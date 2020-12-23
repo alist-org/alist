@@ -1,0 +1,11 @@
+server:
+  site_url: http://localhost
+  port: 5244
+  search: true
+ali_drive:
+  api_url: https://api.aliyundrive.com/v2
+  root_folder: root
+  token:
+  access_token:
+  refresh_token: need
+  max_files_count: 3000
