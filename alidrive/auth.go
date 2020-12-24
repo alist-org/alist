@@ -66,9 +66,10 @@ func RefreshToken() bool {
 			return false
 		}
 	}
-	//刷新成功 更新token
+	//刷新成功 更新token并写入文件
 	conf.Conf.AliDrive.AccessToken=token.AccessToken
 	conf.Conf.AliDrive.RefreshToken=token.RefreshToken
 	conf.Authorization=token.TokenType+"\t"+token.AccessToken
+	utils.WriteToYml(conf.Con,conf.Conf)
 	return true
 }

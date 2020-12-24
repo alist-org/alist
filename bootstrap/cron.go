@@ -2,8 +2,6 @@ package bootstrap
 
 import (
 	"github.com/Xhofe/alist/alidrive"
-	"github.com/Xhofe/alist/conf"
-	"github.com/Xhofe/alist/utils"
 	"github.com/robfig/cron/v3"
 	log "github.com/sirupsen/logrus"
 )
@@ -12,7 +10,6 @@ var Cron *cron.Cron
 
 func refreshToken()  {
 	alidrive.RefreshToken()
-	utils.WriteToYml(conf.Con,conf.Conf)
 }
 
 func InitCron() {

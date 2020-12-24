@@ -1,4 +1,4 @@
-<p>
+<p align="center">
     <img src="https://img.oez.cc/2020/12/24/1fb16bc25a4f6.png" alt="RenewalManage Logo" width=200/>
 </p>
 <p align="center">
@@ -10,6 +10,7 @@
     <img src="https://img.shields.io/badge/%24-donate-ff69b4.svg" alt="donate">
   </a>
 </p>
+---
 
 ### 这是什么？
 
@@ -47,6 +48,7 @@
 - [x] `Readme`渲染
 - [x] 密码加密
 - [ ] 搜索与翻页
+- [ ] 文件直链
 - [ ] 路径优化
 - [ ] 缓存
 
