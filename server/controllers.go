@@ -7,7 +7,9 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// TODO:添加前置路由信息
+func Info(c *gin.Context) {
+	c.JSON(200,dataResponse(conf.Conf.Info))
+}
 
 func Get(c *gin.Context) {
 	var get alidrive.GetReq

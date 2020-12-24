@@ -1,10 +1,15 @@
 package conf
 
 type Config struct {
+	Info struct{
+		Title			string		`yaml:"title" json:"title"`
+		SiteUrl 		string 		`yaml:"site_url" json:"site_url"`//网站url
+		Logo			string		`yaml:"logo" json:"logo"`
+	}	`yaml:"info"`
 	Server struct{
-		SiteUrl 		string 		`yaml:"site_url"`//网站url
 		Port 			string 		`yaml:"port"`//端口
-		Search			bool		`yaml:"search"`//允许搜索
+		Search			bool		`yaml:"search" json:"search"`//允许搜索
+		Static			string		`yaml:"static"`
 	}	`yaml:"server"`
 	AliDrive struct{
 		ApiUrl			string		`yaml:"api_url"`//阿里云盘api

@@ -1,7 +1,11 @@
-server:
+info:
+  title: AList
   site_url: http://localhost
-  port: 5244
+  logo:
+server:
+  port: "5244"
   search: true
+  static: dist
 ali_drive:
   api_url: https://api.aliyundrive.com/v2
   root_folder: root

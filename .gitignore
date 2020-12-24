@@ -1,6 +1,7 @@
 .idea/
 .DS_Store
 output/
+dist/
 
 # Binaries for programs and plugins
 *.exe
