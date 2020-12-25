@@ -1,10 +1,10 @@
 <p align="center">
-    <img src="https://img.oez.cc/2020/12/24/1fb16bc25a4f6.png" alt="RenewalManage Logo" width=200/>
+    <img src="https://img.oez.cc/2020/12/24/1fb16bc25a4f6.png" alt="AList Logo" width=200/>
 </p>
 <p align="center">
   <a href="https://github.com/Xhofe/alist/releases"><img src="https://img.shields.io/github/release/Xhofe/alist" alt="Release version"></a>
   <a href="https://github.com/Xhofe/alist/actions?query=workflow%3ARelease"><img src="https://github.com/Xhofe/alist/workflows/Release/badge.svg" alt="Release status"></a>
-  <a href="https://github.com/Xhofe/RenewalManage/releases"><img src="https://img.shields.io/github/downloads/Xhofe/alist/latest/total" alt="Downloads"></a>
+  <a href="https://github.com/Xhofe/alist/releases"><img src="https://img.shields.io/github/downloads/Xhofe/alist/latest/total" alt="Downloads"></a>
   <a href="https://github.com/Xhofe/alist/blob/main/LICENSE"><img src="https://img.shields.io/github/license/Xhofe/alist" alt="License"></a>
   <a href="https://pay.xhofe.top">
     <img src="https://img.shields.io/badge/%24-donate-ff69b4.svg" alt="donate">
@@ -35,6 +35,7 @@
 - 目录加密
 - `Readme`渲染
 - 自定义根目录
+- 文件直链下载
 - …
 
 #### TODO
@@ -54,7 +55,7 @@
 
 ### 如何使用
 
-正在写……
+- https://www.nn.ci/archives/alist.html
 
 ### License
 
