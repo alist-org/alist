@@ -39,11 +39,11 @@ func printASC()  {
 func start() {
 	InitLog()
 	printASC()
-	InitClient()
 	if !ReadConf(conf.Con) {
 		log.Errorf("读取配置文件时出现错误,启动失败.")
 		return
 	}
+	InitClient()
 	if !InitAliDrive() {
 		log.Errorf("初始化阿里云盘出现错误,启动失败.")
 		return
@@ -54,9 +54,9 @@ func start() {
 
 func server() {
 	baseServer:="0.0.0.0:"+conf.Conf.Server.Port
-	log.Infof("Starting server @ %s",baseServer)
 	r:=gin.Default()
 	serv.InitRouter(r)
+	log.Infof("Starting server @ %s",baseServer)
 	err:=r.Run(baseServer)
 	if err!=nil {
 		log.Errorf("Server failed start:%s",err.Error())

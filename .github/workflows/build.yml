@@ -1,0 +1,71 @@
+name: Build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+
+  build:
+    strategy:
+      matrix:
+        platform: [ubuntu-latest]
+        go-version: [1.15]
+    name: Build
+    runs-on: ${{ matrix.platform }}
+    steps:
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+
+      - name: Get dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install gcc-mingw-w64-x86-64
+          sudo apt-get -y install gcc-arm-linux-gnueabihf libc6-dev-armhf-cross
+          sudo apt-get -y install gcc-aarch64-linux-gnu libc6-dev-arm64-cross
+          go get -v -t -d ./...
+          if [ -f Gopkg.toml ]; then
+              curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+              dep ensure
+          fi
+      - name: Build linux
+        run: |
+          CC=gcc CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -o alist_linux_amd64 alist.go
+          CC=aarch64-linux-gnu-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm64 go build -o alist_linux_arm64 alist.go
+          CC=arm-linux-gnueabihf-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm go build -o alist_linux_arm alist.go
+
+      - name: Build windows
+        run: |
+          CC=x86_64-w64-mingw32-gcc CGO_ENABLED=1 GOOS=windows GOARCH=amd64 go build -o alist_windows_amd64.exe alist.go
+
+      - name: Upload artifacts linux_amd64
+        uses: actions/upload-artifact@v2
+        with:
+          name: alist_linux_amd64
+          path: alist_linux_amd64
+
+      - name: Upload artifacts linux_arm64
+        uses: actions/upload-artifact@v2
+        with:
+          name: alist_linux_arm64
+          path: alist_linux_arm64
+
+      - name: Upload artifacts linux_arm
+        uses: actions/upload-artifact@v2
+        with:
+          name: alist_linux_arm
+          path: alist_linux_arm
+
+      - name: Upload artifacts windows_amd64
+        uses: actions/upload-artifact@v2
+        with:
+          name: alist_windows_amd64
+          path: alist_windows_amd64.exe

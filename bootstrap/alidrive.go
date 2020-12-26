@@ -7,6 +7,7 @@ import (
 )
 
 func InitAliDrive() bool {
+	log.Infof("初始化阿里云盘...")
 	//首先token_login
 	if conf.Conf.AliDrive.RefreshToken == "" {
 		tokenLogin,err:=alidrive.TokenLogin()

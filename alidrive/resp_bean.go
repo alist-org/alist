@@ -18,8 +18,8 @@ type UserInfo struct {
 	DomainId       string                 `json:"domain_id"`
 	UserId         string                 `json:"user_id"`
 	Avatar         string                 `json:"avatar"`
-	CreatedAt      int                    `json:"created_at"`
-	UpdatedAt      int                    `json:"updated_at"`
+	CreatedAt      int64                  `json:"created_at"`
+	UpdatedAt      int64                  `json:"updated_at"`
 	Email          string                 `json:"email"`
 	NickName       string                 `json:"nick_name"`
 	Phone          string                 `json:"phone"`
@@ -66,8 +66,8 @@ type File struct {
 	ContentType        string                 `json:"content_type"`
 	Crc64Hash          string                 `json:"crc_64_hash"`
 	DownloadUrl        string                 `json:"download_url"`
-	PunishFlag         int                    `json:"punish_flag"`
-	Size               int                    `json:"size"`
+	PunishFlag         int64                  `json:"punish_flag"`
+	Size               int64                  `json:"size"`
 	Thumbnail          string                 `json:"thumbnail"`
 	Url                string                 `json:"url"`
 	ImageMediaMetadata map[string]interface{} `json:"image_media_metadata"`

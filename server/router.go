@@ -4,9 +4,11 @@ import (
 	"github.com/Xhofe/alist/conf"
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 )
 
 func InitRouter(engine *gin.Engine) {
+	log.Infof("初始化路由...")
 	engine.Use(CrosHandler())
 	InitApiRouter(engine)
 }

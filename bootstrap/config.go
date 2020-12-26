@@ -9,6 +9,7 @@ import (
 )
 
 func ReadConf(config string) bool {
+	log.Infof("读取配置文件...")
 	if !utils.Exists(config) {
 		log.Infof("找不到配置文件:%s",config)
 		return false

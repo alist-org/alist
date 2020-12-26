@@ -175,6 +175,7 @@ func DoPost(url string,request interface{},auth bool) (body []byte, err error) {
 	if body, err = ioutil.ReadAll(resp.Body); err != nil {
 		log.Errorf("读取api返回内容失败")
 	}
+	log.Debugf("请求返回信息:%s",string(body))
 	return
 }
 
