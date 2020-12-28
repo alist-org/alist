@@ -106,8 +106,9 @@ type TokenResp struct {
 
 func HasPassword(files *Files) string {
 	fileList := files.Items
-	for _, file := range fileList {
+	for i, file := range fileList {
 		if strings.HasPrefix(file.Name, ".password-") {
+			files.Items=fileList[:i+copy(fileList[i:],fileList[i+1:])]
 			return file.Name[10:]
 		}
 	}

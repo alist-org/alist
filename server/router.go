@@ -25,4 +25,5 @@ func InitApiRouter(engine *gin.Engine) {
 		v2.POST("/list",List)
 		v2.POST("/search",Search)
 	}
+	engine.GET("/d/*file_id",Down)
 }

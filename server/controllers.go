@@ -5,6 +5,7 @@ import (
 	"github.com/Xhofe/alist/conf"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
+	"strings"
 )
 
 func Info(c *gin.Context) {
@@ -101,4 +102,17 @@ func Search(c *gin.Context) {
 		return
 	}
 	c.JSON(200,dataResponse(files))
+}
+
+func Down(c *gin.Context) {
+	fileIdParam:=c.Param("file_id")
+	log.Debugf("down:%s",fileIdParam)
+	fileId:=strings.Split(fileIdParam,"/")[1]
+	file,err:=alidrive.GetFile(fileId)
+	if err != nil {
+		c.JSON(200,metaResponse(500,err.Error()))
+		return
+	}
+	c.Redirect(301,file.DownloadUrl)
+	return
 }

@@ -5,10 +5,11 @@ import (
 	"github.com/Xhofe/alist/alidrive"
 	"github.com/Xhofe/alist/bootstrap"
 	"github.com/Xhofe/alist/conf"
+	"os"
 	"testing"
 )
 
-func init() {
+func setup() {
 	bootstrap.InitLog()
 	bootstrap.ReadConf("../conf.yml")
 	bootstrap.InitClient()
@@ -37,4 +38,10 @@ func TestGet(t *testing.T) {
 	file,err:=alidrive.GetFile("5fb7c80e85e4f335cd344008be1b1b5349f74414")
 	fmt.Println(err)
 	fmt.Println(file)
+}
+
+func TestMain(m *testing.M) {
+	setup()
+	code:=m.Run()
+	os.Exit(code)
 }
