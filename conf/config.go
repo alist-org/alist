@@ -4,7 +4,11 @@ type Config struct {
 	Info struct{
 		Title			string		`yaml:"title" json:"title"`
 		SiteUrl 		string 		`yaml:"site_url" json:"site_url"`//网站url
+		BackendUrl		string		`yaml:"backend_url" json:"backend_url"`//后端地址
 		Logo			string		`yaml:"logo" json:"logo"`
+		FooterText		string		`yaml:"footer_text" json:"footer_text"`
+		FooterUrl		string		`yaml:"footer_url" json:"footer_url"`
+		MusicImg		string		`yaml:"music_img" json:"music_img"`
 	}	`yaml:"info"`
 	Server struct{
 		Port 			string 		`yaml:"port"`//端口

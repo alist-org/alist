@@ -20,9 +20,10 @@ func InitAliDrive() bool {
 		if err!=nil {
 			return false
 		}
-		conf.Authorization=token.TokenType+" "+token.AccessToken
+		conf.Authorization=token.TokenType+"\t"+token.AccessToken
+	}else {
+		conf.Authorization=conf.Bearer+conf.Conf.AliDrive.AccessToken
 	}
-	conf.Authorization=conf.Bearer+conf.Conf.AliDrive.AccessToken
 	log.Infof("token:%s",conf.Authorization)
 	user,err:=alidrive.GetUserInfo()
 	if err != nil {
