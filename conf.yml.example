@@ -1,15 +1,22 @@
 info:
-  title: AList
-  site_url: http://localhost
-  logo:
+  title: AList #标题
+  site_url: http://localhost:5277 #前端地址
+  backend_url: http://localhost:5244 #后端地址
+  logo: "" #网站logo 如果填写,则会替换掉默认的
+  footer_text: Xhofe's Blog #网页底部文字
+  footer_url: https://www.nn.ci #网页底部文字链接
+  music_img: https://img.oez.cc/2020/12/19/0f8b57866bdb5.gif #预览音乐文件时的图片
 server:
-  port: "5244"
-  search: true
-  static: dist
+  port: "5244" #程序监听端口
+  search: true #是否开启搜索接口,开启搜索之后密码和根目录都会失效,所以前端暂时不做搜索
+  static: dist #前端文件目录
+cache:
+  cache: true #是否开启缓存
+  expiration: 5 #缓存失效时间(单位:分钟)
+  cleanup_interval: 10 #清理失效缓存间隔
+  refresh_password: password #手动清理缓存密码
 ali_drive:
-  api_url: https://api.aliyundrive.com/v2
-  root_folder: root
-  token:
-  access_token:
+  api_url: https://api.aliyundrive.com/v2 #阿里云盘api,无需修改
+  root_folder: root #根目录
   refresh_token: need
   max_files_count: 3000

@@ -48,6 +48,7 @@ func start() {
 		log.Errorf("初始化阿里云盘出现错误,启动失败.")
 		return
 	}
+	InitCache()
 	InitCron()
 	server()
 }

@@ -19,7 +19,7 @@ func CrosHandler() gin.HandlerFunc {
 		//context.Set("content-type", "application/json")  //设置返回格式是json
 
 		if method == "OPTIONS" {
-			context.JSON(http.StatusOK, metaResponse(200,"Options Request!"))
+			context.JSON(http.StatusOK, gin.H{})
 		}
 
 		//处理请求

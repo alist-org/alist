@@ -15,6 +15,12 @@ type Config struct {
 		Search			bool		`yaml:"search" json:"search"`//允许搜索
 		Static			string		`yaml:"static"`
 	}	`yaml:"server"`
+	Cache struct{
+		Enable			bool		`yaml:"cache"`
+		Expiration		int			`yaml:"expiration"`
+		CleanupInterval	int			`yaml:"cleanup_interval"`
+		RefreshPassword	string		`yaml:"refresh_password"`
+	}
 	AliDrive struct{
 		ApiUrl			string		`yaml:"api_url"`//阿里云盘api
 		RootFolder		string		`yaml:"root_folder"`//根目录id

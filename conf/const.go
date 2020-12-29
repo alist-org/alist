@@ -1,6 +1,7 @@
 package conf
 
 import (
+	"github.com/patrickmn/go-cache"
 	"net/http"
 )
 
@@ -10,6 +11,8 @@ var(
 	Con string
 	Client *http.Client
 	Authorization string
+
+	Cache *cache.Cache
 )
 
 var Conf = new(Config)
