@@ -11,7 +11,7 @@ server:
   search: true #是否开启搜索接口,开启搜索之后密码和根目录都会失效,所以前端暂时不做搜索
   static: dist #前端文件目录
 cache:
-  cache: true #是否开启缓存
+  enable: true #是否开启缓存
   expiration: 5 #缓存失效时间(单位:分钟)
   cleanup_interval: 10 #清理失效缓存间隔
   refresh_password: password #手动清理缓存密码

@@ -16,7 +16,7 @@ type Config struct {
 		Static			string		`yaml:"static"`
 	}	`yaml:"server"`
 	Cache struct{
-		Enable			bool		`yaml:"cache"`
+		Enable			bool		`yaml:"enable"`
 		Expiration		int			`yaml:"expiration"`
 		CleanupInterval	int			`yaml:"cleanup_interval"`
 		RefreshPassword	string		`yaml:"refresh_password"`
