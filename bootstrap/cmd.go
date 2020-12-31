@@ -39,6 +39,7 @@ func printASC()  {
 func start() {
 	InitLog()
 	printASC()
+	CheckUpdate()
 	if !ReadConf(conf.Con) {
 		log.Errorf("读取配置文件时出现错误,启动失败.")
 		return

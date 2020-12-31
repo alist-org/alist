@@ -19,7 +19,7 @@ func Search(c *gin.Context) {
 		c.JSON(200, metaResponse(400,"Bad Request"))
 		return
 	}
-	log.Debugf("search:%v",search)
+	log.Debugf("search:%+v",search)
 	// cache
 	cacheKey:=fmt.Sprintf("%s-%s","s",search.Query)
 	if conf.Conf.Cache.Enable {

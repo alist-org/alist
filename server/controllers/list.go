@@ -9,13 +9,18 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+type ListReq struct {
+	Password	string	`json:"password"`
+	alidrive.ListReq
+}
+
 func List(c *gin.Context) {
 	var list ListReq
 	if err := c.ShouldBindJSON(&list);err!=nil {
 		c.JSON(200, metaResponse(400,"Bad Request"))
 		return
 	}
-	log.Debugf("list:%v",list)
+	log.Debugf("list:%+v",list)
 	// cache
 	cacheKey:=fmt.Sprintf("%s-%s-%s","l",list.ParentFileId,list.Password)
 	if conf.Conf.Cache.Enable {

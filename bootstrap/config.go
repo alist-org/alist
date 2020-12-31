@@ -24,6 +24,6 @@ func ReadConf(config string) bool {
 		log.Errorf("加载配置文件时发生错误:%s",err.Error())
 		return false
 	}
-	log.Debugf("config:%v",conf.Conf)
+	log.Debugf("config:%+v",conf.Conf)
 	return true
 }

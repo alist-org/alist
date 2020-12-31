@@ -18,7 +18,7 @@ var(
 var Conf = new(Config)
 
 const (
-	VERSION="0.1.0"
+	VERSION="v0.1.3"
 
 	ImageThumbnailProcess="image/resize,w_50"
 	VideoThumbnailProcess="video/snapshot,t_0,f_jpg,w_50"

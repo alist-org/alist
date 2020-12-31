@@ -146,7 +146,7 @@ func DoPost(url string,request interface{},auth bool) (body []byte, err error) {
 		log.Errorf("创建requestBody出错:%s",err.Error())
 	}
 	req,err:=http.NewRequest("POST",url,requestBody)
-	log.Debugf("do_post_req:%v",req)
+	log.Debugf("do_post_req:%+v",req)
 	if err != nil {
 		log.Errorf("创建request出错:%s",err.Error())
 		return

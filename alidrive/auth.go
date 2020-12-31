@@ -12,7 +12,7 @@ func TokenLogin() (*TokenLoginResp, error) {
 	log.Infof("尝试使用token登录...")
 	url:="https://auth.aliyundrive.com/v2/oauth/token_login"
 	req:=TokenLoginReq{Token:conf.Conf.AliDrive.LoginToken}
-	log.Debugf("token_login_req:%v",req)
+	log.Debugf("token_login_req:%+v",req)
 	var tokenLogin TokenLoginResp
 	if body, err := DoPost(url, req,false); err != nil {
 		log.Errorf("tokenLogin-doPost出错:%s",err.Error())

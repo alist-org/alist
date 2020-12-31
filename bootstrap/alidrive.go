@@ -24,13 +24,13 @@ func InitAliDrive() bool {
 	}else {
 		conf.Authorization=conf.Bearer+conf.Conf.AliDrive.AccessToken
 	}
-	log.Infof("token:%s",conf.Authorization)
+	log.Debugf("token:%s",conf.Authorization)
 	user,err:=alidrive.GetUserInfo()
 	if err != nil {
 		log.Errorf("初始化用户失败:%s",err.Error())
 		return false
 	}
-	log.Infof("当前用户信息:%v",user)
+	log.Infof("当前用户信息:%+v",user)
 	alidrive.User=user
 	return true
 }

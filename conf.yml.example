@@ -12,8 +12,8 @@ server:
   static: dist #前端文件目录
 cache:
   enable: true #是否开启缓存
-  expiration: 5 #缓存失效时间(单位:分钟)
-  cleanup_interval: 10 #清理失效缓存间隔
+  expiration: 60 #缓存失效时间(单位:分钟)
+  cleanup_interval: 120 #清理失效缓存间隔
   refresh_password: password #手动清理缓存密码
 ali_drive:
   api_url: https://api.aliyundrive.com/v2 #阿里云盘api,无需修改
