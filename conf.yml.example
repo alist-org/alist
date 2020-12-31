@@ -7,6 +7,7 @@ info:
   footer_url: https://www.nn.ci #网页底部文字链接
   music_img: https://img.oez.cc/2020/12/19/0f8b57866bdb5.gif #预览音乐文件时的图片
   check_update: true #前端是否显示更新
+  script: #自定义脚本,可以是脚本的链接，也可以直接是脚本内容,如document.querySelector('body').style="background-image:url('https://api.mtyqx.cn/api/random.php');background-attachment:fixed"
 server:
   port: "5244" #程序监听端口
   search: true #是否开启搜索接口,开启搜索之后密码和根目录都会失效,所以前端暂时不做搜索

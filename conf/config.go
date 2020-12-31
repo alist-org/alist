@@ -10,6 +10,7 @@ type Config struct {
 		FooterUrl		string		`yaml:"footer_url" json:"footer_url"`
 		MusicImg		string		`yaml:"music_img" json:"music_img"`
 		CheckUpdate		bool		`yaml:"check_update" json:"check_update"`
+		Script			string 		`yaml:"script" json:"script"`
 	}	`yaml:"info"`
 	Server struct{
 		Port 			string 		`yaml:"port"`//端口
