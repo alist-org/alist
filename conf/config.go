@@ -9,6 +9,7 @@ type Config struct {
 		FooterText		string		`yaml:"footer_text" json:"footer_text"`
 		FooterUrl		string		`yaml:"footer_url" json:"footer_url"`
 		MusicImg		string		`yaml:"music_img" json:"music_img"`
+		CheckUpdate		bool		`yaml:"check_update" json:"check_update"`
 	}	`yaml:"info"`
 	Server struct{
 		Port 			string 		`yaml:"port"`//端口
