@@ -11,6 +11,14 @@ type Config struct {
 		MusicImg		string		`yaml:"music_img" json:"music_img"`
 		CheckUpdate		bool		`yaml:"check_update" json:"check_update"`
 		Script			string 		`yaml:"script" json:"script"`
+		Autoplay		bool		`yaml:"autoplay" json:"autoplay"`
+		Preview	struct{
+			Url			string		`yaml:"url" json:"url"`
+			PreProcess	[]string	`yaml:"pre_process" json:"pre_process"`
+			Extensions	[]string	`yaml:"extensions" json:"extensions"`
+			Text		[]string	`yaml:"text" json:"text"`
+			MaxSize		int			`yaml:"max_size" json:"max_size"`
+		}	`yaml:"preview" json:"preview"`
 	}	`yaml:"info"`
 	Server struct{
 		Port 			string 		`yaml:"port"`//端口
