@@ -6,6 +6,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
+	"strings"
 )
 
 func ReadConf(config string) bool {
@@ -25,5 +26,6 @@ func ReadConf(config string) bool {
 		return false
 	}
 	log.Debugf("config:%+v",conf.Conf)
+	conf.Origins = strings.Split(conf.Conf.Info.SiteUrl,",")
 	return true
 }
