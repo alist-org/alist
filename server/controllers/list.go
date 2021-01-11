@@ -17,7 +17,7 @@ type ListReq struct {
 func List(c *gin.Context) {
 	var list ListReq
 	if err := c.ShouldBindJSON(&list);err!=nil {
-		c.JSON(200, metaResponse(400,"Bad Request"))
+		c.JSON(200, MetaResponse(400,"Bad Request"))
 		return
 	}
 	log.Debugf("list:%+v",list)
@@ -27,7 +27,7 @@ func List(c *gin.Context) {
 		files,exist:=conf.Cache.Get(cacheKey)
 		if exist {
 			log.Debugf("使用了缓存:%s",cacheKey)
-			c.JSON(200, dataResponse(files))
+			c.JSON(200, DataResponse(files))
 			return
 		}
 	}
@@ -47,21 +47,21 @@ func List(c *gin.Context) {
 		files,err=alidrive.GetList(list.ParentFileId,list.Limit,list.Marker,list.OrderBy,list.OrderDirection)
 	}
 	if err!=nil {
-		c.JSON(200, metaResponse(500,err.Error()))
+		c.JSON(200, MetaResponse(500,err.Error()))
 		return
 	}
 	password:=alidrive.HasPassword(files)
 	if password!="" && password!=list.Password {
 		if list.Password=="" {
-			c.JSON(200, metaResponse(401,"need password."))
+			c.JSON(200, MetaResponse(401,"need password."))
 			return
 		}
-		c.JSON(200, metaResponse(401,"wrong password."))
+		c.JSON(200, MetaResponse(401,"wrong password."))
 		return
 	}
 	paths,err:=alidrive.GetPaths(list.ParentFileId)
 	if err!=nil {
-		c.JSON(200, metaResponse(500,err.Error()))
+		c.JSON(200, MetaResponse(500,err.Error()))
 		return
 	}
 	files.Paths=*paths
@@ -69,5 +69,5 @@ func List(c *gin.Context) {
 	if conf.Conf.Cache.Enable {
 		conf.Cache.Set(cacheKey,files,cache.DefaultExpiration)
 	}
-	c.JSON(200, dataResponse(files))
+	c.JSON(200, DataResponse(files))
 }

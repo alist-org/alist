@@ -6,7 +6,7 @@ import (
 )
 
 func Info(c *gin.Context) {
-	c.JSON(200, dataResponse(conf.Conf.Info))
+	c.JSON(200, DataResponse(conf.Conf.Info))
 }
 
 func RefreshCache(c *gin.Context) {
@@ -14,12 +14,12 @@ func RefreshCache(c *gin.Context) {
 	if conf.Conf.Cache.Enable {
 		if password == conf.Conf.Cache.RefreshPassword {
 			conf.Cache.Flush()
-			c.JSON(200,metaResponse(200,"flush success."))
+			c.JSON(200, MetaResponse(200,"flush success."))
 			return
 		}
-		c.JSON(200,metaResponse(401,"wrong password."))
+		c.JSON(200, MetaResponse(401,"wrong password."))
 		return
 	}
-	c.JSON(200,metaResponse(400,"disabled cache."))
+	c.JSON(200, MetaResponse(400,"disabled cache."))
 	return
 }

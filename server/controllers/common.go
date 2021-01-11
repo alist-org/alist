@@ -2,7 +2,7 @@ package controllers
 
 import "github.com/gin-gonic/gin"
 
-func metaResponse(code int, msg string) gin.H {
+func MetaResponse(code int, msg string) gin.H {
 	return gin.H{
 		"meta":gin.H{
 			"code":code,
@@ -11,7 +11,7 @@ func metaResponse(code int, msg string) gin.H {
 	}
 }
 
-func dataResponse(data interface{}) gin.H {
+func DataResponse(data interface{}) gin.H {
 	return gin.H{
 		"meta":gin.H{
 			"code":200,

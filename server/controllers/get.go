@@ -12,7 +12,7 @@ import (
 func Get(c *gin.Context) {
 	var get alidrive.GetReq
 	if err := c.ShouldBindJSON(&get); err != nil {
-		c.JSON(200,metaResponse(400,"Bad Request"))
+		c.JSON(200, MetaResponse(400,"Bad Request"))
 		return
 	}
 	log.Debugf("get:%+v",get)
@@ -22,25 +22,25 @@ func Get(c *gin.Context) {
 	//	file,exist:=conf.Cache.Get(cacheKey)
 	//	if exist {
 	//		log.Debugf("使用了缓存:%s",cacheKey)
-	//		c.JSON(200,dataResponse(file))
+	//		c.JSON(200,DataResponse(file))
 	//		return
 	//	}
 	//}
 	file,err:=alidrive.GetFile(get.FileId)
 	if err !=nil {
-		c.JSON(200,metaResponse(500,err.Error()))
+		c.JSON(200, MetaResponse(500,err.Error()))
 		return
 	}
 	paths,err:=alidrive.GetPaths(get.FileId)
 	if err!=nil {
-		c.JSON(200,metaResponse(500,err.Error()))
+		c.JSON(200, MetaResponse(500,err.Error()))
 		return
 	}
 	file.Paths=*paths
 	//if conf.Conf.Cache.Enable {
 	//	conf.Cache.Set(cacheKey,file,cache.DefaultExpiration)
 	//}
-	c.JSON(200,dataResponse(file))
+	c.JSON(200, DataResponse(file))
 }
 
 func Down(c *gin.Context) {
@@ -58,7 +58,7 @@ func Down(c *gin.Context) {
 	//}
 	file,err:=alidrive.GetFile(fileId)
 	if err != nil {
-		c.JSON(200, metaResponse(500,err.Error()))
+		c.JSON(200, MetaResponse(500,err.Error()))
 		return
 	}
 	//if conf.Conf.Cache.Enable {

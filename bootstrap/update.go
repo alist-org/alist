@@ -3,6 +3,7 @@ package bootstrap
 import (
 	"encoding/json"
 	"github.com/Xhofe/alist/conf"
+	"github.com/Xhofe/alist/utils"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
@@ -32,8 +33,10 @@ func CheckUpdate() {
 		log.Warnf("解析更新失败:%s",err.Error())
 		return
 	}
-	if conf.VERSION == release.TagName {
-		log.Infof("当前已是最新版本:%s",release.TagName)
+	lasted:=release.TagName[1:]
+	now:=conf.VERSION[1:]
+	if utils.VersionCompare(lasted,now) != 1 {
+		log.Infof("当前已是最新版本:%s",conf.VERSION)
 	}else {
 		log.Infof("发现新版本:%s",release.TagName)
 		log.Infof("请至'%s'获取更新.",release.HtmlUrl)
