@@ -9,9 +9,15 @@ import (
 
 func CrosHandler() gin.HandlerFunc {
 	return func(context *gin.Context) {
+		origin:=context.GetHeader("Origin")
+		// 同源
+		if origin == "" {
+			context.Next()
+			return
+		}
 		method := context.Request.Method
 		// 设置跨域
-		context.Header("Access-Control-Allow-Origin",context.GetHeader("Origin"))
+		context.Header("Access-Control-Allow-Origin",origin)
 		context.Header("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE,UPDATE")
 		context.Header("Access-Control-Allow-Headers", "Content-Length,session,Accept, Origin, Host, Connection, Accept-Encoding, Accept-Language, Keep-Alive, User-Agent, Cache-Control, Content-Type")
 		context.Header("Access-Control-Expose-Headers", "Content-Length,Cache-Control,Content-Language,Content-Type,Expires,Last-Modified")

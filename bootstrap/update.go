@@ -16,6 +16,7 @@ type GithubRelease struct {
 }
 
 func CheckUpdate() {
+	log.Infof("检查更新...")
 	url:="https://api.github.com/repos/Xhofe/alist/releases/latest"
 	resp,err:=http.Get(url)
 	if err!=nil {

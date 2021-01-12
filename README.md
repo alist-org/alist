@@ -3,7 +3,7 @@
 </p>
 <p align="center">
   <a href="https://github.com/Xhofe/alist/releases"><img src="https://img.shields.io/github/release/Xhofe/alist" alt="Release version"></a>
-  <a href="https://github.com/Xhofe/alist/actions?query=workflow%3ABuild"><img src="https://github.com/Xhofe/alist/workflows/Build/badge.svg" alt="Build status"></a>
+  <a href="https://github.com/Xhofe/alist/actions?query=workflow%3ABuild"><img src="https://github.com/Xhofe/alist/workflows/build/badge.svg" alt="Build status"></a>
   <a href="https://github.com/Xhofe/alist/releases"><img src="https://img.shields.io/github/downloads/Xhofe/alist/latest/total" alt="Downloads"></a>
   <a href="https://github.com/Xhofe/alist/blob/main/LICENSE"><img src="https://img.shields.io/github/license/Xhofe/alist" alt="License"></a>
   <a href="https://pay.xhofe.top">
