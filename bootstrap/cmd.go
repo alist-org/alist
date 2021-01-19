@@ -2,6 +2,7 @@ package bootstrap
 
 import (
 	"flag"
+	"fmt"
 	"github.com/Xhofe/alist/conf"
 	serv "github.com/Xhofe/alist/server"
 	"github.com/gin-gonic/gin"
@@ -11,6 +12,7 @@ import (
 func init() {
 	flag.BoolVar(&conf.Debug,"debug",false,"use debug mode")
 	flag.BoolVar(&conf.Help,"help",false,"show usage help")
+	flag.BoolVar(&conf.Version,"version",false,"show version info")
 	flag.StringVar(&conf.Con,"conf","conf.yml","config file")
 }
 
@@ -18,6 +20,10 @@ func Run()  {
 	flag.Parse()
 	if conf.Help {
 		flag.Usage()
+		return
+	}
+	if conf.Version {
+		fmt.Println("Current version:"+conf.VERSION)
 		return
 	}
 	start()

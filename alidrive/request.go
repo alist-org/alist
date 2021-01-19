@@ -20,25 +20,11 @@ func GetFile(fileId string) (*File, error) {
 		ImageThumbnailProcess: conf.ImageThumbnailProcess,
 		VideoThumbnailProcess: conf.VideoThumbnailProcess,
 	}
-	var file File
-	if body, err := DoPost(url, req,true); err != nil {
-		log.Errorf("doPost出错:%s",err.Error())
+	var resp File
+	if err := BodyToJson(url, req, &resp, true); err!=nil {
 		return nil,err
-	}else {
-		if err = json.Unmarshal(body,&file);err !=nil {
-			log.Errorf("解析json[%s]出错:%s",string(body),err.Error())
-			return nil,err
-		}
 	}
-	if file.IsAvailable() {
-		return &file,nil
-	}
-	if file.Code==conf.AccessTokenInvalid {
-		if RefreshToken() {
-			return GetFile(fileId)
-		}
-	}
-	return nil,fmt.Errorf(file.Message)
+	return &resp,nil
 }
 
 func Search(key string,limit int, marker string) (*Files, error) {
@@ -53,25 +39,11 @@ func Search(key string,limit int, marker string) (*Files, error) {
 		Query:                 fmt.Sprintf("name match '%s'",key),
 		VideoThumbnailProcess: conf.VideoThumbnailProcess,
 	}
-	var files Files
-	if body, err := DoPost(url, req,true); err != nil {
-		log.Errorf("doPost出错:%s",err.Error())
+	var resp Files
+	if err := BodyToJson(url, req, &resp, true); err!=nil {
 		return nil,err
-	}else {
-		if err = json.Unmarshal(body,&files);err !=nil {
-			log.Errorf("解析json[%s]出错:%s",string(body),err.Error())
-			return nil,err
-		}
 	}
-	if files.IsAvailable() {
-		return &files,nil
-	}
-	if files.Code==conf.AccessTokenInvalid {
-		if RefreshToken() {
-			return Search(key,limit,marker)
-		}
-	}
-	return nil,fmt.Errorf(files.Message)
+	return &resp,nil
 }
 
 func GetRoot(limit int,marker string,orderBy string,orderDirection string) (*Files,error) {
@@ -92,48 +64,56 @@ func GetList(parent string,limit int,marker string,orderBy string,orderDirection
 		ParentFileId:          parent,
 		VideoThumbnailProcess: conf.VideoThumbnailProcess,
 	}
-	var files Files
-	if body, err := DoPost(url, req,true); err != nil {
-		log.Errorf("doPost出错:%s",err.Error())
+	var resp Files
+	if err := BodyToJson(url, req, &resp, true); err!=nil {
 		return nil,err
-	}else {
-		if err = json.Unmarshal(body,&files);err !=nil {
-			log.Errorf("解析json[%s]出错:%s",string(body),err.Error())
-			return nil,err
-		}
 	}
-	if files.IsAvailable() {
-		return &files,nil
-	}
-	if files.Code==conf.AccessTokenInvalid {
-		if RefreshToken() {
-			return GetRoot(limit,marker,orderBy,orderDirection)
-		}
-	}
-	return nil,fmt.Errorf(files.Message)
+	return &resp,nil
 }
 
 func GetUserInfo() (*UserInfo,error) {
 	url:=conf.Conf.AliDrive.ApiUrl+"/user/get"
-	var user UserInfo
-	if body, err := DoPost(url, map[string]interface{}{},true); err != nil {
-		log.Errorf("doPost出错:%s",err.Error())
+	var resp UserInfo
+	if err := BodyToJson(url, map[string]interface{}{}, &resp, true); err!=nil {
 		return nil,err
+	}
+	return &resp,nil
+}
+
+func GetOfficePreviewUrl(fileId string) (*OfficePreviewUrlResp,error) {
+	url:=conf.Conf.AliDrive.ApiUrl+"/file/get_office_preview_url"
+	req:=OfficePreviewUrlReq{
+		AccessToken: conf.Conf.AliDrive.AccessToken,
+		DriveId:     User.DefaultDriveId,
+		FileId:      fileId,
+	}
+	var resp OfficePreviewUrlResp
+	if err := BodyToJson(url, req, &resp, true); err!=nil {
+		return nil,err
+	}
+	return &resp,nil
+}
+
+func BodyToJson(url string, req interface{}, resp RespHandle,auth bool) error {
+	if body,err := DoPost(url,req,auth);err!=nil {
+		log.Errorf("doPost出错:%s",err.Error())
+		return err
 	}else {
-		if err = json.Unmarshal(body,&user);err !=nil {
+		if err = json.Unmarshal(body,&resp);err!=nil {
 			log.Errorf("解析json[%s]出错:%s",string(body),err.Error())
-			return nil,err
+			return err
 		}
 	}
-	if user.IsAvailable() {
-		return &user,nil
+	if resp.IsAvailable() {
+		return nil
 	}
-	if user.Code==conf.AccessTokenInvalid {
+	if resp.GetCode() == conf.AccessTokenInvalid {
+		resp.SetCode("")
 		if RefreshToken() {
-			return GetUserInfo()
+			return BodyToJson(url,req,resp,auth)
 		}
 	}
-	return nil,fmt.Errorf(user.Message)
+	return fmt.Errorf(resp.GetMessage())
 }
 
 func DoPost(url string,request interface{},auth bool) (body []byte, err error) {

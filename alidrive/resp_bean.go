@@ -8,9 +8,32 @@ import (
 	"time"
 )
 
+type RespHandle interface {
+	IsAvailable() bool
+	GetCode() string
+	GetMessage() string
+	SetCode(code string)
+}
+
 type RespError struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
+}
+
+func (resp *RespError) IsAvailable() bool {
+	return resp.Code == ""
+}
+
+func (resp *RespError)GetCode() string {
+	return resp.Code
+}
+
+func (resp *RespError)GetMessage() string {
+	return resp.Message
+}
+
+func (resp *RespError)SetCode(code string) {
+	resp.Code=code
 }
 
 type UserInfo struct {
@@ -36,7 +59,7 @@ type Files struct {
 	Items      []File `json:"items"`
 	NextMarker string `json:"next_marker"`
 	Readme     string `json:"readme"`
-	Paths       []Path `json:"paths"`
+	Paths      []Path `json:"paths"`
 }
 
 type Path struct {
@@ -72,11 +95,7 @@ type File struct {
 	Url                string                 `json:"url"`
 	ImageMediaMetadata map[string]interface{} `json:"image_media_metadata"`
 
-	Paths       []Path `json:"paths"`
-}
-
-func (resp *RespError) IsAvailable() bool {
-	return resp.Code == ""
+	Paths []Path `json:"paths"`
 }
 
 type TokenLoginResp struct {
@@ -104,11 +123,17 @@ type TokenResp struct {
 	DeviceId           string        `json:"device_id"`
 }
 
+type OfficePreviewUrlResp struct {
+	RespError
+	PreviewUrl  string `json:"preview_url"`
+	AccessToken string `json:"access_token"`
+}
+
 func HasPassword(files *Files) string {
 	fileList := files.Items
 	for i, file := range fileList {
 		if strings.HasPrefix(file.Name, ".password-") {
-			files.Items=fileList[:i+copy(fileList[i:],fileList[i+1:])]
+			files.Items = fileList[:i+copy(fileList[i:], fileList[i+1:])]
 			return file.Name[10:]
 		}
 	}

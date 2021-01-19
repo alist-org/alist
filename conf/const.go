@@ -8,6 +8,7 @@ import (
 var(
 	Debug bool
 	Help bool
+	Version bool
 	Con string
 	Client *http.Client
 	Authorization string
@@ -20,7 +21,7 @@ var(
 var Conf = new(Config)
 
 const (
-	VERSION="v0.1.5"
+	VERSION="v0.1.6"
 
 	ImageThumbnailProcess="image/resize,w_50"
 	VideoThumbnailProcess="video/snapshot,t_0,f_jpg,w_50"
