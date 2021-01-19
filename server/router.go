@@ -25,6 +25,7 @@ func InitApiRouter(engine *gin.Engine) {
 		v2.POST("/get",controllers.Get)
 		v2.POST("/list",controllers.List)
 		v2.POST("/search",controllers.Search)
+		v2.POST("/office_preview",controllers.OfficePreview)
 	}
 	engine.GET("/d/*file_id",controllers.Down)
 	engine.GET("/cache/:password",controllers.RefreshCache)
