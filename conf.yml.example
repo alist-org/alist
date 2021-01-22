@@ -7,12 +7,12 @@ info:
   check_update: true #前端是否显示更新
   script: #自定义脚本,可以是脚本的链接，也可以直接是脚本内容,如document.querySelector('body').style="background-image:url('https://api.mtyqx.cn/api/random.php');background-attachment:fixed"
   autoplay: true #视频是否自动播放
-    preview:
-      url: https://view.alist.nn.ci/onlinePreview?url= #extensions中包含的后缀名预览的地址，默认使用了kkFileView，可以自行搭建
-      pre_process: [base64,encodeURIComponent] #对地址的处理，支持base64,encodeURIComponent,encodeURI
-      extensions: [doc,docx,ppt,pptx,xls,xlsx,pdf] #使用上面的url预览的文件后缀
-      text: [txt,htm,html,xml,java,properties,sql,js,md,json,conf,ini,vue,php,py,bat,gitignore,yml,go,sh,c,cpp,h,hpp] #要预览的文本文件的后缀，可以自行添加
-      max_size: 5242880
+  preview:
+    url: https://view.alist.nn.ci/onlinePreview?url= #extensions中包含的后缀名预览的地址，默认使用了kkFileView，可以自行搭建
+    pre_process: [base64,encodeURIComponent] #对地址的处理，支持base64,encodeURIComponent,encodeURI
+    extensions: [zip,rar,jar,tar,gzip] #使用上面的url预览的文件后缀,这是只是示例
+    text: [txt,htm,html,xml,java,properties,sql,js,md,json,conf,ini,vue,php,py,bat,gitignore,yml,go,sh,c,cpp,h,hpp] #要预览的文本文件的后缀，可以自行添加
+    max_size: 5242880
 server:
   port: "5244" #程序监听端口
   search: true #是否开启搜索接口,开启搜索之后密码和根目录都会失效,所以前端暂时不做搜索
