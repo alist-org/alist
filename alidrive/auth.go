@@ -8,6 +8,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// use token login
 func TokenLogin() (*TokenLoginResp, error) {
 	log.Infof("尝试使用token登录...")
 	url:="https://auth.aliyundrive.com/v2/oauth/token_login"
@@ -29,6 +30,7 @@ func TokenLogin() (*TokenLoginResp, error) {
 	return nil,fmt.Errorf("登录token失效,请更换:%s",tokenLogin.Message)
 }
 
+// get access token
 func GetToken(tokenLogin *TokenLoginResp) (*TokenResp,error) {
 	log.Infof("获取API token...")
 	url:="https://websv.aliyundrive.com/token/get"
@@ -51,6 +53,7 @@ func GetToken(tokenLogin *TokenLoginResp) (*TokenResp,error) {
 	return &token,nil
 }
 
+// refresh access_token token by refresh_token
 func RefreshToken() bool {
 	log.Infof("刷新token...")
 	url:="https://websv.aliyundrive.com/token/refresh"

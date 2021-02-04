@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 )
 
+// determine whether the file exists
 func Exists(name string) bool {
 	if _, err := os.Stat(name); err != nil {
 		if os.IsNotExist(err) {
@@ -17,6 +18,7 @@ func Exists(name string) bool {
 	return true
 }
 
+// 嵌套创建文件
 func CreatNestedFile(path string) (*os.File, error) {
 	basePath := filepath.Dir(path)
 	if !Exists(basePath) {
@@ -29,6 +31,7 @@ func CreatNestedFile(path string) (*os.File, error) {
 	return os.Create(path)
 }
 
+// write struct to yaml file
 func WriteToYml(src string,conf interface{}){
 	data,err := yaml.Marshal(conf)
 	if err!=nil {

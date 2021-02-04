@@ -8,17 +8,19 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// init router
 func InitRouter(engine *gin.Engine) {
 	log.Infof("初始化路由...")
-	engine.Use(CrosHandler())
-	InitApiRouter(engine)
-}
-
-func InitApiRouter(engine *gin.Engine) {
+	engine.Use(CorsHandler())
 	engine.Use(static.Serve("/",static.LocalFile(conf.Conf.Server.Static,false)))
 	engine.NoRoute(func(c *gin.Context) {
 		c.File(conf.Conf.Server.Static+"/index.html")
 	})
+	InitApiRouter(engine)
+}
+
+// init api router
+func InitApiRouter(engine *gin.Engine) {
 	v2:=engine.Group("/api")
 	{
 		v2.GET("/info",controllers.Info)

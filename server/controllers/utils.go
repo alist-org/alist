@@ -5,10 +5,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// handle info request
 func Info(c *gin.Context) {
 	c.JSON(200, DataResponse(conf.Conf.Info))
 }
 
+// handle refresh_cache request
 func RefreshCache(c *gin.Context) {
 	password:=c.Param("password")
 	if conf.Conf.Cache.Enable {

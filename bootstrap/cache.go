@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+// init cache
 func InitCache() {
 	if conf.Conf.Cache.Enable {
 		log.Infof("初始化缓存...")

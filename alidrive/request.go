@@ -12,6 +12,7 @@ import (
 	"time"
 )
 
+// get file
 func GetFile(fileId string) (*File, error) {
 	url:=conf.Conf.AliDrive.ApiUrl+"/file/get"
 	req:=GetReq{
@@ -27,6 +28,7 @@ func GetFile(fileId string) (*File, error) {
 	return &resp,nil
 }
 
+// search by keyword
 func Search(key string,limit int, marker string) (*Files, error) {
 	url:=conf.Conf.AliDrive.ApiUrl+"/file/search"
 	req:=SearchReq{
@@ -46,10 +48,12 @@ func Search(key string,limit int, marker string) (*Files, error) {
 	return &resp,nil
 }
 
+// get root folder
 func GetRoot(limit int,marker string,orderBy string,orderDirection string) (*Files,error) {
 	return GetList(conf.Conf.AliDrive.RootFolder,limit,marker,orderBy,orderDirection)
 }
 
+// get folder list by file_id
 func GetList(parent string,limit int,marker string,orderBy string,orderDirection string) (*Files,error) {
 	url:=conf.Conf.AliDrive.ApiUrl+"/file/list"
 	req:=ListReq{
@@ -71,6 +75,7 @@ func GetList(parent string,limit int,marker string,orderBy string,orderDirection
 	return &resp,nil
 }
 
+// get user info
 func GetUserInfo() (*UserInfo,error) {
 	url:=conf.Conf.AliDrive.ApiUrl+"/user/get"
 	var resp UserInfo
@@ -80,6 +85,7 @@ func GetUserInfo() (*UserInfo,error) {
 	return &resp,nil
 }
 
+// get office preview url and token
 func GetOfficePreviewUrl(fileId string) (*OfficePreviewUrlResp,error) {
 	url:=conf.Conf.AliDrive.ApiUrl+"/file/get_office_preview_url"
 	req:=OfficePreviewUrlReq{
@@ -94,6 +100,7 @@ func GetOfficePreviewUrl(fileId string) (*OfficePreviewUrlResp,error) {
 	return &resp,nil
 }
 
+// convert body to json
 func BodyToJson(url string, req interface{}, resp RespHandle,auth bool) error {
 	if body,err := DoPost(url,req,auth);err!=nil {
 		log.Errorf("doPost出错:%s",err.Error())
@@ -116,6 +123,7 @@ func BodyToJson(url string, req interface{}, resp RespHandle,auth bool) error {
 	return fmt.Errorf(resp.GetMessage())
 }
 
+// do post request
 func DoPost(url string,request interface{},auth bool) (body []byte, err error) {
 	var(
 		resp *http.Response

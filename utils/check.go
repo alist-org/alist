@@ -7,6 +7,7 @@ import (
 	"strings"
 )
 
+// get code from url
 func GetCode(rawUrl string) string {
 	u,err:=url.Parse(rawUrl)
 	if err!=nil {
@@ -17,6 +18,7 @@ func GetCode(rawUrl string) string {
 	return code
 }
 
+// determine whether to include
 func ContainsString(array []string, val string) (index int) {
 	index = -1
 	for i := 0; i < len(array); i++ {
@@ -28,6 +30,7 @@ func ContainsString(array []string, val string) (index int) {
 	return
 }
 
+// compare version
 func VersionCompare(version1, version2 string) int {
 	a := strings.Split(version1, ".")
 	b := strings.Split(version2, ".")

@@ -6,6 +6,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// init aliyun drive
 func InitAliDrive() bool {
 	log.Infof("初始化阿里云盘...")
 	//首先token_login

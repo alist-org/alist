@@ -1,5 +1,6 @@
 package alidrive
 
+// list request bean
 type ListReq struct {
 	DriveId               string `json:"drive_id"`
 	Fields                string `json:"fields"`
@@ -13,6 +14,7 @@ type ListReq struct {
 	VideoThumbnailProcess string `json:"video_thumbnail_process"`
 }
 
+// get request bean
 type GetReq struct {
 	DriveId               string `json:"drive_id"`
 	FileId                string `json:"file_id"`
@@ -20,6 +22,7 @@ type GetReq struct {
 	VideoThumbnailProcess string `json:"video_thumbnail_process"`
 }
 
+// search request bean
 type SearchReq struct {
 	DriveId               string `json:"drive_id"`
 	ImageThumbnailProcess string `json:"image_thumbnail_process"`
@@ -33,18 +36,22 @@ type SearchReq struct {
 	VideoThumbnailProcess string `json:"video_thumbnail_process"`
 }
 
+// token_login request bean
 type TokenLoginReq struct {
 	Token string `json:"token"`
 }
 
+// get_token request bean
 type GetTokenReq struct {
 	Code string `json:"code"`
 }
 
+// refresh_token request bean
 type RefreshTokenReq struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
+// office_preview_url request bean
 type OfficePreviewUrlReq struct {
 	AccessToken string `json:"access_token"`
 	DriveId     string `json:"drive_id"`

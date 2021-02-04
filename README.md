@@ -2,12 +2,12 @@
     <img src="https://img.oez.cc/2020/12/24/1fb16bc25a4f6.png" alt="AList Logo" width=200/>
 </p>
 <p align="center">
-  <a href="https://github.com/Xhofe/alist/releases"><img src="https://img.shields.io/github/release/Xhofe/alist" alt="Release version"></a>
-  <a href="https://github.com/Xhofe/alist/actions?query=workflow%3ABuild"><img src="https://github.com/Xhofe/alist/workflows/build/badge.svg" alt="Build status"></a>
-  <a href="https://github.com/Xhofe/alist/releases"><img src="https://img.shields.io/github/downloads/Xhofe/alist/latest/total" alt="Downloads"></a>
-  <a href="https://github.com/Xhofe/alist/blob/main/LICENSE"><img src="https://img.shields.io/github/license/Xhofe/alist" alt="License"></a>
+  <a href="https://github.com/Xhofe/alist/releases"><img src="https://img.shields.io/github/release/Xhofe/alist?style=flat-square" alt="Release version"></a>
+  <a href="https://github.com/Xhofe/alist/actions?query=workflow%3ABuild"><img src="https://img.shields.io/github/workflow/status/Xhofe/alist/build?style=flat-square" alt="Build status"></a>
+  <a href="https://github.com/Xhofe/alist/releases"><img src="https://img.shields.io/github/downloads/Xhofe/alist/total?style=flat-square" alt="Downloads"></a>
+  <a href="https://github.com/Xhofe/alist/blob/main/LICENSE"><img src="https://img.shields.io/github/license/Xhofe/alist?style=flat-square" alt="License"></a>
   <a href="https://pay.xhofe.top">
-    <img src="https://img.shields.io/badge/%24-donate-ff69b4.svg" alt="donate">
+    <img src="https://img.shields.io/badge/%24-donate-ff69b4.svg?style=flat-square" alt="donate">
   </a>
 </p>
 
@@ -23,7 +23,9 @@
 
 ### 演示地址
 
-- https://alist.nn.ci
+- https://alist.nn.ci (稳定版本)
+- https://alist.now.sh (开发版本)
+- https://alist-plyr.now.sh (plyr分支版本)
 
 ### 预览
 

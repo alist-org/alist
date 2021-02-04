@@ -16,6 +16,7 @@ func init() {
 	flag.StringVar(&conf.Con,"conf","conf.yml","config file")
 }
 
+// bootstrap run
 func Run()  {
 	flag.Parse()
 	if conf.Help {
@@ -29,6 +30,7 @@ func Run()  {
 	start()
 }
 
+// print asc
 func printASC()  {
 	log.Info(`
  ________  ___       ___  ________  _________   
@@ -42,6 +44,7 @@ func printASC()  {
 `)
 }
 
+// start server
 func start() {
 	InitLog()
 	printASC()
@@ -60,6 +63,7 @@ func start() {
 	server()
 }
 
+// start http server
 func server() {
 	baseServer:="0.0.0.0:"+conf.Conf.Server.Port
 	r:=gin.Default()

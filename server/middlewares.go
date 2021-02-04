@@ -7,7 +7,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func CrosHandler() gin.HandlerFunc {
+// handle cors request
+func CorsHandler() gin.HandlerFunc {
 	return func(context *gin.Context) {
 		origin:=context.GetHeader("Origin")
 		// 同源

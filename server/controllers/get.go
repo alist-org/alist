@@ -7,8 +7,8 @@ import (
 	"strings"
 )
 
+// handle get request
 // 因为下载地址有时效，所以去掉了文件请求和直链的缓存
-
 func Get(c *gin.Context) {
 	var get alidrive.GetReq
 	if err := c.ShouldBindJSON(&get); err != nil {

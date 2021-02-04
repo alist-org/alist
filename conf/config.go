@@ -1,5 +1,6 @@
 package conf
 
+// config struct
 type Config struct {
 	Info struct{
 		Title			string		`yaml:"title" json:"title"`

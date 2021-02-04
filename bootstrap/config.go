@@ -9,6 +9,7 @@ import (
 	"strings"
 )
 
+// read config file
 func ReadConf(config string) bool {
 	log.Infof("读取配置文件...")
 	if !utils.Exists(config) {

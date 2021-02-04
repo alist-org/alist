@@ -9,6 +9,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// handle search request
 func Search(c *gin.Context) {
 	if !conf.Conf.Server.Search {
 		c.JSON(200, MetaResponse(403,"Not allow search."))

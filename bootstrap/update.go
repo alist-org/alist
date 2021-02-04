@@ -9,12 +9,14 @@ import (
 	"net/http"
 )
 
+// github release response bean
 type GithubRelease struct {
 	TagName	string `json:"tag_name"`
 	HtmlUrl	string `json:"html_url"`
 	Body	string `json:"body"`
 }
 
+// check updtae
 func CheckUpdate() {
 	log.Infof("检查更新...")
 	url:="https://api.github.com/repos/Xhofe/alist/releases/latest"

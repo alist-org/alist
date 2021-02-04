@@ -6,6 +6,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// handle office_preview request
 func OfficePreview(c *gin.Context) {
 	var req alidrive.OfficePreviewUrlReq
 	if err := c.ShouldBindJSON(&req); err != nil {

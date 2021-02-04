@@ -6,6 +6,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// init logrus
 func InitLog() {
 	if conf.Debug {
 		log.SetLevel(log.DebugLevel)

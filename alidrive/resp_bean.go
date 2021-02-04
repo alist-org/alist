@@ -8,13 +8,15 @@ import (
 	"time"
 )
 
+// response bean methods
 type RespHandle interface {
-	IsAvailable() bool
-	GetCode() string
-	GetMessage() string
-	SetCode(code string)
+	IsAvailable() bool // check available
+	GetCode() string // get err code
+	GetMessage() string // get err message
+	SetCode(code string) // set err code
 }
 
+// common response bean
 type RespError struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
@@ -36,6 +38,7 @@ func (resp *RespError)SetCode(code string) {
 	resp.Code=code
 }
 
+// user_info response bean
 type UserInfo struct {
 	RespError
 	DomainId       string                 `json:"domain_id"`
@@ -54,19 +57,22 @@ type UserInfo struct {
 	UserData       map[string]interface{} `json:"user_data"`
 }
 
+// folder files response bean
 type Files struct {
 	RespError
 	Items      []File `json:"items"`
 	NextMarker string `json:"next_marker"`
-	Readme     string `json:"readme"`
+	Readme     string `json:"readme"` // Deprecated
 	Paths      []Path `json:"paths"`
 }
 
+// path bean
 type Path struct {
 	Name   string `json:"name"`
 	FileId string `json:"file_id"`
 }
 
+// file response bean
 type File struct {
 	RespError
 	DriveId       string     `json:"drive_id"`
@@ -98,11 +104,13 @@ type File struct {
 	Paths []Path `json:"paths"`
 }
 
+// token_login response bean
 type TokenLoginResp struct {
 	RespError
 	Goto string `json:"goto"`
 }
 
+// token response bean
 type TokenResp struct {
 	RespError
 	AccessToken  string `json:"access_token"`
@@ -123,12 +131,14 @@ type TokenResp struct {
 	DeviceId           string        `json:"device_id"`
 }
 
+// office_preview_url response bean
 type OfficePreviewUrlResp struct {
 	RespError
 	PreviewUrl  string `json:"preview_url"`
 	AccessToken string `json:"access_token"`
 }
 
+// check password
 func HasPassword(files *Files) string {
 	fileList := files.Items
 	for i, file := range fileList {
@@ -140,6 +150,7 @@ func HasPassword(files *Files) string {
 	return ""
 }
 
+// Deprecated: check readme, implemented by the front end now
 func HasReadme(files *Files) string {
 	fileList := files.Items
 	for _, file := range fileList {

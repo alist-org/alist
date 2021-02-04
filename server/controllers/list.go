@@ -9,11 +9,13 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// list request bean
 type ListReq struct {
 	Password	string	`json:"password"`
 	alidrive.ListReq
 }
 
+// handle list request
 func List(c *gin.Context) {
 	var list ListReq
 	if err := c.ShouldBindJSON(&list);err!=nil {
@@ -65,7 +67,7 @@ func List(c *gin.Context) {
 		return
 	}
 	files.Paths=*paths
-	files.Readme=alidrive.HasReadme(files)
+	//files.Readme=alidrive.HasReadme(files)
 	if conf.Conf.Cache.Enable {
 		conf.Cache.Set(cacheKey,files,cache.DefaultExpiration)
 	}

@@ -8,10 +8,12 @@ import (
 
 var Cron *cron.Cron
 
+// refresh token func for cron
 func refreshToken()  {
 	alidrive.RefreshToken()
 }
 
+// init cron jobs
 func InitCron() {
 	log.Infof("初始化定时任务:刷新token")
 	Cron=cron.New()
