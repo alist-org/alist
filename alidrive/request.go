@@ -28,6 +28,21 @@ func GetFile(fileId string) (*File, error) {
 	return &resp,nil
 }
 
+// get download_url
+func GetDownLoadUrl(fileId string) (*File, error) {
+	url:=conf.Conf.AliDrive.ApiUrl+"/file/get_download_url"
+	req:=DownloadReq{
+		DriveId:               User.DefaultDriveId,
+		FileId:                fileId,
+		ExpireSec:             14400,
+	}
+	var resp File
+	if err := BodyToJson(url, req, &resp, true); err!=nil {
+		return nil,err
+	}
+	return &resp,nil
+}
+
 // search by keyword
 func Search(key string,limit int, marker string) (*Files, error) {
 	url:=conf.Conf.AliDrive.ApiUrl+"/file/search"

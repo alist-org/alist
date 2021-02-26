@@ -37,6 +37,12 @@ func Get(c *gin.Context) {
 		return
 	}
 	file.Paths=*paths
+	download,err:=alidrive.GetDownLoadUrl(get.FileId)
+	if err!=nil {
+		c.JSON(200, MetaResponse(500,err.Error()))
+		return
+	}
+	file.DownloadUrl=download.Url
 	//if conf.Conf.Cache.Enable {
 	//	conf.Cache.Set(cacheKey,file,cache.DefaultExpiration)
 	//}
@@ -56,7 +62,7 @@ func Down(c *gin.Context) {
 	//		return
 	//	}
 	//}
-	file,err:=alidrive.GetFile(fileId)
+	file,err:=alidrive.GetDownLoadUrl(fileId)
 	if err != nil {
 		c.JSON(200, MetaResponse(500,err.Error()))
 		return
@@ -64,6 +70,6 @@ func Down(c *gin.Context) {
 	//if conf.Conf.Cache.Enable {
 	//	conf.Cache.Set(cacheKey,file.DownloadUrl,cache.DefaultExpiration)
 	//}
-	c.Redirect(301,file.DownloadUrl)
+	c.Redirect(301,file.Url)
 	return
 }
