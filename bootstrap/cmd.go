@@ -14,6 +14,7 @@ func init() {
 	flag.BoolVar(&conf.Help,"help",false,"show usage help")
 	flag.BoolVar(&conf.Version,"version",false,"show version info")
 	flag.StringVar(&conf.Con,"conf","conf.yml","config file")
+	flag.BoolVar(&conf.SkipUpdate,"skip-update",false,"skip update")
 }
 
 // bootstrap run
@@ -48,7 +49,9 @@ func printASC()  {
 func start() {
 	InitLog()
 	printASC()
-	CheckUpdate()
+	if !conf.SkipUpdate {
+		CheckUpdate()
+	}
 	if !ReadConf(conf.Con) {
 		log.Errorf("读取配置文件时出现错误,启动失败.")
 		return

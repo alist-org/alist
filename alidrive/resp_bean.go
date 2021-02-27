@@ -10,9 +10,9 @@ import (
 
 // response bean methods
 type RespHandle interface {
-	IsAvailable() bool // check available
-	GetCode() string // get err code
-	GetMessage() string // get err message
+	IsAvailable() bool   // check available
+	GetCode() string     // get err code
+	GetMessage() string  // get err message
 	SetCode(code string) // set err code
 }
 
@@ -26,16 +26,16 @@ func (resp *RespError) IsAvailable() bool {
 	return resp.Code == ""
 }
 
-func (resp *RespError)GetCode() string {
+func (resp *RespError) GetCode() string {
 	return resp.Code
 }
 
-func (resp *RespError)GetMessage() string {
+func (resp *RespError) GetMessage() string {
 	return resp.Message
 }
 
-func (resp *RespError)SetCode(code string) {
-	resp.Code=code
+func (resp *RespError) SetCode(code string) {
+	resp.Code = code
 }
 
 // user_info response bean
@@ -102,6 +102,18 @@ type File struct {
 	ImageMediaMetadata map[string]interface{} `json:"image_media_metadata"`
 
 	Paths []Path `json:"paths"`
+}
+
+type DownloadResp struct {
+	RespError
+	Expiration string `json:"expiration"`
+	Method     string `json:"method"`
+	Size       int64  `json:"size"`
+	Url        string `json:"url"`
+	//RateLimit struct{
+	//	PartSize int `json:"part_size"`
+	//	PartSpeed int `json:"part_speed"`
+	//} `json:"rate_limit"`//rate limit
 }
 
 // token_login response bean

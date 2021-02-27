@@ -27,6 +27,7 @@ type DownloadReq struct {
 	DriveId               string `json:"drive_id"`
 	FileId                string `json:"file_id"`
 	ExpireSec             int    `json:"expire_sec"`
+	FileName			  string `json:"file_name"`
 }
 
 // search request bean

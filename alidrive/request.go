@@ -29,14 +29,14 @@ func GetFile(fileId string) (*File, error) {
 }
 
 // get download_url
-func GetDownLoadUrl(fileId string) (*File, error) {
+func GetDownLoadUrl(fileId string) (*DownloadResp, error) {
 	url:=conf.Conf.AliDrive.ApiUrl+"/file/get_download_url"
 	req:=DownloadReq{
 		DriveId:               User.DefaultDriveId,
 		FileId:                fileId,
 		ExpireSec:             14400,
 	}
-	var resp File
+	var resp DownloadResp
 	if err := BodyToJson(url, req, &resp, true); err!=nil {
 		return nil,err
 	}
