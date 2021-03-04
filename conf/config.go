@@ -40,4 +40,14 @@ type Config struct {
 		RefreshToken	string		`yaml:"refresh_token"`
 		MaxFilesCount	int			`yaml:"max_files_count"`
 	}	`yaml:"ali_drive"`
+	Database struct{
+		Type        string	`yaml:"type"`
+		User        string	`yaml:"user"`
+		Password    string	`yaml:"password"`
+		Host        string	`yaml:"host"`
+		Port        int		`yaml:"port"`
+		Name        string	`yaml:"name"`
+		TablePrefix string	`yaml:"tablePrefix"`
+		DBFile      string	`yaml:"dBFile"`
+	}	`yaml:"database"`
 }

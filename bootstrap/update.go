@@ -16,7 +16,7 @@ type GithubRelease struct {
 	Body	string `json:"body"`
 }
 
-// check updtae
+// check update
 func CheckUpdate() {
 	log.Infof("检查更新...")
 	url:="https://api.github.com/repos/Xhofe/alist/releases/latest"
