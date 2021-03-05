@@ -1,9 +1,10 @@
-package controllers
+package v1
 
 import (
 	"fmt"
 	"github.com/Xhofe/alist/alidrive"
 	"github.com/Xhofe/alist/conf"
+	"github.com/Xhofe/alist/server/controllers"
 	"github.com/gin-gonic/gin"
 	"github.com/patrickmn/go-cache"
 	log "github.com/sirupsen/logrus"
@@ -12,12 +13,12 @@ import (
 // handle search request
 func Search(c *gin.Context) {
 	if !conf.Conf.Server.Search {
-		c.JSON(200, MetaResponse(403,"Not allow search."))
+		c.JSON(200, controllers.MetaResponse(403,"Not allow search."))
 		return
 	}
 	var search alidrive.SearchReq
 	if err := c.ShouldBindJSON(&search); err != nil {
-		c.JSON(200, MetaResponse(400,"Bad Request"))
+		c.JSON(200, controllers.MetaResponse(400,"Bad Request"))
 		return
 	}
 	log.Debugf("search:%+v",search)
@@ -27,7 +28,7 @@ func Search(c *gin.Context) {
 		files,exist:=conf.Cache.Get(cacheKey)
 		if exist {
 			log.Debugf("使用了缓存:%s",cacheKey)
-			c.JSON(200, DataResponse(files))
+			c.JSON(200, controllers.DataResponse(files))
 			return
 		}
 	}
@@ -40,11 +41,11 @@ func Search(c *gin.Context) {
 	//}
 	files,err:=alidrive.Search(search.Query,search.Limit,search.OrderBy)
 	if err != nil {
-		c.JSON(200, MetaResponse(500,err.Error()))
+		c.JSON(200, controllers.MetaResponse(500,err.Error()))
 		return
 	}
 	if conf.Conf.Cache.Enable {
 		conf.Cache.Set(cacheKey,files,cache.DefaultExpiration)
 	}
-	c.JSON(200, DataResponse(files))
+	c.JSON(200, controllers.DataResponse(files))
 }

@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"github.com/Xhofe/alist/conf"
+	"github.com/Xhofe/alist/server/models"
 	"github.com/gin-gonic/gin"
 )
 
@@ -23,5 +24,19 @@ func RefreshCache(c *gin.Context) {
 		return
 	}
 	c.JSON(200, MetaResponse(400,"disabled cache."))
+	return
+}
+
+// rebuild tree
+func RebuildTree(c *gin.Context) {
+	if err:=models.Clear();err!=nil{
+		c.JSON(200,MetaResponse(500,err.Error()))
+		return
+	}
+	if err:=models.BuildTree();err!=nil {
+		c.JSON(200,MetaResponse(500,err.Error()))
+		return
+	}
+	c.JSON(200,MetaResponse(200,"success."))
 	return
 }

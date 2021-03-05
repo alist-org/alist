@@ -3,6 +3,8 @@ package server
 import (
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/server/controllers"
+	"github.com/Xhofe/alist/server/controllers/v1"
+	v2 "github.com/Xhofe/alist/server/controllers/v2"
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
@@ -21,14 +23,21 @@ func InitRouter(engine *gin.Engine) {
 
 // init api router
 func InitApiRouter(engine *gin.Engine) {
-	v2:=engine.Group("/api")
+	apiV1 :=engine.Group("/api/v1")
 	{
-		v2.GET("/info",controllers.Info)
-		v2.POST("/get",controllers.Get)
-		v2.POST("/list",controllers.List)
-		v2.POST("/search",controllers.Search)
-		v2.POST("/office_preview",controllers.OfficePreview)
+		apiV1.GET("/info",controllers.Info)
+		apiV1.POST("/get", v1.Get)
+		apiV1.POST("/list", v1.List)
+		apiV1.POST("/search", v1.Search)
+		apiV1.POST("/office_preview", v1.OfficePreview)
+		apiV1.GET("/d/*file_id", v1.Down)
 	}
-	engine.GET("/d/*file_id",controllers.Down)
+	apiV2:=engine.Group("/api")
+	{
+		apiV2.POST("/list",v2.List)
+		apiV2.POST("/get",v2.Get)
+	}
+	engine.GET("/d/*file",v2.Down)
 	engine.GET("/cache/:password",controllers.RefreshCache)
+	engine.GET("/rebuild",controllers.RebuildTree)
 }
