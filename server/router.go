@@ -14,30 +14,30 @@ import (
 func InitRouter(engine *gin.Engine) {
 	log.Infof("初始化路由...")
 	engine.Use(CorsHandler())
-	engine.Use(static.Serve("/",static.LocalFile(conf.Conf.Server.Static,false)))
+	engine.Use(static.Serve("/", static.LocalFile(conf.Conf.Server.Static, false)))
 	engine.NoRoute(func(c *gin.Context) {
-		c.File(conf.Conf.Server.Static+"/index.html")
+		c.File(conf.Conf.Server.Static + "/index.html")
 	})
 	InitApiRouter(engine)
 }
 
 // init api router
 func InitApiRouter(engine *gin.Engine) {
-	apiV1 :=engine.Group("/api/v1")
+	apiV1 := engine.Group("/api/v1")
 	{
-		apiV1.GET("/info",controllers.Info)
+		apiV1.GET("/info", controllers.Info)
 		apiV1.POST("/get", v1.Get)
 		apiV1.POST("/list", v1.List)
 		apiV1.POST("/search", v1.Search)
 		apiV1.POST("/office_preview", v1.OfficePreview)
 		apiV1.GET("/d/*file_id", v1.Down)
 	}
-	apiV2:=engine.Group("/api")
+	apiV2 := engine.Group("/api")
 	{
-		apiV2.POST("/list",v2.List)
-		apiV2.POST("/get",v2.Get)
+		apiV2.POST("/list", v2.List)
+		apiV2.POST("/get", v2.Get)
 	}
-	engine.GET("/d/*file",v2.Down)
-	engine.GET("/cache/:password",controllers.RefreshCache)
-	engine.GET("/rebuild",controllers.RebuildTree)
+	engine.GET("/d/*file", v2.Down)
+	engine.GET("/cache/:password", controllers.RefreshCache)
+	engine.GET("/rebuild", controllers.RebuildTree)
 }

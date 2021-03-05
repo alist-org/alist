@@ -13,10 +13,10 @@ import (
 func Get(c *gin.Context) {
 	var get alidrive.GetReq
 	if err := c.ShouldBindJSON(&get); err != nil {
-		c.JSON(200, controllers.MetaResponse(400,"Bad Request"))
+		c.JSON(200, controllers.MetaResponse(400, "Bad Request"))
 		return
 	}
-	log.Debugf("get:%+v",get)
+	log.Debugf("get:%+v", get)
 	// cache
 	//cacheKey:=fmt.Sprintf("%s-%s","g",get.FileId)
 	//if conf.Conf.Cache.Enable {
@@ -27,23 +27,23 @@ func Get(c *gin.Context) {
 	//		return
 	//	}
 	//}
-	file,err:=alidrive.GetFile(get.FileId)
-	if err !=nil {
-		c.JSON(200, controllers.MetaResponse(500,err.Error()))
+	file, err := alidrive.GetFile(get.FileId)
+	if err != nil {
+		c.JSON(200, controllers.MetaResponse(500, err.Error()))
 		return
 	}
-	paths,err:=alidrive.GetPaths(get.FileId)
-	if err!=nil {
-		c.JSON(200, controllers.MetaResponse(500,err.Error()))
+	paths, err := alidrive.GetPaths(get.FileId)
+	if err != nil {
+		c.JSON(200, controllers.MetaResponse(500, err.Error()))
 		return
 	}
-	file.Paths=*paths
-	download,err:=alidrive.GetDownLoadUrl(get.FileId)
-	if err!=nil {
-		c.JSON(200, controllers.MetaResponse(500,err.Error()))
+	file.Paths = *paths
+	download, err := alidrive.GetDownLoadUrl(get.FileId)
+	if err != nil {
+		c.JSON(200, controllers.MetaResponse(500, err.Error()))
 		return
 	}
-	file.DownloadUrl=download.Url
+	file.DownloadUrl = download.Url
 	//if conf.Conf.Cache.Enable {
 	//	conf.Cache.Set(cacheKey,file,cache.DefaultExpiration)
 	//}
@@ -51,9 +51,9 @@ func Get(c *gin.Context) {
 }
 
 func Down(c *gin.Context) {
-	fileIdParam:=c.Param("file_id")
-	log.Debugf("down:%s",fileIdParam)
-	fileId:=strings.Split(fileIdParam,"/")[1]
+	fileIdParam := c.Param("file_id")
+	log.Debugf("down:%s", fileIdParam)
+	fileId := strings.Split(fileIdParam, "/")[1]
 	//cacheKey:=fmt.Sprintf("%s-%s","d",fileId)
 	//if conf.Conf.Cache.Enable {
 	//	downloadUrl,exist:=conf.Cache.Get(cacheKey)
@@ -63,14 +63,14 @@ func Down(c *gin.Context) {
 	//		return
 	//	}
 	//}
-	file,err:=alidrive.GetDownLoadUrl(fileId)
+	file, err := alidrive.GetDownLoadUrl(fileId)
 	if err != nil {
-		c.JSON(200, controllers.MetaResponse(500,err.Error()))
+		c.JSON(200, controllers.MetaResponse(500, err.Error()))
 		return
 	}
 	//if conf.Conf.Cache.Enable {
 	//	conf.Cache.Set(cacheKey,file.DownloadUrl,cache.DefaultExpiration)
 	//}
-	c.Redirect(301,file.Url)
+	c.Redirect(301, file.Url)
 	return
 }

@@ -9,12 +9,12 @@ import (
 
 // get code from url
 func GetCode(rawUrl string) string {
-	u,err:=url.Parse(rawUrl)
-	if err!=nil {
-		log.Errorf("解析url出错:%s",err.Error())
+	u, err := url.Parse(rawUrl)
+	if err != nil {
+		log.Errorf("解析url出错:%s", err.Error())
 		return ""
 	}
-	code:=u.Query().Get("code")
+	code := u.Query().Get("code")
 	return code
 }
 
@@ -48,7 +48,7 @@ func VersionCompare(version1, version2 string) int {
 			return 1 * flag
 		}
 	}
-	for _, v:= range b[len(a):] {
+	for _, v := range b[len(a):] {
 		y, _ := strconv.Atoi(v)
 		if y > 0 {
 			return -1 * flag

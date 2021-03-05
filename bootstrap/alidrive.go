@@ -11,27 +11,27 @@ func InitAliDrive() bool {
 	log.Infof("初始化阿里云盘...")
 	//首先token_login
 	if conf.Conf.AliDrive.RefreshToken == "" {
-		tokenLogin,err:=alidrive.TokenLogin()
-		if err!=nil {
-			log.Errorf("登录失败:%s",err.Error())
+		tokenLogin, err := alidrive.TokenLogin()
+		if err != nil {
+			log.Errorf("登录失败:%s", err.Error())
 			return false
 		}
 		//然后get_token
-		token,err:=alidrive.GetToken(tokenLogin)
-		if err!=nil {
+		token, err := alidrive.GetToken(tokenLogin)
+		if err != nil {
 			return false
 		}
-		conf.Authorization=token.TokenType+"\t"+token.AccessToken
-	}else {
-		conf.Authorization=conf.Bearer+conf.Conf.AliDrive.AccessToken
+		conf.Authorization = token.TokenType + "\t" + token.AccessToken
+	} else {
+		conf.Authorization = conf.Bearer + conf.Conf.AliDrive.AccessToken
 	}
-	log.Debugf("token:%s",conf.Authorization)
-	user,err:=alidrive.GetUserInfo()
+	log.Debugf("token:%s", conf.Authorization)
+	user, err := alidrive.GetUserInfo()
 	if err != nil {
-		log.Errorf("初始化用户失败:%s",err.Error())
+		log.Errorf("初始化用户失败:%s", err.Error())
 		return false
 	}
-	log.Infof("当前用户信息:%+v",user)
-	alidrive.User=user
+	log.Infof("当前用户信息:%+v", user)
+	alidrive.User = user
 	return true
 }

@@ -23,8 +23,8 @@ func Get(c *gin.Context) {
 		return
 	}
 	log.Debugf("list:%+v", get)
-	path,name:=filepath.Split(get.File)
-	file, err := models.GetFileByParentPathAndName(path,name)
+	dir, name := filepath.Split(get.File)
+	file, err := models.GetFileByParentPathAndName(dir, name)
 	if err != nil {
 		c.JSON(200, controllers.MetaResponse(500, err.Error()))
 		return
@@ -34,19 +34,19 @@ func Get(c *gin.Context) {
 
 // handle download request
 func Down(c *gin.Context) {
-	filePath:=c.Param("file")
-	log.Debugf("down:%s",filePath)
-	path,name:=filepath.Split(filePath)
-	fileModel, err := models.GetFileByParentPathAndName(path,name)
+	filePath := c.Param("file")
+	log.Debugf("down:%s", filePath)
+	dir, name := filepath.Split(filePath)
+	fileModel, err := models.GetFileByParentPathAndName(dir, name)
 	if err != nil {
 		c.JSON(200, controllers.MetaResponse(500, err.Error()))
 		return
 	}
-	file,err:=alidrive.GetDownLoadUrl(fileModel.FileId)
+	file, err := alidrive.GetDownLoadUrl(fileModel.FileId)
 	if err != nil {
-		c.JSON(200, controllers.MetaResponse(500,err.Error()))
+		c.JSON(200, controllers.MetaResponse(500, err.Error()))
 		return
 	}
-	c.Redirect(301,file.Url)
+	c.Redirect(301, file.Url)
 	return
 }

@@ -32,13 +32,13 @@ func CreatNestedFile(path string) (*os.File, error) {
 }
 
 // write struct to yaml file
-func WriteToYml(src string,conf interface{}){
-	data,err := yaml.Marshal(conf)
-	if err!=nil {
-		log.Errorf("Conf转[]byte失败:%s",err.Error())
+func WriteToYml(src string, conf interface{}) {
+	data, err := yaml.Marshal(conf)
+	if err != nil {
+		log.Errorf("Conf转[]byte失败:%s", err.Error())
 	}
-	err = ioutil.WriteFile(src,data,0777)
-	if err!=nil {
-		log.Errorf("写yml文件失败",err.Error())
+	err = ioutil.WriteFile(src, data, 0777)
+	if err != nil {
+		log.Errorf("写yml文件失败", err.Error())
 	}
 }

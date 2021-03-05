@@ -17,31 +17,31 @@ func setup() {
 }
 
 func TestGetUserInfo(t *testing.T) {
-	user,err:= alidrive.GetUserInfo()
+	user, err := alidrive.GetUserInfo()
 	fmt.Println(err)
 	fmt.Println(user)
 }
 
 func TestGetRoot(t *testing.T) {
-	files,err:=alidrive.GetRoot(50,"",conf.OrderUpdatedAt,conf.DESC)
+	files, err := alidrive.GetRoot(50, "", conf.OrderUpdatedAt, conf.DESC)
 	fmt.Println(err)
 	fmt.Println(files)
 }
 
 func TestSearch(t *testing.T) {
-	files,err:=alidrive.Search("测试文件",50,"")
+	files, err := alidrive.Search("测试文件", 50, "")
 	fmt.Println(err)
 	fmt.Println(files)
 }
 
 func TestGet(t *testing.T) {
-	file,err:=alidrive.GetFile("5fb7c80e85e4f335cd344008be1b1b5349f74414")
+	file, err := alidrive.GetFile("5fb7c80e85e4f335cd344008be1b1b5349f74414")
 	fmt.Println(err)
 	fmt.Println(file)
 }
 
 func TestMain(m *testing.M) {
 	setup()
-	code:=m.Run()
+	code := m.Run()
 	os.Exit(code)
 }

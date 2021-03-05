@@ -14,5 +14,5 @@ func TestStr(t *testing.T) {
 
 func TestWriteYml(t *testing.T) {
 	alidrive.RefreshToken()
-	utils.WriteToYml("../conf.yml",conf.Conf)
+	utils.WriteToYml("../conf.yml", conf.Conf)
 }

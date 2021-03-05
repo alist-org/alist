@@ -11,6 +11,6 @@ import (
 func InitCache() {
 	if conf.Conf.Cache.Enable {
 		log.Infof("初始化缓存...")
-		conf.Cache=cache.New(time.Duration(conf.Conf.Cache.Expiration)*time.Minute,time.Duration(conf.Conf.Cache.CleanupInterval)*time.Minute)
+		conf.Cache = cache.New(time.Duration(conf.Conf.Cache.Expiration)*time.Minute, time.Duration(conf.Conf.Cache.CleanupInterval)*time.Minute)
 	}
 }

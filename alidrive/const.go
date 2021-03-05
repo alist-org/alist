@@ -1,5 +1,5 @@
 package alidrive
 
 var (
-	User	*UserInfo
+	User *UserInfo
 )

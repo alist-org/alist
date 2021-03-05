@@ -7,7 +7,7 @@ import (
 )
 
 // init request client
-func InitClient()  {
+func InitClient() {
 	log.Infof("初始化client...")
-	conf.Client=&http.Client{}
+	conf.Client = &http.Client{}
 }

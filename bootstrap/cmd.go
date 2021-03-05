@@ -10,29 +10,29 @@ import (
 )
 
 func init() {
-	flag.BoolVar(&conf.Debug,"debug",false,"use debug mode")
-	flag.BoolVar(&conf.Help,"help",false,"show usage help")
-	flag.BoolVar(&conf.Version,"version",false,"show version info")
-	flag.StringVar(&conf.Con,"conf","conf.yml","config file")
-	flag.BoolVar(&conf.SkipUpdate,"skip-update",false,"skip update")
+	flag.BoolVar(&conf.Debug, "debug", false, "use debug mode")
+	flag.BoolVar(&conf.Help, "help", false, "show usage help")
+	flag.BoolVar(&conf.Version, "version", false, "show version info")
+	flag.StringVar(&conf.Con, "conf", "conf.yml", "config file")
+	flag.BoolVar(&conf.SkipUpdate, "skip-update", false, "skip update")
 }
 
 // bootstrap run
-func Run()  {
+func Run() {
 	flag.Parse()
 	if conf.Help {
 		flag.Usage()
 		return
 	}
 	if conf.Version {
-		fmt.Println("Current version:"+conf.VERSION)
+		fmt.Println("Current version:" + conf.VERSION)
 		return
 	}
 	start()
 }
 
 // print asc
-func printASC()  {
+func printASC() {
 	log.Info(`
  ________  ___       ___  ________  _________   
 |\   __  \|\  \     |\  \|\   ____\|\___   ___\ 
@@ -72,12 +72,12 @@ func start() {
 
 // start http server
 func server() {
-	baseServer:="0.0.0.0:"+conf.Conf.Server.Port
-	r:=gin.Default()
+	baseServer := "0.0.0.0:" + conf.Conf.Server.Port
+	r := gin.Default()
 	serv.InitRouter(r)
-	log.Infof("Starting server @ %s",baseServer)
-	err:=r.Run(baseServer)
-	if err!=nil {
-		log.Errorf("Server failed start:%s",err.Error())
+	log.Infof("Starting server @ %s", baseServer)
+	err := r.Run(baseServer)
+	if err != nil {
+		log.Errorf("Server failed start:%s", err.Error())
 	}
 }
