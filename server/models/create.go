@@ -6,6 +6,7 @@ import (
 	"github.com/Xhofe/alist/conf"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
+	"strings"
 )
 
 // build tree
@@ -20,19 +21,29 @@ func BuildTree() error {
 	if err := tx.Error; err != nil {
 		return err
 	}
-	if err := BuildOne(conf.Conf.AliDrive.RootFolder, "/root/", tx); err != nil {
+	if err := BuildOne(conf.Conf.AliDrive.RootFolder, "/root/", tx, ""); err != nil {
 		tx.Rollback()
 		return err
 	}
 	return tx.Commit().Error
 }
 
-func BuildOne(parent string, path string, tx *gorm.DB) error {
+func BuildOne(parent string, path string, tx *gorm.DB, parentPassword string) error {
 	files, err := alidrive.GetList(parent, conf.Conf.AliDrive.MaxFilesCount, "", "", "")
 	if err != nil {
 		return err
 	}
 	for _, file := range files.Items {
+		name := file.Name
+		if strings.HasSuffix(name, ".hide") {
+			continue
+		}
+		password := parentPassword
+		if strings.Contains(name, ".password-") {
+			index := strings.Index(name, ".password-")
+			name = file.Name[:index]
+			password = file.Name[index+10:]
+		}
 		newFile := File{
 			ParentPath:    path,
 			FileExtension: file.FileExtension,
@@ -43,13 +54,14 @@ func BuildOne(parent string, path string, tx *gorm.DB) error {
 			Category:      file.Category,
 			ContentType:   file.ContentType,
 			Size:          file.Size,
+			Password:      password,
 		}
 		log.Debugf("插入file:%+v", newFile)
 		if err := tx.Create(&newFile).Error; err != nil {
 			return err
 		}
 		if file.Type == "folder" {
-			if err := BuildOne(file.FileId, fmt.Sprintf("%s%s/", path, file.Name), tx); err != nil {
+			if err := BuildOne(file.FileId, fmt.Sprintf("%s%s/", path, file.Name), tx, password); err != nil {
 				return err
 			}
 		}
