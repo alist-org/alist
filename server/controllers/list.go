@@ -9,7 +9,7 @@ import (
 
 // list request bean
 type ListReq struct {
-	Path     string `json:"path"`
+	Path     string `json:"path" binding:"required"`
 	Password string `json:"password"`
 }
 
@@ -17,7 +17,7 @@ type ListReq struct {
 func List(c *gin.Context) {
 	var list ListReq
 	if err := c.ShouldBindJSON(&list); err != nil {
-		c.JSON(200, MetaResponse(400, "Bad Request."))
+		c.JSON(200, MetaResponse(400, "Bad Request:"+err.Error()))
 		return
 	}
 	log.Debugf("list:%+v", list)
@@ -43,6 +43,10 @@ func List(c *gin.Context) {
 		return
 	}
 	files, err := models.GetFilesByParentPath(list.Path + "/")
+	// delete password
+	for i, _ := range *files {
+		(*files)[i].Password = ""
+	}
 	if err != nil {
 		c.JSON(200, MetaResponse(500, err.Error()))
 		return

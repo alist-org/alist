@@ -6,11 +6,15 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+type OfficePreviewReq struct {
+	FileId string `json:"file_id" binding:"required"`
+}
+
 // handle office_preview request
 func OfficePreview(c *gin.Context) {
-	var req alidrive.OfficePreviewUrlReq
+	var req OfficePreviewReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(200, MetaResponse(400, "Bad Request"))
+		c.JSON(200, MetaResponse(400, "Bad Request:"+err.Error()))
 		return
 	}
 	log.Debugf("preview_req:%+v", req)

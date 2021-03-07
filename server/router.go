@@ -27,6 +27,8 @@ func InitApiRouter(engine *gin.Engine) {
 		apiV2.POST("/list", controllers.List)
 		apiV2.POST("/get", controllers.Get)
 		apiV2.POST("/office_preview", controllers.OfficePreview)
+		apiV2.POST("/local_search", controllers.LocalSearch)
+		apiV2.POST("/global_search", controllers.GlobalSearch)
 	}
 	engine.GET("/d/*file", controllers.Down)
 	engine.GET("/rebuild", controllers.RebuildTree)

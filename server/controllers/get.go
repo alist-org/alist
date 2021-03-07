@@ -10,7 +10,7 @@ import (
 
 // get request bean
 type GetReq struct {
-	File     string `json:"file"`
+	File     string `json:"file" binding:"required"`
 	Password string `json:"password"`
 }
 
@@ -18,7 +18,7 @@ type GetReq struct {
 func Get(c *gin.Context) {
 	var get GetReq
 	if err := c.ShouldBindJSON(&get); err != nil {
-		c.JSON(200, MetaResponse(400, "Bad Request."))
+		c.JSON(200, MetaResponse(400, "Bad Request:"+err.Error()))
 		return
 	}
 	log.Debugf("list:%+v", get)
