@@ -1,7 +1,6 @@
 package conf
 
 import (
-	"github.com/patrickmn/go-cache"
 	"gorm.io/gorm"
 	"net/http"
 )
@@ -15,8 +14,6 @@ var (
 
 	Client        *http.Client // request client
 	Authorization string       // authorization string
-
-	Cache *cache.Cache // cache
 
 	DB *gorm.DB
 

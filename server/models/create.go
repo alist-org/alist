@@ -21,6 +21,16 @@ func BuildTree() error {
 	if err := tx.Error; err != nil {
 		return err
 	}
+	rootFile := File{
+		ParentPath: "/",
+		FileId:     conf.Conf.AliDrive.RootFolder,
+		Name:       "root",
+		Type:       "folder",
+	}
+	if err := tx.Create(&rootFile).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
 	if err := BuildOne(conf.Conf.AliDrive.RootFolder, "/root/", tx, ""); err != nil {
 		tx.Rollback()
 		return err
@@ -48,7 +58,7 @@ func BuildOne(parent string, path string, tx *gorm.DB, parentPassword string) er
 			ParentPath:    path,
 			FileExtension: file.FileExtension,
 			FileId:        file.FileId,
-			Name:          file.Name,
+			Name:          name,
 			Type:          file.Type,
 			UpdatedAt:     file.UpdatedAt,
 			Category:      file.Category,

@@ -25,12 +25,6 @@ type Config struct {
 		Static  string `yaml:"static"`
 		SiteUrl string `yaml:"site_url" json:"site_url"` //网站url
 	} `yaml:"server"`
-	Cache struct {
-		Enable          bool   `yaml:"enable"`
-		Expiration      int    `yaml:"expiration"`
-		CleanupInterval int    `yaml:"cleanup_interval"`
-		RefreshPassword string `yaml:"refresh_password"`
-	}
 	AliDrive struct {
 		ApiUrl     string `yaml:"api_url"`     //阿里云盘api
 		RootFolder string `yaml:"root_folder"` //根目录id
