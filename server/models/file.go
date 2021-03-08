@@ -7,7 +7,7 @@ import (
 )
 
 type File struct {
-	ParentPath    string     `json:"parent_path" gorm:"index"`
+	Dir           string     `json:"dir" gorm:"index"`
 	FileExtension string     `json:"file_extension"`
 	FileId        string     `json:"file_id"`
 	Name          string     `json:"name" gorm:"index"`
@@ -27,17 +27,17 @@ func Clear() error {
 	return conf.DB.Where("1 = 1").Delete(&File{}).Error
 }
 
-func GetFileByParentPathAndName(parentPath, name string) (*File, error) {
+func GetFileByDirAndName(dir, name string) (*File, error) {
 	var file File
-	if err := conf.DB.Where("parent_path = ? AND name = ?", parentPath, name).First(&file).Error; err != nil {
+	if err := conf.DB.Where("dir = ? AND name = ?", dir, name).First(&file).Error; err != nil {
 		return nil, err
 	}
 	return &file, nil
 }
 
-func GetFilesByParentPath(parentPath string) (*[]File, error) {
+func GetFilesByDir(dir string) (*[]File, error) {
 	var files []File
-	if err := conf.DB.Where("parent_path = ?", parentPath).Find(&files).Error; err != nil {
+	if err := conf.DB.Where("dir = ?", dir).Find(&files).Error; err != nil {
 		return nil, err
 	}
 	return &files, nil
@@ -45,15 +45,15 @@ func GetFilesByParentPath(parentPath string) (*[]File, error) {
 
 func SearchByNameGlobal(keyword string) (*[]File, error) {
 	var files []File
-	if err := conf.DB.Where("name LIKE ?", fmt.Sprintf("%%%s%%", keyword)).Find(&files).Error; err != nil {
+	if err := conf.DB.Where("name LIKE ? AND password = ''", fmt.Sprintf("%%%s%%", keyword)).Find(&files).Error; err != nil {
 		return nil, err
 	}
 	return &files, nil
 }
 
-func SearchByNameInPath(keyword string, parentPath string) (*[]File, error) {
+func SearchByNameInDir(keyword string, dir string) (*[]File, error) {
 	var files []File
-	if err := conf.DB.Where("parent_path LIKE ? AND name LIKE ?", fmt.Sprintf("%s%%", parentPath), fmt.Sprintf("%%%s%%", keyword)).Find(&files).Error; err != nil {
+	if err := conf.DB.Where("dir LIKE ? AND name LIKE ? AND password = ''", fmt.Sprintf("%s%%", dir), fmt.Sprintf("%%%s%%", keyword)).Find(&files).Error; err != nil {
 		return nil, err
 	}
 	return &files, nil

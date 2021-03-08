@@ -7,6 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"strings"
 )
 
 func InitModel() bool {
@@ -14,6 +15,10 @@ func InitModel() bool {
 	switch conf.Conf.Database.Type {
 	case "sqlite3":
 		{
+			if !(strings.HasSuffix(conf.Conf.Database.DBFile, ".db") && len(conf.Conf.Database.DBFile) > 3) {
+				log.Errorf("db名称不正确.")
+				return false
+			}
 			needMigrate := !utils.Exists(conf.Conf.Database.DBFile)
 			db, err := gorm.Open(sqlite.Open(conf.Conf.Database.DBFile), &gorm.Config{})
 			if err != nil {

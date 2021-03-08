@@ -22,6 +22,6 @@ func TestPassword(t *testing.T) {
 }
 
 func TestDir(t *testing.T) {
-	dir,file:=filepath.Split("/root/")
+	dir,file:=filepath.Split("root")
 	fmt.Printf("dir:%s\nfile:%s\n",dir,file)
 }

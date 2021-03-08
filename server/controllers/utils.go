@@ -13,6 +13,15 @@ func Info(c *gin.Context) {
 
 // rebuild tree
 func RebuildTree(c *gin.Context) {
+	password := c.Param("password")[1:]
+	if password != conf.Conf.Server.Password {
+		if password == "" {
+			c.JSON(200, MetaResponse(401, "need password."))
+			return
+		}
+		c.JSON(200, MetaResponse(401, "wrong password."))
+		return
+	}
 	if err := models.Clear(); err != nil {
 		c.JSON(200, MetaResponse(500, err.Error()))
 		return
