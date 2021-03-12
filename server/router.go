@@ -24,11 +24,12 @@ func InitApiRouter(engine *gin.Engine) {
 	apiV2 := engine.Group("/api")
 	{
 		apiV2.GET("/info", controllers.Info)
+		apiV2.POST("/get", controllers.Get)
 		apiV2.POST("/path", controllers.Path)
 		apiV2.POST("/office_preview", controllers.OfficePreview)
 		apiV2.POST("/local_search", controllers.LocalSearch)
 		apiV2.POST("/global_search", controllers.GlobalSearch)
+		apiV2.GET("/rebuild/*password", controllers.RebuildTree)
 	}
 	engine.GET("/d/*path", controllers.Down)
-	engine.GET("/rebuild/*password", controllers.RebuildTree)
 }

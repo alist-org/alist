@@ -17,6 +17,7 @@ type File struct {
 	ContentType   string     `json:"content_type"`
 	Size          int64      `json:"size"`
 	Password      string     `json:"password"`
+	Url           string     `json:"url" gorm:"-"`
 }
 
 func (file *File) Create() error {
