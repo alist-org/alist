@@ -71,7 +71,7 @@ func BuildOne(parent string, path string, tx *gorm.DB, parentPassword string) er
 			return err
 		}
 		if file.Type == "folder" {
-			if err := BuildOne(file.FileId, fmt.Sprintf("%s%s/", path, file.Name), tx, password); err != nil {
+			if err := BuildOne(file.FileId, fmt.Sprintf("%s%s/", path, name), tx, password); err != nil {
 				return err
 			}
 		}
