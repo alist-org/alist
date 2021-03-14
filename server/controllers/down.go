@@ -3,6 +3,7 @@ package controllers
 import (
 	"github.com/Xhofe/alist/alidrive"
 	"github.com/Xhofe/alist/server/models"
+	"github.com/Xhofe/alist/utils"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"path/filepath"
@@ -31,7 +32,7 @@ func Down(c *gin.Context) {
 		c.JSON(200, MetaResponse(500, err.Error()))
 		return
 	}
-	if fileModel.Password != "" && fileModel.Password != down.Password {
+	if fileModel.Password != "" && fileModel.Password != utils.Get16MD5Encode(down.Password) {
 		if down.Password == "" {
 			c.JSON(200, MetaResponse(401, "need password."))
 		} else {

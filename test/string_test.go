@@ -2,6 +2,7 @@ package test
 
 import (
 	"fmt"
+	"github.com/Xhofe/alist/utils"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -24,4 +25,8 @@ func TestPassword(t *testing.T) {
 func TestDir(t *testing.T) {
 	dir,file:=filepath.Split("root")
 	fmt.Printf("dir:%s\nfile:%s\n",dir,file)
+}
+
+func TestMD5(t *testing.T) {
+	fmt.Printf("%s\n", utils.Get16MD5Encode("123456"))
 }
