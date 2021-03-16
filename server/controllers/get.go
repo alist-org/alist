@@ -3,9 +3,11 @@ package controllers
 import (
 	"github.com/Xhofe/alist/alidrive"
 	"github.com/Xhofe/alist/server/models"
+	"github.com/Xhofe/alist/utils"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"path/filepath"
+	"strings"
 )
 
 // get request bean
@@ -40,7 +42,12 @@ func Get(c *gin.Context) {
 		}
 		return
 	}
-	down, err := alidrive.GetDownLoadUrl(file.FileId)
+	drive := utils.GetDriveByName(strings.Split(dir,"/")[0])
+	if drive == nil {
+		c.JSON(200, MetaResponse(500, "找不到drive."))
+		return
+	}
+	down, err := alidrive.GetDownLoadUrl(file.FileId, drive)
 	if err != nil {
 		c.JSON(200, MetaResponse(500, err.Error()))
 		return

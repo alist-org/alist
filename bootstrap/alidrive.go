@@ -10,28 +10,24 @@ import (
 func InitAliDrive() bool {
 	log.Infof("初始化阿里云盘...")
 	//首先token_login
-	if conf.Conf.AliDrive.RefreshToken == "" {
-		tokenLogin, err := alidrive.TokenLogin()
-		if err != nil {
-			log.Errorf("登录失败:%s", err.Error())
-			return false
-		}
-		//然后get_token
-		token, err := alidrive.GetToken(tokenLogin)
-		if err != nil {
-			return false
-		}
-		conf.Authorization = token.TokenType + "\t" + token.AccessToken
-	} else {
-		conf.Authorization = conf.Bearer + conf.Conf.AliDrive.AccessToken
+	res := alidrive.RefreshTokenAll()
+	if res != "" {
+		log.Errorf("盘[%s]refresh_token失效,请检查", res)
 	}
-	log.Debugf("token:%s", conf.Authorization)
-	user, err := alidrive.GetUserInfo()
+	log.Debugf("config:%+v", conf.Conf)
+	for i, _ := range conf.Conf.AliDrive.Drives {
+		InitDriveId(&conf.Conf.AliDrive.Drives[i])
+	}
+	return true
+}
+
+func InitDriveId(drive *conf.Drive) bool {
+	user, err := alidrive.GetUserInfo(drive)
 	if err != nil {
-		log.Errorf("初始化用户失败:%s", err.Error())
+		log.Errorf("初始化盘[%s]失败:%s", drive.Name, err.Error())
 		return false
 	}
-	log.Infof("当前用户信息:%+v", user)
-	alidrive.User = user
+	drive.DefaultDriveId = user.DefaultDriveId
+	log.Infof("初始化盘[%s]成功:%+v", drive.Name, user)
 	return true
 }

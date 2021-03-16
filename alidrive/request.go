@@ -13,41 +13,41 @@ import (
 )
 
 // get file
-func GetFile(fileId string) (*File, error) {
+func GetFile(fileId string, drive *conf.Drive) (*File, error) {
 	url := conf.Conf.AliDrive.ApiUrl + "/file/get"
 	req := GetReq{
-		DriveId:               User.DefaultDriveId,
+		DriveId:               drive.DefaultDriveId,
 		FileId:                fileId,
 		ImageThumbnailProcess: conf.ImageThumbnailProcess,
 		VideoThumbnailProcess: conf.VideoThumbnailProcess,
 	}
 	var resp File
-	if err := BodyToJson(url, req, &resp, true); err != nil {
+	if err := BodyToJson(url, req, &resp, drive); err != nil {
 		return nil, err
 	}
 	return &resp, nil
 }
 
 // get download_url
-func GetDownLoadUrl(fileId string) (*DownloadResp, error) {
+func GetDownLoadUrl(fileId string, drive *conf.Drive) (*DownloadResp, error) {
 	url := conf.Conf.AliDrive.ApiUrl + "/file/get_download_url"
 	req := DownloadReq{
-		DriveId:   User.DefaultDriveId,
+		DriveId:   drive.DefaultDriveId,
 		FileId:    fileId,
 		ExpireSec: 14400,
 	}
 	var resp DownloadResp
-	if err := BodyToJson(url, req, &resp, true); err != nil {
+	if err := BodyToJson(url, req, &resp, drive); err != nil {
 		return nil, err
 	}
 	return &resp, nil
 }
 
 // search by keyword
-func Search(key string, limit int, marker string) (*Files, error) {
+func Search(key string, limit int, marker string, drive *conf.Drive) (*Files, error) {
 	url := conf.Conf.AliDrive.ApiUrl + "/file/search"
 	req := SearchReq{
-		DriveId:               User.DefaultDriveId,
+		DriveId:               drive.DefaultDriveId,
 		ImageThumbnailProcess: conf.ImageThumbnailProcess,
 		ImageUrlProcess:       conf.ImageUrlProcess,
 		Limit:                 limit,
@@ -57,22 +57,22 @@ func Search(key string, limit int, marker string) (*Files, error) {
 		VideoThumbnailProcess: conf.VideoThumbnailProcess,
 	}
 	var resp Files
-	if err := BodyToJson(url, req, &resp, true); err != nil {
+	if err := BodyToJson(url, req, &resp, drive); err != nil {
 		return nil, err
 	}
 	return &resp, nil
 }
 
 // get root folder
-func GetRoot(limit int, marker string, orderBy string, orderDirection string) (*Files, error) {
-	return GetList(conf.Conf.AliDrive.RootFolder, limit, marker, orderBy, orderDirection)
+func GetRoot(limit int, marker string, orderBy string, orderDirection string, drive *conf.Drive) (*Files, error) {
+	return GetList(drive.RootFolder, limit, marker, orderBy, orderDirection, drive)
 }
 
 // get folder list by file_id
-func GetList(parent string, limit int, marker string, orderBy string, orderDirection string) (*Files, error) {
+func GetList(parent string, limit int, marker string, orderBy string, orderDirection string, drive *conf.Drive) (*Files, error) {
 	url := conf.Conf.AliDrive.ApiUrl + "/file/list"
 	req := ListReq{
-		DriveId:               User.DefaultDriveId,
+		DriveId:               drive.DefaultDriveId,
 		Fields:                "*",
 		ImageThumbnailProcess: conf.ImageThumbnailProcess,
 		ImageUrlProcess:       conf.ImageUrlProcess,
@@ -84,40 +84,40 @@ func GetList(parent string, limit int, marker string, orderBy string, orderDirec
 		VideoThumbnailProcess: conf.VideoThumbnailProcess,
 	}
 	var resp Files
-	if err := BodyToJson(url, req, &resp, true); err != nil {
+	if err := BodyToJson(url, req, &resp, drive); err != nil {
 		return nil, err
 	}
 	return &resp, nil
 }
 
 // get user info
-func GetUserInfo() (*UserInfo, error) {
+func GetUserInfo(drive *conf.Drive) (*UserInfo, error) {
 	url := conf.Conf.AliDrive.ApiUrl + "/user/get"
 	var resp UserInfo
-	if err := BodyToJson(url, map[string]interface{}{}, &resp, true); err != nil {
+	if err := BodyToJson(url, map[string]interface{}{}, &resp, drive); err != nil {
 		return nil, err
 	}
 	return &resp, nil
 }
 
 // get office preview url and token
-func GetOfficePreviewUrl(fileId string) (*OfficePreviewUrlResp, error) {
+func GetOfficePreviewUrl(fileId string, drive *conf.Drive) (*OfficePreviewUrlResp, error) {
 	url := conf.Conf.AliDrive.ApiUrl + "/file/get_office_preview_url"
 	req := OfficePreviewUrlReq{
-		AccessToken: conf.Conf.AliDrive.AccessToken,
-		DriveId:     User.DefaultDriveId,
+		AccessToken: drive.AccessToken,
+		DriveId:     drive.DefaultDriveId,
 		FileId:      fileId,
 	}
 	var resp OfficePreviewUrlResp
-	if err := BodyToJson(url, req, &resp, true); err != nil {
+	if err := BodyToJson(url, req, &resp, drive); err != nil {
 		return nil, err
 	}
 	return &resp, nil
 }
 
 // convert body to json
-func BodyToJson(url string, req interface{}, resp RespHandle, auth bool) error {
-	if body, err := DoPost(url, req, auth); err != nil {
+func BodyToJson(url string, req interface{}, resp RespHandle, drive *conf.Drive) error {
+	if body, err := DoPost(url, req, drive.AccessToken); err != nil {
 		log.Errorf("doPost出错:%s", err.Error())
 		return err
 	} else {
@@ -131,15 +131,15 @@ func BodyToJson(url string, req interface{}, resp RespHandle, auth bool) error {
 	}
 	if resp.GetCode() == conf.AccessTokenInvalid {
 		resp.SetCode("")
-		if RefreshToken() {
-			return BodyToJson(url, req, resp, auth)
+		if RefreshToken(drive) {
+			return BodyToJson(url, req, resp, drive)
 		}
 	}
 	return fmt.Errorf(resp.GetMessage())
 }
 
 // do post request
-func DoPost(url string, request interface{}, auth bool) (body []byte, err error) {
+func DoPost(url string, request interface{}, auth string) (body []byte, err error) {
 	var (
 		resp *http.Response
 	)
@@ -154,8 +154,8 @@ func DoPost(url string, request interface{}, auth bool) (body []byte, err error)
 		log.Errorf("创建request出错:%s", err.Error())
 		return
 	}
-	if auth {
-		req.Header.Set("authorization", conf.Authorization)
+	if auth != "" {
+		req.Header.Set("authorization", conf.Bearer + auth)
 	}
 	req.Header.Add("content-type", "application/json")
 	req.Header.Add("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36")
@@ -180,25 +180,4 @@ func DoPost(url string, request interface{}, auth bool) (body []byte, err error)
 	}
 	log.Debugf("请求返回信息:%s", string(body))
 	return
-}
-
-func GetPaths(fileId string) (*[]Path, error) {
-	paths := make([]Path, 0)
-	for fileId != conf.Conf.AliDrive.RootFolder && fileId != "root" {
-		file, err := GetFile(fileId)
-		if err != nil {
-			log.Errorf("获取path出错:%s", err.Error())
-			return nil, err
-		}
-		paths = append(paths, Path{
-			Name:   file.Name,
-			FileId: file.FileId,
-		})
-		fileId = file.ParentFileId
-	}
-	paths = append(paths, Path{
-		Name:   "Root",
-		FileId: "root",
-	})
-	return &paths, nil
 }

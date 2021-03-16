@@ -10,7 +10,7 @@ var Cron *cron.Cron
 
 // refresh token func for cron
 func refreshToken() {
-	alidrive.RefreshToken()
+	alidrive.RefreshTokenAll()
 }
 
 // init cron jobs

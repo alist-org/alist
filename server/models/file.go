@@ -24,8 +24,8 @@ func (file *File) Create() error {
 	return conf.DB.Create(file).Error
 }
 
-func Clear() error {
-	return conf.DB.Where("1 = 1").Delete(&File{}).Error
+func Clear(drive *conf.Drive) error {
+	return conf.DB.Where("dir like ?", fmt.Sprintf("%s%%", drive.Name)).Delete(&File{}).Error
 }
 
 func GetFileByDirAndName(dir, name string) (*File, error) {

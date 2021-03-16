@@ -9,11 +9,10 @@ var (
 	Debug      bool   // is debug command
 	Help       bool   // is help command
 	Version    bool   // is print version command
-	Con        string // config file
+	ConfigFile string // config file
 	SkipUpdate bool   // skip update
 
 	Client        *http.Client // request client
-	Authorization string       // authorization string
 
 	DB *gorm.DB
 

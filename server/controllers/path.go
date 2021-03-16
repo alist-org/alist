@@ -55,7 +55,11 @@ func Path(c *gin.Context) {
 	}
 	// delete password
 	for i, _ := range *files {
-		(*files)[i].Password = ""
+		if (*files)[i].Password == "" {
+			(*files)[i].Password = "n"
+		}else {
+			(*files)[i].Password = "y"
+		}
 	}
 	c.JSON(200, DataResponse(files))
 }

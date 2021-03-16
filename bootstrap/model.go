@@ -33,9 +33,7 @@ func InitModel() bool {
 					log.Errorf("数据库迁移失败:%s", err.Error())
 					return false
 				}
-				if err := models.BuildTree(); err != nil {
-					log.Errorf("构建目录树失败:%s", err.Error())
-				}
+				models.BuildTreeAll()
 			}
 			return true
 		}

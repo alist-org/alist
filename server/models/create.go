@@ -9,8 +9,18 @@ import (
 	"strings"
 )
 
+func BuildTreeAll() {
+	for i, _ := range conf.Conf.AliDrive.Drives {
+		if err := BuildTree(&conf.Conf.AliDrive.Drives[i]); err != nil {
+			log.Errorf("盘[%s]构建目录树失败:%s", err.Error())
+		}else {
+			log.Infof("盘[%s]构建目录树成功")
+		}
+	}
+}
+
 // build tree
-func BuildTree() error {
+func BuildTree(drive *conf.Drive) error {
 	log.Infof("开始构建目录树...")
 	tx := conf.DB.Begin()
 	defer func() {
@@ -22,24 +32,25 @@ func BuildTree() error {
 		return err
 	}
 	rootFile := File{
-		Dir:    "",
-		FileId: conf.Conf.AliDrive.RootFolder,
-		Name:   "root",
-		Type:   "folder",
+		Dir:      "",
+		FileId:   drive.RootFolder,
+		Name:     drive.Name,
+		Type:     "folder",
+		Password: drive.Password,
 	}
 	if err := tx.Create(&rootFile).Error; err != nil {
 		tx.Rollback()
 		return err
 	}
-	if err := BuildOne(conf.Conf.AliDrive.RootFolder, "root/", tx, ""); err != nil {
+	if err := BuildOne(drive.RootFolder, drive.Name+"/", tx, drive.Password, drive); err != nil {
 		tx.Rollback()
 		return err
 	}
 	return tx.Commit().Error
 }
 
-func BuildOne(parent string, path string, tx *gorm.DB, parentPassword string) error {
-	files, err := alidrive.GetList(parent, conf.Conf.AliDrive.MaxFilesCount, "", "", "")
+func BuildOne(parent string, path string, tx *gorm.DB, parentPassword string, drive *conf.Drive) error {
+	files, err := alidrive.GetList(parent, conf.Conf.AliDrive.MaxFilesCount, "", "", "", drive)
 	if err != nil {
 		return err
 	}
@@ -71,7 +82,7 @@ func BuildOne(parent string, path string, tx *gorm.DB, parentPassword string) er
 			return err
 		}
 		if file.Type == "folder" {
-			if err := BuildOne(file.FileId, fmt.Sprintf("%s%s/", path, name), tx, password); err != nil {
+			if err := BuildOne(file.FileId, fmt.Sprintf("%s%s/", path, name), tx, password, drive); err != nil {
 				return err
 			}
 		}

@@ -3,6 +3,7 @@ package controllers
 import (
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/server/models"
+	"github.com/Xhofe/alist/utils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -13,7 +14,12 @@ func Info(c *gin.Context) {
 
 // rebuild tree
 func RebuildTree(c *gin.Context) {
-	password := c.Param("password")[1:]
+	drive := utils.GetDriveByName(c.Param("drive"))
+	if drive == nil {
+		c.JSON(200, MetaResponse(400, "drive isn't exist."))
+		return
+	}
+	password := c.Param("password")
 	if password != conf.Conf.Server.Password {
 		if password == "" {
 			c.JSON(200, MetaResponse(401, "need password."))
@@ -22,11 +28,11 @@ func RebuildTree(c *gin.Context) {
 		c.JSON(200, MetaResponse(401, "wrong password."))
 		return
 	}
-	if err := models.Clear(); err != nil {
+	if err := models.Clear(drive); err != nil {
 		c.JSON(200, MetaResponse(500, err.Error()))
 		return
 	}
-	if err := models.BuildTree(); err != nil {
+	if err := models.BuildTree(drive); err != nil {
 		c.JSON(200, MetaResponse(500, err.Error()))
 		return
 	}

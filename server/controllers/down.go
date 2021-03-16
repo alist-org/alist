@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"path/filepath"
+	"strings"
 )
 
 type DownReq struct {
@@ -44,7 +45,12 @@ func Down(c *gin.Context) {
 		c.JSON(200, MetaResponse(406, "无法下载目录."))
 		return
 	}
-	file, err := alidrive.GetDownLoadUrl(fileModel.FileId)
+	drive := utils.GetDriveByName(strings.Split(dir,"/")[0])
+	if drive == nil {
+		c.JSON(200, MetaResponse(500, "找不到drive."))
+		return
+	}
+	file, err := alidrive.GetDownLoadUrl(fileModel.FileId, drive)
 	if err != nil {
 		c.JSON(200, MetaResponse(500, err.Error()))
 		return

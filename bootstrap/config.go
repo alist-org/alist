@@ -27,6 +27,7 @@ func ReadConf(config string) bool {
 		return false
 	}
 	log.Debugf("config:%+v", conf.Conf)
+	conf.Conf.Info.Roots = utils.GetNames()
 	conf.Origins = strings.Split(conf.Conf.Server.SiteUrl, ",")
 	return true
 }
