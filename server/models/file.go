@@ -25,6 +25,9 @@ func (file *File) Create() error {
 }
 
 func Clear(drive *conf.Drive) error {
+	if err := conf.DB.Where("dir = '' AND name = ?", drive.Name).Delete(&File{}).Error; err != nil {
+		return err
+	}
 	return conf.DB.Where("dir like ?", fmt.Sprintf("%s%%", drive.Name)).Delete(&File{}).Error
 }
 
