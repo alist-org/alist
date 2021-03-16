@@ -32,7 +32,7 @@ func Down(c *gin.Context) {
 		c.JSON(200, MetaResponse(500, err.Error()))
 		return
 	}
-	if fileModel.Password != "" && fileModel.Password != utils.Get16MD5Encode(down.Password) {
+	if fileModel.Password != "" && down.Password != utils.Get16MD5Encode(fileModel.Password) {
 		if down.Password == "" {
 			c.JSON(200, MetaResponse(401, "need password."))
 		} else {
