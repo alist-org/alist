@@ -12,7 +12,7 @@ var (
 	ConfigFile string // config file
 	SkipUpdate bool   // skip update
 
-	Client        *http.Client // request client
+	Client *http.Client // request client
 
 	DB *gorm.DB
 

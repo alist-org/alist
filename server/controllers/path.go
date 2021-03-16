@@ -44,6 +44,11 @@ func Path(c *gin.Context) {
 	}
 	// file
 	if file.Type == "file" {
+		if file.Password == "" {
+			file.Password = "n"
+		} else {
+			file.Password = "y"
+		}
 		c.JSON(200, DataResponse(file))
 		return
 	}
@@ -57,7 +62,7 @@ func Path(c *gin.Context) {
 	for i, _ := range *files {
 		if (*files)[i].Password == "" {
 			(*files)[i].Password = "n"
-		}else {
+		} else {
 			(*files)[i].Password = "y"
 		}
 	}

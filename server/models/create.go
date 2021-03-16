@@ -13,7 +13,7 @@ func BuildTreeAll() {
 	for i, _ := range conf.Conf.AliDrive.Drives {
 		if err := BuildTree(&conf.Conf.AliDrive.Drives[i]); err != nil {
 			log.Errorf("盘[%s]构建目录树失败:%s", err.Error())
-		}else {
+		} else {
 			log.Infof("盘[%s]构建目录树成功")
 		}
 	}

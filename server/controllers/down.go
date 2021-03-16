@@ -45,7 +45,7 @@ func Down(c *gin.Context) {
 		c.JSON(200, MetaResponse(406, "无法下载目录."))
 		return
 	}
-	drive := utils.GetDriveByName(strings.Split(dir,"/")[0])
+	drive := utils.GetDriveByName(strings.Split(dir, "/")[0])
 	if drive == nil {
 		c.JSON(200, MetaResponse(500, "找不到drive."))
 		return
