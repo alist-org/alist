@@ -18,13 +18,9 @@ jobs:
         with:
           go-version: ${{ matrix.go-version }}
 
-      - name: Extract tag name
-        id: tag
-        uses: actions/github-script@0.2.0
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            return context.payload.ref.replace(/\/refs\/tags\//, '');
+      - name: Get version
+        id: get_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
 
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
@@ -53,10 +49,10 @@ jobs:
 
       - name: compress
         run: |
-          tar -czvf alist_linux_amd64.tar.gz linux_amd64/alist
-          tar -czvf alist_linux_arm64.tar.gz linux_arm64/alist
-          tar -czvf alist_linux_arm.tar.gz linux_arm/alist
-          zip alist_windows_amd64.zip windows_amd64/alist.exe
+          tar -czvf alist_linux_amd64.tar.gz linux_amd64/alist conf.yml.example
+          tar -czvf alist_linux_arm64.tar.gz linux_arm64/alist conf.yml.example
+          tar -czvf alist_linux_arm.tar.gz linux_arm/alist conf.yml.example
+          zip alist_windows_amd64.zip windows_amd64/alist.exe conf.yml.example
 
       - name: Build Changelog
         id: github_release
@@ -84,7 +80,7 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: alist_linux_amd64.tar.gz
-          asset_name: alist_${{ steps.tag.outputs.result }}_linux_amd64.tar.gz
+          asset_name: alist_${{ steps.get_version.outputs.VERSION }}_linux_amd64.tar.gz
           asset_content_type: application/gzip
 
       - name: Upload alist_linux_arm64
@@ -95,7 +91,7 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: alist_linux_arm64.tar.gz
-          asset_name: alist_${{ steps.tag.outputs.result }}_linux_arm64.tar.gz
+          asset_name: alist_${{ steps.get_version.outputs.VERSION }}_linux_arm64.tar.gz
           asset_content_type: application/gzip
 
       - name: Upload alist_linux_arm
@@ -106,7 +102,7 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: alist_linux_arm.tar.gz
-          asset_name: alist_${{ steps.tag.outputs.result }}_linux_arm.tar.gz
+          asset_name: alist_${{ steps.get_version.outputs.VERSION }}_linux_arm.tar.gz
           asset_content_type: application/gzip
 
       - name: Upload alist_windows_amd64
@@ -117,5 +113,5 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: alist_windows_amd64.zip
-          asset_name: alist_${{ steps.tag.outputs.result }}_windows_amd64.zip
+          asset_name: alist_${{ steps.get_version.outputs.VERSION }}_windows_amd64.zip
           asset_content_type: application/zip
