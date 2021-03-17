@@ -53,9 +53,9 @@ jobs:
 
       - name: compress
         run: |
-          tar -czvf alist_linux_amd64.tar.gz linux_amd64/dist
-          tar -czvf alist_linux_arm64.tar.gz linux_arm64/dist
-          tar -czvf alist_linux_arm.tar.gz linux_arm/dist
+          tar -czvf alist_linux_amd64.tar.gz linux_amd64/alist
+          tar -czvf alist_linux_arm64.tar.gz linux_arm64/alist
+          tar -czvf alist_linux_arm.tar.gz linux_arm/alist
           zip alist_windows_amd64.zip windows_amd64/alist.exe
 
       - name: Build Changelog
