@@ -5,24 +5,117 @@ on:
       - '*'
 
 jobs:
-  goreleaser:
-    runs-on: ubuntu-latest
+  release:
+    strategy:
+      matrix:
+        platform: [ ubuntu-16.04 ]
+        go-version: [ 1.15 ]
+    name: Build
+    runs-on: ${{ matrix.platform }}
     steps:
-      -
-        name: Checkout
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-      -
-        name: Set up Go
+      - name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.15
-      -
-        name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v2
+          go-version: ${{ matrix.go-version }}
+
+      - name: Extract tag name
+        id: tag
+        uses: actions/github-script@0.2.0
         with:
-          version: latest
-          args: release --rm-dist
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            return context.payload.ref.replace(/\/refs\/tags\//, '');
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+
+      - name: Get dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install gcc-mingw-w64-x86-64
+          sudo apt-get -y install gcc-arm-linux-gnueabihf libc6-dev-armhf-cross
+          sudo apt-get -y install gcc-aarch64-linux-gnu libc6-dev-arm64-cross
+          go get -v -t -d ./...
+          if [ -f Gopkg.toml ]; then
+              curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+              dep ensure
+          fi
+
+      - name: Build linux
+        run: |
+          CC=gcc CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -o linux_amd64/alist alist.go
+          CC=aarch64-linux-gnu-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm64 go build -o linux_arm64/alist alist.go
+          CC=arm-linux-gnueabihf-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm go build -o linux_arm/alist alist.go
+
+      - name: Build windows
+        run: |
+          CC=x86_64-w64-mingw32-gcc CGO_ENABLED=1 GOOS=windows GOARCH=amd64 go build -o windows_amd64/alist.exe alist.go
+
+      - name: compress
+        run: |
+          tar -czvf alist_linux_amd64.tar.gz linux_amd64/dist
+          tar -czvf alist_linux_arm64.tar.gz linux_arm64/dist
+          tar -czvf alist_linux_arm.tar.gz linux_arm/dist
+          zip alist_windows_amd64.zip windows_amd64/alist.exe
+
+      - name: Build Changelog
+        id: github_release
+        uses: mikepenz/release-changelog-builder-action@main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body: ${{steps.github_release.outputs.changelog}}
+          draft: false
+          prerelease: false
+
+      - name: Upload alist_linux_amd64
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: alist_linux_amd64.tar.gz
+          asset_name: alist_${{ steps.tag.outputs.result }}_linux_amd64.tar.gz
+          asset_content_type: application/gzip
+
+      - name: Upload alist_linux_arm64
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: alist_linux_arm64.tar.gz
+          asset_name: alist_${{ steps.tag.outputs.result }}_linux_arm64.tar.gz
+          asset_content_type: application/gzip
+
+      - name: Upload alist_linux_arm
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: alist_linux_arm.tar.gz
+          asset_name: alist_${{ steps.tag.outputs.result }}_linux_arm.tar.gz
+          asset_content_type: application/gzip
+
+      - name: Upload alist_windows_amd64
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: alist_windows_amd64.zip
+          asset_name: alist_${{ steps.tag.outputs.result }}_windows_amd64.zip
+          asset_content_type: application/zip
