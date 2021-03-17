@@ -77,7 +77,7 @@ jobs:
           prerelease: false
 
       - name: Upload alist_linux_amd64
-        id: upload-release-asset
+        id: upload-release-linux-amd64
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -88,7 +88,7 @@ jobs:
           asset_content_type: application/gzip
 
       - name: Upload alist_linux_arm64
-        id: upload-release-asset
+        id: upload-release-linux-arm64
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -99,7 +99,7 @@ jobs:
           asset_content_type: application/gzip
 
       - name: Upload alist_linux_arm
-        id: upload-release-asset
+        id: upload-release-linux-arm
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -110,7 +110,7 @@ jobs:
           asset_content_type: application/gzip
 
       - name: Upload alist_windows_amd64
-        id: upload-release-asset
+        id: upload-release-windows-amd64
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
