@@ -31,6 +31,7 @@ type Config struct {
 		} `yaml:"preview" json:"preview"`
 	} `yaml:"info"`
 	Server struct {
+		Address  string `yaml:"address"`
 		Port     string `yaml:"port"`   //端口
 		Search   bool   `yaml:"search"` //允许搜索
 		Static   string `yaml:"static"`

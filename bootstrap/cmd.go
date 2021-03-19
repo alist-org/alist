@@ -3,6 +3,7 @@ package bootstrap
 import (
 	"flag"
 	"fmt"
+
 	"github.com/Xhofe/alist/conf"
 	serv "github.com/Xhofe/alist/server"
 	"github.com/gin-gonic/gin"
@@ -71,7 +72,7 @@ func start() {
 
 // start http server
 func server() {
-	baseServer := "0.0.0.0:" + conf.Conf.Server.Port
+	baseServer := conf.Conf.Server.Address + ":" + conf.Conf.Server.Port
 	r := gin.Default()
 	serv.InitRouter(r)
 	log.Infof("Starting server @ %s", baseServer)
