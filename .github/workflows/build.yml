@@ -31,6 +31,7 @@ jobs:
           sudo apt-get -y install gcc-mingw-w64-x86-64
           sudo apt-get -y install gcc-arm-linux-gnueabihf libc6-dev-armhf-cross
           sudo apt-get -y install gcc-aarch64-linux-gnu libc6-dev-arm64-cross
+          sudo apt-get -y install libc6-dev-i386
           go get -v -t -d ./...
           if [ -f Gopkg.toml ]; then
               curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
