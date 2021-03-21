@@ -31,7 +31,6 @@ jobs:
           sudo apt-get -y install gcc-mingw-w64-x86-64
           sudo apt-get -y install gcc-arm-linux-gnueabihf libc6-dev-armhf-cross
           sudo apt-get -y install gcc-aarch64-linux-gnu libc6-dev-arm64-cross
-          sudo apt-get -y install libc6-dev-i386
           go get -v -t -d ./...
           if [ -f Gopkg.toml ]; then
               curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
@@ -42,11 +41,15 @@ jobs:
           CC=gcc CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -o alist_linux_amd64 alist.go
           CC=aarch64-linux-gnu-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm64 go build -o alist_linux_arm64 alist.go
           CC=arm-linux-gnueabihf-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm go build -o alist_linux_arm alist.go
-          CC=gcc CGO_ENABLED=1 GOOS=linux GOARCH=386 go build -o alist_linux_386 alist.go
 
       - name: Build windows
         run: |
           CC=x86_64-w64-mingw32-gcc CGO_ENABLED=1 GOOS=windows GOARCH=amd64 go build -o alist_windows_amd64.exe alist.go
+
+      - name: Build linux_386
+        run: |
+          sudo apt-get -y install libc6-dev-i386
+          CC=gcc CGO_ENABLED=1 GOOS=linux GOARCH=386 go build -o alist_linux_386 alist.go
 
       - name: Upload artifacts linux_amd64
         uses: actions/upload-artifact@v2
@@ -71,6 +74,7 @@ jobs:
         with:
           name: alist_windows_amd64
           path: alist_windows_amd64.exe
+      
       - name: Upload artifacts linux_386
         uses: actions/upload-artifact@v2
         with:
