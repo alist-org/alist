@@ -41,6 +41,7 @@ jobs:
           CC=gcc CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -o alist_linux_amd64 alist.go
           CC=aarch64-linux-gnu-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm64 go build -o alist_linux_arm64 alist.go
           CC=arm-linux-gnueabihf-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm go build -o alist_linux_arm alist.go
+          CC=gcc CGO_ENABLED=1 GOOS=linux GOARCH=386 go build -o alist_linux_386 alist.go
 
       - name: Build windows
         run: |
@@ -69,3 +70,8 @@ jobs:
         with:
           name: alist_windows_amd64
           path: alist_windows_amd64.exe
+      - name: Upload artifacts linux_386
+        uses: actions/upload-artifact@v2
+        with:
+          name: alist_linux_386
+          path: alist_linux_386
