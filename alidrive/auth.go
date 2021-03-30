@@ -10,8 +10,8 @@ import (
 // refresh access_token token by refresh_token
 func RefreshToken(drive *conf.Drive) bool {
 	log.Infof("刷新[%s]token...", drive.Name)
-	url := "https://websv.aliyundrive.com/token/refresh"
-	req := RefreshTokenReq{RefreshToken: drive.RefreshToken}
+	url := "https://auth.aliyundrive.com/v2/account/token"
+	req := RefreshTokenReq{RefreshToken: drive.RefreshToken , GrantType: "refresh_token"}
 	var token TokenResp
 	if body, err := DoPost(url, req, ""); err != nil {
 		log.Errorf("tokenLogin-doPost出错:%s", err.Error())
