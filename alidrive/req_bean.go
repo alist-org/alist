@@ -57,6 +57,7 @@ type GetTokenReq struct {
 // refresh_token request bean
 type RefreshTokenReq struct {
 	RefreshToken string `json:"refresh_token"`
+	GrantType    string `json:"grant_type"`
 }
 
 // office_preview_url request bean
