@@ -23,6 +23,10 @@ func RefreshToken(drive *conf.Drive) bool {
 			return false
 		}
 	}
+	if token.Code != "" {
+		log.Errorf("盘[%s]刷新token出错：%s", drive.Name, token.Message)
+		return false
+	}
 	//刷新成功 更新token
 	drive.AccessToken = token.AccessToken
 	drive.RefreshToken = token.RefreshToken
