@@ -47,11 +47,17 @@ jobs:
         run: |
           CC=x86_64-w64-mingw32-gcc CGO_ENABLED=1 GOOS=windows GOARCH=amd64 go build -o windows_amd64/alist.exe alist.go
 
+      - name: Build linux_386
+        run: |
+          sudo apt-get -y install libc6-dev-i386
+          CC=gcc CGO_ENABLED=1 GOOS=linux GOARCH=386 go build -o linux_386/alist alist.go
+
       - name: compress
         run: |
           tar -czvf alist_linux_amd64.tar.gz linux_amd64/alist conf.yml.example
           tar -czvf alist_linux_arm64.tar.gz linux_arm64/alist conf.yml.example
           tar -czvf alist_linux_arm.tar.gz linux_arm/alist conf.yml.example
+          tar -czvf alist_linux_386.tar.gz linux_386/alist conf.yml.example
           zip alist_windows_amd64.zip windows_amd64/alist.exe conf.yml.example
 
       - name: Build Changelog
@@ -103,6 +109,17 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: alist_linux_arm.tar.gz
           asset_name: alist_${{ steps.get_version.outputs.VERSION }}_linux_arm.tar.gz
+          asset_content_type: application/gzip
+
+      - name: Upload alist_linux_386
+        id: upload-release-linux-386
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: alist_linux_386.tar.gz
+          asset_name: alist_${{ steps.get_version.outputs.VERSION }}_linux_386.tar.gz
           asset_content_type: application/gzip
 
       - name: Upload alist_windows_amd64
