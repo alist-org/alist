@@ -1,0 +1,22 @@
+version: "3"
+services: 
+    alist:  
+        image: zy84338719/alist:amd64
+        container_name: alist_server
+        restart: always
+        volumes:
+            - "$PWD/conf.yml:/app/conf.yml:rw"
+            - "$PWD/web:/app/dist:rw"
+        ports:
+            - '5244:5244'
+        networks:
+            - app_alist
+
+networks:
+    # 配置docker network
+    app_alist:
+        driver: bridge
+        ipam:
+            config:
+                # 子网络
+                - subnet: 10.254.0.0/24
