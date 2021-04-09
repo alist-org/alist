@@ -1,6 +1,7 @@
 package bootstrap
 
 import (
+	"crypto/tls"
 	"github.com/Xhofe/alist/conf"
 	log "github.com/sirupsen/logrus"
 	"net/http"
@@ -9,5 +10,8 @@ import (
 // init request client
 func InitClient() {
 	log.Infof("初始化client...")
-	conf.Client = &http.Client{}
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	conf.Client = &http.Client{Transport: tr}
 }
