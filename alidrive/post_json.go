@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"strings"
 	"time"
+	"crypto/tls"
 )
 
 // convert body to json
@@ -61,8 +62,13 @@ func DoPost(url string, request interface{}, auth string) (body []byte, err erro
 	req.Header.Add("Accept-Language", "zh-CN,zh;q=0.8,en-US;q=0.5,en;q=0.3")
 	req.Header.Add("Connection", "keep-alive")
 
+	tr := &http.Transport{
+        	TLSClientConfig:    &tls.Config{InsecureSkipVerify: true},
+    	}
+    	client := &http.Client{Transport: tr}
+	
 	for retryCount := 3; retryCount >= 0; retryCount-- {
-		if resp, err = conf.Client.Do(req); err != nil && strings.Contains(err.Error(), "timeout") {
+		if resp, err = client.Do(req); err != nil && strings.Contains(err.Error(), "timeout") {
 			<-time.After(time.Second)
 		} else {
 			break
