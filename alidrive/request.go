@@ -114,6 +114,7 @@ func GetVideoPreviewUrl(fileId string, drive *conf.Drive) (*VideoPreviewUrlResp,
 	req := VideoPreviewUrlReq{
 		DriveId:     drive.DefaultDriveId,
 		FileId:      fileId,
+		ExpireSec: 14400,
 	}
 	var resp VideoPreviewUrlResp
 	if err := BodyToJson(url, req, &resp, drive); err != nil {
