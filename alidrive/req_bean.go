@@ -71,4 +71,5 @@ type OfficePreviewUrlReq struct {
 type VideoPreviewUrlReq struct {
 	DriveId     string `json:"drive_id"`
 	FileId      string `json:"file_id"`
+	ExpireSec int    `json:"expire_sec"`
 }
