@@ -4,23 +4,25 @@ import (
 	"fmt"
 	"github.com/Xhofe/alist/alidrive"
 	"github.com/Xhofe/alist/conf"
+	"github.com/Xhofe/alist/utils"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
+	"path/filepath"
 	"strings"
 )
 
-func BuildTreeAll() {
+func BuildTreeAll(depth int) {
 	for i, _ := range conf.Conf.AliDrive.Drives {
-		if err := BuildTree(&conf.Conf.AliDrive.Drives[i]); err != nil {
-			log.Errorf("盘[%s]构建目录树失败:%s", err.Error())
+		if err := BuildTree(&conf.Conf.AliDrive.Drives[i], depth); err != nil {
+			log.Errorf("盘[%s]构建目录树失败:%s", conf.Conf.AliDrive.Drives[i].Name, err.Error())
 		} else {
-			log.Infof("盘[%s]构建目录树成功")
+			log.Infof("盘[%s]构建目录树成功", conf.Conf.AliDrive.Drives[i].Name)
 		}
 	}
 }
 
 // build tree
-func BuildTree(drive *conf.Drive) error {
+func BuildTree(drive *conf.Drive, depth int) error {
 	log.Infof("开始构建目录树...")
 	tx := conf.DB.Begin()
 	defer func() {
@@ -42,14 +44,24 @@ func BuildTree(drive *conf.Drive) error {
 		tx.Rollback()
 		return err
 	}
-	if err := BuildOne(drive.RootFolder, drive.Name+"/", tx, drive.Password, drive); err != nil {
+	if err := BuildOne(drive.RootFolder, drive.Name+"/", tx, drive.Password, drive, depth); err != nil {
 		tx.Rollback()
 		return err
 	}
 	return tx.Commit().Error
 }
 
-func BuildOne(parent string, path string, tx *gorm.DB, parentPassword string, drive *conf.Drive) error {
+/*
+递归构建目录树,插入指定目录下的所有文件
+parent 父目录的file_id
+path 指定的目录
+parentPassword	父目录所携带的密码
+drive 要构建的盘
+*/
+func BuildOne(parent string, path string, tx *gorm.DB, parentPassword string, drive *conf.Drive, depth int) error {
+	if depth == 0 {
+		return nil
+	}
 	files, err := alidrive.GetList(parent, conf.Conf.AliDrive.MaxFilesCount, "", "", "", drive)
 	if err != nil {
 		return err
@@ -76,16 +88,86 @@ func BuildOne(parent string, path string, tx *gorm.DB, parentPassword string, dr
 			ContentType:   file.ContentType,
 			Size:          file.Size,
 			Password:      password,
+			ContentHash:   file.ContentHash,
 		}
 		log.Debugf("插入file:%+v", newFile)
 		if err := tx.Create(&newFile).Error; err != nil {
 			return err
 		}
 		if file.Type == "folder" {
-			if err := BuildOne(file.FileId, fmt.Sprintf("%s%s/", path, name), tx, password, drive); err != nil {
+			if err := BuildOne(file.FileId, fmt.Sprintf("%s%s/", path, name), tx, password, drive, depth-1); err != nil {
 				return err
 			}
 		}
 	}
 	return nil
+}
+
+//重建指定路径与深度的目录树: 先删除该目录与该目录下所有文件的model，再重新插入
+func BuildTreeWithPath(path string, depth int) error {
+	dir, name := filepath.Split(path)
+	driveName := strings.Split(path, "/")[0]
+	drive := utils.GetDriveByName(driveName)
+	if drive == nil {
+		return fmt.Errorf("找不到drive[%s]", driveName)
+	}
+	file := &File{
+		Dir:      "",
+		FileId:   drive.RootFolder,
+		Name:     drive.Name,
+		Type:     "folder",
+		Password: drive.Password,
+	}
+	var err error
+	if dir != "" {
+		file, err = GetFileByDirAndName(dir, name)
+		if err != nil {
+			if file == nil {
+				return fmt.Errorf("path not found")
+			}
+			return err
+		}
+	}
+	tx := conf.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+	if err = tx.Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+	if err = tx.Where("dir = ? AND name = ?", file.Dir, file.Name).Delete(file).Error; err != nil{
+		tx.Rollback()
+		return err
+	}
+	if err = tx.Where("dir like ?", fmt.Sprintf("%s%%", path)).Delete(&File{}).Error; err != nil{
+		tx.Rollback()
+		return err
+	}
+	//if dir != "" {
+	//	aliFile, err := alidrive.GetFile(file.FileId, drive)
+	//	if err != nil {
+	//		tx.Rollback()
+	//		return err
+	//	}
+	//	aliName := aliFile.Name
+	//	if strings.HasSuffix(aliName, ".hide") {
+	//		return nil
+	//	}
+	//	if strings.Contains(aliName, ".password-") {
+	//		index := strings.Index(name, ".password-")
+	//		file.Name = aliName[:index]
+	//		file.Password = aliName[index+10:]
+	//	}
+	//}
+	if err = tx.Create(&file).Error; err != nil {
+		return err
+	}
+	if err = BuildOne(file.FileId, path+"/", tx, file.Password, drive, depth); err != nil {
+		tx.Rollback()
+		return err
+	}
+	return tx.Commit().Error
 }

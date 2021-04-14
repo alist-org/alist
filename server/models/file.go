@@ -18,6 +18,7 @@ type File struct {
 	Size          int64      `json:"size"`
 	Password      string     `json:"password"`
 	Url           string     `json:"url" gorm:"-"`
+	ContentHash   string     `json:"content_hash"`
 }
 
 func (file *File) Create() error {
@@ -61,4 +62,8 @@ func SearchByNameInDir(keyword string, dir string) (*[]File, error) {
 		return nil, err
 	}
 	return &files, nil
+}
+
+func DeleteWithDir(dir string) error {
+	return conf.DB.Where("dir like ?", fmt.Sprintf("%s%%", dir)).Delete(&File{}).Error
 }

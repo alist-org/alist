@@ -42,7 +42,7 @@ func Get(c *gin.Context) {
 		}
 		return
 	}
-	drive := utils.GetDriveByName(strings.Split(dir, "/")[0])
+	drive := utils.GetDriveByName(strings.Split(get.Path, "/")[0])
 	if drive == nil {
 		c.JSON(200, MetaResponse(500, "找不到drive."))
 		return

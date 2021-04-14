@@ -68,6 +68,14 @@ type Path struct {
 	FileId string `json:"file_id"`
 }
 
+/** 秒传
+{
+	"name":"mikuclub.mp4",
+	"content_hash":"C733AC50D1F964C0398D0E403F3A30C37EFC2ADD",
+	"size":1141068377,
+	"content_type":"video/mp4"
+}
+ */
 // file response bean
 type File struct {
 	RespError

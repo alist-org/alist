@@ -112,8 +112,8 @@ func GetOfficePreviewUrl(fileId string, drive *conf.Drive) (*OfficePreviewUrlRes
 func GetVideoPreviewUrl(fileId string, drive *conf.Drive) (*VideoPreviewUrlResp, error) {
 	url := conf.Conf.AliDrive.ApiUrl + "/databox/get_video_play_info"
 	req := VideoPreviewUrlReq{
-		DriveId:     drive.DefaultDriveId,
-		FileId:      fileId,
+		DriveId:   drive.DefaultDriveId,
+		FileId:    fileId,
 		ExpireSec: 14400,
 	}
 	var resp VideoPreviewUrlResp

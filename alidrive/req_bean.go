@@ -69,7 +69,7 @@ type OfficePreviewUrlReq struct {
 
 // video preview url request bean
 type VideoPreviewUrlReq struct {
-	DriveId     string `json:"drive_id"`
-	FileId      string `json:"file_id"`
+	DriveId   string `json:"drive_id"`
+	FileId    string `json:"file_id"`
 	ExpireSec int    `json:"expire_sec"`
 }
