@@ -27,7 +27,7 @@ func Path(c *gin.Context) {
 	if err != nil {
 		// folder model not exist
 		if file == nil {
-			c.JSON(200, MetaResponse(404, "path not found."))
+			c.JSON(200, MetaResponse(404, "path not found.(第一次请先点击网页底部rebuild)"))
 			return
 		}
 		c.JSON(200, MetaResponse(500, err.Error()))

@@ -62,41 +62,48 @@ func BuildOne(parent string, path string, tx *gorm.DB, parentPassword string, dr
 	if depth == 0 {
 		return nil
 	}
-	files, err := alidrive.GetList(parent, conf.Conf.AliDrive.MaxFilesCount, "", "", "", drive)
-	if err != nil {
-		return err
-	}
-	for _, file := range files.Items {
-		name := file.Name
-		if strings.HasSuffix(name, ".hide") {
-			continue
+	marker := "first"
+	for marker != "" {
+		if marker == "first" {
+			marker = ""
 		}
-		password := parentPassword
-		if strings.Contains(name, ".password-") {
-			index := strings.Index(name, ".password-")
-			name = file.Name[:index]
-			password = file.Name[index+10:]
-		}
-		newFile := File{
-			Dir:           path,
-			FileExtension: file.FileExtension,
-			FileId:        file.FileId,
-			Name:          name,
-			Type:          file.Type,
-			UpdatedAt:     file.UpdatedAt,
-			Category:      file.Category,
-			ContentType:   file.ContentType,
-			Size:          file.Size,
-			Password:      password,
-			ContentHash:   file.ContentHash,
-		}
-		log.Debugf("插入file:%+v", newFile)
-		if err := tx.Create(&newFile).Error; err != nil {
+		files, err := alidrive.GetList(parent, conf.Conf.AliDrive.MaxFilesCount, marker, "", "", drive)
+		if err != nil {
 			return err
 		}
-		if file.Type == "folder" {
-			if err := BuildOne(file.FileId, fmt.Sprintf("%s%s/", path, name), tx, password, drive, depth-1); err != nil {
+		marker = files.NextMarker
+		for _, file := range files.Items {
+			name := file.Name
+			if strings.HasSuffix(name, ".hide") {
+				continue
+			}
+			password := parentPassword
+			if strings.Contains(name, ".password-") {
+				index := strings.Index(name, ".password-")
+				name = file.Name[:index]
+				password = file.Name[index+10:]
+			}
+			newFile := File{
+				Dir:           path,
+				FileExtension: file.FileExtension,
+				FileId:        file.FileId,
+				Name:          name,
+				Type:          file.Type,
+				UpdatedAt:     file.UpdatedAt,
+				Category:      file.Category,
+				ContentType:   file.ContentType,
+				Size:          file.Size,
+				Password:      password,
+				ContentHash:   file.ContentHash,
+			}
+			log.Debugf("插入file:%+v", newFile)
+			if err := tx.Create(&newFile).Error; err != nil {
 				return err
+			}
+			if file.Type == "folder" {
+				if err := BuildOne(file.FileId, fmt.Sprintf("%s%s/", path, name), tx, password, drive, depth-1); err != nil {
+					return err
+				}
 			}
 		}
 	}
