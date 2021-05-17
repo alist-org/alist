@@ -74,10 +74,35 @@ func BuildOne(parent string, path string, tx *gorm.DB, parentPassword string, dr
 		marker = files.NextMarker
 		for _, file := range files.Items {
 			name := file.Name
+			password := parentPassword
 			if strings.HasSuffix(name, ".hide") {
 				continue
 			}
-			password := parentPassword
+			if strings.Contains(name, ".ln-") {
+				index := strings.Index(name, ".ln-")
+				name = file.Name[:index]
+				fileId := file.Name[index+4:]
+				newFile := File{
+					Dir:           path,
+					FileExtension: "",
+					FileId:        fileId,
+					Name:          name,
+					Type:          "folder",
+					UpdatedAt:     file.UpdatedAt,
+					Category:      "",
+					ContentType:   "",
+					Size:          0,
+					Password:      password,
+				}
+				log.Debugf("插入file:%+v", newFile)
+				if err = tx.Create(&newFile).Error; err != nil {
+					return err
+				}
+				if err = BuildOne(fileId, fmt.Sprintf("%s%s/", path, name), tx, password, drive, depth-1); err != nil {
+					return err
+				}
+				continue
+			}
 			if strings.Contains(name, ".password-") {
 				index := strings.Index(name, ".password-")
 				name = file.Name[:index]
