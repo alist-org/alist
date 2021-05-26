@@ -1,13 +1,11 @@
 package bootstrap
 
 import (
-	"bufio"
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/utils"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
-	"os"
 	"strings"
 )
 
@@ -16,8 +14,9 @@ func ReadConf(config string) bool {
 	log.Infof("读取配置文件...")
 	if !utils.Exists(config) {
 		log.Infof("找不到配置文件:%s", config)
-		Write()
-		return false
+		if !Write(config) {
+			return false
+		}
 	}
 	confFile, err := ioutil.ReadFile(config)
 	if err != nil {
@@ -34,15 +33,16 @@ func ReadConf(config string) bool {
 	conf.Origins = strings.Split(conf.Conf.Server.SiteUrl, ",")
 	return true
 }
-func Write()  {
+func Write(path string) bool {
 	log.Infof("创建默认配置文件")
-	filePath :="conf.yml"
-	file,err :=os.OpenFile(filePath,os.O_WRONLY | os.O_CREATE,0644)
+	file, err := utils.CreatNestedFile(path)
 	if err != nil {
-		log.Infof("文件创建失败...")
-		return
+		log.Errorf("无法创建配置文件, %s", err)
+		return false
 	}
-	defer file.Close()
+	defer func() {
+		_ = file.Close()
+	}()
 	str := `
 info:
   title: AList #标题
@@ -75,7 +75,10 @@ database:
   type: sqlite3
   dBFile: alist.db
 `
-	writer := bufio.NewWriter(file)
-	writer.WriteString(str)
-	writer.Flush()
+	_, err = file.WriteString(str)
+	if err != nil {
+		log.Errorf("无法写入配置文件, %s", err)
+		return false
+	}
+	return true
 }
