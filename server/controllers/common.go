@@ -1,24 +1,23 @@
 package controllers
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/Xhofe/alist/alidrive"
+)
 
 // common meta response
-func MetaResponse(code int, msg string) gin.H {
-	return gin.H{
-		"meta": gin.H{
-			"code": code,
-			"msg":  msg,
-		},
+func MetaResponse(code int, msg string) alidrive.ReqData {
+	return alidrive.ReqData{
+		Code:    code,
+		Data:    nil,
+		Message: msg,
 	}
 }
 
 // common data response
-func DataResponse(data interface{}) gin.H {
-	return gin.H{
-		"meta": gin.H{
-			"code": 200,
-			"msg":  "success",
-		},
-		"data": data,
+func DataResponse(data interface{})  alidrive.ReqData {
+	return alidrive.ReqData{
+		Code:    200,
+		Data:    data,
+		Message: "ok",
 	}
 }

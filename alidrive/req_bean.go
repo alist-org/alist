@@ -73,3 +73,8 @@ type VideoPreviewUrlReq struct {
 	FileId    string `json:"file_id"`
 	ExpireSec int    `json:"expire_sec"`
 }
+type ReqData struct {
+	Code int `json:"code"`
+	Data interface{} `json:"data"`
+	Message string `json:"message"`
+}
