@@ -1,6 +1,6 @@
 package alidrive
 
-// list request bean
+// ListReq list request bean
 type ListReq struct {
 	DriveId               string `json:"drive_id"`
 	Fields                string `json:"fields"`
@@ -14,7 +14,7 @@ type ListReq struct {
 	VideoThumbnailProcess string `json:"video_thumbnail_process"`
 }
 
-// get request bean
+// GetReq get request bean
 type GetReq struct {
 	DriveId               string `json:"drive_id"`
 	FileId                string `json:"file_id"`
@@ -22,7 +22,7 @@ type GetReq struct {
 	VideoThumbnailProcess string `json:"video_thumbnail_process"`
 }
 
-// download request bean
+// DownloadReq download request bean
 type DownloadReq struct {
 	DriveId   string `json:"drive_id"`
 	FileId    string `json:"file_id"`
@@ -30,7 +30,7 @@ type DownloadReq struct {
 	FileName  string `json:"file_name"`
 }
 
-// search request bean
+// SearchReq search request bean
 type SearchReq struct {
 	DriveId               string `json:"drive_id"`
 	ImageThumbnailProcess string `json:"image_thumbnail_process"`
@@ -44,37 +44,32 @@ type SearchReq struct {
 	VideoThumbnailProcess string `json:"video_thumbnail_process"`
 }
 
-// token_login request bean
+// TokenLoginReq token_login request bean
 type TokenLoginReq struct {
 	Token string `json:"token"`
 }
 
-// get_token request bean
+// GetTokenReq get_token request bean
 type GetTokenReq struct {
 	Code string `json:"code"`
 }
 
-// refresh_token request bean
+// RefreshTokenReq refresh_token request bean
 type RefreshTokenReq struct {
 	RefreshToken string `json:"refresh_token"`
 	GrantType    string `json:"grant_type"`
 }
 
-// office_preview_url request bean
+// OfficePreviewUrlReq office_preview_url request bean
 type OfficePreviewUrlReq struct {
 	AccessToken string `json:"access_token"`
 	DriveId     string `json:"drive_id"`
 	FileId      string `json:"file_id"`
 }
 
-// video preview url request bean
+// VideoPreviewUrlReq video preview url request bean
 type VideoPreviewUrlReq struct {
 	DriveId   string `json:"drive_id"`
 	FileId    string `json:"file_id"`
 	ExpireSec int    `json:"expire_sec"`
-}
-type ReqData struct {
-	Code int `json:"code"`
-	Data interface{} `json:"data"`
-	Message string `json:"message"`
 }
