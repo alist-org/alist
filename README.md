@@ -21,7 +21,7 @@
 
 - https://github.com/Xhofe/alist-web
 
-### 演示地址(服务器由<a href="https://kuline.cn"><img src="https://img.xhofe.top/2021/05/15/cfcae48ae84f8.png" style="zoom: 60%;" /></a>赞助)
+### 演示地址
 
 - https://alist.nn.ci (稳定版本)
 - https://alist.now.sh (开发版本)
