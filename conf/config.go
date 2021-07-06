@@ -32,8 +32,9 @@ type Config struct {
 	} `yaml:"info"`
 	Server struct {
 		Address  string `yaml:"address"`
-		Port     string `yaml:"port"`   //端口
-		Search   bool   `yaml:"search"` //允许搜索
+		Port     string `yaml:"port"`     //端口
+		Search   bool   `yaml:"search"`   //允许搜索
+		Download bool   `yaml:"download"` //允许下载
 		Static   string `yaml:"static"`
 		SiteUrl  string `yaml:"site_url"` //网站url
 		Password string `yaml:"password"`

@@ -13,6 +13,7 @@ server:
   address: "0.0.0.0"
   port: "5244"
   search: true
+  download: true //是否允许获取直链
   static: dist
   site_url: '*'
   password: password #用于重建目录

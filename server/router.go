@@ -16,11 +16,11 @@ func InitRouter(engine *gin.Engine) {
 	engine.NoRoute(func(c *gin.Context) {
 		c.File(conf.Conf.Server.Static + "/index.html")
 	})
-	InitApiRouter(engine)
+	InitApiRouter(engine, conf.Conf.Server.Download)
 }
 
 // init api router
-func InitApiRouter(engine *gin.Engine) {
+func InitApiRouter(engine *gin.Engine, download bool) {
 	apiV2 := engine.Group("/api")
 	{
 		apiV2.GET("/info", controllers.Info)
@@ -32,5 +32,7 @@ func InitApiRouter(engine *gin.Engine) {
 		apiV2.POST("/global_search", controllers.GlobalSearch)
 		apiV2.POST("/rebuild", controllers.RebuildTree)
 	}
-	engine.GET("/d/*path", controllers.Down)
+	if download {
+		engine.GET("/d/*path", controllers.Down)
+	}
 }
