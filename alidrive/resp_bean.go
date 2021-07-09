@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-// response bean methods
+// RespHandle response bean methods
 type RespHandle interface {
 	IsAvailable() bool   // check available
 	GetCode() string     // get err code
@@ -12,7 +12,7 @@ type RespHandle interface {
 	SetCode(code string) // set err code
 }
 
-// common response bean
+// RespError common response bean
 type RespError struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
@@ -34,7 +34,7 @@ func (resp *RespError) SetCode(code string) {
 	resp.Code = code
 }
 
-// user_info response bean
+// UserInfo user_info response bean
 type UserInfo struct {
 	RespError
 	DomainId       string                 `json:"domain_id"`
@@ -53,7 +53,7 @@ type UserInfo struct {
 	UserData       map[string]interface{} `json:"user_data"`
 }
 
-// folder files response bean
+// Files folder files response bean
 type Files struct {
 	RespError
 	Items      []File `json:"items"`
@@ -62,7 +62,7 @@ type Files struct {
 	Paths      []Path `json:"paths"`
 }
 
-// path bean
+// Path path bean
 type Path struct {
 	Name   string `json:"name"`
 	FileId string `json:"file_id"`
@@ -75,8 +75,9 @@ type Path struct {
 	"size":1141068377,
 	"content_type":"video/mp4"
 }
- */
-// file response bean
+*/
+
+// File file response bean
 type File struct {
 	RespError
 	DriveId       string     `json:"drive_id"`
@@ -120,13 +121,13 @@ type DownloadResp struct {
 	//} `json:"rate_limit"`//rate limit
 }
 
-// token_login response bean
+// TokenLoginResp token_login response bean
 type TokenLoginResp struct {
 	RespError
 	Goto string `json:"goto"`
 }
 
-// token response bean
+// TokenResp token response bean
 type TokenResp struct {
 	RespError
 	AccessToken  string `json:"access_token"`
@@ -147,7 +148,7 @@ type TokenResp struct {
 	DeviceId           string        `json:"device_id"`
 }
 
-// office_preview_url response bean
+// OfficePreviewUrlResp office_preview_url response bean
 type OfficePreviewUrlResp struct {
 	RespError
 	PreviewUrl  string `json:"preview_url"`
@@ -161,4 +162,16 @@ type VideoPreviewUrlResp struct {
 		Status     string `json:"status"`
 		Url        string `json:"url"`
 	} `json:"template_list"`
+}
+
+type VideoPreviewPlayInfoResp struct {
+	RespError
+	VideoPreviewPlayInfo struct {
+		LiveTranscodingTaskList []struct {
+			TemplateId string `json:"template_id"`
+			Status     string `json:"status"`
+			Url        string `json:"url"`
+			Stage      string `json:"stage"`
+		} `json:"live_transcoding_task_list"`
+	} `json:"video_preview_play_info"`
 }

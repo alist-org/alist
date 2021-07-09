@@ -5,7 +5,7 @@ import (
 	"github.com/Xhofe/alist/conf"
 )
 
-// get file
+// GetFile get file
 func GetFile(fileId string, drive *conf.Drive) (*File, error) {
 	url := conf.Conf.AliDrive.ApiUrl + "/file/get"
 	req := GetReq{
@@ -21,7 +21,7 @@ func GetFile(fileId string, drive *conf.Drive) (*File, error) {
 	return &resp, nil
 }
 
-// get download_url
+// GetDownLoadUrl get download_url
 func GetDownLoadUrl(fileId string, drive *conf.Drive) (*DownloadResp, error) {
 	url := conf.Conf.AliDrive.ApiUrl + "/file/get_download_url"
 	req := DownloadReq{
@@ -36,7 +36,7 @@ func GetDownLoadUrl(fileId string, drive *conf.Drive) (*DownloadResp, error) {
 	return &resp, nil
 }
 
-// search by keyword
+// Search search by keyword
 func Search(key string, limit int, marker string, drive *conf.Drive) (*Files, error) {
 	url := conf.Conf.AliDrive.ApiUrl + "/file/search"
 	req := SearchReq{
@@ -56,12 +56,12 @@ func Search(key string, limit int, marker string, drive *conf.Drive) (*Files, er
 	return &resp, nil
 }
 
-// get root folder
+// GetRoot get root folder
 func GetRoot(limit int, marker string, orderBy string, orderDirection string, drive *conf.Drive) (*Files, error) {
 	return GetList(drive.RootFolder, limit, marker, orderBy, orderDirection, drive)
 }
 
-// get folder list by file_id
+// GetList get folder list by file_id
 func GetList(parent string, limit int, marker string, orderBy string, orderDirection string, drive *conf.Drive) (*Files, error) {
 	url := conf.Conf.AliDrive.ApiUrl + "/file/list"
 	req := ListReq{
@@ -83,7 +83,7 @@ func GetList(parent string, limit int, marker string, orderBy string, orderDirec
 	return &resp, nil
 }
 
-// get user info
+// GetUserInfo get user info
 func GetUserInfo(drive *conf.Drive) (*UserInfo, error) {
 	url := conf.Conf.AliDrive.ApiUrl + "/user/get"
 	var resp UserInfo
@@ -93,7 +93,7 @@ func GetUserInfo(drive *conf.Drive) (*UserInfo, error) {
 	return &resp, nil
 }
 
-// get office preview url and token
+// GetOfficePreviewUrl get office preview url and token
 func GetOfficePreviewUrl(fileId string, drive *conf.Drive) (*OfficePreviewUrlResp, error) {
 	url := conf.Conf.AliDrive.ApiUrl + "/file/get_office_preview_url"
 	req := OfficePreviewUrlReq{
@@ -108,7 +108,7 @@ func GetOfficePreviewUrl(fileId string, drive *conf.Drive) (*OfficePreviewUrlRes
 	return &resp, nil
 }
 
-// get video preview url
+// GetVideoPreviewUrl get video preview url
 func GetVideoPreviewUrl(fileId string, drive *conf.Drive) (*VideoPreviewUrlResp, error) {
 	url := conf.Conf.AliDrive.ApiUrl + "/databox/get_video_play_info"
 	req := VideoPreviewUrlReq{
@@ -117,6 +117,21 @@ func GetVideoPreviewUrl(fileId string, drive *conf.Drive) (*VideoPreviewUrlResp,
 		ExpireSec: 14400,
 	}
 	var resp VideoPreviewUrlResp
+	if err := BodyToJson(url, req, &resp, drive); err != nil {
+		return nil, err
+	}
+	return &resp, nil
+}
+
+// GetVideoPreviewPlayInfo get video preview url
+func GetVideoPreviewPlayInfo(fileId string, drive *conf.Drive) (*VideoPreviewPlayInfoResp, error) {
+	url := conf.Conf.AliDrive.ApiUrl + "/file/get_video_preview_play_info"
+	req := VideoPreviewPlayInfoReq{
+		DriveId:   drive.DefaultDriveId,
+		FileId:    fileId,
+		Category: "live_transcoding",
+	}
+	var resp VideoPreviewPlayInfoResp
 	if err := BodyToJson(url, req, &resp, drive); err != nil {
 		return nil, err
 	}

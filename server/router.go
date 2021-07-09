@@ -34,7 +34,7 @@ func InitApiRouter(engine *gin.Engine, download bool) {
 	if download {
 		apiV2.POST("/office_preview/:drive", controllers.OfficePreview)
 		apiV2.POST("/video_preview/:drive", controllers.VideoPreview)
-
+		apiV2.POST("/video_preview_play_info/:drive", controllers.VideoPreviewPlayInfo)
 		engine.GET("/d/*path", controllers.Down)
 	}
 }

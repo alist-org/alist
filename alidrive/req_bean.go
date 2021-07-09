@@ -73,3 +73,11 @@ type VideoPreviewUrlReq struct {
 	FileId    string `json:"file_id"`
 	ExpireSec int    `json:"expire_sec"`
 }
+
+// VideoPreviewPlayInfoReq video preview play info req
+type VideoPreviewPlayInfoReq struct {
+	Category   string `json:"category"`
+	DriveId    string `json:"drive_id"`
+	FileId     string `json:"file_id"`
+	TemplateId string `json:"template_id"`
+}
