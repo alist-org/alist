@@ -59,6 +59,7 @@ server:
   address: "0.0.0.0"
   port: "5244"
   search: true
+  download: true
   static: dist
   site_url: '*'
   password: password #用于重建目录
