@@ -55,6 +55,6 @@ func Down(c *gin.Context) {
 		c.JSON(200, MetaResponse(500, err.Error()))
 		return
 	}
-	c.Redirect(301, file.Url)
+	c.Redirect(302, file.Url)
 	return
 }
