@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"github.com/Xhofe/alist/alidrive"
+	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/utils"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
@@ -13,6 +14,10 @@ type VideoPreviewReq struct {
 
 // VideoPreview handle video_preview request
 func VideoPreview(c *gin.Context) {
+	if !conf.Conf.Server.Download {
+		c.JSON(200,MetaResponse(403,"not allowed download and preview"))
+		return
+	}
 	drive := utils.GetDriveByName(c.Param("drive"))
 	if drive == nil {
 		c.JSON(200, MetaResponse(400, "drive isn't exist."))
@@ -33,6 +38,10 @@ func VideoPreview(c *gin.Context) {
 }
 
 func VideoPreviewPlayInfo(c *gin.Context) {
+	if !conf.Conf.Server.Download {
+		c.JSON(200,MetaResponse(403,"not allowed download and preview"))
+		return
+	}
 	drive := utils.GetDriveByName(c.Param("drive"))
 	if drive == nil {
 		c.JSON(200, MetaResponse(400, "drive isn't exist."))

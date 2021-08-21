@@ -8,7 +8,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// init router
+// InitRouter init router
 func InitRouter(engine *gin.Engine) {
 	log.Infof("初始化路由...")
 	engine.Use(CorsHandler())
@@ -16,11 +16,11 @@ func InitRouter(engine *gin.Engine) {
 	engine.NoRoute(func(c *gin.Context) {
 		c.File(conf.Conf.Server.Static + "/index.html")
 	})
-	InitApiRouter(engine, conf.Conf.Server.Download)
+	InitApiRouter(engine)
 }
 
-// init api router
-func InitApiRouter(engine *gin.Engine, download bool) {
+// InitApiRouter init api router
+func InitApiRouter(engine *gin.Engine) {
 	apiV2 := engine.Group("/api")
 	{
 		apiV2.GET("/info", controllers.Info)
@@ -29,9 +29,7 @@ func InitApiRouter(engine *gin.Engine, download bool) {
 		apiV2.POST("/local_search", controllers.LocalSearch)
 		apiV2.POST("/global_search", controllers.GlobalSearch)
 		apiV2.POST("/rebuild", controllers.RebuildTree)
-	}
 
-	if download {
 		apiV2.POST("/office_preview/:drive", controllers.OfficePreview)
 		apiV2.POST("/video_preview/:drive", controllers.VideoPreview)
 		apiV2.POST("/video_preview_play_info/:drive", controllers.VideoPreviewPlayInfo)

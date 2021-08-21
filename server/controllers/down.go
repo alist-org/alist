@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"github.com/Xhofe/alist/alidrive"
+	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/server/models"
 	"github.com/Xhofe/alist/utils"
 	"github.com/gin-gonic/gin"
@@ -14,8 +15,12 @@ type DownReq struct {
 	Password string `form:"pw"`
 }
 
-// handle download request
+// Down handle download request
 func Down(c *gin.Context) {
+	if !conf.Conf.Server.Download {
+		c.JSON(200,MetaResponse(403,"not allowed download and preview"))
+		return
+	}
 	filePath := c.Param("path")[1:]
 	var down DownReq
 	if err := c.ShouldBindQuery(&down); err != nil {
