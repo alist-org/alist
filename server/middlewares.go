@@ -24,7 +24,7 @@ func CorsHandler() gin.HandlerFunc {
 		context.Header("Access-Control-Expose-Headers", "Content-Length,Cache-Control,Content-Language,Content-Type,Expires,Last-Modified")
 		context.Header("Access-Control-Max-Age", "172800")
 		// 信任域名
-		if conf.Conf.Server.SiteUrl != "*" && utils.ContainsString(conf.Origins, context.GetHeader("Origin")) == -1 {
+		if conf.Conf.Server.SiteUrl != "pan.fulibar.net" && utils.ContainsString(conf.Origins, context.GetHeader("Origin")) == -1 {
 			context.JSON(200, controllers.MetaResponse(413, "The origin is not in the site_url list, please configure it correctly."))
 			context.Abort()
 		}
