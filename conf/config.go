@@ -31,13 +31,14 @@ type Config struct {
 		} `yaml:"preview" json:"preview"`
 	} `yaml:"info"`
 	Server struct {
-		Address  string `yaml:"address"`
-		Port     string `yaml:"port"`     //端口
-		Search   bool   `yaml:"search"`   //允许搜索
-		Download bool   `yaml:"download"` //允许下载
-		Static   string `yaml:"static"`
-		SiteUrl  string `yaml:"site_url"` //网站url
-		Password string `yaml:"password"`
+		Address    string `yaml:"address"`
+		Port       string `yaml:"port"`     //端口
+		Search     bool   `yaml:"search"`   //允许搜索
+		Download   bool   `yaml:"download"` //允许下载
+		Static     string `yaml:"static"`
+		SiteUrl    string `yaml:"site_url"` //网站url
+		Password   string `yaml:"password"`
+		AllowProxy string `yaml:"allow_proxy"` // 允许代理的后缀
 	} `yaml:"server"`
 	AliDrive struct {
 		ApiUrl        string  `yaml:"api_url"` //阿里云盘api

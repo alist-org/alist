@@ -17,6 +17,7 @@ var (
 	DB *gorm.DB
 
 	Origins []string // allow origins
+	AllowProxies []string
 )
 
 var Conf = new(Config)

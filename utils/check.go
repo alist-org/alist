@@ -56,3 +56,13 @@ func VersionCompare(version1, version2 string) int {
 	}
 	return 0
 }
+
+// HasSuffixes check string has suffixes in string array.
+func HasSuffixes(str string, suffixes []string) bool {
+	for _, suffix := range suffixes {
+		if strings.HasSuffix(str,suffix) {
+			return true
+		}
+	}
+	return false
+}

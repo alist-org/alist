@@ -31,6 +31,7 @@ func ReadConf(config string) bool {
 	log.Debugf("config:%+v", conf.Conf)
 	conf.Conf.Info.Roots = utils.GetNames()
 	conf.Origins = strings.Split(conf.Conf.Server.SiteUrl, ",")
+	conf.AllowProxies = strings.Split(conf.Conf.Server.AllowProxy,",")
 	return true
 }
 func Write(path string) bool {
@@ -63,6 +64,7 @@ server:
   static: dist
   site_url: '*'
   password: password #用于重建目录
+  allow_proxy: vtt
 ali_drive:
   api_url: https://api.aliyundrive.com/v2
   max_files_count: 100

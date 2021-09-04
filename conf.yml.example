@@ -17,6 +17,7 @@ server:
   static: dist
   site_url: '*'
   password: password #用于重建目录
+  allow_proxy: vtt #允许代理的后缀，以,分割
 ali_drive:
   api_url: https://api.aliyundrive.com/v2
   max_files_count: 50 #重建目录时每次请求的文件

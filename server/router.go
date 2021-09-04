@@ -34,5 +34,6 @@ func InitApiRouter(engine *gin.Engine) {
 		apiV2.POST("/video_preview/:drive", controllers.VideoPreview)
 		apiV2.POST("/video_preview_play_info/:drive", controllers.VideoPreviewPlayInfo)
 		engine.GET("/d/*path", controllers.Down)
+		engine.GET("/p/*path",controllers.Proxy)
 	}
 }
