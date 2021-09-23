@@ -14,11 +14,10 @@ require (
 	github.com/robfig/cron/v3 v3.0.0
 	github.com/sirupsen/logrus v1.7.0
 	github.com/ugorji/go v1.2.2 // indirect
-	golang.org/x/crypto v0.0.0-20201217014255-9d1352758620 // indirect
-	golang.org/x/sys v0.0.0-20201218084310-7d0127a74742 // indirect
 	google.golang.org/protobuf v1.25.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0
 	gorm.io/driver/mysql v1.0.5
+	gorm.io/driver/postgres v1.1.1 // indirect
 	gorm.io/driver/sqlite v1.1.4
-	gorm.io/gorm v1.21.3
+	gorm.io/gorm v1.21.15
 )

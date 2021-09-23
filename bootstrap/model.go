@@ -8,6 +8,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/sqlite"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 	"strings"
@@ -50,6 +51,28 @@ func InitModel() bool {
 			dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 				dbConfig.User, dbConfig.Password, dbConfig.Host, dbConfig.Port, dbConfig.Name)
 			db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
+				NamingStrategy: schema.NamingStrategy{
+					TablePrefix: dbConfig.TablePrefix,
+				},
+			})
+			if err != nil {
+				log.Errorf("连接数据库出现错误:%s", err.Error())
+				return false
+			}
+			conf.DB = db
+			log.Infof("迁移数据库...")
+			err = conf.DB.AutoMigrate(&models.File{})
+			if err != nil {
+				log.Errorf("数据库迁移失败:%s", err.Error())
+				return false
+			}
+			return true
+		}
+	case "postgres":
+		{
+			dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=disable TimeZone=Asia/Shanghai",
+				dbConfig.Host, dbConfig.User, dbConfig.Password, dbConfig.Name, dbConfig.Port)
+			db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 				NamingStrategy: schema.NamingStrategy{
 					TablePrefix: dbConfig.TablePrefix,
 				},
