@@ -80,5 +80,6 @@ func Proxy(c *gin.Context) {
 	c.Request.URL = url
 	c.Request.Host = url.Host
 	c.Request.Header.Del("Origin")
+	c.Request.Header.Set("Referer", "https://www.aliyundrive.com/")
 	proxy.ServeHTTP(c.Writer, c.Request)
 }
