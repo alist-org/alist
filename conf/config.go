@@ -22,6 +22,7 @@ type Config struct {
 		CheckUpdate bool     `yaml:"check_update" json:"check_update"`
 		Script      string   `yaml:"script" json:"script"`
 		Autoplay    bool     `yaml:"autoplay" json:"autoplay"`
+		Sort		string	 `yaml:"sort" json:"sort"`
 		Preview     struct {
 			Url        string   `yaml:"url" json:"url"`
 			PreProcess []string `yaml:"pre_process" json:"pre_process"`
