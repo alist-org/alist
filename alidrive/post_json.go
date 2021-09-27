@@ -62,18 +62,23 @@ func DoPost(url string, request interface{}, auth string) (body []byte, err erro
 	req.Header.Add("Connection", "keep-alive")
 
 	for retryCount := 3; retryCount >= 0; retryCount-- {
-		if resp, err = conf.Client.Do(req); err != nil && strings.Contains(err.Error(), "timeout") {
+		resp, err = conf.Client.Do(req)
+		if err != nil && strings.Contains(err.Error(), "timeout") {
 			<-time.After(time.Second)
 		} else {
-			break
+			if body, err = ioutil.ReadAll(resp.Body); err != nil {
+				log.Errorf("读取api返回内容失败")
+			}
+			if string(body) != "" {
+				break
+			}
+			log.Errorf("返回为空,1s后重新请求")
+			<-time.After(time.Second)
 		}
 	}
 	if err != nil {
 		log.Errorf("请求阿里云盘api时出错:%s", err.Error())
 		return
-	}
-	if body, err = ioutil.ReadAll(resp.Body); err != nil {
-		log.Errorf("读取api返回内容失败")
 	}
 	log.Debugf("请求返回信息:%s", string(body))
 	return
