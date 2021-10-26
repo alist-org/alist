@@ -2,6 +2,7 @@ package utils
 
 import (
 	"encoding/json"
+	"github.com/Xhofe/alist/conf"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
@@ -16,6 +17,36 @@ func Exists(name string) bool {
 		}
 	}
 	return true
+}
+
+// IsDir determine whether the file is dir
+func IsDir(path string) bool {
+	s, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+	return s.IsDir()
+}
+
+// GetFileType get file type
+func GetFileType(ext string) int {
+	if ext == "" {
+		return conf.UNKNOWN
+	}
+	ext = ext[1:]
+	if IsContain(conf.OfficeTypes,ext) {
+		return conf.OFFICE
+	}
+	if IsContain(conf.AudioTypes,ext) {
+		return conf.AUDIO
+	}
+	if IsContain(conf.VideoTypes,ext) {
+		return conf.VIDEO
+	}
+	if IsContain(conf.TextTypes,ext) {
+		return conf.TEXT
+	}
+	return conf.UNKNOWN
 }
 
 // CreatNestedFile create nested file

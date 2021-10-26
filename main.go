@@ -6,13 +6,32 @@ import (
 	"fmt"
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/model"
+	"github.com/Xhofe/alist/public"
+	"github.com/Xhofe/alist/server"
 	"github.com/Xhofe/alist/utils"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/filesystem"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
+	"net/http"
 )
 
-// initConf init config
+// initLog init log
+func initLog() {
+	if conf.Debug {
+		log.SetLevel(log.DebugLevel)
+		log.SetReportCaller(true)
+	}
+	log.SetFormatter(&log.TextFormatter{
+		//DisableColors: true,
+		ForceColors:               true,
+		EnvironmentOverrideColors: true,
+		TimestampFormat:           "2006-01-02 15:04:05",
+		FullTimestamp:             true,
+	})
+}
+
+// InitConf init config
 func initConf() {
 	log.Infof("reading config file: %s", conf.ConfigFile)
 	if !utils.Exists(conf.ConfigFile) {
@@ -35,20 +54,6 @@ func initConf() {
 	log.Debugf("config:%+v", conf.Conf)
 }
 
-// initLog init log
-func initLog() {
-	if conf.Debug {
-		log.SetLevel(log.DebugLevel)
-		log.SetReportCaller(true)
-	}
-	log.SetFormatter(&log.TextFormatter{
-		//DisableColors: true,
-		ForceColors:               true,
-		EnvironmentOverrideColors: true,
-		TimestampFormat:           "2006-01-02 15:04:05",
-		FullTimestamp:             true,
-	})
-}
 
 func init() {
 	flag.StringVar(&conf.ConfigFile, "conf", "config.json", "config file")
@@ -61,9 +66,11 @@ func init() {
 
 func main() {
 	app := fiber.New()
-	app.Get("/", func(ctx *fiber.Ctx) error {
-		return ctx.SendString("Hello, World 👋!")
-	})
+	app.Use("/",filesystem.New(filesystem.Config{
+		Root:         http.FS(public.Public),
+		//NotFoundFile: "index.html",
+	}))
+	server.InitApiRouter(app)
 	log.Info("starting server")
 	_ = app.Listen(fmt.Sprintf(":%d", conf.Conf.Port))
 }
