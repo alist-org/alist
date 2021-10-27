@@ -5,7 +5,7 @@ import "github.com/Xhofe/alist/model"
 type Driver interface {
 	Path(path string, account *model.Account) (*model.File, []*model.File, error)
 	Link(path string, account *model.Account) (string,error)
-	Save(account model.Account)
+	Save(account *model.Account, old *model.Account) error
 }
 
 var driversMap = map[string]Driver{}

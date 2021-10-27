@@ -69,7 +69,7 @@ func InitModel() {
 		log.Fatalf("failed to auto migrate")
 	}
 
-	// TODO init accounts and filetype
+	// TODO init filetype
 	initAccounts()
+	initSettings()
 }
-

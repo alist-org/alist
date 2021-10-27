@@ -6,15 +6,18 @@ import (
 )
 
 type Account struct {
-	Name         string `json:"name" gorm:"primaryKey" validate:"required"`
-	Type         string `json:"type"`
-	Username     string `json:"username"`
-	Password     string `json:"password"`
-	RefreshToken string `json:"refresh_token"`
-	AccessToken  string `json:"access_token"`
-	RootFolder   string `json:"root_folder"`
-	Status       int    `json:"status"`
-	CronId       int    `json:"cron_id"`
+	Name           string `json:"name" gorm:"primaryKey" validate:"required"`
+	Type           string `json:"type"`
+	Username       string `json:"username"`
+	Password       string `json:"password"`
+	RefreshToken   string `json:"refresh_token"`
+	AccessToken    string `json:"access_token"`
+	RootFolder     string `json:"root_folder"`
+	Status         string
+	CronId         int
+	DriveId        string
+	OrderBy        string `json:"order_by"`
+	OrderDirection string `json:"order_direction"`
 }
 
 var accountsMap = map[string]Account{}
@@ -78,6 +81,7 @@ func GetAccounts() []*Account {
 }
 
 func initAccounts() {
+	log.Infof("init accounts...")
 	var accounts []Account
 	if err := conf.DB.Find(&accounts).Error; err != nil {
 		log.Fatalf("failed sync init accounts")

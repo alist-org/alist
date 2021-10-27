@@ -9,11 +9,15 @@ import (
 	"github.com/Xhofe/alist/public"
 	"github.com/Xhofe/alist/server"
 	"github.com/Xhofe/alist/utils"
+	"github.com/allegro/bigcache/v3"
+	"github.com/eko/gocache/v2/cache"
+	"github.com/eko/gocache/v2/store"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/filesystem"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
+	"time"
 )
 
 // initLog init log
@@ -54,6 +58,15 @@ func initConf() {
 	log.Debugf("config:%+v", conf.Conf)
 }
 
+func initCache() {
+	log.Infof("init cache...")
+	bigCacheConfig := bigcache.DefaultConfig(60 * time.Minute)
+	bigCacheConfig.HardMaxCacheSize = 512
+	bigCacheClient, _ := bigcache.NewBigCache(bigCacheConfig)
+	bigCacheStore := store.NewBigcache(bigCacheClient, nil)
+	conf.Cache = cache.New(bigCacheStore)
+}
+
 
 func init() {
 	flag.StringVar(&conf.ConfigFile, "conf", "config.json", "config file")
@@ -62,6 +75,7 @@ func init() {
 	initLog()
 	initConf()
 	model.InitModel()
+	initCache()
 }
 
 func main() {

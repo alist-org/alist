@@ -23,10 +23,18 @@ func SaveAccount(ctx *fiber.Ctx) error {
 	if !ok {
 		return ErrorResp(ctx, fmt.Errorf("no [%s] driver", req.Type), 400)
 	}
+	old, ok := model.GetAccount(req.Name)
 	if err := model.SaveAccount(req); err != nil {
 		return ErrorResp(ctx, err, 500)
 	} else {
-		driver.Save(req)
+		if ok {
+			err = driver.Save(&req, &old)
+		}else {
+			err = driver.Save(&req, nil)
+		}
+		if err != nil {
+			return ErrorResp(ctx,err,500)
+		}
 		return SuccessResp(ctx)
 	}
 }

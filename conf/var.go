@@ -1,6 +1,10 @@
 package conf
 
-import "gorm.io/gorm"
+import (
+	"context"
+	"github.com/eko/gocache/v2/cache"
+	"gorm.io/gorm"
+)
 
 var (
 	ConfigFile string // config file
@@ -8,6 +12,8 @@ var (
 	Debug      bool
 
 	DB *gorm.DB
+	Cache *cache.Cache
+	Ctx = context.TODO()
 )
 
 var (

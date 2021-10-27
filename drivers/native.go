@@ -16,10 +16,12 @@ type Native struct {
 
 }
 
-func (n Native) Save(account model.Account) {
+func (n Native) Save(account *model.Account, old *model.Account) error {
 	log.Debugf("save a account: [%s]",account.Name)
+	return nil
 }
 
+// TODO sort files
 func (n Native) Path(path string, account *model.Account) (*model.File, []*model.File, error) {
 	fullPath := filepath.Join(account.RootFolder,path)
 	log.Debugf("%s-%s-%s",account.RootFolder,path,fullPath)
@@ -81,5 +83,5 @@ func (n Native) Link(path string, account *model.Account) (string,error) {
 var _ Driver = (*Native)(nil)
 
 func init() {
-	RegisterDriver("native", &Native{})
+	RegisterDriver("Native", &Native{})
 }
