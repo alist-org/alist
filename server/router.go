@@ -10,11 +10,12 @@ func InitApiRouter(app *fiber.App) {
 	{
 		// TODO check accounts
 		public.Post("/path", Path)
+		public.Get("/settings", GetSettingsPublic)
 	}
 
 	admin := app.Group("/api/admin")
 	{
-		// TODO auth
+		admin.Use(Auth)
 		admin.Get("/settings", GetSettingsByType)
 		admin.Post("/settings", SaveSettings)
 		admin.Post("/account", SaveAccount)

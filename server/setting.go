@@ -36,3 +36,11 @@ func GetSettingsByType(ctx *fiber.Ctx) error {
 	}
 	return SuccessResp(ctx,settings)
 }
+
+func GetSettingsPublic(ctx *fiber.Ctx) error {
+	settings, err := model.GetSettingByType(0)
+	if err != nil {
+		return ErrorResp(ctx, err, 400)
+	}
+	return SuccessResp(ctx,settings)
+}

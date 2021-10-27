@@ -1,6 +1,9 @@
 package drivers
 
-import "github.com/Xhofe/alist/model"
+import (
+	"encoding/json"
+	"github.com/Xhofe/alist/model"
+)
 
 type Driver interface {
 	Path(path string, account *model.Account) (*model.File, []*model.File, error)
@@ -25,4 +28,11 @@ func GetDriverNames() []string {
 		names = append(names, k)
 	}
 	return names
+}
+
+type Json map[string]interface{}
+
+func JsonStr(j Json) string {
+	data, _ := json.Marshal(j)
+	return string(data)
 }

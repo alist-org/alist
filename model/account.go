@@ -2,7 +2,6 @@ package model
 
 import (
 	"github.com/Xhofe/alist/conf"
-	log "github.com/sirupsen/logrus"
 )
 
 type Account struct {
@@ -22,6 +21,7 @@ type Account struct {
 
 var accountsMap = map[string]Account{}
 
+// SaveAccount save account to database
 func SaveAccount(account Account) error {
 	if err := conf.DB.Save(account).Error; err != nil {
 		return err
@@ -80,14 +80,3 @@ func GetAccounts() []*Account {
 	return accounts
 }
 
-func initAccounts() {
-	log.Infof("init accounts...")
-	var accounts []Account
-	if err := conf.DB.Find(&accounts).Error; err != nil {
-		log.Fatalf("failed sync init accounts")
-	}
-	for _, account := range accounts {
-		RegisterAccount(account)
-	}
-	log.Debugf("accounts:%+v", accountsMap)
-}

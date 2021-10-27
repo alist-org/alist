@@ -3,6 +3,7 @@ package conf
 import (
 	"context"
 	"github.com/eko/gocache/v2/cache"
+	"github.com/robfig/cron/v3"
 	"gorm.io/gorm"
 )
 
@@ -14,6 +15,7 @@ var (
 	DB *gorm.DB
 	Cache *cache.Cache
 	Ctx = context.TODO()
+	Cron *cron.Cron
 )
 
 var (

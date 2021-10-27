@@ -1,8 +1,11 @@
-package model
+package bootstrap
 
 import (
 	"fmt"
 	"github.com/Xhofe/alist/conf"
+	"github.com/Xhofe/alist/drivers"
+	"github.com/Xhofe/alist/model"
+	"github.com/Xhofe/alist/utils"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
@@ -64,7 +67,7 @@ func InitModel() {
 		log.Fatalf("not supported database type: %s", config.Type)
 	}
 	log.Infof("auto migrate model")
-	err := conf.DB.AutoMigrate(&SettingItem{},&Account{})
+	err := conf.DB.AutoMigrate(&model.SettingItem{}, &model.Account{})
 	if err != nil {
 		log.Fatalf("failed to auto migrate")
 	}
@@ -72,4 +75,75 @@ func InitModel() {
 	// TODO init filetype
 	initAccounts()
 	initSettings()
+}
+
+func initAccounts() {
+	log.Infof("init accounts...")
+	var accounts []model.Account
+	if err := conf.DB.Find(&accounts).Error; err != nil {
+		log.Fatalf("failed sync init accounts")
+	}
+	for _, account := range accounts {
+		model.RegisterAccount(account)
+		driver, ok := drivers.GetDriver(account.Type)
+		if !ok {
+			log.Error("no [%s] driver", driver)
+		} else {
+			err := driver.Save(&account, nil)
+			if err != nil {
+				log.Errorf("init account [%s] error:[%s]", account.Name, err.Error())
+			}
+		}
+	}
+}
+
+func initSettings() {
+	log.Infof("init settings...")
+	version, err := model.GetSettingByKey("version")
+	if err != nil {
+		log.Debugf("first run")
+		version = &model.SettingItem{
+			Key:         "version",
+			Value:       "0.0.0",
+			Description: "version",
+			Type:        model.CONST,
+		}
+	}
+	settingsMap := map[string][]model.SettingItem{
+		"2.0.0": {
+			{
+				Key:         "title",
+				Value:       "Alist",
+				Description: "title",
+				Type:        model.PUBLIC,
+			},
+			{
+				Key:         "password",
+				Value:       "alist",
+				Description: "password",
+				Type:        model.PRIVATE,
+			},
+			{
+				Key:         "version",
+				Value:       "2.0.0",
+				Description: "version",
+				Type:        model.CONST,
+			},
+			{
+				Key:         "logo",
+				Value:       "",
+				Description: "logo",
+				Type:        model.PUBLIC,
+			},
+		},
+	}
+	for k, v := range settingsMap {
+		if utils.VersionCompare(k, version.Value) > 0 {
+			log.Infof("writing [v%s] settings", k)
+			err = model.SaveSettings(v)
+			if err != nil {
+				log.Fatalf("save settings error")
+			}
+		}
+	}
 }
