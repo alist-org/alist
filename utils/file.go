@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // Exists determine whether the file exists
@@ -75,4 +76,12 @@ func WriteToJson(src string, conf interface{}) bool {
 		return false
 	}
 	return true
+}
+
+func ParsePath(path string) string {
+	path = strings.TrimRight(path, "/")
+	if !strings.HasPrefix(path, "/") {
+		path = "/" + path
+	}
+	return path
 }

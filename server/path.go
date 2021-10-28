@@ -1,9 +1,11 @@
 package server
 
 import (
+	"fmt"
 	"github.com/Xhofe/alist/model"
+	"github.com/Xhofe/alist/utils"
 	"github.com/gofiber/fiber/v2"
-	"strings"
+	log "github.com/sirupsen/logrus"
 )
 
 type PathReq struct {
@@ -16,8 +18,14 @@ func Path(ctx *fiber.Ctx) error {
 	if err := ctx.BodyParser(&req); err != nil {
 		return ErrorResp(ctx, err, 400)
 	}
-	if !strings.HasPrefix(req.Path, "/") {
-		req.Path = "/"+req.Path
+	req.Path = utils.ParsePath(req.Path)
+	log.Debugf("path: %s",req.Path)
+	meta, err := model.GetMetaByPath(req.Path)
+	if err == nil {
+		if meta.Password != "" && meta.Password!= req.Password {
+			return ErrorResp(ctx,fmt.Errorf("wrong password"),401)
+		}
+		// TODO hide or ignore?
 	}
 	if model.AccountsCount() > 1 && req.Path == "/" {
 		return ctx.JSON(Resp{

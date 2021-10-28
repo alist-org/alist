@@ -3,10 +3,12 @@ module github.com/Xhofe/alist
 go 1.17
 
 require (
-	github.com/allegro/bigcache/v3 v3.0.1
 	github.com/eko/gocache/v2 v2.1.0
 	github.com/go-playground/validator/v10 v10.9.0
+	github.com/go-resty/resty/v2 v2.6.0
 	github.com/gofiber/fiber/v2 v2.20.2
+	github.com/patrickmn/go-cache v2.1.0+incompatible
+	github.com/robfig/cron/v3 v3.0.0
 	github.com/sirupsen/logrus v1.8.1
 	gorm.io/driver/mysql v1.1.2
 	gorm.io/driver/postgres v1.1.2
@@ -25,7 +27,6 @@ require (
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
 	github.com/go-redis/redis/v8 v8.9.0 // indirect
-	github.com/go-resty/resty/v2 v2.6.0 // indirect
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
 	github.com/golang/protobuf v1.4.3 // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
@@ -47,7 +48,6 @@ require (
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.18.0 // indirect
 	github.com/prometheus/procfs v0.6.0 // indirect
-	github.com/robfig/cron/v3 v3.0.0 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.31.0 // indirect

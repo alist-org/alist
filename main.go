@@ -13,7 +13,7 @@ import (
 	"net/http"
 )
 
-func init() {
+func Init() {
 	flag.StringVar(&conf.ConfigFile, "conf", "config.json", "config file")
 	flag.BoolVar(&conf.Debug,"debug",false,"start with debug mode")
 	flag.Parse()
@@ -25,6 +25,7 @@ func init() {
 }
 
 func main() {
+	Init()
 	app := fiber.New()
 	app.Use("/",filesystem.New(filesystem.Config{
 		Root:         http.FS(public.Public),

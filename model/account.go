@@ -15,6 +15,7 @@ type Account struct {
 	Status         string
 	CronId         int
 	DriveId        string
+	Limit          int    `json:"limit"`
 	OrderBy        string `json:"order_by"`
 	OrderDirection string `json:"order_direction"`
 }
@@ -79,4 +80,3 @@ func GetAccounts() []*Account {
 	}
 	return accounts
 }
-

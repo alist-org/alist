@@ -67,7 +67,7 @@ func InitModel() {
 		log.Fatalf("not supported database type: %s", config.Type)
 	}
 	log.Infof("auto migrate model")
-	err := conf.DB.AutoMigrate(&model.SettingItem{}, &model.Account{})
+	err := conf.DB.AutoMigrate(&model.SettingItem{}, &model.Account{},&model.Meta{})
 	if err != nil {
 		log.Fatalf("failed to auto migrate")
 	}
@@ -87,7 +87,7 @@ func initAccounts() {
 		model.RegisterAccount(account)
 		driver, ok := drivers.GetDriver(account.Type)
 		if !ok {
-			log.Error("no [%s] driver", driver)
+			log.Errorf("no [%s] driver", driver)
 		} else {
 			err := driver.Save(&account, nil)
 			if err != nil {
