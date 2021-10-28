@@ -18,6 +18,7 @@ type Account struct {
 	Limit          int    `json:"limit"`
 	OrderBy        string `json:"order_by"`
 	OrderDirection string `json:"order_direction"`
+	Proxy          bool   `json:"proxy"`
 }
 
 var accountsMap = map[string]Account{}

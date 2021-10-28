@@ -3,12 +3,14 @@ package drivers
 import (
 	"encoding/json"
 	"github.com/Xhofe/alist/model"
+	"github.com/gofiber/fiber/v2"
 )
 
 type Driver interface {
 	Path(path string, account *model.Account) (*model.File, []*model.File, error)
 	Link(path string, account *model.Account) (string,error)
 	Save(account *model.Account, old *model.Account) error
+	Proxy(ctx *fiber.Ctx)
 }
 
 var driversMap = map[string]Driver{}

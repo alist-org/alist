@@ -10,6 +10,8 @@ func InitApiRouter(app *fiber.App) {
 	// TODO from settings
 	app.Use(cors.New())
 	app.Get("/d/*", Down)
+	// TODO check allow proxy?
+	app.Get("/p/*", Proxy)
 
 	public := app.Group("/api/public")
 	{

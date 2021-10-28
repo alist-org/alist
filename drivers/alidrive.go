@@ -6,6 +6,7 @@ import (
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
 	"github.com/go-resty/resty/v2"
+	"github.com/gofiber/fiber/v2"
 	"github.com/robfig/cron/v3"
 	log "github.com/sirupsen/logrus"
 	"path/filepath"
@@ -23,6 +24,11 @@ func init() {
 }
 
 type AliDrive struct {
+}
+
+func (a AliDrive) Proxy(ctx *fiber.Ctx) {
+	ctx.Request().Header.Del("Origin")
+	ctx.Request().Header.Set("Referer", "https://www.aliyundrive.com/")
 }
 
 type AliRespError struct {

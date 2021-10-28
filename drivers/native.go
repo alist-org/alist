@@ -5,6 +5,7 @@ import (
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
+	"github.com/gofiber/fiber/v2"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
@@ -14,6 +15,10 @@ import (
 
 type Native struct {
 
+}
+
+func (n Native) Proxy(ctx *fiber.Ctx) {
+	panic("implement me")
 }
 
 func (n Native) Save(account *model.Account, old *model.Account) error {
