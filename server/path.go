@@ -3,6 +3,7 @@ package server
 import (
 	"github.com/Xhofe/alist/model"
 	"github.com/gofiber/fiber/v2"
+	"strings"
 )
 
 type PathReq struct {
@@ -15,7 +16,10 @@ func Path(ctx *fiber.Ctx) error {
 	if err := ctx.BodyParser(&req); err != nil {
 		return ErrorResp(ctx, err, 400)
 	}
-	if model.AccountsCount() > 1 && req.Path == "" {
+	if !strings.HasPrefix(req.Path, "/") {
+		req.Path = "/"+req.Path
+	}
+	if model.AccountsCount() > 1 && req.Path == "/" {
 		return ctx.JSON(Resp{
 			Code: 200,
 			Msg:  "folder",

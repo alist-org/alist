@@ -27,12 +27,12 @@ func ParsePath(rawPath string) (*model.Account,string,drivers.Driver,error) {
 		break
 	default:
 		paths := strings.Split(rawPath,"/")
-		path = strings.Join(paths[1:],"/")
-		name = paths[0]
+		path = strings.Join(paths[2:],"/")
+		name = paths[1]
 	}
 	account,ok := model.GetAccount(name)
 	if !ok {
-		return nil,"",nil,fmt.Errorf("")
+		return nil,"",nil,fmt.Errorf("no [%s] account", name)
 	}
 	driver,ok := drivers.GetDriver(account.Type)
 	if !ok {

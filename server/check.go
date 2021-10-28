@@ -22,3 +22,10 @@ func Auth(ctx *fiber.Ctx) error {
 	}
 	return ctx.Next()
 }
+
+func CheckAccount(ctx *fiber.Ctx) error {
+	if model.AccountsCount() == 0 {
+		return ErrorResp(ctx,fmt.Errorf("no accounts,please add one first"),1001)
+	}
+	return ctx.Next()
+}

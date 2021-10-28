@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/model"
+	"github.com/Xhofe/alist/utils"
 	"github.com/go-resty/resty/v2"
 	"github.com/robfig/cron/v3"
 	log "github.com/sirupsen/logrus"
@@ -29,39 +30,47 @@ type AliRespError struct {
 }
 
 type AliFile struct {
-	AliRespError
 	DriveId            string                 `json:"drive_id"`
 	CreatedAt          *time.Time             `json:"created_at"`
-	DomainId           string                 `json:"domain_id"`
-	EncryptMode        string                 `json:"encrypt_mode"`
 	FileExtension      string                 `json:"file_extension"`
 	FileId             string                 `json:"file_id"`
-	Hidden             bool                   `json:"hidden"`
 	Name               string                 `json:"name"`
 	ParentFileId       string                 `json:"parent_file_id"`
-	Starred            bool                   `json:"starred"`
-	Status             string                 `json:"status"`
-	Type               string                 `json:"type"`
 	UpdatedAt          *time.Time             `json:"updated_at"`
-	Category           string                 `json:"category"`
-	ContentHash        string                 `json:"content_hash"`
-	ContentHashName    string                 `json:"content_hash_name"`
-	ContentType        string                 `json:"content_type"`
-	Crc64Hash          string                 `json:"crc_64_hash"`
-	DownloadUrl        string                 `json:"download_url"`
-	PunishFlag         int64                  `json:"punish_flag"`
 	Size               int64                  `json:"size"`
-	Thumbnail          string                 `json:"thumbnail"`
+	//Thumbnail          string                 `json:"thumbnail"`
 	Url                string                 `json:"url"`
-	ImageMediaMetadata map[string]interface{} `json:"image_media_metadata"`
 }
 
-func (a AliDrive) Path(path string, account *model.Account) (*model.File, []*model.File, error) {
-	_, err := conf.Cache.Get(conf.Ctx, path)
-	if err == nil {
-		// return
+func AliToFile(file AliFile) *model.File {
+	return &model.File{
+		Name:      file.Name,
+		Size:      file.Size,
+		Type:      utils.GetFileType(file.FileExtension),
+		UpdatedAt: file.UpdatedAt,
 	}
+}
 
+// path: /aaa/bbb
+func (a AliDrive) Path(path string, account *model.Account) (*model.File, []*model.File, error) {
+	cache, err := conf.Cache.Get(conf.Ctx, path)
+	if err == nil {
+		file,ok := cache.(AliFile)
+		if ok {
+			return AliToFile(file), nil, nil
+		}else {
+			files,_ := cache.([]AliFile)
+			res := make([]*model.File,0)
+			for _,file = range files{
+				res = append(res, AliToFile(file))
+			}
+			return nil, res, nil
+		}
+	}else {
+		if path != "/" {
+
+		}
+	}
 	panic("implement me")
 }
 
