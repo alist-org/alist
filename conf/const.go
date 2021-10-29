@@ -7,4 +7,5 @@ const (
 	VIDEO
 	AUDIO
 	TEXT
+	IMAGE
 )

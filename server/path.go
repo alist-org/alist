@@ -30,7 +30,7 @@ func Path(ctx *fiber.Ctx) error {
 	if model.AccountsCount() > 1 && req.Path == "/" {
 		return ctx.JSON(Resp{
 			Code: 200,
-			Msg:  "folder",
+			Message:  "folder",
 			Data: model.GetAccountFiles(),
 		})
 	}
@@ -45,13 +45,13 @@ func Path(ctx *fiber.Ctx) error {
 	if file != nil {
 		return ctx.JSON(Resp{
 			Code: 200,
-			Msg:  "file",
+			Message:  "file",
 			Data: []*model.File{file},
 		})
 	} else {
 		return ctx.JSON(Resp{
 			Code: 200,
-			Msg:  "folder",
+			Message:  "folder",
 			Data: files,
 		})
 	}

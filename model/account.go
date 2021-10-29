@@ -12,7 +12,7 @@ type Account struct {
 	RefreshToken   string `json:"refresh_token"`
 	AccessToken    string `json:"access_token"`
 	RootFolder     string `json:"root_folder"`
-	Status         string
+	Status         string `json:"status"`
 	CronId         int
 	DriveId        string
 	Limit          int    `json:"limit"`
@@ -74,10 +74,10 @@ func GetAccountFiles() []*File {
 	return files
 }
 
-func GetAccounts() []*Account {
-	accounts := make([]*Account, 0)
+func GetAccounts() []Account {
+	accounts := make([]Account, 0)
 	for _, v := range accountsMap {
-		accounts = append(accounts, &v)
+		accounts = append(accounts, v)
 	}
 	return accounts
 }

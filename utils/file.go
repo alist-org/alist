@@ -35,17 +35,20 @@ func GetFileType(ext string) int {
 		return conf.UNKNOWN
 	}
 	ext = ext[1:]
-	if IsContain(conf.OfficeTypes,ext) {
+	if IsContain(conf.OfficeTypes, ext) {
 		return conf.OFFICE
 	}
-	if IsContain(conf.AudioTypes,ext) {
+	if IsContain(conf.AudioTypes, ext) {
 		return conf.AUDIO
 	}
-	if IsContain(conf.VideoTypes,ext) {
+	if IsContain(conf.VideoTypes, ext) {
 		return conf.VIDEO
 	}
-	if IsContain(conf.TextTypes,ext) {
+	if IsContain(conf.TextTypes, ext) {
 		return conf.TEXT
+	}
+	if IsContain(conf.ImageTypes, ext) {
+		return conf.IMAGE
 	}
 	return conf.UNKNOWN
 }
@@ -65,7 +68,7 @@ func CreatNestedFile(path string) (*os.File, error) {
 
 // WriteToJson write struct to json file
 func WriteToJson(src string, conf interface{}) bool {
-	data, err := json.MarshalIndent(conf,"","  ")
+	data, err := json.MarshalIndent(conf, "", "  ")
 	if err != nil {
 		log.Errorf("failed convert Conf to []byte:%s", err.Error())
 		return false

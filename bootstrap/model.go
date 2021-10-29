@@ -67,7 +67,7 @@ func InitModel() {
 		log.Fatalf("not supported database type: %s", config.Type)
 	}
 	log.Infof("auto migrate model")
-	err := conf.DB.AutoMigrate(&model.SettingItem{}, &model.Account{},&model.Meta{})
+	err := conf.DB.AutoMigrate(&model.SettingItem{}, &model.Account{}, &model.Meta{})
 	if err != nil {
 		log.Fatalf("failed to auto migrate")
 	}
@@ -105,8 +105,9 @@ func initSettings() {
 		version = &model.SettingItem{
 			Key:         "version",
 			Value:       "0.0.0",
+			Type:        "string",
 			Description: "version",
-			Type:        model.CONST,
+			Group:       model.CONST,
 		}
 	}
 	settingsMap := map[string][]model.SettingItem{
@@ -115,25 +116,29 @@ func initSettings() {
 				Key:         "title",
 				Value:       "Alist",
 				Description: "title",
-				Type:        model.PUBLIC,
+				Type:        "string",
+				Group:       model.PUBLIC,
 			},
 			{
 				Key:         "password",
 				Value:       "alist",
+				Type:        "string",
 				Description: "password",
-				Type:        model.PRIVATE,
+				Group:       model.PRIVATE,
 			},
 			{
 				Key:         "version",
 				Value:       "2.0.0",
+				Type:        "string",
 				Description: "version",
-				Type:        model.CONST,
+				Group:       model.CONST,
 			},
 			{
 				Key:         "logo",
 				Value:       "",
+				Type:        "string",
 				Description: "logo",
-				Type:        model.PUBLIC,
+				Group:       model.PUBLIC,
 			},
 		},
 	}

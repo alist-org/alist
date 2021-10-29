@@ -13,7 +13,7 @@ var validate = validator.New()
 
 type Resp struct {
 	Code int `json:"code"`
-	Msg string `json:"msg"`
+	Message string `json:"message"`
 	Data interface{} `json:"data"`
 }
 
@@ -44,7 +44,7 @@ func ParsePath(rawPath string) (*model.Account,string,drivers.Driver,error) {
 func ErrorResp(ctx *fiber.Ctx,err error,code int) error {
 	return ctx.JSON(Resp{
 		Code: code,
-		Msg:  err.Error(),
+		Message:  err.Error(),
 		Data: nil,
 	})
 }
@@ -53,13 +53,13 @@ func SuccessResp(ctx *fiber.Ctx, data ...interface{}) error {
 	if len(data) == 0 {
 		return ctx.JSON(Resp{
 			Code: 200,
-			Msg:  "success",
+			Message:  "success",
 			Data: nil,
 		})
 	}
 	return ctx.JSON(Resp{
 		Code: 200,
-		Msg:  "success",
+		Message:  "success",
 		Data: data[0],
 	})
 }

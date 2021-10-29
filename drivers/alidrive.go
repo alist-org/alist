@@ -24,7 +24,7 @@ func init() {
 		SetHeader("origin", "https://aliyundrive.com")
 }
 
-type AliDrive struct {}
+type AliDrive struct{}
 
 func (a AliDrive) Items() []Item {
 	return []Item{
@@ -73,12 +73,18 @@ type AliFile struct {
 }
 
 func AliToFile(file AliFile) *model.File {
-	return &model.File{
+	f := &model.File{
 		Name:      file.Name,
 		Size:      file.Size,
-		Type:      utils.GetFileType(file.FileExtension),
 		UpdatedAt: file.UpdatedAt,
+		Thumbnail: file.Thumbnail,
 	}
+	if file.Type == "folder" {
+		f.Type = conf.FOLDER
+	} else {
+		f.Type = utils.GetFileType(file.FileExtension)
+	}
+	return f
 }
 
 func (a AliDrive) GetFiles(fileId string, account *model.Account) ([]AliFile, error) {
@@ -105,6 +111,7 @@ func (a AliDrive) GetFiles(fileId string, account *model.Account) ([]AliFile, er
 				"order_direction":         account.OrderDirection,
 				"parent_file_id":          fileId,
 				"video_thumbnail_process": "video/snapshot,t_0,f_jpg,w_50",
+				//"url_expire_sec":          1600,
 			})).Post("https://api.aliyundrive.com/v2/file/list")
 		if err != nil {
 			return nil, err
@@ -122,7 +129,7 @@ func (a AliDrive) GetFiles(fileId string, account *model.Account) ([]AliFile, er
 func (a AliDrive) Path(path string, account *model.Account) (*model.File, []*model.File, error) {
 	path = utils.ParsePath(path)
 	log.Debugf("ali path: %s", path)
-	cache, err := conf.Cache.Get(conf.Ctx, path)
+	cache, err := conf.Cache.Get(conf.Ctx, fmt.Sprintf("%s%s", account.Name, path))
 	if err == nil {
 		file, ok := cache.(AliFile)
 		if ok {
@@ -144,7 +151,7 @@ func (a AliDrive) Path(path string, account *model.Account) (*model.File, []*mod
 			if err != nil {
 				return nil, nil, err
 			}
-			parentFiles_, _ := conf.Cache.Get(conf.Ctx, dir)
+			parentFiles_, _ := conf.Cache.Get(conf.Ctx, fmt.Sprintf("%s%s", account.Name, dir))
 			parentFiles, _ := parentFiles_.([]AliFile)
 			found := false
 			for _, file := range parentFiles {
@@ -166,7 +173,7 @@ func (a AliDrive) Path(path string, account *model.Account) (*model.File, []*mod
 		if err != nil {
 			return nil, nil, err
 		}
-		_ = conf.Cache.Set(conf.Ctx, path, files, nil)
+		_ = conf.Cache.Set(conf.Ctx, fmt.Sprintf("%s%s", account.Name, path), files, nil)
 		res := make([]*model.File, 0)
 		for _, file := range files {
 			res = append(res, AliToFile(file))
@@ -243,6 +250,9 @@ func (a AliDrive) Save(account *model.Account, old *model.Account) error {
 	}
 	if account.RootFolder == "" {
 		account.RootFolder = "root"
+	}
+	if account.Limit == 0 {
+		account.Limit = 200
 	}
 	refresh, access, err := AliRefreshToken(account.RefreshToken)
 	if err != nil {

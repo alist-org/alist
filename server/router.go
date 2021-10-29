@@ -13,17 +13,20 @@ func InitApiRouter(app *fiber.App) {
 	// TODO check allow proxy?
 	app.Get("/p/*", Proxy)
 
-	public := app.Group("/api/public")
+	api := app.Group("/api")
+	api.Use(SetSuccess)
+	public := api.Group("/public")
 	{
 		// TODO check accounts
 		public.Post("/path", CheckAccount, Path)
 		public.Get("/settings", GetSettingsPublic)
 	}
 
-	admin := app.Group("/api/admin")
+	admin := api.Group("/admin")
 	{
 		admin.Use(Auth)
-		admin.Get("/settings", GetSettingsByType)
+		admin.Get("/login", Login)
+		admin.Get("/settings", GetSettings)
 		admin.Post("/settings", SaveSettings)
 		admin.Post("/account", SaveAccount)
 		admin.Get("/accounts", GetAccounts)

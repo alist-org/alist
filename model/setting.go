@@ -14,16 +14,25 @@ type SettingItem struct {
 	Key         string `json:"key" gorm:"primaryKey" validate:"required"`
 	Value       string `json:"value"`
 	Description string `json:"description"`
-	Type        int    `json:"type"`
+	Type        string `json:"type"`
+	Group       int    `json:"group"`
 }
 
 func SaveSettings(items []SettingItem) error {
 	return conf.DB.Save(items).Error
 }
 
-func GetSettingByType(t int) (*[]SettingItem, error) {
+func GetSettingsByGroup(t int) (*[]SettingItem, error) {
 	var items []SettingItem
-	if err := conf.DB.Where("type = ?", t).Find(&items).Error; err != nil {
+	if err := conf.DB.Where("group = ?", t).Find(&items).Error; err != nil {
+		return nil, err
+	}
+	return &items, nil
+}
+
+func GetSettings() (*[]SettingItem, error) {
+	var items []SettingItem
+	if err := conf.DB.Find(&items).Error; err != nil {
 		return nil, err
 	}
 	return &items, nil
@@ -36,4 +45,3 @@ func GetSettingByKey(key string) (*SettingItem, error) {
 	}
 	return &items, nil
 }
-

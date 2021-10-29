@@ -9,7 +9,7 @@ import (
 )
 
 func Auth(ctx *fiber.Ctx) error {
-	token := ctx.Get("token")
+	token := ctx.Get("Authorization")
 	password, err := model.GetSettingByKey("password")
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -20,6 +20,15 @@ func Auth(ctx *fiber.Ctx) error {
 	if token != utils.GetMD5Encode(password.Value) {
 		return ErrorResp(ctx, fmt.Errorf("wrong password"), 401)
 	}
+	return ctx.Next()
+}
+
+func Login(ctx *fiber.Ctx) error {
+	return SuccessResp(ctx)
+}
+
+func SetSuccess(ctx *fiber.Ctx) error {
+	ctx.Status(200)
 	return ctx.Next()
 }
 

@@ -7,4 +7,5 @@ type File struct {
 	Size      int64      `json:"size"`
 	Type      int        `json:"type"`
 	UpdatedAt *time.Time `json:"updated_at"`
+	Thumbnail string     `json:"thumbnail"`
 }
