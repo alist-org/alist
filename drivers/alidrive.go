@@ -16,6 +16,7 @@ import (
 var aliClient = resty.New()
 
 func init() {
+	RegisterDriver("AliDrive", &AliDrive{})
 	aliClient.
 		SetRetryCount(3).
 		SetHeader("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36").
@@ -23,7 +24,23 @@ func init() {
 		SetHeader("origin", "https://aliyundrive.com")
 }
 
-type AliDrive struct {
+type AliDrive struct {}
+
+func (a AliDrive) Items() []Item {
+	return []Item{
+		{
+			Name:     "refresh_token",
+			Label:    "refresh token",
+			Type:     "string",
+			Required: true,
+		},
+		{
+			Name:     "root_folder",
+			Label:    "root folder file_id",
+			Type:     "string",
+			Required: false,
+		},
+	}
 }
 
 func (a AliDrive) Proxy(ctx *fiber.Ctx) {
@@ -184,7 +201,7 @@ func (a AliDrive) Link(path string, account *model.Account) (string, error) {
 					return "", err
 				}
 				if e.Code != "" {
-					return "", fmt.Errorf("%s",e.Message)
+					return "", fmt.Errorf("%s", e.Message)
 				}
 				return resp["url"].(string), nil
 			} else {
@@ -224,6 +241,9 @@ func (a AliDrive) Save(account *model.Account, old *model.Account) error {
 	if old != nil {
 		conf.Cron.Remove(cron.EntryID(old.CronId))
 	}
+	if account.RootFolder == "" {
+		account.RootFolder = "root"
+	}
 	refresh, access, err := AliRefreshToken(account.RefreshToken)
 	if err != nil {
 		return err
@@ -260,7 +280,3 @@ func (a AliDrive) Save(account *model.Account, old *model.Account) error {
 }
 
 var _ Driver = (*AliDrive)(nil)
-
-func init() {
-	RegisterDriver("AliDrive", &AliDrive{})
-}

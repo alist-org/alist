@@ -24,7 +24,7 @@ func Down(ctx *fiber.Ctx) error {
 	if err != nil {
 		return ErrorResp(ctx, err, 500)
 	}
-	if account.Type == "native" {
+	if account.Type == "Native" {
 		return ctx.SendFile(link)
 	} else {
 		return ctx.Redirect(link, 302)
@@ -49,7 +49,7 @@ func Proxy(ctx *fiber.Ctx) error {
 	if err != nil {
 		return ErrorResp(ctx, err, 500)
 	}
-	if account.Type == "native" {
+	if account.Type == "Native" {
 		return ctx.SendFile(link)
 	} else {
 		driver.Proxy(ctx)

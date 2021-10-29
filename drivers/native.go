@@ -14,33 +14,46 @@ import (
 )
 
 type Native struct {
+}
 
+func (n Native) Items() []Item {
+	return []Item{
+		{
+			Name:     "root_folder",
+			Label:    "root folder path",
+			Type:     "string",
+			Required: true,
+		},
+	}
 }
 
 func (n Native) Proxy(ctx *fiber.Ctx) {
-	panic("implement me")
+	// unnecessary
 }
 
 func (n Native) Save(account *model.Account, old *model.Account) error {
-	log.Debugf("save a account: [%s]",account.Name)
+	log.Debugf("save a account: [%s]", account.Name)
+	if !utils.Exists(account.RootFolder) {
+		return fmt.Errorf("[%s] not exist", account.RootFolder)
+	}
 	return nil
 }
 
 // TODO sort files
 func (n Native) Path(path string, account *model.Account) (*model.File, []*model.File, error) {
-	fullPath := filepath.Join(account.RootFolder,path)
-	log.Debugf("%s-%s-%s",account.RootFolder,path,fullPath)
+	fullPath := filepath.Join(account.RootFolder, path)
+	log.Debugf("%s-%s-%s", account.RootFolder, path, fullPath)
 	if !utils.Exists(fullPath) {
-		return nil,nil,fmt.Errorf("path not found")
+		return nil, nil, fmt.Errorf("path not found")
 	}
 	if utils.IsDir(fullPath) {
-		result := make([]*model.File,0)
+		result := make([]*model.File, 0)
 		files, err := ioutil.ReadDir(fullPath)
 		if err != nil {
 			return nil, nil, err
 		}
-		for _,f := range files {
-			if strings.HasPrefix(f.Name(),".") {
+		for _, f := range files {
+			if strings.HasPrefix(f.Name(), ".") {
 				continue
 			}
 			time := f.ModTime()
@@ -52,14 +65,14 @@ func (n Native) Path(path string, account *model.Account) (*model.File, []*model
 			}
 			if f.IsDir() {
 				file.Type = conf.FOLDER
-			}else {
+			} else {
 				file.Type = utils.GetFileType(filepath.Ext(f.Name()))
 			}
 			result = append(result, file)
 		}
 		return nil, result, nil
 	}
-	f,err := os.Stat(fullPath)
+	f, err := os.Stat(fullPath)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -73,8 +86,8 @@ func (n Native) Path(path string, account *model.Account) (*model.File, []*model
 	return file, nil, nil
 }
 
-func (n Native) Link(path string, account *model.Account) (string,error) {
-	fullPath := filepath.Join(account.RootFolder,path)
+func (n Native) Link(path string, account *model.Account) (string, error) {
+	fullPath := filepath.Join(account.RootFolder, path)
 	s, err := os.Stat(fullPath)
 	if err != nil {
 		return "", err
@@ -82,7 +95,7 @@ func (n Native) Link(path string, account *model.Account) (string,error) {
 	if s.IsDir() {
 		return "", fmt.Errorf("can't down folder")
 	}
-	return fullPath,nil
+	return fullPath, nil
 }
 
 var _ Driver = (*Native)(nil)

@@ -6,5 +6,5 @@ import (
 )
 
 func GetDrivers(ctx *fiber.Ctx) error {
-	return SuccessResp(ctx, drivers.GetDriverNames())
+	return SuccessResp(ctx, drivers.GetDrivers())
 }
