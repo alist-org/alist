@@ -62,6 +62,7 @@ func (n Native) Path(path string, account *model.Account) (*model.File, []*model
 				Size:      f.Size(),
 				Type:      0,
 				UpdatedAt: &time,
+				Driver: "Native",
 			}
 			if f.IsDir() {
 				file.Type = conf.FOLDER
@@ -82,6 +83,7 @@ func (n Native) Path(path string, account *model.Account) (*model.File, []*model
 		Size:      f.Size(),
 		Type:      utils.GetFileType(filepath.Ext(f.Name())),
 		UpdatedAt: &time,
+		Driver: "Native",
 	}
 	return file, nil, nil
 }

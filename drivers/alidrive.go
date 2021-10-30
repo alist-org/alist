@@ -65,6 +65,7 @@ type AliFile struct {
 	FileId        string     `json:"file_id"`
 	Type          string     `json:"type"`
 	Name          string     `json:"name"`
+	Category      string     `json:"category"`
 	ParentFileId  string     `json:"parent_file_id"`
 	UpdatedAt     *time.Time `json:"updated_at"`
 	Size          int64      `json:"size"`
@@ -78,11 +79,18 @@ func AliToFile(file AliFile) *model.File {
 		Size:      file.Size,
 		UpdatedAt: file.UpdatedAt,
 		Thumbnail: file.Thumbnail,
+		Driver:    "AliDrive",
 	}
 	if file.Type == "folder" {
 		f.Type = conf.FOLDER
 	} else {
 		f.Type = utils.GetFileType(file.FileExtension)
+	}
+	if file.Category == "video" {
+		f.Type = conf.VIDEO
+	}
+	if file.Category == "image" {
+		f.Type = conf.IMAGE
 	}
 	return f
 }

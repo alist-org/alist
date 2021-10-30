@@ -19,6 +19,7 @@ func InitApiRouter(app *fiber.App) {
 	{
 		public.Post("/path", CheckAccount, Path)
 		public.Get("/settings", GetSettingsPublic)
+		public.Post("/link", CheckAccount, Link)
 	}
 
 	admin := api.Group("/admin")

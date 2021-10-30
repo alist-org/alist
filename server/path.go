@@ -56,3 +56,30 @@ func Path(ctx *fiber.Ctx) error {
 		})
 	}
 }
+
+func Link(ctx *fiber.Ctx) error {
+	var req PathReq
+	if err := ctx.BodyParser(&req); err != nil {
+		return ErrorResp(ctx, err, 400)
+	}
+	rawPath := req.Path
+	rawPath = utils.ParsePath(rawPath)
+	log.Debugf("down: %s",rawPath)
+	account, path, driver, err := ParsePath(rawPath)
+	if err != nil {
+		return ErrorResp(ctx, err, 500)
+	}
+	link, err := driver.Link(path, account)
+	if err != nil {
+		return ErrorResp(ctx, err, 500)
+	}
+	if account.Type == "Native" {
+		return SuccessResp(ctx, fiber.Map{
+			"url":"",
+		})
+	} else {
+		return SuccessResp(ctx,fiber.Map{
+			"url":link,
+		})
+	}
+}

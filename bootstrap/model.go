@@ -142,7 +142,7 @@ func initSettings() {
 			},
 			{
 				Key:         "icon color",
-				Value:       "blue.400",
+				Value:       "teal.300",
 				Type:        "string",
 				Description: "icon's color",
 				Group:       model.PUBLIC,
