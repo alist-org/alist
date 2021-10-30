@@ -103,14 +103,14 @@ func (a AliDrive) GetFiles(fileId string, account *model.Account) ([]AliFile, er
 			SetBody(JsonStr(Json{
 				"drive_id":                account.DriveId,
 				"fields":                  "*",
-				"image_thumbnail_process": "image/resize,w_50",
+				"image_thumbnail_process": "image/resize,w_400/format,jpeg",
 				"image_url_process":       "image/resize,w_1920/format,jpeg",
 				"limit":                   account.Limit,
 				"marker":                  marker,
 				"order_by":                account.OrderBy,
 				"order_direction":         account.OrderDirection,
 				"parent_file_id":          fileId,
-				"video_thumbnail_process": "video/snapshot,t_0,f_jpg,w_50",
+				"video_thumbnail_process": "video/snapshot,t_0,f_jpg,ar_auto,w_300",
 				//"url_expire_sec":          1600,
 			})).Post("https://api.aliyundrive.com/v2/file/list")
 		if err != nil {

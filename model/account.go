@@ -2,6 +2,7 @@ package model
 
 import (
 	"github.com/Xhofe/alist/conf"
+	"time"
 )
 
 type Account struct {
@@ -15,10 +16,11 @@ type Account struct {
 	Status         string `json:"status"`
 	CronId         int
 	DriveId        string
-	Limit          int    `json:"limit"`
-	OrderBy        string `json:"order_by"`
-	OrderDirection string `json:"order_direction"`
-	Proxy          bool   `json:"proxy"`
+	Limit          int        `json:"limit"`
+	OrderBy        string     `json:"order_by"`
+	OrderDirection string     `json:"order_direction"`
+	Proxy          bool       `json:"proxy"`
+	UpdatedAt      *time.Time `json:"updated_at"`
 }
 
 var accountsMap = map[string]Account{}
@@ -68,7 +70,7 @@ func GetAccountFiles() []*File {
 			Name:      v.Name,
 			Size:      0,
 			Type:      conf.FOLDER,
-			UpdatedAt: nil,
+			UpdatedAt: v.UpdatedAt,
 		})
 	}
 	return files

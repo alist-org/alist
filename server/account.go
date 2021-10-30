@@ -5,6 +5,7 @@ import (
 	"github.com/Xhofe/alist/drivers"
 	"github.com/Xhofe/alist/model"
 	"github.com/gofiber/fiber/v2"
+	"time"
 )
 
 func GetAccounts(ctx *fiber.Ctx) error {
@@ -24,6 +25,8 @@ func SaveAccount(ctx *fiber.Ctx) error {
 		return ErrorResp(ctx, fmt.Errorf("no [%s] driver", req.Type), 400)
 	}
 	old, ok := model.GetAccount(req.Name)
+	now := time.Now()
+	req.UpdatedAt = &now
 	if err := model.SaveAccount(req); err != nil {
 		return ErrorResp(ctx, err, 500)
 	} else {

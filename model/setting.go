@@ -24,7 +24,7 @@ func SaveSettings(items []SettingItem) error {
 
 func GetSettingsByGroup(t int) (*[]SettingItem, error) {
 	var items []SettingItem
-	if err := conf.DB.Where("group = ?", t).Find(&items).Error; err != nil {
+	if err := conf.DB.Where("`group` = ?", t).Find(&items).Error; err != nil {
 		return nil, err
 	}
 	return &items, nil

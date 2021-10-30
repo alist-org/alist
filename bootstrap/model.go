@@ -140,6 +140,13 @@ func initSettings() {
 				Description: "logo",
 				Group:       model.PUBLIC,
 			},
+			{
+				Key:         "icon_color",
+				Value:       "blue.400",
+				Type:        "string",
+				Description: "icon's color",
+				Group:       model.PUBLIC,
+			},
 		},
 	}
 	for k, v := range settingsMap {

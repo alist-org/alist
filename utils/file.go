@@ -34,7 +34,7 @@ func GetFileType(ext string) int {
 	if ext == "" {
 		return conf.UNKNOWN
 	}
-	ext = ext[1:]
+	ext = strings.TrimLeft(ext,".")
 	if IsContain(conf.OfficeTypes, ext) {
 		return conf.OFFICE
 	}
