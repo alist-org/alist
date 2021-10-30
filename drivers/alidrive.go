@@ -189,7 +189,7 @@ func (a AliDrive) Link(path string, account *model.Account) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	parentFiles_, _ := conf.Cache.Get(conf.Ctx, dir)
+	parentFiles_, _ := conf.Cache.Get(conf.Ctx, fmt.Sprintf("%s%s", account.Name, dir))
 	parentFiles, _ := parentFiles_.([]AliFile)
 	for _, file := range parentFiles {
 		if file.Name == name {

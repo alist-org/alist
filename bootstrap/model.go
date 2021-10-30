@@ -166,6 +166,6 @@ func initSettings() {
 	}
 	textTypes, err := model.GetSettingByKey("text types")
 	if err==nil{
-		conf.ImageTypes = strings.Split(textTypes.Value,",")
+		conf.TextTypes = strings.Split(textTypes.Value,",")
 	}
 }
