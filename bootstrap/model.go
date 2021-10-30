@@ -135,17 +135,23 @@ func initSettings() {
 			},
 			{
 				Key:         "logo",
-				Value:       "",
+				Value:       "https://store.heytapimage.com/cdo-portal/feedback/202110/30/d43c41c5d257c9bc36366e310374fb19.png",
 				Type:        "string",
 				Description: "logo",
 				Group:       model.PUBLIC,
 			},
 			{
-				Key:         "icon_color",
+				Key:         "icon color",
 				Value:       "blue.400",
 				Type:        "string",
 				Description: "icon's color",
 				Group:       model.PUBLIC,
+			},
+			{
+				Key: "text types",
+				Value: "txt,htm,html,xml,java,properties,sql,js,md,json,conf,ini,vue,php,py,bat,gitignore,yml,go,sh,c,cpp,h,hpp",
+				Type: "string",
+				Description: "text type extensions",
 			},
 		},
 	}
@@ -157,5 +163,9 @@ func initSettings() {
 				log.Fatalf("save settings error")
 			}
 		}
+	}
+	textTypes, err := model.GetSettingByKey("text types")
+	if err==nil{
+		conf.ImageTypes = strings.Split(textTypes.Value,",")
 	}
 }

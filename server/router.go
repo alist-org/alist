@@ -17,7 +17,6 @@ func InitApiRouter(app *fiber.App) {
 	api.Use(SetSuccess)
 	public := api.Group("/public")
 	{
-		// TODO check accounts
 		public.Post("/path", CheckAccount, Path)
 		public.Get("/settings", GetSettingsPublic)
 	}

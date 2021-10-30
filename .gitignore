@@ -24,3 +24,5 @@ dist/
 bin/*
 alist
 *.json
+public/index.html
+public/assets/

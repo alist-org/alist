@@ -1,9 +1,11 @@
 package server
 
 import (
+	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/model"
 	"github.com/gofiber/fiber/v2"
 	"strconv"
+	"strings"
 )
 
 func SaveSettings(ctx *fiber.Ctx) error {
@@ -17,6 +19,10 @@ func SaveSettings(ctx *fiber.Ctx) error {
 	if err := model.SaveSettings(req); err != nil {
 		return ErrorResp(ctx, err, 500)
 	} else {
+		textTypes, err := model.GetSettingByKey("text types")
+		if err==nil{
+			conf.ImageTypes = strings.Split(textTypes.Value,",")
+		}
 		return SuccessResp(ctx)
 	}
 }

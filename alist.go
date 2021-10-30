@@ -27,11 +27,14 @@ func Init() {
 func main() {
 	Init()
 	app := fiber.New()
+	server.InitApiRouter(app)
 	app.Use("/",filesystem.New(filesystem.Config{
 		Root:         http.FS(public.Public),
-		//NotFoundFile: "index.html",
+		NotFoundFile: "index.html",
 	}))
-	server.InitApiRouter(app)
 	log.Info("starting server")
-	_ = app.Listen(fmt.Sprintf(":%d", conf.Conf.Port))
+	err := app.Listen(fmt.Sprintf(":%d", conf.Conf.Port))
+	if err != nil {
+		log.Errorf("failed to start: %s", err.Error())
+	}
 }
