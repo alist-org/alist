@@ -12,6 +12,7 @@ type Driver interface {
 	Link(path string, account *model.Account) (string, error)
 	Save(account *model.Account, old *model.Account) error
 	Proxy(ctx *fiber.Ctx)
+	Preview(path string, account *model.Account) (interface{},error)
 	// TODO
 	//MakeDir(path string, account *model.Account) error
 	//Move(src string, des string, account *model.Account) error

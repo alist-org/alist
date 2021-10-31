@@ -26,6 +26,45 @@ func init() {
 
 type AliDrive struct{}
 
+func (a AliDrive) Preview(path string, account *model.Account) (interface{}, error) {
+	file, err := a.GetFile(path, account)
+	if err != nil {
+		return nil, err
+	}
+	// office
+	var resp Json
+	var e AliRespError
+	var url string
+	req := Json{
+		"drive_id": account.DriveId,
+		"file_id": file.FileId,
+	}
+	switch file.Category {
+	case "doc":
+		{
+			url = "https://api.aliyundrive.com/v2/file/get_office_preview_url"
+			req["access_token"] = account.AccessToken
+		}
+	case "video":
+		{
+			url = "https://api.aliyundrive.com/v2/file/get_video_preview_play_info"
+			req["category"] = "live_transcoding"
+		}
+	default:
+		return nil, fmt.Errorf("don't support")
+	}
+	_, err = aliClient.R().SetResult(&resp).SetError(&e).
+		SetHeader("authorization", "Bearer\t"+account.AccessToken).
+		SetBody(req).Post(url)
+	if err != nil {
+		return nil, err
+	}
+	if e.Code != "" {
+		return nil, fmt.Errorf("%s",e.Message)
+	}
+	return resp, nil
+}
+
 func (a AliDrive) Items() []Item {
 	return []Item{
 		{
@@ -133,6 +172,27 @@ func (a AliDrive) GetFiles(fileId string, account *model.Account) ([]AliFile, er
 	return res, nil
 }
 
+func (a AliDrive) GetFile(path string, account *model.Account) (*AliFile, error) {
+	dir, name := filepath.Split(path)
+	dir = utils.ParsePath(dir)
+	_, _, err := a.Path(dir, account)
+	if err != nil {
+		return nil, err
+	}
+	parentFiles_, _ := conf.Cache.Get(conf.Ctx, fmt.Sprintf("%s%s", account.Name, dir))
+	parentFiles, _ := parentFiles_.([]AliFile)
+	for _, file := range parentFiles {
+		if file.Name == name {
+			if file.Type == "file" {
+				return &file, err
+			} else {
+				return nil, fmt.Errorf("not file")
+			}
+		}
+	}
+	return nil, fmt.Errorf("path not found")
+}
+
 // path: /aaa/bbb
 func (a AliDrive) Path(path string, account *model.Account) (*model.File, []*model.File, error) {
 	path = utils.ParsePath(path)
@@ -191,40 +251,27 @@ func (a AliDrive) Path(path string, account *model.Account) (*model.File, []*mod
 }
 
 func (a AliDrive) Link(path string, account *model.Account) (string, error) {
-	dir, name := filepath.Split(path)
-	dir = utils.ParsePath(dir)
-	_, _, err := a.Path(dir, account)
+	file, err := a.GetFile(path, account)
 	if err != nil {
 		return "", err
 	}
-	parentFiles_, _ := conf.Cache.Get(conf.Ctx, fmt.Sprintf("%s%s", account.Name, dir))
-	parentFiles, _ := parentFiles_.([]AliFile)
-	for _, file := range parentFiles {
-		if file.Name == name {
-			if file.Type == "file" {
-				var resp Json
-				var e AliRespError
-				_, err = aliClient.R().SetResult(&resp).
-					SetError(&e).
-					SetHeader("authorization", "Bearer\t"+account.AccessToken).
-					SetBody(Json{
-						"drive_id":   account.DriveId,
-						"file_id":    file.FileId,
-						"expire_sec": 14400,
-					}).Post("https://api.aliyundrive.com/v2/file/get_download_url")
-				if err != nil {
-					return "", err
-				}
-				if e.Code != "" {
-					return "", fmt.Errorf("%s", e.Message)
-				}
-				return resp["url"].(string), nil
-			} else {
-				return "", fmt.Errorf("can't down folder")
-			}
-		}
+	var resp Json
+	var e AliRespError
+	_, err = aliClient.R().SetResult(&resp).
+		SetError(&e).
+		SetHeader("authorization", "Bearer\t"+account.AccessToken).
+		SetBody(Json{
+			"drive_id":   account.DriveId,
+			"file_id":    file.FileId,
+			"expire_sec": 14400,
+		}).Post("https://api.aliyundrive.com/v2/file/get_download_url")
+	if err != nil {
+		return "", err
 	}
-	return "", fmt.Errorf("path not found")
+	if e.Code != "" {
+		return "", fmt.Errorf("%s", e.Message)
+	}
+	return resp["url"].(string), nil
 }
 
 type AliTokenResp struct {

@@ -64,7 +64,7 @@ func Link(ctx *fiber.Ctx) error {
 	}
 	rawPath := req.Path
 	rawPath = utils.ParsePath(rawPath)
-	log.Debugf("down: %s",rawPath)
+	log.Debugf("link: %s",rawPath)
 	account, path, driver, err := ParsePath(rawPath)
 	if err != nil {
 		return ErrorResp(ctx, err, 500)
@@ -81,5 +81,25 @@ func Link(ctx *fiber.Ctx) error {
 		return SuccessResp(ctx,fiber.Map{
 			"url":link,
 		})
+	}
+}
+
+func Preview(ctx *fiber.Ctx) error {
+	var req PathReq
+	if err := ctx.BodyParser(&req); err != nil {
+		return ErrorResp(ctx, err, 400)
+	}
+	rawPath := req.Path
+	rawPath = utils.ParsePath(rawPath)
+	log.Debugf("preview: %s",rawPath)
+	account, path, driver, err := ParsePath(rawPath)
+	if err != nil {
+		return ErrorResp(ctx, err, 500)
+	}
+	data, err := driver.Preview(path, account)
+	if err != nil {
+		return ErrorResp(ctx,err,500)
+	}else {
+		return SuccessResp(ctx,data)
 	}
 }

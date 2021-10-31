@@ -16,6 +16,10 @@ import (
 type Native struct {
 }
 
+func (n Native) Preview(path string, account *model.Account) (interface{}, error) {
+	return nil,fmt.Errorf("no need")
+}
+
 func (n Native) Items() []Item {
 	return []Item{
 		{
