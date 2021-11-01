@@ -11,24 +11,39 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
+	log2 "log"
+	"os"
 	"strings"
+	"time"
 )
 
 func InitModel() {
 	log.Infof("init model...")
-	config := conf.Conf.Database
-	switch config.Type {
+	databaseConfig := conf.Conf.Database
+	newLogger := logger.New(
+		log2.New(os.Stdout, "\r\n", log2.LstdFlags),
+		logger.Config{
+			SlowThreshold:             time.Second,
+			LogLevel:                  logger.Silent,
+			IgnoreRecordNotFoundError: true,
+			Colorful:                  true,
+		},
+	)
+	gormConfig := &gorm.Config{
+		NamingStrategy: schema.NamingStrategy{
+			TablePrefix: databaseConfig.TablePrefix,
+		},
+		Logger: newLogger,
+	}
+	switch databaseConfig.Type {
 	case "sqlite3":
 		{
-			if !(strings.HasSuffix(config.DBFile, ".db") && len(config.DBFile) > 3) {
+			if !(strings.HasSuffix(databaseConfig.DBFile, ".db") && len(databaseConfig.DBFile) > 3) {
 				log.Fatalf("db name error.")
 			}
-			db, err := gorm.Open(sqlite.Open(config.DBFile), &gorm.Config{
-				NamingStrategy: schema.NamingStrategy{
-					TablePrefix: config.TablePrefix,
-				},
-			})
+			db, err := gorm.Open(sqlite.Open(databaseConfig.DBFile), gormConfig)
 			if err != nil {
 				log.Fatalf("failed to connect database:%s", err.Error())
 			}
@@ -37,12 +52,8 @@ func InitModel() {
 	case "mysql":
 		{
 			dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local",
-				config.User, config.Password, config.Host, config.Port, config.Name)
-			db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
-				NamingStrategy: schema.NamingStrategy{
-					TablePrefix: config.TablePrefix,
-				},
-			})
+				databaseConfig.User, databaseConfig.Password, databaseConfig.Host, databaseConfig.Port, databaseConfig.Name)
+			db, err := gorm.Open(mysql.Open(dsn), gormConfig)
 			if err != nil {
 				log.Fatalf("failed to connect database:%s", err.Error())
 			}
@@ -51,12 +62,8 @@ func InitModel() {
 	case "postgres":
 		{
 			dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=disable TimeZone=Asia/Shanghai",
-				config.Host, config.User, config.Password, config.Name, config.Port)
-			db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-				NamingStrategy: schema.NamingStrategy{
-					TablePrefix: config.TablePrefix,
-				},
-			})
+				databaseConfig.Host, databaseConfig.User, databaseConfig.Password, databaseConfig.Name, databaseConfig.Port)
+			db, err := gorm.Open(postgres.Open(dsn), gormConfig)
 			if err != nil {
 				log.Errorf("failed to connect database:%s", err.Error())
 			}
@@ -64,7 +71,7 @@ func InitModel() {
 
 		}
 	default:
-		log.Fatalf("not supported database type: %s", config.Type)
+		log.Fatalf("not supported database type: %s", databaseConfig.Type)
 	}
 	log.Infof("auto migrate model")
 	err := conf.DB.AutoMigrate(&model.SettingItem{}, &model.Account{}, &model.Meta{})
