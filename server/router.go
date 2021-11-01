@@ -33,5 +33,6 @@ func InitApiRouter(app *fiber.App) {
 		admin.Get("/accounts", GetAccounts)
 		admin.Delete("/account", DeleteAccount)
 		admin.Get("/drivers", GetDrivers)
+		admin.Get("/clear_cache",ClearCache)
 	}
 }

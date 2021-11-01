@@ -148,10 +148,22 @@ func initSettings() {
 				Group:       model.PUBLIC,
 			},
 			{
-				Key: "text types",
-				Value: "txt,htm,html,xml,java,properties,sql,js,md,json,conf,ini,vue,php,py,bat,gitignore,yml,go,sh,c,cpp,h,hpp",
-				Type: "string",
+				Key:         "text types",
+				Value:       "txt,htm,html,xml,java,properties,sql,js,md,json,conf,ini,vue,php,py,bat,gitignore,yml,go,sh,c,cpp,h,hpp",
+				Type:        "string",
 				Description: "text type extensions",
+			},
+			{
+				Key:         "readme file",
+				Value:       "hide",
+				Type:        "string",
+				Description: "hide readme file? (show/hide)",
+			},
+			{
+				Key:         "music cover",
+				Value:       "https://store.heytapimage.com/cdo-portal/feedback/202110/30/d43c41c5d257c9bc36366e310374fb19.png",
+				Type:        "string",
+				Description: "music cover image",
 			},
 		},
 	}
@@ -165,7 +177,7 @@ func initSettings() {
 		}
 	}
 	textTypes, err := model.GetSettingByKey("text types")
-	if err==nil{
-		conf.TextTypes = strings.Split(textTypes.Value,",")
+	if err == nil {
+		conf.TextTypes = strings.Split(textTypes.Value, ",")
 	}
 }

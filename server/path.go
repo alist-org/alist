@@ -43,6 +43,9 @@ func Path(ctx *fiber.Ctx) error {
 		return ErrorResp(ctx, err, 500)
 	}
 	if file != nil {
+		if account.Type == "Native" {
+			file.Url = fmt.Sprintf("%s://%s/p%s",ctx.Protocol(),ctx.Hostname(),req.Path)
+		}
 		return ctx.JSON(Resp{
 			Code: 200,
 			Message:  "file",
@@ -75,7 +78,7 @@ func Link(ctx *fiber.Ctx) error {
 	}
 	if account.Type == "Native" {
 		return SuccessResp(ctx, fiber.Map{
-			"url":"",
+			"url":fmt.Sprintf("%s://%s/p%s",ctx.Protocol(),ctx.Hostname(),rawPath),
 		})
 	} else {
 		return SuccessResp(ctx,fiber.Map{

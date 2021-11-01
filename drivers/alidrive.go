@@ -37,7 +37,7 @@ func (a AliDrive) Preview(path string, account *model.Account) (interface{}, err
 	var url string
 	req := Json{
 		"drive_id": account.DriveId,
-		"file_id": file.FileId,
+		"file_id":  file.FileId,
 	}
 	switch file.Category {
 	case "doc":
@@ -60,7 +60,7 @@ func (a AliDrive) Preview(path string, account *model.Account) (interface{}, err
 		return nil, err
 	}
 	if e.Code != "" {
-		return nil, fmt.Errorf("%s",e.Message)
+		return nil, fmt.Errorf("%s", e.Message)
 	}
 	return resp, nil
 }
@@ -119,6 +119,7 @@ func AliToFile(file AliFile) *model.File {
 		UpdatedAt: file.UpdatedAt,
 		Thumbnail: file.Thumbnail,
 		Driver:    "AliDrive",
+		Url:       file.Url,
 	}
 	if file.Type == "folder" {
 		f.Type = conf.FOLDER
@@ -158,7 +159,7 @@ func (a AliDrive) GetFiles(fileId string, account *model.Account) ([]AliFile, er
 				"order_direction":         account.OrderDirection,
 				"parent_file_id":          fileId,
 				"video_thumbnail_process": "video/snapshot,t_0,f_jpg,ar_auto,w_300",
-				//"url_expire_sec":          1600,
+				"url_expire_sec":          14400,
 			})).Post("https://api.aliyundrive.com/v2/file/list")
 		if err != nil {
 			return nil, err
@@ -226,6 +227,11 @@ func (a AliDrive) Path(path string, account *model.Account) (*model.File, []*mod
 				if file.Name == name {
 					found = true
 					if file.Type == "file" {
+						url,err := a.Link(path,account)
+						if err != nil {
+							return nil, nil, err
+						}
+						file.Url = url
 						return AliToFile(file), nil, nil
 					} else {
 						fileId = file.FileId
@@ -251,7 +257,7 @@ func (a AliDrive) Path(path string, account *model.Account) (*model.File, []*mod
 }
 
 func (a AliDrive) Link(path string, account *model.Account) (string, error) {
-	file, err := a.GetFile(path, account)
+	file, err := a.GetFile(utils.ParsePath(path), account)
 	if err != nil {
 		return "", err
 	}

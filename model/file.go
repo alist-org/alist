@@ -9,4 +9,5 @@ type File struct {
 	Driver    string     `json:"driver"`
 	UpdatedAt *time.Time `json:"updated_at"`
 	Thumbnail string     `json:"thumbnail"`
+	Url       string     `json:"url"`
 }
