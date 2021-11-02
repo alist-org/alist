@@ -21,6 +21,7 @@ type Account struct {
 	OrderDirection string     `json:"order_direction"`
 	Proxy          bool       `json:"proxy"`
 	UpdatedAt      *time.Time `json:"updated_at"`
+	Search         bool       `json:"search"`
 }
 
 var accountsMap = map[string]Account{}

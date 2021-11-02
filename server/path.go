@@ -6,6 +6,7 @@ import (
 	"github.com/Xhofe/alist/utils"
 	"github.com/gofiber/fiber/v2"
 	log "github.com/sirupsen/logrus"
+	"strings"
 )
 
 type PathReq struct {
@@ -19,19 +20,19 @@ func Path(ctx *fiber.Ctx) error {
 		return ErrorResp(ctx, err, 400)
 	}
 	req.Path = utils.ParsePath(req.Path)
-	log.Debugf("path: %s",req.Path)
+	log.Debugf("path: %s", req.Path)
 	meta, err := model.GetMetaByPath(req.Path)
 	if err == nil {
-		if meta.Password != "" && meta.Password!= req.Password {
-			return ErrorResp(ctx,fmt.Errorf("wrong password"),401)
+		if meta.Password != "" && meta.Password != req.Password {
+			return ErrorResp(ctx, fmt.Errorf("wrong password"), 401)
 		}
 		// TODO hide or ignore?
 	}
 	if model.AccountsCount() > 1 && req.Path == "/" {
 		return ctx.JSON(Resp{
-			Code: 200,
-			Message:  "folder",
-			Data: model.GetAccountFiles(),
+			Code:    200,
+			Message: "folder",
+			Data:    model.GetAccountFiles(),
 		})
 	}
 	account, path, driver, err := ParsePath(req.Path)
@@ -44,18 +45,28 @@ func Path(ctx *fiber.Ctx) error {
 	}
 	if file != nil {
 		if account.Type == "Native" {
-			file.Url = fmt.Sprintf("%s://%s/p%s",ctx.Protocol(),ctx.Hostname(),req.Path)
+			file.Url = fmt.Sprintf("%s://%s/p%s", ctx.Protocol(), ctx.Hostname(), req.Path)
 		}
 		return ctx.JSON(Resp{
-			Code: 200,
-			Message:  "file",
-			Data: []*model.File{file},
+			Code:    200,
+			Message: "file",
+			Data:    []*model.File{file},
 		})
 	} else {
+		if meta != nil && meta.Hide != "" {
+			tmpFiles := make([]*model.File, 0)
+			hideFiles := strings.Split(meta.Hide, ",")
+			for _, item := range files {
+				if !utils.IsContain(hideFiles, item.Name) {
+					tmpFiles = append(tmpFiles, item)
+				}
+			}
+			files = tmpFiles
+		}
 		return ctx.JSON(Resp{
-			Code: 200,
-			Message:  "folder",
-			Data: files,
+			Code:    200,
+			Message: "folder",
+			Data:    files,
 		})
 	}
 }
@@ -67,7 +78,7 @@ func Link(ctx *fiber.Ctx) error {
 	}
 	rawPath := req.Path
 	rawPath = utils.ParsePath(rawPath)
-	log.Debugf("link: %s",rawPath)
+	log.Debugf("link: %s", rawPath)
 	account, path, driver, err := ParsePath(rawPath)
 	if err != nil {
 		return ErrorResp(ctx, err, 500)
@@ -78,11 +89,11 @@ func Link(ctx *fiber.Ctx) error {
 	}
 	if account.Type == "Native" {
 		return SuccessResp(ctx, fiber.Map{
-			"url":fmt.Sprintf("%s://%s/p%s",ctx.Protocol(),ctx.Hostname(),rawPath),
+			"url": fmt.Sprintf("%s://%s/p%s", ctx.Protocol(), ctx.Hostname(), rawPath),
 		})
 	} else {
-		return SuccessResp(ctx,fiber.Map{
-			"url":link,
+		return SuccessResp(ctx, fiber.Map{
+			"url": link,
 		})
 	}
 }
@@ -94,15 +105,15 @@ func Preview(ctx *fiber.Ctx) error {
 	}
 	rawPath := req.Path
 	rawPath = utils.ParsePath(rawPath)
-	log.Debugf("preview: %s",rawPath)
+	log.Debugf("preview: %s", rawPath)
 	account, path, driver, err := ParsePath(rawPath)
 	if err != nil {
 		return ErrorResp(ctx, err, 500)
 	}
 	data, err := driver.Preview(path, account)
 	if err != nil {
-		return ErrorResp(ctx,err,500)
-	}else {
-		return SuccessResp(ctx,data)
+		return ErrorResp(ctx, err, 500)
+	} else {
+		return SuccessResp(ctx, data)
 	}
 }
