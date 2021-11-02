@@ -112,7 +112,7 @@ type AliFile struct {
 	Url           string     `json:"url"`
 }
 
-func AliToFile(file AliFile) *model.File {
+func (a AliDrive) FormatFile(file *AliFile) *model.File {
 	f := &model.File{
 		Name:      file.Name,
 		Size:      file.Size,
@@ -148,7 +148,7 @@ func (a AliDrive) GetFiles(fileId string, account *model.Account) ([]AliFile, er
 			SetResult(&resp).
 			SetError(&e).
 			SetHeader("authorization", "Bearer\t"+account.AccessToken).
-			SetBody(JsonStr(Json{
+			SetBody(Json{
 				"drive_id":                account.DriveId,
 				"fields":                  "*",
 				"image_thumbnail_process": "image/resize,w_400/format,jpeg",
@@ -160,11 +160,20 @@ func (a AliDrive) GetFiles(fileId string, account *model.Account) ([]AliFile, er
 				"parent_file_id":          fileId,
 				"video_thumbnail_process": "video/snapshot,t_0,f_jpg,ar_auto,w_300",
 				"url_expire_sec":          14400,
-			})).Post("https://api.aliyundrive.com/v2/file/list")
+			}).Post("https://api.aliyundrive.com/v2/file/list")
 		if err != nil {
 			return nil, err
 		}
 		if e.Code != "" {
+			if e.Code == "AccessTokenInvalid" {
+				err = a.RefreshToken(account)
+				if err != nil {
+					return nil, err
+				} else {
+					_ = model.SaveAccount(*account)
+					return a.GetFiles(fileId, account)
+				}
+			}
 			return nil, fmt.Errorf("%s", e.Message)
 		}
 		marker = resp.NextMarker
@@ -202,12 +211,12 @@ func (a AliDrive) Path(path string, account *model.Account) (*model.File, []*mod
 	if err == nil {
 		file, ok := cache.(AliFile)
 		if ok {
-			return AliToFile(file), nil, nil
+			return a.FormatFile(&file), nil, nil
 		} else {
 			files, _ := cache.([]AliFile)
 			res := make([]*model.File, 0)
 			for _, file = range files {
-				res = append(res, AliToFile(file))
+				res = append(res, a.FormatFile(&file))
 			}
 			return nil, res, nil
 		}
@@ -227,12 +236,12 @@ func (a AliDrive) Path(path string, account *model.Account) (*model.File, []*mod
 				if file.Name == name {
 					found = true
 					if file.Type == "file" {
-						url,err := a.Link(path,account)
+						url, err := a.Link(path, account)
 						if err != nil {
 							return nil, nil, err
 						}
 						file.Url = url
-						return AliToFile(file), nil, nil
+						return a.FormatFile(&file), nil, nil
 					} else {
 						fileId = file.FileId
 						break
@@ -250,7 +259,7 @@ func (a AliDrive) Path(path string, account *model.Account) (*model.File, []*mod
 		_ = conf.Cache.Set(conf.Ctx, fmt.Sprintf("%s%s", account.Name, path), files, nil)
 		res := make([]*model.File, 0)
 		for _, file := range files {
-			res = append(res, AliToFile(file))
+			res = append(res, a.FormatFile(&file))
 		}
 		return nil, res, nil
 	}
@@ -275,34 +284,39 @@ func (a AliDrive) Link(path string, account *model.Account) (string, error) {
 		return "", err
 	}
 	if e.Code != "" {
+		if e.Code == "AccessTokenInvalid" {
+			err = a.RefreshToken(account)
+			if err != nil {
+				return "", err
+			} else {
+				_ = model.SaveAccount(*account)
+				return a.Link(path, account)
+			}
+		}
 		return "", fmt.Errorf("%s", e.Message)
 	}
 	return resp["url"].(string), nil
 }
 
-type AliTokenResp struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-}
-
-func AliRefreshToken(refresh string) (string, string, error) {
+func (a AliDrive) RefreshToken(account *model.Account) error {
 	url := "https://auth.aliyundrive.com/v2/account/token"
-	var resp AliTokenResp
+	var resp TokenResp
 	var e AliRespError
 	_, err := aliClient.R().
 		//ForceContentType("application/json").
-		SetBody(JsonStr(Json{"refresh_token": refresh, "grant_type": "refresh_token"})).
+		SetBody(Json{"refresh_token": account.RefreshToken, "grant_type": "refresh_token"}).
 		SetResult(&resp).
 		SetError(&e).
 		Post(url)
 	if err != nil {
-		return "", "", err
+		return err
 	}
 	log.Debugf("%+v,%+v", resp, e)
 	if e.Code != "" {
-		return "", "", fmt.Errorf("failed to refresh token: %s", e.Message)
+		return fmt.Errorf("failed to refresh token: %s", e.Message)
 	}
-	return resp.RefreshToken, resp.AccessToken, nil
+	account.RefreshToken, account.AccessToken = resp.RefreshToken, resp.AccessToken
+	return nil
 }
 
 func (a AliDrive) Save(account *model.Account, old *model.Account) error {
@@ -315,25 +329,24 @@ func (a AliDrive) Save(account *model.Account, old *model.Account) error {
 	if account.Limit == 0 {
 		account.Limit = 200
 	}
-	refresh, access, err := AliRefreshToken(account.RefreshToken)
+	err := a.RefreshToken(account)
 	if err != nil {
 		return err
 	}
 	var resp Json
 	_, _ = aliClient.R().SetResult(&resp).
 		SetBody("{}").
-		SetHeader("authorization", "Bearer\t"+access).
+		SetHeader("authorization", "Bearer\t"+account.AccessToken).
 		Post("https://api.aliyundrive.com/v2/user/get")
 	log.Debugf("user info: %+v", resp)
 	account.DriveId = resp["default_drive_id"].(string)
-	account.RefreshToken, account.AccessToken = refresh, access
 	cronId, err := conf.Cron.AddFunc("@every 2h", func() {
 		name := account.Name
 		newAccount, ok := model.GetAccount(name)
 		if !ok {
 			return
 		}
-		newAccount.RefreshToken, newAccount.AccessToken, err = AliRefreshToken(newAccount.RefreshToken)
+		err = a.RefreshToken(&newAccount)
 		if err != nil {
 			newAccount.Status = err.Error()
 		}

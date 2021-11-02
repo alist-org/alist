@@ -1,7 +1,6 @@
 package drivers
 
 import (
-	"encoding/json"
 	"github.com/Xhofe/alist/model"
 	"github.com/gofiber/fiber/v2"
 )
@@ -12,7 +11,7 @@ type Driver interface {
 	Link(path string, account *model.Account) (string, error)
 	Save(account *model.Account, old *model.Account) error
 	Proxy(ctx *fiber.Ctx)
-	Preview(path string, account *model.Account) (interface{},error)
+	Preview(path string, account *model.Account) (interface{}, error)
 	// TODO
 	//MakeDir(path string, account *model.Account) error
 	//Move(src string, des string, account *model.Account) error
@@ -24,8 +23,14 @@ type Item struct {
 	Name        string `json:"name"`
 	Label       string `json:"label"`
 	Type        string `json:"type"`
+	Values      string `json:"values"`
 	Required    bool   `json:"required"`
 	Description string `json:"description"`
+}
+
+type TokenResp struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
 }
 
 var driversMap = map[string]Driver{}
@@ -48,8 +53,3 @@ func GetDrivers() map[string][]Item {
 }
 
 type Json map[string]interface{}
-
-func JsonStr(j Json) string {
-	data, _ := json.Marshal(j)
-	return string(data)
-}

@@ -22,6 +22,13 @@ type Account struct {
 	Proxy          bool       `json:"proxy"`
 	UpdatedAt      *time.Time `json:"updated_at"`
 	Search         bool       `json:"search"`
+	ClientId       string     `json:"client_id"`
+	ClientSecret   string     `json:"client_secret"`
+	Zone           string     `json:"zone"`
+	RedirectUri    string     `json:"redirect_uri"`
+	SiteUrl        string     `json:"site_url"`
+	SiteId         string
+	OnedriveType   string `json:"onedrive_type"`
 }
 
 var accountsMap = map[string]Account{}
