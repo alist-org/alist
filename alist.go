@@ -13,10 +13,22 @@ import (
 	"net/http"
 )
 
-func Init() {
+var (
+	builtAt   string
+	goVersion string
+	gitAuthor string
+	gitCommit string
+	gitTag    string
+)
+
+func init() {
 	flag.StringVar(&conf.ConfigFile, "conf", "config.json", "config file")
-	flag.BoolVar(&conf.Debug,"debug",false,"start with debug mode")
+	flag.BoolVar(&conf.Debug, "debug", false, "start with debug mode")
+	flag.BoolVar(&conf.Version, "version", false, "print version info")
 	flag.Parse()
+}
+
+func Init() {
 	bootstrap.InitLog()
 	bootstrap.InitConf()
 	bootstrap.InitCron()
@@ -25,10 +37,14 @@ func Init() {
 }
 
 func main() {
+	if conf.Version {
+		log.Infof("Built At: %s\nGo Version: %s\nAuthor: %s\nCommit ID: %s\nVersion:%s", builtAt, goVersion, gitAuthor, gitCommit, gitTag)
+		return
+	}
 	Init()
 	app := fiber.New()
 	server.InitApiRouter(app)
-	app.Use("/",filesystem.New(filesystem.Config{
+	app.Use("/", filesystem.New(filesystem.Config{
 		Root:         http.FS(public.Public),
 		NotFoundFile: "index.html",
 	}))

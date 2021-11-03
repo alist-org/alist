@@ -11,17 +11,18 @@ var (
 	ConfigFile string // config file
 	Conf       *Config
 	Debug      bool
+	Version    bool
 
-	DB *gorm.DB
+	DB    *gorm.DB
 	Cache *cache.Cache
-	Ctx = context.TODO()
-	Cron *cron.Cron
+	Ctx   = context.TODO()
+	Cron  *cron.Cron
 )
 
 var (
 	TextTypes   = []string{"txt", "go", "md"}
 	OfficeTypes = []string{"doc", "docx", "xls", "xlsx", "ppt", "pptx", "pdf"}
 	VideoTypes  = []string{"mp4", "mkv", "avi", "mov", "rmvb"}
-	AudioTypes  = []string{"mp3", "flac","ogg"}
-	ImageTypes = []string{"jpg","tiff","jpeg","png","gif","bmp","svg"}
+	AudioTypes  = []string{"mp3", "flac", "ogg"}
+	ImageTypes  = []string{"jpg", "tiff", "jpeg", "png", "gif", "bmp", "svg"}
 )

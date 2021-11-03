@@ -22,9 +22,9 @@ func SaveSettings(items []SettingItem) error {
 	return conf.DB.Save(items).Error
 }
 
-func GetSettingsByGroup(t int) (*[]SettingItem, error) {
+func GetSettingsPublic() (*[]SettingItem, error) {
 	var items []SettingItem
-	if err := conf.DB.Where("`group` = ?", t).Find(&items).Error; err != nil {
+	if err := conf.DB.Where("`group` <> ?", 1).Find(&items).Error; err != nil {
 		return nil, err
 	}
 	return &items, nil
