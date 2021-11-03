@@ -22,6 +22,7 @@ func SaveMeta(ctx *fiber.Ctx) error {
 	if err := validate.Struct(req); err != nil {
 		return ErrorResp(ctx, err, 400)
 	}
+	req.Path = utils.ParsePath(req.Path)
 	if err := model.SaveMeta(req); err != nil {
 		return ErrorResp(ctx, err, 500)
 	} else {
