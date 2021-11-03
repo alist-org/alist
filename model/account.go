@@ -7,6 +7,7 @@ import (
 
 type Account struct {
 	Name           string `json:"name" gorm:"primaryKey" validate:"required"`
+	Index          int    `json:"index" validate:"required"`
 	Type           string `json:"type"`
 	Username       string `json:"username"`
 	Password       string `json:"password"`
@@ -71,9 +72,13 @@ func GetAccount(name string) (Account, bool) {
 	return account, ok
 }
 
-func GetAccountFiles() []*File {
+func GetAccountFiles() ([]*File, error) {
 	files := make([]*File, 0)
-	for _, v := range accountsMap {
+	var accounts []Account
+	if err := conf.DB.Order("`index`").Find(&accounts).Error; err != nil {
+		return nil, err
+	}
+	for _, v := range accounts {
 		files = append(files, &File{
 			Name:      v.Name,
 			Size:      0,
@@ -81,13 +86,13 @@ func GetAccountFiles() []*File {
 			UpdatedAt: v.UpdatedAt,
 		})
 	}
-	return files
+	return files, nil
 }
 
-func GetAccounts() []Account {
-	accounts := make([]Account, 0)
-	for _, v := range accountsMap {
-		accounts = append(accounts, v)
+func GetAccounts() ([]Account, error) {
+	var accounts []Account
+	if err := conf.DB.Order("`index`").Find(&accounts).Error; err != nil {
+		return nil, err
 	}
-	return accounts
+	return accounts, nil
 }

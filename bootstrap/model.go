@@ -172,6 +172,11 @@ func initSettings() {
 				Type:        "string",
 				Description: "music cover image",
 			},
+			{
+				Key:         "site beian",
+				Type:        "string",
+				Description: "chinese beian info",
+			},
 		},
 	}
 	for k, v := range settingsMap {

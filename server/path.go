@@ -29,10 +29,14 @@ func Path(ctx *fiber.Ctx) error {
 		// TODO hide or ignore?
 	}
 	if model.AccountsCount() > 1 && req.Path == "/" {
+		files, err := model.GetAccountFiles()
+		if err != nil {
+			return ErrorResp(ctx, err, 500)
+		}
 		return ctx.JSON(Resp{
 			Code:    200,
 			Message: "folder",
-			Data:    model.GetAccountFiles(),
+			Data:    files,
 		})
 	}
 	account, path, driver, err := ParsePath(req.Path)

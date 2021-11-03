@@ -9,7 +9,11 @@ import (
 )
 
 func GetAccounts(ctx *fiber.Ctx) error {
-	return SuccessResp(ctx, model.GetAccounts())
+	accounts, err := model.GetAccounts()
+	if err != nil {
+		return ErrorResp(ctx, err, 500)
+	}
+	return SuccessResp(ctx, accounts)
 }
 
 func SaveAccount(ctx *fiber.Ctx) error {
@@ -32,11 +36,11 @@ func SaveAccount(ctx *fiber.Ctx) error {
 	} else {
 		if ok {
 			err = driver.Save(&req, &old)
-		}else {
+		} else {
 			err = driver.Save(&req, nil)
 		}
 		if err != nil {
-			return ErrorResp(ctx,err,500)
+			return ErrorResp(ctx, err, 500)
 		}
 		return SuccessResp(ctx)
 	}

@@ -79,6 +79,13 @@ func (a AliDrive) Items() []Item {
 			Type:     "string",
 			Required: false,
 		},
+		{
+			Name:        "limit",
+			Label:       "limit",
+			Type:        "number",
+			Required:    false,
+			Description: ">0 and <=200",
+		},
 	}
 }
 
