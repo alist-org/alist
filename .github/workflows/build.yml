@@ -26,7 +26,7 @@ jobs:
           ref: v2
           path: alist
 
-      - name: Checkout tools repo
+      - name: Checkout web repo
         uses: actions/checkout@v2
         with:
           repository: Xhofe/alist-web
@@ -42,7 +42,7 @@ jobs:
         run: |
           docker pull techknowlogick/xgo:latest
           go install src.techknowlogick.com/xgo@latest
-          apt install upx
+          sudo apt install upx
 
       - name: Build web
         run: |
@@ -54,7 +54,7 @@ jobs:
       - name: Build
         run: |
           cd alist
-          sh build.sh
+          bash build.sh
           cd ..
 
       - name: Upload artifact
