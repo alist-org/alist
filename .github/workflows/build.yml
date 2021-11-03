@@ -1,0 +1,64 @@
+name: build
+
+on:
+  push:
+    branches: [ v2 ]
+  pull_request:
+    branches: [ v2 ]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        platform: [ubuntu-latest]
+        go-version: [1.17]
+    name: Build
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: v2
+          path: alist
+
+      - name: Checkout tools repo
+        uses: actions/checkout@v2
+        with:
+          repository: Xhofe/alist-web
+          ref: v2
+          path: alist-web
+
+      - name: Set up Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+
+      - name: Set up xgo
+        run: |
+          docker pull techknowlogick/xgo:latest
+          go install src.techknowlogick.com/xgo@latest
+          apt install upx
+
+      - name: Build web
+        run: |
+          cd alist-web
+          yarn
+          yarn build
+          cd ..
+
+      - name: Build
+        run: |
+          cd alist
+          sh build.sh
+          cd ..
+
+      - name: Upload artifact
+      - uses: actions/upload-artifact@v2
+        with:
+          name: artifact
+          path: alist/build
