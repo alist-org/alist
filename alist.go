@@ -38,7 +38,7 @@ func Init() {
 
 func main() {
 	if conf.Version {
-		log.Infof("Built At: %s\nGo Version: %s\nAuthor: %s\nCommit ID: %s\nVersion:%s", builtAt, goVersion, gitAuthor, gitCommit, gitTag)
+		fmt.Printf("Built At: %s\nGo Version: %s\nAuthor: %s\nCommit ID: %s\nVersion:%s\n", builtAt, goVersion, gitAuthor, gitCommit, gitTag)
 		return
 	}
 	Init()

@@ -1,0 +1,62 @@
+name: build
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  release:
+    strategy:
+      matrix:
+        platform: [ubuntu-latest]
+        go-version: [1.17]
+    name: Release
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: v2
+          path: alist
+
+      - name: Checkout web repo
+        uses: actions/checkout@v2
+        with:
+          repository: Xhofe/alist-web
+          ref: v2
+          path: alist-web
+
+      - name: Set up Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+
+      - name: Set up xgo
+        run: |
+          docker pull techknowlogick/xgo:latest
+          go install src.techknowlogick.com/xgo@latest
+          sudo apt install upx
+
+      - name: Build web
+        run: |
+          cd alist-web
+          yarn
+          yarn build
+          cd ..
+
+      - name: Build
+        run: |
+          cd alist
+          bash build.sh release
+          cd ..
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: alist/build/compress/*
