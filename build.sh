@@ -26,7 +26,7 @@ cp -R ../alist-web/dist/* public
 if [ "$1" == "release" ]; then
   xgo -out alist -ldflags="$ldflags" .
 else
-  xgo -targets=linux/amd64,windows/amd64,macos/amd64 -out alist -ldflags="$ldflags" .
+  xgo -targets=linux/amd64,windows/amd64,darwin/amd64 -out alist -ldflags="$ldflags" .
 fi
 mkdir "build"
 mv alist-* build
