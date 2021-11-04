@@ -9,15 +9,23 @@ jobs:
   release:
     strategy:
       matrix:
-        platform: [ubuntu-latest]
+        platform: [macos-latest]
         go-version: [1.17]
     name: Release
     runs-on: ${{ matrix.platform }}
     steps:
-      - name: Set up Go
+      - name: Setup Go
         uses: actions/setup-go@v2
         with:
           go-version: ${{ matrix.go-version }}
+
+      - name: Setup docker
+        uses: docker-practice/actions-setup-docker@master
+
+      - name: Setup Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
 
       - name: Checkout
         uses: actions/checkout@v2
@@ -32,16 +40,11 @@ jobs:
           ref: v2
           path: alist-web
 
-      - name: Set up Node
-        uses: actions/setup-node@v2
-        with:
-          node-version: '16'
-
       - name: Set up xgo
         run: |
           docker pull techknowlogick/xgo:latest
           go install src.techknowlogick.com/xgo@latest
-          sudo apt install upx
+          brew install upx
 
       - name: Build web
         run: |
