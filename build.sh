@@ -35,7 +35,7 @@ mv alist-* build
 cd build || exit
 upx -9 ./*
 find . -type f -print0 | xargs -0 md5sum > md5.txt
-
+cat md5.txt
 # compress file (release)
 if [ "$1" == "release" ]; then
     mkdir compress
