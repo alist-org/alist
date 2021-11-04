@@ -15,10 +15,18 @@ jobs:
     name: Build
     runs-on: ${{ matrix.platform }}
     steps:
-      - name: Set up Go
+      - name: Setup Go
         uses: actions/setup-go@v2
         with:
           go-version: ${{ matrix.go-version }}
+
+      - name: Set up Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+
+      - name: Setup docker
+        uses: docker-practice/actions-setup-docker@master
 
       - name: Checkout
         uses: actions/checkout@v2
@@ -32,11 +40,6 @@ jobs:
           repository: Xhofe/alist-web
           ref: v2
           path: alist-web
-
-      - name: Set up Node
-        uses: actions/setup-node@v2
-        with:
-          node-version: '16'
 
       - name: Set up xgo
         run: |
