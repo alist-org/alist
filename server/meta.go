@@ -32,7 +32,7 @@ func SaveMeta(ctx *fiber.Ctx) error {
 
 func DeleteMeta(ctx *fiber.Ctx) error {
 	path := ctx.Query("path")
-	path = utils.ParsePath(path)
+	//path = utils.ParsePath(path)
 	if err := model.DeleteMeta(path); err != nil {
 		return ErrorResp(ctx, err, 500)
 	}
