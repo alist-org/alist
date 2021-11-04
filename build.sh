@@ -9,7 +9,7 @@ gitCommit=$(git log --pretty=format:"%h" -1)
 if [ "$1" == "release" ]; then
   gitTag=$(git describe --abbrev=0 --tags)
 else
-  gitTag=$(git describe --abbrev=0 --tags)-next
+  gitTag=build-next
 fi
 
 echo "build version: $gitTag"
