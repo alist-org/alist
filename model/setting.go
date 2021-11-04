@@ -14,12 +14,16 @@ type SettingItem struct {
 	Key         string `json:"key" gorm:"primaryKey" validate:"required"`
 	Value       string `json:"value"`
 	Description string `json:"description"`
-	Type        string `json:"type"`
+	//Type        string `json:"type"`
 	Group       int    `json:"group"`
 }
 
 func SaveSettings(items []SettingItem) error {
 	return conf.DB.Save(items).Error
+}
+
+func SaveSetting(item SettingItem) error {
+	return conf.DB.Save(item).Error
 }
 
 func GetSettingsPublic() (*[]SettingItem, error) {

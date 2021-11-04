@@ -13,14 +13,6 @@ import (
 	"net/http"
 )
 
-var (
-	builtAt   string
-	goVersion string
-	gitAuthor string
-	gitCommit string
-	gitTag    string
-)
-
 func init() {
 	flag.StringVar(&conf.ConfigFile, "conf", "config.json", "config file")
 	flag.BoolVar(&conf.Debug, "debug", false, "start with debug mode")
@@ -38,7 +30,7 @@ func Init() {
 
 func main() {
 	if conf.Version {
-		fmt.Printf("Built At: %s\nGo Version: %s\nAuthor: %s\nCommit ID: %s\nVersion:%s\n", builtAt, goVersion, gitAuthor, gitCommit, gitTag)
+		fmt.Printf("Built At: %s\nGo Version: %s\nAuthor: %s\nCommit ID: %s\nVersion:%s\n", conf.BuiltAt, conf.GoVersion, conf.GitAuthor, conf.GitCommit, conf.GitTag)
 		return
 	}
 	Init()

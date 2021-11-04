@@ -8,6 +8,14 @@ import (
 )
 
 var (
+	BuiltAt   string
+	GoVersion string
+	GitAuthor string
+	GitCommit string
+	GitTag    string
+)
+
+var (
 	ConfigFile string // config file
 	Conf       *Config
 	Debug      bool

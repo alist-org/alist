@@ -7,7 +7,7 @@ import (
 
 type Account struct {
 	Name           string `json:"name" gorm:"primaryKey" validate:"required"`
-	Index          int    `json:"index" validate:"required"`
+	Index          int    `json:"index"`
 	Type           string `json:"type"`
 	Username       string `json:"username"`
 	Password       string `json:"password"`
@@ -28,8 +28,8 @@ type Account struct {
 	Zone           string     `json:"zone"`
 	RedirectUri    string     `json:"redirect_uri"`
 	SiteUrl        string     `json:"site_url"`
-	SiteId         string
-	OnedriveType   string `json:"onedrive_type"`
+	SiteId         string     `json:"site_id"`
+	OnedriveType   string     `json:"onedrive_type"`
 }
 
 var accountsMap = map[string]Account{}

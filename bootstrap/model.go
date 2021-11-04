@@ -5,7 +5,6 @@ import (
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/drivers"
 	"github.com/Xhofe/alist/model"
-	"github.com/Xhofe/alist/utils"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
@@ -106,85 +105,79 @@ func initAccounts() {
 
 func initSettings() {
 	log.Infof("init settings...")
-	version, err := model.GetSettingByKey("version")
-	if err != nil {
-		log.Debugf("first run")
-		version = &model.SettingItem{
-			Key:         "version",
-			Value:       "0.0.0",
-			Type:        "string",
-			Description: "version",
-			Group:       model.CONST,
-		}
+	version := model.SettingItem{
+		Key:         "version",
+		Value:       conf.GitTag,
+		Description: "version",
+		Group:       model.CONST,
 	}
-	settingsMap := map[string][]model.SettingItem{
-		"2.0.0": {
-			{
-				Key:         "title",
-				Value:       "Alist",
-				Description: "title",
-				Type:        "string",
-				Group:       model.PUBLIC,
-			},
-			{
-				Key:         "password",
-				Value:       "alist",
-				Type:        "string",
-				Description: "password",
-				Group:       model.PRIVATE,
-			},
-			{
-				Key:         "version",
-				Value:       "2.0.0",
-				Type:        "string",
-				Description: "version",
-				Group:       model.CONST,
-			},
-			{
-				Key:         "logo",
-				Value:       "https://store.heytapimage.com/cdo-portal/feedback/202110/30/d43c41c5d257c9bc36366e310374fb19.png",
-				Type:        "string",
-				Description: "logo",
-				Group:       model.PUBLIC,
-			},
-			{
-				Key:         "icon color",
-				Value:       "teal.300",
-				Type:        "string",
-				Description: "icon's color",
-				Group:       model.PUBLIC,
-			},
-			{
-				Key:         "text types",
-				Value:       "txt,htm,html,xml,java,properties,sql,js,md,json,conf,ini,vue,php,py,bat,gitignore,yml,go,sh,c,cpp,h,hpp",
-				Type:        "string",
-				Description: "text type extensions",
-			},
-			{
-				Key:         "readme file",
-				Value:       "hide",
-				Type:        "string",
-				Description: "hide readme file? (show/hide)",
-			},
-			{
-				Key:         "music cover",
-				Value:       "https://store.heytapimage.com/cdo-portal/feedback/202110/30/d43c41c5d257c9bc36366e310374fb19.png",
-				Type:        "string",
-				Description: "music cover image",
-			},
-			{
-				Key:         "site beian",
-				Type:        "string",
-				Description: "chinese beian info",
-			},
+
+	_ = model.SaveSetting(version)
+
+	settings := []model.SettingItem{
+		{
+			Key:         "title",
+			Value:       "Alist",
+			Description: "title",
+			Group:       model.PUBLIC,
+		},
+		{
+			Key:         "password",
+			Value:       "alist",
+			Description: "password",
+			Group:       model.PRIVATE,
+		},
+		{
+			Key:         "logo",
+			Value:       "https://store.heytapimage.com/cdo-portal/feedback/202110/30/d43c41c5d257c9bc36366e310374fb19.png",
+			Description: "logo",
+			Group:       model.PUBLIC,
+		},
+		{
+			Key:         "favicon",
+			Value:       "https://store.heytapimage.com/cdo-portal/feedback/202110/30/d43c41c5d257c9bc36366e310374fb19.png",
+			Description: "favicon",
+			Group:       model.PUBLIC,
+		},
+		{
+			Key:         "icon color",
+			Value:       "teal.300",
+			Description: "icon's color",
+			Group:       model.PUBLIC,
+		},
+		{
+			Key:         "text types",
+			Value:       "txt,htm,html,xml,java,properties,sql,js,md,json,conf,ini,vue,php,py,bat,gitignore,yml,go,sh,c,cpp,h,hpp",
+			Description: "text type extensions",
+		},
+		{
+			Key:         "readme file",
+			Value:       "hide",
+			Description: "hide readme file? (show/hide)",
+		},
+		{
+			Key:         "music cover",
+			Value:       "https://store.heytapimage.com/cdo-portal/feedback/202110/30/d43c41c5d257c9bc36366e310374fb19.png",
+			Description: "music cover image",
+			Group:       model.PUBLIC,
+		},
+		{
+			Key:         "site beian",
+			Description: "chinese beian info",
+			Group:       model.PUBLIC,
+		},
+		{
+			Key:         "home readme url",
+			Description: "when have multiple, the readme file to show",
+			Group:       model.PUBLIC,
 		},
 	}
-	for k, v := range settingsMap {
-		if utils.VersionCompare(k, version.Value) > 0 {
-			log.Infof("writing [v%s] settings", k)
-			err = model.SaveSettings(v)
+	for _, v := range settings {
+		_, err := model.GetSettingByKey(v.Key)
+		if err == gorm.ErrRecordNotFound {
+			err = model.SaveSetting(v)
 			if err != nil {
-				log.Fatalf("save settings error")
+				log.Fatalf("failed write setting: %s", err.Error())
 			}
 		}
 	}

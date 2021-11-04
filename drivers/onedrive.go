@@ -115,8 +115,8 @@ func (o Onedrive) Items() []Item {
 			Required: true,
 		},
 		{
-			Name:     "site_url",
-			Label:    "site url",
+			Name:     "site_id",
+			Label:    "site id",
 			Type:     "string",
 			Required: false,
 		},

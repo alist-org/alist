@@ -14,16 +14,20 @@ fi
 
 ldflags="\
 -w -s \
--X 'main.builtAt=$builtAt' \
--X 'main.goVersion=$goVersion' \
--X 'main.gitAuthor=$gitAuthor' \
--X 'main.gitCommit=$gitCommit' \
--X 'main.gitTag=$gitTag' \
+-X 'github.com/Xhofe/alist/conf.BuiltAt=$builtAt' \
+-X 'github.com/Xhofe/alist/conf.GoVersion=$goVersion' \
+-X 'github.com/Xhofe/alist/conf.GitAuthor=$gitAuthor' \
+-X 'github.com/Xhofe/alist/conf.GitCommit=$gitCommit' \
+-X 'github.com/Xhofe/alist/conf.GitTag=$gitTag' \
 "
 
 cp -R ../alist-web/dist/* public
 
-xgo -out alist -ldflags="$ldflags" .
+if [ "$1" == "release" ]; then
+  xgo -out alist -ldflags="$ldflags" .
+else
+  xgo -targets=linux/amd64,windows/amd64,macos/amd64 -out alist -ldflags="$ldflags" .
+fi
 mkdir "build"
 mv alist-* build
 cd build || exit
