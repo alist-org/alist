@@ -12,6 +12,8 @@ else
   gitTag=$(git describe --abbrev=0 --tags)-next
 fi
 
+echo "build version: $gitTag"
+
 ldflags="\
 -w -s \
 -X 'github.com/Xhofe/alist/conf.BuiltAt=$builtAt' \
