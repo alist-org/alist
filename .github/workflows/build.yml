@@ -45,7 +45,7 @@ jobs:
         run: |
           docker pull techknowlogick/xgo:latest
           go install src.techknowlogick.com/xgo@latest
-          sudo brew install upx
+          brew install upx
 
       - name: Build web
         run: |
