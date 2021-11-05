@@ -32,6 +32,8 @@ jobs:
         with:
           ref: v2
           path: alist
+          persist-credentials: false
+          fetch-depth: 0
 
       - name: Checkout web repo
         uses: actions/checkout@v2
@@ -39,6 +41,8 @@ jobs:
           repository: Xhofe/alist-web
           ref: v2
           path: alist-web
+          persist-credentials: false
+          fetch-depth: 0
 
       - name: Set up xgo
         run: |
