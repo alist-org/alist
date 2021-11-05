@@ -221,55 +221,57 @@ func (a AliDrive) Path(path string, account *model.Account) (*model.File, []*mod
 			return a.FormatFile(&file), nil, nil
 		} else {
 			files, _ := cache.([]AliFile)
-			res := make([]*model.File, 0)
-			for _, file = range files {
-				res = append(res, a.FormatFile(&file))
-			}
-			return nil, res, nil
-		}
-	} else {
-		fileId := account.RootFolder
-		if path != "/" {
-			dir, name := filepath.Split(path)
-			dir = utils.ParsePath(dir)
-			_, _, err = a.Path(dir, account)
-			if err != nil {
-				return nil, nil, err
-			}
-			parentFiles_, _ := conf.Cache.Get(conf.Ctx, fmt.Sprintf("%s%s", account.Name, dir))
-			parentFiles, _ := parentFiles_.([]AliFile)
-			found := false
-			for _, file := range parentFiles {
-				if file.Name == name {
-					found = true
-					if file.Type == "file" {
-						url, err := a.Link(path, account)
-						if err != nil {
-							return nil, nil, err
-						}
-						file.Url = url
-						return a.FormatFile(&file), nil, nil
-					} else {
-						fileId = file.FileId
-						break
-					}
+			if len(files) != 0 {
+				res := make([]*model.File, 0)
+				for _, file = range files {
+					res = append(res, a.FormatFile(&file))
 				}
-			}
-			if !found {
-				return nil, nil, fmt.Errorf("path not found")
+				return nil, res, nil
 			}
 		}
-		files, err := a.GetFiles(fileId, account)
+	}
+	// no cache or len(files) == 0
+	fileId := account.RootFolder
+	if path != "/" {
+		dir, name := filepath.Split(path)
+		dir = utils.ParsePath(dir)
+		_, _, err = a.Path(dir, account)
 		if err != nil {
 			return nil, nil, err
 		}
-		_ = conf.Cache.Set(conf.Ctx, fmt.Sprintf("%s%s", account.Name, path), files, nil)
-		res := make([]*model.File, 0)
-		for _, file := range files {
-			res = append(res, a.FormatFile(&file))
+		parentFiles_, _ := conf.Cache.Get(conf.Ctx, fmt.Sprintf("%s%s", account.Name, dir))
+		parentFiles, _ := parentFiles_.([]AliFile)
+		found := false
+		for _, file := range parentFiles {
+			if file.Name == name {
+				found = true
+				if file.Type == "file" {
+					url, err := a.Link(path, account)
+					if err != nil {
+						return nil, nil, err
+					}
+					file.Url = url
+					return a.FormatFile(&file), nil, nil
+				} else {
+					fileId = file.FileId
+					break
+				}
+			}
 		}
-		return nil, res, nil
+		if !found {
+			return nil, nil, fmt.Errorf("path not found")
+		}
 	}
+	files, err := a.GetFiles(fileId, account)
+	if err != nil {
+		return nil, nil, err
+	}
+	_ = conf.Cache.Set(conf.Ctx, fmt.Sprintf("%s%s", account.Name, path), files, nil)
+	res := make([]*model.File, 0)
+	for _, file := range files {
+		res = append(res, a.FormatFile(&file))
+	}
+	return nil, res, nil
 }
 
 func (a AliDrive) Link(path string, account *model.Account) (string, error) {
@@ -316,10 +318,12 @@ func (a AliDrive) RefreshToken(account *model.Account) error {
 		SetError(&e).
 		Post(url)
 	if err != nil {
+		account.Status = err.Error()
 		return err
 	}
 	log.Debugf("%+v,%+v", resp, e)
 	if e.Code != "" {
+		account.Status = e.Message
 		return fmt.Errorf("failed to refresh token: %s", e.Message)
 	}
 	account.RefreshToken, account.AccessToken = resp.RefreshToken, resp.AccessToken
@@ -354,9 +358,6 @@ func (a AliDrive) Save(account *model.Account, old *model.Account) error {
 			return
 		}
 		err = a.RefreshToken(&newAccount)
-		if err != nil {
-			newAccount.Status = err.Error()
-		}
 		_ = model.SaveAccount(newAccount)
 	})
 	if err != nil {
