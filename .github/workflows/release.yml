@@ -57,7 +57,7 @@ jobs:
           github_token: ${{ secrets.MY_TOKEN }}
           branch: cdn
           directory: alist-web
-          repository: https://github.com/Xhofe/alist-web
+          repository: Xhofe/alist-web
 
       - name: Release
         uses: softprops/action-gh-release@v1
