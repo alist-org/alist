@@ -48,7 +48,9 @@ jobs:
           sudo apt install upx
 
       - name: Build
-        run: bash build.sh
+        run: |
+          mv alist/build.sh .
+          bash build.sh
 
       - name: Upload artifact
         uses: actions/upload-artifact@v2

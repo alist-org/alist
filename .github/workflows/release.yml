@@ -47,7 +47,9 @@ jobs:
           sudo apt install upx
 
       - name: Build
-        run: bash build.sh release
+        run: |
+          mv alist/build.sh .
+          bash build.sh release
 
       - name: Upload asserts files
         uses: ad-m/github-push-action@master
