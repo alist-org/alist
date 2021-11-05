@@ -146,9 +146,11 @@ func (o Onedrive) RefreshToken(account *model.Account) error {
 		"refresh_token": account.RefreshToken,
 	}).Post(url)
 	if err != nil {
+		account.Status = err.Error()
 		return err
 	}
 	if e.Error != "" {
+		account.Status = e.ErrorDescription
 		return fmt.Errorf("%s", e.ErrorDescription)
 	}
 	account.RefreshToken, account.AccessToken = resp.RefreshToken, resp.AccessToken
@@ -280,9 +282,6 @@ func (o Onedrive) Save(account *model.Account, old *model.Account) error {
 			return
 		}
 		err = o.RefreshToken(&newAccount)
-		if err != nil {
-			newAccount.Status = err.Error()
-		}
 		_ = model.SaveAccount(newAccount)
 	})
 	if err != nil {
