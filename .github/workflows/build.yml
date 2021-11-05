@@ -47,18 +47,8 @@ jobs:
           go install src.techknowlogick.com/xgo@latest
           sudo apt install upx
 
-      - name: Build web
-        run: |
-          cd alist-web
-          yarn
-          yarn build
-          cd ..
-
       - name: Build
-        run: |
-          cd alist
-          bash build.sh
-          cd ..
+        run: bash build.sh
 
       - name: Upload artifact
         uses: actions/upload-artifact@v2

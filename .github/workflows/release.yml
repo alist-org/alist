@@ -46,18 +46,16 @@ jobs:
           go install src.techknowlogick.com/xgo@latest
           sudo apt install upx
 
-      - name: Build web
-        run: |
-          cd alist-web
-          yarn
-          yarn build
-          cd ..
-
       - name: Build
-        run: |
-          cd alist
-          bash build.sh release
-          cd ..
+        run: bash build.sh release
+
+      - name: Upload asserts files
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.MY_TOKEN }}
+          branch: cdn
+          directory: alist-web
+          repository: https://github.com/Xhofe/alist-web
 
       - name: Release
         uses: softprops/action-gh-release@v1

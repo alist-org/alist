@@ -1,5 +1,18 @@
 #!/bin/bash
 
+cd alist-web || exit
+webCommit=$(git log --pretty=format:"%h" -1)
+echo "web commit id: $webCommit"
+yarn
+if [ "$1" == "release" ]; then
+  yarn build --base="https://cdn.jsdelivr.net/gh/Xhofe/alist-web@cdn/v2/$webCommit"
+  mv dist/assets ..
+else
+  yarn build
+fi
+cd ..
+
+cd alist
 appName="alist"
 builtAt="$(date +'%F %T %z')"
 goVersion=$(go version | sed 's/go version //')
@@ -52,4 +65,17 @@ if [ "$1" == "release" ]; then
     do
       zip compress/$(echo $i | sed 's/\.[^.]*$//').zip "$i"
     done
+fi
+cd ../..
+
+if [ "$1" == "release" ]; then
+  cd alist-web
+  git checkout cdn
+  mkdir "v2/$webCommit"
+  mv ../assets/ v2/$webCommit
+  git add .
+  git config --local user.email "i@nn.ci"
+  git config --local user.name "Xhofe"
+  git commit --allow-empty -m "upload $webCommit assets files" -a
+  cd ..
 fi
