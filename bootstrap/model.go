@@ -171,6 +171,12 @@ func initSettings() {
 			Description: "when have multiple, the readme file to show",
 			Group:       model.PUBLIC,
 		},
+		{
+			Key: "markdown theme",
+			Value: "vuepress",
+			Description: "default | github | vuepress",
+			Group: model.PUBLIC,
+		},
 	}
 	for _, v := range settings {
 		_, err := model.GetSettingByKey(v.Key)
