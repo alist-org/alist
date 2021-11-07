@@ -34,7 +34,7 @@ func Down(ctx *fiber.Ctx) error {
 }
 
 func Proxy(ctx *fiber.Ctx) error {
-	rawPath, err:= url.QueryUnescape(ctx.Params("*"))
+	rawPath, err:= url.PathUnescape(ctx.Params("*"))
 	if err != nil {
 		return ErrorResp(ctx,err,500)
 	}
