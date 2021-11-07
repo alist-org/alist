@@ -44,7 +44,7 @@ func GetSettings() (*[]SettingItem, error) {
 
 func GetSettingByKey(key string) (*SettingItem, error) {
 	var items SettingItem
-	if err := conf.DB.Where("key = ?", key).First(&items).Error; err != nil {
+	if err := conf.DB.Where("`key` = ?", key).First(&items).Error; err != nil {
 		return nil, err
 	}
 	return &items, nil
