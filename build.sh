@@ -4,7 +4,7 @@ if [ "$1" == "web" ]; then
   cd alist-web || exit
   yarn
   yarn build
-  mv dist ../public
+  mv dist/* ../public
   cd ..
   exit 0
 fi
