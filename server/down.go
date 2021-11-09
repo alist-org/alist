@@ -12,12 +12,12 @@ import (
 )
 
 func Down(ctx *fiber.Ctx) error {
-	rawPath, err:= url.PathUnescape(ctx.Params("*"))
+	rawPath, err := url.PathUnescape(ctx.Params("*"))
 	if err != nil {
-		return ErrorResp(ctx,err,500)
+		return ErrorResp(ctx, err, 500)
 	}
 	rawPath = utils.ParsePath(rawPath)
-	log.Debugf("down: %s",rawPath)
+	log.Debugf("down: %s", rawPath)
 	account, path, driver, err := ParsePath(rawPath)
 	if err != nil {
 		return ErrorResp(ctx, err, 500)
@@ -34,18 +34,18 @@ func Down(ctx *fiber.Ctx) error {
 }
 
 func Proxy(ctx *fiber.Ctx) error {
-	rawPath, err:= url.PathUnescape(ctx.Params("*"))
+	rawPath, err := url.PathUnescape(ctx.Params("*"))
 	if err != nil {
-		return ErrorResp(ctx,err,500)
+		return ErrorResp(ctx, err, 500)
 	}
 	rawPath = utils.ParsePath(rawPath)
-	log.Debugf("proxy: %s",rawPath)
+	log.Debugf("proxy: %s", rawPath)
 	account, path, driver, err := ParsePath(rawPath)
 	if err != nil {
 		return ErrorResp(ctx, err, 500)
 	}
-	if !account.Proxy && utils.GetFileType(filepath.Ext(rawPath))!=conf.TEXT {
-		return ErrorResp(ctx,fmt.Errorf("[%s] not allowed proxy",account.Name),403)
+	if !account.Proxy && utils.GetFileType(filepath.Ext(rawPath)) != conf.TEXT {
+		return ErrorResp(ctx, fmt.Errorf("[%s] not allowed proxy", account.Name), 403)
 	}
 	link, err := driver.Link(path, account)
 	if err != nil {
@@ -55,6 +55,20 @@ func Proxy(ctx *fiber.Ctx) error {
 		return ctx.SendFile(link)
 	} else {
 		driver.Proxy(ctx)
+		//ctx.Response().ImmediateHeaderFlush = true
+		//var ProxyNetHttp = fasthttpadaptor.NewFastHTTPHandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		//	target, _ := url.Parse(link)
+		//	protocol := "https://"
+		//	if strings.HasPrefix(link, "http://") {
+		//		protocol = "http://"
+		//	}
+		//	targetHost, _ := url.Parse(fmt.Sprintf("%s%s", protocol, target.Host))
+		//	proxy := httputil.NewSingleHostReverseProxy(targetHost)
+		//	r.URL = target
+		//	r.Host = target.Host
+		//	proxy.ServeHTTP(w, r)
+		//})
+		//ProxyNetHttp(ctx.Context())
 		if err := proxy.Do(ctx, link); err != nil {
 			log.Errorf("proxy error: %s", err)
 			return ErrorResp(ctx,err,500)
