@@ -1,4 +1,33 @@
 #!/bin/bash
+if [ "$1" == "web" ]; then
+  git clone https://github.com/Xhofe/alist-web.git
+  cd alist-web || exit
+  yarn
+  yarn build
+  mv dist ../public
+  cd ..
+  exit 0
+fi
+
+if [ "$1" == "docker" ]; then
+  apk add --no-cache git
+  appName="alist"
+  builtAt="$(date +'%F %T %z')"
+  goVersion=$(go version | sed 's/go version //')
+  gitAuthor=$(git show -s --format='format:%aN <%ae>' HEAD)
+  gitCommit=$(git log --pretty=format:"%h" -1)
+  gitTag=$(git describe --abbrev=0 --tags)
+  ldflags="\
+-w -s \
+-X 'github.com/Xhofe/alist/conf.BuiltAt=$builtAt' \
+-X 'github.com/Xhofe/alist/conf.GoVersion=$goVersion' \
+-X 'github.com/Xhofe/alist/conf.GitAuthor=$gitAuthor' \
+-X 'github.com/Xhofe/alist/conf.GitCommit=$gitCommit' \
+-X 'github.com/Xhofe/alist/conf.GitTag=$gitTag' \
+"
+  go build -o ./bin/alist -ldflags="$ldflags" alist.go
+  exit 0
+fi
 
 cd alist-web || exit
 webCommit=$(git log --pretty=format:"%h" -1)
