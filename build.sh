@@ -9,6 +9,8 @@ if [ "$1" == "web" ]; then
   exit 0
 fi
 
+go env -w GOPROXY=https://goproxy.cn,https://mirrors.aliyun.com/goproxy/,https://goproxy.io,direct
+
 if [ "$1" == "docker" ]; then
   appName="alist"
   builtAt="$(date +'%F %T %z')"
