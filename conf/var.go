@@ -31,6 +31,6 @@ var (
 	TextTypes   = []string{"txt", "go", "md"}
 	OfficeTypes = []string{"doc", "docx", "xls", "xlsx", "ppt", "pptx", "pdf"}
 	VideoTypes  = []string{"mp4", "mkv", "avi", "mov", "rmvb"}
-	AudioTypes  = []string{"mp3", "flac", "ogg"}
+	AudioTypes  = []string{"mp3", "flac", "ogg", "m4a"}
 	ImageTypes  = []string{"jpg", "tiff", "jpeg", "png", "gif", "bmp", "svg"}
 )
