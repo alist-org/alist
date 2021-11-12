@@ -34,3 +34,8 @@ var (
 	AudioTypes  = []string{"mp3", "flac", "ogg", "m4a"}
 	ImageTypes  = []string{"jpg", "tiff", "jpeg", "png", "gif", "bmp", "svg"}
 )
+
+// settings
+var (
+	CheckParent bool
+)

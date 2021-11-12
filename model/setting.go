@@ -2,6 +2,7 @@ package model
 
 import (
 	"github.com/Xhofe/alist/conf"
+	"strings"
 )
 
 const (
@@ -49,4 +50,15 @@ func GetSettingByKey(key string) (*SettingItem, error) {
 		return nil, err
 	}
 	return &items, nil
+}
+
+func LoadSettings() {
+	textTypes, err := GetSettingByKey("text types")
+	if err == nil {
+		conf.TextTypes = strings.Split(textTypes.Value, ",")
+	}
+	checkParent, err := GetSettingByKey("check parent folder")
+	if err == nil {
+		conf.CheckParent = checkParent.Value == "true"
+	}
 }

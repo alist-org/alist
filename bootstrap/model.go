@@ -189,6 +189,22 @@ func initSettings() {
 			Type:        "select",
 			Values:      "default,github,vuepress",
 		},
+		{
+			Key:         "autoplay video",
+			Value:       "true",
+			Type:        "bool",
+		},
+		{
+			Key:         "autoplay audio",
+			Value:       "true",
+			Type:        "bool",
+		},
+		{
+			Key:         "check parent folder",
+			Value:       "true",
+			Type:        "bool",
+			Description: "check parent folder password",
+		},
 	}
 	for _, v := range settings {
 		_, err := model.GetSettingByKey(v.Key)
@@ -199,8 +215,5 @@ func initSettings() {
 			}
 		}
 	}
-	textTypes, err := model.GetSettingByKey("text types")
-	if err == nil {
-		conf.TextTypes = strings.Split(textTypes.Value, ",")
-	}
+	model.LoadSettings()
 }
