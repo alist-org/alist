@@ -191,17 +191,17 @@ func initSettings() {
 		},
 		{
 			Key:         "autoplay video",
-			Value:       "true",
+			Value:       "false",
 			Type:        "bool",
 		},
 		{
 			Key:         "autoplay audio",
-			Value:       "true",
+			Value:       "false",
 			Type:        "bool",
 		},
 		{
 			Key:         "check parent folder",
-			Value:       "true",
+			Value:       "false",
 			Type:        "bool",
 			Description: "check parent folder password",
 		},
