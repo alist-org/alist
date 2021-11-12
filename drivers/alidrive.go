@@ -68,6 +68,20 @@ func (a AliDrive) Preview(path string, account *model.Account) (interface{}, err
 func (a AliDrive) Items() []Item {
 	return []Item{
 		{
+			Name: "order_by",
+			Label: "order_by",
+			Type: "select",
+			Values: "name,size,updated_at,created_at",
+			Required: false,
+		},
+		{
+			Name: "order_direction",
+			Label: "order_direction",
+			Type: "select",
+			Values: "ASC,DESC",
+			Required: false,
+		},
+		{
 			Name:     "refresh_token",
 			Label:    "refresh token",
 			Type:     "string",
