@@ -6,8 +6,10 @@ import (
 	"github.com/Xhofe/alist/utils"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
+	"net/http/httputil"
 	"net/url"
 	"path/filepath"
+	"strings"
 )
 
 func Down(c *gin.Context) {
@@ -64,6 +66,21 @@ func Proxy(c *gin.Context) {
 		return
 	} else {
 		driver.Proxy(c)
-		// TODO
+		r := c.Request
+		w := c.Writer
+		target, err := url.Parse(link)
+		if err != nil {
+			ErrorResp(c, err, 500)
+			return
+		}
+		protocol := "http://"
+		if strings.HasPrefix(link, "https://") {
+			protocol = "https://"
+		}
+		targetHost, err := url.Parse(fmt.Sprintf("%s%s", protocol, target.Host))
+		proxy := httputil.NewSingleHostReverseProxy(targetHost)
+		r.URL = target
+		r.Host = target.Host
+		proxy.ServeHTTP(w, r)
 	}
 }
