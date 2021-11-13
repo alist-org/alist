@@ -1,7 +1,6 @@
 package model
 
 import (
-	"fmt"
 	"github.com/Xhofe/alist/conf"
 	"github.com/robfig/cron/v3"
 	"time"
@@ -54,11 +53,13 @@ func CreateAccount(account Account) error {
 	return nil
 }
 
-func DeleteAccount(name string) error {
-	account, ok := GetAccount(name)
-	if !ok {
-		return fmt.Errorf("no [%s] account", name)
+func DeleteAccount(id uint) error {
+	var account Account
+	account.ID = id
+	if err := conf.DB.First(&account).Error; err != nil {
+		return err
 	}
+	name := account.Name
 	conf.Cron.Remove(cron.EntryID(account.CronId))
 	if err := conf.DB.Delete(&account).Error; err != nil {
 		return err

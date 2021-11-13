@@ -14,8 +14,7 @@ type Meta struct {
 
 func GetMetaByPath(path string) (*Meta, error) {
 	var meta Meta
-	meta.Path = path
-	err := conf.DB.First(&meta).Error
+	err := conf.DB.Where("path = ?", path).First(&meta).Error
 	if err != nil {
 		return nil, err
 	}
@@ -30,8 +29,8 @@ func CreateMeta(meta Meta) error {
 	return conf.DB.Create(&meta).Error
 }
 
-func DeleteMeta(path string) error {
-	meta := Meta{Path: path}
+func DeleteMeta(id uint) error {
+	meta := Meta{ID: id}
 	log.Debugf("delete meta: %+v", meta)
 	return conf.DB.Delete(&meta).Error
 }

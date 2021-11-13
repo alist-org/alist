@@ -5,6 +5,7 @@ import (
 	"github.com/Xhofe/alist/drivers"
 	"github.com/Xhofe/alist/model"
 	"github.com/gin-gonic/gin"
+	"strconv"
 	"time"
 )
 
@@ -73,8 +74,13 @@ func SaveAccount(c *gin.Context) {
 }
 
 func DeleteAccount(c *gin.Context) {
-	name := c.Query("name")
-	if err := model.DeleteAccount(name); err != nil {
+	idStr := c.Query("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		ErrorResp(c, err, 400)
+		return
+	}
+	if err := model.DeleteAccount(uint(id)); err != nil {
 		ErrorResp(c, err, 500)
 		return
 	}

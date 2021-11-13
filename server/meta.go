@@ -4,6 +4,7 @@ import (
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
 	"github.com/gin-gonic/gin"
+	"strconv"
 )
 
 func GetMetas(c *gin.Context)  {
@@ -44,9 +45,14 @@ func SaveMeta(c *gin.Context)  {
 }
 
 func DeleteMeta(c *gin.Context) {
-	path := c.Query("path")
+	idStr := c.Query("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		ErrorResp(c, err, 400)
+		return
+	}
 	//path = utils.ParsePath(path)
-	if err := model.DeleteMeta(path); err != nil {
+	if err := model.DeleteMeta(uint(id)); err != nil {
 		ErrorResp(c, err, 500)
 		return
 	}
