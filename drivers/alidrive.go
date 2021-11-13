@@ -191,7 +191,7 @@ func (a AliDrive) GetFiles(fileId string, account *model.Account) ([]AliFile, er
 				if err != nil {
 					return nil, err
 				} else {
-					_ = model.SaveAccount(*account)
+					_ = model.SaveAccount(account)
 					return a.GetFiles(fileId, account)
 				}
 			}
@@ -312,7 +312,7 @@ func (a AliDrive) Link(path string, account *model.Account) (string, error) {
 			if err != nil {
 				return "", err
 			} else {
-				_ = model.SaveAccount(*account)
+				_ = model.SaveAccount(account)
 				return a.Link(path, account)
 			}
 		}
@@ -372,13 +372,13 @@ func (a AliDrive) Save(account *model.Account, old *model.Account) error {
 			return
 		}
 		err = a.RefreshToken(&newAccount)
-		_ = model.SaveAccount(newAccount)
+		_ = model.SaveAccount(&newAccount)
 	})
 	if err != nil {
 		return err
 	}
 	account.CronId = int(cronId)
-	err = model.SaveAccount(*account)
+	err = model.SaveAccount(account)
 	if err != nil {
 		return err
 	}

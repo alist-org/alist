@@ -37,19 +37,19 @@ type Account struct {
 var accountsMap = map[string]Account{}
 
 // SaveAccount save account to database
-func SaveAccount(account Account) error {
-	if err := conf.DB.Save(&account).Error; err != nil {
+func SaveAccount(account *Account) error {
+	if err := conf.DB.Save(account).Error; err != nil {
 		return err
 	}
-	RegisterAccount(account)
+	RegisterAccount(*account)
 	return nil
 }
 
-func CreateAccount(account Account) error {
-	if err := conf.DB.Create(&account).Error; err != nil {
+func CreateAccount(account *Account) error {
+	if err := conf.DB.Create(account).Error; err != nil {
 		return err
 	}
-	RegisterAccount(account)
+	RegisterAccount(*account)
 	return nil
 }
 

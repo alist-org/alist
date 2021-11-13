@@ -5,6 +5,7 @@ import (
 	"github.com/Xhofe/alist/drivers"
 	"github.com/Xhofe/alist/model"
 	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 	"strconv"
 	"time"
 )
@@ -31,9 +32,10 @@ func CreateAccount(c *gin.Context) {
 	}
 	now := time.Now()
 	req.UpdatedAt = &now
-	if err := model.CreateAccount(req); err != nil {
+	if err := model.CreateAccount(&req); err != nil {
 		ErrorResp(c, err, 500)
 	} else {
+		log.Debugf("new account: %+v", req)
 		err = driver.Save(&req, nil)
 		if err != nil {
 			ErrorResp(c, err, 500)
@@ -57,9 +59,10 @@ func SaveAccount(c *gin.Context) {
 	old, ok := model.GetAccount(req.Name)
 	now := time.Now()
 	req.UpdatedAt = &now
-	if err := model.SaveAccount(req); err != nil {
+	if err := model.SaveAccount(&req); err != nil {
 		ErrorResp(c, err, 500)
 	} else {
+		log.Debugf("save account: %+v", req)
 		if ok {
 			err = driver.Save(&req, &old)
 		} else {

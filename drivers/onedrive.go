@@ -282,13 +282,13 @@ func (o Onedrive) Save(account *model.Account, old *model.Account) error {
 			return
 		}
 		err = o.RefreshToken(&newAccount)
-		_ = model.SaveAccount(newAccount)
+		_ = model.SaveAccount(&newAccount)
 	})
 	if err != nil {
 		return err
 	}
 	account.CronId = int(cronId)
-	err = model.SaveAccount(*account)
+	err = model.SaveAccount(account)
 	if err != nil {
 		return err
 	}
@@ -296,7 +296,7 @@ func (o Onedrive) Save(account *model.Account, old *model.Account) error {
 }
 
 func (o Onedrive) Proxy(c *gin.Context) {
-
+	c.Request.Header.Del("Origin")
 }
 
 func (o Onedrive) Preview(path string, account *model.Account) (interface{}, error) {
