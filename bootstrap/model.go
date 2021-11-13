@@ -109,6 +109,7 @@ func initSettings() {
 		Key:         "version",
 		Value:       conf.GitTag,
 		Description: "version",
+		Type:        "string",
 		Group:       model.CONST,
 	}
 
@@ -190,14 +191,14 @@ func initSettings() {
 			Values:      "default,github,vuepress",
 		},
 		{
-			Key:         "autoplay video",
-			Value:       "false",
-			Type:        "bool",
+			Key:   "autoplay video",
+			Value: "false",
+			Type:  "bool",
 		},
 		{
-			Key:         "autoplay audio",
-			Value:       "false",
-			Type:        "bool",
+			Key:   "autoplay audio",
+			Value: "false",
+			Type:  "bool",
 		},
 		{
 			Key:         "check parent folder",
