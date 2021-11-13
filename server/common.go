@@ -4,62 +4,61 @@ import (
 	"fmt"
 	"github.com/Xhofe/alist/drivers"
 	"github.com/Xhofe/alist/model"
-	"github.com/go-playground/validator/v10"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gin-gonic/gin"
 	"strings"
 )
 
-var validate = validator.New()
-
 type Resp struct {
-	Code int `json:"code"`
-	Message string `json:"message"`
-	Data interface{} `json:"data"`
+	Code    int         `json:"code"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data"`
 }
 
-func ParsePath(rawPath string) (*model.Account,string,drivers.Driver,error) {
-	var path,name string
+func ParsePath(rawPath string) (*model.Account, string, drivers.Driver, error) {
+	var path, name string
 	switch model.AccountsCount() {
 	case 0:
-		return nil,"",nil,fmt.Errorf("no accounts,please add one first")
+		return nil, "", nil, fmt.Errorf("no accounts,please add one first")
 	case 1:
 		path = rawPath
 		break
 	default:
-		paths := strings.Split(rawPath,"/")
-		path = "/" + strings.Join(paths[2:],"/")
+		paths := strings.Split(rawPath, "/")
+		path = "/" + strings.Join(paths[2:], "/")
 		name = paths[1]
 	}
-	account,ok := model.GetAccount(name)
+	account, ok := model.GetAccount(name)
 	if !ok {
-		return nil,"",nil,fmt.Errorf("no [%s] account", name)
+		return nil, "", nil, fmt.Errorf("no [%s] account", name)
 	}
-	driver,ok := drivers.GetDriver(account.Type)
+	driver, ok := drivers.GetDriver(account.Type)
 	if !ok {
-		return nil,"",nil,fmt.Errorf("no [%s] driver",account.Type)
+		return nil, "", nil, fmt.Errorf("no [%s] driver", account.Type)
 	}
-	return &account,path,driver,nil
+	return &account, path, driver, nil
 }
 
-func ErrorResp(ctx *fiber.Ctx,err error,code int) error {
-	return ctx.JSON(Resp{
-		Code: code,
-		Message:  err.Error(),
-		Data: nil,
+func ErrorResp(c *gin.Context, err error, code int) {
+	c.JSON(200, Resp{
+		Code:    code,
+		Message: err.Error(),
+		Data:    nil,
 	})
+	c.Abort()
 }
 
-func SuccessResp(ctx *fiber.Ctx, data ...interface{}) error {
+func SuccessResp(c *gin.Context, data ...interface{}) {
 	if len(data) == 0 {
-		return ctx.JSON(Resp{
-			Code: 200,
-			Message:  "success",
-			Data: nil,
+		c.JSON(200, Resp{
+			Code:    200,
+			Message: "success",
+			Data:    nil,
 		})
+		return
 	}
-	return ctx.JSON(Resp{
-		Code: 200,
-		Message:  "success",
-		Data: data[0],
+	c.JSON(200, Resp{
+		Code:    200,
+		Message: "success",
+		Data:    data[0],
 	})
 }

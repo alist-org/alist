@@ -3,7 +3,7 @@ package model
 import "github.com/Xhofe/alist/conf"
 
 type Meta struct {
-	Path     string `json:"path" gorm:"primaryKey" validate:"required"`
+	Path     string `json:"path" gorm:"primaryKey" binding:"required"`
 	Password string `json:"password"`
 	Hide     string `json:"hide"`
 }

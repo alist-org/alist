@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"strings"
 )
@@ -14,44 +14,50 @@ type PathReq struct {
 	Password string `json:"Password"`
 }
 
-func Path(ctx *fiber.Ctx) error {
+func Path(c *gin.Context) {
 	var req PathReq
-	if err := ctx.BodyParser(&req); err != nil {
-		return ErrorResp(ctx, err, 400)
+	if err := c.ShouldBind(&req); err != nil {
+		ErrorResp(c, err, 400)
+		return
 	}
 	req.Path = utils.ParsePath(req.Path)
 	log.Debugf("path: %s", req.Path)
 	meta, err := model.GetMetaByPath(req.Path)
 	if err == nil {
 		if meta.Password != "" && meta.Password != req.Password {
-			return ErrorResp(ctx, fmt.Errorf("wrong password"), 401)
+			ErrorResp(c, fmt.Errorf("wrong password"), 401)
+			return
 		}
 		// TODO hide or ignore?
 	}
 	if model.AccountsCount() > 1 && req.Path == "/" {
 		files, err := model.GetAccountFiles()
 		if err != nil {
-			return ErrorResp(ctx, err, 500)
+			ErrorResp(c, err, 500)
+			return
 		}
-		return ctx.JSON(Resp{
+		c.JSON(200, Resp{
 			Code:    200,
 			Message: "folder",
 			Data:    files,
 		})
+		return
 	}
 	account, path, driver, err := ParsePath(req.Path)
 	if err != nil {
-		return ErrorResp(ctx, err, 500)
+		ErrorResp(c, err, 500)
+		return
 	}
 	file, files, err := driver.Path(path, account)
 	if err != nil {
-		return ErrorResp(ctx, err, 500)
+		ErrorResp(c, err, 500)
+		return
 	}
 	if file != nil {
 		if account.Type == "Native" {
-			file.Url = fmt.Sprintf("%s://%s/p%s", ctx.Protocol(), ctx.Hostname(), req.Path)
+			file.Url = fmt.Sprintf("//%s/d%s", c.Request.Host, req.Path)
 		}
-		return ctx.JSON(Resp{
+		c.JSON(200, Resp{
 			Code:    200,
 			Message: "file",
 			Data:    []*model.File{file},
@@ -67,7 +73,7 @@ func Path(ctx *fiber.Ctx) error {
 			}
 			files = tmpFiles
 		}
-		return ctx.JSON(Resp{
+		c.JSON(200, Resp{
 			Code:    200,
 			Message: "folder",
 			Data:    files,
@@ -75,49 +81,56 @@ func Path(ctx *fiber.Ctx) error {
 	}
 }
 
-func Link(ctx *fiber.Ctx) error {
+func Link(c *gin.Context) {
 	var req PathReq
-	if err := ctx.BodyParser(&req); err != nil {
-		return ErrorResp(ctx, err, 400)
+	if err := c.ShouldBind(&req); err != nil {
+		ErrorResp(c, err, 400)
+		return
 	}
 	rawPath := req.Path
 	rawPath = utils.ParsePath(rawPath)
 	log.Debugf("link: %s", rawPath)
 	account, path, driver, err := ParsePath(rawPath)
 	if err != nil {
-		return ErrorResp(ctx, err, 500)
+		ErrorResp(c, err, 500)
+		return
 	}
 	link, err := driver.Link(path, account)
 	if err != nil {
-		return ErrorResp(ctx, err, 500)
+		ErrorResp(c, err, 500)
+		return
 	}
 	if account.Type == "Native" {
-		return SuccessResp(ctx, fiber.Map{
-			"url": fmt.Sprintf("%s://%s/p%s", ctx.Protocol(), ctx.Hostname(), rawPath),
+		SuccessResp(c, gin.H{
+			"url": fmt.Sprintf("//%s/d%s", c.Request.Host, req.Path),
 		})
+		return
 	} else {
-		return SuccessResp(ctx, fiber.Map{
+		SuccessResp(c, gin.H{
 			"url": link,
 		})
+		return
 	}
 }
 
-func Preview(ctx *fiber.Ctx) error {
+func Preview(c *gin.Context) {
 	var req PathReq
-	if err := ctx.BodyParser(&req); err != nil {
-		return ErrorResp(ctx, err, 400)
+	if err := c.ShouldBind(&req); err != nil {
+		ErrorResp(c, err, 400)
+		return
 	}
 	rawPath := req.Path
 	rawPath = utils.ParsePath(rawPath)
 	log.Debugf("preview: %s", rawPath)
 	account, path, driver, err := ParsePath(rawPath)
 	if err != nil {
-		return ErrorResp(ctx, err, 500)
+		ErrorResp(c, err, 500)
+		return
 	}
 	data, err := driver.Preview(path, account)
 	if err != nil {
-		return ErrorResp(ctx, err, 500)
+		ErrorResp(c, err, 500)
 	} else {
-		return SuccessResp(ctx, data)
+		SuccessResp(c, data)
 	}
 }

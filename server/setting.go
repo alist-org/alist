@@ -2,37 +2,37 @@ package server
 
 import (
 	"github.com/Xhofe/alist/model"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gin-gonic/gin"
 )
 
-func SaveSettings(ctx *fiber.Ctx) error {
+func SaveSettings(c *gin.Context) {
 	var req []model.SettingItem
-	if err := ctx.BodyParser(&req); err != nil {
-		return ErrorResp(ctx, err, 400)
+	if err := c.ShouldBind(&req); err != nil {
+		ErrorResp(c, err, 400)
+		return
 	}
-	//if err := validate.Struct(req); err != nil {
-	//	return ErrorResp(ctx, err, 400)
-	//}
 	if err := model.SaveSettings(req); err != nil {
-		return ErrorResp(ctx, err, 500)
+		ErrorResp(c, err, 500)
 	} else {
 		model.LoadSettings()
-		return SuccessResp(ctx)
+		SuccessResp(c)
 	}
 }
 
-func GetSettings(ctx *fiber.Ctx) error {
+func GetSettings(c *gin.Context) {
 	settings, err := model.GetSettings()
 	if err != nil {
-		return ErrorResp(ctx, err, 400)
+		ErrorResp(c, err, 400)
+		return
 	}
-	return SuccessResp(ctx, settings)
+	SuccessResp(c, settings)
 }
 
-func GetSettingsPublic(ctx *fiber.Ctx) error {
+func GetSettingsPublic(c *gin.Context) {
 	settings, err := model.GetSettingsPublic()
 	if err != nil {
-		return ErrorResp(ctx, err, 400)
+		ErrorResp(c, err, 400)
+		return
 	}
-	return SuccessResp(ctx, settings)
+	SuccessResp(c, settings)
 }

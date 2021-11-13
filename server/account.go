@@ -4,35 +4,35 @@ import (
 	"fmt"
 	"github.com/Xhofe/alist/drivers"
 	"github.com/Xhofe/alist/model"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gin-gonic/gin"
 	"time"
 )
 
-func GetAccounts(ctx *fiber.Ctx) error {
+func GetAccounts(c *gin.Context) {
 	accounts, err := model.GetAccounts()
 	if err != nil {
-		return ErrorResp(ctx, err, 500)
+		ErrorResp(c, err, 500)
+		return
 	}
-	return SuccessResp(ctx, accounts)
+	SuccessResp(c, accounts)
 }
 
-func SaveAccount(ctx *fiber.Ctx) error {
+func SaveAccount(c *gin.Context) {
 	var req model.Account
-	if err := ctx.BodyParser(&req); err != nil {
-		return ErrorResp(ctx, err, 400)
-	}
-	if err := validate.Struct(req); err != nil {
-		return ErrorResp(ctx, err, 400)
+	if err := c.ShouldBind(&req); err != nil {
+		ErrorResp(c, err, 400)
+		return
 	}
 	driver, ok := drivers.GetDriver(req.Type)
 	if !ok {
-		return ErrorResp(ctx, fmt.Errorf("no [%s] driver", req.Type), 400)
+		ErrorResp(c, fmt.Errorf("no [%s] driver", req.Type), 400)
+		return
 	}
 	old, ok := model.GetAccount(req.Name)
 	now := time.Now()
 	req.UpdatedAt = &now
 	if err := model.SaveAccount(req); err != nil {
-		return ErrorResp(ctx, err, 500)
+		ErrorResp(c, err, 500)
 	} else {
 		if ok {
 			err = driver.Save(&req, &old)
@@ -40,16 +40,18 @@ func SaveAccount(ctx *fiber.Ctx) error {
 			err = driver.Save(&req, nil)
 		}
 		if err != nil {
-			return ErrorResp(ctx, err, 500)
+			ErrorResp(c, err, 500)
+			return
 		}
-		return SuccessResp(ctx)
+		SuccessResp(c)
 	}
 }
 
-func DeleteAccount(ctx *fiber.Ctx) error {
-	name := ctx.Query("name")
+func DeleteAccount(c *gin.Context) {
+	name := c.Query("name")
 	if err := model.DeleteAccount(name); err != nil {
-		return ErrorResp(ctx, err, 500)
+		ErrorResp(c, err, 500)
+		return
 	}
-	return SuccessResp(ctx)
+	SuccessResp(c)
 }

@@ -2,14 +2,14 @@ package server
 
 import (
 	"github.com/Xhofe/alist/conf"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gin-gonic/gin"
 )
 
-func ClearCache(ctx *fiber.Ctx) error {
+func ClearCache(c *gin.Context) {
 	err := conf.Cache.Clear(conf.Ctx)
 	if err != nil {
-		return ErrorResp(ctx,err,500)
-	}else {
-		return SuccessResp(ctx)
+		ErrorResp(c, err, 500)
+	} else {
+		SuccessResp(c)
 	}
 }

@@ -5,8 +5,8 @@ import (
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
+	"github.com/gin-gonic/gin"
 	"github.com/go-resty/resty/v2"
-	"github.com/gofiber/fiber/v2"
 	"github.com/robfig/cron/v3"
 	"path/filepath"
 	"time"
@@ -295,7 +295,7 @@ func (o Onedrive) Save(account *model.Account, old *model.Account) error {
 	return nil
 }
 
-func (o Onedrive) Proxy(ctx *fiber.Ctx) {
+func (o Onedrive) Proxy(c *gin.Context) {
 
 }
 

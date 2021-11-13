@@ -1,42 +1,48 @@
 package server
 
 import (
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
 )
 
-func InitApiRouter(app *fiber.App) {
+func InitApiRouter(r *gin.Engine) {
 
 	// TODO from settings
-	app.Use(cors.New())
-	app.Get("/d/*", Down)
-	// TODO check allow proxy?
-	app.Get("/p/*", Proxy)
+	Cors(r)
+	r.GET("/d/*path", Down)
+	r.GET("/p/*path", Proxy)
 
-	api := app.Group("/api")
-	api.Use(SetSuccess)
+	api := r.Group("/api")
 	public := api.Group("/public")
 	{
-		public.Post("/path", CheckAccount, Path)
-		public.Post("/preview", CheckAccount, Preview)
-		public.Get("/settings", GetSettingsPublic)
-		public.Post("/link", CheckAccount, Link)
+		public.POST("/path", CheckAccount, Path)
+		public.POST("/preview", CheckAccount, Preview)
+		public.GET("/settings", GetSettingsPublic)
+		public.POST("/link", CheckAccount, Link)
 	}
 
 	admin := api.Group("/admin")
 	{
 		admin.Use(Auth)
-		admin.Get("/login", Login)
-		admin.Get("/settings", GetSettings)
-		admin.Post("/settings", SaveSettings)
-		admin.Post("/account", SaveAccount)
-		admin.Get("/accounts", GetAccounts)
-		admin.Delete("/account", DeleteAccount)
-		admin.Get("/drivers", GetDrivers)
-		admin.Get("/clear_cache",ClearCache)
+		admin.GET("/login", Login)
+		admin.GET("/settings", GetSettings)
+		admin.POST("/settings", SaveSettings)
+		admin.POST("/account", SaveAccount)
+		admin.GET("/accounts", GetAccounts)
+		admin.DELETE("/account", DeleteAccount)
+		admin.GET("/drivers", GetDrivers)
+		admin.GET("/clear_cache", ClearCache)
 
-		admin.Get("/metas", GetMetas)
-		admin.Post("/meta", SaveMeta)
-		admin.Delete("/meta", DeleteMeta)
+		admin.GET("/metas", GetMetas)
+		admin.POST("/meta", SaveMeta)
+		admin.DELETE("/meta", DeleteMeta)
 	}
+	Static(r)
+}
+
+func Cors(r *gin.Engine) {
+	config := cors.DefaultConfig()
+	config.AllowAllOrigins = true
+	config.AllowHeaders = append(config.AllowHeaders, "Authorization")
+	r.Use(cors.New(config))
 }

@@ -2,7 +2,7 @@ package drivers
 
 import (
 	"github.com/Xhofe/alist/model"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gin-gonic/gin"
 )
 
 type Driver interface {
@@ -10,7 +10,7 @@ type Driver interface {
 	Path(path string, account *model.Account) (*model.File, []*model.File, error)
 	Link(path string, account *model.Account) (string, error)
 	Save(account *model.Account, old *model.Account) error
-	Proxy(ctx *fiber.Ctx)
+	Proxy(c *gin.Context)
 	Preview(path string, account *model.Account) (interface{}, error)
 	// TODO
 	//MakeDir(path string, account *model.Account) error

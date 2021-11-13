@@ -5,7 +5,7 @@ import (
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
@@ -31,7 +31,7 @@ func (n Native) Items() []Item {
 	}
 }
 
-func (n Native) Proxy(ctx *fiber.Ctx) {
+func (n Native) Proxy(c *gin.Context) {
 	// unnecessary
 }
 

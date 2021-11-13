@@ -5,12 +5,9 @@ import (
 	"fmt"
 	"github.com/Xhofe/alist/bootstrap"
 	"github.com/Xhofe/alist/conf"
-	"github.com/Xhofe/alist/public"
 	"github.com/Xhofe/alist/server"
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/filesystem"
+	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
-	"net/http"
 )
 
 func init() {
@@ -34,14 +31,14 @@ func main() {
 		return
 	}
 	Init()
-	app := fiber.New()
-	server.InitApiRouter(app)
-	app.Use("/", filesystem.New(filesystem.Config{
-		Root:         http.FS(public.Public),
-		NotFoundFile: "index.html",
-	}))
+	if !conf.Debug {
+		gin.SetMode(gin.ReleaseMode)
+	}
+	r := gin.Default()
+	server.InitApiRouter(r)
+
 	log.Info("starting server")
-	err := app.Listen(fmt.Sprintf(":%d", conf.Conf.Port))
+	err := r.Run(fmt.Sprintf("%s:%d", conf.Conf.Address, conf.Conf.Port))
 	if err != nil {
 		log.Errorf("failed to start: %s", err.Error())
 	}

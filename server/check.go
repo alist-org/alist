@@ -4,37 +4,36 @@ import (
 	"fmt"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
-func Auth(ctx *fiber.Ctx) error {
-	token := ctx.Get("Authorization")
+func Auth(c *gin.Context) {
+	token := c.GetHeader("Authorization")
 	password, err := model.GetSettingByKey("password")
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return ErrorResp(ctx, fmt.Errorf("password not set"), 400)
+			ErrorResp(c, fmt.Errorf("password not set"), 400)
+			return
 		}
-		return ErrorResp(ctx, err, 500)
+		ErrorResp(c, err, 500)
+		return
 	}
 	if token != utils.GetMD5Encode(password.Value) {
-		return ErrorResp(ctx, fmt.Errorf("wrong password"), 401)
+		ErrorResp(c, fmt.Errorf("wrong password"), 401)
+		return
 	}
-	return ctx.Next()
+	c.Next()
 }
 
-func Login(ctx *fiber.Ctx) error {
-	return SuccessResp(ctx)
+func Login(c *gin.Context) {
+	SuccessResp(c)
 }
 
-func SetSuccess(ctx *fiber.Ctx) error {
-	ctx.Status(200)
-	return ctx.Next()
-}
-
-func CheckAccount(ctx *fiber.Ctx) error {
+func CheckAccount(c *gin.Context) {
 	if model.AccountsCount() == 0 {
-		return ErrorResp(ctx,fmt.Errorf("no accounts,please add one first"),1001)
+		ErrorResp(c, fmt.Errorf("no accounts,please add one first"), 1001)
+		return
 	}
-	return ctx.Next()
+	c.Next()
 }

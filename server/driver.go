@@ -2,9 +2,9 @@ package server
 
 import (
 	"github.com/Xhofe/alist/drivers"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gin-gonic/gin"
 )
 
-func GetDrivers(ctx *fiber.Ctx) error {
-	return SuccessResp(ctx, drivers.GetDrivers())
+func GetDrivers(c *gin.Context) {
+	SuccessResp(c, drivers.GetDrivers())
 }

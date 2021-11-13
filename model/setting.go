@@ -12,7 +12,7 @@ const (
 )
 
 type SettingItem struct {
-	Key         string `json:"key" gorm:"primaryKey" validate:"required"`
+	Key         string `json:"key" gorm:"primaryKey" binding:"required"`
 	Value       string `json:"value"`
 	Description string `json:"description"`
 	Type        string `json:"type"`

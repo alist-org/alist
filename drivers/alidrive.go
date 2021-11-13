@@ -5,8 +5,8 @@ import (
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
+	"github.com/gin-gonic/gin"
 	"github.com/go-resty/resty/v2"
-	"github.com/gofiber/fiber/v2"
 	"github.com/robfig/cron/v3"
 	log "github.com/sirupsen/logrus"
 	"path/filepath"
@@ -103,9 +103,9 @@ func (a AliDrive) Items() []Item {
 	}
 }
 
-func (a AliDrive) Proxy(ctx *fiber.Ctx) {
-	ctx.Request().Header.Del("Origin")
-	ctx.Request().Header.Set("Referer", "https://www.aliyundrive.com/")
+func (a AliDrive) Proxy(c *gin.Context) {
+	c.Request.Header.Del("Origin")
+	c.Request.Header.Set("Referer", "https://www.aliyundrive.com/")
 }
 
 type AliRespError struct {

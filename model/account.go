@@ -8,7 +8,7 @@ import (
 )
 
 type Account struct {
-	Name           string `json:"name" gorm:"primaryKey" validate:"required"`
+	Name           string `json:"name" gorm:"primaryKey" binding:"required"`
 	Index          int    `json:"index"`
 	Type           string `json:"type"`
 	Username       string `json:"username"`
