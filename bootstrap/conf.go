@@ -13,6 +13,10 @@ func InitConf() {
 	log.Infof("reading config file: %s", conf.ConfigFile)
 	if !utils.Exists(conf.ConfigFile) {
 		log.Infof("config file not exists, creating default config file")
+		_, err := utils.CreatNestedFile(conf.ConfigFile)
+		if err != nil {
+			log.Fatalf("failed to create config file")
+		}
 		conf.Conf = conf.DefaultConfig()
 		if !utils.WriteToJson(conf.ConfigFile, conf.Conf) {
 			log.Fatalf("failed to create default config file")

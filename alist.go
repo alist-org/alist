@@ -14,7 +14,7 @@ import (
 )
 
 func init() {
-	flag.StringVar(&conf.ConfigFile, "conf", "config.json", "config file")
+	flag.StringVar(&conf.ConfigFile, "conf", "data/config.json", "config file")
 	flag.BoolVar(&conf.Debug, "debug", false, "start with debug mode")
 	flag.BoolVar(&conf.Version, "version", false, "print version info")
 	flag.Parse()

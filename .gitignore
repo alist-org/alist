@@ -25,3 +25,4 @@ alist
 *.json
 public/index.html
 public/assets/
+data/

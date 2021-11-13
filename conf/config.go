@@ -28,7 +28,7 @@ func DefaultConfig() *Config {
 			Port:        0,
 			Name:        "",
 			TablePrefix: "x_",
-			DBFile:      "data.db",
+			DBFile:      "data/data.db",
 		},
 	}
 }
