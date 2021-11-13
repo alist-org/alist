@@ -15,6 +15,20 @@ func GetMetas(c *gin.Context)  {
 	SuccessResp(c, metas)
 }
 
+func CreateMeta(c *gin.Context)  {
+	var req model.Meta
+	if err := c.ShouldBind(&req); err != nil {
+		ErrorResp(c, err, 400)
+		return
+	}
+	req.Path = utils.ParsePath(req.Path)
+	if err := model.CreateMeta(req); err != nil {
+		ErrorResp(c, err, 500)
+	} else {
+		SuccessResp(c)
+	}
+}
+
 func SaveMeta(c *gin.Context)  {
 	var req model.Meta
 	if err := c.ShouldBind(&req); err != nil {
@@ -34,6 +48,7 @@ func DeleteMeta(c *gin.Context) {
 	//path = utils.ParsePath(path)
 	if err := model.DeleteMeta(path); err != nil {
 		ErrorResp(c, err, 500)
+		return
 	}
 	SuccessResp(c)
 }

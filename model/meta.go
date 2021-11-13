@@ -1,9 +1,13 @@
 package model
 
-import "github.com/Xhofe/alist/conf"
+import (
+	"github.com/Xhofe/alist/conf"
+	log "github.com/sirupsen/logrus"
+)
 
 type Meta struct {
-	Path     string `json:"path" gorm:"primaryKey" binding:"required"`
+	ID       uint   `json:"id" gorm:"primaryKey"`
+	Path     string `json:"path" gorm:"unique" binding:"required"`
 	Password string `json:"password"`
 	Hide     string `json:"hide"`
 }
@@ -19,11 +23,16 @@ func GetMetaByPath(path string) (*Meta, error) {
 }
 
 func SaveMeta(meta Meta) error {
-	return conf.DB.Save(meta).Error
+	return conf.DB.Save(&meta).Error
+}
+
+func CreateMeta(meta Meta) error {
+	return conf.DB.Create(&meta).Error
 }
 
 func DeleteMeta(path string) error {
 	meta := Meta{Path: path}
+	log.Debugf("delete meta: %+v", meta)
 	return conf.DB.Delete(&meta).Error
 }
 

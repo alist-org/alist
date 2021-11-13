@@ -8,7 +8,8 @@ import (
 )
 
 type Account struct {
-	Name           string `json:"name" gorm:"primaryKey" binding:"required"`
+	ID             uint   `json:"id" gorm:"primaryKey"`
+	Name           string `json:"name" gorm:"unique" binding:"required"`
 	Index          int    `json:"index"`
 	Type           string `json:"type"`
 	Username       string `json:"username"`
@@ -38,7 +39,15 @@ var accountsMap = map[string]Account{}
 
 // SaveAccount save account to database
 func SaveAccount(account Account) error {
-	if err := conf.DB.Save(account).Error; err != nil {
+	if err := conf.DB.Save(&account).Error; err != nil {
+		return err
+	}
+	RegisterAccount(account)
+	return nil
+}
+
+func CreateAccount(account Account) error {
+	if err := conf.DB.Create(&account).Error; err != nil {
 		return err
 	}
 	RegisterAccount(account)

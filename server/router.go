@@ -27,14 +27,16 @@ func InitApiRouter(r *gin.Engine) {
 		admin.GET("/login", Login)
 		admin.GET("/settings", GetSettings)
 		admin.POST("/settings", SaveSettings)
-		admin.POST("/account", SaveAccount)
+		admin.POST("/account/create", CreateAccount)
+		admin.POST("/account/save", SaveAccount)
 		admin.GET("/accounts", GetAccounts)
 		admin.DELETE("/account", DeleteAccount)
 		admin.GET("/drivers", GetDrivers)
 		admin.GET("/clear_cache", ClearCache)
 
 		admin.GET("/metas", GetMetas)
-		admin.POST("/meta", SaveMeta)
+		admin.POST("/meta/create", CreateMeta)
+		admin.POST("/meta/save", SaveMeta)
 		admin.DELETE("/meta", DeleteMeta)
 	}
 	Static(r)
