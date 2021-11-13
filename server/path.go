@@ -2,10 +2,12 @@ package server
 
 import (
 	"fmt"
+	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
+	"path/filepath"
 	"strings"
 )
 
@@ -29,6 +31,12 @@ func Path(c *gin.Context) {
 			return
 		}
 		// TODO hide or ignore?
+	}
+	if conf.CheckParent {
+		if !CheckParent(filepath.Dir(req.Path), req.Password) {
+			ErrorResp(c, fmt.Errorf("wrong password"), 401)
+			return
+		}
 	}
 	if model.AccountsCount() > 1 && req.Path == "/" {
 		files, err := model.GetAccountFiles()

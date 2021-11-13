@@ -6,6 +6,7 @@ import (
 	"github.com/Xhofe/alist/utils"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
+	"path/filepath"
 )
 
 func Auth(c *gin.Context) {
@@ -36,4 +37,19 @@ func CheckAccount(c *gin.Context) {
 		return
 	}
 	c.Next()
+}
+
+func CheckParent(path string, password string) bool {
+	meta, err := model.GetMetaByPath(path)
+	if err == nil {
+		if meta.Password != "" && meta.Password != password {
+			return false
+		}
+		return true
+	} else {
+		if path == "/" {
+			return true
+		}
+		return CheckParent(filepath.Dir(path), password)
+	}
 }
