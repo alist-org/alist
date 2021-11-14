@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/public"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
@@ -9,11 +10,11 @@ import (
 	"net/http"
 )
 
-var data []byte
 
 func init() {
 	index, _ := public.Public.Open("index.html")
-	data, _ = ioutil.ReadAll(index)
+	data, _ := ioutil.ReadAll(index)
+	conf.RawIndexHtml = string(data)
 }
 
 func Static(r *gin.Engine) {
@@ -25,7 +26,7 @@ func Static(r *gin.Engine) {
 	r.NoRoute(func(c *gin.Context) {
 		c.Status(200)
 		c.Header("Content-Type", "text/html")
-		_, _ = c.Writer.Write(data)
+		_, _ = c.Writer.WriteString(conf.IndexHtml)
 		c.Writer.Flush()
 	})
 }

@@ -37,5 +37,10 @@ var (
 
 // settings
 var (
-	CheckParent bool
+	RawIndexHtml    string
+	IndexHtml       string
+	CheckParent     bool
+	//CustomizeStyle  string
+	//CustomizeScript string
+	//Favicon         string
 )

@@ -61,4 +61,19 @@ func LoadSettings() {
 	if err == nil {
 		conf.CheckParent = checkParent.Value == "true"
 	}
+	favicon, err := GetSettingByKey("favicon")
+	if err == nil {
+		//conf.Favicon = favicon.Value
+		conf.IndexHtml = strings.Replace(conf.RawIndexHtml, "https://store.heytapimage.com/cdo-portal/feedback/202110/30/d43c41c5d257c9bc36366e310374fb19.png", favicon.Value, 1)
+	}
+	customizeStyle, err := GetSettingByKey("customize style")
+	if err == nil {
+		//conf.CustomizeStyle = customizeStyle.Value
+		conf.IndexHtml = strings.Replace(conf.IndexHtml, "/* customize-style */", customizeStyle.Value, 1)
+	}
+	customizeScript, err := GetSettingByKey("customize script")
+	if err == nil {
+		//conf.CustomizeStyle = customizeScript.Value
+		conf.IndexHtml = strings.Replace(conf.IndexHtml, "// customize-js", customizeScript.Value, 1)
+	}
 }

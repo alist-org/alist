@@ -206,6 +206,18 @@ func initSettings() {
 			Type:        "bool",
 			Description: "check parent folder password",
 		},
+		{
+			Key: "customize style",
+			Value: "",
+			Type: "text",
+			Description: "customize style, don't need add <style></style>",
+		},
+		{
+			Key: "customize script",
+			Value: "",
+			Type: "text",
+			Description: "customize script, don't need add <script></script>",
+		},
 	}
 	for _, v := range settings {
 		_, err := model.GetSettingByKey(v.Key)
