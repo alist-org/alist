@@ -68,6 +68,10 @@ func DeleteAccount(id uint) error {
 	return nil
 }
 
+func DeleteAccountFromMap(name string) {
+	delete(accountsMap, name)
+}
+
 func AccountsCount() int {
 	return len(accountsMap)
 }
@@ -84,6 +88,15 @@ func GetAccount(name string) (Account, bool) {
 	}
 	account, ok := accountsMap[name]
 	return account, ok
+}
+
+func GetAccountById(id uint) (*Account, error) {
+	var account Account
+	account.ID = id
+	if err := conf.DB.First(&account).Error; err != nil {
+		return nil, err
+	}
+	return &account, nil
 }
 
 func GetAccountFiles() ([]*File, error) {

@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-resty/resty/v2"
 	"github.com/robfig/cron/v3"
+	log "github.com/sirupsen/logrus"
 	"path/filepath"
 	"time"
 )
@@ -269,6 +270,7 @@ func (o Onedrive) Save(account *model.Account, old *model.Account) error {
 	}
 	if old != nil {
 		conf.Cron.Remove(cron.EntryID(old.CronId))
+		model.DeleteAccountFromMap(old.Name)
 	}
 	account.RootFolder = utils.ParsePath(account.RootFolder)
 	err := o.RefreshToken(account)
@@ -277,7 +279,9 @@ func (o Onedrive) Save(account *model.Account, old *model.Account) error {
 	}
 	cronId, err := conf.Cron.AddFunc("@every 1h", func() {
 		name := account.Name
+		log.Debugf("onedrive account name: %s", name)
 		newAccount, ok := model.GetAccount(name)
+		log.Debugf("onedrive account: %+v", newAccount)
 		if !ok {
 			return
 		}

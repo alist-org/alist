@@ -347,6 +347,7 @@ func (a AliDrive) RefreshToken(account *model.Account) error {
 func (a AliDrive) Save(account *model.Account, old *model.Account) error {
 	if old != nil {
 		conf.Cron.Remove(cron.EntryID(old.CronId))
+		model.DeleteAccountFromMap(old.Name)
 	}
 	if account.RootFolder == "" {
 		account.RootFolder = "root"
@@ -367,7 +368,9 @@ func (a AliDrive) Save(account *model.Account, old *model.Account) error {
 	account.DriveId = resp["default_drive_id"].(string)
 	cronId, err := conf.Cron.AddFunc("@every 2h", func() {
 		name := account.Name
+		log.Debugf("ali account name: %s", name)
 		newAccount, ok := model.GetAccount(name)
+		log.Debugf("ali account: %+v", newAccount)
 		if !ok {
 			return
 		}

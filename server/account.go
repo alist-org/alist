@@ -56,18 +56,18 @@ func SaveAccount(c *gin.Context) {
 		ErrorResp(c, fmt.Errorf("no [%s] driver", req.Type), 400)
 		return
 	}
-	old, ok := model.GetAccount(req.Name)
+	old, err := model.GetAccountById(req.ID)
+	if err != nil {
+		ErrorResp(c, err, 400)
+		return
+	}
 	now := time.Now()
 	req.UpdatedAt = &now
 	if err := model.SaveAccount(&req); err != nil {
 		ErrorResp(c, err, 500)
 	} else {
 		log.Debugf("save account: %+v", req)
-		if ok {
-			err = driver.Save(&req, &old)
-		} else {
-			err = driver.Save(&req, nil)
-		}
+		err = driver.Save(&req, old)
 		if err != nil {
 			ErrorResp(c, err, 500)
 			return
