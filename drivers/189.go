@@ -195,11 +195,11 @@ func (c Cloud189) Link(path string, account *model.Account) (string, error) {
 	var e Cloud189Error
 	var resp Cloud189Down
 	_, err = client.R().SetResult(&resp).SetError(&e).
-		SetHeader("Accept","application/json;charset=UTF-8").
+		SetHeader("Accept", "application/json;charset=UTF-8").
 		SetQueryParams(map[string]string{
-		"noCache": random(),
-		"fileId":  strconv.FormatInt(file.Id, 10),
-	}).Get("https://cloud.189.cn/api/open/file/getFileDownloadUrl.action")
+			"noCache": random(),
+			"fileId":  strconv.FormatInt(file.Id, 10),
+		}).Get("https://cloud.189.cn/api/open/file/getFileDownloadUrl.action")
 	if err != nil {
 		return "", err
 	}
@@ -214,6 +214,10 @@ func (c Cloud189) Link(path string, account *model.Account) (string, error) {
 	}
 	if resp.ResCode != 0 {
 		return "", fmt.Errorf(resp.ResMessage)
+	}
+	res, err := noRedirectClient.R().Get(resp.FileDownloadUrl)
+	if res.StatusCode() == 302 {
+		return res.Header().Get("location"), nil
 	}
 	return resp.FileDownloadUrl, nil
 }
@@ -233,13 +237,13 @@ func init() {
 	client189Map = make(map[string]*resty.Client, 0)
 }
 
-// refer to PanIndex
 type LoginResp struct {
 	Msg    string `json:"msg"`
 	Result int    `json:"result"`
 	ToUrl  string `json:"toUrl"`
 }
 
+// Login refer to PanIndex
 func (c Cloud189) Login(account *model.Account) error {
 	client, ok := client189Map[account.Name]
 	if !ok {
@@ -278,11 +282,11 @@ func (c Cloud189) Login(account *model.Account) error {
 	var loginResp LoginResp
 	res, err = client.R().
 		SetHeaders(map[string]string{
-		"lt":         lt,
-		"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36",
-		"Referer":    "https://open.e.189.cn/",
-		"accept": "application/json;charset=UTF-8",
-	}).SetFormData(map[string]string{
+			"lt":         lt,
+			"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36",
+			"Referer":    "https://open.e.189.cn/",
+			"accept":     "application/json;charset=UTF-8",
+		}).SetFormData(map[string]string{
 		"appKey":       "cloud",
 		"accountType":  "01",
 		"userName":     "{RSA}" + userRsa,
@@ -361,17 +365,17 @@ func (c Cloud189) GetFiles(fileId string, account *model.Account) ([]Cloud189Fil
 		var e Cloud189Error
 		var resp Cloud189Files
 		_, err := client.R().SetResult(&resp).SetError(&e).
-			SetHeader("Accept","application/json;charset=UTF-8").
+			SetHeader("Accept", "application/json;charset=UTF-8").
 			SetQueryParams(map[string]string{
-			"noCache":    random(),
-			"pageSize":   "60",
-			"pageNum":    strconv.Itoa(pageNum),
-			"mediaType":  "0",
-			"folderId":   fileId,
-			"iconOption": "5",
-			"orderBy":    account.OrderBy,
-			"descending": account.OrderDirection,
-		}).Get("https://cloud.189.cn/api/open/file/listFiles.action")
+				"noCache":    random(),
+				"pageSize":   "60",
+				"pageNum":    strconv.Itoa(pageNum),
+				"mediaType":  "0",
+				"folderId":   fileId,
+				"iconOption": "5",
+				"orderBy":    account.OrderBy,
+				"descending": account.OrderDirection,
+			}).Get("https://cloud.189.cn/api/open/file/listFiles.action")
 		if err != nil {
 			return nil, err
 		}

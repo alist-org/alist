@@ -3,6 +3,8 @@ package drivers
 import (
 	"github.com/Xhofe/alist/model"
 	"github.com/gin-gonic/gin"
+	"github.com/go-resty/resty/v2"
+	"net/http"
 )
 
 type Driver interface {
@@ -53,3 +55,13 @@ func GetDrivers() map[string][]Item {
 }
 
 type Json map[string]interface{}
+
+var noRedirectClient *resty.Client
+
+func init() {
+	noRedirectClient = resty.New().SetRedirectPolicy(
+		resty.RedirectPolicyFunc(func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		}),
+	)
+}
