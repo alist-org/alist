@@ -99,9 +99,18 @@ func init() {
 
 func Text(c *gin.Context, link string) {
 	res, err := client.R().Get(link)
+	text := res.String()
+	if utils.IsGBK(res.Body()) {
+		body, err := utils.GbkToUtf8(res.Body())
+		if err != nil {
+			ErrorResp(c,err,500)
+			return
+		}
+		text = string(body)
+	}
 	if err != nil {
 		ErrorResp(c,err,500)
 		return
 	}
-	c.String(200,res.String())
+	c.String(200,text)
 }
