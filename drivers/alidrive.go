@@ -339,6 +339,8 @@ func (a AliDrive) RefreshToken(account *model.Account) error {
 	if e.Code != "" {
 		account.Status = e.Message
 		return fmt.Errorf("failed to refresh token: %s", e.Message)
+	}else {
+		account.Status = "work"
 	}
 	account.RefreshToken, account.AccessToken = resp.RefreshToken, resp.AccessToken
 	return nil

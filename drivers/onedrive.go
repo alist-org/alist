@@ -153,6 +153,8 @@ func (o Onedrive) RefreshToken(account *model.Account) error {
 	if e.Error != "" {
 		account.Status = e.ErrorDescription
 		return fmt.Errorf("%s", e.ErrorDescription)
+	}else {
+		account.Status = "work"
 	}
 	account.RefreshToken, account.AccessToken = resp.RefreshToken, resp.AccessToken
 	return nil

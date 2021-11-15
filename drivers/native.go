@@ -40,6 +40,11 @@ func (n Native) Save(account *model.Account, old *model.Account) error {
 	if !utils.Exists(account.RootFolder) {
 		return fmt.Errorf("[%s] not exist", account.RootFolder)
 	}
+	account.Status = "work"
+	err := model.SaveAccount(account)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
