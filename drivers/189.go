@@ -14,9 +14,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
-	"golang.org/x/net/publicsuffix"
 	mathRand "math/rand"
-	"net/http/cookiejar"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -245,9 +243,9 @@ type LoginResp struct {
 func (c Cloud189) Login(account *model.Account) error {
 	client, ok := client189Map[account.Name]
 	if !ok {
-		cookieJar, _ := cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
+		//cookieJar, _ := cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
 		client = resty.New()
-		client.SetCookieJar(cookieJar)
+		//client.SetCookieJar(cookieJar)
 		client.SetRetryCount(3)
 	}
 	url := "https://cloud.189.cn/api/portal/loginUrl.action?redirectURL=https%3A%2F%2Fcloud.189.cn%2Fmain.action"
