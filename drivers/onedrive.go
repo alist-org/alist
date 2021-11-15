@@ -48,6 +48,7 @@ func init() {
 
 func (o Onedrive) GetMetaUrl(account *model.Account, auth bool, path string) string {
 	path = filepath.Join(account.RootFolder, path)
+	log.Debugf(path)
 	host, _ := onedriveHostMap[account.Zone]
 	if auth {
 		return host.Oauth
@@ -55,7 +56,7 @@ func (o Onedrive) GetMetaUrl(account *model.Account, auth bool, path string) str
 	switch account.OnedriveType {
 	case "onedrive":
 		{
-			if path == "/" {
+			if path == "/" || path == "\\" {
 				return fmt.Sprintf("%s/v1.0/me/drive/root", host.Api)
 			} else {
 				return fmt.Sprintf("%s/v1.0/me/drive/root:%s:", host.Api, path)
