@@ -85,8 +85,14 @@ func (c Cloud189) FormatFile(file *Cloud189File) *model.File {
 		Thumbnail: file.Icon.SmallUrl,
 		Url:       file.Url,
 	}
+	loc, _ := time.LoadLocation("Local")
+	lastOpTime, err := time.ParseInLocation("2006-01-02 15:04:05", file.LastOpTime, loc)
+	if err == nil {
+		f.UpdatedAt = &lastOpTime
+	}
 	if file.Size == -1 {
 		f.Type = conf.FOLDER
+		f.Size = 0
 	} else {
 		f.Type = utils.GetFileType(filepath.Ext(file.Name))
 	}
