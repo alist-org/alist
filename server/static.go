@@ -12,7 +12,11 @@ import (
 
 
 func init() {
-	index, _ := public.Public.Open("index.html")
+	index, err := public.Public.Open("index.html")
+	if err != nil {
+		log.Errorf(err.Error())
+		return
+	}
 	data, _ := ioutil.ReadAll(index)
 	conf.RawIndexHtml = string(data)
 }

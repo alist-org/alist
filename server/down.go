@@ -5,6 +5,7 @@ import (
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/utils"
 	"github.com/gin-gonic/gin"
+	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
 	"net/http/httputil"
 	"net/url"
@@ -65,6 +66,10 @@ func Proxy(c *gin.Context) {
 		c.File(link)
 		return
 	} else {
+		if utils.GetFileType(filepath.Ext(rawPath)) == conf.TEXT {
+			Text(c, link)
+			return
+		}
 		driver.Proxy(c)
 		r := c.Request
 		w := c.Writer
@@ -83,4 +88,20 @@ func Proxy(c *gin.Context) {
 		r.Host = target.Host
 		proxy.ServeHTTP(w, r)
 	}
+}
+
+var client *resty.Client
+
+func init() {
+	client = resty.New()
+	client.SetRetryCount(3)
+}
+
+func Text(c *gin.Context, link string) {
+	res, err := client.R().Get(link)
+	if err != nil {
+		ErrorResp(c,err,500)
+		return
+	}
+	c.String(200,res.String())
 }
