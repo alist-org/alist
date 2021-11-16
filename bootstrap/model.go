@@ -77,13 +77,9 @@ func InitModel() {
 	if err != nil {
 		log.Fatalf("failed to auto migrate")
 	}
-
-	// TODO init filetype
-	initAccounts()
-	initSettings()
 }
 
-func initAccounts() {
+func InitAccounts() {
 	log.Infof("init accounts...")
 	var accounts []model.Account
 	if err := conf.DB.Find(&accounts).Error; err != nil {
@@ -98,12 +94,14 @@ func initAccounts() {
 			err := driver.Save(&accounts[i], nil)
 			if err != nil {
 				log.Errorf("init account [%s] error:[%s]", account.Name, err.Error())
+			} else {
+				log.Infof("success init account: %s, type: %s", account.Name, account.Type)
 			}
 		}
 	}
 }
 
-func initSettings() {
+func InitSettings() {
 	log.Infof("init settings...")
 	version := model.SettingItem{
 		Key:         "version",
@@ -207,15 +205,15 @@ func initSettings() {
 			Description: "check parent folder password",
 		},
 		{
-			Key: "customize style",
-			Value: "",
-			Type: "text",
+			Key:         "customize style",
+			Value:       "",
+			Type:        "text",
 			Description: "customize style, don't need add <style></style>",
 		},
 		{
-			Key: "customize script",
-			Value: "",
-			Type: "text",
+			Key:         "customize script",
+			Value:       "",
+			Type:        "text",
 			Description: "customize script, don't need add <script></script>",
 		},
 	}

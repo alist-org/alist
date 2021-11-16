@@ -20,6 +20,7 @@ var (
 	Conf       *Config
 	Debug      bool
 	Version    bool
+	Password   bool
 
 	DB    *gorm.DB
 	Cache *cache.Cache
@@ -37,9 +38,9 @@ var (
 
 // settings
 var (
-	RawIndexHtml    string
-	IndexHtml       string
-	CheckParent     bool
+	RawIndexHtml string
+	IndexHtml    string
+	CheckParent  bool
 	//CustomizeStyle  string
 	//CustomizeScript string
 	//Favicon         string

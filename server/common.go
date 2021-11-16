@@ -5,6 +5,7 @@ import (
 	"github.com/Xhofe/alist/drivers"
 	"github.com/Xhofe/alist/model"
 	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 	"strings"
 )
 
@@ -39,6 +40,7 @@ func ParsePath(rawPath string) (*model.Account, string, drivers.Driver, error) {
 }
 
 func ErrorResp(c *gin.Context, err error, code int) {
+	log.Error(err.Error())
 	c.JSON(200, Resp{
 		Code:    code,
 		Message: err.Error(),
