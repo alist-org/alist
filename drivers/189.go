@@ -71,6 +71,13 @@ func (c Cloud189) Save(account *model.Account, old *model.Account) error {
 		delete(client189Map, old.Name)
 	}
 	if err := c.Login(account); err != nil {
+		account.Status = err.Error()
+		_ = model.SaveAccount(account)
+		return err
+	}
+	account.Status = "work"
+	err := model.SaveAccount(account)
+	if err != nil {
 		return err
 	}
 	return nil
