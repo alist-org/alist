@@ -111,18 +111,13 @@ func (c Cloud189) Path(path string, account *model.Account) (*model.File, []*mod
 	log.Debugf("189 path: %s", path)
 	cache, err := conf.Cache.Get(conf.Ctx, fmt.Sprintf("%s%s", account.Name, path))
 	if err == nil {
-		file, ok := cache.(Cloud189File)
-		if ok {
-			return c.FormatFile(&file), nil, nil
-		} else {
-			files, _ := cache.([]Cloud189File)
-			if len(files) != 0 {
-				res := make([]*model.File, 0)
-				for _, file = range files {
-					res = append(res, c.FormatFile(&file))
-				}
-				return nil, res, nil
+		files, _ := cache.([]Cloud189File)
+		if len(files) != 0 {
+			res := make([]*model.File, 0)
+			for _, file := range files {
+				res = append(res, c.FormatFile(&file))
 			}
+			return nil, res, nil
 		}
 	}
 	// no cache or len(files) == 0

@@ -230,18 +230,13 @@ func (a AliDrive) Path(path string, account *model.Account) (*model.File, []*mod
 	log.Debugf("ali path: %s", path)
 	cache, err := conf.Cache.Get(conf.Ctx, fmt.Sprintf("%s%s", account.Name, path))
 	if err == nil {
-		file, ok := cache.(AliFile)
-		if ok {
-			return a.FormatFile(&file), nil, nil
-		} else {
-			files, _ := cache.([]AliFile)
-			if len(files) != 0 {
-				res := make([]*model.File, 0)
-				for _, file = range files {
-					res = append(res, a.FormatFile(&file))
-				}
-				return nil, res, nil
+		files, _ := cache.([]AliFile)
+		if len(files) != 0 {
+			res := make([]*model.File, 0)
+			for _, file := range files {
+				res = append(res, a.FormatFile(&file))
 			}
+			return nil, res, nil
 		}
 	}
 	// no cache or len(files) == 0
