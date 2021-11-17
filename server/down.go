@@ -21,6 +21,11 @@ func Down(c *gin.Context) {
 	}
 	rawPath = utils.ParsePath(rawPath)
 	log.Debugf("down: %s", rawPath)
+	pw := c.Query("pw")
+	if !CheckDownLink(filepath.Dir(rawPath), pw) {
+		ErrorResp(c, fmt.Errorf("wrong password"), 401)
+		return
+	}
 	account, path, driver, err := ParsePath(rawPath)
 	if err != nil {
 		ErrorResp(c, err, 500)
@@ -52,6 +57,11 @@ func Proxy(c *gin.Context) {
 	}
 	rawPath = utils.ParsePath(rawPath)
 	log.Debugf("proxy: %s", rawPath)
+	pw := c.Query("pw")
+	if !CheckDownLink(filepath.Dir(rawPath), pw) {
+		ErrorResp(c, fmt.Errorf("wrong password"), 401)
+		return
+	}
 	account, path, driver, err := ParsePath(rawPath)
 	if err != nil {
 		ErrorResp(c, err, 500)
@@ -74,7 +84,7 @@ func Proxy(c *gin.Context) {
 			Text(c, link)
 			return
 		}
-		driver.Proxy(c,account)
+		driver.Proxy(c, account)
 		r := c.Request
 		w := c.Writer
 		target, err := url.Parse(link)

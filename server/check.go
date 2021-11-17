@@ -2,9 +2,11 @@ package server
 
 import (
 	"fmt"
+	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
 	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	"path/filepath"
 )
@@ -51,5 +53,28 @@ func CheckParent(path string, password string) bool {
 			return true
 		}
 		return CheckParent(filepath.Dir(path), password)
+	}
+}
+
+func CheckDownLink(path string, passwordMd5 string) bool {
+	if !conf.CheckDown {
+		return true
+	}
+	meta, err := model.GetMetaByPath(path)
+	log.Debugf("check down path: %s", path)
+	if err == nil {
+		log.Debugf("check down link: %s,%s", meta.Password, passwordMd5)
+		if meta.Password != "" && utils.Get16MD5Encode(meta.Password) != passwordMd5 {
+			return false
+		}
+		return true
+	} else {
+		if !conf.CheckParent {
+			return true
+		}
+		if path == "/" {
+			return true
+		}
+		return CheckDownLink(filepath.Dir(path), passwordMd5)
 	}
 }

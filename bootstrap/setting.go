@@ -57,7 +57,7 @@ func InitSettings() {
 		},
 		{
 			Key:         "text types",
-			Value:       "txt,htm,html,xml,java,properties,sql,js,md,json,conf,ini,vue,php,py,bat,gitignore,yml,go,sh,c,cpp,h,hpp",
+			Value:       "txt,htm,html,xml,java,properties,sql,js,md,json,conf,ini,vue,php,py,bat,gitignore,yml,go,sh,c,cpp,h,hpp,tsx",
 			Type:        "string",
 			Description: "text type extensions",
 		},
@@ -98,35 +98,48 @@ func InitSettings() {
 			Key:   "autoplay video",
 			Value: "false",
 			Type:  "bool",
+			Group: model.PUBLIC,
 		},
 		{
 			Key:   "autoplay audio",
 			Value: "false",
 			Type:  "bool",
+			Group: model.PUBLIC,
 		},
 		{
 			Key:         "check parent folder",
 			Value:       "false",
 			Type:        "bool",
 			Description: "check parent folder password",
+			Group:       model.PRIVATE,
 		},
 		{
 			Key:         "customize style",
 			Value:       "",
 			Type:        "text",
 			Description: "customize style, don't need add <style></style>",
+			Group:       model.PRIVATE,
 		},
 		{
 			Key:         "customize script",
 			Value:       "",
 			Type:        "text",
 			Description: "customize script, don't need add <script></script>",
+			Group:       model.PRIVATE,
 		},
 		{
 			Key:         "animation",
 			Value:       "true",
 			Type:        "bool",
 			Description: "when there are a lot of files, the animation will freeze when opening",
+			Group:       model.PUBLIC,
+		},
+		{
+			Key:         "check down link",
+			Value:       "false",
+			Type:        "bool",
+			Description: "check down link password, your link will be 'https://alist.com/d/filename?pw=xxx'",
+			Group:       model.PUBLIC,
 		},
 	}
 	for _, v := range settings {

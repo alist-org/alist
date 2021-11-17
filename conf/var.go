@@ -44,4 +44,5 @@ var (
 	//CustomizeStyle  string
 	//CustomizeScript string
 	//Favicon         string
+	CheckDown bool
 )

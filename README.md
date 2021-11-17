@@ -34,6 +34,7 @@
 - Onedrive/世纪互联
 - 天翼云盘
 - GoogleDrive
+- 123pan
 - ...
 
 ### 如何使用

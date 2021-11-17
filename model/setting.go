@@ -61,6 +61,10 @@ func LoadSettings() {
 	if err == nil {
 		conf.CheckParent = checkParent.Value == "true"
 	}
+	checkDown,err := GetSettingByKey("check down link")
+	if err == nil {
+		conf.CheckDown = checkDown.Value == "true"
+	}
 	favicon, err := GetSettingByKey("favicon")
 	if err == nil {
 		//conf.Favicon = favicon.Value
