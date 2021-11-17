@@ -82,6 +82,8 @@ func (g GoogleDrive) Save(account *model.Account, old *model.Account) error {
 		_ = model.SaveAccount(account)
 		return err
 	}
+	account.Status = "work"
+	_ = model.SaveAccount(account)
 	return nil
 }
 
