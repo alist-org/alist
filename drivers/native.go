@@ -17,7 +17,7 @@ type Native struct {
 }
 
 func (n Native) Preview(path string, account *model.Account) (interface{}, error) {
-	return nil,fmt.Errorf("no need")
+	return nil, fmt.Errorf("no need")
 }
 
 func (n Native) Items() []Item {
@@ -36,6 +36,9 @@ func (n Native) Proxy(c *gin.Context) {
 }
 
 func (n Native) Save(account *model.Account, old *model.Account) error {
+	if old != nil {
+		model.DeleteAccountFromMap(old.Name)
+	}
 	log.Debugf("save a account: [%s]", account.Name)
 	if !utils.Exists(account.RootFolder) {
 		account.Status = fmt.Sprintf("[%s] not exist", account.RootFolder)
@@ -73,7 +76,7 @@ func (n Native) Path(path string, account *model.Account) (*model.File, []*model
 				Size:      f.Size(),
 				Type:      0,
 				UpdatedAt: &time,
-				Driver: "Native",
+				Driver:    "Native",
 			}
 			if f.IsDir() {
 				file.Type = conf.FOLDER
@@ -94,7 +97,7 @@ func (n Native) Path(path string, account *model.Account) (*model.File, []*model
 		Size:      f.Size(),
 		Type:      utils.GetFileType(filepath.Ext(f.Name())),
 		UpdatedAt: &time,
-		Driver: "Native",
+		Driver:    "Native",
 	}
 	return file, nil, nil
 }

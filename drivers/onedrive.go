@@ -273,7 +273,9 @@ func (o Onedrive) Save(account *model.Account, old *model.Account) error {
 	}
 	if old != nil {
 		conf.Cron.Remove(cron.EntryID(old.CronId))
-		model.DeleteAccountFromMap(old.Name)
+		if old.Name != account.Name {
+			model.DeleteAccountFromMap(old.Name)
+		}
 	}
 	account.RootFolder = utils.ParsePath(account.RootFolder)
 	err := o.RefreshToken(account)

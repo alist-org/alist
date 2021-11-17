@@ -67,8 +67,9 @@ func (c Cloud189) Items() []Item {
 }
 
 func (c Cloud189) Save(account *model.Account, old *model.Account) error {
-	if old != nil {
+	if old != nil && old.Name != account.Name {
 		delete(client189Map, old.Name)
+		model.DeleteAccountFromMap(old.Name)
 	}
 	if err := c.Login(account); err != nil {
 		account.Status = err.Error()
