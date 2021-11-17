@@ -12,7 +12,7 @@ type Driver interface {
 	Save(account *model.Account, old *model.Account) error
 	Path(path string, account *model.Account) (*model.File, []*model.File, error)
 	Link(path string, account *model.Account) (string, error)
-	Proxy(c *gin.Context)
+	Proxy(c *gin.Context, account *model.Account)
 	Preview(path string, account *model.Account) (interface{}, error)
 	// TODO
 	//Search(path string, keyword string, account *model.Account) ([]*model.File, error)

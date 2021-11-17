@@ -301,7 +301,7 @@ func (o Onedrive) Save(account *model.Account, old *model.Account) error {
 	return nil
 }
 
-func (o Onedrive) Proxy(c *gin.Context) {
+func (o Onedrive) Proxy(c *gin.Context, account *model.Account) {
 	c.Request.Header.Del("Origin")
 }
 

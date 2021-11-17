@@ -31,7 +31,7 @@ func (n Native) Items() []Item {
 	}
 }
 
-func (n Native) Proxy(c *gin.Context) {
+func (n Native) Proxy(c *gin.Context, account *model.Account) {
 	// unnecessary
 }
 

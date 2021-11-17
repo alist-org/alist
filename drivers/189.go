@@ -230,7 +230,7 @@ func (c Cloud189) Link(path string, account *model.Account) (string, error) {
 	return resp.FileDownloadUrl, nil
 }
 
-func (c Cloud189) Proxy(ctx *gin.Context) {
+func (c Cloud189) Proxy(ctx *gin.Context, account *model.Account) {
 	ctx.Request.Header.Del("Origin")
 }
 

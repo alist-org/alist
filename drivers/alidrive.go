@@ -103,7 +103,7 @@ func (a AliDrive) Items() []Item {
 	}
 }
 
-func (a AliDrive) Proxy(c *gin.Context) {
+func (a AliDrive) Proxy(c *gin.Context, account *model.Account) {
 	c.Request.Header.Del("Origin")
 	c.Request.Header.Set("Referer", "https://www.aliyundrive.com/")
 }
