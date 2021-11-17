@@ -30,6 +30,13 @@ var client189Map map[string]*resty.Client
 func (c Cloud189) Items() []Item {
 	return []Item{
 		{
+			Name:        "proxy",
+			Label:       "proxy",
+			Type:        "bool",
+			Required:    true,
+			Description: "allow proxy",
+		},
+		{
 			Name:        "username",
 			Label:       "username",
 			Type:        "string",
@@ -224,6 +231,9 @@ func (c Cloud189) Link(path string, account *model.Account) (string, error) {
 		return "", fmt.Errorf(resp.ResMessage)
 	}
 	res, err := noRedirectClient.R().Get(resp.FileDownloadUrl)
+	if err != nil {
+		return "", err
+	}
 	if res.StatusCode() == 302 {
 		return res.Header().Get("location"), nil
 	}

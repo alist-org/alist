@@ -68,6 +68,13 @@ func (a AliDrive) Preview(path string, account *model.Account) (interface{}, err
 func (a AliDrive) Items() []Item {
 	return []Item{
 		{
+			Name:        "proxy",
+			Label:       "proxy",
+			Type:        "bool",
+			Required:    true,
+			Description: "allow proxy",
+		},
+		{
 			Name: "order_by",
 			Label: "order_by",
 			Type: "select",

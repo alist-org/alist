@@ -26,6 +26,10 @@ func Down(c *gin.Context) {
 		ErrorResp(c, err, 500)
 		return
 	}
+	if account.Type == "GoogleDrive" {
+		Proxy(c)
+		return
+	}
 	link, err := driver.Link(path, account)
 	if err != nil {
 		ErrorResp(c, err, 500)
@@ -70,7 +74,7 @@ func Proxy(c *gin.Context) {
 			Text(c, link)
 			return
 		}
-		driver.Proxy(c)
+		driver.Proxy(c,account)
 		r := c.Request
 		w := c.Writer
 		target, err := url.Parse(link)

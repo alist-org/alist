@@ -43,6 +43,7 @@ func (n Native) Save(account *model.Account, old *model.Account) error {
 		return fmt.Errorf("[%s] not exist", account.RootFolder)
 	}
 	account.Status = "work"
+	account.Proxy = true
 	err := model.SaveAccount(account)
 	if err != nil {
 		return err

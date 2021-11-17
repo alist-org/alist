@@ -78,6 +78,13 @@ func (o Onedrive) GetMetaUrl(account *model.Account, auth bool, path string) str
 func (o Onedrive) Items() []Item {
 	return []Item{
 		{
+			Name:        "proxy",
+			Label:       "proxy",
+			Type:        "bool",
+			Required:    true,
+			Description: "allow proxy",
+		},
+		{
 			Name:        "zone",
 			Label:       "zone",
 			Type:        "select",
