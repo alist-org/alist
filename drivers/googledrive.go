@@ -199,7 +199,7 @@ func (g GoogleDrive) GetFile(path string, account *model.Account) (*GoogleFile, 
 
 func (g GoogleDrive) Path(path string, account *model.Account) (*model.File, []*model.File, error) {
 	path = utils.ParsePath(path)
-	log.Debugf("ali path: %s", path)
+	log.Debugf("google path: %s", path)
 	cache, err := conf.Cache.Get(conf.Ctx, fmt.Sprintf("%s%s", account.Name, path))
 	if err == nil {
 		files, _ := cache.([]GoogleFile)
