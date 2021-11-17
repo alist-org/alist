@@ -349,9 +349,6 @@ func (a AliDrive) RefreshToken(account *model.Account) error {
 func (a AliDrive) Save(account *model.Account, old *model.Account) error {
 	if old != nil {
 		conf.Cron.Remove(cron.EntryID(old.CronId))
-		if old.Name != account.Name {
-			model.DeleteAccountFromMap(old.Name)
-		}
 	}
 	if account.RootFolder == "" {
 		account.RootFolder = "root"

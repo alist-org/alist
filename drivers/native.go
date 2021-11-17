@@ -36,9 +36,6 @@ func (n Native) Proxy(c *gin.Context) {
 }
 
 func (n Native) Save(account *model.Account, old *model.Account) error {
-	if old != nil {
-		model.DeleteAccountFromMap(old.Name)
-	}
 	log.Debugf("save a account: [%s]", account.Name)
 	if !utils.Exists(account.RootFolder) {
 		account.Status = fmt.Sprintf("[%s] not exist", account.RootFolder)

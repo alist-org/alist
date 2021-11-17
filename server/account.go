@@ -63,6 +63,9 @@ func SaveAccount(c *gin.Context) {
 	}
 	now := time.Now()
 	req.UpdatedAt = &now
+	if old.Name != req.Name {
+		model.DeleteAccountFromMap(old.Name)
+	}
 	if err := model.SaveAccount(&req); err != nil {
 		ErrorResp(c, err, 500)
 	} else {
