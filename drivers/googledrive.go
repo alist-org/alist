@@ -286,4 +286,5 @@ var _ Driver = (*GoogleDrive)(nil)
 
 func init() {
 	RegisterDriver("GoogleDrive", &GoogleDrive{})
+	googleClient.SetRetryCount(3)
 }
