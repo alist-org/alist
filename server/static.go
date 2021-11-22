@@ -32,5 +32,6 @@ func Static(r *gin.Engine) {
 		c.Header("Content-Type", "text/html")
 		_, _ = c.Writer.WriteString(conf.IndexHtml)
 		c.Writer.Flush()
+		c.Writer.WriteHeaderNow()
 	})
 }
