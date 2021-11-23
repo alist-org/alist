@@ -135,6 +135,20 @@ func (o Onedrive) Items() []Item {
 			Type:     "string",
 			Required: false,
 		},
+		{
+			Name:     "order_by",
+			Label:    "order_by",
+			Type:     "select",
+			Values:   "name,size,lastModifiedDateTime",
+			Required: false,
+		},
+		{
+			Name:     "order_direction",
+			Label:    "order_direction",
+			Type:     "select",
+			Values:   "asc,desc",
+			Required: false,
+		},
 	}
 }
 
@@ -161,7 +175,7 @@ func (o Onedrive) RefreshToken(account *model.Account) error {
 	if e.Error != "" {
 		account.Status = e.ErrorDescription
 		return fmt.Errorf("%s", e.ErrorDescription)
-	}else {
+	} else {
 		account.Status = "work"
 	}
 	account.RefreshToken, account.AccessToken = resp.RefreshToken, resp.AccessToken
@@ -179,7 +193,8 @@ type OneFile struct {
 }
 
 type OneFiles struct {
-	Value []OneFile `json:"value"`
+	Value    []OneFile `json:"value"`
+	NextLink string    `json:"@odata.nextLink"`
 }
 
 type OneRespErr struct {
@@ -206,18 +221,30 @@ func (o Onedrive) FormatFile(file *OneFile) *model.File {
 }
 
 func (o Onedrive) GetFiles(account *model.Account, path string) ([]OneFile, error) {
-	var files OneFiles
-	var e OneRespErr
-	_, err := oneClient.R().SetResult(&files).SetError(&e).
-		SetHeader("Authorization", "Bearer  "+account.AccessToken).
-		Get(o.GetMetaUrl(account, false, path) + "/children")
-	if err != nil {
-		return nil, err
+	var res []OneFile
+	nextLink := o.GetMetaUrl(account, false, path) + "/children"
+	if account.OrderBy != "" {
+		nextLink += fmt.Sprintf("?orderby=%s", account.OrderBy)
+		if account.OrderDirection != "" {
+			nextLink += fmt.Sprintf(" %s", account.OrderDirection)
+		}
 	}
-	if e.Error.Code != "" {
-		return nil, fmt.Errorf("%s", e.Error.Message)
+	for nextLink != "" {
+		var files OneFiles
+		var e OneRespErr
+		_, err := oneClient.R().SetResult(&files).SetError(&e).
+			SetHeader("Authorization", "Bearer  "+account.AccessToken).
+			Get(nextLink)
+		if err != nil {
+			return nil, err
+		}
+		if e.Error.Code != "" {
+			return nil, fmt.Errorf("%s", e.Error.Message)
+		}
+		res = append(res, files.Value...)
+		nextLink = files.NextLink
 	}
-	return files.Value, nil
+	return res, nil
 }
 
 func (o Onedrive) GetFile(account *model.Account, path string) (*OneFile, error) {
