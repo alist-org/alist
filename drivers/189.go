@@ -271,18 +271,25 @@ func (c Cloud189) Login(account *model.Account) error {
 		client.SetRetryCount(3)
 	}
 	url := "https://cloud.189.cn/api/portal/loginUrl.action?redirectURL=https%3A%2F%2Fcloud.189.cn%2Fmain.action"
-	res, err := client.R().Get(url)
-	if err != nil {
-		return err
-	}
-	b := res.String()
+	b := ""
 	lt := ""
 	ltText := regexp.MustCompile(`lt = "(.+?)"`)
-	ltTextArr := ltText.FindStringSubmatch(b)
-	if len(ltTextArr) > 0 {
-		lt = ltTextArr[1]
-	} else {
-		return fmt.Errorf("ltTextArr = 0")
+	for i := 0; i < 3; i++ {
+		res, err := client.R().Get(url)
+		if err != nil {
+			return err
+		}
+		b = res.String()
+		ltTextArr := ltText.FindStringSubmatch(b)
+		if len(ltTextArr) > 0 {
+			lt = ltTextArr[1]
+			break
+		} else {
+			<-time.After(time.Second)
+		}
+	}
+	if lt == "" {
+		return fmt.Errorf("get empty login page")
 	}
 	captchaToken := regexp.MustCompile(`captchaToken' value='(.+?)'`).FindStringSubmatch(b)[1]
 	returnUrl := regexp.MustCompile(`returnUrl = '(.+?)'`).FindStringSubmatch(b)[1]
@@ -298,7 +305,7 @@ func (c Cloud189) Login(account *model.Account) error {
 	passwordRsa := RsaEncode([]byte(account.Password), jRsakey)
 	url = "https://open.e.189.cn/api/logbox/oauth2/loginSubmit.do"
 	var loginResp LoginResp
-	res, err = client.R().
+	res, err := client.R().
 		SetHeaders(map[string]string{
 			"lt":         lt,
 			"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36",
