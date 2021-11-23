@@ -28,6 +28,20 @@ func (n Native) Items() []Item {
 			Type:     "string",
 			Required: true,
 		},
+		{
+			Name: "order_by",
+			Label: "order_by",
+			Type: "select",
+			Values: "name,size,updated_at",
+			Required: false,
+		},
+		{
+			Name: "order_direction",
+			Label: "order_direction",
+			Type: "select",
+			Values: "ASC,DESC",
+			Required: false,
+		},
 	}
 }
 
@@ -51,7 +65,6 @@ func (n Native) Save(account *model.Account, old *model.Account) error {
 	return nil
 }
 
-// TODO sort files
 func (n Native) Path(path string, account *model.Account) (*model.File, []model.File, error) {
 	fullPath := filepath.Join(account.RootFolder, path)
 	log.Debugf("%s-%s-%s", account.RootFolder, path, fullPath)
@@ -83,6 +96,7 @@ func (n Native) Path(path string, account *model.Account) (*model.File, []model.
 			}
 			result = append(result, file)
 		}
+		model.SortFiles(result, account)
 		return nil, result, nil
 	}
 	f, err := os.Stat(fullPath)
