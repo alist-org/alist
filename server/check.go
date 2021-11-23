@@ -49,7 +49,7 @@ func CheckParent(path string, password string) bool {
 		}
 		return true
 	} else {
-		if path == "/" {
+		if path == "/" || path == "\\" {
 			return true
 		}
 		return CheckParent(filepath.Dir(path), password)
@@ -72,7 +72,7 @@ func CheckDownLink(path string, passwordMd5 string) bool {
 		if !conf.CheckParent {
 			return true
 		}
-		if path == "/" {
+		if path == "/" || path == "\\" {
 			return true
 		}
 		return CheckDownLink(filepath.Dir(path), passwordMd5)
