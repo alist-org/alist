@@ -99,14 +99,14 @@ func GetAccountById(id uint) (*Account, error) {
 	return &account, nil
 }
 
-func GetAccountFiles() ([]*File, error) {
-	files := make([]*File, 0)
+func GetAccountFiles() ([]File, error) {
+	files := make([]File, 0)
 	var accounts []Account
 	if err := conf.DB.Order("`index`").Find(&accounts).Error; err != nil {
 		return nil, err
 	}
 	for _, v := range accounts {
-		files = append(files, &File{
+		files = append(files, File{
 			Name:      v.Name,
 			Size:      0,
 			Type:      conf.FOLDER,

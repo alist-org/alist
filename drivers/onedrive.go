@@ -262,11 +262,11 @@ func (o Onedrive) GetFile(account *model.Account, path string) (*OneFile, error)
 	return &file, nil
 }
 
-func (o Onedrive) Path(path string, account *model.Account) (*model.File, []*model.File, error) {
+func (o Onedrive) Path(path string, account *model.Account) (*model.File, []model.File, error) {
 	path = utils.ParsePath(path)
 	cache, err := conf.Cache.Get(conf.Ctx, fmt.Sprintf("%s%s", account.Name, path))
 	if err == nil {
-		files, _ := cache.([]*model.File)
+		files, _ := cache.([]model.File)
 		return nil, files, nil
 	}
 	file, err := o.GetFile(account, path)
@@ -280,9 +280,9 @@ func (o Onedrive) Path(path string, account *model.Account) (*model.File, []*mod
 		if err != nil {
 			return nil, nil, err
 		}
-		res := make([]*model.File, 0)
+		res := make([]model.File, 0)
 		for _, file := range files {
-			res = append(res, o.FormatFile(&file))
+			res = append(res, *o.FormatFile(&file))
 		}
 		_ = conf.Cache.Set(conf.Ctx, fmt.Sprintf("%s%s", account.Name, path), res, nil)
 		return nil, res, nil

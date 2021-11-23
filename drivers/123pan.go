@@ -172,16 +172,16 @@ func (p Pan123) GetFiles(parentId string, account *model.Account) ([]Pan123File,
 	return res, nil
 }
 
-func (p Pan123) Path(path string, account *model.Account) (*model.File, []*model.File, error) {
+func (p Pan123) Path(path string, account *model.Account) (*model.File, []model.File, error) {
 	path = utils.ParsePath(path)
 	log.Debugf("pan123 path: %s", path)
 	cache, err := conf.Cache.Get(conf.Ctx, fmt.Sprintf("%s%s", account.Name, path))
 	if err == nil {
 		files, _ := cache.([]Pan123File)
 		if len(files) != 0 {
-			res := make([]*model.File, 0)
+			res := make([]model.File, 0)
 			for _, file := range files {
-				res = append(res, p.FormatFile(&file))
+				res = append(res, *p.FormatFile(&file))
 			}
 			return nil, res, nil
 		}
@@ -226,9 +226,9 @@ func (p Pan123) Path(path string, account *model.Account) (*model.File, []*model
 	}
 	log.Debugf("%+v", files)
 	_ = conf.Cache.Set(conf.Ctx, fmt.Sprintf("%s%s", account.Name, path), files, nil)
-	res := make([]*model.File, 0)
+	res := make([]model.File, 0)
 	for _, file := range files {
-		res = append(res, p.FormatFile(&file))
+		res = append(res, *p.FormatFile(&file))
 	}
 	return nil, res, nil
 }

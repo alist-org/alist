@@ -52,14 +52,14 @@ func (n Native) Save(account *model.Account, old *model.Account) error {
 }
 
 // TODO sort files
-func (n Native) Path(path string, account *model.Account) (*model.File, []*model.File, error) {
+func (n Native) Path(path string, account *model.Account) (*model.File, []model.File, error) {
 	fullPath := filepath.Join(account.RootFolder, path)
 	log.Debugf("%s-%s-%s", account.RootFolder, path, fullPath)
 	if !utils.Exists(fullPath) {
 		return nil, nil, fmt.Errorf("path not found")
 	}
 	if utils.IsDir(fullPath) {
-		result := make([]*model.File, 0)
+		result := make([]model.File, 0)
 		files, err := ioutil.ReadDir(fullPath)
 		if err != nil {
 			return nil, nil, err
@@ -69,7 +69,7 @@ func (n Native) Path(path string, account *model.Account) (*model.File, []*model
 				continue
 			}
 			time := f.ModTime()
-			file := &model.File{
+			file := model.File{
 				Name:      f.Name(),
 				Size:      f.Size(),
 				Type:      0,

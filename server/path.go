@@ -72,7 +72,7 @@ func Path(c *gin.Context) {
 		})
 	} else {
 		if meta != nil && meta.Hide != "" {
-			tmpFiles := make([]*model.File, 0)
+			tmpFiles := make([]model.File, 0)
 			hideFiles := strings.Split(meta.Hide, ",")
 			for _, item := range files {
 				if !utils.IsContain(hideFiles, item.Name) {

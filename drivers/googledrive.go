@@ -197,16 +197,16 @@ func (g GoogleDrive) GetFile(path string, account *model.Account) (*GoogleFile, 
 	return nil, fmt.Errorf("path not found")
 }
 
-func (g GoogleDrive) Path(path string, account *model.Account) (*model.File, []*model.File, error) {
+func (g GoogleDrive) Path(path string, account *model.Account) (*model.File, []model.File, error) {
 	path = utils.ParsePath(path)
 	log.Debugf("google path: %s", path)
 	cache, err := conf.Cache.Get(conf.Ctx, fmt.Sprintf("%s%s", account.Name, path))
 	if err == nil {
 		files, _ := cache.([]GoogleFile)
 		if len(files) != 0 {
-			res := make([]*model.File, 0)
+			res := make([]model.File, 0)
 			for _, file := range files {
-				res = append(res, g.FormatFile(&file))
+				res = append(res, *g.FormatFile(&file))
 			}
 			return nil, res, nil
 		}
@@ -243,9 +243,9 @@ func (g GoogleDrive) Path(path string, account *model.Account) (*model.File, []*
 		return nil, nil, err
 	}
 	_ = conf.Cache.Set(conf.Ctx, fmt.Sprintf("%s%s", account.Name, path), files, nil)
-	res := make([]*model.File, 0)
+	res := make([]model.File, 0)
 	for _, file := range files {
-		res = append(res, g.FormatFile(&file))
+		res = append(res, *g.FormatFile(&file))
 	}
 	return nil, res, nil
 }

@@ -232,16 +232,16 @@ func (a AliDrive) GetFile(path string, account *model.Account) (*AliFile, error)
 }
 
 // path: /aaa/bbb
-func (a AliDrive) Path(path string, account *model.Account) (*model.File, []*model.File, error) {
+func (a AliDrive) Path(path string, account *model.Account) (*model.File, []model.File, error) {
 	path = utils.ParsePath(path)
 	log.Debugf("ali path: %s", path)
 	cache, err := conf.Cache.Get(conf.Ctx, fmt.Sprintf("%s%s", account.Name, path))
 	if err == nil {
 		files, _ := cache.([]AliFile)
 		if len(files) != 0 {
-			res := make([]*model.File, 0)
+			res := make([]model.File, 0)
 			for _, file := range files {
-				res = append(res, a.FormatFile(&file))
+				res = append(res, *a.FormatFile(&file))
 			}
 			return nil, res, nil
 		}
@@ -283,9 +283,9 @@ func (a AliDrive) Path(path string, account *model.Account) (*model.File, []*mod
 		return nil, nil, err
 	}
 	_ = conf.Cache.Set(conf.Ctx, fmt.Sprintf("%s%s", account.Name, path), files, nil)
-	res := make([]*model.File, 0)
+	res := make([]model.File, 0)
 	for _, file := range files {
-		res = append(res, a.FormatFile(&file))
+		res = append(res, *a.FormatFile(&file))
 	}
 	return nil, res, nil
 }

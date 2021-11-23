@@ -113,16 +113,16 @@ func (c Cloud189) FormatFile(file *Cloud189File) *model.File {
 	return f
 }
 
-func (c Cloud189) Path(path string, account *model.Account) (*model.File, []*model.File, error) {
+func (c Cloud189) Path(path string, account *model.Account) (*model.File, []model.File, error) {
 	path = utils.ParsePath(path)
 	log.Debugf("189 path: %s", path)
 	cache, err := conf.Cache.Get(conf.Ctx, fmt.Sprintf("%s%s", account.Name, path))
 	if err == nil {
 		files, _ := cache.([]Cloud189File)
 		if len(files) != 0 {
-			res := make([]*model.File, 0)
+			res := make([]model.File, 0)
 			for _, file := range files {
-				res = append(res, c.FormatFile(&file))
+				res = append(res, *c.FormatFile(&file))
 			}
 			return nil, res, nil
 		}
@@ -164,9 +164,9 @@ func (c Cloud189) Path(path string, account *model.Account) (*model.File, []*mod
 		return nil, nil, err
 	}
 	_ = conf.Cache.Set(conf.Ctx, fmt.Sprintf("%s%s", account.Name, path), files, nil)
-	res := make([]*model.File, 0)
+	res := make([]model.File, 0)
 	for _, file := range files {
-		res = append(res, c.FormatFile(&file))
+		res = append(res, *c.FormatFile(&file))
 	}
 	return nil, res, nil
 }

@@ -10,7 +10,7 @@ import (
 type Driver interface {
 	Items() []Item
 	Save(account *model.Account, old *model.Account) error
-	Path(path string, account *model.Account) (*model.File, []*model.File, error)
+	Path(path string, account *model.Account) (*model.File, []model.File, error)
 	Link(path string, account *model.Account) (string, error)
 	Proxy(c *gin.Context, account *model.Account)
 	Preview(path string, account *model.Account) (interface{}, error)
