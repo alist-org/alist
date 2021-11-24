@@ -39,7 +39,7 @@
 
 ### 如何使用
 
-- https://www.nn.ci/archives/alist.html
+- https://alist-doc.nn.ci/
 
 ### License
 
