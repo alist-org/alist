@@ -40,7 +40,7 @@ func (g GoogleDrive) Items() []Item {
 		},
 		{
 			Name:     "root_folder",
-			Label:    "root folder path",
+			Label:    "root folder file_id",
 			Type:     "string",
 			Required: true,
 		},
