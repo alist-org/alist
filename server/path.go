@@ -31,8 +31,7 @@ func Path(c *gin.Context) {
 			return
 		}
 		// TODO hide or ignore?
-	}
-	if conf.CheckParent {
+	} else if conf.CheckParent {
 		if !CheckParent(filepath.Dir(req.Path), req.Password) {
 			ErrorResp(c, fmt.Errorf("wrong password"), 401)
 			return
