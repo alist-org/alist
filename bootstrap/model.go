@@ -71,7 +71,7 @@ func InitModel() {
 	default:
 		log.Fatalf("not supported database type: %s", databaseConfig.Type)
 	}
-	log.Infof("auto migrate model")
+	log.Infof("auto migrate model...")
 	err := conf.DB.AutoMigrate(&model.SettingItem{}, &model.Account{}, &model.Meta{})
 	if err != nil {
 		log.Fatalf("failed to auto migrate")

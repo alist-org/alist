@@ -52,9 +52,9 @@ func main() {
 	}
 	r := gin.Default()
 	server.InitApiRouter(r)
-
-	log.Info("starting server")
-	err := r.Run(fmt.Sprintf("%s:%d", conf.Conf.Address, conf.Conf.Port))
+	base := fmt.Sprintf("%s:%d", conf.Conf.Address, conf.Conf.Port)
+	log.Info("start server @ %s", base)
+	err := r.Run(base)
 	if err != nil {
 		log.Errorf("failed to start: %s", err.Error())
 	}
