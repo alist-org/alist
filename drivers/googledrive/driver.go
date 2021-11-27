@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 )
 
-type GoogleDrive struct {}
+type GoogleDrive struct{}
 
 var driverName = "GoogleDrive"
 
@@ -109,9 +109,12 @@ func (driver GoogleDrive) Files(path string, account *model.Account) ([]model.Fi
 }
 
 func (driver GoogleDrive) Link(path string, account *model.Account) (string, error) {
-	file, err := driver.GetFile(utils.ParsePath(path), account)
+	file, err := driver.File(path, account)
 	if err != nil {
 		return "", err
+	}
+	if file.Type == conf.FOLDER {
+		return "", drivers.NotFile
 	}
 	link := fmt.Sprintf("https://www.googleapis.com/drive/v3/files/%s?includeItemsFromAllDrives=true&supportsAllDrives=true", file.Id)
 	var e GoogleError

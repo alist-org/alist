@@ -131,26 +131,26 @@ func (driver GoogleDrive) GetFiles(id string, account *model.Account) ([]GoogleF
 	return res, nil
 }
 
-func (driver GoogleDrive) GetFile(path string, account *model.Account) (*GoogleFile, error) {
-	dir, name := filepath.Split(path)
-	dir = utils.ParsePath(dir)
-	_, _, err := driver.Path(dir, account)
-	if err != nil {
-		return nil, err
-	}
-	parentFiles_, _ := conf.Cache.Get(conf.Ctx, fmt.Sprintf("%s%s", account.Name, dir))
-	parentFiles, _ := parentFiles_.([]GoogleFile)
-	for _, file := range parentFiles {
-		if file.Name == name {
-			if !driver.IsDir(file.MimeType) {
-				return &file, err
-			} else {
-				return nil, fmt.Errorf("not file")
-			}
-		}
-	}
-	return nil, fmt.Errorf("path not found")
-}
+//func (driver GoogleDrive) GetFile(path string, account *model.Account) (*GoogleFile, error) {
+//	dir, name := filepath.Split(path)
+//	dir = utils.ParsePath(dir)
+//	_, _, err := driver.Path(dir, account)
+//	if err != nil {
+//		return nil, err
+//	}
+//	parentFiles_, _ := conf.Cache.Get(conf.Ctx, fmt.Sprintf("%s%s", account.Name, dir))
+//	parentFiles, _ := parentFiles_.([]GoogleFile)
+//	for _, file := range parentFiles {
+//		if file.Name == name {
+//			if !driver.IsDir(file.MimeType) {
+//				return &file, err
+//			} else {
+//				return nil, drivers.NotFile
+//			}
+//		}
+//	}
+//	return nil, drivers.PathNotFound
+//}
 
 var _ drivers.Driver = (*GoogleDrive)(nil)
 
