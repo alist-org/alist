@@ -18,6 +18,8 @@ type Pan123 struct {
 
 var pan123Client = resty.New()
 
+var pan123 = "123Pan"
+
 func (p Pan123) Items() []Item {
 	return []Item{
 		{
@@ -114,6 +116,7 @@ type Pan123File struct {
 
 func (p Pan123) FormatFile(file *Pan123File) *model.File {
 	f := &model.File{
+		Id:        strconv.FormatInt(file.FileId, 10),
 		Name:      file.FileName,
 		Size:      file.Size,
 		Driver:    "123Pan",
@@ -172,71 +175,79 @@ func (p Pan123) GetFiles(parentId string, account *model.Account) ([]Pan123File,
 	return res, nil
 }
 
+func (p Pan123) File(path string, account *model.Account) (*model.File, error) {
+	path = utils.ParsePath(path)
+	if path == "/" {
+		return &model.File{
+			Id:        account.RootFolder,
+			Name:      account.Name,
+			Size:      0,
+			Type:      conf.FOLDER,
+			Driver:    pan123,
+			UpdatedAt: account.UpdatedAt,
+		}, nil
+	}
+	dir, name := filepath.Split(path)
+	files, err := p.Files(dir, account)
+	if err != nil {
+		return nil, err
+	}
+	for _, file := range files {
+		if file.Name == name {
+			return &file, nil
+		}
+	}
+	return nil, PathNotFound
+}
+
+func (p Pan123) Files(path string, account *model.Account) ([]model.File, error) {
+	path = utils.ParsePath(path)
+	var rawFiles []Pan123File
+	cache, err := conf.Cache.Get(conf.Ctx, fmt.Sprintf("%s%s", account.Name, path))
+	if err == nil {
+		rawFiles, _ = cache.([]Pan123File)
+	} else {
+		file, err := p.File(path, account)
+		if err != nil {
+			return nil, err
+		}
+		rawFiles, err = p.GetFiles(file.Id, account)
+		if err != nil {
+			return nil, err
+		}
+		if len(rawFiles) > 0 {
+			_ = conf.Cache.Set(conf.Ctx, fmt.Sprintf("%s%s", account.Name, path), rawFiles, nil)
+		}
+	}
+	files := make([]model.File, 0)
+	for _, file := range rawFiles {
+		files = append(files, *p.FormatFile(&file))
+	}
+	return files, nil
+}
+
 func (p Pan123) Path(path string, account *model.Account) (*model.File, []model.File, error) {
 	path = utils.ParsePath(path)
 	log.Debugf("pan123 path: %s", path)
-	cache, err := conf.Cache.Get(conf.Ctx, fmt.Sprintf("%s%s", account.Name, path))
-	if err == nil {
-		files, _ := cache.([]Pan123File)
-		if len(files) != 0 {
-			res := make([]model.File, 0)
-			for _, file := range files {
-				res = append(res, *p.FormatFile(&file))
-			}
-			return nil, res, nil
-		}
-	}
-	// no cache or len(files) == 0
-	fileId := account.RootFolder
-	if path != "/" {
-		dir, name := filepath.Split(path)
-		dir = utils.ParsePath(dir)
-		_, _, err = p.Path(dir, account)
-		if err != nil {
-			return nil, nil, err
-		}
-		parentFiles_, _ := conf.Cache.Get(conf.Ctx, fmt.Sprintf("%s%s", account.Name, dir))
-		parentFiles, _ := parentFiles_.([]Pan123File)
-		found := false
-		for _, file := range parentFiles {
-			if file.FileName == name {
-				found = true
-				if file.Type != 1 {
-					url, err := p.Link(path, account)
-					if err != nil {
-						return nil, nil, err
-					}
-
-					f := p.FormatFile(&file)
-					f.Url = url
-					return f, nil, nil
-				} else {
-					fileId = strconv.FormatInt(file.FileId, 10)
-					break
-				}
-			}
-		}
-		if !found {
-			return nil, nil, fmt.Errorf("path not found")
-		}
-	}
-	files, err := p.GetFiles(fileId, account)
+	file, err := p.File(path, account)
 	if err != nil {
 		return nil, nil, err
 	}
-	log.Debugf("%+v", files)
-	_ = conf.Cache.Set(conf.Ctx, fmt.Sprintf("%s%s", account.Name, path), files, nil)
-	res := make([]model.File, 0)
-	for _, file := range files {
-		res = append(res, *p.FormatFile(&file))
+	if file.Type != conf.FOLDER {
+		file.Url, _ = p.Link(path, account)
+		return file, nil, nil
 	}
-	return nil, res, nil
+	files, err := p.Files(path, account)
+	if err != nil {
+		return nil, nil, err
+	}
+	return nil, files, nil
 }
 
 func (p Pan123) GetFile(path string, account *model.Account) (*Pan123File, error) {
 	dir, name := filepath.Split(path)
 	dir = utils.ParsePath(dir)
-	_, _, err := p.Path(dir, account)
+	_, err := p.Files(dir, account)
 	if err != nil {
 		return nil, err
 	}
@@ -247,11 +258,11 @@ func (p Pan123) GetFile(path string, account *model.Account) (*Pan123File, error
 			if file.Type != 1 {
 				return &file, err
 			} else {
-				return nil, fmt.Errorf("not file")
+				return nil, NotFile
 			}
 		}
 	}
-	return nil, fmt.Errorf("path not found")
+	return nil, PathNotFound
 }
 
 type Pan123DownResp struct {

@@ -92,6 +92,7 @@ func (c Cloud189) Save(account *model.Account, old *model.Account) error {
 
 func (c Cloud189) FormatFile(file *Cloud189File) *model.File {
 	f := &model.File{
+		Id:        strconv.FormatInt(file.Id, 10),
 		Name:      file.Name,
 		Size:      file.Size,
 		Driver:    "189Cloud",
@@ -113,84 +114,95 @@ func (c Cloud189) FormatFile(file *Cloud189File) *model.File {
 	return f
 }
 
-func (c Cloud189) Path(path string, account *model.Account) (*model.File, []model.File, error) {
+func (c Cloud189) File(path string, account *model.Account) (*model.File, error) {
 	path = utils.ParsePath(path)
-	log.Debugf("189 path: %s", path)
-	cache, err := conf.Cache.Get(conf.Ctx, fmt.Sprintf("%s%s", account.Name, path))
-	if err == nil {
-		files, _ := cache.([]Cloud189File)
-		if len(files) != 0 {
-			res := make([]model.File, 0)
-			for _, file := range files {
-				res = append(res, *c.FormatFile(&file))
-			}
-			return nil, res, nil
-		}
+	if path == "/" {
+		return &model.File{
+			Id:        account.RootFolder,
+			Name:      account.Name,
+			Size:      0,
+			Type:      conf.FOLDER,
+			Driver:    pan123,
+			UpdatedAt: account.UpdatedAt,
+		}, nil
 	}
-	// no cache or len(files) == 0
-	fileId := account.RootFolder
-	if path != "/" {
-		dir, name := filepath.Split(path)
-		dir = utils.ParsePath(dir)
-		_, _, err = c.Path(dir, account)
-		if err != nil {
-			return nil, nil, err
-		}
-		parentFiles_, _ := conf.Cache.Get(conf.Ctx, fmt.Sprintf("%s%s", account.Name, dir))
-		parentFiles, _ := parentFiles_.([]Cloud189File)
-		found := false
-		for _, file := range parentFiles {
-			if file.Name == name {
-				found = true
-				if file.Size != -1 {
-					url, err := c.Link(path, account)
-					if err != nil {
-						return nil, nil, err
-					}
-					file.Url = url
-					return c.FormatFile(&file), nil, nil
-				} else {
-					fileId = strconv.FormatInt(file.Id, 10)
-					break
-				}
-			}
-		}
-		if !found {
-			return nil, nil, fmt.Errorf("path not found")
-		}
-	}
-	files, err := c.GetFiles(fileId, account)
-	if err != nil {
-		return nil, nil, err
-	}
-	_ = conf.Cache.Set(conf.Ctx, fmt.Sprintf("%s%s", account.Name, path), files, nil)
-	res := make([]model.File, 0)
-	for _, file := range files {
-		res = append(res, *c.FormatFile(&file))
-	}
-	return nil, res, nil
-}
-
-func (c Cloud189) GetFile(path string, account *model.Account) (*Cloud189File, error) {
 	dir, name := filepath.Split(path)
-	dir = utils.ParsePath(dir)
-	_, _, err := c.Path(dir, account)
+	files, err := c.Files(dir, account)
 	if err != nil {
 		return nil, err
 	}
-	parentFiles_, _ := conf.Cache.Get(conf.Ctx, fmt.Sprintf("%s%s", account.Name, dir))
-	parentFiles, _ := parentFiles_.([]Cloud189File)
-	for _, file := range parentFiles {
+	for _, file := range files {
 		if file.Name == name {
-			if file.Size != -1 {
-				return &file, err
-			} else {
-				return nil, fmt.Errorf("not file")
-			}
+			return &file, nil
 		}
 	}
-	return nil, fmt.Errorf("path not found")
+	return nil, PathNotFound
 }
+
+func (c Cloud189) Files(path string, account *model.Account) ([]model.File, error) {
+	path = utils.ParsePath(path)
+	var rawFiles []Cloud189File
+	cache, err := conf.Cache.Get(conf.Ctx, fmt.Sprintf("%s%s", account.Name, path))
+	if err == nil {
+		rawFiles, _ = cache.([]Cloud189File)
+	} else {
+		file, err := c.File(path, account)
+		if err != nil {
+			return nil, err
+		}
+		rawFiles, err = c.GetFiles(file.Id, account)
+		if err != nil {
+			return nil, err
+		}
+		if len(rawFiles) > 0 {
+			_ = conf.Cache.Set(conf.Ctx, fmt.Sprintf("%s%s", account.Name, path), rawFiles, nil)
+		}
+	}
+	files := make([]model.File, 0)
+	for _, file := range rawFiles {
+		files = append(files, *c.FormatFile(&file))
+	}
+	return files, nil
+}
+
+func (c Cloud189) Path(path string, account *model.Account) (*model.File, []model.File, error) {
+	path = utils.ParsePath(path)
+	log.Debugf("189 path: %s", path)
+	file, err := c.File(path, account)
+	if err != nil {
+		return nil, nil, err
+	}
+	if file.Type != conf.FOLDER {
+		file.Url, _ = c.Link(path, account)
+		return file, nil, nil
+	}
+	files, err := c.Files(path, account)
+	if err != nil {
+		return nil, nil, err
+	}
+	return nil, files, nil
+}
+
+//func (c Cloud189) GetFile(path string, account *model.Account) (*Cloud189File, error) {
+//	dir, name := filepath.Split(path)
+//	dir = utils.ParsePath(dir)
+//	_, _, err := c.Path(dir, account)
+//	if err != nil {
+//		return nil, err
+//	}
+//	parentFiles_, _ := conf.Cache.Get(conf.Ctx, fmt.Sprintf("%s%s", account.Name, dir))
+//	parentFiles, _ := parentFiles_.([]Cloud189File)
+//	for _, file := range parentFiles {
+//		if file.Name == name {
+//			if file.Size != -1 {
+//				return &file, err
+//			} else {
+//				return nil, NotFile
+//			}
+//		}
+//	}
+//	return nil, PathNotFound
+//}
 
 type Cloud189Down struct {
 	ResCode         int    `json:"res_code"`
@@ -199,9 +211,12 @@ type Cloud189Down struct {
 }
 
 func (c Cloud189) Link(path string, account *model.Account) (string, error) {
-	file, err := c.GetFile(utils.ParsePath(path), account)
+	file, err := c.File(utils.ParsePath(path), account)
 	if err != nil {
 		return "", err
+	}
+	if file.Type == conf.FOLDER {
+		return "", NotFile
 	}
 	client, ok := client189Map[account.Name]
 	if !ok {
@@ -213,7 +228,7 @@ func (c Cloud189) Link(path string, account *model.Account) (string, error) {
 		SetHeader("Accept", "application/json;charset=UTF-8").
 		SetQueryParams(map[string]string{
 			"noCache": random(),
-			"fileId":  strconv.FormatInt(file.Id, 10),
+			"fileId":  file.Id,
 		}).Get("https://cloud.189.cn/api/open/file/getFileDownloadUrl.action")
 	if err != nil {
 		return "", err
