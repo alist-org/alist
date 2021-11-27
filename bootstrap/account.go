@@ -17,7 +17,7 @@ func InitAccounts() {
 		model.RegisterAccount(account)
 		driver, ok := drivers.GetDriver(account.Type)
 		if !ok {
-			log.Errorf("no [%s] driver", driver)
+			log.Errorf("no [%s] driver", account.Type)
 		} else {
 			err := driver.Save(&accounts[i], nil)
 			if err != nil {

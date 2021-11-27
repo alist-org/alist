@@ -4,16 +4,17 @@ import (
 	"github.com/Xhofe/alist/model"
 	"github.com/gin-gonic/gin"
 	"github.com/go-resty/resty/v2"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 )
 
 type Driver interface {
 	Items() []Item
 	Save(account *model.Account, old *model.Account) error
-	//File(path string, account *model.Account) (*model.File, error)
-	//Files(path string, account *model.Account) ([]model.File, error)
-	Path(path string, account *model.Account) (*model.File, []model.File, error)
+	File(path string, account *model.Account) (*model.File, error)
+	Files(path string, account *model.Account) ([]model.File, error)
 	Link(path string, account *model.Account) (string, error)
+	Path(path string, account *model.Account) (*model.File, []model.File, error)
 	Proxy(c *gin.Context, account *model.Account)
 	Preview(path string, account *model.Account) (interface{}, error)
 	// TODO
@@ -41,6 +42,7 @@ type TokenResp struct {
 var driversMap = map[string]Driver{}
 
 func RegisterDriver(name string, driver Driver) {
+	log.Infof("register driver: [%s]", name)
 	driversMap[name] = driver
 }
 
@@ -59,10 +61,10 @@ func GetDrivers() map[string][]Item {
 
 type Json map[string]interface{}
 
-var noRedirectClient *resty.Client
+var NoRedirectClient *resty.Client
 
 func init() {
-	noRedirectClient = resty.New().SetRedirectPolicy(
+	NoRedirectClient = resty.New().SetRedirectPolicy(
 		resty.RedirectPolicyFunc(func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
 		}),

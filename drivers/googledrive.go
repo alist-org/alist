@@ -16,6 +16,14 @@ import (
 type GoogleDrive struct {
 }
 
+func (g GoogleDrive) File(path string, account *model.Account) (*model.File, error) {
+	panic("implement me")
+}
+
+func (g GoogleDrive) Files(path string, account *model.Account) ([]model.File, error) {
+	panic("implement me")
+}
+
 var googleClient = resty.New()
 
 func (g GoogleDrive) Items() []Item {

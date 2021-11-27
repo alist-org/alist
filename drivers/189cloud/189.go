@@ -1,4 +1,4 @@
-package drivers
+package _89cloud
 
 import (
 	"crypto/rand"
@@ -9,9 +9,9 @@ import (
 	"encoding/pem"
 	"fmt"
 	"github.com/Xhofe/alist/conf"
+	"github.com/Xhofe/alist/drivers"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
-	"github.com/gin-gonic/gin"
 	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
 	mathRand "math/rand"
@@ -22,75 +22,10 @@ import (
 	"time"
 )
 
-type Cloud189 struct {
-}
 
 var client189Map map[string]*resty.Client
 
-func (c Cloud189) Items() []Item {
-	return []Item{
-		{
-			Name:        "proxy",
-			Label:       "proxy",
-			Type:        "bool",
-			Required:    true,
-			Description: "allow proxy",
-		},
-		{
-			Name:        "username",
-			Label:       "username",
-			Type:        "string",
-			Required:    true,
-			Description: "account username/phone number",
-		},
-		{
-			Name:        "password",
-			Label:       "password",
-			Type:        "string",
-			Required:    true,
-			Description: "account password",
-		},
-		{
-			Name:     "root_folder",
-			Label:    "root folder file_id",
-			Type:     "string",
-			Required: true,
-		},
-		{
-			Name:     "order_by",
-			Label:    "order_by",
-			Type:     "select",
-			Values:   "name,size,lastOpTime,createdDate",
-			Required: true,
-		},
-		{
-			Name:     "order_direction",
-			Label:    "desc",
-			Type:     "select",
-			Values:   "true,false",
-			Required: true,
-		},
-	}
-}
-
-func (c Cloud189) Save(account *model.Account, old *model.Account) error {
-	if old != nil && old.Name != account.Name {
-		delete(client189Map, old.Name)
-	}
-	if err := c.Login(account); err != nil {
-		account.Status = err.Error()
-		_ = model.SaveAccount(account)
-		return err
-	}
-	account.Status = "work"
-	err := model.SaveAccount(account)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (c Cloud189) FormatFile(file *Cloud189File) *model.File {
+func (driver Cloud189) FormatFile(file *Cloud189File) *model.File {
 	f := &model.File{
 		Id:        strconv.FormatInt(file.Id, 10),
 		Name:      file.Name,
@@ -112,75 +47,6 @@ func (c Cloud189) FormatFile(file *Cloud189File) *model.File {
 		f.Type = utils.GetFileType(filepath.Ext(file.Name))
 	}
 	return f
-}
-
-func (c Cloud189) File(path string, account *model.Account) (*model.File, error) {
-	path = utils.ParsePath(path)
-	if path == "/" {
-		return &model.File{
-			Id:        account.RootFolder,
-			Name:      account.Name,
-			Size:      0,
-			Type:      conf.FOLDER,
-			Driver:    pan123,
-			UpdatedAt: account.UpdatedAt,
-		}, nil
-	}
-	dir, name := filepath.Split(path)
-	files, err := c.Files(dir, account)
-	if err != nil {
-		return nil, err
-	}
-	for _, file := range files {
-		if file.Name == name {
-			return &file, nil
-		}
-	}
-	return nil, PathNotFound
-}
-
-func (c Cloud189) Files(path string, account *model.Account) ([]model.File, error) {
-	path = utils.ParsePath(path)
-	var rawFiles []Cloud189File
-	cache, err := conf.Cache.Get(conf.Ctx, fmt.Sprintf("%s%s", account.Name, path))
-	if err == nil {
-		rawFiles, _ = cache.([]Cloud189File)
-	} else {
-		file, err := c.File(path, account)
-		if err != nil {
-			return nil, err
-		}
-		rawFiles, err = c.GetFiles(file.Id, account)
-		if err != nil {
-			return nil, err
-		}
-		if len(rawFiles) > 0 {
-			_ = conf.Cache.Set(conf.Ctx, fmt.Sprintf("%s%s", account.Name, path), rawFiles, nil)
-		}
-	}
-	files := make([]model.File, 0)
-	for _, file := range rawFiles {
-		files = append(files, *c.FormatFile(&file))
-	}
-	return files, nil
-}
-
-func (c Cloud189) Path(path string, account *model.Account) (*model.File, []model.File, error) {
-	path = utils.ParsePath(path)
-	log.Debugf("189 path: %s", path)
-	file, err := c.File(path, account)
-	if err != nil {
-		return nil, nil, err
-	}
-	if file.Type != conf.FOLDER {
-		file.Url, _ = c.Link(path, account)
-		return file, nil, nil
-	}
-	files, err := c.Files(path, account)
-	if err != nil {
-		return nil, nil, err
-	}
-	return nil, files, nil
 }
 
 //func (c Cloud189) GetFile(path string, account *model.Account) (*Cloud189File, error) {
@@ -210,63 +76,8 @@ type Cloud189Down struct {
 	FileDownloadUrl string `json:"fileDownloadUrl"`
 }
 
-func (c Cloud189) Link(path string, account *model.Account) (string, error) {
-	file, err := c.File(utils.ParsePath(path), account)
-	if err != nil {
-		return "", err
-	}
-	if file.Type == conf.FOLDER {
-		return "", NotFile
-	}
-	client, ok := client189Map[account.Name]
-	if !ok {
-		return "", fmt.Errorf("can't find [%s] client", account.Name)
-	}
-	var e Cloud189Error
-	var resp Cloud189Down
-	_, err = client.R().SetResult(&resp).SetError(&e).
-		SetHeader("Accept", "application/json;charset=UTF-8").
-		SetQueryParams(map[string]string{
-			"noCache": random(),
-			"fileId":  file.Id,
-		}).Get("https://cloud.189.cn/api/open/file/getFileDownloadUrl.action")
-	if err != nil {
-		return "", err
-	}
-	if e.ErrorCode != "" {
-		if e.ErrorCode == "InvalidSessionKey" {
-			err = c.Login(account)
-			if err != nil {
-				return "", err
-			}
-			return c.Link(path, account)
-		}
-	}
-	if resp.ResCode != 0 {
-		return "", fmt.Errorf(resp.ResMessage)
-	}
-	res, err := noRedirectClient.R().Get(resp.FileDownloadUrl)
-	if err != nil {
-		return "", err
-	}
-	if res.StatusCode() == 302 {
-		return res.Header().Get("location"), nil
-	}
-	return resp.FileDownloadUrl, nil
-}
-
-func (c Cloud189) Proxy(ctx *gin.Context, account *model.Account) {
-	ctx.Request.Header.Del("Origin")
-}
-
-func (c Cloud189) Preview(path string, account *model.Account) (interface{}, error) {
-	return nil, nil
-}
-
-var _ Driver = (*Cloud189)(nil)
-
 func init() {
-	RegisterDriver("189Cloud", &Cloud189{})
+	drivers.RegisterDriver("189Cloud", &Cloud189{})
 	client189Map = make(map[string]*resty.Client, 0)
 }
 
@@ -277,7 +88,7 @@ type LoginResp struct {
 }
 
 // Login refer to PanIndex
-func (c Cloud189) Login(account *model.Account) error {
+func (driver Cloud189) Login(account *model.Account) error {
 	client, ok := client189Map[account.Name]
 	if !ok {
 		//cookieJar, _ := cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
@@ -394,7 +205,7 @@ type Cloud189Files struct {
 	} `json:"fileListAO"`
 }
 
-func (c Cloud189) GetFiles(fileId string, account *model.Account) ([]Cloud189File, error) {
+func (driver Cloud189) GetFiles(fileId string, account *model.Account) ([]Cloud189File, error) {
 	client, ok := client189Map[account.Name]
 	if !ok {
 		return nil, fmt.Errorf("can't find [%s] client", account.Name)
@@ -421,11 +232,11 @@ func (c Cloud189) GetFiles(fileId string, account *model.Account) ([]Cloud189Fil
 		}
 		if e.ErrorCode != "" {
 			if e.ErrorCode == "InvalidSessionKey" {
-				err = c.Login(account)
+				err = driver.Login(account)
 				if err != nil {
 					return nil, err
 				}
-				return c.GetFiles(fileId, account)
+				return driver.GetFiles(fileId, account)
 			}
 		}
 		if resp.ResCode != 0 {

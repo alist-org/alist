@@ -15,6 +15,14 @@ import (
 
 type Onedrive struct{}
 
+func (o Onedrive) File(path string, account *model.Account) (*model.File, error) {
+	panic("implement me")
+}
+
+func (o Onedrive) Files(path string, account *model.Account) ([]model.File, error) {
+	panic("implement me")
+}
+
 var oneClient = resty.New()
 
 type OnedriveHost struct {

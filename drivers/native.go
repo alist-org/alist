@@ -16,6 +16,14 @@ import (
 type Native struct {
 }
 
+func (n Native) File(path string, account *model.Account) (*model.File, error) {
+	panic("implement me")
+}
+
+func (n Native) Files(path string, account *model.Account) ([]model.File, error) {
+	panic("implement me")
+}
+
 func (n Native) Preview(path string, account *model.Account) (interface{}, error) {
 	return nil, fmt.Errorf("no need")
 }
