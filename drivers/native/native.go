@@ -5,5 +5,5 @@ import (
 )
 
 func init() {
-	drivers.RegisterDriver("Native", &Native{})
+	drivers.RegisterDriver(driverName, &Native{})
 }

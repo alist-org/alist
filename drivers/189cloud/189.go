@@ -76,11 +76,6 @@ type Cloud189Down struct {
 	FileDownloadUrl string `json:"fileDownloadUrl"`
 }
 
-func init() {
-	drivers.RegisterDriver("189Cloud", &Cloud189{})
-	client189Map = make(map[string]*resty.Client, 0)
-}
-
 type LoginResp struct {
 	Msg    string `json:"msg"`
 	Result int    `json:"result"`
@@ -315,4 +310,9 @@ func b64tohex(a string) string {
 		d += int2char(c << 2)
 	}
 	return d
+}
+
+func init() {
+	drivers.RegisterDriver(driverName, &Cloud189{})
+	client189Map = make(map[string]*resty.Client, 0)
 }
