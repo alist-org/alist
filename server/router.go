@@ -40,6 +40,7 @@ func InitApiRouter(r *gin.Engine) {
 		admin.DELETE("/meta", DeleteMeta)
 	}
 	Static(r)
+	WebDav(r)
 }
 
 func Cors(r *gin.Engine) {

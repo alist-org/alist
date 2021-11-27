@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/Xhofe/alist/conf"
 	"sort"
 	"strings"
 	"time"
@@ -46,4 +47,20 @@ func SortFiles(files []File, account *Account) {
 		}
 		return false
 	})
+}
+
+func (f File) GetSize() uint64 {
+	return uint64(f.Size)
+}
+
+func (f File) GetName() string {
+	return f.Name
+}
+
+func (f File) ModTime() time.Time {
+	return *f.UpdatedAt
+}
+
+func (f File) IsDir() bool {
+	return f.Type == conf.FOLDER
 }

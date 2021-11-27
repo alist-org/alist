@@ -89,3 +89,9 @@ func ParsePath(path string) string {
 	return path
 }
 
+func RemoveLastSlash(path string) string {
+	if len(path) > 1 {
+		return strings.TrimSuffix(path, "/")
+	}
+	return path
+}
