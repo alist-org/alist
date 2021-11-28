@@ -85,4 +85,13 @@ func LoadSettings() {
 		//conf.CustomizeStyle = customizeScript.Value
 		conf.IndexHtml = strings.Replace(conf.IndexHtml, "// customize-js", customizeScript.Value, 1)
 	}
+
+	davUsername, err := GetSettingByKey("WebDAV username")
+	if err == nil {
+		conf.DavUsername = davUsername.Value
+	}
+	davPassword, err := GetSettingByKey("WebDAV password")
+	if err == nil {
+		conf.DavPassword = davPassword.Value
+	}
 }

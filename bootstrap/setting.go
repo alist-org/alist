@@ -141,6 +141,20 @@ func InitSettings() {
 			Description: "check down link password, your link will be 'https://alist.com/d/filename?pw=xxx'",
 			Group:       model.PUBLIC,
 		},
+		{
+			Key:         "WebDAV username",
+			Value:       "alist",
+			Description: "WebDAV username",
+			Type:        "string",
+			Group:       model.PRIVATE,
+		},
+		{
+			Key:         "WebDAV password",
+			Value:       "alist",
+			Description: "WebDAV password",
+			Type:        "string",
+			Group:       model.PRIVATE,
+		},
 	}
 	for _, v := range settings {
 		_, err := model.GetSettingByKey(v.Key)

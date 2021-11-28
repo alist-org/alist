@@ -45,4 +45,7 @@ var (
 	//CustomizeScript string
 	//Favicon         string
 	CheckDown bool
+
+	DavUsername string
+	DavPassword string
 )
