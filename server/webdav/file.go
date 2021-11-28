@@ -80,6 +80,27 @@ func (fs *FileSystem) Files(rawPath string) ([]model.File, error) {
 	return driver.Files(path_, account)
 }
 
+func GetPW(path string) string {
+	if !conf.CheckDown {
+		return ""
+	}
+	meta, err := model.GetMetaByPath(path)
+	if err == nil {
+		if meta.Password != "" {
+			utils.Get16MD5Encode(meta.Password)
+		}
+		return ""
+	} else {
+		if !conf.CheckParent {
+			return ""
+		}
+		if path == "/" || path == "\\" {
+			return ""
+		}
+		return GetPW(filepath.Dir(path))
+	}
+}
+
 func (fs *FileSystem) Link(host, rawPath string) (string, error) {
 	rawPath = utils.ParsePath(rawPath)
 	if model.AccountsCount() > 1 && rawPath == "/" {
@@ -90,9 +111,10 @@ func (fs *FileSystem) Link(host, rawPath string) (string, error) {
 		return "", err
 	}
 	if account.Type == "Native" || account.Type == "GoogleDrive" {
-		link := fmt.Sprintf("//%s/d%s", host, rawPath)
+		link := fmt.Sprintf("//%s/p%s", host, rawPath)
 		if conf.CheckDown {
-			// TODO
+			pw := GetPW(filepath.Dir(rawPath))
+			link += "?pw" + pw
 		}
 		log.Debugf("proxy link: %s", link)
 		return link, nil
