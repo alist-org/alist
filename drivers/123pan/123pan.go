@@ -126,6 +126,7 @@ func (driver Pan123) GetFiles(parentId string, account *model.Account) ([]Pan123
 
 func (driver Pan123) GetFile(path string, account *model.Account) (*Pan123File, error) {
 	dir, name := filepath.Split(path)
+	dir = utils.ParsePath(dir)
 	_, err := driver.Files(dir, account)
 	if err != nil {
 		return nil, err
@@ -134,7 +135,7 @@ func (driver Pan123) GetFile(path string, account *model.Account) (*Pan123File, 
 	parentFiles, _ := parentFiles_.([]Pan123File)
 	for _, file := range parentFiles {
 		if file.FileName == name {
-			if file.Type != 1 {
+			if file.Type != conf.FOLDER {
 				return &file, err
 			} else {
 				return nil, drivers.NotFile

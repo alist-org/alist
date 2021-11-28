@@ -112,6 +112,7 @@ func (driver AliDrive) GetFiles(fileId string, account *model.Account) ([]AliFil
 
 func (driver AliDrive) GetFile(path string, account *model.Account) (*AliFile, error) {
 	dir, name := filepath.Split(path)
+	dir = utils.ParsePath(dir)
 	_, err := driver.Files(dir, account)
 	if err != nil {
 		return nil, err
