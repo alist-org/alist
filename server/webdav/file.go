@@ -11,13 +11,15 @@ import (
 	"github.com/Xhofe/alist/drivers"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 	"path"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
-type FileSystem struct {}
+type FileSystem struct{}
 
 func ParsePath(rawPath string) (*model.Account, string, drivers.Driver, error) {
 	var path, name string
@@ -43,41 +45,42 @@ func ParsePath(rawPath string) (*model.Account, string, drivers.Driver, error) {
 	return &account, path, driver, nil
 }
 
-func (fs *FileSystem) File(rawPath string) (*model.File,error) {
+func (fs *FileSystem) File(rawPath string) (*model.File, error) {
 	rawPath = utils.ParsePath(rawPath)
 	if model.AccountsCount() > 1 && rawPath == "/" {
+		now := time.Now()
 		return &model.File{
 			Name:      "root",
 			Size:      0,
 			Type:      conf.FOLDER,
 			Driver:    "root",
-			UpdatedAt: nil,
-		},nil
+			UpdatedAt: &now,
+		}, nil
 	}
 	account, path_, driver, err := ParsePath(rawPath)
 	if err != nil {
 		return nil, err
 	}
-	return driver.File(path_,account)
+	return driver.File(path_, account)
 }
 
-func (fs *FileSystem) Files(rawPath string) ([]model.File,error) {
+func (fs *FileSystem) Files(rawPath string) ([]model.File, error) {
 	rawPath = utils.ParsePath(rawPath)
 	if model.AccountsCount() > 1 && rawPath == "/" {
 		files, err := model.GetAccountFiles()
 		if err != nil {
 			return nil, err
 		}
-		return files,nil
+		return files, nil
 	}
 	account, path_, driver, err := ParsePath(rawPath)
 	if err != nil {
 		return nil, err
 	}
-	return driver.Files(path_,account)
+	return driver.Files(path_, account)
 }
 
-func (fs *FileSystem) Link(rawPath string) (string, error) {
+func (fs *FileSystem) Link(host, rawPath string) (string, error) {
 	rawPath = utils.ParsePath(rawPath)
 	if model.AccountsCount() > 1 && rawPath == "/" {
 		// error
@@ -86,7 +89,15 @@ func (fs *FileSystem) Link(rawPath string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return driver.Link(path_,account)
+	if account.Type == "Native" || account.Type == "GoogleDrive" {
+		link := fmt.Sprintf("//%s/d%s", host, rawPath)
+		if conf.CheckDown {
+			// TODO
+		}
+		log.Debugf("proxy link: %s", link)
+		return link, nil
+	}
+	return driver.Link(path_, account)
 }
 
 func (fs *FileSystem) CreateDirectory(ctx context.Context, reqPath string) (interface{}, error) {

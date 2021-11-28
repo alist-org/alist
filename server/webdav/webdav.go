@@ -197,6 +197,7 @@ func (h *Handler) handleOptions(w http.ResponseWriter, r *http.Request, fs *File
 	ctx := r.Context()
 	allow := "OPTIONS, LOCK, PUT, MKCOL"
 	if exist, fi := isPathExist(ctx, fs, reqPath); exist {
+		log.Debugf("fi: %+v", fi)
 		if fi.IsDir() {
 			allow = "OPTIONS, LOCK, DELETE, PROPPATCH, COPY, MOVE, UNLOCK, PROPFIND"
 		} else {
@@ -231,7 +232,9 @@ func (h *Handler) handleGetHeadPost(w http.ResponseWriter, r *http.Request, fs *
 		return http.StatusInternalServerError, err
 	}
 	w.Header().Set("ETag", etag)
-	link, err := fs.Link(reqPath)
+	log.Debugf("url: %+v", r.URL)
+	host := r.Host
+	link, err := fs.Link(host, reqPath)
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}
