@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/robfig/cron/v3"
 	log "github.com/sirupsen/logrus"
+	"path/filepath"
 )
 
 type Onedrive struct{}
@@ -129,12 +130,27 @@ func (driver Onedrive) Save(account *model.Account, old *model.Account) error {
 
 func (driver Onedrive) File(path string, account *model.Account) (*model.File, error) {
 	path = utils.ParsePath(path)
-	rawFile, err := driver.GetFile(account, path)
+	if path == "/" {
+		return &model.File{
+			Id:        account.RootFolder,
+			Name:      account.Name,
+			Size:      0,
+			Type:      conf.FOLDER,
+			Driver:    driverName,
+			UpdatedAt: account.UpdatedAt,
+		}, nil
+	}
+	dir, name := filepath.Split(path)
+	files, err := driver.Files(dir, account)
 	if err != nil {
 		return nil, err
 	}
-	file := driver.FormatFile(rawFile)
-	return file, nil
+	for _, file := range files {
+		if file.Name == name {
+			return &file, nil
+		}
+	}
+	return nil, drivers.PathNotFound
 }
 
 func (driver Onedrive) Files(path string, account *model.Account) ([]model.File, error) {
