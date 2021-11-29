@@ -8,6 +8,7 @@ import (
 	"github.com/Xhofe/alist/utils"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
+	url "net/url"
 	"path/filepath"
 )
 
@@ -148,6 +149,19 @@ func (driver Pan123) Link(path string, account *model.Account) (string, error) {
 			return driver.Link(path, account)
 		}
 		return "", fmt.Errorf(resp.Message)
+	}
+	u,err := url.Parse(resp.Data.DownloadUrl)
+	if err != nil {
+		return "", err
+	}
+	u_ := fmt.Sprintf("https://%s%s",u.Host,u.Path)
+	res, err := drivers.NoRedirectClient.R().SetQueryParamsFromValues(u.Query()).Get(u_)
+	if err != nil {
+		return "", err
+	}
+	log.Debug(res.String())
+	if res.StatusCode() == 302 {
+		return res.Header().Get("location"), nil
 	}
 	return resp.Data.DownloadUrl, nil
 }
