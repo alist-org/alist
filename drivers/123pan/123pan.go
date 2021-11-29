@@ -7,7 +7,6 @@ import (
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
 	"github.com/go-resty/resty/v2"
-	log "github.com/sirupsen/logrus"
 	"path/filepath"
 	"strconv"
 	"time"
@@ -107,7 +106,6 @@ func (driver Pan123) GetFiles(parentId string, account *model.Account) ([]Pan123
 		if err != nil {
 			return nil, err
 		}
-		log.Debugf("%+v", resp)
 		if resp.Code != 0 {
 			if resp.Code == 401 {
 				err := driver.Login(account)
