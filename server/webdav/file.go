@@ -94,7 +94,7 @@ func GetPW(path string) string {
 		if !conf.CheckParent {
 			return ""
 		}
-		if path == "/" || path == "\\" {
+		if path == "/" {
 			return ""
 		}
 		return GetPW(utils.Dir(path))
