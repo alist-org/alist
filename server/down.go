@@ -18,7 +18,7 @@ func Down(c *gin.Context) {
 	rawPath = utils.ParsePath(rawPath)
 	log.Debugf("down: %s", rawPath)
 	pw := c.Query("pw")
-	if !CheckDownLink(filepath.Dir(rawPath), pw) {
+	if !CheckDownLink(utils.Dir(rawPath), pw) {
 		ErrorResp(c, fmt.Errorf("wrong password"), 401)
 		return
 	}
@@ -50,7 +50,7 @@ func Proxy(c *gin.Context) {
 	rawPath = utils.ParsePath(rawPath)
 	log.Debugf("proxy: %s", rawPath)
 	pw := c.Query("pw")
-	if !CheckDownLink(filepath.Dir(rawPath), pw) {
+	if !CheckDownLink(utils.Dir(rawPath), pw) {
 		ErrorResp(c, fmt.Errorf("wrong password"), 401)
 		return
 	}

@@ -7,7 +7,6 @@ import (
 	"github.com/Xhofe/alist/utils"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
-	"path/filepath"
 	"strings"
 )
 
@@ -32,7 +31,7 @@ func Path(c *gin.Context) {
 		}
 		// TODO hide or ignore?
 	} else if conf.CheckParent {
-		if !CheckParent(filepath.Dir(req.Path), req.Password) {
+		if !CheckParent(utils.Dir(req.Path), req.Password) {
 			ErrorResp(c, fmt.Errorf("wrong password"), 401)
 			return
 		}

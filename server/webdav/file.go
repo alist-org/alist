@@ -97,7 +97,7 @@ func GetPW(path string) string {
 		if path == "/" || path == "\\" {
 			return ""
 		}
-		return GetPW(filepath.Dir(path))
+		return GetPW(utils.Dir(path))
 	}
 }
 
@@ -119,7 +119,7 @@ func (fs *FileSystem) Link(r *http.Request, rawPath string) (string, error) {
 	if driver.Config().OnlyProxy || account.WebdavProxy {
 		link = fmt.Sprintf("%s://%s/p%s", protocol, r.Host, rawPath)
 		if conf.CheckDown {
-			pw := GetPW(filepath.Dir(rawPath))
+			pw := GetPW(utils.Dir(rawPath))
 			link += "?pw" + pw
 		}
 	} else {

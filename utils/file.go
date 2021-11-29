@@ -95,3 +95,9 @@ func RemoveLastSlash(path string) string {
 	}
 	return path
 }
+
+func Dir(path string) string {
+	path = ParsePath(path)
+	idx := strings.LastIndex(path, "/")
+	return path[:idx]
+}

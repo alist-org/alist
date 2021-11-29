@@ -8,7 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
-	"path/filepath"
 )
 
 func Auth(c *gin.Context) {
@@ -52,7 +51,7 @@ func CheckParent(path string, password string) bool {
 		if path == "/" || path == "\\" {
 			return true
 		}
-		return CheckParent(filepath.Dir(path), password)
+		return CheckParent(utils.Dir(path), password)
 	}
 }
 
@@ -75,6 +74,6 @@ func CheckDownLink(path string, passwordMd5 string) bool {
 		if path == "/" || path == "\\" {
 			return true
 		}
-		return CheckDownLink(filepath.Dir(path), passwordMd5)
+		return CheckDownLink(utils.Dir(path), passwordMd5)
 	}
 }
