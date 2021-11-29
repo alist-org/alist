@@ -14,11 +14,7 @@ import (
 )
 
 func Down(c *gin.Context) {
-	rawPath, err := url.PathUnescape(c.Param("path"))
-	if err != nil {
-		ErrorResp(c, err, 500)
-		return
-	}
+	rawPath := c.Param("path")
 	rawPath = utils.ParsePath(rawPath)
 	log.Debugf("down: %s", rawPath)
 	pw := c.Query("pw")
@@ -50,11 +46,7 @@ func Down(c *gin.Context) {
 }
 
 func Proxy(c *gin.Context) {
-	rawPath, err := url.PathUnescape(c.Param("path"))
-	if err != nil {
-		ErrorResp(c, err, 500)
-		return
-	}
+	rawPath := c.Param("path")
 	rawPath = utils.ParsePath(rawPath)
 	log.Debugf("proxy: %s", rawPath)
 	pw := c.Query("pw")
