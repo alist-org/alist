@@ -101,8 +101,9 @@ func GetPW(path string) string {
 	}
 }
 
-func (fs *FileSystem) Link(host, rawPath string) (string, error) {
+func (fs *FileSystem) Link(r *http.Request, rawPath string) (string, error) {
 	rawPath = utils.ParsePath(rawPath)
+	log.Debugf("get link path: %s", rawPath)
 	if model.AccountsCount() > 1 && rawPath == "/" {
 		// error
 	}
@@ -110,16 +111,22 @@ func (fs *FileSystem) Link(host, rawPath string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if account.Type == "Native" || account.Type == "GoogleDrive" {
-		link := fmt.Sprintf("//%s/p%s", host, rawPath)
+	link := ""
+	protocol := "http"
+	if r.TLS != nil {
+		protocol = "https"
+	}
+	if driver.Config().OnlyProxy || account.WebdavProxy {
+		link = fmt.Sprintf("%s://%s/p%s", protocol, r.Host, rawPath)
 		if conf.CheckDown {
 			pw := GetPW(filepath.Dir(rawPath))
 			link += "?pw" + pw
 		}
-		log.Debugf("proxy link: %s", link)
-		return link, nil
+	} else {
+		link, err = driver.Link(path_, account)
 	}
-	return driver.Link(path_, account)
+	log.Debugf("webdav get link: %s", link)
+	return link, err
 }
 
 func (fs *FileSystem) CreateDirectory(ctx context.Context, reqPath string) (interface{}, error) {

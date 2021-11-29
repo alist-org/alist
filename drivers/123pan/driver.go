@@ -16,15 +16,14 @@ type Pan123 struct {}
 
 var driverName = "123Pan"
 
+func (driver Pan123) Config() drivers.DriverConfig {
+	return drivers.DriverConfig{
+		OnlyProxy: false,
+	}
+}
+
 func (driver Pan123) Items() []drivers.Item {
 	return []drivers.Item{
-		{
-			Name:        "proxy",
-			Label:       "proxy",
-			Type:        "bool",
-			Required:    true,
-			Description: "allow proxy",
-		},
 		{
 			Name:        "username",
 			Label:       "username",

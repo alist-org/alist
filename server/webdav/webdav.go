@@ -233,8 +233,7 @@ func (h *Handler) handleGetHeadPost(w http.ResponseWriter, r *http.Request, fs *
 	}
 	w.Header().Set("ETag", etag)
 	log.Debugf("url: %+v", r.URL)
-	host := r.Host
-	link, err := fs.Link(host, reqPath)
+	link, err := fs.Link(r, reqPath)
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}

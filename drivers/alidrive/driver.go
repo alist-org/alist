@@ -16,15 +16,14 @@ type AliDrive struct{}
 
 var driverName = "AliDrive"
 
+func (driver AliDrive) Config() drivers.DriverConfig {
+	return drivers.DriverConfig{
+		OnlyProxy: false,
+	}
+}
+
 func (driver AliDrive) Items() []drivers.Item {
 	return []drivers.Item{
-		{
-			Name:        "proxy",
-			Label:       "proxy",
-			Type:        "bool",
-			Required:    true,
-			Description: "allow proxy",
-		},
 		{
 			Name: "order_by",
 			Label: "order_by",

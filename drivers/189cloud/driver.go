@@ -15,15 +15,14 @@ type Cloud189 struct {}
 
 var driverName = "189Cloud"
 
+func (driver Cloud189) Config() drivers.DriverConfig {
+	return drivers.DriverConfig{
+		OnlyProxy: false,
+	}
+}
+
 func (driver Cloud189) Items() []drivers.Item {
 	return []drivers.Item{
-		{
-			Name:        "proxy",
-			Label:       "proxy",
-			Type:        "bool",
-			Required:    true,
-			Description: "allow proxy",
-		},
 		{
 			Name:        "username",
 			Label:       "username",

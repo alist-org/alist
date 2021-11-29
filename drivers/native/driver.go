@@ -18,6 +18,12 @@ type Native struct{}
 
 var driverName = "Native"
 
+func (driver Native) Config() drivers.DriverConfig {
+	return drivers.DriverConfig{
+		OnlyProxy: true,
+	}
+}
+
 func (driver Native) Items() []drivers.Item {
 	return []drivers.Item{
 		{

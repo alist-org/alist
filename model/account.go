@@ -32,6 +32,7 @@ type Account struct {
 	SiteUrl        string     `json:"site_url"`
 	SiteId         string     `json:"site_id"`
 	OnedriveType   string     `json:"onedrive_type"`
+	WebdavProxy    bool       `json:"webdav_proxy"`
 }
 
 var accountsMap = map[string]Account{}

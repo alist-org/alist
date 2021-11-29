@@ -8,7 +8,12 @@ import (
 	"net/http"
 )
 
+type DriverConfig struct {
+	OnlyProxy bool
+}
+
 type Driver interface {
+	Config() DriverConfig
 	Items() []Item
 	Save(account *model.Account, old *model.Account) error
 	File(path string, account *model.Account) (*model.File, error)
@@ -54,7 +59,26 @@ func GetDriver(name string) (driver Driver, ok bool) {
 func GetDrivers() map[string][]Item {
 	res := make(map[string][]Item, 0)
 	for k, v := range driversMap {
-		res[k] = v.Items()
+		if v.Config().OnlyProxy {
+			res[k] = v.Items()
+		} else {
+			res[k] = append([]Item{
+				{
+					Name:        "proxy",
+					Label:       "proxy",
+					Type:        "bool",
+					Required:    true,
+					Description: "allow proxy",
+				},
+				{
+					Name:        "webdav_proxy",
+					Label:       "webdav proxy",
+					Type:        "bool",
+					Required:    true,
+					Description: "Transfer the WebDAV of this account through the server",
+				},
+			}, v.Items()...)
+		}
 	}
 	return res
 }

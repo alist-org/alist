@@ -15,6 +15,12 @@ type GoogleDrive struct{}
 
 var driverName = "GoogleDrive"
 
+func (driver GoogleDrive) Config() drivers.DriverConfig {
+	return drivers.DriverConfig{
+		OnlyProxy: true,
+	}
+}
+
 func (driver GoogleDrive) Items() []drivers.Item {
 	return []drivers.Item{
 		{

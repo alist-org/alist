@@ -16,15 +16,14 @@ type Onedrive struct{}
 
 var driverName = "Onedrive"
 
+func (driver Onedrive) Config() drivers.DriverConfig {
+	return drivers.DriverConfig{
+		OnlyProxy: false,
+	}
+}
+
 func (driver Onedrive) Items() []drivers.Item {
 	return []drivers.Item{
-		{
-			Name:        "proxy",
-			Label:       "proxy",
-			Type:        "bool",
-			Required:    true,
-			Description: "allow proxy",
-		},
 		{
 			Name:        "zone",
 			Label:       "zone",
