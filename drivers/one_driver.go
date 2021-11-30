@@ -1,9 +1,8 @@
-package onedrive
+package drivers
 
 import (
 	"fmt"
 	"github.com/Xhofe/alist/conf"
-	"github.com/Xhofe/alist/drivers"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
 	"github.com/gin-gonic/gin"
@@ -14,16 +13,15 @@ import (
 
 type Onedrive struct{}
 
-var driverName = "Onedrive"
-
-func (driver Onedrive) Config() drivers.DriverConfig {
-	return drivers.DriverConfig{
+func (driver Onedrive) Config() DriverConfig {
+	return DriverConfig{
+		Name: "Onedrive",
 		OnlyProxy: false,
 	}
 }
 
-func (driver Onedrive) Items() []drivers.Item {
-	return []drivers.Item{
+func (driver Onedrive) Items() []Item {
+	return []Item{
 		{
 			Name:        "zone",
 			Label:       "zone",
@@ -135,7 +133,7 @@ func (driver Onedrive) File(path string, account *model.Account) (*model.File, e
 			Name:      account.Name,
 			Size:      0,
 			Type:      conf.FOLDER,
-			Driver:    driverName,
+			Driver:    driver.Config().Name,
 			UpdatedAt: account.UpdatedAt,
 		}, nil
 	}
@@ -149,7 +147,7 @@ func (driver Onedrive) File(path string, account *model.Account) (*model.File, e
 			return &file, nil
 		}
 	}
-	return nil, drivers.PathNotFound
+	return nil, PathNotFound
 }
 
 func (driver Onedrive) Files(path string, account *model.Account) ([]model.File, error) {

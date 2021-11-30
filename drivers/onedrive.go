@@ -1,9 +1,8 @@
-package onedrive
+package drivers
 
 import (
 	"fmt"
 	"github.com/Xhofe/alist/conf"
-	"github.com/Xhofe/alist/drivers"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
 	"github.com/go-resty/resty/v2"
@@ -74,7 +73,7 @@ type OneTokenErr struct {
 
 func (driver Onedrive) RefreshToken(account *model.Account) error {
 	url := driver.GetMetaUrl(account, true, "") + "/common/oauth2/v2.0/token"
-	var resp drivers.TokenResp
+	var resp TokenResp
 	var e OneTokenErr
 	_, err := oneClient.R().SetResult(&resp).SetError(&e).SetFormData(map[string]string{
 		"grant_type":    "refresh_token",
@@ -124,7 +123,7 @@ func (driver Onedrive) FormatFile(file *OneFile) *model.File {
 		Name:      file.Name,
 		Size:      file.Size,
 		UpdatedAt: file.LastModifiedDateTime,
-		Driver:    driverName,
+		Driver:    driver.Config().Name,
 		Url:       file.Url,
 	}
 	if file.File.MimeType == "" {
@@ -177,9 +176,9 @@ func (driver Onedrive) GetFile(account *model.Account, path string) (*OneFile, e
 	return &file, nil
 }
 
-var _ drivers.Driver = (*Onedrive)(nil)
+var _ Driver = (*Onedrive)(nil)
 
 func init() {
-	drivers.RegisterDriver(driverName, &Onedrive{})
+	RegisterDriver(&Onedrive{})
 	oneClient.SetRetryCount(3)
 }

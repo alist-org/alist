@@ -1,9 +1,8 @@
-package _23pan
+package drivers
 
 import (
 	"fmt"
 	"github.com/Xhofe/alist/conf"
-	"github.com/Xhofe/alist/drivers"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
 	"github.com/gin-gonic/gin"
@@ -14,16 +13,15 @@ import (
 
 type Pan123 struct {}
 
-var driverName = "123Pan"
-
-func (driver Pan123) Config() drivers.DriverConfig {
-	return drivers.DriverConfig{
+func (driver Pan123) Config() DriverConfig {
+	return DriverConfig{
+		Name: "123Pan",
 		OnlyProxy: false,
 	}
 }
 
-func (driver Pan123) Items() []drivers.Item {
-	return []drivers.Item{
+func (driver Pan123) Items() []Item {
+	return []Item{
 		{
 			Name:        "username",
 			Label:       "username",
@@ -77,7 +75,7 @@ func (driver Pan123) File(path string, account *model.Account) (*model.File, err
 			Name:      account.Name,
 			Size:      0,
 			Type:      conf.FOLDER,
-			Driver:    driverName,
+			Driver:    driver.Config().Name,
 			UpdatedAt: account.UpdatedAt,
 		}, nil
 	}
@@ -91,7 +89,7 @@ func (driver Pan123) File(path string, account *model.Account) (*model.File, err
 			return &file, nil
 		}
 	}
-	return nil, drivers.PathNotFound
+	return nil, PathNotFound
 }
 
 func (driver Pan123) Files(path string, account *model.Account) ([]model.File, error) {
@@ -127,7 +125,7 @@ func (driver Pan123) Link(path string, account *model.Account) (string, error) {
 	}
 	var resp Pan123DownResp
 	_, err = pan123Client.R().SetResult(&resp).SetHeader("authorization", "Bearer "+account.AccessToken).
-		SetBody(drivers.Json{
+		SetBody(Json{
 			"driveId":   0,
 			"etag":      file.Etag,
 			"fileId":    file.FileId,
@@ -154,7 +152,7 @@ func (driver Pan123) Link(path string, account *model.Account) (string, error) {
 		return "", err
 	}
 	u_ := fmt.Sprintf("https://%s%s",u.Host,u.Path)
-	res, err := drivers.NoRedirectClient.R().SetQueryParamsFromValues(u.Query()).Get(u_)
+	res, err := NoRedirectClient.R().SetQueryParamsFromValues(u.Query()).Get(u_)
 	if err != nil {
 		return "", err
 	}
@@ -191,4 +189,4 @@ func (driver Pan123) Preview(path string, account *model.Account) (interface{}, 
 	return nil, nil
 }
 
-var _ drivers.Driver = (*Pan123)(nil)
+var _ Driver = (*Pan123)(nil)

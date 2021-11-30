@@ -1,9 +1,8 @@
-package _23pan
+package drivers
 
 import (
 	"fmt"
 	"github.com/Xhofe/alist/conf"
-	"github.com/Xhofe/alist/drivers"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
 	"github.com/go-resty/resty/v2"
@@ -53,7 +52,7 @@ func (driver Pan123) Login(account *model.Account) error {
 	var resp Pan123TokenResp
 	_, err := pan123Client.R().
 		SetResult(&resp).
-		SetBody(drivers.Json{
+		SetBody(Json{
 			"passport": account.Username,
 			"password": account.Password,
 		}).Post("https://www.123pan.com/api/user/sign_in")
@@ -76,7 +75,7 @@ func (driver Pan123) FormatFile(file *Pan123File) *model.File {
 		Id:        strconv.FormatInt(file.FileId, 10),
 		Name:      file.FileName,
 		Size:      file.Size,
-		Driver:    driverName,
+		Driver:    driver.Config().Name,
 		UpdatedAt: file.UpdateAt,
 	}
 	if file.Type == 1 {
@@ -136,14 +135,14 @@ func (driver Pan123) GetFile(path string, account *model.Account) (*Pan123File, 
 			if file.Type != conf.FOLDER {
 				return &file, err
 			} else {
-				return nil, drivers.NotFile
+				return nil, NotFile
 			}
 		}
 	}
-	return nil, drivers.PathNotFound
+	return nil, PathNotFound
 }
 
 func init() {
-	drivers.RegisterDriver(driverName, &Pan123{})
+	RegisterDriver(&Pan123{})
 	pan123Client.SetRetryCount(3)
 }

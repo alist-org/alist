@@ -1,9 +1,8 @@
-package alidrive
+package drivers
 
 import (
 	"fmt"
 	"github.com/Xhofe/alist/conf"
-	"github.com/Xhofe/alist/drivers"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
 	"github.com/go-resty/resty/v2"
@@ -46,7 +45,7 @@ func (driver AliDrive) FormatFile(file *AliFile) *model.File {
 		Size:      file.Size,
 		UpdatedAt: file.UpdatedAt,
 		Thumbnail: file.Thumbnail,
-		Driver:    driverName,
+		Driver:    driver.Config().Name,
 		Url:       file.Url,
 	}
 	if file.Type == "folder" {
@@ -76,7 +75,7 @@ func (driver AliDrive) GetFiles(fileId string, account *model.Account) ([]AliFil
 			SetResult(&resp).
 			SetError(&e).
 			SetHeader("authorization", "Bearer\t"+account.AccessToken).
-			SetBody(drivers.Json{
+			SetBody(Json{
 				"drive_id":                account.DriveId,
 				"fields":                  "*",
 				"image_thumbnail_process": "image/resize,w_400/format,jpeg",
@@ -128,16 +127,16 @@ func (driver AliDrive) GetFile(path string, account *model.Account) (*AliFile, e
 			}
 		}
 	}
-	return nil, drivers.PathNotFound
+	return nil, PathNotFound
 }
 
 func (driver AliDrive) RefreshToken(account *model.Account) error {
 	url := "https://auth.aliyundrive.com/v2/account/token"
-	var resp drivers.TokenResp
+	var resp TokenResp
 	var e AliRespError
 	_, err := aliClient.R().
 		//ForceContentType("application/json").
-		SetBody(drivers.Json{"refresh_token": account.RefreshToken, "grant_type": "refresh_token"}).
+		SetBody(Json{"refresh_token": account.RefreshToken, "grant_type": "refresh_token"}).
 		SetResult(&resp).
 		SetError(&e).
 		Post(url)
@@ -157,7 +156,7 @@ func (driver AliDrive) RefreshToken(account *model.Account) error {
 }
 
 func init() {
-	drivers.RegisterDriver(driverName, &AliDrive{})
+	RegisterDriver(&AliDrive{})
 	aliClient.
 		SetRetryCount(3).
 		SetHeader("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36").

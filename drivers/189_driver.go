@@ -1,9 +1,8 @@
-package _89cloud
+package drivers
 
 import (
 	"fmt"
 	"github.com/Xhofe/alist/conf"
-	"github.com/Xhofe/alist/drivers"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
 	"github.com/gin-gonic/gin"
@@ -13,16 +12,15 @@ import (
 
 type Cloud189 struct {}
 
-var driverName = "189Cloud"
-
-func (driver Cloud189) Config() drivers.DriverConfig {
-	return drivers.DriverConfig{
+func (driver Cloud189) Config() DriverConfig {
+	return DriverConfig{
+		Name: "189Cloud",
 		OnlyProxy: false,
 	}
 }
 
-func (driver Cloud189) Items() []drivers.Item {
-	return []drivers.Item{
+func (driver Cloud189) Items() []Item {
+	return []Item{
 		{
 			Name:        "username",
 			Label:       "username",
@@ -85,7 +83,7 @@ func (driver Cloud189) File(path string, account *model.Account) (*model.File, e
 			Name:      account.Name,
 			Size:      0,
 			Type:      conf.FOLDER,
-			Driver:    driverName,
+			Driver:    driver.Config().Name,
 			UpdatedAt: account.UpdatedAt,
 		}, nil
 	}
@@ -99,7 +97,7 @@ func (driver Cloud189) File(path string, account *model.Account) (*model.File, e
 			return &file, nil
 		}
 	}
-	return nil, drivers.PathNotFound
+	return nil, PathNotFound
 }
 
 func (driver Cloud189) Files(path string, account *model.Account) ([]model.File, error) {
@@ -134,7 +132,7 @@ func (driver Cloud189) Link(path string, account *model.Account) (string, error)
 		return "", err
 	}
 	if file.Type == conf.FOLDER {
-		return "", drivers.NotFile
+		return "", NotFile
 	}
 	client, ok := client189Map[account.Name]
 	if !ok {
@@ -163,7 +161,7 @@ func (driver Cloud189) Link(path string, account *model.Account) (string, error)
 	if resp.ResCode != 0 {
 		return "", fmt.Errorf(resp.ResMessage)
 	}
-	res, err := drivers.NoRedirectClient.R().Get(resp.FileDownloadUrl)
+	res, err := NoRedirectClient.R().Get(resp.FileDownloadUrl)
 	if err != nil {
 		return "", err
 	}
@@ -199,4 +197,4 @@ func (driver Cloud189) Preview(path string, account *model.Account) (interface{}
 	return nil, nil
 }
 
-var _ drivers.Driver = (*Cloud189)(nil)
+var _ Driver = (*Cloud189)(nil)

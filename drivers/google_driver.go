@@ -1,9 +1,8 @@
-package googledrive
+package drivers
 
 import (
 	"fmt"
 	"github.com/Xhofe/alist/conf"
-	"github.com/Xhofe/alist/drivers"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
 	"github.com/gin-gonic/gin"
@@ -13,16 +12,15 @@ import (
 
 type GoogleDrive struct{}
 
-var driverName = "GoogleDrive"
-
-func (driver GoogleDrive) Config() drivers.DriverConfig {
-	return drivers.DriverConfig{
+func (driver GoogleDrive) Config() DriverConfig {
+	return DriverConfig{
+		Name: "GoogleDrive",
 		OnlyProxy: true,
 	}
 }
 
-func (driver GoogleDrive) Items() []drivers.Item {
-	return []drivers.Item{
+func (driver GoogleDrive) Items() []Item {
+	return []Item{
 		{
 			Name:     "client_id",
 			Label:    "client id",
@@ -71,7 +69,7 @@ func (driver GoogleDrive) File(path string, account *model.Account) (*model.File
 			Name:      account.Name,
 			Size:      0,
 			Type:      conf.FOLDER,
-			Driver:    driverName,
+			Driver:    driver.Config().Name,
 			UpdatedAt: account.UpdatedAt,
 		}, nil
 	}
@@ -85,7 +83,7 @@ func (driver GoogleDrive) File(path string, account *model.Account) (*model.File
 			return &file, nil
 		}
 	}
-	return nil, drivers.PathNotFound
+	return nil, PathNotFound
 }
 
 func (driver GoogleDrive) Files(path string, account *model.Account) ([]model.File, error) {
@@ -120,7 +118,7 @@ func (driver GoogleDrive) Link(path string, account *model.Account) (string, err
 		return "", err
 	}
 	if file.Type == conf.FOLDER {
-		return "", drivers.NotFile
+		return "", NotFile
 	}
 	link := fmt.Sprintf("https://www.googleapis.com/drive/v3/files/%s?includeItemsFromAllDrives=true&supportsAllDrives=true", file.Id)
 	var e GoogleError

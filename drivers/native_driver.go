@@ -1,9 +1,8 @@
-package native
+package drivers
 
 import (
 	"fmt"
 	"github.com/Xhofe/alist/conf"
-	"github.com/Xhofe/alist/drivers"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
 	"github.com/gin-gonic/gin"
@@ -16,16 +15,15 @@ import (
 
 type Native struct{}
 
-var driverName = "Native"
-
-func (driver Native) Config() drivers.DriverConfig {
-	return drivers.DriverConfig{
+func (driver Native) Config() DriverConfig {
+	return DriverConfig{
+		Name: "Native",
 		OnlyProxy: true,
 	}
 }
 
-func (driver Native) Items() []drivers.Item {
-	return []drivers.Item{
+func (driver Native) Items() []Item {
+	return []Item{
 		{
 			Name:     "root_folder",
 			Label:    "root folder path",
@@ -68,7 +66,7 @@ func (driver Native) Save(account *model.Account, old *model.Account) error {
 func (driver Native) File(path string, account *model.Account) (*model.File, error) {
 	fullPath := filepath.Join(account.RootFolder, path)
 	if !utils.Exists(fullPath) {
-		return nil, drivers.PathNotFound
+		return nil, PathNotFound
 	}
 	f, err := os.Stat(fullPath)
 	if err != nil {
@@ -79,7 +77,7 @@ func (driver Native) File(path string, account *model.Account) (*model.File, err
 		Name:      f.Name(),
 		Size:      f.Size(),
 		UpdatedAt: &time,
-		Driver:    driverName,
+		Driver:    driver.Config().Name,
 	}
 	if f.IsDir() {
 		file.Type = conf.FOLDER
@@ -92,7 +90,7 @@ func (driver Native) File(path string, account *model.Account) (*model.File, err
 func (driver Native) Files(path string, account *model.Account) ([]model.File, error) {
 	fullPath := filepath.Join(account.RootFolder, path)
 	if !utils.Exists(fullPath) {
-		return nil, drivers.PathNotFound
+		return nil, PathNotFound
 	}
 	files := make([]model.File, 0)
 	rawFiles, err := ioutil.ReadDir(fullPath)
@@ -109,7 +107,7 @@ func (driver Native) Files(path string, account *model.Account) ([]model.File, e
 			Size:      f.Size(),
 			Type:      0,
 			UpdatedAt: &time,
-			Driver:    driverName,
+			Driver:    driver.Config().Name,
 		}
 		if f.IsDir() {
 			file.Type = conf.FOLDER
@@ -160,4 +158,4 @@ func (driver Native) Preview(path string, account *model.Account) (interface{}, 
 	return nil, fmt.Errorf("no need")
 }
 
-var _ drivers.Driver = (*Native)(nil)
+var _ Driver = (*Native)(nil)

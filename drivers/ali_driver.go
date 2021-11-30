@@ -1,9 +1,8 @@
-package alidrive
+package drivers
 
 import (
 	"fmt"
 	"github.com/Xhofe/alist/conf"
-	"github.com/Xhofe/alist/drivers"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
 	"github.com/gin-gonic/gin"
@@ -14,16 +13,15 @@ import (
 
 type AliDrive struct{}
 
-var driverName = "AliDrive"
-
-func (driver AliDrive) Config() drivers.DriverConfig {
-	return drivers.DriverConfig{
+func (driver AliDrive) Config() DriverConfig {
+	return DriverConfig{
+		Name: "AliDrive",
 		OnlyProxy: false,
 	}
 }
 
-func (driver AliDrive) Items() []drivers.Item {
-	return []drivers.Item{
+func (driver AliDrive) Items() []Item {
+	return []Item{
 		{
 			Name: "order_by",
 			Label: "order_by",
@@ -74,7 +72,7 @@ func (driver AliDrive) Save(account *model.Account, old *model.Account) error {
 	if err != nil {
 		return err
 	}
-	var resp drivers.Json
+	var resp Json
 	_, _ = aliClient.R().SetResult(&resp).
 		SetBody("{}").
 		SetHeader("authorization", "Bearer\t"+account.AccessToken).
@@ -111,7 +109,7 @@ func (driver AliDrive) File(path string, account *model.Account) (*model.File, e
 			Name:      account.Name,
 			Size:      0,
 			Type:      conf.FOLDER,
-			Driver:    driverName,
+			Driver:    driver.Config().Name,
 			UpdatedAt: account.UpdatedAt,
 		}, nil
 	}
@@ -125,7 +123,7 @@ func (driver AliDrive) File(path string, account *model.Account) (*model.File, e
 			return &file, nil
 		}
 	}
-	return nil, drivers.PathNotFound
+	return nil, PathNotFound
 }
 
 func (driver AliDrive) Files(path string, account *model.Account) ([]model.File, error) {
@@ -159,12 +157,12 @@ func (driver AliDrive) Link(path string, account *model.Account) (string, error)
 	if err != nil {
 		return "", err
 	}
-	var resp drivers.Json
+	var resp Json
 	var e AliRespError
 	_, err = aliClient.R().SetResult(&resp).
 		SetError(&e).
 		SetHeader("authorization", "Bearer\t"+account.AccessToken).
-		SetBody(drivers.Json{
+		SetBody(Json{
 			"drive_id":   account.DriveId,
 			"file_id":    file.Id,
 			"expire_sec": 14400,
@@ -216,10 +214,10 @@ func (driver AliDrive) Preview(path string, account *model.Account) (interface{}
 		return nil, err
 	}
 	// office
-	var resp drivers.Json
+	var resp Json
 	var e AliRespError
 	var url string
-	req := drivers.Json{
+	req := Json{
 		"drive_id": account.DriveId,
 		"file_id":  file.FileId,
 	}
@@ -249,4 +247,4 @@ func (driver AliDrive) Preview(path string, account *model.Account) (interface{}
 	return resp, nil
 }
 
-var _ drivers.Driver = (*AliDrive)(nil)
+var _ Driver = (*AliDrive)(nil)

@@ -9,6 +9,7 @@ import (
 )
 
 type DriverConfig struct {
+	Name string
 	OnlyProxy bool
 }
 
@@ -46,9 +47,9 @@ type TokenResp struct {
 
 var driversMap = map[string]Driver{}
 
-func RegisterDriver(name string, driver Driver) {
-	log.Infof("register driver: [%s]", name)
-	driversMap[name] = driver
+func RegisterDriver(driver Driver) {
+	log.Infof("register driver: [%s]", driver.Config().Name)
+	driversMap[driver.Config().Name] = driver
 }
 
 func GetDriver(name string) (driver Driver, ok bool) {

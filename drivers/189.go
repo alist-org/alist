@@ -1,4 +1,4 @@
-package _89cloud
+package drivers
 
 import (
 	"crypto/rand"
@@ -9,7 +9,6 @@ import (
 	"encoding/pem"
 	"fmt"
 	"github.com/Xhofe/alist/conf"
-	"github.com/Xhofe/alist/drivers"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
 	"github.com/go-resty/resty/v2"
@@ -30,7 +29,7 @@ func (driver Cloud189) FormatFile(file *Cloud189File) *model.File {
 		Id:        strconv.FormatInt(file.Id, 10),
 		Name:      file.Name,
 		Size:      file.Size,
-		Driver:    "189Cloud",
+		Driver:    driver.Config().Name,
 		UpdatedAt: nil,
 		Thumbnail: file.Icon.SmallUrl,
 		Url:       file.Url,
@@ -313,6 +312,6 @@ func b64tohex(a string) string {
 }
 
 func init() {
-	drivers.RegisterDriver(driverName, &Cloud189{})
+	RegisterDriver(&Cloud189{})
 	client189Map = make(map[string]*resty.Client, 0)
 }
