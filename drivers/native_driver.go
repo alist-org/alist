@@ -155,7 +155,7 @@ func (driver Native) Proxy(c *gin.Context, account *model.Account) {
 }
 
 func (driver Native) Preview(path string, account *model.Account) (interface{}, error) {
-	return nil, fmt.Errorf("no need")
+	return nil, NotSupport
 }
 
 var _ Driver = (*Native)(nil)

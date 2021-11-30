@@ -202,7 +202,7 @@ func (driver Onedrive) Proxy(c *gin.Context, account *model.Account) {
 }
 
 func (driver Onedrive) Preview(path string, account *model.Account) (interface{}, error) {
-	return nil, nil
+	return nil, NotSupport
 }
 
 var _ Driver = (*Onedrive)(nil)

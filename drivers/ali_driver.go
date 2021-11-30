@@ -233,7 +233,7 @@ func (driver AliDrive) Preview(path string, account *model.Account) (interface{}
 			req["category"] = "live_transcoding"
 		}
 	default:
-		return nil, fmt.Errorf("don't support")
+		return nil, NotSupport
 	}
 	_, err = aliClient.R().SetResult(&resp).SetError(&e).
 		SetHeader("authorization", "Bearer\t"+account.AccessToken).

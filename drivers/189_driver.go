@@ -194,7 +194,7 @@ func (driver Cloud189) Proxy(ctx *gin.Context, account *model.Account) {
 }
 
 func (driver Cloud189) Preview(path string, account *model.Account) (interface{}, error) {
-	return nil, nil
+	return nil, NotSupport
 }
 
 var _ Driver = (*Cloud189)(nil)

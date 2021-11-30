@@ -186,7 +186,7 @@ func (driver Pan123) Proxy(c *gin.Context, account *model.Account) {
 }
 
 func (driver Pan123) Preview(path string, account *model.Account) (interface{}, error) {
-	return nil, nil
+	return nil, NotSupport
 }
 
 var _ Driver = (*Pan123)(nil)

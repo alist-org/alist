@@ -162,7 +162,7 @@ func (driver GoogleDrive) Proxy(c *gin.Context, account *model.Account) {
 }
 
 func (driver GoogleDrive) Preview(path string, account *model.Account) (interface{}, error) {
-	return nil, nil
+	return nil, NotSupport
 }
 
 var _ Driver = (*GoogleDrive)(nil)
