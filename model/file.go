@@ -16,6 +16,8 @@ type File struct {
 	UpdatedAt *time.Time `json:"updated_at"`
 	Thumbnail string     `json:"thumbnail"`
 	Url       string     `json:"url"`
+	SizeStr   string     `json:"size_str"`
+	TimeStr   string     `json:"time_str"`
 }
 
 func SortFiles(files []File, account *Account) {
