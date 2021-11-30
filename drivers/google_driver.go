@@ -43,7 +43,7 @@ func (driver GoogleDrive) Items() []Item {
 			Name:     "root_folder",
 			Label:    "root folder file_id",
 			Type:     "string",
-			Required: true,
+			Required: false,
 		},
 	}
 }
@@ -55,6 +55,9 @@ func (driver GoogleDrive) Save(account *model.Account, old *model.Account) error
 		account.Status = err.Error()
 		_ = model.SaveAccount(account)
 		return err
+	}
+	if account.RootFolder == "" {
+		account.RootFolder = "root"
 	}
 	account.Status = "work"
 	_ = model.SaveAccount(account)
