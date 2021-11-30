@@ -54,7 +54,12 @@ func main() {
 	server.InitApiRouter(r)
 	base := fmt.Sprintf("%s:%d", conf.Conf.Address, conf.Conf.Port)
 	log.Infof("start server @ %s", base)
-	err := r.Run(base)
+	var err error
+	if conf.Conf.Https {
+		err = r.RunTLS(base, conf.Conf.CertFile, conf.Conf.KeyFile)
+	} else {
+		err = r.Run(base)
+	}
 	if err != nil {
 		log.Errorf("failed to start: %s", err.Error())
 	}

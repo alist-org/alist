@@ -14,6 +14,9 @@ type Config struct {
 	Address  string   `json:"address"`
 	Port     int      `json:"port"`
 	Database Database `json:"database"`
+	Https    bool     `json:"https"`
+	CertFile string   `json:"cert_file"`
+	KeyFile  string   `json:"key_file"`
 }
 
 func DefaultConfig() *Config {
@@ -22,11 +25,7 @@ func DefaultConfig() *Config {
 		Port:    5244,
 		Database: Database{
 			Type:        "sqlite3",
-			User:        "",
-			Password:    "",
-			Host:        "",
 			Port:        0,
-			Name:        "",
 			TablePrefix: "x_",
 			DBFile:      "data/data.db",
 		},
