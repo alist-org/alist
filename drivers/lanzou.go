@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strconv"
+	"time"
 )
 
 var lanzouClient = resty.New()
@@ -25,12 +26,14 @@ type LanZouFile struct {
 }
 
 func (driver *Lanzou) FormatFile(file *LanZouFile) *model.File {
+	now := time.Now()
 	f := &model.File{
-		Id:      file.Id,
-		Name:    file.Name,
-		Driver:  driver.Config().Name,
-		SizeStr: file.Size,
-		TimeStr: file.Time,
+		Id:        file.Id,
+		Name:      file.Name,
+		Driver:    driver.Config().Name,
+		SizeStr:   file.Size,
+		TimeStr:   file.Time,
+		UpdatedAt: &now,
 	}
 	if file.Folder {
 		f.Type = conf.FOLDER
@@ -146,7 +149,7 @@ func (driver *Lanzou) GetFilesByUrl(account *model.Account) ([]LanZouFile, error
 		pg++
 		files = append(files, resp.Text...)
 	}
-	return files,nil
+	return files, nil
 }
 
 //type LanzouDownInfo struct {
