@@ -176,8 +176,6 @@ func (driver Onedrive) GetFile(account *model.Account, path string) (*OneFile, e
 	return &file, nil
 }
 
-var _ Driver = (*Onedrive)(nil)
-
 func init() {
 	RegisterDriver(&Onedrive{})
 	oneClient.SetRetryCount(3)

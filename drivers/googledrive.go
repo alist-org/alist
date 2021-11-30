@@ -151,8 +151,6 @@ func (driver GoogleDrive) GetFiles(id string, account *model.Account) ([]GoogleF
 //	return nil, drivers.PathNotFound
 //}
 
-var _ Driver = (*GoogleDrive)(nil)
-
 func init() {
 	RegisterDriver(&GoogleDrive{})
 	googleClient.SetRetryCount(3)
