@@ -104,6 +104,11 @@ type OneFile struct {
 	File                 struct {
 		MimeType string `json:"mimeType"`
 	} `json:"file"`
+	Thumbnails []struct{
+		Medium struct{
+			Url string `json:"url"`
+		} `json:"medium"`
+	} `json:"thumbnails"`
 }
 
 type OneFiles struct {
@@ -126,6 +131,9 @@ func (driver Onedrive) FormatFile(file *OneFile) *model.File {
 		Driver:    driver.Config().Name,
 		Url:       file.Url,
 	}
+	if len(file.Thumbnails) > 0 {
+		f.Thumbnail = file.Thumbnails[0].Medium.Url
+	}
 	if file.File.MimeType == "" {
 		f.Type = conf.FOLDER
 	} else {
@@ -136,9 +144,9 @@ func (driver Onedrive) FormatFile(file *OneFile) *model.File {
 
 func (driver Onedrive) GetFiles(account *model.Account, path string) ([]OneFile, error) {
 	var res []OneFile
-	nextLink := driver.GetMetaUrl(account, false, path) + "/children"
+	nextLink := driver.GetMetaUrl(account, false, path) + "/children?$expand=thumbnails"
 	if account.OrderBy != "" {
-		nextLink += fmt.Sprintf("?orderby=%s", account.OrderBy)
+		nextLink += fmt.Sprintf("&orderby=%s", account.OrderBy)
 		if account.OrderDirection != "" {
 			nextLink += fmt.Sprintf(" %s", account.OrderDirection)
 		}
