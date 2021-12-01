@@ -148,7 +148,7 @@ func (driver Onedrive) GetFiles(account *model.Account, path string) ([]OneFile,
 	if account.OrderBy != "" {
 		nextLink += fmt.Sprintf("&orderby=%s", account.OrderBy)
 		if account.OrderDirection != "" {
-			nextLink += fmt.Sprintf(" %s", account.OrderDirection)
+			nextLink += fmt.Sprintf("%%20%s", account.OrderDirection)
 		}
 	}
 	for nextLink != "" {
