@@ -1,0 +1,39 @@
+name: "Bug report"
+description: Bug report
+labels: [pending triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+  - type: input
+    id: version
+    attributes:
+      label: Alist Version / Alist 版本
+      description: What version of our software are you running?
+      placeholder: v2.0.0
+    validations:
+      required: true
+  - type: textarea
+    id: bug-description
+    attributes:
+      label: Describe the bug / 问题描述
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction / 复现链接
+      description: |
+        Please provide a link to a repo that can reproduce the problem you ran into.
+        请提供能复现此问题的链接
+    validations:
+      required: false
+  - type: textarea
+    id: logs
+    attributes:
+      label: 日志 / Logs
+      description: |
+        Please copy and paste any relevant log output.
+        请复制粘贴错误日志，或者截图
+      render: shell
