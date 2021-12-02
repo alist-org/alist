@@ -80,14 +80,14 @@ func (fs *FileSystem) Files(rawPath string) ([]model.File, error) {
 	return driver.Files(path_, account)
 }
 
-func GetPW(path string) string {
+func GetPW(path string, name string) string {
 	if !conf.CheckDown {
 		return ""
 	}
 	meta, err := model.GetMetaByPath(path)
 	if err == nil {
 		if meta.Password != "" {
-			utils.Get16MD5Encode(meta.Password)
+			utils.Get16MD5Encode("alist" + meta.Password + name)
 		}
 		return ""
 	} else {
@@ -97,7 +97,7 @@ func GetPW(path string) string {
 		if path == "/" {
 			return ""
 		}
-		return GetPW(utils.Dir(path))
+		return GetPW(utils.Dir(path), name)
 	}
 }
 
@@ -119,7 +119,7 @@ func (fs *FileSystem) Link(r *http.Request, rawPath string) (string, error) {
 	if driver.Config().OnlyProxy || account.WebdavProxy {
 		link = fmt.Sprintf("%s://%s/p%s", protocol, r.Host, rawPath)
 		if conf.CheckDown {
-			pw := GetPW(utils.Dir(rawPath))
+			pw := GetPW(utils.Dir(rawPath), utils.Base(rawPath))
 			link += "?pw" + pw
 		}
 	} else {

@@ -106,3 +106,11 @@ func Dir(path string) string {
 	}
 	return path[:idx]
 }
+
+func Base(path string) string {
+	idx := strings.LastIndex(path, "/")
+	if idx == -1 {
+		return path
+	}
+	return path[idx+1:]
+}

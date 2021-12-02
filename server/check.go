@@ -55,7 +55,7 @@ func CheckParent(path string, password string) bool {
 	}
 }
 
-func CheckDownLink(path string, passwordMd5 string) bool {
+func CheckDownLink(path string, passwordMd5 string, name string) bool {
 	if !conf.CheckDown {
 		return true
 	}
@@ -63,7 +63,7 @@ func CheckDownLink(path string, passwordMd5 string) bool {
 	log.Debugf("check down path: %s", path)
 	if err == nil {
 		log.Debugf("check down link: %s,%s", meta.Password, passwordMd5)
-		if meta.Password != "" && utils.Get16MD5Encode(meta.Password) != passwordMd5 {
+		if meta.Password != "" && utils.Get16MD5Encode("alist"+meta.Password+name) != passwordMd5 {
 			return false
 		}
 		return true
@@ -74,6 +74,6 @@ func CheckDownLink(path string, passwordMd5 string) bool {
 		if path == "/" {
 			return true
 		}
-		return CheckDownLink(utils.Dir(path), passwordMd5)
+		return CheckDownLink(utils.Dir(path), passwordMd5, name)
 	}
 }
