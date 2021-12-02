@@ -1,5 +1,6 @@
-<h2 align="center">Alist</h2>
-<p align="center">
+<div align="center">
+  <h3><a href="https://alist.nn.ci">Alist</a></h3>
+  <p><em>A file list program that supports multiple storage, powered by gin and React.</em></p>
   <a href="https://github.com/Xhofe/alist/releases"><img src="https://img.shields.io/github/release/Xhofe/alist?style=flat-square" alt="Release version"></a>
   <a href="https://github.com/Xhofe/alist/actions?query=workflow%3ABuild"><img src="https://img.shields.io/github/workflow/status/Xhofe/alist/build?style=flat-square" alt="Build status"></a>
   <a href="https://github.com/Xhofe/alist/releases"><img src="https://img.shields.io/github/downloads/Xhofe/alist/total?style=flat-square" alt="Downloads"></a>
@@ -7,40 +8,53 @@
   <a href="https://pay.xhofe.top">
     <img src="https://img.shields.io/badge/%24-donate-ff69b4.svg?style=flat-square" alt="donate">
   </a>
-</p>
+</div>
+
 
 ---
 
-### 这是什么？
+English | [中文](./README_cn.md)
 
-一款支持多种存储的目录文件列表程序，后端基于`gin`，前端使用`react`。
+## Features
 
-### 前端项目地址
+- [x] multiple storage
+  - [x] Local storage
+  - [x] [aliyundrive](https://www.aliyundrive.com/)
+  - [x] OneDrive([global](https://www.office.com/), [cn](https://portal.partner.microsoftonline.cn),de,us）
+  - [x] [189cloud]([https://cloud.189.cn](https://cloud.189.cn/web/main/file/folder/-11))
+  - [x] [GoogleDrive](https://drive.google.com/)
+  - [x] [123pan](https://www.123pan.com/)
+  - [x] [lanzou](https://pc.woozooo.com/)
+- [x] File preview (PDF, markdown, code, plain text, ...)
+- [x] Image preview in gallery mode
+- [x] Video and audio preview (mp4, mp3, ...)
+- [x] Office documents preview (docx, pptx, xlsx, ...)
+- [x] `README.md` preview rendering
+- [x] File permalink copy and direct file download
+- [x] Dark mode
+- [x] I18n
+- [x] Protected routes (password protection and authentication) 
+- [x] WebDav (readonly)
+- [x] [Docker Deploy](https://hub.docker.com/r/xhofe/alist)
 
-- https://github.com/Xhofe/alist-web
+## Discussion
 
-### 演示地址
+Please go to our [discussion forum](https://github.com/Xhofe/alist/discussions) for general questions, **issues are for bug reports  only.**
 
-- https://alist.nn.ci
+## Demo
 
-### 预览
+Available at: <https://alist.nn.ci>.
 
-<a href="https://alist.nn.ci/"><img src="https://store.heytapimage.com/cdo-portal/feedback/202111/03/695ef77854a144e928518efde38db97a.png"></a>
+![demo](https://store.heytapimage.com/cdo-portal/feedback/202112/02/14803f03878e0c6cc863bae95bc2ae0c.png)
 
-### 支持的存储
+## Document
 
-- 本地存储
-- 阿里云盘
-- Onedrive/世纪互联
-- 天翼云盘
-- GoogleDrive
-- 123pan
-- ...
+<https://alist-doc.nn.ci/en/>
 
-### 如何使用
-
-- https://alist-doc.nn.ci/
-
-### License
+## License
 
 The `AList` is open-source software licensed under the MIT license.
+
+---
+
+> [@Blog](https://www.nn.ci/) · [@GitHub](https://github.com/Xhofe)
