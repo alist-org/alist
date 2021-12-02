@@ -19,8 +19,8 @@
 - [x] 多种存储
   - [x] 本地存储
   - [x] [aliyundrive](https://www.aliyundrive.com/)
-  - [x] OneDrive（[国际版](https://www.office.com/), [世纪互联](https://portal.partner.microsoftonline.cn),de,us）
-  - [x] [天翼云盘]([https://cloud.189.cn](https://cloud.189.cn/web/main/file/folder/-11))
+  - [x] OneDrive / Sharepoint（[国际版](https://www.office.com/), [世纪互联](https://portal.partner.microsoftonline.cn),de,us）
+  - [x] [天翼云盘](https://cloud.189.cn)
   - [x] [GoogleDrive](https://drive.google.com/)
   - [x] [123云盘](https://www.123pan.com/)
   - [x] [蓝奏云](https://pc.woozooo.com/)

@@ -4,7 +4,7 @@
   <a href="https://github.com/Xhofe/alist/releases"><img src="https://img.shields.io/github/release/Xhofe/alist?style=flat-square" alt="Release version"></a>
   <a href="https://github.com/Xhofe/alist/actions?query=workflow%3ABuild"><img src="https://img.shields.io/github/workflow/status/Xhofe/alist/build?style=flat-square" alt="Build status"></a>
   <a href="https://github.com/Xhofe/alist/releases"><img src="https://img.shields.io/github/downloads/Xhofe/alist/total?style=flat-square" alt="Downloads"></a>
-  <a href="https://github.com/Xhofe/alist/blob/main/LICENSE"><img src="https://img.shields.io/github/license/Xhofe/alist?style=flat-square" alt="License"></a>
+  <a href="https://github.com/Xhofe/alist/blob/v2/LICENSE"><img src="https://img.shields.io/github/license/Xhofe/alist?style=flat-square" alt="License"></a>
   <a href="https://pay.xhofe.top">
     <img src="https://img.shields.io/badge/%24-donate-ff69b4.svg?style=flat-square" alt="donate">
   </a>
@@ -20,8 +20,8 @@ English | [中文](./README_cn.md)
 - [x] multiple storage
   - [x] Local storage
   - [x] [aliyundrive](https://www.aliyundrive.com/)
-  - [x] OneDrive([global](https://www.office.com/), [cn](https://portal.partner.microsoftonline.cn),de,us）
-  - [x] [189cloud]([https://cloud.189.cn](https://cloud.189.cn/web/main/file/folder/-11))
+  - [x] OneDrive / Sharepoint ([global](https://www.office.com/), [cn](https://portal.partner.microsoftonline.cn),de,us）
+  - [x] [189cloud](https://cloud.189.cn)
   - [x] [GoogleDrive](https://drive.google.com/)
   - [x] [123pan](https://www.123pan.com/)
   - [x] [lanzou](https://pc.woozooo.com/)
