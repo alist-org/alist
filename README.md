@@ -45,7 +45,7 @@ Please go to our [discussion forum](https://github.com/Xhofe/alist/discussions) 
 
 Available at: <https://alist.nn.ci>.
 
-![demo](https://store.heytapimage.com/cdo-portal/feedback/202112/02/14803f03878e0c6cc863bae95bc2ae0c.png)
+![demo](https://inews.gtimg.com/newsapp_ls/0/14256614096/0)
 
 ## Document
 

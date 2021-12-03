@@ -44,7 +44,7 @@
 
 <https://alist.nn.ci>。
 
-![演示](https://store.heytapimage.com/cdo-portal/feedback/202112/02/14803f03878e0c6cc863bae95bc2ae0c.png)
+![演示](https://inews.gtimg.com/newsapp_ls/0/14256614096/0)
 
 ## 文档
 
