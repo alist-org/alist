@@ -1,10 +1,11 @@
 <div align="center">
   <h3><a href="https://alist.nn.ci">Alist</a></h3>
   <p><em>一个支持多存储的文件列表程序，使用 gin 和 React 。</em></p>
-  <a href="https://github.com/Xhofe/alist/releases"><img src="https://img.shields.io/github/release/Xhofe/alist?style=flat-square" alt ="发布版本"></a>
+  <a href="https://github.com/Xhofe/alist/releases"><img src="https://img.shields.io/github/release/Xhofe/alist?style=flat-square" alt="latest version"></a>
+  <a href="https://github.com/Xhofe/alist/discussions"><img src="https://img.shields.io/github/discussions/Xhofe/alist?color=%23ED8936&style=flat-square" alt="discussions"></a>
   <a href="https://github.com/Xhofe/alist/actions?query=workflow%3ABuild"><img src="https://img.shields.io/github/workflow/status/Xhofe/alist/build?style=flat-square" alt="Build status"></a>
-  <a href="https://github.com/Xhofe/alist/releases"><img src="https://img.shields.io/github/downloads/Xhofe/alist/total?style=flat-square " alt="下载"></a>
-  <a href="https://github.com/Xhofe/alist/blob/main/LICENSE"><img src="https://img.shields.io/github/license/Xhofe/alist?style=flat -square" alt="License"></a>
+  <a href="https://github.com/Xhofe/alist/releases"><img src="https://img.shields.io/github/downloads/Xhofe/alist/total?style=flat-square&color=%239F7AEA" alt="Downloads"></a>
+  <a href="https://github.com/Xhofe/alist/blob/v2/LICENSE"><img src="https://img.shields.io/github/license/Xhofe/alist?style=flat-square" alt="License"></a>
   <a href="https://pay.xhofe.top">
     <img src="https://img.shields.io/badge/%24-donate-ff69b4.svg?style=flat-square" alt="donate">
   </a>
@@ -18,7 +19,7 @@
 
 - [x] 多种存储
   - [x] 本地存储
-  - [x] [aliyundrive](https://www.aliyundrive.com/)
+  - [x] [阿里云盘](https://www.aliyundrive.com/)
   - [x] OneDrive / Sharepoint（[国际版](https://www.office.com/), [世纪互联](https://portal.partner.microsoftonline.cn),de,us）
   - [x] [天翼云盘](https://cloud.189.cn)
   - [x] [GoogleDrive](https://drive.google.com/)
