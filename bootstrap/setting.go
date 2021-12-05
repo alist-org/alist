@@ -36,14 +36,14 @@ func InitSettings() {
 		},
 		{
 			Key:         "logo",
-			Value:       "https://store.heytapimage.com/cdo-portal/feedback/202110/30/d43c41c5d257c9bc36366e310374fb19.png",
+			Value:       "https://store.heytapimage.com/cdo-portal/feedback/202112/05/1542f45f86b8609495b69c5380753135.png",
 			Description: "logo",
 			Type:        "string",
 			Group:       model.PUBLIC,
 		},
 		{
 			Key:         "favicon",
-			Value:       "https://store.heytapimage.com/cdo-portal/feedback/202110/30/d43c41c5d257c9bc36366e310374fb19.png",
+			Value:       "https://store.heytapimage.com/cdo-portal/feedback/202112/05/1542f45f86b8609495b69c5380753135.png",
 			Description: "favicon",
 			Type:        "string",
 			Group:       model.PUBLIC,
@@ -114,17 +114,34 @@ func InitSettings() {
 			Group:       model.PRIVATE,
 		},
 		{
-			Key:         "customize style",
-			Value:       "",
+			Key:         "customize head",
+			Value:       `<style>
+.chakra-ui-light{
+  background-image: linear-gradient(120deg,#e0c3fc 0%,#8ec5fc 100%) !important;
+  background-attachment: fixed;
+}
+.main-box {
+  border-radius: 15px !important;
+}
+.chakra-ui-light .main-box {
+  background-color: white !important;
+}
+.chakra-ui-light .readme-box {
+  background-color: white !important;
+}
+.readme-box {
+  border-radius: 15px !important;
+}
+</style>`,
 			Type:        "text",
-			Description: "customize style, don't need add <style></style>",
+			Description: "Customize head, placed at the beginning of the head",
 			Group:       model.PRIVATE,
 		},
 		{
-			Key:         "customize script",
+			Key:         "customize body",
 			Value:       "",
 			Type:        "text",
-			Description: "customize script, don't need add <script></script>",
+			Description: "Customize script, placed at the end of the body",
 			Group:       model.PRIVATE,
 		},
 		{

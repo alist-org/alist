@@ -41,9 +41,6 @@ var (
 	RawIndexHtml string
 	IndexHtml    string
 	CheckParent  bool
-	//CustomizeStyle  string
-	//CustomizeScript string
-	//Favicon         string
 	CheckDown bool
 
 	DavUsername string

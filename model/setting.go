@@ -72,18 +72,15 @@ func LoadSettings() {
 	}
 	title, err := GetSettingByKey("title")
 	if err == nil {
-		//conf.CustomizeStyle = customizeStyle.Value
 		conf.IndexHtml = strings.Replace(conf.IndexHtml, "Loading...", title.Value, 1)
 	}
-	customizeStyle, err := GetSettingByKey("customize style")
+	customizeHead, err := GetSettingByKey("customize head")
 	if err == nil {
-		//conf.CustomizeStyle = customizeStyle.Value
-		conf.IndexHtml = strings.Replace(conf.IndexHtml, "/* customize-style */", customizeStyle.Value, 1)
+		conf.IndexHtml = strings.Replace(conf.IndexHtml, "<!-- customize head -->", customizeHead.Value, 1)
 	}
-	customizeScript, err := GetSettingByKey("customize script")
+	customizeBody, err := GetSettingByKey("customize body")
 	if err == nil {
-		//conf.CustomizeStyle = customizeScript.Value
-		conf.IndexHtml = strings.Replace(conf.IndexHtml, "// customize-js", customizeScript.Value, 1)
+		conf.IndexHtml = strings.Replace(conf.IndexHtml, "<!-- customize body -->", customizeBody.Value, 1)
 	}
 
 	davUsername, err := GetSettingByKey("WebDAV username")
