@@ -25,10 +25,11 @@ type Driver interface {
 	Preview(path string, account *model.Account) (interface{}, error)
 	// TODO
 	//Search(path string, keyword string, account *model.Account) ([]*model.File, error)
-	//MakeDir(path string, account *model.Account) error
-	//Move(src string, des string, account *model.Account) error
-	//Delete(path string) error
-	//Upload(file *fs.File, path string, account *model.Account) error
+	MakeDir(path string, account *model.Account) error
+	Move(src string, dst string, account *model.Account) error
+	Copy(src string, dst string, account *model.Account) error
+	Delete(path string, account *model.Account) error
+	Upload(file *model.FileStream, account *model.Account) error
 }
 
 type Item struct {

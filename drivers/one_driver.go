@@ -13,6 +13,7 @@ import (
 
 type Onedrive struct{}
 
+
 func (driver Onedrive) Config() DriverConfig {
 	return DriverConfig{
 		Name: "Onedrive",
@@ -25,7 +26,7 @@ func (driver Onedrive) Items() []Item {
 		{
 			Name:        "zone",
 			Label:       "zone",
-			Type:        "select",
+			Type:        TypeSelect,
 			Required:    true,
 			Values:      "global,cn,us,de",
 			Description: "",
@@ -33,57 +34,57 @@ func (driver Onedrive) Items() []Item {
 		{
 			Name:     "onedrive_type",
 			Label:    "onedrive type",
-			Type:     "select",
+			Type:     TypeSelect,
 			Required: true,
 			Values:   "onedrive,sharepoint",
 		},
 		{
 			Name:     "client_id",
 			Label:    "client id",
-			Type:     "string",
+			Type:     TypeString,
 			Required: true,
 		},
 		{
 			Name:     "client_secret",
 			Label:    "client secret",
-			Type:     "string",
+			Type:     TypeString,
 			Required: true,
 		},
 		{
 			Name:     "redirect_uri",
 			Label:    "redirect uri",
-			Type:     "string",
+			Type:     TypeString,
 			Required: true,
 		},
 		{
 			Name:     "refresh_token",
 			Label:    "refresh token",
-			Type:     "string",
+			Type:     TypeString,
 			Required: true,
 		},
 		{
 			Name:     "site_id",
 			Label:    "site id",
-			Type:     "string",
+			Type:     TypeString,
 			Required: false,
 		},
 		{
 			Name:     "root_folder",
 			Label:    "root folder path",
-			Type:     "string",
+			Type:     TypeString,
 			Required: false,
 		},
 		{
 			Name:     "order_by",
 			Label:    "order_by",
-			Type:     "select",
+			Type:     TypeSelect,
 			Values:   "name,size,lastModifiedDateTime",
 			Required: false,
 		},
 		{
 			Name:     "order_direction",
 			Label:    "order_direction",
-			Type:     "select",
+			Type:     TypeSelect,
 			Values:   "asc,desc",
 			Required: false,
 		},
@@ -147,7 +148,7 @@ func (driver Onedrive) File(path string, account *model.Account) (*model.File, e
 			return &file, nil
 		}
 	}
-	return nil, PathNotFound
+	return nil, ErrPathNotFound
 }
 
 func (driver Onedrive) Files(path string, account *model.Account) ([]model.File, error) {
@@ -204,7 +205,27 @@ func (driver Onedrive) Proxy(c *gin.Context, account *model.Account) {
 }
 
 func (driver Onedrive) Preview(path string, account *model.Account) (interface{}, error) {
-	return nil, NotSupport
+	return nil, ErrNotSupport
+}
+
+func (driver Onedrive) MakeDir(path string, account *model.Account) error {
+	return ErrNotImplement
+}
+
+func (driver Onedrive) Move(src string, dst string, account *model.Account) error {
+	return ErrNotImplement
+}
+
+func (driver Onedrive) Copy(src string, dst string, account *model.Account) error {
+	return ErrNotImplement
+}
+
+func (driver Onedrive) Delete(path string, account *model.Account) error {
+	return ErrNotImplement
+}
+
+func (driver Onedrive) Upload(file *model.FileStream, account *model.Account) error {
+	return ErrNotImplement
 }
 
 var _ Driver = (*Onedrive)(nil)

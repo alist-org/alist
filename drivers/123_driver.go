@@ -25,34 +25,34 @@ func (driver Pan123) Items() []Item {
 		{
 			Name:        "username",
 			Label:       "username",
-			Type:        "string",
+			Type:        TypeString,
 			Required:    true,
 			Description: "account username/phone number",
 		},
 		{
 			Name:        "password",
 			Label:       "password",
-			Type:        "string",
+			Type:        TypeString,
 			Required:    true,
 			Description: "account password",
 		},
 		{
 			Name:     "root_folder",
 			Label:    "root folder file_id",
-			Type:     "string",
+			Type:     TypeString,
 			Required: false,
 		},
 		{
 			Name:     "order_by",
 			Label:    "order_by",
-			Type:     "select",
+			Type:     TypeSelect,
 			Values:   "name,fileId,updateAt,createAt",
 			Required: true,
 		},
 		{
 			Name:     "order_direction",
 			Label:    "order_direction",
-			Type:     "select",
+			Type:     TypeSelect,
 			Values:   "asc,desc",
 			Required: true,
 		},
@@ -89,7 +89,7 @@ func (driver Pan123) File(path string, account *model.Account) (*model.File, err
 			return &file, nil
 		}
 	}
-	return nil, PathNotFound
+	return nil, ErrPathNotFound
 }
 
 func (driver Pan123) Files(path string, account *model.Account) ([]model.File, error) {
@@ -186,7 +186,27 @@ func (driver Pan123) Proxy(c *gin.Context, account *model.Account) {
 }
 
 func (driver Pan123) Preview(path string, account *model.Account) (interface{}, error) {
-	return nil, NotSupport
+	return nil, ErrNotSupport
+}
+
+func (driver Pan123) MakeDir(path string, account *model.Account) error {
+	return ErrNotImplement
+}
+
+func (driver Pan123) Move(src string, dst string, account *model.Account) error {
+	return ErrNotImplement
+}
+
+func (driver Pan123) Copy(src string, dst string, account *model.Account) error {
+	return ErrNotImplement
+}
+
+func (driver Pan123) Delete(path string, account *model.Account) error {
+	return ErrNotImplement
+}
+
+func (driver Pan123) Upload(file *model.FileStream, account *model.Account) error {
+	return ErrNotImplement
 }
 
 var _ Driver = (*Pan123)(nil)

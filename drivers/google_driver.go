@@ -24,25 +24,25 @@ func (driver GoogleDrive) Items() []Item {
 		{
 			Name:     "client_id",
 			Label:    "client id",
-			Type:     "string",
+			Type:     TypeString,
 			Required: true,
 		},
 		{
 			Name:     "client_secret",
 			Label:    "client secret",
-			Type:     "string",
+			Type:     TypeString,
 			Required: true,
 		},
 		{
 			Name:     "refresh_token",
 			Label:    "refresh token",
-			Type:     "string",
+			Type:     TypeString,
 			Required: true,
 		},
 		{
 			Name:     "root_folder",
 			Label:    "root folder file_id",
-			Type:     "string",
+			Type:     TypeString,
 			Required: false,
 		},
 	}
@@ -86,7 +86,7 @@ func (driver GoogleDrive) File(path string, account *model.Account) (*model.File
 			return &file, nil
 		}
 	}
-	return nil, PathNotFound
+	return nil, ErrPathNotFound
 }
 
 func (driver GoogleDrive) Files(path string, account *model.Account) ([]model.File, error) {
@@ -121,7 +121,7 @@ func (driver GoogleDrive) Link(path string, account *model.Account) (string, err
 		return "", err
 	}
 	if file.Type == conf.FOLDER {
-		return "", NotFile
+		return "", ErrNotFile
 	}
 	link := fmt.Sprintf("https://www.googleapis.com/drive/v3/files/%s?includeItemsFromAllDrives=true&supportsAllDrives=true", file.Id)
 	var e GoogleError
@@ -165,7 +165,27 @@ func (driver GoogleDrive) Proxy(c *gin.Context, account *model.Account) {
 }
 
 func (driver GoogleDrive) Preview(path string, account *model.Account) (interface{}, error) {
-	return nil, NotSupport
+	return nil, ErrNotSupport
+}
+
+func (driver GoogleDrive) MakeDir(path string, account *model.Account) error {
+	return ErrNotImplement
+}
+
+func (driver GoogleDrive) Move(src string, dst string, account *model.Account) error {
+	return ErrNotImplement
+}
+
+func (driver GoogleDrive) Copy(src string, dst string, account *model.Account) error {
+	return ErrNotImplement
+}
+
+func (driver GoogleDrive) Delete(path string, account *model.Account) error {
+	return ErrNotImplement
+}
+
+func (driver GoogleDrive) Upload(file *model.FileStream, account *model.Account) error {
+	return ErrNotImplement
 }
 
 var _ Driver = (*GoogleDrive)(nil)

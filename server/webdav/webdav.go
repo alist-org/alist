@@ -253,26 +253,11 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request, fs *FileS
 		return status, err
 	}
 	defer release()
-
-	//ctx := r.Context()
-
-	//// 尝试作为文件删除
-	//if ok, file := fs.IsFileExist(reqPath); ok {
-	//	if err := fs.Delete(ctx, []uint{}, []uint{file.ID}, false); err != nil {
-	//		return http.StatusMethodNotAllowed, err
-	//	}
-	//	return http.StatusNoContent, nil
-	//}
-	//
-	//// 尝试作为目录删除
-	//if ok, folder := fs.IsPathExist(reqPath); ok {
-	//	if err := fs.Delete(ctx, []uint{folder.ID}, []uint{}, false); err != nil {
-	//		return http.StatusMethodNotAllowed, err
-	//	}
-	//	return http.StatusNoContent, nil
-	//}
-
-	return http.StatusNotFound, nil
+	err = fs.Delete(reqPath)
+	if err != nil {
+		return http.StatusMethodNotAllowed, err
+	}
+	return http.StatusNoContent, nil
 }
 
 // OK
@@ -290,6 +275,11 @@ func (h *Handler) handlePut(w http.ResponseWriter, r *http.Request, fs *FileSyst
 	// comments in http.checkEtag.
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+
+	err = fs.Upload(ctx, r, reqPath)
+	if err != nil {
+		return http.StatusMethodNotAllowed, err
+	}
 
 	etag, err := findETag(ctx, fs, h.LockSystem, reqPath, nil)
 	if err != nil {
@@ -361,7 +351,7 @@ func (h *Handler) handleCopyMove(w http.ResponseWriter, r *http.Request, fs *Fil
 
 	ctx := r.Context()
 
-	isExist, target := isPathExist(ctx, fs, src)
+	isExist, _ := isPathExist(ctx, fs, src)
 
 	if !isExist {
 		return http.StatusNotFound, nil
@@ -390,7 +380,7 @@ func (h *Handler) handleCopyMove(w http.ResponseWriter, r *http.Request, fs *Fil
 				return http.StatusBadRequest, errInvalidDepth
 			}
 		}
-		return copyFiles(ctx, fs, target, dst, r.Header.Get("Overwrite") != "F", depth, 0)
+		return copyFiles(ctx, fs, src, dst, r.Header.Get("Overwrite") != "F", depth, 0)
 	}
 
 	// windows下，某些情况下（网盘根目录下）Office保存文件时附带的锁token只包含源文件，
@@ -409,7 +399,7 @@ func (h *Handler) handleCopyMove(w http.ResponseWriter, r *http.Request, fs *Fil
 			return http.StatusBadRequest, errInvalidDepth
 		}
 	}
-	return moveFiles(ctx, fs, target, dst, r.Header.Get("Overwrite") == "T")
+	return moveFiles(ctx, fs, src, dst, r.Header.Get("Overwrite") == "T")
 }
 
 // OK

@@ -3,14 +3,15 @@ package drivers
 import "fmt"
 
 var (
-	PathNotFound = fmt.Errorf("path not found")
-	NotFile = fmt.Errorf("not file")
-	NotImplement = fmt.Errorf("not implement")
-	NotSupport = fmt.Errorf("not support")
+	ErrPathNotFound = fmt.Errorf("path not found")
+	ErrNotFile      = fmt.Errorf("not file")
+	ErrNotImplement = fmt.Errorf("not implement")
+	ErrNotSupport   = fmt.Errorf("not support")
 )
 
 const (
-	STRING = "string"
-	SELECT = "select"
-	BOOL = "bool"
+	TypeString = "string"
+	TypeSelect = "select"
+	TypeBool   = "bool"
+	TypeNumber = "number"
 )

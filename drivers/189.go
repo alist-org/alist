@@ -62,11 +62,11 @@ func (driver Cloud189) FormatFile(file *Cloud189File) *model.File {
 //			if file.Size != -1 {
 //				return &file, err
 //			} else {
-//				return nil, NotFile
+//				return nil, ErrNotFile
 //			}
 //		}
 //	}
-//	return nil, PathNotFound
+//	return nil, ErrPathNotFound
 //}
 
 type Cloud189Down struct {

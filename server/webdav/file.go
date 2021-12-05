@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -133,6 +134,45 @@ func (fs *FileSystem) CreateDirectory(ctx context.Context, reqPath string) (inte
 	return nil, nil
 }
 
+func (fs *FileSystem) Upload(ctx context.Context, r *http.Request, rawPath string) error {
+	rawPath = utils.ParsePath(rawPath)
+	if model.AccountsCount() > 1 && rawPath == "/" {
+		return ErrNotImplemented
+	}
+	account, path_, driver, err := ParsePath(rawPath)
+	if err != nil {
+		return err
+	}
+	fileSize, err := strconv.ParseUint(r.Header.Get("Content-Length"), 10, 64)
+	if err != nil {
+		return err
+	}
+	filePath, fileName := filepath.Split(path_)
+	fileData := model.FileStream{
+		MIMEType: r.Header.Get("Content-Type"),
+		File:     r.Body,
+		Size:     fileSize,
+		Name:     fileName,
+		Path:     filePath,
+	}
+	return driver.Upload(&fileData, account)
+}
+
+func (fs *FileSystem) Delete(rawPath string) error {
+	rawPath = utils.ParsePath(rawPath)
+	if rawPath == "/" {
+		return ErrNotImplemented
+	}
+	if model.AccountsCount() > 1 && len(strings.Split(rawPath, "/")) < 2 {
+		return ErrNotImplemented
+	}
+	account, path_, driver, err := ParsePath(rawPath)
+	if err != nil {
+		return err
+	}
+	return driver.Delete(path_, account)
+}
+
 // slashClean is equivalent to but slightly more efficient than
 // path.Clean("/" + name).
 func slashClean(name string) string {
@@ -145,16 +185,55 @@ func slashClean(name string) string {
 // moveFiles moves files and/or directories from src to dst.
 //
 // See section 9.9.4 for when various HTTP status codes apply.
-func moveFiles(ctx context.Context, fs *FileSystem, src FileInfo, dst string, overwrite bool) (status int, err error) {
-
+func moveFiles(ctx context.Context, fs *FileSystem, src string, dst string, overwrite bool) (status int, err error) {
+	src = utils.ParsePath(src)
+	dst = utils.ParsePath(dst)
+	if src == dst {
+		return http.StatusMethodNotAllowed, errDestinationEqualsSource
+	}
+	srcAccount, srcPath, driver, err := ParsePath(src)
+	if err != nil {
+		return http.StatusMethodNotAllowed, err
+	}
+	dstAccount, dstPath, _, err := ParsePath(dst)
+	if err != nil {
+		return http.StatusMethodNotAllowed, err
+	}
+	if srcAccount.Name != dstAccount.Name {
+		return http.StatusMethodNotAllowed, errInvalidDestination
+	}
+	err = driver.Move(srcPath,dstPath,srcAccount)
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
 	return http.StatusNoContent, nil
 }
 
 // copyFiles copies files and/or directories from src to dst.
 //
 // See section 9.8.5 for when various HTTP status codes apply.
-func copyFiles(ctx context.Context, fs *FileSystem, src FileInfo, dst string, overwrite bool, depth int, recursion int) (status int, err error) {
-
+func copyFiles(ctx context.Context, fs *FileSystem, src string, dst string, overwrite bool, depth int, recursion int) (status int, err error) {
+	src = utils.ParsePath(src)
+	dst = utils.ParsePath(dst)
+	if src == dst {
+		return http.StatusMethodNotAllowed, errDestinationEqualsSource
+	}
+	srcAccount, srcPath, driver, err := ParsePath(src)
+	if err != nil {
+		return http.StatusMethodNotAllowed, err
+	}
+	dstAccount, dstPath, _, err := ParsePath(dst)
+	if err != nil {
+		return http.StatusMethodNotAllowed, err
+	}
+	if srcAccount.Name != dstAccount.Name {
+		// TODO 跨账号复制
+		return http.StatusMethodNotAllowed, errInvalidDestination
+	}
+	err = driver.Copy(srcPath,dstPath,srcAccount)
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
 	return http.StatusNoContent, nil
 }
 

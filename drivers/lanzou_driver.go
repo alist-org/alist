@@ -24,30 +24,30 @@ func (driver Lanzou) Items() []Item {
 		{
 			Name:     "onedrive_type",
 			Label:    "lanzou type",
-			Type:     SELECT,
+			Type:     TypeSelect,
 			Required: true,
 			Values:   "cookie,url",
 		},
 		{
 			Name:        "access_token",
 			Label:       "cookie",
-			Type:        STRING,
+			Type:        TypeString,
 			Description: "about 15 days valid",
 		},
 		{
 			Name:  "root_folder",
 			Label: "root folder file_id",
-			Type:  STRING,
+			Type:  TypeString,
 		},
 		{
 			Name:  "site_url",
 			Label: "share url",
-			Type:  STRING,
+			Type:  TypeString,
 		},
 		{
 			Name:  "password",
 			Label: "share password",
-			Type:  STRING,
+			Type:  TypeString,
 		},
 	}
 }
@@ -85,7 +85,7 @@ func (driver Lanzou) File(path string, account *model.Account) (*model.File, err
 			return &file, nil
 		}
 	}
-	return nil, PathNotFound
+	return nil, ErrPathNotFound
 }
 
 func (driver Lanzou) Files(path string, account *model.Account) ([]model.File, error) {
@@ -157,7 +157,27 @@ func (driver Lanzou) Proxy(c *gin.Context, account *model.Account) {
 }
 
 func (driver Lanzou) Preview(path string, account *model.Account) (interface{}, error) {
-	return nil, NotSupport
+	return nil, ErrNotSupport
+}
+
+func (driver *Lanzou) MakeDir(path string, account *model.Account) error {
+	return ErrNotImplement
+}
+
+func (driver *Lanzou) Move(src string, dst string, account *model.Account) error {
+	return ErrNotImplement
+}
+
+func (driver *Lanzou) Copy(src string, dst string, account *model.Account) error {
+	return ErrNotImplement
+}
+
+func (driver *Lanzou) Delete(path string, account *model.Account) error {
+	return ErrNotImplement
+}
+
+func (driver *Lanzou) Upload(file *model.FileStream, account *model.Account) error {
+	return ErrNotImplement
 }
 
 var _ Driver = (*Lanzou)(nil)

@@ -135,11 +135,11 @@ func (driver Pan123) GetFile(path string, account *model.Account) (*Pan123File, 
 			if file.Type != conf.FOLDER {
 				return &file, err
 			} else {
-				return nil, NotFile
+				return nil, ErrNotFile
 			}
 		}
 	}
-	return nil, PathNotFound
+	return nil, ErrPathNotFound
 }
 
 func init() {

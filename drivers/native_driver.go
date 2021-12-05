@@ -15,6 +15,7 @@ import (
 
 type Native struct{}
 
+
 func (driver Native) Config() DriverConfig {
 	return DriverConfig{
 		Name: "Native",
@@ -27,20 +28,20 @@ func (driver Native) Items() []Item {
 		{
 			Name:     "root_folder",
 			Label:    "root folder path",
-			Type:     "string",
+			Type:     TypeString,
 			Required: true,
 		},
 		{
 			Name:     "order_by",
 			Label:    "order_by",
-			Type:     "select",
+			Type:     TypeSelect,
 			Values:   "name,size,updated_at",
 			Required: false,
 		},
 		{
 			Name:     "order_direction",
 			Label:    "order_direction",
-			Type:     "select",
+			Type:     TypeSelect,
 			Values:   "ASC,DESC",
 			Required: false,
 		},
@@ -66,7 +67,7 @@ func (driver Native) Save(account *model.Account, old *model.Account) error {
 func (driver Native) File(path string, account *model.Account) (*model.File, error) {
 	fullPath := filepath.Join(account.RootFolder, path)
 	if !utils.Exists(fullPath) {
-		return nil, PathNotFound
+		return nil, ErrPathNotFound
 	}
 	f, err := os.Stat(fullPath)
 	if err != nil {
@@ -90,7 +91,7 @@ func (driver Native) File(path string, account *model.Account) (*model.File, err
 func (driver Native) Files(path string, account *model.Account) ([]model.File, error) {
 	fullPath := filepath.Join(account.RootFolder, path)
 	if !utils.Exists(fullPath) {
-		return nil, PathNotFound
+		return nil, ErrPathNotFound
 	}
 	files := make([]model.File, 0)
 	rawFiles, err := ioutil.ReadDir(fullPath)
@@ -155,7 +156,26 @@ func (driver Native) Proxy(c *gin.Context, account *model.Account) {
 }
 
 func (driver Native) Preview(path string, account *model.Account) (interface{}, error) {
-	return nil, NotSupport
+	return nil, ErrNotSupport
 }
 
+func (driver Native) MakeDir(path string, account *model.Account) error {
+	return ErrNotImplement
+}
+
+func (driver Native) Move(src string, dst string, account *model.Account) error {
+	return ErrNotImplement
+}
+
+func (driver Native) Copy(src string, dst string, account *model.Account) error {
+	return ErrNotImplement
+}
+
+func (driver Native) Delete(path string, account *model.Account) error {
+	return ErrNotImplement
+}
+
+func (driver Native) Upload(file *model.FileStream, account *model.Account) error {
+	return ErrNotImplement
+}
 var _ Driver = (*Native)(nil)

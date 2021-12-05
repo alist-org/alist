@@ -25,33 +25,33 @@ func (driver AliDrive) Items() []Item {
 		{
 			Name: "order_by",
 			Label: "order_by",
-			Type: "select",
+			Type: TypeSelect,
 			Values: "name,size,updated_at,created_at",
 			Required: false,
 		},
 		{
 			Name: "order_direction",
 			Label: "order_direction",
-			Type: "select",
+			Type: TypeSelect,
 			Values: "ASC,DESC",
 			Required: false,
 		},
 		{
 			Name:     "refresh_token",
 			Label:    "refresh token",
-			Type:     "string",
+			Type:     TypeString,
 			Required: true,
 		},
 		{
 			Name:     "root_folder",
 			Label:    "root folder file_id",
-			Type:     "string",
+			Type:     TypeString,
 			Required: false,
 		},
 		{
 			Name:        "limit",
 			Label:       "limit",
-			Type:        "number",
+			Type:        TypeNumber,
 			Required:    false,
 			Description: ">0 and <=200",
 		},
@@ -123,7 +123,7 @@ func (driver AliDrive) File(path string, account *model.Account) (*model.File, e
 			return &file, nil
 		}
 	}
-	return nil, PathNotFound
+	return nil, ErrPathNotFound
 }
 
 func (driver AliDrive) Files(path string, account *model.Account) ([]model.File, error) {
@@ -233,7 +233,7 @@ func (driver AliDrive) Preview(path string, account *model.Account) (interface{}
 			req["category"] = "live_transcoding"
 		}
 	default:
-		return nil, NotSupport
+		return nil, ErrNotSupport
 	}
 	_, err = aliClient.R().SetResult(&resp).SetError(&e).
 		SetHeader("authorization", "Bearer\t"+account.AccessToken).
@@ -245,6 +245,26 @@ func (driver AliDrive) Preview(path string, account *model.Account) (interface{}
 		return nil, fmt.Errorf("%s", e.Message)
 	}
 	return resp, nil
+}
+
+func (driver AliDrive) MakeDir(path string, account *model.Account) error {
+	return ErrNotImplement
+}
+
+func (driver AliDrive) Move(src string, dst string, account *model.Account) error {
+	return ErrNotImplement
+}
+
+func (driver AliDrive) Copy(src string, dst string, account *model.Account) error {
+	return ErrNotImplement
+}
+
+func (driver AliDrive) Delete(path string, account *model.Account) error {
+	return ErrNotImplement
+}
+
+func (driver AliDrive) Upload(file *model.FileStream, account *model.Account) error {
+	return ErrNotImplement
 }
 
 var _ Driver = (*AliDrive)(nil)

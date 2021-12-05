@@ -127,7 +127,7 @@ func (driver AliDrive) GetFile(path string, account *model.Account) (*AliFile, e
 			}
 		}
 	}
-	return nil, PathNotFound
+	return nil, ErrPathNotFound
 }
 
 func (driver AliDrive) RefreshToken(account *model.Account) error {

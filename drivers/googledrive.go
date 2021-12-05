@@ -144,11 +144,11 @@ func (driver GoogleDrive) GetFiles(id string, account *model.Account) ([]GoogleF
 //			if !driver.IsDir(file.MimeType) {
 //				return &file, err
 //			} else {
-//				return nil, drivers.NotFile
+//				return nil, drivers.ErrNotFile
 //			}
 //		}
 //	}
-//	return nil, drivers.PathNotFound
+//	return nil, drivers.ErrPathNotFound
 //}
 
 func init() {
