@@ -4,7 +4,6 @@ import (
 	"github.com/Xhofe/alist/model"
 	"github.com/gin-gonic/gin"
 	"github.com/go-resty/resty/v2"
-	log "github.com/sirupsen/logrus"
 	"net/http"
 )
 
@@ -49,7 +48,7 @@ type TokenResp struct {
 var driversMap = map[string]Driver{}
 
 func RegisterDriver(driver Driver) {
-	log.Infof("register driver: [%s]", driver.Config().Name)
+	//log.Infof("register driver: [%s]", driver.Config().Name)
 	driversMap[driver.Config().Name] = driver
 }
 

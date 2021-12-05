@@ -281,7 +281,8 @@ func (h *Handler) handlePut(w http.ResponseWriter, r *http.Request, fs *FileSyst
 		return http.StatusMethodNotAllowed, err
 	}
 
-	etag, err := findETag(ctx, fs, h.LockSystem, reqPath, nil)
+	_, fi := isPathExist(ctx, fs, reqPath)
+	etag, err := findETag(ctx, fs, h.LockSystem, reqPath, fi)
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}
@@ -311,7 +312,7 @@ func (h *Handler) handleMkcol(w http.ResponseWriter, r *http.Request, fs *FileSy
 		//	ctx = context.WithValue(ctx, fsctx.IgnoreDirectoryConflictCtx, true)
 		//}
 	}
-	if _, err := fs.CreateDirectory(ctx, reqPath); err != nil {
+	if err := fs.CreateDirectory(ctx, reqPath); err != nil {
 		return http.StatusConflict, err
 	}
 	return http.StatusCreated, nil

@@ -7,6 +7,7 @@ import (
 	"github.com/Xhofe/alist/utils"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -15,10 +16,9 @@ import (
 
 type Native struct{}
 
-
 func (driver Native) Config() DriverConfig {
 	return DriverConfig{
-		Name: "Native",
+		Name:      "Native",
 		OnlyProxy: true,
 	}
 }
@@ -160,22 +160,70 @@ func (driver Native) Preview(path string, account *model.Account) (interface{}, 
 }
 
 func (driver Native) MakeDir(path string, account *model.Account) error {
-	return ErrNotImplement
+	fullPath := filepath.Join(account.RootFolder, path)
+	err := os.MkdirAll(fullPath, 0700)
+	return err
 }
 
 func (driver Native) Move(src string, dst string, account *model.Account) error {
-	return ErrNotImplement
+	fullSrc := filepath.Join(account.RootFolder, src)
+	fullDst := filepath.Join(account.RootFolder, dst)
+	return os.Rename(fullSrc, fullDst)
 }
 
 func (driver Native) Copy(src string, dst string, account *model.Account) error {
-	return ErrNotImplement
+	fullSrc := filepath.Join(account.RootFolder, src)
+	fullDst := filepath.Join(account.RootFolder, dst)
+	srcFile, err := driver.File(src, account)
+	if err != nil {
+		return err
+	}
+	dstFile, err := driver.File(dst, account)
+	if err == nil {
+		if !dstFile.IsDir() {
+			return ErrNotSupport
+		}
+	}
+	if srcFile.IsDir() {
+		return driver.CopyDir(fullSrc, fullDst)
+	}
+	return driver.CopyFile(fullSrc, fullDst)
 }
 
 func (driver Native) Delete(path string, account *model.Account) error {
-	return ErrNotImplement
+	fullPath := filepath.Join(account.RootFolder, path)
+	file, err := driver.File(path, account)
+	if err != nil {
+		return err
+	}
+	if file.IsDir() {
+		return os.RemoveAll(fullPath)
+	}
+	return os.Remove(fullPath)
 }
 
 func (driver Native) Upload(file *model.FileStream, account *model.Account) error {
-	return ErrNotImplement
+	fullPath := filepath.Join(account.RootFolder, file.Path, file.Name)
+	_, err := driver.File(filepath.Join(file.Path,file.Name), account)
+	if err == nil {
+		// TODO overwrite?
+	}
+	basePath := filepath.Dir(fullPath)
+	if !utils.Exists(basePath) {
+		err := os.MkdirAll(basePath, 0744)
+		if err != nil {
+			return err
+		}
+	}
+	out, err := os.Create(fullPath)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = out.Close()
+	}()
+	_, err = io.Copy(out, file)
+	return err
 }
+
 var _ Driver = (*Native)(nil)

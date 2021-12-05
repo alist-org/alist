@@ -130,8 +130,19 @@ func (fs *FileSystem) Link(r *http.Request, rawPath string) (string, error) {
 	return link, err
 }
 
-func (fs *FileSystem) CreateDirectory(ctx context.Context, reqPath string) (interface{}, error) {
-	return nil, nil
+func (fs *FileSystem) CreateDirectory(ctx context.Context, rawPath string) error {
+	rawPath = utils.ParsePath(rawPath)
+	if rawPath == "/" {
+		return ErrNotImplemented
+	}
+	if model.AccountsCount() > 1 && len(strings.Split(rawPath, "/")) < 2 {
+		return ErrNotImplemented
+	}
+	account, path_, driver, err := ParsePath(rawPath)
+	if err != nil {
+		return err
+	}
+	return driver.MakeDir(path_,account)
 }
 
 func (fs *FileSystem) Upload(ctx context.Context, r *http.Request, rawPath string) error {
