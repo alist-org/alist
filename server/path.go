@@ -11,8 +11,8 @@ import (
 )
 
 type PathReq struct {
-	Path     string `json:"ParentPath"`
-	Password string `json:"Password"`
+	Path     string `json:"path"`
+	Password string `json:"password"`
 }
 
 func Path(c *gin.Context) {

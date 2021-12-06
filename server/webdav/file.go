@@ -15,7 +15,6 @@ import (
 	"net/http"
 	"path"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -154,10 +153,11 @@ func (fs *FileSystem) Upload(ctx context.Context, r *http.Request, rawPath strin
 	if err != nil {
 		return err
 	}
-	fileSize, err := strconv.ParseUint(r.Header.Get("Content-Length"), 10, 64)
-	if err != nil {
-		return err
-	}
+	//fileSize, err := strconv.ParseUint(r.Header.Get("Content-Length"), 10, 64)
+	fileSize := uint64(r.ContentLength)
+	//if err != nil {
+	//	return err
+	//}
 	filePath, fileName := filepath.Split(path_)
 	fileData := model.FileStream{
 		MIMEType:   r.Header.Get("Content-Type"),

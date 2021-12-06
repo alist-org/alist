@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/robfig/cron/v3"
 	log "github.com/sirupsen/logrus"
+	"io"
 	"math"
 	"path/filepath"
 )
@@ -317,6 +318,7 @@ func (driver AliDrive) Copy(src string, dst string, account *model.Account) erro
 	return base.ErrNotSupport
 }
 
+// TODO wrong
 func (driver AliDrive) Delete(path string, account *model.Account) error {
 	file, err := driver.File(path, account)
 	if err != nil {
@@ -350,12 +352,18 @@ func (driver AliDrive) Delete(path string, account *model.Account) error {
 }
 
 type UploadResp struct {
+	FileId       string `json:"file_id"`
+	UploadId     string `json:"upload_id"`
+	PartInfoList []struct {
+		UploadUrl string `json:"upload_url"`
+	} `json:"part_info_list"`
 }
 
+// TODO wrong
 func (driver AliDrive) Upload(file *model.FileStream, account *model.Account) error {
-	const DEFAULT int64 = 10485760
-	var count = math.Ceil(float64(file.GetSize()) / float64(DEFAULT))
-	//var finish int64 = 0
+	const DEFAULT uint64 = 10485760
+	var count = int64(math.Ceil(float64(file.GetSize()) / float64(DEFAULT)))
+	var finish uint64 = 0
 	parentFile, err := driver.File(file.ParentPath, account)
 	if err != nil {
 		return err
@@ -363,7 +371,8 @@ func (driver AliDrive) Upload(file *model.FileStream, account *model.Account) er
 	var resp UploadResp
 	var e AliRespError
 	partInfoList := make([]base.Json, 0)
-	for i := 0; i < int(count); i++ {
+	var i int64
+	for i = 0; i < count; i++ {
 		partInfoList = append(partInfoList, base.Json{
 			"part_number": i + 1,
 		})
@@ -377,12 +386,13 @@ func (driver AliDrive) Upload(file *model.FileStream, account *model.Account) er
 			"drive_id":          account.DriveId,
 			"name":              file.GetFileName(),
 			"parent_file_id":    parentFile.Id,
-			"part_info_list": partInfoList,
+			"part_info_list":    partInfoList,
 			//proof_code
 			"proof_version": "v1",
 			"size":          file.GetSize(),
 			"type":          "file",
-		}).Post("https://api.aliyundrive.com/v2/recyclebin/trash")
+		}).Post("https://api.aliyundrive.com/adrive/v2/file/createWithFolders")
+	log.Debugf("%+v\n%+v", resp, e)
 	if e.Code != "" {
 		if e.Code == "AccessTokenInvalid" {
 			err = driver.RefreshToken(account)
@@ -395,7 +405,53 @@ func (driver AliDrive) Upload(file *model.FileStream, account *model.Account) er
 		}
 		return fmt.Errorf("%s", e.Message)
 	}
-	return base.ErrNotImplement
+	var byteSize uint64
+	for i = 0; i < count; i++ {
+		byteSize = file.GetSize() - finish
+		if DEFAULT < byteSize {
+			byteSize = DEFAULT
+		}
+		log.Debugf("%d,%d",byteSize,finish)
+		byteData := make([]byte, byteSize)
+		//n, err := io.ReadFull(file, byteData)
+		//n, err := file.Read(byteData)
+		byteData, err := io.ReadAll(file)
+		n := len(byteData)
+		log.Debug(err,n)
+		if err != nil {
+			return err
+		}
+
+		finish += uint64(n)
+		_, err = aliClient.R().SetBody(byteData).Put(resp.PartInfoList[i].UploadUrl)
+		if err != nil {
+			return err
+		}
+	}
+	var resp2 base.Json
+	_,err = aliClient.R().SetResult(&resp2).SetError(&e).
+		SetHeader("authorization", "Bearer\t"+account.AccessToken).
+		SetBody(base.Json{
+		"drive_id": account.DriveId,
+		"file_id": resp.FileId,
+		"upload_id": resp.UploadId,
+	}).Post("https://api.aliyundrive.com/v2/file/complete")
+	if e.Code != "" {
+		//if e.Code == "AccessTokenInvalid" {
+		//	err = driver.RefreshToken(account)
+		//	if err != nil {
+		//		return err
+		//	} else {
+		//		_ = model.SaveAccount(account)
+		//		return driver.Upload(file, account)
+		//	}
+		//}
+		return fmt.Errorf("%s", e.Message)
+	}
+	if resp2["file_id"] == resp.FileId {
+		return nil
+	}
+	return fmt.Errorf("%+v", resp2)
 }
 
 var _ base.Driver = (*AliDrive)(nil)
