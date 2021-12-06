@@ -134,7 +134,7 @@ func (driver GoogleDrive) GetFiles(id string, account *model.Account) ([]GoogleF
 //func (driver GoogleDrive) GetFile(path string, account *model.Account) (*GoogleFile, error) {
 //	dir, name := filepath.Split(path)
 //	dir = utils.ParsePath(dir)
-//	_, _, err := driver.Path(dir, account)
+//	_, _, err := driver.ParentPath(dir, account)
 //	if err != nil {
 //		return nil, err
 //	}

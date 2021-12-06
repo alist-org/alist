@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/robfig/cron/v3"
 	log "github.com/sirupsen/logrus"
+	"math"
 	"path/filepath"
 )
 
@@ -16,7 +17,7 @@ type AliDrive struct{}
 
 func (driver AliDrive) Config() base.DriverConfig {
 	return base.DriverConfig{
-		Name: "AliDrive",
+		Name:      "AliDrive",
 		OnlyProxy: false,
 	}
 }
@@ -130,7 +131,7 @@ func (driver AliDrive) File(path string, account *model.Account) (*model.File, e
 func (driver AliDrive) Files(path string, account *model.Account) ([]model.File, error) {
 	path = utils.ParsePath(path)
 	var rawFiles []AliFile
-	cache, err := conf.Cache.Get(conf.Ctx, fmt.Sprintf("%s%s", account.Name, path))
+	cache, err := base.GetCache(path, account)
 	if err == nil {
 		rawFiles, _ = cache.([]AliFile)
 	} else {
@@ -143,7 +144,7 @@ func (driver AliDrive) Files(path string, account *model.Account) ([]model.File,
 			return nil, err
 		}
 		if len(rawFiles) > 0 {
-			_ = conf.Cache.Set(conf.Ctx, fmt.Sprintf("%s%s", account.Name, path), rawFiles, nil)
+			_ = base.SetCache(path, rawFiles, account)
 		}
 	}
 	files := make([]model.File, 0)
@@ -249,22 +250,151 @@ func (driver AliDrive) Preview(path string, account *model.Account) (interface{}
 }
 
 func (driver AliDrive) MakeDir(path string, account *model.Account) error {
-	return base.ErrNotImplement
+	dir, name := filepath.Split(path)
+	parentFile, err := driver.File(dir, account)
+	if err != nil {
+		return err
+	}
+	if !parentFile.IsDir() {
+		return base.ErrNotFolder
+	}
+	var resp base.Json
+	var e AliRespError
+	_, err = aliClient.R().SetResult(&resp).SetError(&e).
+		SetHeader("authorization", "Bearer\t"+account.AccessToken).
+		SetBody(base.Json{
+			"check_name_mode": "refuse",
+			"drive_id":        account.DriveId,
+			"name":            name,
+			"parent_file_id":  parentFile.Id,
+			"type":            "folder",
+		}).Post("https://api.aliyundrive.com/adrive/v2/file/createWithFolders")
+	if e.Code != "" {
+		if e.Code == "AccessTokenInvalid" {
+			err = driver.RefreshToken(account)
+			if err != nil {
+				return err
+			} else {
+				_ = model.SaveAccount(account)
+				return driver.MakeDir(path, account)
+			}
+		}
+		return fmt.Errorf("%s", e.Message)
+	}
+	if resp["file_name"] == name {
+		_ = base.DeleteCache(dir, account)
+		return nil
+	}
+	return fmt.Errorf("%+v", resp)
 }
 
 func (driver AliDrive) Move(src string, dst string, account *model.Account) error {
-	return base.ErrNotImplement
+	srcDir, _ := filepath.Split(src)
+	dstDir, dstName := filepath.Split(dst)
+	srcFile, err := driver.File(src, account)
+	if err != nil {
+		return err
+	}
+	// rename
+	if srcDir == dstDir {
+		err = driver.Rename(srcFile.Id, dstName, account)
+	} else {
+		// move
+		dstDirFile, err := driver.File(dstDir, account)
+		if err != nil {
+			return err
+		}
+		err = driver.Batch(srcFile.Id, dstDirFile.Id, account)
+	}
+	if err != nil {
+		_ = base.DeleteCache(srcDir, account)
+		_ = base.DeleteCache(dstDir, account)
+	}
+	return err
 }
 
 func (driver AliDrive) Copy(src string, dst string, account *model.Account) error {
-	return base.ErrNotImplement
+	return base.ErrNotSupport
 }
 
 func (driver AliDrive) Delete(path string, account *model.Account) error {
-	return base.ErrNotImplement
+	file, err := driver.File(path, account)
+	if err != nil {
+		return err
+	}
+	var resp base.Json
+	var e AliRespError
+	_, err = aliClient.R().SetResult(&resp).SetError(&e).
+		SetHeader("authorization", "Bearer\t"+account.AccessToken).
+		SetBody(base.Json{
+			"drive_id": account.DriveId,
+			"file_id":  file.Id,
+		}).Post("https://api.aliyundrive.com/v2/recyclebin/trash")
+	if e.Code != "" {
+		if e.Code == "AccessTokenInvalid" {
+			err = driver.RefreshToken(account)
+			if err != nil {
+				return err
+			} else {
+				_ = model.SaveAccount(account)
+				return driver.Delete(path, account)
+			}
+		}
+		return fmt.Errorf("%s", e.Message)
+	}
+	if resp["file_id"] == file.Id {
+		_ = base.DeleteCache(utils.Dir(path), account)
+		return nil
+	}
+	return fmt.Errorf("%+v", resp)
+}
+
+type UploadResp struct {
 }
 
 func (driver AliDrive) Upload(file *model.FileStream, account *model.Account) error {
+	const DEFAULT int64 = 10485760
+	var count = math.Ceil(float64(file.GetSize()) / float64(DEFAULT))
+	//var finish int64 = 0
+	parentFile, err := driver.File(file.ParentPath, account)
+	if err != nil {
+		return err
+	}
+	var resp UploadResp
+	var e AliRespError
+	partInfoList := make([]base.Json, 0)
+	for i := 0; i < int(count); i++ {
+		partInfoList = append(partInfoList, base.Json{
+			"part_number": i + 1,
+		})
+	}
+	_, err = aliClient.R().SetResult(&resp).SetError(&e).
+		SetHeader("authorization", "Bearer\t"+account.AccessToken).
+		SetBody(base.Json{
+			"check_name_mode": "auto_rename",
+			// content_hash
+			"content_hash_name": "none",
+			"drive_id":          account.DriveId,
+			"name":              file.GetFileName(),
+			"parent_file_id":    parentFile.Id,
+			"part_info_list": partInfoList,
+			//proof_code
+			"proof_version": "v1",
+			"size":          file.GetSize(),
+			"type":          "file",
+		}).Post("https://api.aliyundrive.com/v2/recyclebin/trash")
+	if e.Code != "" {
+		if e.Code == "AccessTokenInvalid" {
+			err = driver.RefreshToken(account)
+			if err != nil {
+				return err
+			} else {
+				_ = model.SaveAccount(account)
+				return driver.Upload(file, account)
+			}
+		}
+		return fmt.Errorf("%s", e.Message)
+	}
 	return base.ErrNotImplement
 }
 

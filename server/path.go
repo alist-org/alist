@@ -11,7 +11,7 @@ import (
 )
 
 type PathReq struct {
-	Path     string `json:"Path"`
+	Path     string `json:"ParentPath"`
 	Password string `json:"Password"`
 }
 

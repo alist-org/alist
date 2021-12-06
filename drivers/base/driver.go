@@ -41,11 +41,6 @@ type Item struct {
 	Description string `json:"description"`
 }
 
-type TokenResp struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-}
-
 var driversMap = map[string]Driver{}
 
 func RegisterDriver(driver Driver) {
@@ -68,14 +63,14 @@ func GetDrivers() map[string][]Item {
 				{
 					Name:        "proxy",
 					Label:       "proxy",
-					Type:        "bool",
+					Type:        TypeBool,
 					Required:    true,
 					Description: "allow proxy",
 				},
 				{
 					Name:        "webdav_proxy",
 					Label:       "webdav proxy",
-					Type:        "bool",
+					Type:        TypeBool,
 					Required:    true,
 					Description: "Transfer the WebDAV of this account through the server",
 				},
@@ -84,8 +79,6 @@ func GetDrivers() map[string][]Item {
 	}
 	return res
 }
-
-type Json map[string]interface{}
 
 var NoRedirectClient *resty.Client
 

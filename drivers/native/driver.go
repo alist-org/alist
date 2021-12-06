@@ -204,8 +204,8 @@ func (driver Native) Delete(path string, account *model.Account) error {
 }
 
 func (driver Native) Upload(file *model.FileStream, account *model.Account) error {
-	fullPath := filepath.Join(account.RootFolder, file.Path, file.Name)
-	_, err := driver.File(filepath.Join(file.Path,file.Name), account)
+	fullPath := filepath.Join(account.RootFolder, file.ParentPath, file.Name)
+	_, err := driver.File(filepath.Join(file.ParentPath,file.Name), account)
 	if err == nil {
 		// TODO overwrite?
 	}

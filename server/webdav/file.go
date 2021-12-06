@@ -23,16 +23,16 @@ import (
 type FileSystem struct{}
 
 func ParsePath(rawPath string) (*model.Account, string, base.Driver, error) {
-	var path, name string
+	var internalPath, name string
 	switch model.AccountsCount() {
 	case 0:
 		return nil, "", nil, fmt.Errorf("no accounts,please add one first")
 	case 1:
-		path = rawPath
+		internalPath = rawPath
 		break
 	default:
 		paths := strings.Split(rawPath, "/")
-		path = "/" + strings.Join(paths[2:], "/")
+		internalPath = "/" + strings.Join(paths[2:], "/")
 		name = paths[1]
 	}
 	account, ok := model.GetAccount(name)
@@ -43,7 +43,7 @@ func ParsePath(rawPath string) (*model.Account, string, base.Driver, error) {
 	if !ok {
 		return nil, "", nil, fmt.Errorf("no [%s] driver", account.Type)
 	}
-	return &account, path, driver, nil
+	return &account, internalPath, driver, nil
 }
 
 func (fs *FileSystem) File(rawPath string) (*model.File, error) {
@@ -160,11 +160,11 @@ func (fs *FileSystem) Upload(ctx context.Context, r *http.Request, rawPath strin
 	}
 	filePath, fileName := filepath.Split(path_)
 	fileData := model.FileStream{
-		MIMEType: r.Header.Get("Content-Type"),
-		File:     r.Body,
-		Size:     fileSize,
-		Name:     fileName,
-		Path:     filePath,
+		MIMEType:   r.Header.Get("Content-Type"),
+		File:       r.Body,
+		Size:       fileSize,
+		Name:       fileName,
+		ParentPath: filePath,
 	}
 	return driver.Upload(&fileData, account)
 }

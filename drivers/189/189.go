@@ -52,7 +52,7 @@ func (driver Cloud189) FormatFile(file *Cloud189File) *model.File {
 //func (c Cloud189) GetFile(path string, account *model.Account) (*Cloud189File, error) {
 //	dir, name := filepath.Split(path)
 //	dir = utils.ParsePath(dir)
-//	_, _, err := c.Path(dir, account)
+//	_, _, err := c.ParentPath(dir, account)
 //	if err != nil {
 //		return nil, err
 //	}

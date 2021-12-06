@@ -1,6 +1,7 @@
 package alidrive
 
 import (
+	"errors"
 	"fmt"
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/drivers/base"
@@ -9,6 +10,7 @@ import (
 	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -154,6 +156,81 @@ func (driver AliDrive) RefreshToken(account *model.Account) error {
 	}
 	account.RefreshToken, account.AccessToken = resp.RefreshToken, resp.AccessToken
 	return nil
+}
+
+func (driver AliDrive) Rename(fileId, name string, account *model.Account) error {
+	var resp base.Json
+	var e AliRespError
+	_, err := aliClient.R().SetResult(&resp).SetError(&e).
+		SetHeader("authorization", "Bearer\t"+account.AccessToken).
+		SetBody(base.Json{
+			"check_name_mode": "refuse",
+			"drive_id":        account.DriveId,
+			"file_id":         fileId,
+			"name":            name,
+		}).Post("https://api.aliyundrive.com/v3/file/update")
+	if err != nil {
+		return err
+	}
+	if e.Code != "" {
+		if e.Code == "AccessTokenInvalid" {
+			err = driver.RefreshToken(account)
+			if err != nil {
+				return err
+			} else {
+				_ = model.SaveAccount(account)
+				return driver.Rename(fileId, name, account)
+			}
+		}
+		return fmt.Errorf("%s", e.Message)
+	}
+	if resp["name"] == name {
+		return nil
+	}
+	return fmt.Errorf("%+v", resp)
+}
+
+func (driver AliDrive) Batch(srcId,dstId string, account *model.Account) error {
+	var e AliRespError
+	res, err := aliClient.R().SetError(&e).
+		SetHeader("authorization", "Bearer\t"+account.AccessToken).
+		SetBody(base.Json{
+			"requests": []base.Json{
+				{
+					"headers": base.Json{
+						"Content-Type": "application/json",
+					},
+					"method":"POST",
+					"id":srcId,
+					"body":base.Json{
+						"drive_id": account.DriveId,
+						"file_id":srcId,
+						"to_drive_id":account.DriveId,
+						"to_parent_file_id":dstId,
+					},
+				},
+			},
+			"resource": "file",
+		}).Post("https://api.aliyundrive.com/v3/batch")
+	if err != nil {
+		return err
+	}
+	if e.Code != "" {
+		if e.Code == "AccessTokenInvalid" {
+			err = driver.RefreshToken(account)
+			if err != nil {
+				return err
+			} else {
+				_ = model.SaveAccount(account)
+				return driver.Batch(srcId, dstId, account)
+			}
+		}
+		return fmt.Errorf("%s", e.Message)
+	}
+	if strings.Contains(res.String(), `"status":200`) {
+		return nil
+	}
+	return errors.New(res.String())
 }
 
 func init() {

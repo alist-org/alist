@@ -3,11 +3,11 @@ package model
 import "io"
 
 type FileStream struct {
-	File     io.ReadCloser
-	Size     uint64
-	Path     string
-	Name     string
-	MIMEType string
+	File       io.ReadCloser
+	Size       uint64
+	ParentPath string
+	Name       string
+	MIMEType   string
 }
 
 func (file FileStream) Read(p []byte) (n int, err error) {
@@ -30,6 +30,6 @@ func (file FileStream) GetFileName() string {
 	return file.Name
 }
 
-func (file FileStream) GetPath() string {
-	return file.Path
+func (file FileStream) GetParentPath() string {
+	return file.ParentPath
 }

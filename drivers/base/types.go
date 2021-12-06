@@ -1,12 +1,15 @@
 package base
 
-import "fmt"
+import (
+	"errors"
+)
 
 var (
-	ErrPathNotFound = fmt.Errorf("path not found")
-	ErrNotFile      = fmt.Errorf("not file")
-	ErrNotImplement = fmt.Errorf("not implement")
-	ErrNotSupport   = fmt.Errorf("not support")
+	ErrPathNotFound = errors.New("path not found")
+	ErrNotFile      = errors.New("not file")
+	ErrNotImplement = errors.New("not implement")
+	ErrNotSupport   = errors.New("not support")
+	ErrNotFolder    = errors.New("not a folder")
 )
 
 const (
@@ -15,3 +18,10 @@ const (
 	TypeBool   = "bool"
 	TypeNumber = "number"
 )
+
+type Json map[string]interface{}
+
+type TokenResp struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+}
