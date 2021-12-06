@@ -1,7 +1,8 @@
-package drivers
+package native
 
 import (
 	"fmt"
+	"github.com/Xhofe/alist/drivers/base"
 	"io"
 	"io/ioutil"
 	"os"
@@ -69,5 +70,5 @@ func (driver *Native) CopyDir(src string, dst string) error {
 }
 
 func init() {
-	RegisterDriver(&Native{})
+	base.RegisterDriver(&Native{})
 }

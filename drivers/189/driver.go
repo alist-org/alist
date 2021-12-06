@@ -1,8 +1,9 @@
-package drivers
+package _89
 
 import (
 	"fmt"
 	"github.com/Xhofe/alist/conf"
+	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
 	"github.com/gin-gonic/gin"
@@ -12,46 +13,46 @@ import (
 
 type Cloud189 struct {}
 
-func (driver Cloud189) Config() DriverConfig {
-	return DriverConfig{
+func (driver Cloud189) Config() base.DriverConfig {
+	return base.DriverConfig{
 		Name: "189Cloud",
 		OnlyProxy: false,
 	}
 }
 
-func (driver Cloud189) Items() []Item {
-	return []Item{
+func (driver Cloud189) Items() []base.Item {
+	return []base.Item{
 		{
 			Name:        "username",
 			Label:       "username",
-			Type:        TypeString,
+			Type:        base.TypeString,
 			Required:    true,
 			Description: "account username/phone number",
 		},
 		{
 			Name:        "password",
 			Label:       "password",
-			Type:        TypeString,
+			Type:        base.TypeString,
 			Required:    true,
 			Description: "account password",
 		},
 		{
 			Name:     "root_folder",
 			Label:    "root folder file_id",
-			Type:     TypeString,
+			Type:     base.TypeString,
 			Required: true,
 		},
 		{
 			Name:     "order_by",
 			Label:    "order_by",
-			Type:     TypeSelect,
+			Type:     base.TypeSelect,
 			Values:   "name,size,lastOpTime,createdDate",
 			Required: true,
 		},
 		{
 			Name:     "order_direction",
 			Label:    "desc",
-			Type:     TypeSelect,
+			Type:     base.TypeSelect,
 			Values:   "true,false",
 			Required: true,
 		},
@@ -97,7 +98,7 @@ func (driver Cloud189) File(path string, account *model.Account) (*model.File, e
 			return &file, nil
 		}
 	}
-	return nil, ErrPathNotFound
+	return nil, base.ErrPathNotFound
 }
 
 func (driver Cloud189) Files(path string, account *model.Account) ([]model.File, error) {
@@ -132,7 +133,7 @@ func (driver Cloud189) Link(path string, account *model.Account) (string, error)
 		return "", err
 	}
 	if file.Type == conf.FOLDER {
-		return "", ErrNotFile
+		return "", base.ErrNotFile
 	}
 	client, ok := client189Map[account.Name]
 	if !ok {
@@ -161,7 +162,7 @@ func (driver Cloud189) Link(path string, account *model.Account) (string, error)
 	if resp.ResCode != 0 {
 		return "", fmt.Errorf(resp.ResMessage)
 	}
-	res, err := NoRedirectClient.R().Get(resp.FileDownloadUrl)
+	res, err := base.NoRedirectClient.R().Get(resp.FileDownloadUrl)
 	if err != nil {
 		return "", err
 	}
@@ -194,28 +195,28 @@ func (driver Cloud189) Proxy(ctx *gin.Context, account *model.Account) {
 }
 
 func (driver Cloud189) Preview(path string, account *model.Account) (interface{}, error) {
-	return nil, ErrNotSupport
+	return nil, base.ErrNotSupport
 }
 
 
 func (driver Cloud189) MakeDir(path string, account *model.Account) error {
-	return ErrNotImplement
+	return base.ErrNotImplement
 }
 
 func (driver Cloud189) Move(src string, dst string, account *model.Account) error {
-	return ErrNotImplement
+	return base.ErrNotImplement
 }
 
 func (driver Cloud189) Copy(src string, dst string, account *model.Account) error {
-	return ErrNotImplement
+	return base.ErrNotImplement
 }
 
 func (driver Cloud189) Delete(path string, account *model.Account) error {
-	return ErrNotImplement
+	return base.ErrNotImplement
 }
 
 func (driver Cloud189) Upload(file *model.FileStream, account *model.Account) error {
-	return ErrNotImplement
+	return base.ErrNotImplement
 }
 
-var _ Driver = (*Cloud189)(nil)
+var _ base.Driver = (*Cloud189)(nil)

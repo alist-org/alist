@@ -1,8 +1,9 @@
-package drivers
+package _23
 
 import (
 	"fmt"
 	"github.com/Xhofe/alist/conf"
+	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
 	"github.com/gin-gonic/gin"
@@ -13,46 +14,46 @@ import (
 
 type Pan123 struct {}
 
-func (driver Pan123) Config() DriverConfig {
-	return DriverConfig{
+func (driver Pan123) Config() base.DriverConfig {
+	return base.DriverConfig{
 		Name: "123Pan",
 		OnlyProxy: false,
 	}
 }
 
-func (driver Pan123) Items() []Item {
-	return []Item{
+func (driver Pan123) Items() []base.Item {
+	return []base.Item{
 		{
 			Name:        "username",
 			Label:       "username",
-			Type:        TypeString,
+			Type:        base.TypeString,
 			Required:    true,
 			Description: "account username/phone number",
 		},
 		{
 			Name:        "password",
 			Label:       "password",
-			Type:        TypeString,
+			Type:        base.TypeString,
 			Required:    true,
 			Description: "account password",
 		},
 		{
 			Name:     "root_folder",
 			Label:    "root folder file_id",
-			Type:     TypeString,
+			Type:     base.TypeString,
 			Required: false,
 		},
 		{
 			Name:     "order_by",
 			Label:    "order_by",
-			Type:     TypeSelect,
+			Type:     base.TypeSelect,
 			Values:   "name,fileId,updateAt,createAt",
 			Required: true,
 		},
 		{
 			Name:     "order_direction",
 			Label:    "order_direction",
-			Type:     TypeSelect,
+			Type:     base.TypeSelect,
 			Values:   "asc,desc",
 			Required: true,
 		},
@@ -89,7 +90,7 @@ func (driver Pan123) File(path string, account *model.Account) (*model.File, err
 			return &file, nil
 		}
 	}
-	return nil, ErrPathNotFound
+	return nil, base.ErrPathNotFound
 }
 
 func (driver Pan123) Files(path string, account *model.Account) ([]model.File, error) {
@@ -125,7 +126,7 @@ func (driver Pan123) Link(path string, account *model.Account) (string, error) {
 	}
 	var resp Pan123DownResp
 	_, err = pan123Client.R().SetResult(&resp).SetHeader("authorization", "Bearer "+account.AccessToken).
-		SetBody(Json{
+		SetBody(base.Json{
 			"driveId":   0,
 			"etag":      file.Etag,
 			"fileId":    file.FileId,
@@ -152,7 +153,7 @@ func (driver Pan123) Link(path string, account *model.Account) (string, error) {
 		return "", err
 	}
 	u_ := fmt.Sprintf("https://%s%s",u.Host,u.Path)
-	res, err := NoRedirectClient.R().SetQueryParamsFromValues(u.Query()).Get(u_)
+	res, err := base.NoRedirectClient.R().SetQueryParamsFromValues(u.Query()).Get(u_)
 	if err != nil {
 		return "", err
 	}
@@ -186,27 +187,27 @@ func (driver Pan123) Proxy(c *gin.Context, account *model.Account) {
 }
 
 func (driver Pan123) Preview(path string, account *model.Account) (interface{}, error) {
-	return nil, ErrNotSupport
+	return nil, base.ErrNotSupport
 }
 
 func (driver Pan123) MakeDir(path string, account *model.Account) error {
-	return ErrNotImplement
+	return base.ErrNotImplement
 }
 
 func (driver Pan123) Move(src string, dst string, account *model.Account) error {
-	return ErrNotImplement
+	return base.ErrNotImplement
 }
 
 func (driver Pan123) Copy(src string, dst string, account *model.Account) error {
-	return ErrNotImplement
+	return base.ErrNotImplement
 }
 
 func (driver Pan123) Delete(path string, account *model.Account) error {
-	return ErrNotImplement
+	return base.ErrNotImplement
 }
 
 func (driver Pan123) Upload(file *model.FileStream, account *model.Account) error {
-	return ErrNotImplement
+	return base.ErrNotImplement
 }
 
-var _ Driver = (*Pan123)(nil)
+var _ base.Driver = (*Pan123)(nil)

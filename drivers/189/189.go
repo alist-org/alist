@@ -1,4 +1,4 @@
-package drivers
+package _89
 
 import (
 	"crypto/rand"
@@ -9,6 +9,7 @@ import (
 	"encoding/pem"
 	"fmt"
 	"github.com/Xhofe/alist/conf"
+	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
 	"github.com/go-resty/resty/v2"
@@ -312,6 +313,6 @@ func b64tohex(a string) string {
 }
 
 func init() {
-	RegisterDriver(&Cloud189{})
+	base.RegisterDriver(&Cloud189{})
 	client189Map = make(map[string]*resty.Client, 0)
 }

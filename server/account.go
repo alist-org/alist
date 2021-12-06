@@ -2,7 +2,7 @@ package server
 
 import (
 	"fmt"
-	"github.com/Xhofe/alist/drivers"
+	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
@@ -25,7 +25,7 @@ func CreateAccount(c *gin.Context) {
 		ErrorResp(c, err, 400)
 		return
 	}
-	driver, ok := drivers.GetDriver(req.Type)
+	driver, ok := base.GetDriver(req.Type)
 	if !ok {
 		ErrorResp(c, fmt.Errorf("no [%s] driver", req.Type), 400)
 		return
@@ -51,7 +51,7 @@ func SaveAccount(c *gin.Context) {
 		ErrorResp(c, err, 400)
 		return
 	}
-	driver, ok := drivers.GetDriver(req.Type)
+	driver, ok := base.GetDriver(req.Type)
 	if !ok {
 		ErrorResp(c, fmt.Errorf("no [%s] driver", req.Type), 400)
 		return

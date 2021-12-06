@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/Xhofe/alist/bootstrap"
 	"github.com/Xhofe/alist/conf"
+	_ "github.com/Xhofe/alist/drivers"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/server"
 	"github.com/gin-gonic/gin"
@@ -20,7 +21,7 @@ func init() {
 }
 
 func Init() bool {
-	bootstrap.InitLog()
+	//bootstrap.InitLog()
 	bootstrap.InitConf()
 	bootstrap.InitCron()
 	bootstrap.InitModel()

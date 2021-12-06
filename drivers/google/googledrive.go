@@ -1,8 +1,9 @@
-package drivers
+package google
 
 import (
 	"fmt"
 	"github.com/Xhofe/alist/conf"
+	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
 	"github.com/go-resty/resty/v2"
@@ -20,7 +21,7 @@ type GoogleTokenError struct {
 
 func (driver GoogleDrive) RefreshToken(account *model.Account) error {
 	url := "https://www.googleapis.com/oauth2/v4/token"
-	var resp TokenResp
+	var resp base.TokenResp
 	var e GoogleTokenError
 	_, err := googleClient.R().SetResult(&resp).SetError(&e).
 		SetFormData(map[string]string{
@@ -152,6 +153,6 @@ func (driver GoogleDrive) GetFiles(id string, account *model.Account) ([]GoogleF
 //}
 
 func init() {
-	RegisterDriver(&GoogleDrive{})
+	base.RegisterDriver(&GoogleDrive{})
 	googleClient.SetRetryCount(3)
 }

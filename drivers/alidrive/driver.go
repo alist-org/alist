@@ -1,8 +1,9 @@
-package drivers
+package alidrive
 
 import (
 	"fmt"
 	"github.com/Xhofe/alist/conf"
+	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
 	"github.com/gin-gonic/gin"
@@ -13,45 +14,45 @@ import (
 
 type AliDrive struct{}
 
-func (driver AliDrive) Config() DriverConfig {
-	return DriverConfig{
+func (driver AliDrive) Config() base.DriverConfig {
+	return base.DriverConfig{
 		Name: "AliDrive",
 		OnlyProxy: false,
 	}
 }
 
-func (driver AliDrive) Items() []Item {
-	return []Item{
+func (driver AliDrive) Items() []base.Item {
+	return []base.Item{
 		{
-			Name: "order_by",
-			Label: "order_by",
-			Type: TypeSelect,
-			Values: "name,size,updated_at,created_at",
+			Name:     "order_by",
+			Label:    "order_by",
+			Type:     base.TypeSelect,
+			Values:   "name,size,updated_at,created_at",
 			Required: false,
 		},
 		{
-			Name: "order_direction",
-			Label: "order_direction",
-			Type: TypeSelect,
-			Values: "ASC,DESC",
+			Name:     "order_direction",
+			Label:    "order_direction",
+			Type:     base.TypeSelect,
+			Values:   "ASC,DESC",
 			Required: false,
 		},
 		{
 			Name:     "refresh_token",
 			Label:    "refresh token",
-			Type:     TypeString,
+			Type:     base.TypeString,
 			Required: true,
 		},
 		{
 			Name:     "root_folder",
 			Label:    "root folder file_id",
-			Type:     TypeString,
+			Type:     base.TypeString,
 			Required: false,
 		},
 		{
 			Name:        "limit",
 			Label:       "limit",
-			Type:        TypeNumber,
+			Type:        base.TypeNumber,
 			Required:    false,
 			Description: ">0 and <=200",
 		},
@@ -72,7 +73,7 @@ func (driver AliDrive) Save(account *model.Account, old *model.Account) error {
 	if err != nil {
 		return err
 	}
-	var resp Json
+	var resp base.Json
 	_, _ = aliClient.R().SetResult(&resp).
 		SetBody("{}").
 		SetHeader("authorization", "Bearer\t"+account.AccessToken).
@@ -123,7 +124,7 @@ func (driver AliDrive) File(path string, account *model.Account) (*model.File, e
 			return &file, nil
 		}
 	}
-	return nil, ErrPathNotFound
+	return nil, base.ErrPathNotFound
 }
 
 func (driver AliDrive) Files(path string, account *model.Account) ([]model.File, error) {
@@ -157,12 +158,12 @@ func (driver AliDrive) Link(path string, account *model.Account) (string, error)
 	if err != nil {
 		return "", err
 	}
-	var resp Json
+	var resp base.Json
 	var e AliRespError
 	_, err = aliClient.R().SetResult(&resp).
 		SetError(&e).
 		SetHeader("authorization", "Bearer\t"+account.AccessToken).
-		SetBody(Json{
+		SetBody(base.Json{
 			"drive_id":   account.DriveId,
 			"file_id":    file.Id,
 			"expire_sec": 14400,
@@ -214,10 +215,10 @@ func (driver AliDrive) Preview(path string, account *model.Account) (interface{}
 		return nil, err
 	}
 	// office
-	var resp Json
+	var resp base.Json
 	var e AliRespError
 	var url string
-	req := Json{
+	req := base.Json{
 		"drive_id": account.DriveId,
 		"file_id":  file.FileId,
 	}
@@ -233,7 +234,7 @@ func (driver AliDrive) Preview(path string, account *model.Account) (interface{}
 			req["category"] = "live_transcoding"
 		}
 	default:
-		return nil, ErrNotSupport
+		return nil, base.ErrNotSupport
 	}
 	_, err = aliClient.R().SetResult(&resp).SetError(&e).
 		SetHeader("authorization", "Bearer\t"+account.AccessToken).
@@ -248,23 +249,23 @@ func (driver AliDrive) Preview(path string, account *model.Account) (interface{}
 }
 
 func (driver AliDrive) MakeDir(path string, account *model.Account) error {
-	return ErrNotImplement
+	return base.ErrNotImplement
 }
 
 func (driver AliDrive) Move(src string, dst string, account *model.Account) error {
-	return ErrNotImplement
+	return base.ErrNotImplement
 }
 
 func (driver AliDrive) Copy(src string, dst string, account *model.Account) error {
-	return ErrNotImplement
+	return base.ErrNotImplement
 }
 
 func (driver AliDrive) Delete(path string, account *model.Account) error {
-	return ErrNotImplement
+	return base.ErrNotImplement
 }
 
 func (driver AliDrive) Upload(file *model.FileStream, account *model.Account) error {
-	return ErrNotImplement
+	return base.ErrNotImplement
 }
 
-var _ Driver = (*AliDrive)(nil)
+var _ base.Driver = (*AliDrive)(nil)

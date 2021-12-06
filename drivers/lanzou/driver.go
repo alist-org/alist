@@ -1,8 +1,9 @@
-package drivers
+package lanzou
 
 import (
 	"fmt"
 	"github.com/Xhofe/alist/conf"
+	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
 	"github.com/gin-gonic/gin"
@@ -12,42 +13,42 @@ import (
 
 type Lanzou struct{}
 
-func (driver Lanzou) Config() DriverConfig {
-	return DriverConfig{
+func (driver Lanzou) Config() base.DriverConfig {
+	return base.DriverConfig{
 		Name:      "Lanzou",
 		OnlyProxy: false,
 	}
 }
 
-func (driver Lanzou) Items() []Item {
-	return []Item{
+func (driver Lanzou) Items() []base.Item {
+	return []base.Item{
 		{
 			Name:     "onedrive_type",
 			Label:    "lanzou type",
-			Type:     TypeSelect,
+			Type:     base.TypeSelect,
 			Required: true,
 			Values:   "cookie,url",
 		},
 		{
 			Name:        "access_token",
 			Label:       "cookie",
-			Type:        TypeString,
+			Type:        base.TypeString,
 			Description: "about 15 days valid",
 		},
 		{
 			Name:  "root_folder",
 			Label: "root folder file_id",
-			Type:  TypeString,
+			Type:  base.TypeString,
 		},
 		{
 			Name:  "site_url",
 			Label: "share url",
-			Type:  TypeString,
+			Type:  base.TypeString,
 		},
 		{
 			Name:  "password",
 			Label: "share password",
-			Type:  TypeString,
+			Type:  base.TypeString,
 		},
 	}
 }
@@ -85,7 +86,7 @@ func (driver Lanzou) File(path string, account *model.Account) (*model.File, err
 			return &file, nil
 		}
 	}
-	return nil, ErrPathNotFound
+	return nil, base.ErrPathNotFound
 }
 
 func (driver Lanzou) Files(path string, account *model.Account) ([]model.File, error) {
@@ -157,27 +158,27 @@ func (driver Lanzou) Proxy(c *gin.Context, account *model.Account) {
 }
 
 func (driver Lanzou) Preview(path string, account *model.Account) (interface{}, error) {
-	return nil, ErrNotSupport
+	return nil, base.ErrNotSupport
 }
 
 func (driver *Lanzou) MakeDir(path string, account *model.Account) error {
-	return ErrNotImplement
+	return base.ErrNotImplement
 }
 
 func (driver *Lanzou) Move(src string, dst string, account *model.Account) error {
-	return ErrNotImplement
+	return base.ErrNotImplement
 }
 
 func (driver *Lanzou) Copy(src string, dst string, account *model.Account) error {
-	return ErrNotImplement
+	return base.ErrNotImplement
 }
 
 func (driver *Lanzou) Delete(path string, account *model.Account) error {
-	return ErrNotImplement
+	return base.ErrNotImplement
 }
 
 func (driver *Lanzou) Upload(file *model.FileStream, account *model.Account) error {
-	return ErrNotImplement
+	return base.ErrNotImplement
 }
 
-var _ Driver = (*Lanzou)(nil)
+var _ base.Driver = (*Lanzou)(nil)

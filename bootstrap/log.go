@@ -20,3 +20,7 @@ func InitLog() {
 	})
 	log.Infof("init log...")
 }
+
+func init() {
+	InitLog()
+}

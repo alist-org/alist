@@ -1,8 +1,9 @@
-package drivers
+package google
 
 import (
 	"fmt"
 	"github.com/Xhofe/alist/conf"
+	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
 	"github.com/gin-gonic/gin"
@@ -12,37 +13,37 @@ import (
 
 type GoogleDrive struct{}
 
-func (driver GoogleDrive) Config() DriverConfig {
-	return DriverConfig{
+func (driver GoogleDrive) Config() base.DriverConfig {
+	return base.DriverConfig{
 		Name: "GoogleDrive",
 		OnlyProxy: true,
 	}
 }
 
-func (driver GoogleDrive) Items() []Item {
-	return []Item{
+func (driver GoogleDrive) Items() []base.Item {
+	return []base.Item{
 		{
 			Name:     "client_id",
 			Label:    "client id",
-			Type:     TypeString,
+			Type:     base.TypeString,
 			Required: true,
 		},
 		{
 			Name:     "client_secret",
 			Label:    "client secret",
-			Type:     TypeString,
+			Type:     base.TypeString,
 			Required: true,
 		},
 		{
 			Name:     "refresh_token",
 			Label:    "refresh token",
-			Type:     TypeString,
+			Type:     base.TypeString,
 			Required: true,
 		},
 		{
 			Name:     "root_folder",
 			Label:    "root folder file_id",
-			Type:     TypeString,
+			Type:     base.TypeString,
 			Required: false,
 		},
 	}
@@ -86,7 +87,7 @@ func (driver GoogleDrive) File(path string, account *model.Account) (*model.File
 			return &file, nil
 		}
 	}
-	return nil, ErrPathNotFound
+	return nil, base.ErrPathNotFound
 }
 
 func (driver GoogleDrive) Files(path string, account *model.Account) ([]model.File, error) {
@@ -121,7 +122,7 @@ func (driver GoogleDrive) Link(path string, account *model.Account) (string, err
 		return "", err
 	}
 	if file.Type == conf.FOLDER {
-		return "", ErrNotFile
+		return "", base.ErrNotFile
 	}
 	link := fmt.Sprintf("https://www.googleapis.com/drive/v3/files/%s?includeItemsFromAllDrives=true&supportsAllDrives=true", file.Id)
 	var e GoogleError
@@ -165,27 +166,27 @@ func (driver GoogleDrive) Proxy(c *gin.Context, account *model.Account) {
 }
 
 func (driver GoogleDrive) Preview(path string, account *model.Account) (interface{}, error) {
-	return nil, ErrNotSupport
+	return nil, base.ErrNotSupport
 }
 
 func (driver GoogleDrive) MakeDir(path string, account *model.Account) error {
-	return ErrNotImplement
+	return base.ErrNotImplement
 }
 
 func (driver GoogleDrive) Move(src string, dst string, account *model.Account) error {
-	return ErrNotImplement
+	return base.ErrNotImplement
 }
 
 func (driver GoogleDrive) Copy(src string, dst string, account *model.Account) error {
-	return ErrNotImplement
+	return base.ErrNotImplement
 }
 
 func (driver GoogleDrive) Delete(path string, account *model.Account) error {
-	return ErrNotImplement
+	return base.ErrNotImplement
 }
 
 func (driver GoogleDrive) Upload(file *model.FileStream, account *model.Account) error {
-	return ErrNotImplement
+	return base.ErrNotImplement
 }
 
-var _ Driver = (*GoogleDrive)(nil)
+var _ base.Driver = (*GoogleDrive)(nil)

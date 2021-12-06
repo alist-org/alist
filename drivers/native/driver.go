@@ -1,8 +1,9 @@
-package drivers
+package native
 
 import (
 	"fmt"
 	"github.com/Xhofe/alist/conf"
+	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
 	"github.com/gin-gonic/gin"
@@ -16,32 +17,32 @@ import (
 
 type Native struct{}
 
-func (driver Native) Config() DriverConfig {
-	return DriverConfig{
+func (driver Native) Config() base.DriverConfig {
+	return base.DriverConfig{
 		Name:      "Native",
 		OnlyProxy: true,
 	}
 }
 
-func (driver Native) Items() []Item {
-	return []Item{
+func (driver Native) Items() []base.Item {
+	return []base.Item{
 		{
 			Name:     "root_folder",
 			Label:    "root folder path",
-			Type:     TypeString,
+			Type:     base.TypeString,
 			Required: true,
 		},
 		{
 			Name:     "order_by",
 			Label:    "order_by",
-			Type:     TypeSelect,
+			Type:     base.TypeSelect,
 			Values:   "name,size,updated_at",
 			Required: false,
 		},
 		{
 			Name:     "order_direction",
 			Label:    "order_direction",
-			Type:     TypeSelect,
+			Type:     base.TypeSelect,
 			Values:   "ASC,DESC",
 			Required: false,
 		},
@@ -67,7 +68,7 @@ func (driver Native) Save(account *model.Account, old *model.Account) error {
 func (driver Native) File(path string, account *model.Account) (*model.File, error) {
 	fullPath := filepath.Join(account.RootFolder, path)
 	if !utils.Exists(fullPath) {
-		return nil, ErrPathNotFound
+		return nil, base.ErrPathNotFound
 	}
 	f, err := os.Stat(fullPath)
 	if err != nil {
@@ -91,7 +92,7 @@ func (driver Native) File(path string, account *model.Account) (*model.File, err
 func (driver Native) Files(path string, account *model.Account) ([]model.File, error) {
 	fullPath := filepath.Join(account.RootFolder, path)
 	if !utils.Exists(fullPath) {
-		return nil, ErrPathNotFound
+		return nil, base.ErrPathNotFound
 	}
 	files := make([]model.File, 0)
 	rawFiles, err := ioutil.ReadDir(fullPath)
@@ -156,7 +157,7 @@ func (driver Native) Proxy(c *gin.Context, account *model.Account) {
 }
 
 func (driver Native) Preview(path string, account *model.Account) (interface{}, error) {
-	return nil, ErrNotSupport
+	return nil, base.ErrNotSupport
 }
 
 func (driver Native) MakeDir(path string, account *model.Account) error {
@@ -181,7 +182,7 @@ func (driver Native) Copy(src string, dst string, account *model.Account) error 
 	dstFile, err := driver.File(dst, account)
 	if err == nil {
 		if !dstFile.IsDir() {
-			return ErrNotSupport
+			return base.ErrNotSupport
 		}
 	}
 	if srcFile.IsDir() {
@@ -226,4 +227,4 @@ func (driver Native) Upload(file *model.FileStream, account *model.Account) erro
 	return err
 }
 
-var _ Driver = (*Native)(nil)
+var _ base.Driver = (*Native)(nil)

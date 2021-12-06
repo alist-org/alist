@@ -1,8 +1,9 @@
-package drivers
+package lanzou
 
 import (
 	"fmt"
 	"github.com/Xhofe/alist/conf"
+	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
 	"github.com/go-resty/resty/v2"
@@ -231,7 +232,7 @@ func (driver *Lanzou) GetLink(downId string) (string, error) {
 }
 
 func init() {
-	RegisterDriver(&Lanzou{})
+	base.RegisterDriver(&Lanzou{})
 	lanzouClient.
 		SetRetryCount(3).
 		SetHeader("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36")

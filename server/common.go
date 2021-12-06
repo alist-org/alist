@@ -2,7 +2,7 @@ package server
 
 import (
 	"fmt"
-	"github.com/Xhofe/alist/drivers"
+	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
@@ -15,7 +15,7 @@ type Resp struct {
 	Data    interface{} `json:"data"`
 }
 
-func ParsePath(rawPath string) (*model.Account, string, drivers.Driver, error) {
+func ParsePath(rawPath string) (*model.Account, string, base.Driver, error) {
 	var path, name string
 	switch model.AccountsCount() {
 	case 0:
@@ -32,7 +32,7 @@ func ParsePath(rawPath string) (*model.Account, string, drivers.Driver, error) {
 	if !ok {
 		return nil, "", nil, fmt.Errorf("no [%s] account", name)
 	}
-	driver, ok := drivers.GetDriver(account.Type)
+	driver, ok := base.GetDriver(account.Type)
 	if !ok {
 		return nil, "", nil, fmt.Errorf("no [%s] driver", account.Type)
 	}

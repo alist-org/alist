@@ -1,8 +1,9 @@
-package drivers
+package onedrive
 
 import (
 	"fmt"
 	"github.com/Xhofe/alist/conf"
+	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
 	"github.com/gin-gonic/gin"
@@ -14,19 +15,19 @@ import (
 type Onedrive struct{}
 
 
-func (driver Onedrive) Config() DriverConfig {
-	return DriverConfig{
+func (driver Onedrive) Config() base.DriverConfig {
+	return base.DriverConfig{
 		Name: "Onedrive",
 		OnlyProxy: false,
 	}
 }
 
-func (driver Onedrive) Items() []Item {
-	return []Item{
+func (driver Onedrive) Items() []base.Item {
+	return []base.Item{
 		{
 			Name:        "zone",
 			Label:       "zone",
-			Type:        TypeSelect,
+			Type:        base.TypeSelect,
 			Required:    true,
 			Values:      "global,cn,us,de",
 			Description: "",
@@ -34,57 +35,57 @@ func (driver Onedrive) Items() []Item {
 		{
 			Name:     "onedrive_type",
 			Label:    "onedrive type",
-			Type:     TypeSelect,
+			Type:     base.TypeSelect,
 			Required: true,
 			Values:   "onedrive,sharepoint",
 		},
 		{
 			Name:     "client_id",
 			Label:    "client id",
-			Type:     TypeString,
+			Type:     base.TypeString,
 			Required: true,
 		},
 		{
 			Name:     "client_secret",
 			Label:    "client secret",
-			Type:     TypeString,
+			Type:     base.TypeString,
 			Required: true,
 		},
 		{
 			Name:     "redirect_uri",
 			Label:    "redirect uri",
-			Type:     TypeString,
+			Type:     base.TypeString,
 			Required: true,
 		},
 		{
 			Name:     "refresh_token",
 			Label:    "refresh token",
-			Type:     TypeString,
+			Type:     base.TypeString,
 			Required: true,
 		},
 		{
 			Name:     "site_id",
 			Label:    "site id",
-			Type:     TypeString,
+			Type:     base.TypeString,
 			Required: false,
 		},
 		{
 			Name:     "root_folder",
 			Label:    "root folder path",
-			Type:     TypeString,
+			Type:     base.TypeString,
 			Required: false,
 		},
 		{
 			Name:     "order_by",
 			Label:    "order_by",
-			Type:     TypeSelect,
+			Type:     base.TypeSelect,
 			Values:   "name,size,lastModifiedDateTime",
 			Required: false,
 		},
 		{
 			Name:     "order_direction",
 			Label:    "order_direction",
-			Type:     TypeSelect,
+			Type:     base.TypeSelect,
 			Values:   "asc,desc",
 			Required: false,
 		},
@@ -148,7 +149,7 @@ func (driver Onedrive) File(path string, account *model.Account) (*model.File, e
 			return &file, nil
 		}
 	}
-	return nil, ErrPathNotFound
+	return nil, base.ErrPathNotFound
 }
 
 func (driver Onedrive) Files(path string, account *model.Account) ([]model.File, error) {
@@ -205,27 +206,27 @@ func (driver Onedrive) Proxy(c *gin.Context, account *model.Account) {
 }
 
 func (driver Onedrive) Preview(path string, account *model.Account) (interface{}, error) {
-	return nil, ErrNotSupport
+	return nil, base.ErrNotSupport
 }
 
 func (driver Onedrive) MakeDir(path string, account *model.Account) error {
-	return ErrNotImplement
+	return base.ErrNotImplement
 }
 
 func (driver Onedrive) Move(src string, dst string, account *model.Account) error {
-	return ErrNotImplement
+	return base.ErrNotImplement
 }
 
 func (driver Onedrive) Copy(src string, dst string, account *model.Account) error {
-	return ErrNotImplement
+	return base.ErrNotImplement
 }
 
 func (driver Onedrive) Delete(path string, account *model.Account) error {
-	return ErrNotImplement
+	return base.ErrNotImplement
 }
 
 func (driver Onedrive) Upload(file *model.FileStream, account *model.Account) error {
-	return ErrNotImplement
+	return base.ErrNotImplement
 }
 
-var _ Driver = (*Onedrive)(nil)
+var _ base.Driver = (*Onedrive)(nil)

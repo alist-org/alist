@@ -8,7 +8,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/Xhofe/alist/conf"
-	"github.com/Xhofe/alist/drivers"
+	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
 	log "github.com/sirupsen/logrus"
@@ -22,7 +22,7 @@ import (
 
 type FileSystem struct{}
 
-func ParsePath(rawPath string) (*model.Account, string, drivers.Driver, error) {
+func ParsePath(rawPath string) (*model.Account, string, base.Driver, error) {
 	var path, name string
 	switch model.AccountsCount() {
 	case 0:
@@ -39,7 +39,7 @@ func ParsePath(rawPath string) (*model.Account, string, drivers.Driver, error) {
 	if !ok {
 		return nil, "", nil, fmt.Errorf("no [%s] account", name)
 	}
-	driver, ok := drivers.GetDriver(account.Type)
+	driver, ok := base.GetDriver(account.Type)
 	if !ok {
 		return nil, "", nil, fmt.Errorf("no [%s] driver", account.Type)
 	}
