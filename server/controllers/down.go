@@ -1,8 +1,9 @@
-package server
+package controllers
 
 import (
 	"fmt"
 	"github.com/Xhofe/alist/conf"
+	"github.com/Xhofe/alist/server/common"
 	"github.com/Xhofe/alist/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/go-resty/resty/v2"
@@ -17,55 +18,40 @@ func Down(c *gin.Context) {
 	rawPath := c.Param("path")
 	rawPath = utils.ParsePath(rawPath)
 	log.Debugf("down: %s", rawPath)
-	pw := c.Query("pw")
-	if !CheckDownLink(utils.Dir(rawPath), pw, utils.Base(rawPath)) {
-		ErrorResp(c, fmt.Errorf("wrong password"), 401)
-		return
-	}
-	account, path, driver, err := ParsePath(rawPath)
+	account, path, driver, err := common.ParsePath(rawPath)
 	if err != nil {
-		ErrorResp(c, err, 500)
+		common.ErrorResp(c, err, 500)
 		return
 	}
-	if account.Type == "GoogleDrive" {
+	if driver.Config().OnlyProxy {
 		Proxy(c)
 		return
 	}
 	link, err := driver.Link(path, account)
 	if err != nil {
-		ErrorResp(c, err, 500)
+		common.ErrorResp(c, err, 500)
 		return
 	}
-	if account.Type == "Native" {
-		c.File(link)
-		return
-	} else {
-		c.Redirect(302, link)
-		return
-	}
+	c.Redirect(302, link)
+	return
 }
 
 func Proxy(c *gin.Context) {
 	rawPath := c.Param("path")
 	rawPath = utils.ParsePath(rawPath)
 	log.Debugf("proxy: %s", rawPath)
-	pw := c.Query("pw")
-	if !CheckDownLink(utils.Dir(rawPath), pw, utils.Base(rawPath)) {
-		ErrorResp(c, fmt.Errorf("wrong password"), 401)
-		return
-	}
-	account, path, driver, err := ParsePath(rawPath)
+	account, path, driver, err := common.ParsePath(rawPath)
 	if err != nil {
-		ErrorResp(c, err, 500)
+		common.ErrorResp(c, err, 500)
 		return
 	}
 	if !account.Proxy && utils.GetFileType(filepath.Ext(rawPath)) != conf.TEXT {
-		ErrorResp(c, fmt.Errorf("[%s] not allowed proxy", account.Name), 403)
+		common.ErrorResp(c, fmt.Errorf("[%s] not allowed proxy", account.Name), 403)
 		return
 	}
 	link, err := driver.Link(path, account)
 	if err != nil {
-		ErrorResp(c, err, 500)
+		common.ErrorResp(c, err, 500)
 		return
 	}
 	if account.Type == "Native" {
@@ -81,7 +67,7 @@ func Proxy(c *gin.Context) {
 		w := c.Writer
 		target, err := url.Parse(link)
 		if err != nil {
-			ErrorResp(c, err, 500)
+			common.ErrorResp(c, err, 500)
 			return
 		}
 		protocol := "http://"
@@ -106,7 +92,7 @@ func init() {
 func Text(c *gin.Context, link string) {
 	res, err := client.R().Get(link)
 	if err != nil {
-		ErrorResp(c, err, 500)
+		common.ErrorResp(c, err, 500)
 		return
 	}
 	text := res.String()
@@ -115,7 +101,7 @@ func Text(c *gin.Context, link string) {
 	if t != utils.UTF8 {
 		body, err := utils.GbkToUtf8(res.Body())
 		if err != nil {
-			ErrorResp(c, err, 500)
+			common.ErrorResp(c, err, 500)
 			return
 		}
 		text = string(body)

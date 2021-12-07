@@ -1,6 +1,9 @@
 package server
 
 import (
+	"github.com/Xhofe/alist/server/common"
+	"github.com/Xhofe/alist/server/controllers"
+	"github.com/Xhofe/alist/server/middlewares"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -9,35 +12,37 @@ func InitApiRouter(r *gin.Engine) {
 
 	// TODO from settings
 	Cors(r)
-	r.GET("/d/*path", Down)
-	r.GET("/p/*path", Proxy)
+	r.GET("/d/*path", middlewares.DownCheck, controllers.Down)
+	r.GET("/p/*path", middlewares.DownCheck, controllers.Proxy)
 
 	api := r.Group("/api")
 	public := api.Group("/public")
 	{
-		public.POST("/path", CheckAccount, Path)
-		public.POST("/preview", CheckAccount, Preview)
-		public.GET("/settings", GetSettingsPublic)
-		public.POST("/link", CheckAccount, Link)
+		path := public.Group("", middlewares.PathCheck, middlewares.CheckAccount)
+		path.POST("/path", controllers.Path)
+		path.POST("/preview", controllers.Preview)
+		path.POST("/link", controllers.Link)
+
+		public.GET("/settings", controllers.GetSettingsPublic)
 	}
 
 	admin := api.Group("/admin")
 	{
-		admin.Use(Auth)
-		admin.GET("/login", Login)
-		admin.GET("/settings", GetSettings)
-		admin.POST("/settings", SaveSettings)
-		admin.POST("/account/create", CreateAccount)
-		admin.POST("/account/save", SaveAccount)
-		admin.GET("/accounts", GetAccounts)
-		admin.DELETE("/account", DeleteAccount)
-		admin.GET("/drivers", GetDrivers)
-		admin.GET("/clear_cache", ClearCache)
+		admin.Use(middlewares.Auth)
+		admin.GET("/login", common.Login)
+		admin.GET("/settings", controllers.GetSettings)
+		admin.POST("/settings", controllers.SaveSettings)
+		admin.POST("/account/create", controllers.CreateAccount)
+		admin.POST("/account/save", controllers.SaveAccount)
+		admin.GET("/accounts", controllers.GetAccounts)
+		admin.DELETE("/account", controllers.DeleteAccount)
+		admin.GET("/drivers", controllers.GetDrivers)
+		admin.GET("/clear_cache", controllers.ClearCache)
 
-		admin.GET("/metas", GetMetas)
-		admin.POST("/meta/create", CreateMeta)
-		admin.POST("/meta/save", SaveMeta)
-		admin.DELETE("/meta", DeleteMeta)
+		admin.GET("/metas", controllers.GetMetas)
+		admin.POST("/meta/create", controllers.CreateMeta)
+		admin.POST("/meta/save", controllers.SaveMeta)
+		admin.DELETE("/meta", controllers.DeleteMeta)
 	}
 	Static(r)
 	WebDav(r)

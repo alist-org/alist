@@ -1,4 +1,4 @@
-package server
+package common
 
 import (
 	"fmt"
@@ -13,6 +13,11 @@ type Resp struct {
 	Code    int         `json:"code"`
 	Message string      `json:"message"`
 	Data    interface{} `json:"data"`
+}
+
+type PathReq struct {
+	Path     string `json:"path"`
+	Password string `json:"password"`
 }
 
 func ParsePath(rawPath string) (*model.Account, string, base.Driver, error) {
