@@ -41,8 +41,9 @@ var (
 	RawIndexHtml string
 	IndexHtml    string
 	CheckParent  bool
-	CheckDown bool
+	CheckDown    bool
 
+	Token       string
 	DavUsername string
 	DavPassword string
 )

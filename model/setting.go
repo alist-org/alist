@@ -1,7 +1,9 @@
 package model
 
 import (
+	"fmt"
 	"github.com/Xhofe/alist/conf"
+	"github.com/Xhofe/alist/utils"
 	"strings"
 )
 
@@ -81,6 +83,11 @@ func LoadSettings() {
 	customizeBody, err := GetSettingByKey("customize body")
 	if err == nil {
 		conf.IndexHtml = strings.Replace(conf.IndexHtml, "<!-- customize body -->", customizeBody.Value, 1)
+	}
+
+	adminPassword, err := GetSettingByKey("password")
+	if err == nil {
+		conf.Token = utils.GetMD5Encode(fmt.Sprintf("https://github.com/Xhofe/alist-%s",adminPassword.Value))
 	}
 
 	davUsername, err := GetSettingByKey("WebDAV username")

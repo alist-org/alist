@@ -17,6 +17,11 @@ func PathCheck(c *gin.Context) {
 	}
 	req.Path = utils.ParsePath(req.Path)
 	c.Set("req",req)
+	token := c.GetHeader("Authorization")
+	if token == conf.Token {
+		c.Next()
+		return
+	}
 	meta, err := model.GetMetaByPath(req.Path)
 	if err == nil {
 		if meta.Password != "" && meta.Password != req.Password {

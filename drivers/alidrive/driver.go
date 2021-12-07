@@ -431,7 +431,7 @@ func (driver AliDrive) Upload(file *model.FileStream, account *model.Account) er
 		if err != nil {
 			return err
 		}
-		res, err := base.BaseHttpClient.Do(req)
+		res, err := base.HttpClient.Do(req)
 		if err != nil {
 			return err
 		}
