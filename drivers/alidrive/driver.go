@@ -363,7 +363,6 @@ type UploadResp struct {
 	} `json:"part_info_list"`
 }
 
-// TODO wrong
 func (driver AliDrive) Upload(file *model.FileStream, account *model.Account) error {
 	const DEFAULT uint64 = 10485760
 	var count = int64(math.Ceil(float64(file.GetSize()) / float64(DEFAULT)))
