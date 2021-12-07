@@ -239,5 +239,5 @@ func init() {
 		SetRetryCount(3).
 		SetHeader("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36").
 		SetHeader("content-type", "application/json").
-		SetHeader("origin", "https://aliyundrive.com")
+		SetHeader("origin", "https://www.aliyundrive.com")
 }

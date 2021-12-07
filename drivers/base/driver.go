@@ -81,6 +81,8 @@ func GetDrivers() map[string][]Item {
 }
 
 var NoRedirectClient *resty.Client
+//var BaseClient = resty.New()
+var BaseHttpClient = &http.Client{}
 
 func init() {
 	NoRedirectClient = resty.New().SetRedirectPolicy(

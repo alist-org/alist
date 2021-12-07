@@ -1,6 +1,8 @@
 package alidrive
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/drivers/base"
@@ -11,6 +13,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io"
 	"math"
+	"net/http"
 	"path/filepath"
 )
 
@@ -318,20 +321,21 @@ func (driver AliDrive) Copy(src string, dst string, account *model.Account) erro
 	return base.ErrNotSupport
 }
 
-// TODO wrong
 func (driver AliDrive) Delete(path string, account *model.Account) error {
 	file, err := driver.File(path, account)
 	if err != nil {
 		return err
 	}
-	var resp base.Json
 	var e AliRespError
-	_, err = aliClient.R().SetResult(&resp).SetError(&e).
+	res, err := aliClient.R().SetError(&e).
 		SetHeader("authorization", "Bearer\t"+account.AccessToken).
 		SetBody(base.Json{
 			"drive_id": account.DriveId,
 			"file_id":  file.Id,
 		}).Post("https://api.aliyundrive.com/v2/recyclebin/trash")
+	if err != nil {
+		return err
+	}
 	if e.Code != "" {
 		if e.Code == "AccessTokenInvalid" {
 			err = driver.RefreshToken(account)
@@ -344,11 +348,11 @@ func (driver AliDrive) Delete(path string, account *model.Account) error {
 		}
 		return fmt.Errorf("%s", e.Message)
 	}
-	if resp["file_id"] == file.Id {
+	if res.StatusCode() == 204 {
 		_ = base.DeleteCache(utils.Dir(path), account)
 		return nil
 	}
-	return fmt.Errorf("%+v", resp)
+	return errors.New(res.String())
 }
 
 type UploadResp struct {
@@ -391,8 +395,8 @@ func (driver AliDrive) Upload(file *model.FileStream, account *model.Account) er
 			"proof_version": "v1",
 			"size":          file.GetSize(),
 			"type":          "file",
-		}).Post("https://api.aliyundrive.com/adrive/v2/file/createWithFolders")
-	log.Debugf("%+v\n%+v", resp, e)
+		}).Post("https://api.aliyundrive.com/adrive/v2/file/createWithFolders") // /v2/file/create_with_proof
+	//log.Debugf("%+v\n%+v", resp, e)
 	if e.Code != "" {
 		if e.Code == "AccessTokenInvalid" {
 			err = driver.RefreshToken(account)
@@ -413,20 +417,33 @@ func (driver AliDrive) Upload(file *model.FileStream, account *model.Account) er
 		}
 		log.Debugf("%d,%d",byteSize,finish)
 		byteData := make([]byte, byteSize)
-		//n, err := io.ReadFull(file, byteData)
+		n, err := io.ReadFull(file, byteData)
 		//n, err := file.Read(byteData)
-		byteData, err := io.ReadAll(file)
-		n := len(byteData)
+		//byteData, err := io.ReadAll(file)
+		//n := len(byteData)
 		log.Debug(err,n)
 		if err != nil {
 			return err
 		}
 
 		finish += uint64(n)
-		_, err = aliClient.R().SetBody(byteData).Put(resp.PartInfoList[i].UploadUrl)
+
+		req,err := http.NewRequest("PUT", resp.PartInfoList[i].UploadUrl, bytes.NewBuffer(byteData))
 		if err != nil {
 			return err
 		}
+		res, err := base.BaseHttpClient.Do(req)
+		if err != nil {
+			return err
+		}
+		log.Debugf("%+v", res)
+		//res, err := base.BaseClient.R().
+		//	SetHeader("Content-Type","").
+		//	SetBody(byteData).Put(resp.PartInfoList[i].UploadUrl)
+		//if err != nil {
+		//	return err
+		//}
+		//log.Debugf("put to %s : %d,%s", resp.PartInfoList[i].UploadUrl, res.StatusCode(),res.String())
 	}
 	var resp2 base.Json
 	_,err = aliClient.R().SetResult(&resp2).SetError(&e).
