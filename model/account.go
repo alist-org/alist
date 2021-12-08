@@ -7,22 +7,21 @@ import (
 )
 
 type Account struct {
-	ID             uint   `json:"id" gorm:"primaryKey"`
-	Name           string `json:"name" gorm:"unique" binding:"required"`
-	Index          int    `json:"index"`
-	Type           string `json:"type"`
+	ID             uint   `json:"id" gorm:"primaryKey"`                  // 唯一ID
+	Name           string `json:"name" gorm:"unique" binding:"required"` // 唯一名称
+	Index          int    `json:"index"`                                 // 序号 用于排序
+	Type           string `json:"type"`                                  // 类型，即driver
 	Username       string `json:"username"`
 	Password       string `json:"password"`
 	RefreshToken   string `json:"refresh_token"`
 	AccessToken    string `json:"access_token"`
 	RootFolder     string `json:"root_folder"`
-	Status         string `json:"status"`
+	Status         string `json:"status"` // 状态
 	CronId         int
 	DriveId        string
 	Limit          int        `json:"limit"`
 	OrderBy        string     `json:"order_by"`
 	OrderDirection string     `json:"order_direction"`
-	Proxy          bool       `json:"proxy"`
 	UpdatedAt      *time.Time `json:"updated_at"`
 	Search         bool       `json:"search"`
 	ClientId       string     `json:"client_id"`
@@ -33,8 +32,9 @@ type Account struct {
 	SiteId         string     `json:"site_id"`
 	OnedriveType   string     `json:"onedrive_type"`
 	WebdavProxy    bool       `json:"webdav_proxy"`
-	AllowProxy     bool       `json:"allow_proxy"`
-	ProxyUrl       string     `json:"proxy_url"`
+	Proxy          bool       `json:"proxy"`       // 是否中转
+	//AllowProxy     bool       `json:"allow_proxy"` // 是否允许中转下载
+	ProxyUrl       string     `json:"proxy_url"`   // 用于中转下载服务的URL
 }
 
 var accountsMap = map[string]Account{}

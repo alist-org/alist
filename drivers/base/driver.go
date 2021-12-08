@@ -61,12 +61,19 @@ func GetDrivers() map[string][]Item {
 			res[k] = v.Items()
 		} else {
 			res[k] = append([]Item{
+				//{
+				//	Name:        "allow_proxy",
+				//	Label:       "allow_proxy",
+				//	Type:        TypeBool,
+				//	Required:    true,
+				//	Description: "allow proxy",
+				//},
 				{
 					Name:        "proxy",
 					Label:       "proxy",
 					Type:        TypeBool,
 					Required:    true,
-					Description: "allow proxy",
+					Description: "web proxy",
 				},
 				{
 					Name:        "webdav_proxy",
@@ -77,6 +84,13 @@ func GetDrivers() map[string][]Item {
 				},
 			}, v.Items()...)
 		}
+		res[k] = append(res[k], Item{
+			Name:        "proxy_url",
+			Label:       "proxy_url",
+			Type:        TypeString,
+			Required:    false,
+			Description: "proxy url",
+		})
 	}
 	return res
 }

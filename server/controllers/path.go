@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"fmt"
+	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/server/common"
 	"github.com/Xhofe/alist/utils"
@@ -37,8 +38,13 @@ func Path(c *gin.Context) {
 		return
 	}
 	if file != nil {
-		if driver.Config().OnlyProxy {
-			file.Url = fmt.Sprintf("//%s/d%s", c.Request.Host, req.Path)
+		// 对于中转文件或只能中转,将链接修改为中转链接
+		if driver.Config().OnlyProxy || account.Proxy {
+			if account.ProxyUrl != "" {
+				file.Url = fmt.Sprintf("%s%s?sign=%s", account.ProxyUrl, req.Path, utils.SignWithToken(file.Name, conf.Token))
+			}else {
+				file.Url = fmt.Sprintf("//%s/d%s", c.Request.Host, req.Path)
+			}
 		}
 		c.JSON(200, common.Resp{
 			Code:    200,

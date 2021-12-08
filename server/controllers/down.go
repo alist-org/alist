@@ -47,14 +47,19 @@ func Proxy(c *gin.Context) {
 		common.ErrorResp(c, err, 500)
 		return
 	}
+	// 只有三种情况允许中转：
+	// 1. 账号开启中转
+	// 2. driver只能中转
+	// 3. 是文本类型文件
+	if !account.Proxy && !driver.Config().OnlyProxy && utils.GetFileType(filepath.Ext(rawPath)) != conf.TEXT {
+		common.ErrorResp(c, fmt.Errorf("[%s] not allowed proxy", account.Name), 403)
+		return
+	}
+	// 中转时有中转机器使用中转机器
 	if account.ProxyUrl != "" {
 		name := utils.Base(rawPath)
 		link := fmt.Sprintf("%s%s?sign=%s", account.ProxyUrl, rawPath, utils.SignWithToken(name, conf.Token))
 		c.Redirect(302, link)
-		return
-	}
-	if !account.Proxy && utils.GetFileType(filepath.Ext(rawPath)) != conf.TEXT {
-		common.ErrorResp(c, fmt.Errorf("[%s] not allowed proxy", account.Name), 403)
 		return
 	}
 	link, err := driver.Link(path, account)
@@ -62,7 +67,9 @@ func Proxy(c *gin.Context) {
 		common.ErrorResp(c, err, 500)
 		return
 	}
+	// 本机文件直接返回文件
 	if account.Type == "Native" {
+		// 对于名称为index.html的文件需要特殊处理
 		if utils.Base(rawPath) == "index.html" {
 			file, err := os.Open(link)
 			if err != nil {
