@@ -54,7 +54,7 @@ func (driver Alist) Save(account *model.Account, old *model.Account) error {
 	err := driver.Login(account)
 	if err == nil {
 		account.Status = "work"
-	}else {
+	} else {
 		account.Status = err.Error()
 	}
 	_ = model.SaveAccount(account)
@@ -91,7 +91,14 @@ func (driver Alist) File(path string, account *model.Account) (*model.File, erro
 
 func (driver Alist) Files(path string, account *model.Account) ([]model.File, error) {
 	//return nil, base.ErrNotImplement
-	return []model.File{}, nil
+	_, files, err := driver.Path(utils.Dir(path), account)
+	if err != nil {
+		return nil, err
+	}
+	if files == nil {
+		return nil, base.ErrNotFolder
+	}
+	return files, nil
 }
 
 func (driver Alist) Link(path string, account *model.Account) (string, error) {
@@ -101,13 +108,18 @@ func (driver Alist) Link(path string, account *model.Account) (string, error) {
 	if utils.GetFileType(filepath.Ext(path)) == conf.TEXT {
 		flag = "p"
 	}
-	return fmt.Sprintf("%s/%s%s?sign=%s", account.SiteUrl, flag, path, utils.SignWithToken(name,conf.Token)), nil
+	return fmt.Sprintf("%s/%s%s?sign=%s", account.SiteUrl, flag, path, utils.SignWithToken(name, conf.Token)), nil
 }
 
 func (driver Alist) Path(path string, account *model.Account) (*model.File, []model.File, error) {
 	path = utils.ParsePath(path)
+	cache, err := base.GetCache(path, account)
+	if err == nil {
+		files := cache.([]model.File)
+		return nil, files, nil
+	}
 	var resp PathResp
-	_, err := base.RestyClient.R().SetResult(&resp).
+	_, err = base.RestyClient.R().SetResult(&resp).
 		SetHeader("Authorization", account.AccessToken).
 		SetBody(base.Json{
 			"path": path,
@@ -121,7 +133,9 @@ func (driver Alist) Path(path string, account *model.Account) (*model.File, []mo
 	if resp.Message == "file" {
 		return &resp.Data[0], nil, nil
 	}
-	_ = base.SetCache(path, resp.Data, account)
+	if len(resp.Data) > 0 {
+		_ = base.SetCache(path, resp.Data, account)
+	}
 	return nil, resp.Data, nil
 }
 
