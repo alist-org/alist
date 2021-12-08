@@ -8,8 +8,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
+	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -61,6 +63,23 @@ func Proxy(c *gin.Context) {
 		return
 	}
 	if account.Type == "Native" {
+		if utils.Base(rawPath) == "index.html" {
+			file, err := os.Open(link)
+			if err != nil {
+				common.ErrorResp(c, err, 500)
+				return
+			}
+			defer func() {
+				_ = file.Close()
+			}()
+			fileStat, err := os.Stat(link)
+			if err != nil {
+				common.ErrorResp(c, err, 500)
+				return
+			}
+			http.ServeContent(c.Writer, c.Request, utils.Base(rawPath), fileStat.ModTime(), file)
+			return
+		}
 		c.File(link)
 		return
 	} else {
