@@ -17,9 +17,9 @@ func SetCache(path string, obj interface{}, account *model.Account) error {
 }
 
 func GetCache(path string, account *model.Account) (interface{}, error) {
-	return conf.Cache.Get(conf.Ctx, fmt.Sprintf("%s", KeyCache(path, account)))
+	return conf.Cache.Get(conf.Ctx, KeyCache(path, account))
 }
 
 func DeleteCache(path string, account *model.Account) error {
-	return conf.Cache.Delete(conf.Ctx, fmt.Sprintf("%s", KeyCache(path, account)))
+	return conf.Cache.Delete(conf.Ctx, KeyCache(path, account))
 }
