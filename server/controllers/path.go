@@ -71,9 +71,14 @@ func Path(c *gin.Context) {
 	}
 }
 
+// 返回真实的链接，非中转
 func Link(c *gin.Context) {
-	reqV, _ := c.Get("req")
-	req := reqV.(common.PathReq)
+	var req common.PathReq
+	if err := c.ShouldBind(&req); err != nil {
+		common.ErrorResp(c, err, 400)
+		return
+	}
+	req.Path = utils.ParsePath(req.Path)
 	rawPath := req.Path
 	rawPath = utils.ParsePath(rawPath)
 	log.Debugf("link: %s", rawPath)
