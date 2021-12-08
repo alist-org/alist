@@ -94,7 +94,7 @@ func (driver GoogleDrive) File(path string, account *model.Account) (*model.File
 func (driver GoogleDrive) Files(path string, account *model.Account) ([]model.File, error) {
 	path = utils.ParsePath(path)
 	var rawFiles []GoogleFile
-	cache, err := conf.Cache.Get(conf.Ctx, fmt.Sprintf("%s%s", account.Name, path))
+	cache, err := base.GetCache(path, account)
 	if err == nil {
 		rawFiles, _ = cache.([]GoogleFile)
 	} else {
@@ -107,7 +107,7 @@ func (driver GoogleDrive) Files(path string, account *model.Account) ([]model.Fi
 			return nil, err
 		}
 		if len(rawFiles) > 0 {
-			_ = conf.Cache.Set(conf.Ctx, fmt.Sprintf("%s%s", account.Name, path), rawFiles, nil)
+			_ = base.SetCache(path, rawFiles, account)
 		}
 	}
 	files := make([]model.File, 0)

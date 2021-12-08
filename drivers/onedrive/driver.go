@@ -154,7 +154,7 @@ func (driver Onedrive) File(path string, account *model.Account) (*model.File, e
 
 func (driver Onedrive) Files(path string, account *model.Account) ([]model.File, error) {
 	path = utils.ParsePath(path)
-	cache, err := conf.Cache.Get(conf.Ctx, fmt.Sprintf("%s%s", account.Name, path))
+	cache, err := base.GetCache(path, account)
 	if err == nil {
 		files, _ := cache.([]model.File)
 		return files, nil
@@ -168,7 +168,7 @@ func (driver Onedrive) Files(path string, account *model.Account) ([]model.File,
 		files = append(files, *driver.FormatFile(&file))
 	}
 	if len(files) > 0 {
-		_ = conf.Cache.Set(conf.Ctx, fmt.Sprintf("%s%s", account.Name, path), files, nil)
+		_ = base.SetCache(path, files, account)
 	}
 	return files, nil
 }

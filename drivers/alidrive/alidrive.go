@@ -119,7 +119,7 @@ func (driver AliDrive) GetFile(path string, account *model.Account) (*AliFile, e
 	if err != nil {
 		return nil, err
 	}
-	parentFiles_, _ := conf.Cache.Get(conf.Ctx, fmt.Sprintf("%s%s", account.Name, dir))
+	parentFiles_, _ := base.GetCache(dir, account)
 	parentFiles, _ := parentFiles_.([]AliFile)
 	for _, file := range parentFiles {
 		if file.Name == name {

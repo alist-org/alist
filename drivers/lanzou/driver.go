@@ -1,7 +1,6 @@
 package lanzou
 
 import (
-	"fmt"
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
@@ -92,7 +91,7 @@ func (driver Lanzou) File(path string, account *model.Account) (*model.File, err
 func (driver Lanzou) Files(path string, account *model.Account) ([]model.File, error) {
 	path = utils.ParsePath(path)
 	var rawFiles []LanZouFile
-	cache, err := conf.Cache.Get(conf.Ctx, fmt.Sprintf("%s%s", account.Name, path))
+	cache, err := base.GetCache(path, account)
 	if err == nil {
 		rawFiles, _ = cache.([]LanZouFile)
 	} else {
@@ -105,7 +104,7 @@ func (driver Lanzou) Files(path string, account *model.Account) ([]model.File, e
 			return nil, err
 		}
 		if len(rawFiles) > 0 {
-			_ = conf.Cache.Set(conf.Ctx, fmt.Sprintf("%s%s", account.Name, path), rawFiles, nil)
+			_ = base.SetCache(path, rawFiles, account)
 		}
 	}
 	files := make([]model.File, 0)

@@ -104,7 +104,7 @@ func (driver Cloud189) File(path string, account *model.Account) (*model.File, e
 func (driver Cloud189) Files(path string, account *model.Account) ([]model.File, error) {
 	path = utils.ParsePath(path)
 	var rawFiles []Cloud189File
-	cache, err := conf.Cache.Get(conf.Ctx, fmt.Sprintf("%s%s", account.Name, path))
+	cache, err := base.GetCache(path, account)
 	if err == nil {
 		rawFiles, _ = cache.([]Cloud189File)
 	} else {
@@ -117,7 +117,7 @@ func (driver Cloud189) Files(path string, account *model.Account) ([]model.File,
 			return nil, err
 		}
 		if len(rawFiles) > 0 {
-			_ = conf.Cache.Set(conf.Ctx, fmt.Sprintf("%s%s", account.Name, path), rawFiles, nil)
+			_ = base.SetCache(path, rawFiles, account)
 		}
 	}
 	files := make([]model.File, 0)

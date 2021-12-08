@@ -12,11 +12,11 @@ import (
 	"path/filepath"
 )
 
-type Pan123 struct {}
+type Pan123 struct{}
 
 func (driver Pan123) Config() base.DriverConfig {
 	return base.DriverConfig{
-		Name: "123Pan",
+		Name:      "123Pan",
 		OnlyProxy: false,
 	}
 }
@@ -96,7 +96,7 @@ func (driver Pan123) File(path string, account *model.Account) (*model.File, err
 func (driver Pan123) Files(path string, account *model.Account) ([]model.File, error) {
 	path = utils.ParsePath(path)
 	var rawFiles []Pan123File
-	cache, err := conf.Cache.Get(conf.Ctx, fmt.Sprintf("%s%s", account.Name, path))
+	cache, err := base.GetCache(path, account)
 	if err == nil {
 		rawFiles, _ = cache.([]Pan123File)
 	} else {
@@ -109,7 +109,7 @@ func (driver Pan123) Files(path string, account *model.Account) ([]model.File, e
 			return nil, err
 		}
 		if len(rawFiles) > 0 {
-			_ = conf.Cache.Set(conf.Ctx, fmt.Sprintf("%s%s", account.Name, path), rawFiles, nil)
+			_ = base.SetCache(path, rawFiles, account)
 		}
 	}
 	files := make([]model.File, 0)
@@ -148,11 +148,11 @@ func (driver Pan123) Link(path string, account *model.Account) (string, error) {
 		}
 		return "", fmt.Errorf(resp.Message)
 	}
-	u,err := url.Parse(resp.Data.DownloadUrl)
+	u, err := url.Parse(resp.Data.DownloadUrl)
 	if err != nil {
 		return "", err
 	}
-	u_ := fmt.Sprintf("https://%s%s",u.Host,u.Path)
+	u_ := fmt.Sprintf("https://%s%s", u.Host, u.Path)
 	res, err := base.NoRedirectClient.R().SetQueryParamsFromValues(u.Query()).Get(u_)
 	if err != nil {
 		return "", err

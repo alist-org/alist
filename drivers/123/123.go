@@ -129,7 +129,7 @@ func (driver Pan123) GetFile(path string, account *model.Account) (*Pan123File, 
 	if err != nil {
 		return nil, err
 	}
-	parentFiles_, _ := conf.Cache.Get(conf.Ctx, fmt.Sprintf("%s%s", account.Name, dir))
+	parentFiles_, _ := base.GetCache(dir, account)
 	parentFiles, _ := parentFiles_.([]Pan123File)
 	for _, file := range parentFiles {
 		if file.FileName == name {

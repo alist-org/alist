@@ -26,7 +26,7 @@ func (driver Alist) Items() []base.Item {
 	return []base.Item{
 		{
 			Name:     "site_url",
-			Label:    "site url",
+			Label:    "alist site url",
 			Type:     base.TypeString,
 			Required: true,
 		},
