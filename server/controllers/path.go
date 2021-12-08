@@ -11,7 +11,7 @@ import (
 )
 
 func Path(c *gin.Context) {
-	reqV,_ := c.Get("req")
+	reqV, _ := c.Get("req")
 	req := reqV.(common.PathReq)
 	if model.AccountsCount() > 1 && req.Path == "/" {
 		files, err := model.GetAccountFiles()
@@ -66,7 +66,7 @@ func Path(c *gin.Context) {
 }
 
 func Link(c *gin.Context) {
-	reqV,_ := c.Get("req")
+	reqV, _ := c.Get("req")
 	req := reqV.(common.PathReq)
 	rawPath := req.Path
 	rawPath = utils.ParsePath(rawPath)
@@ -79,6 +79,16 @@ func Link(c *gin.Context) {
 	link, err := driver.Link(path, account)
 	if err != nil {
 		common.ErrorResp(c, err, 500)
+		return
+	}
+	if driver.Config().NeedHeader {
+		common.SuccessResp(c, gin.H{
+			"url": link,
+			"header": gin.H{
+				"name":  "Authorization",
+				"value": "Bearer " + account.AccessToken,
+			},
+		})
 		return
 	}
 	if driver.Config().OnlyProxy {
@@ -95,7 +105,7 @@ func Link(c *gin.Context) {
 }
 
 func Preview(c *gin.Context) {
-	reqV,_ := c.Get("req")
+	reqV, _ := c.Get("req")
 	req := reqV.(common.PathReq)
 	rawPath := req.Path
 	rawPath = utils.ParsePath(rawPath)

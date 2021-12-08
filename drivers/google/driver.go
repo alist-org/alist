@@ -15,8 +15,9 @@ type GoogleDrive struct{}
 
 func (driver GoogleDrive) Config() base.DriverConfig {
 	return base.DriverConfig{
-		Name: "GoogleDrive",
-		OnlyProxy: true,
+		Name:       "GoogleDrive",
+		OnlyProxy:  true,
+		NeedHeader: true,
 	}
 }
 

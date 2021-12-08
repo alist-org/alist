@@ -21,7 +21,8 @@ func InitApiRouter(r *gin.Engine) {
 		path := public.Group("", middlewares.PathCheck, middlewares.CheckAccount)
 		path.POST("/path", controllers.Path)
 		path.POST("/preview", controllers.Preview)
-		path.POST("/link", controllers.Link)
+
+		//path.POST("/link",middlewares.Auth, controllers.Link)
 
 		public.GET("/settings", controllers.GetSettingsPublic)
 	}
@@ -43,6 +44,8 @@ func InitApiRouter(r *gin.Engine) {
 		admin.POST("/meta/create", controllers.CreateMeta)
 		admin.POST("/meta/save", controllers.SaveMeta)
 		admin.DELETE("/meta", controllers.DeleteMeta)
+
+		admin.POST("/link", controllers.Link)
 	}
 	Static(r)
 	WebDav(r)

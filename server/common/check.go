@@ -35,7 +35,7 @@ func CheckDownLink(path string, passwordMd5 string, name string) bool {
 	log.Debugf("check down path: %s", path)
 	if err == nil {
 		log.Debugf("check down link: %s,%s", meta.Password, passwordMd5)
-		if meta.Password != "" && utils.Get16MD5Encode("alist"+meta.Password+name) != passwordMd5 {
+		if meta.Password != "" && utils.SignWithPassword(name, meta.Password) != passwordMd5 {
 			return false
 		}
 		return true

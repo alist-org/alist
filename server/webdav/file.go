@@ -87,7 +87,7 @@ func GetPW(path string, name string) string {
 	meta, err := model.GetMetaByPath(path)
 	if err == nil {
 		if meta.Password != "" {
-			utils.Get16MD5Encode("alist" + meta.Password + name)
+			return utils.SignWithPassword(name, meta.Password)
 		}
 		return ""
 	} else {

@@ -101,7 +101,7 @@ func (driver Alist) Link(path string, account *model.Account) (string, error) {
 	if utils.GetFileType(filepath.Ext(path)) == conf.TEXT {
 		flag = "p"
 	}
-	return fmt.Sprintf("%s/%s%s?sign=%s", account.SiteUrl, flag, path, utils.Get16MD5Encode(fmt.Sprintf("%s-%s", conf.Token, name))), nil
+	return fmt.Sprintf("%s/%s%s?sign=%s", account.SiteUrl, flag, path, utils.SignWithToken(name,conf.Token)), nil
 }
 
 func (driver Alist) Path(path string, account *model.Account) (*model.File, []model.File, error) {

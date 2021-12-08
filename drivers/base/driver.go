@@ -9,8 +9,9 @@ import (
 )
 
 type DriverConfig struct {
-	Name string
-	OnlyProxy bool
+	Name       string
+	OnlyProxy  bool
+	NeedHeader bool
 }
 
 type Driver interface {

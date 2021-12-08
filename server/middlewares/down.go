@@ -13,7 +13,7 @@ func DownCheck(c *gin.Context) {
 	rawPath := c.Param("path")
 	rawPath = utils.ParsePath(rawPath)
 	name := utils.Base(rawPath)
-	if sign == utils.Get16MD5Encode(fmt.Sprintf("%s-%s", conf.Token, name)) {
+	if sign == utils.SignWithToken(name, conf.Token) {
 		c.Next()
 		return
 	}

@@ -23,7 +23,7 @@ func Down(c *gin.Context) {
 		common.ErrorResp(c, err, 500)
 		return
 	}
-	if driver.Config().OnlyProxy {
+	if driver.Config().OnlyProxy || account.Proxy {
 		Proxy(c)
 		return
 	}
@@ -43,6 +43,12 @@ func Proxy(c *gin.Context) {
 	account, path, driver, err := common.ParsePath(rawPath)
 	if err != nil {
 		common.ErrorResp(c, err, 500)
+		return
+	}
+	if account.ProxyUrl != "" {
+		name := utils.Base(rawPath)
+		link := fmt.Sprintf("%s%s?sign=%s", account.ProxyUrl, rawPath, utils.SignWithToken(name, conf.Token))
+		c.Redirect(302, link)
 		return
 	}
 	if !account.Proxy && utils.GetFileType(filepath.Ext(rawPath)) != conf.TEXT {
