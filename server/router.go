@@ -33,6 +33,8 @@ func InitApiRouter(r *gin.Engine) {
 		admin.GET("/login", common.Login)
 		admin.GET("/settings", controllers.GetSettings)
 		admin.POST("/settings", controllers.SaveSettings)
+		admin.DELETE("/setting", controllers.DeleteSetting)
+
 		admin.POST("/account/create", controllers.CreateAccount)
 		admin.POST("/account/save", controllers.SaveAccount)
 		admin.GET("/accounts", controllers.GetAccounts)

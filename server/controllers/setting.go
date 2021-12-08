@@ -37,3 +37,12 @@ func GetSettingsPublic(c *gin.Context) {
 	}
 	common.SuccessResp(c, settings)
 }
+
+func DeleteSetting(c *gin.Context) {
+	key := c.Query("key")
+	if err := model.DeleteSetting(key); err != nil {
+		common.ErrorResp(c, err, 500)
+		return
+	}
+	common.SuccessResp(c)
+}

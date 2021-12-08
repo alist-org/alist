@@ -12,7 +12,7 @@ var (
 	GoVersion string
 	GitAuthor string
 	GitCommit string
-	GitTag    string
+	GitTag    string = "dev"
 )
 
 var (

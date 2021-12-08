@@ -15,9 +15,13 @@ func InitSettings() {
 		Description: "version",
 		Type:        "string",
 		Group:       model.CONST,
+		Version:     conf.GitTag,
 	}
 
-	_ = model.SaveSetting(version)
+	err := model.SaveSetting(version)
+	if err != nil {
+		log.Fatalf("failed write setting: %s", err.Error())
+	}
 
 	settings := []model.SettingItem{
 		{
@@ -114,8 +118,8 @@ func InitSettings() {
 			Group:       model.PRIVATE,
 		},
 		{
-			Key:         "customize head",
-			Value:       `<style>
+			Key: "customize head",
+			Value: `<style>
 .chakra-ui-light{
   background-image: linear-gradient(120deg,#e0c3fc 0%,#8ec5fc 100%) !important;
   background-attachment: fixed;
@@ -173,10 +177,22 @@ func InitSettings() {
 			Group:       model.PRIVATE,
 		},
 	}
-	for _, v := range settings {
-		_, err := model.GetSettingByKey(v.Key)
-		if err == gorm.ErrRecordNotFound {
-			err = model.SaveSetting(v)
+	for i, _ := range settings {
+		v := settings[i]
+		v.Version = conf.GitTag
+		o, err := model.GetSettingByKey(v.Key)
+		if err != nil {
+			if err == gorm.ErrRecordNotFound {
+				err = model.SaveSetting(v)
+				if err != nil {
+					log.Fatalf("failed write setting: %s", err.Error())
+				}
+			} else {
+				log.Fatal("can't get setting: %s", err.Error())
+			}
+		} else {
+			o.Version = conf.GitTag
+			err = model.SaveSetting(*o)
 			if err != nil {
 				log.Fatalf("failed write setting: %s", err.Error())
 			}

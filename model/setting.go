@@ -20,6 +20,7 @@ type SettingItem struct {
 	Type        string `json:"type"`
 	Group       int    `json:"group"`
 	Values      string `json:"values"`
+	Version     string `json:"version"`
 }
 
 func SaveSettings(items []SettingItem) error {
@@ -46,6 +47,13 @@ func GetSettings() (*[]SettingItem, error) {
 	return &items, nil
 }
 
+func DeleteSetting(key string) error {
+	setting := SettingItem{
+		Key: key,
+	}
+	return conf.DB.Delete(&setting).Error
+}
+
 func GetSettingByKey(key string) (*SettingItem, error) {
 	var items SettingItem
 	if err := conf.DB.Where("`key` = ?", key).First(&items).Error; err != nil {
@@ -63,7 +71,7 @@ func LoadSettings() {
 	if err == nil {
 		conf.CheckParent = checkParent.Value == "true"
 	}
-	checkDown,err := GetSettingByKey("check down link")
+	checkDown, err := GetSettingByKey("check down link")
 	if err == nil {
 		conf.CheckDown = checkDown.Value == "true"
 	}
@@ -87,7 +95,7 @@ func LoadSettings() {
 
 	adminPassword, err := GetSettingByKey("password")
 	if err == nil {
-		conf.Token = utils.GetMD5Encode(fmt.Sprintf("https://github.com/Xhofe/alist-%s",adminPassword.Value))
+		conf.Token = utils.GetMD5Encode(fmt.Sprintf("https://github.com/Xhofe/alist-%s", adminPassword.Value))
 	}
 
 	davUsername, err := GetSettingByKey("WebDAV username")
