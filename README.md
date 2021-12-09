@@ -26,6 +26,7 @@ English | [中文](./README_cn.md)
   - [x] [GoogleDrive](https://drive.google.com/)
   - [x] [123pan](https://www.123pan.com/)
   - [x] [lanzou](https://pc.woozooo.com/)
+  - [x] [Alist](https://github.com/Xhofe/alist)
 - [x] File preview (PDF, markdown, code, plain text, ...)
 - [x] Image preview in gallery mode
 - [x] Video and audio preview (mp4, mp3, ...)
@@ -37,6 +38,7 @@ English | [中文](./README_cn.md)
 - [x] Protected routes (password protection and authentication) 
 - [x] WebDav (readonly)
 - [x] [Docker Deploy](https://hub.docker.com/r/xhofe/alist)
+- [x] cloudflare workers proxy
 
 ## Discussion
 

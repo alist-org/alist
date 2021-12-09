@@ -25,6 +25,7 @@
   - [x] [GoogleDrive](https://drive.google.com/)
   - [x] [123云盘](https://www.123pan.com/)
   - [x] [蓝奏云](https://pc.woozooo.com/)
+  - [x] [Alist](https://github.com/Xhofe/alist)
 - [x] 文件预览（PDF、markdown、代码、纯文本……）
 - [x] 画廊模式下的图像预览
 - [x] 视频和音频预览（mp4、mp3 等）
@@ -36,6 +37,7 @@
 - [x] 受保护的路由（密码保护和身份验证）
 - [x] WebDav（只读）
 - [x] [Docker 部署](https://hub.docker.com/r/xhofe/alist)
+- [x] cloudflare workers 中转
 
 ## 讨论
 
