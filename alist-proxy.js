@@ -12,7 +12,7 @@ const corsHeaders = {
 async function handleRequest(request) {
     const origin = request.headers.get("origin");
     const url = new URL(request.url);
-    const path = url.pathname;
+    const path = decodeURI(url.pathname);
     const sign = url.searchParams.get("sign");
     const name = path.split("/").pop();
     const right = md5(`alist-${TOKEN}-${name}`).slice(8, 24);
@@ -39,7 +39,7 @@ async function handleRequest(request) {
             Authorization: TOKEN,
         },
         body: JSON.stringify({
-            path: decodeURI(path),
+            path: path,
         }),
     });
     let res = await resp.json();
