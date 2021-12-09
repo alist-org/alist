@@ -119,10 +119,10 @@ func (driver Pan123) Files(path string, account *model.Account) ([]model.File, e
 	return files, nil
 }
 
-func (driver Pan123) Link(path string, account *model.Account) (string, error) {
+func (driver Pan123) Link(path string, account *model.Account) (*base.Link, error) {
 	file, err := driver.GetFile(utils.ParsePath(path), account)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	var resp Pan123DownResp
 	_, err = pan123Client.R().SetResult(&resp).SetHeader("authorization", "Bearer "+account.AccessToken).
@@ -136,32 +136,35 @@ func (driver Pan123) Link(path string, account *model.Account) (string, error) {
 			"type":      file.Type,
 		}).Post("https://www.123pan.com/api/file/download_info")
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	if resp.Code != 0 {
 		if resp.Code == 401 {
 			err := driver.Login(account)
 			if err != nil {
-				return "", err
+				return nil, err
 			}
 			return driver.Link(path, account)
 		}
-		return "", fmt.Errorf(resp.Message)
+		return nil, fmt.Errorf(resp.Message)
 	}
 	u, err := url.Parse(resp.Data.DownloadUrl)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	u_ := fmt.Sprintf("https://%s%s", u.Host, u.Path)
 	res, err := base.NoRedirectClient.R().SetQueryParamsFromValues(u.Query()).Get(u_)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	log.Debug(res.String())
+	link := base.Link{}
 	if res.StatusCode() == 302 {
-		return res.Header().Get("location"), nil
+		link.Url = res.Header().Get("location")
+	}else {
+		link.Url = resp.Data.DownloadUrl
 	}
-	return resp.Data.DownloadUrl, nil
+	return &link, nil
 }
 
 func (driver Pan123) Path(path string, account *model.Account) (*model.File, []model.File, error) {
@@ -171,8 +174,12 @@ func (driver Pan123) Path(path string, account *model.Account) (*model.File, []m
 	if err != nil {
 		return nil, nil, err
 	}
-	if file.Type != conf.FOLDER {
-		file.Url, _ = driver.Link(path, account)
+	if !file.IsDir() {
+		link, err := driver.Link(path, account)
+		if err != nil {
+			return nil, nil, err
+		}
+		file.Url = link.Url
 		return file, nil, nil
 	}
 	files, err := driver.Files(path, account)

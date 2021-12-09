@@ -127,17 +127,17 @@ func (driver Cloud189) Files(path string, account *model.Account) ([]model.File,
 	return files, nil
 }
 
-func (driver Cloud189) Link(path string, account *model.Account) (string, error) {
+func (driver Cloud189) Link(path string, account *model.Account) (*base.Link, error) {
 	file, err := driver.File(utils.ParsePath(path), account)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	if file.Type == conf.FOLDER {
-		return "", base.ErrNotFile
+		return nil, base.ErrNotFile
 	}
 	client, ok := client189Map[account.Name]
 	if !ok {
-		return "", fmt.Errorf("can't find [%s] client", account.Name)
+		return nil, fmt.Errorf("can't find [%s] client", account.Name)
 	}
 	var e Cloud189Error
 	var resp Cloud189Down
@@ -148,28 +148,31 @@ func (driver Cloud189) Link(path string, account *model.Account) (string, error)
 			"fileId":  file.Id,
 		}).Get("https://cloud.189.cn/api/open/file/getFileDownloadUrl.action")
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	if e.ErrorCode != "" {
 		if e.ErrorCode == "InvalidSessionKey" {
 			err = driver.Login(account)
 			if err != nil {
-				return "", err
+				return nil, err
 			}
 			return driver.Link(path, account)
 		}
 	}
 	if resp.ResCode != 0 {
-		return "", fmt.Errorf(resp.ResMessage)
+		return nil, fmt.Errorf(resp.ResMessage)
 	}
 	res, err := base.NoRedirectClient.R().Get(resp.FileDownloadUrl)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
+	link := base.Link{}
 	if res.StatusCode() == 302 {
-		return res.Header().Get("location"), nil
+		link.Url = res.Header().Get("location")
+	}else {
+		link.Url = resp.FileDownloadUrl
 	}
-	return resp.FileDownloadUrl, nil
+	return &link, nil
 }
 
 func (driver Cloud189) Path(path string, account *model.Account) (*model.File, []model.File, error) {
@@ -179,8 +182,12 @@ func (driver Cloud189) Path(path string, account *model.Account) (*model.File, [
 	if err != nil {
 		return nil, nil, err
 	}
-	if file.Type != conf.FOLDER {
-		file.Url, _ = driver.Link(path, account)
+	if !file.IsDir() {
+		link, err := driver.Link(path, account)
+		if err != nil {
+			return nil, nil, err
+		}
+		file.Url = link.Url
 		return file, nil, nil
 	}
 	files, err := driver.Files(path, account)

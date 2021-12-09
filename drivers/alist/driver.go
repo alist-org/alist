@@ -101,14 +101,16 @@ func (driver Alist) Files(path string, account *model.Account) ([]model.File, er
 	return files, nil
 }
 
-func (driver Alist) Link(path string, account *model.Account) (string, error) {
+func (driver Alist) Link(path string, account *model.Account) (*base.Link, error) {
 	path = utils.ParsePath(path)
 	name := utils.Base(path)
 	flag := "d"
 	if utils.GetFileType(filepath.Ext(path)) == conf.TEXT {
 		flag = "p"
 	}
-	return fmt.Sprintf("%s/%s%s?sign=%s", account.SiteUrl, flag, path, utils.SignWithToken(name, conf.Token)), nil
+	link := base.Link{}
+	link.Url = fmt.Sprintf("%s/%s%s?sign=%s", account.SiteUrl, flag, path, utils.SignWithToken(name, conf.Token))
+	return &link, nil
 }
 
 func (driver Alist) Path(path string, account *model.Account) (*model.File, []model.File, error) {

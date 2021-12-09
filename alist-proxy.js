@@ -1,8 +1,3 @@
-// We support the GET, POST, HEAD, and OPTIONS methods from any origin,
-// and allow any header on requests. These headers must be present
-// on all responses to all CORS preflight requests. In practice, this means
-// all responses to OPTIONS requests.
-
 const HOST = "YOUR_HOST";
 const TOKEN = "YOUR_TOKEN";
 
@@ -26,8 +21,6 @@ async function handleRequest(request) {
             JSON.stringify({
                 code: 401,
                 message: `sign mismatch`,
-                you: sign,
-                right: right,
             }),
             {
                 headers: {
@@ -49,18 +42,17 @@ async function handleRequest(request) {
             path: decodeURI(path),
         }),
     });
-    let data = await resp.json();
-    if (data.code != 200) {
-        return new Response(JSON.stringify(data));
+    let res = await resp.json();
+    if (res.code !== 200) {
+        return new Response(JSON.stringify(res));
     }
-    let headers = {};
-    if (data.data.header) {
-        headers[data.data.header.name] = data.data.header.value;
+    request = new Request(res.data.url, request);
+    if (res.data.headers) {
+        for(const header of res.data.headers){
+            request.headers.set(header.name, header.value);
+        }
     }
-    let response = await fetch(data.data.url, {
-        method: "GET",
-        headers: headers,
-    });
+    let response = await fetch(request);
 
     // Recreate the response so we can modify the headers
     response = new Response(response.body, response);

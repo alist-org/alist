@@ -21,6 +21,7 @@ func (driver Native) Config() base.DriverConfig {
 	return base.DriverConfig{
 		Name:      "Native",
 		OnlyProxy: true,
+		NoLink:    true,
 	}
 }
 
@@ -122,16 +123,19 @@ func (driver Native) Files(path string, account *model.Account) ([]model.File, e
 	return files, nil
 }
 
-func (driver Native) Link(path string, account *model.Account) (string, error) {
+func (driver Native) Link(path string, account *model.Account) (*base.Link, error) {
 	fullPath := filepath.Join(account.RootFolder, path)
 	s, err := os.Stat(fullPath)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	if s.IsDir() {
-		return "", fmt.Errorf("can't down folder")
+		return nil, base.ErrNotFile
 	}
-	return fullPath, nil
+	link := base.Link{
+		Url: fullPath,
+	}
+	return &link, nil
 }
 
 func (driver Native) Path(path string, account *model.Account) (*model.File, []model.File, error) {
@@ -140,7 +144,7 @@ func (driver Native) Path(path string, account *model.Account) (*model.File, []m
 	if err != nil {
 		return nil, nil, err
 	}
-	if file.Type != conf.FOLDER {
+	if !file.IsDir() {
 		//file.Url, _ = driver.Link(path, account)
 		return file, nil, nil
 	}
@@ -205,7 +209,7 @@ func (driver Native) Delete(path string, account *model.Account) error {
 
 func (driver Native) Upload(file *model.FileStream, account *model.Account) error {
 	fullPath := filepath.Join(account.RootFolder, file.ParentPath, file.Name)
-	_, err := driver.File(filepath.Join(file.ParentPath,file.Name), account)
+	_, err := driver.File(filepath.Join(file.ParentPath, file.Name), account)
 	if err == nil {
 		// TODO overwrite?
 	}

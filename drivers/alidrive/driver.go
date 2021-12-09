@@ -158,10 +158,10 @@ func (driver AliDrive) Files(path string, account *model.Account) ([]model.File,
 	return files, nil
 }
 
-func (driver AliDrive) Link(path string, account *model.Account) (string, error) {
+func (driver AliDrive) Link(path string, account *model.Account) (*base.Link, error) {
 	file, err := driver.File(path, account)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	var resp base.Json
 	var e AliRespError
@@ -174,21 +174,23 @@ func (driver AliDrive) Link(path string, account *model.Account) (string, error)
 			"expire_sec": 14400,
 		}).Post("https://api.aliyundrive.com/v2/file/get_download_url")
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	if e.Code != "" {
 		if e.Code == "AccessTokenInvalid" {
 			err = driver.RefreshToken(account)
 			if err != nil {
-				return "", err
+				return nil, err
 			} else {
 				_ = model.SaveAccount(account)
 				return driver.Link(path, account)
 			}
 		}
-		return "", fmt.Errorf("%s", e.Message)
+		return nil, fmt.Errorf("%s", e.Message)
 	}
-	return resp["url"].(string), nil
+	return &base.Link{
+		Url: resp["url"].(string),
+	}, nil
 }
 
 func (driver AliDrive) Path(path string, account *model.Account) (*model.File, []model.File, error) {
@@ -198,8 +200,12 @@ func (driver AliDrive) Path(path string, account *model.Account) (*model.File, [
 	if err != nil {
 		return nil, nil, err
 	}
-	if file.Type != conf.FOLDER {
-		file.Url, _ = driver.Link(path, account)
+	if !file.IsDir() {
+		link, err := driver.Link(path, account)
+		if err != nil {
+			return nil, nil, err
+		}
+		file.Url = link.Url
 		return file, nil, nil
 	}
 	files, err := driver.Files(path, account)
@@ -414,20 +420,20 @@ func (driver AliDrive) Upload(file *model.FileStream, account *model.Account) er
 		if DEFAULT < byteSize {
 			byteSize = DEFAULT
 		}
-		log.Debugf("%d,%d",byteSize,finish)
+		log.Debugf("%d,%d", byteSize, finish)
 		byteData := make([]byte, byteSize)
 		n, err := io.ReadFull(file, byteData)
 		//n, err := file.Read(byteData)
 		//byteData, err := io.ReadAll(file)
 		//n := len(byteData)
-		log.Debug(err,n)
+		log.Debug(err, n)
 		if err != nil {
 			return err
 		}
 
 		finish += uint64(n)
 
-		req,err := http.NewRequest("PUT", resp.PartInfoList[i].UploadUrl, bytes.NewBuffer(byteData))
+		req, err := http.NewRequest("PUT", resp.PartInfoList[i].UploadUrl, bytes.NewBuffer(byteData))
 		if err != nil {
 			return err
 		}
@@ -445,13 +451,13 @@ func (driver AliDrive) Upload(file *model.FileStream, account *model.Account) er
 		//log.Debugf("put to %s : %d,%s", resp.PartInfoList[i].UploadUrl, res.StatusCode(),res.String())
 	}
 	var resp2 base.Json
-	_,err = aliClient.R().SetResult(&resp2).SetError(&e).
+	_, err = aliClient.R().SetResult(&resp2).SetError(&e).
 		SetHeader("authorization", "Bearer\t"+account.AccessToken).
 		SetBody(base.Json{
-		"drive_id": account.DriveId,
-		"file_id": resp.FileId,
-		"upload_id": resp.UploadId,
-	}).Post("https://api.aliyundrive.com/v2/file/complete")
+			"drive_id":  account.DriveId,
+			"file_id":   resp.FileId,
+			"upload_id": resp.UploadId,
+		}).Post("https://api.aliyundrive.com/v2/file/complete")
 	if e.Code != "" {
 		//if e.Code == "AccessTokenInvalid" {
 		//	err = driver.RefreshToken(account)

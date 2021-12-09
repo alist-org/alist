@@ -173,15 +173,18 @@ func (driver Onedrive) Files(path string, account *model.Account) ([]model.File,
 	return files, nil
 }
 
-func (driver Onedrive) Link(path string, account *model.Account) (string, error) {
+func (driver Onedrive) Link(path string, account *model.Account) (*base.Link, error) {
 	file, err := driver.GetFile(account, path)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	if file.File.MimeType == "" {
-		return "", fmt.Errorf("can't down folder")
+		return nil, base.ErrNotFile
 	}
-	return file.Url, nil
+	link := base.Link{
+		Url: file.Url,
+	}
+	return &link, nil
 }
 
 func (driver Onedrive) Path(path string, account *model.Account) (*model.File, []model.File, error) {
@@ -190,7 +193,7 @@ func (driver Onedrive) Path(path string, account *model.Account) (*model.File, [
 	if err != nil {
 		return nil, nil, err
 	}
-	if file.Type != conf.FOLDER {
+	if !file.IsDir() {
 		//file.Url, _ = driver.Link(path, account)
 		return file, nil, nil
 	}

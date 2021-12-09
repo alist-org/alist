@@ -17,7 +17,6 @@ func (driver GoogleDrive) Config() base.DriverConfig {
 	return base.DriverConfig{
 		Name:       "GoogleDrive",
 		OnlyProxy:  true,
-		NeedHeader: true,
 	}
 }
 
@@ -117,31 +116,40 @@ func (driver GoogleDrive) Files(path string, account *model.Account) ([]model.Fi
 	return files, nil
 }
 
-func (driver GoogleDrive) Link(path string, account *model.Account) (string, error) {
+func (driver GoogleDrive) Link(path string, account *model.Account) (*base.Link, error) {
 	file, err := driver.File(path, account)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	if file.Type == conf.FOLDER {
-		return "", base.ErrNotFile
+		return nil, base.ErrNotFile
 	}
-	link := fmt.Sprintf("https://www.googleapis.com/drive/v3/files/%s?includeItemsFromAllDrives=true&supportsAllDrives=true", file.Id)
+	url := fmt.Sprintf("https://www.googleapis.com/drive/v3/files/%s?includeItemsFromAllDrives=true&supportsAllDrives=true", file.Id)
 	var e GoogleError
 	_, _ = googleClient.R().SetError(&e).
 		SetHeader("Authorization", "Bearer "+account.AccessToken).
-		Get(link)
+		Get(url)
 	if e.Error.Code != 0 {
 		if e.Error.Code == 401 {
 			err = driver.RefreshToken(account)
 			if err != nil {
 				_ = model.SaveAccount(account)
-				return "", err
+				return nil, err
 			}
 			return driver.Link(path, account)
 		}
-		return "", fmt.Errorf("%s: %v", e.Error.Message, e.Error.Errors)
+		return nil, fmt.Errorf("%s: %v", e.Error.Message, e.Error.Errors)
 	}
-	return link + "&alt=media", nil
+	link := base.Link{
+		Url: url + "&alt=media",
+		Headers: []base.Header{
+			{
+				Name: "Authorization",
+				Value: "Bearer " + account.AccessToken,
+			},
+		},
+	}
+	return &link, nil
 }
 
 func (driver GoogleDrive) Path(path string, account *model.Account) (*model.File, []model.File, error) {

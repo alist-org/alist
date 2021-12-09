@@ -9,9 +9,9 @@ import (
 )
 
 type DriverConfig struct {
-	Name       string
-	OnlyProxy  bool
-	NeedHeader bool
+	Name      string
+	OnlyProxy bool
+	NoLink    bool // 必须本机返回的
 }
 
 type Driver interface {
@@ -20,7 +20,7 @@ type Driver interface {
 	Save(account *model.Account, old *model.Account) error
 	File(path string, account *model.Account) (*model.File, error)
 	Files(path string, account *model.Account) ([]model.File, error)
-	Link(path string, account *model.Account) (string, error)
+	Link(path string, account *model.Account) (*Link, error)
 	Path(path string, account *model.Account) (*model.File, []model.File, error)
 	Proxy(c *gin.Context, account *model.Account)
 	Preview(path string, account *model.Account) (interface{}, error)
@@ -84,13 +84,16 @@ func GetDrivers() map[string][]Item {
 				},
 			}, v.Items()...)
 		}
-		res[k] = append(res[k], Item{
-			Name:        "proxy_url",
-			Label:       "proxy_url",
-			Type:        TypeString,
-			Required:    false,
-			Description: "proxy url",
-		})
+		// 不支持给本地文件添加中转
+		if v.Config().Name != "Native" {
+			res[k] = append(res[k], Item{
+				Name:        "proxy_url",
+				Label:       "proxy_url",
+				Type:        TypeString,
+				Required:    false,
+				Description: "proxy url",
+			})
+		}
 	}
 	return res
 }

@@ -114,24 +114,27 @@ func (driver Lanzou) Files(path string, account *model.Account) ([]model.File, e
 	return files, nil
 }
 
-func (driver Lanzou) Link(path string, account *model.Account) (string, error) {
+func (driver Lanzou) Link(path string, account *model.Account) (*base.Link, error) {
 	file, err := driver.File(path, account)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	log.Debugf("down file: %+v", file)
 	downId := file.Id
 	if account.OnedriveType == "cookie" {
 		downId, err = driver.GetDownPageId(file.Id, account)
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 	}
-	link, err := driver.GetLink(downId)
+	url, err := driver.GetLink(downId)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return link, nil
+	link := base.Link{
+		Url: url,
+	}
+	return &link, nil
 }
 
 func (driver Lanzou) Path(path string, account *model.Account) (*model.File, []model.File, error) {
@@ -141,8 +144,12 @@ func (driver Lanzou) Path(path string, account *model.Account) (*model.File, []m
 	if err != nil {
 		return nil, nil, err
 	}
-	if file.Type != conf.FOLDER {
-		file.Url, _ = driver.Link(path, account)
+	if !file.IsDir() {
+		link, err := driver.Link(path, account)
+		if err != nil {
+			return nil, nil, err
+		}
+		file.Url = link.Url
 		return file, nil, nil
 	}
 	files, err := driver.Files(path, account)

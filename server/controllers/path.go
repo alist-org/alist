@@ -3,6 +3,7 @@ package controllers
 import (
 	"fmt"
 	"github.com/Xhofe/alist/conf"
+	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/server/common"
 	"github.com/Xhofe/alist/utils"
@@ -42,7 +43,7 @@ func Path(c *gin.Context) {
 		if driver.Config().OnlyProxy || account.Proxy {
 			if account.ProxyUrl != "" {
 				file.Url = fmt.Sprintf("%s%s?sign=%s", account.ProxyUrl, req.Path, utils.SignWithToken(file.Name, conf.Token))
-			}else {
+			} else {
 				file.Url = fmt.Sprintf("//%s/d%s", c.Request.Host, req.Path)
 			}
 		}
@@ -71,7 +72,7 @@ func Path(c *gin.Context) {
 	}
 }
 
-// 返回真实的链接，非中转
+// 返回真实的链接，且携带头,只提供给中转程序使用
 func Link(c *gin.Context) {
 	var req common.PathReq
 	if err := c.ShouldBind(&req); err != nil {
@@ -92,25 +93,13 @@ func Link(c *gin.Context) {
 		common.ErrorResp(c, err, 500)
 		return
 	}
-	if driver.Config().NeedHeader {
-		common.SuccessResp(c, gin.H{
-			"url": link,
-			"header": gin.H{
-				"name":  "Authorization",
-				"value": "Bearer " + account.AccessToken,
-			},
-		})
-		return
-	}
-	if driver.Config().OnlyProxy {
-		common.SuccessResp(c, gin.H{
-			"url": fmt.Sprintf("//%s/d%s", c.Request.Host, req.Path),
+	if driver.Config().NoLink {
+		common.SuccessResp(c, base.Link{
+			Url: fmt.Sprintf("//%s/d%s?sign=%s", c.Request.Host, req.Path, utils.SignWithToken(utils.Base(rawPath), conf.Token)),
 		})
 		return
 	} else {
-		common.SuccessResp(c, gin.H{
-			"url": link,
-		})
+		common.SuccessResp(c, link)
 		return
 	}
 }

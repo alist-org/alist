@@ -3,6 +3,7 @@ package controllers
 import (
 	"fmt"
 	"github.com/Xhofe/alist/conf"
+	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/server/common"
 	"github.com/Xhofe/alist/utils"
 	"github.com/gin-gonic/gin"
@@ -34,7 +35,7 @@ func Down(c *gin.Context) {
 		common.ErrorResp(c, err, 500)
 		return
 	}
-	c.Redirect(302, link)
+	c.Redirect(302, link.Url)
 	return
 }
 
@@ -71,7 +72,7 @@ func Proxy(c *gin.Context) {
 	if account.Type == "Native" {
 		// 对于名称为index.html的文件需要特殊处理
 		if utils.Base(rawPath) == "index.html" {
-			file, err := os.Open(link)
+			file, err := os.Open(link.Url)
 			if err != nil {
 				common.ErrorResp(c, err, 500)
 				return
@@ -79,7 +80,7 @@ func Proxy(c *gin.Context) {
 			defer func() {
 				_ = file.Close()
 			}()
-			fileStat, err := os.Stat(link)
+			fileStat, err := os.Stat(link.Url)
 			if err != nil {
 				common.ErrorResp(c, err, 500)
 				return
@@ -87,7 +88,7 @@ func Proxy(c *gin.Context) {
 			http.ServeContent(c.Writer, c.Request, utils.Base(rawPath), fileStat.ModTime(), file)
 			return
 		}
-		c.File(link)
+		c.File(link.Url)
 		return
 	} else {
 		if utils.GetFileType(filepath.Ext(rawPath)) == conf.TEXT {
@@ -97,13 +98,13 @@ func Proxy(c *gin.Context) {
 		driver.Proxy(c, account)
 		r := c.Request
 		w := c.Writer
-		target, err := url.Parse(link)
+		target, err := url.Parse(link.Url)
 		if err != nil {
 			common.ErrorResp(c, err, 500)
 			return
 		}
 		protocol := "http://"
-		if strings.HasPrefix(link, "https://") {
+		if strings.HasPrefix(link.Url, "https://") {
 			protocol = "https://"
 		}
 		targetHost, err := url.Parse(fmt.Sprintf("%s%s", protocol, target.Host))
@@ -121,8 +122,8 @@ func init() {
 	client.SetRetryCount(3)
 }
 
-func Text(c *gin.Context, link string) {
-	res, err := client.R().Get(link)
+func Text(c *gin.Context, link *base.Link) {
+	res, err := client.R().Get(link.Url)
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return

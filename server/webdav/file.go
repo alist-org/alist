@@ -80,26 +80,26 @@ func (fs *FileSystem) Files(rawPath string) ([]model.File, error) {
 	return driver.Files(path_, account)
 }
 
-func GetPW(path string, name string) string {
-	if !conf.CheckDown {
-		return ""
-	}
-	meta, err := model.GetMetaByPath(path)
-	if err == nil {
-		if meta.Password != "" {
-			return utils.SignWithPassword(name, meta.Password)
-		}
-		return ""
-	} else {
-		if !conf.CheckParent {
-			return ""
-		}
-		if path == "/" {
-			return ""
-		}
-		return GetPW(utils.Dir(path), name)
-	}
-}
+//func GetPW(path string, name string) string {
+//	if !conf.CheckDown {
+//		return ""
+//	}
+//	meta, err := model.GetMetaByPath(path)
+//	if err == nil {
+//		if meta.Password != "" {
+//			return utils.SignWithPassword(name, meta.Password)
+//		}
+//		return ""
+//	} else {
+//		if !conf.CheckParent {
+//			return ""
+//		}
+//		if path == "/" {
+//			return ""
+//		}
+//		return GetPW(utils.Dir(path), name)
+//	}
+//}
 
 func (fs *FileSystem) Link(r *http.Request, rawPath string) (string, error) {
 	rawPath = utils.ParsePath(rawPath)
@@ -119,11 +119,15 @@ func (fs *FileSystem) Link(r *http.Request, rawPath string) (string, error) {
 	if driver.Config().OnlyProxy || account.WebdavProxy {
 		link = fmt.Sprintf("%s://%s/p%s", protocol, r.Host, rawPath)
 		if conf.CheckDown {
-			pw := GetPW(utils.Dir(rawPath), utils.Base(rawPath))
-			link += "?pw" + pw
+			sign := utils.SignWithToken(utils.Base(rawPath), conf.Token)
+			link += "?sign" + sign
 		}
 	} else {
-		link, err = driver.Link(path_, account)
+		link_, err := driver.Link(path_, account)
+		if err != nil {
+			return "", err
+		}
+		link = link_.Url
 	}
 	log.Debugf("webdav get link: %s", link)
 	return link, err

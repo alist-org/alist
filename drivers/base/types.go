@@ -25,3 +25,13 @@ type TokenResp struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
 }
+
+type Header struct{
+	Name string `json:"name"`
+	Value string `json:"value"`
+}
+
+type Link struct {
+	Url string `json:"url"`
+	Headers []Header `json:"headers"`
+}
