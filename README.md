@@ -1,6 +1,6 @@
 <div align="center">
   <h3><a href="https://alist.nn.ci">Alist</a></h3>
-  <p><em>A file list program that supports multiple storage, powered by gin and React.</em></p>
+  <p><em>🗂️Another file list program that supports multiple storage, powered by Gin and React.</em></p>
   <a href="https://github.com/Xhofe/alist/releases"><img src="https://img.shields.io/github/release/Xhofe/alist?style=flat-square" alt="latest version"></a>
   <a href="https://github.com/Xhofe/alist/discussions"><img src="https://img.shields.io/github/discussions/Xhofe/alist?color=%23ED8936&style=flat-square" alt="discussions"></a>
   <a href="https://github.com/Xhofe/alist/actions?query=workflow%3ABuild"><img src="https://img.shields.io/github/workflow/status/Xhofe/alist/build?style=flat-square" alt="Build status"></a>
@@ -38,7 +38,7 @@ English | [中文](./README_cn.md)
 - [x] Protected routes (password protection and authentication) 
 - [x] WebDav (readonly)
 - [x] [Docker Deploy](https://hub.docker.com/r/xhofe/alist)
-- [x] cloudflare workers proxy
+- [x] Cloudflare workers proxy
 
 ## Discussion
 

@@ -1,6 +1,6 @@
 <div align="center">
   <h3><a href="https://alist.nn.ci">Alist</a></h3>
-  <p><em>一个支持多存储的文件列表程序，使用 gin 和 React 。</em></p>
+  <p><em>🗂️一个支持多存储的文件列表程序，使用 Gin 和 React 。</em></p>
   <a href="https://github.com/Xhofe/alist/releases"><img src="https://img.shields.io/github/release/Xhofe/alist?style=flat-square" alt="latest version"></a>
   <a href="https://github.com/Xhofe/alist/discussions"><img src="https://img.shields.io/github/discussions/Xhofe/alist?color=%23ED8936&style=flat-square" alt="discussions"></a>
   <a href="https://github.com/Xhofe/alist/actions?query=workflow%3ABuild"><img src="https://img.shields.io/github/workflow/status/Xhofe/alist/build?style=flat-square" alt="Build status"></a>
@@ -37,7 +37,7 @@
 - [x] 受保护的路由（密码保护和身份验证）
 - [x] WebDav（只读）
 - [x] [Docker 部署](https://hub.docker.com/r/xhofe/alist)
-- [x] cloudflare workers 中转
+- [x] Cloudflare workers 中转
 
 ## 讨论
 
