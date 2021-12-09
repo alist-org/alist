@@ -115,6 +115,8 @@ func (driver Alist) Link(path string, account *model.Account) (*base.Link, error
 
 func (driver Alist) Path(path string, account *model.Account) (*model.File, []model.File, error) {
 	path = utils.ParsePath(path)
+	path = filepath.Join(account.RootFolder, path)
+	path = strings.ReplaceAll(path, "\\", "/")
 	cache, err := base.GetCache(path, account)
 	if err == nil {
 		files := cache.([]model.File)
