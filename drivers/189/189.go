@@ -1,27 +1,34 @@
 package _89
 
 import (
+	"crypto/aes"
+	"crypto/hmac"
+	"crypto/md5"
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/sha1"
 	"crypto/x509"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
 	"github.com/go-resty/resty/v2"
+	jsoniter "github.com/json-iterator/go"
 	log "github.com/sirupsen/logrus"
 	mathRand "math/rand"
+	"net/url"
 	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
 )
-
 
 var client189Map map[string]*resty.Client
 
@@ -90,6 +97,7 @@ func (driver Cloud189) Login(account *model.Account) error {
 		client = resty.New()
 		//client.SetCookieJar(cookieJar)
 		client.SetRetryCount(3)
+		client.SetHeader("Referer", "https://cloud.189.cn/")
 	}
 	url := "https://cloud.189.cn/api/portal/loginUrl.action?redirectURL=https%3A%2F%2Fcloud.189.cn%2Fmain.action"
 	b := ""
@@ -254,6 +262,102 @@ func (driver Cloud189) GetFiles(fileId string, account *model.Account) ([]Cloud1
 	return res, nil
 }
 
+func (driver Cloud189) Request(url string, method string, form map[string]string, headers map[string]string, account *model.Account) ([]byte, error) {
+	client, ok := client189Map[account.Name]
+	if !ok {
+		return nil, fmt.Errorf("can't find [%s] client", account.Name)
+	}
+	//var resp base.Json
+	var e Cloud189Error
+	req := client.R().SetError(&e).
+		SetHeader("Accept", "application/json;charset=UTF-8").
+		SetQueryParams(map[string]string{
+			"noCache": random(),
+		})
+	if form != nil {
+		req = req.SetFormData(form)
+	}
+	if headers != nil {
+		req = req.SetHeaders(headers)
+	}
+	var err error
+	var res *resty.Response
+	if strings.ToUpper(method) == "GET" {
+		res, err = req.Get(url)
+	} else {
+		res, err = req.Post(url)
+	}
+	if err != nil {
+		return nil, err
+	}
+	if e.ErrorCode != "" {
+		if e.ErrorCode == "InvalidSessionKey" {
+			err = driver.Login(account)
+			if err != nil {
+				return nil, err
+			}
+			return driver.Request(url, method, form, nil, account)
+		}
+	}
+	//log.Debug(res, jsoniter.Get(res.Body(),"res_code").ToInt())
+	if jsoniter.Get(res.Body(),"res_code").ToInt() != 0 {
+		err = errors.New(jsoniter.Get(res.Body(),"res_message").ToString())
+	}
+	return res.Body(), err
+}
+
+func (driver Cloud189) GetSessionKey(account *model.Account) (string, error) {
+	resp, err := driver.Request("https://cloud.189.cn/v2/getUserBriefInfo.action", "GET", nil, nil, account)
+	if err != nil {
+		return "", err
+	}
+	return jsoniter.Get(resp, "sessionKey").ToString(), nil
+}
+
+func (driver Cloud189) GetResKey(account *model.Account) (string, string, error) {
+	resp, err := driver.Request("https://cloud.189.cn/api/security/generateRsaKey.action", "GET", nil, nil, account)
+	if err != nil {
+		return "", "", err
+	}
+	return jsoniter.Get(resp, "pubKey").ToString(), jsoniter.Get(resp, "pkId").ToString(), nil
+}
+
+func (driver Cloud189) UploadRequest(url string, form map[string]string, account *model.Account) ([]byte, error) {
+	sessionKey, err := driver.GetSessionKey(account)
+	if err != nil {
+		return nil, err
+	}
+	pubKey, pkId, err := driver.GetResKey(account)
+	if err != nil {
+		return nil, err
+	}
+	xRId := "e007e99a-370c-4a14-a143-1b1541972fcf"
+	pkey := strings.ReplaceAll(xRId, "-", "")
+	params := aesEncrypt(qs(form), pkey[:16])
+	date := strconv.FormatInt(time.Now().Unix(), 10)
+	signature := hmacSha1(fmt.Sprintf("SessionKey=%s&Operate=GET&RequestURI=%s&Date=%s&params=%s", sessionKey, url, date, params), pkey)
+	encryptionText := RsaEncode([]byte(pkey), pubKey)
+	res, err := base.RestyClient.R().SetHeaders(map[string]string{
+		"signature":      signature,
+		"sessionKey":     sessionKey,
+		"encryptionText": encryptionText,
+		"pkId":           pkId,
+		"x-request-id":   xRId,
+		"x-request-date": date,
+		"origin":         "https://cloud.189.cn",
+		"referer":        "https://cloud.189.cn/",
+	}).SetQueryParam("params", params).Get("https://upload.cloud.189.cn" + url)
+	if err != nil {
+		return nil, err
+	}
+	log.Debug(res.String())
+	data := res.Body()
+	if jsoniter.Get(data, "code").ToString() != "SUCCESS" {
+		return nil, errors.New(jsoniter.Get(data, "msg").ToString())
+	}
+	return data, nil
+}
+
 func random() string {
 	return fmt.Sprintf("0.%17v", mathRand.New(mathRand.NewSource(time.Now().UnixNano())).Int63n(100000000000000000))
 }
@@ -310,6 +414,75 @@ func b64tohex(a string) string {
 		d += int2char(c << 2)
 	}
 	return d
+}
+
+func qs(form map[string]string) string {
+	strList := make([]string, 0)
+	for k, v := range form {
+		strList = append(strList, fmt.Sprintf("%s=%s", k, url.QueryEscape(v)))
+	}
+	return strings.Join(strList, "&")
+}
+
+func aesEncrypt(data, key string) string {
+	encrypted := AesEncryptECB([]byte(data), []byte(key))
+	//return string(encrypted)
+	return hex.EncodeToString(encrypted)
+}
+
+func hmacSha1(data string, secret string) string {
+	h := hmac.New(sha1.New, []byte(secret))
+	h.Write([]byte(data))
+	return hex.EncodeToString(h.Sum(nil))
+}
+
+func AesEncryptECB(origData []byte, key []byte) (encrypted []byte) {
+	cipher, _ := aes.NewCipher(generateKey(key))
+	length := (len(origData) + aes.BlockSize) / aes.BlockSize
+	plain := make([]byte, length*aes.BlockSize)
+	copy(plain, origData)
+	pad := byte(len(plain) - len(origData))
+	for i := len(origData); i < len(plain); i++ {
+		plain[i] = pad
+	}
+	encrypted = make([]byte, len(plain))
+	// 分组分块加密
+	for bs, be := 0, cipher.BlockSize(); bs <= len(origData); bs, be = bs+cipher.BlockSize(), be+cipher.BlockSize() {
+		cipher.Encrypt(encrypted[bs:be], plain[bs:be])
+	}
+
+	return encrypted
+}
+func AesDecryptECB(encrypted []byte, key []byte) (decrypted []byte) {
+	cipher, _ := aes.NewCipher(generateKey(key))
+	decrypted = make([]byte, len(encrypted))
+	//
+	for bs, be := 0, cipher.BlockSize(); bs < len(encrypted); bs, be = bs+cipher.BlockSize(), be+cipher.BlockSize() {
+		cipher.Decrypt(decrypted[bs:be], encrypted[bs:be])
+	}
+
+	trim := 0
+	if len(decrypted) > 0 {
+		trim = len(decrypted) - int(decrypted[len(decrypted)-1])
+	}
+
+	return decrypted[:trim]
+}
+func generateKey(key []byte) (genKey []byte) {
+	genKey = make([]byte, 16)
+	copy(genKey, key)
+	for i := 16; i < len(key); {
+		for j := 0; j < 16 && i < len(key); j, i = j+1, i+1 {
+			genKey[j] ^= key[i]
+		}
+	}
+	return genKey
+}
+
+func getMd5(data []byte) []byte {
+	h := md5.New()
+	h.Write(data)
+	return h.Sum(nil)
 }
 
 func init() {
