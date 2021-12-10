@@ -377,6 +377,9 @@ func (driver AliDrive) Upload(file *model.FileStream, account *model.Account) er
 	if err != nil {
 		return err
 	}
+	if !parentFile.IsDir() {
+		return base.ErrNotFolder
+	}
 	var resp UploadResp
 	var e AliRespError
 	partInfoList := make([]base.Json, 0)
@@ -471,6 +474,7 @@ func (driver AliDrive) Upload(file *model.FileStream, account *model.Account) er
 		return fmt.Errorf("%s", e.Message)
 	}
 	if resp2["file_id"] == resp.FileId {
+		_ = base.DeleteCache(file.ParentPath, account)
 		return nil
 	}
 	return fmt.Errorf("%+v", resp2)
