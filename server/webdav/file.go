@@ -203,6 +203,7 @@ func slashClean(name string) string {
 func moveFiles(ctx context.Context, fs *FileSystem, src string, dst string, overwrite bool) (status int, err error) {
 	src = utils.ParsePath(src)
 	dst = utils.ParsePath(dst)
+	log.Debugf("move %s -> %s", src, dst)
 	if src == dst {
 		return http.StatusMethodNotAllowed, errDestinationEqualsSource
 	}
@@ -230,6 +231,7 @@ func moveFiles(ctx context.Context, fs *FileSystem, src string, dst string, over
 func copyFiles(ctx context.Context, fs *FileSystem, src string, dst string, overwrite bool, depth int, recursion int) (status int, err error) {
 	src = utils.ParsePath(src)
 	dst = utils.ParsePath(dst)
+	log.Debugf("move %s -> %s", src, dst)
 	if src == dst {
 		return http.StatusMethodNotAllowed, errDestinationEqualsSource
 	}

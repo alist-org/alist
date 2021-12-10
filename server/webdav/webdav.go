@@ -46,6 +46,7 @@ func (h *Handler) stripPrefix(p string) (string, int, error) {
 func isPathExist(ctx context.Context, fs *FileSystem, path string) (bool, FileInfo) {
 	file, err := fs.File(path)
 	if err != nil {
+		log.Debug(err)
 		return false, nil
 	}
 	return true, file

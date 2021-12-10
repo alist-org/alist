@@ -5,6 +5,7 @@ import (
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
+	log "github.com/sirupsen/logrus"
 )
 
 func KeyCache(path string, account *model.Account) string {
@@ -21,5 +22,7 @@ func GetCache(path string, account *model.Account) (interface{}, error) {
 }
 
 func DeleteCache(path string, account *model.Account) error {
-	return conf.Cache.Delete(conf.Ctx, KeyCache(path, account))
+	err := conf.Cache.Delete(conf.Ctx, KeyCache(path, account))
+	log.Debugf("delete cache %s: %+v", path, err)
+	return err
 }
