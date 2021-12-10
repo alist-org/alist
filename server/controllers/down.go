@@ -56,8 +56,8 @@ func Proxy(c *gin.Context) {
 		common.ErrorResp(c, fmt.Errorf("[%s] not allowed proxy", account.Name), 403)
 		return
 	}
-	// 中转时有中转机器使用中转机器
-	if account.ProxyUrl != "" {
+	// 中转时有中转机器使用中转机器，若携带标志位则表明不能再走中转机器了
+	if account.ProxyUrl != "" && c.Param("d") != "1" {
 		name := utils.Base(rawPath)
 		link := fmt.Sprintf("%s%s?sign=%s", account.ProxyUrl, rawPath, utils.SignWithToken(name, conf.Token))
 		c.Redirect(302, link)

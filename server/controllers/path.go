@@ -95,7 +95,7 @@ func Link(c *gin.Context) {
 	}
 	if driver.Config().NoLink {
 		common.SuccessResp(c, base.Link{
-			Url: fmt.Sprintf("//%s/d%s?sign=%s", c.Request.Host, req.Path, utils.SignWithToken(utils.Base(rawPath), conf.Token)),
+			Url: fmt.Sprintf("//%s/d%s?d=1&sign=%s", c.Request.Host, req.Path, utils.SignWithToken(utils.Base(rawPath), conf.Token)),
 		})
 		return
 	} else {

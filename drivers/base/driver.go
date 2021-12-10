@@ -84,16 +84,13 @@ func GetDrivers() map[string][]Item {
 				},
 			}, v.Items()...)
 		}
-		// 不支持给本地文件添加中转
-		if v.Config().Name != "Native" {
-			res[k] = append(res[k], Item{
-				Name:        "proxy_url",
-				Label:       "proxy_url",
-				Type:        TypeString,
-				Required:    false,
-				Description: "proxy url",
-			})
-		}
+		res[k] = append(res[k], Item{
+			Name:        "proxy_url",
+			Label:       "proxy_url",
+			Type:        TypeString,
+			Required:    false,
+			Description: "proxy url",
+		})
 	}
 	return res
 }
