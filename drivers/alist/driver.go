@@ -91,7 +91,7 @@ func (driver Alist) File(path string, account *model.Account) (*model.File, erro
 
 func (driver Alist) Files(path string, account *model.Account) ([]model.File, error) {
 	//return nil, base.ErrNotImplement
-	_, files, err := driver.Path(utils.Dir(path), account)
+	_, files, err := driver.Path(path, account)
 	if err != nil {
 		return nil, err
 	}
