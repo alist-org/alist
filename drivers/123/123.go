@@ -1,12 +1,17 @@
 package _23
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"errors"
 	"fmt"
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
 	"github.com/go-resty/resty/v2"
+	jsoniter "github.com/json-iterator/go"
+	"math/rand"
 	"path/filepath"
 	"strconv"
 	"time"
@@ -122,6 +127,20 @@ func (driver Pan123) GetFiles(parentId string, account *model.Account) ([]Pan123
 	return res, nil
 }
 
+func (driver Pan123) Post(url string, data base.Json, account *model.Account) ([]byte, error) {
+	res, err := pan123Client.R().
+		SetHeader("authorization", "Bearer "+account.AccessToken).
+		SetBody(data).Post(url)
+	if err != nil {
+		return nil, err
+	}
+	body := res.Body()
+	if jsoniter.Get(body, "code").ToInt() != 0 {
+		return nil, errors.New(jsoniter.Get(body, "message").ToString())
+	}
+	return body, nil
+}
+
 func (driver Pan123) GetFile(path string, account *model.Account) (*Pan123File, error) {
 	dir, name := filepath.Split(path)
 	dir = utils.ParsePath(dir)
@@ -141,6 +160,28 @@ func (driver Pan123) GetFile(path string, account *model.Account) (*Pan123File, 
 		}
 	}
 	return nil, base.ErrPathNotFound
+}
+
+func RandStr(length int) string {
+	str := "123456789abcdefghijklmnopqrstuvwxyz"
+	bytes := []byte(str)
+	var result []byte
+	rand.Seed(time.Now().UnixNano()+ int64(rand.Intn(100)))
+	for i := 0; i < length; i++ {
+		result = append(result, bytes[rand.Intn(len(bytes))])
+	}
+	return string(result)
+}
+
+func HMAC(message string, secret string) string {
+	key := []byte(secret)
+	h := hmac.New(sha256.New, key)
+	h.Write([]byte(message))
+	//	fmt.Println(h.Sum(nil))
+	//sha := hex.EncodeToString(h.Sum(nil))
+	//	fmt.Println(sha)
+	//return sha
+	return string(h.Sum(nil))
 }
 
 func init() {
