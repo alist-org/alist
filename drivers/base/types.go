@@ -19,6 +19,14 @@ const (
 	TypeNumber = "number"
 )
 
+const (
+	Get = iota
+	Post
+	Put
+	Delete
+	Patch
+)
+
 type Json map[string]interface{}
 
 type TokenResp struct {

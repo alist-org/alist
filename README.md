@@ -27,6 +27,8 @@ English | [中文](./README_cn.md)
   - [x] [123pan](https://www.123pan.com/)
   - [x] [lanzou](https://pc.woozooo.com/)
   - [x] [Alist](https://github.com/Xhofe/alist)
+  - [x] FTP
+  - [x] [PikPak](https://www.mypikpak.com/)
 - [x] File preview (PDF, markdown, code, plain text, ...)
 - [x] Image preview in gallery mode
 - [x] Video and audio preview (mp4, mp3, ...)

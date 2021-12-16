@@ -26,6 +26,8 @@
   - [x] [123云盘](https://www.123pan.com/)
   - [x] [蓝奏云](https://pc.woozooo.com/)
   - [x] [Alist](https://github.com/Xhofe/alist)
+  - [x] FTP
+  - [x] [PikPak](https://www.mypikpak.com/)
 - [x] 文件预览（PDF、markdown、代码、纯文本……）
 - [x] 画廊模式下的图像预览
 - [x] 视频和音频预览（mp4、mp3 等）

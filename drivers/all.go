@@ -10,4 +10,5 @@ import (
 	_ "github.com/Xhofe/alist/drivers/lanzou"
 	_ "github.com/Xhofe/alist/drivers/native"
 	_ "github.com/Xhofe/alist/drivers/onedrive"
+	_ "github.com/Xhofe/alist/drivers/pikpak"
 )

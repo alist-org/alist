@@ -220,6 +220,7 @@ func moveFiles(ctx context.Context, fs *FileSystem, src string, dst string, over
 	}
 	err = driver.Move(srcPath,dstPath,srcAccount)
 	if err != nil {
+		log.Debug(err)
 		return http.StatusInternalServerError, err
 	}
 	return http.StatusNoContent, nil
