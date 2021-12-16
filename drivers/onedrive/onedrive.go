@@ -1,6 +1,7 @@
 package onedrive
 
 import (
+	"errors"
 	"fmt"
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/drivers/base"
@@ -92,6 +93,10 @@ func (driver Onedrive) RefreshToken(account *model.Account) error {
 		return fmt.Errorf("%s", e.ErrorDescription)
 	} else {
 		account.Status = "work"
+	}
+	if resp.RefreshToken == "" {
+		account.Status = "empty refresh_token"
+		return errors.New("empty refresh_token")
 	}
 	account.RefreshToken, account.AccessToken = resp.RefreshToken, resp.AccessToken
 	return nil
