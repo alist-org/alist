@@ -74,6 +74,14 @@ type OneTokenErr struct {
 }
 
 func (driver Onedrive) RefreshToken(account *model.Account) error {
+	err := driver.refreshToken(account)
+	if err != nil && err.Error() == "empty refresh_token" {
+		return driver.refreshToken(account)
+	}
+	return err
+}
+
+func (driver Onedrive) refreshToken(account *model.Account) error {
 	url := driver.GetMetaUrl(account, true, "") + "/common/oauth2/v2.0/token"
 	var resp base.TokenResp
 	var e OneTokenErr
