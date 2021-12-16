@@ -46,7 +46,7 @@ func (driver Onedrive) GetMetaUrl(account *model.Account, auth bool, path string
 	if auth {
 		return host.Oauth
 	}
-	switch account.OnedriveType {
+	switch account.InternalType {
 	case "onedrive":
 		{
 			if path == "/" || path == "\\" {

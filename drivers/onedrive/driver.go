@@ -33,7 +33,7 @@ func (driver Onedrive) Items() []base.Item {
 			Description: "",
 		},
 		{
-			Name:     "onedrive_type",
+			Name:     "internal_type",
 			Label:    "onedrive type",
 			Type:     base.TypeSelect,
 			Required: true,

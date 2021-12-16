@@ -53,7 +53,7 @@ type LanZouFilesResp struct {
 }
 
 func (driver *Lanzou) GetFiles(folderId string, account *model.Account) ([]LanZouFile, error) {
-	if account.OnedriveType == "cookie" {
+	if account.InternalType == "cookie" {
 		files := make([]LanZouFile, 0)
 		var resp LanZouFilesResp
 		// folders

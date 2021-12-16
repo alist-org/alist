@@ -22,7 +22,7 @@ func (driver Lanzou) Config() base.DriverConfig {
 func (driver Lanzou) Items() []base.Item {
 	return []base.Item{
 		{
-			Name:     "onedrive_type",
+			Name:     "internal_type",
 			Label:    "lanzou type",
 			Type:     base.TypeSelect,
 			Required: true,
@@ -53,7 +53,7 @@ func (driver Lanzou) Items() []base.Item {
 }
 
 func (driver Lanzou) Save(account *model.Account, old *model.Account) error {
-	if account.OnedriveType == "cookie" {
+	if account.InternalType == "cookie" {
 		if account.RootFolder == "" {
 			account.RootFolder = "-1"
 		}
@@ -121,7 +121,7 @@ func (driver Lanzou) Link(path string, account *model.Account) (*base.Link, erro
 	}
 	log.Debugf("down file: %+v", file)
 	downId := file.Id
-	if account.OnedriveType == "cookie" {
+	if account.InternalType == "cookie" {
 		downId, err = driver.GetDownPageId(file.Id, account)
 		if err != nil {
 			return nil, err

@@ -30,7 +30,7 @@ type Account struct {
 	RedirectUri    string     `json:"redirect_uri"`
 	SiteUrl        string     `json:"site_url"`
 	SiteId         string     `json:"site_id"`
-	OnedriveType   string     `json:"onedrive_type"`
+	InternalType   string     `json:"internal_type"`
 	WebdavProxy    bool       `json:"webdav_proxy"`
 	Proxy          bool       `json:"proxy"`       // 是否中转
 	//AllowProxy     bool       `json:"allow_proxy"` // 是否允许中转下载
