@@ -68,6 +68,10 @@ func Proxy(c *gin.Context) {
 		common.ErrorResp(c, err, 500)
 		return
 	}
+	// 本机读取数据
+	if account.Type == "FTP" {
+		c.Data(http.StatusOK, "application/octet-stream", link.Data)
+	}
 	// 本机文件直接返回文件
 	if account.Type == "Native" {
 		// 对于名称为index.html的文件需要特殊处理

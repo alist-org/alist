@@ -34,4 +34,5 @@ type Header struct{
 type Link struct {
 	Url string `json:"url"`
 	Headers []Header `json:"headers"`
+	Data []byte
 }

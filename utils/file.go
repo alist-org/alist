@@ -114,3 +114,11 @@ func Base(path string) string {
 	}
 	return path[idx+1:]
 }
+
+func Join(elem ...string) string {
+	res := filepath.Join(elem...)
+	if res == "\\" {
+		res = "/"
+	}
+	return res
+}

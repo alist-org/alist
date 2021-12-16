@@ -88,20 +88,20 @@ func Link(c *gin.Context) {
 		common.ErrorResp(c, err, 500)
 		return
 	}
-	link, err := driver.Link(path, account)
-	if err != nil {
-		common.ErrorResp(c, err, 500)
-		return
-	}
 	if driver.Config().NoLink {
 		common.SuccessResp(c, base.Link{
 			Url: fmt.Sprintf("//%s/d%s?d=1&sign=%s", c.Request.Host, req.Path, utils.SignWithToken(utils.Base(rawPath), conf.Token)),
 		})
 		return
-	} else {
-		common.SuccessResp(c, link)
+	}
+	link, err := driver.Link(path, account)
+	if err != nil {
+		common.ErrorResp(c, err, 500)
 		return
 	}
+	common.SuccessResp(c, link)
+	return
+
 }
 
 func Preview(c *gin.Context) {
