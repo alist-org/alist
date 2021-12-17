@@ -71,6 +71,7 @@ func Proxy(c *gin.Context) {
 	// 本机读取数据
 	if account.Type == "FTP" {
 		c.Data(http.StatusOK, "application/octet-stream", link.Data)
+		return
 	}
 	// 本机文件直接返回文件
 	if account.Type == "Native" {
