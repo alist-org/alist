@@ -11,7 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	jsoniter "github.com/json-iterator/go"
 	log "github.com/sirupsen/logrus"
-	url "net/url"
+	"net/url"
 	"path/filepath"
 	"strconv"
 	"strings"

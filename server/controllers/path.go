@@ -101,7 +101,6 @@ func Link(c *gin.Context) {
 	}
 	common.SuccessResp(c, link)
 	return
-
 }
 
 func Preview(c *gin.Context) {

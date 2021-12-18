@@ -19,12 +19,16 @@ import (
 
 var pan123Client = resty.New()
 
+type BaseResp struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}
+
 type Pan123TokenResp struct {
-	Code int `json:"code"`
+	BaseResp
 	Data struct {
 		Token string `json:"token"`
 	} `json:"data"`
-	Message string `json:"message"`
 }
 
 type Pan123File struct {
@@ -38,8 +42,7 @@ type Pan123File struct {
 }
 
 type Pan123Files struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
+	BaseResp
 	Data    struct {
 		InfoList []Pan123File `json:"InfoList"`
 		Next     string       `json:"Next"`
@@ -47,8 +50,7 @@ type Pan123Files struct {
 }
 
 type Pan123DownResp struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
+	BaseResp
 	Data    struct {
 		DownloadUrl string `json:"DownloadUrl"`
 	} `json:"data"`
