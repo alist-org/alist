@@ -86,7 +86,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request, fs *FileSyst
 	if status != 0 {
 		w.WriteHeader(status)
 		if status != http.StatusNoContent {
-			w.Write([]byte(StatusText(status)))
+			_, _ = w.Write([]byte(StatusText(status)))
 		}
 	}
 	if h.Logger != nil {
@@ -222,7 +222,10 @@ func (h *Handler) handleGetHeadPost(w http.ResponseWriter, r *http.Request, fs *
 	}
 
 	ctx := r.Context()
-
+	if reqPath == "/" {
+		_, err = w.Write([]byte("Please connect using software that supports WebDAV instead of a browser.\n"))
+		return http.StatusMethodNotAllowed, err
+	}
 	exist, file := isPathExist(ctx, fs, reqPath)
 	if !exist {
 		return http.StatusNotFound, nil
