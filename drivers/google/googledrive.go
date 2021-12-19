@@ -7,23 +7,25 @@ import (
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
 	"github.com/go-resty/resty/v2"
+	log "github.com/sirupsen/logrus"
 	"path/filepath"
 	"strconv"
 	"time"
 )
 
-var googleClient = resty.New()
-
-type GoogleTokenError struct {
+type TokenError struct {
 	Error            string `json:"error"`
 	ErrorDescription string `json:"error_description"`
 }
 
 func (driver GoogleDrive) RefreshToken(account *model.Account) error {
 	url := "https://www.googleapis.com/oauth2/v4/token"
+	if account.APIProxyUrl != "" {
+		url = fmt.Sprintf("%s/%s", account.APIProxyUrl, url)
+	}
 	var resp base.TokenResp
-	var e GoogleTokenError
-	_, err := googleClient.R().SetResult(&resp).SetError(&e).
+	var e TokenError
+	res, err := base.RestyClient.R().SetResult(&resp).SetError(&e).
 		SetFormData(map[string]string{
 			"client_id":     account.ClientId,
 			"client_secret": account.ClientSecret,
@@ -33,6 +35,7 @@ func (driver GoogleDrive) RefreshToken(account *model.Account) error {
 	if err != nil {
 		return err
 	}
+	log.Debug(res.String())
 	if e.Error != "" {
 		return fmt.Errorf(e.Error)
 	}
@@ -41,7 +44,7 @@ func (driver GoogleDrive) RefreshToken(account *model.Account) error {
 	return nil
 }
 
-type GoogleFile struct {
+type File struct {
 	Id           string     `json:"id"`
 	Name         string     `json:"name"`
 	MimeType     string     `json:"mimeType"`
@@ -53,7 +56,7 @@ func (driver GoogleDrive) IsDir(mimeType string) bool {
 	return mimeType == "application/vnd.google-apps.folder" || mimeType == "application/vnd.google-apps.shortcut"
 }
 
-func (driver GoogleDrive) FormatFile(file *GoogleFile) *model.File {
+func (driver GoogleDrive) FormatFile(file *File) *model.File {
 	f := &model.File{
 		Id:        file.Id,
 		Name:      file.Name,
@@ -72,12 +75,12 @@ func (driver GoogleDrive) FormatFile(file *GoogleFile) *model.File {
 	return f
 }
 
-type GoogleFiles struct {
-	NextPageToken string       `json:"nextPageToken"`
-	Files         []GoogleFile `json:"files"`
+type Files struct {
+	NextPageToken string `json:"nextPageToken"`
+	Files         []File `json:"files"`
 }
 
-type GoogleError struct {
+type Error struct {
 	Error struct {
 		Errors []struct {
 			Domain       string `json:"domain"`
@@ -91,39 +94,27 @@ type GoogleError struct {
 	} `json:"error"`
 }
 
-func (driver GoogleDrive) GetFiles(id string, account *model.Account) ([]GoogleFile, error) {
+func (driver GoogleDrive) GetFiles(id string, account *model.Account) ([]File, error) {
 	pageToken := "first"
-	res := make([]GoogleFile, 0)
+	res := make([]File, 0)
 	for pageToken != "" {
 		if pageToken == "first" {
 			pageToken = ""
 		}
-		var resp GoogleFiles
-		var e GoogleError
-		_, err := googleClient.R().SetResult(&resp).SetError(&e).
-			SetHeader("Authorization", "Bearer "+account.AccessToken).
-			SetQueryParams(map[string]string{
-				"orderBy":                   "folder,name,modifiedTime desc",
-				"fields":                    "files(id,name,mimeType,size,modifiedTime),nextPageToken",
-				"pageSize":                  "1000",
-				"q":                         fmt.Sprintf("'%s' in parents and trashed = false", id),
-				"includeItemsFromAllDrives": "true",
-				"supportsAllDrives":         "true",
-				"pageToken":                 pageToken,
-			}).Get("https://www.googleapis.com/drive/v3/files")
+		var resp Files
+		query := map[string]string{
+			"orderBy":                   "folder,name,modifiedTime desc",
+			"fields":                    "files(id,name,mimeType,size,modifiedTime),nextPageToken",
+			"pageSize":                  "1000",
+			"q":                         fmt.Sprintf("'%s' in parents and trashed = false", id),
+			"includeItemsFromAllDrives": "true",
+			"supportsAllDrives":         "true",
+			"pageToken":                 pageToken,
+		}
+		_, err := driver.Request("https://www.googleapis.com/drive/v3/files",
+			base.Get, nil, query, nil, nil, &resp, account)
 		if err != nil {
 			return nil, err
-		}
-		if e.Error.Code != 0 {
-			if e.Error.Code == 401 {
-				err = driver.RefreshToken(account)
-				if err != nil {
-					_ = model.SaveAccount(account)
-					return nil, err
-				}
-				return driver.GetFiles(id, account)
-			}
-			return nil, fmt.Errorf("%s: %v", e.Error.Message, e.Error.Errors)
 		}
 		pageToken = resp.NextPageToken
 		res = append(res, resp.Files...)
@@ -131,28 +122,58 @@ func (driver GoogleDrive) GetFiles(id string, account *model.Account) ([]GoogleF
 	return res, nil
 }
 
-//func (driver GoogleDrive) GetFile(path string, account *model.Account) (*GoogleFile, error) {
-//	dir, name := filepath.Split(path)
-//	dir = utils.ParsePath(dir)
-//	_, _, err := driver.ParentPath(dir, account)
-//	if err != nil {
-//		return nil, err
-//	}
-//	parentFiles_, _ := conf.Cache.Get(conf.Ctx, fmt.Sprintf("%s%s", account.Name, dir))
-//	parentFiles, _ := parentFiles_.([]GoogleFile)
-//	for _, file := range parentFiles {
-//		if file.Name == name {
-//			if !driver.IsDir(file.MimeType) {
-//				return &file, err
-//			} else {
-//				return nil, drivers.ErrNotFile
-//			}
-//		}
-//	}
-//	return nil, drivers.ErrPathNotFound
-//}
+func (driver GoogleDrive) Request(url string, method int, headers, query, form map[string]string, data *base.Json, resp interface{}, account *model.Account) ([]byte, error) {
+	rawUrl := url
+	if account.APIProxyUrl != "" {
+		url = fmt.Sprintf("%s/%s", account.APIProxyUrl, url)
+	}
+	req := base.RestyClient.R()
+	req.SetHeader("Authorization", "Bearer "+account.AccessToken)
+	if headers != nil {
+		req.SetHeaders(headers)
+	}
+	if query != nil {
+		req.SetQueryParams(query)
+	}
+	if form != nil {
+		req.SetFormData(form)
+	}
+	if data != nil {
+		req.SetBody(data)
+	}
+	if resp != nil {
+		req.SetResult(resp)
+	}
+	var res *resty.Response
+	var err error
+	var e Error
+	req.SetError(&e)
+	switch method {
+	case base.Get:
+		res, err = req.Get(url)
+	case base.Post:
+		res, err = req.Post(url)
+	default:
+		return nil, base.ErrNotSupport
+	}
+	if err != nil {
+		return nil, err
+	}
+	log.Debug(res.String())
+	if e.Error.Code != 0 {
+		if e.Error.Code == 401 {
+			err = driver.RefreshToken(account)
+			if err != nil {
+				_ = model.SaveAccount(account)
+				return nil, err
+			}
+			return driver.Request(rawUrl, method, headers, query, form, data, resp, account)
+		}
+		return nil, fmt.Errorf("%s: %v", e.Error.Message, e.Error.Errors)
+	}
+	return res.Body(), nil
+}
 
 func init() {
 	base.RegisterDriver(&GoogleDrive{})
-	googleClient.SetRetryCount(3)
 }

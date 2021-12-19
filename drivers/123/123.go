@@ -127,7 +127,6 @@ func (driver Pan123) Request(url string, method int, headers, query map[string]s
 	if account.APIProxyUrl != "" && proxy {
 		url = fmt.Sprintf("%s/%s", account.APIProxyUrl, url)
 	}
-	log.Debugf("request: %s", url)
 	req := base.RestyClient.R()
 	req.SetHeader("Authorization", "Bearer "+account.AccessToken)
 	if headers != nil {

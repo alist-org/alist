@@ -113,11 +113,13 @@ func GetDrivers() map[string][]Item {
 			},
 		}, res[k]...)
 		if v.Config().ApiProxy {
-			res[k] = append(res[k], Item{
-				Name:  "api_proxy_url",
-				Label: "api_proxy_url",
-				Type:  TypeString,
-			})
+			res[k] = append([]Item{
+				{
+					Name:  "api_proxy_url",
+					Label: "api_proxy_url",
+					Type:  TypeString,
+				},
+			}, res[k]...)
 		}
 	}
 	return res
