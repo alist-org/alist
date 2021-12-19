@@ -99,8 +99,8 @@ func (driver PikPak) Files(path string, account *model.Account) ([]model.File, e
 	return files, nil
 }
 
-func (driver PikPak) Link(path string, account *model.Account) (*base.Link, error) {
-	file, err := driver.File(path, account)
+func (driver PikPak) Link(args base.Args, account *model.Account) (*base.Link, error) {
+	file, err := driver.File(args.Path, account)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +123,7 @@ func (driver PikPak) Path(path string, account *model.Account) (*model.File, []m
 		return nil, nil, err
 	}
 	if !file.IsDir() {
-		link, err := driver.Link(path, account)
+		link, err := driver.Link(base.Args{Path: path}, account)
 		if err != nil {
 			return nil, nil, err
 		}

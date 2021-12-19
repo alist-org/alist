@@ -146,7 +146,8 @@ func (driver FTP) Files(path string, account *model.Account) ([]model.File, erro
 	return res, nil
 }
 
-func (driver FTP) Link(path string, account *model.Account) (*base.Link, error) {
+func (driver FTP) Link(args base.Args, account *model.Account) (*base.Link, error) {
+	path := args.Path
 	path = utils.ParsePath(path)
 	realPath := utils.Join(account.RootFolder, path)
 	conn, err := driver.Login(account)

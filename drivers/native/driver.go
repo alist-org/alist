@@ -123,8 +123,8 @@ func (driver Native) Files(path string, account *model.Account) ([]model.File, e
 	return files, nil
 }
 
-func (driver Native) Link(path string, account *model.Account) (*base.Link, error) {
-	fullPath := filepath.Join(account.RootFolder, path)
+func (driver Native) Link(args base.Args, account *model.Account) (*base.Link, error) {
+	fullPath := filepath.Join(account.RootFolder, args.Path)
 	s, err := os.Stat(fullPath)
 	if err != nil {
 		return nil, err

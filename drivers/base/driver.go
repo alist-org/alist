@@ -12,25 +12,45 @@ type DriverConfig struct {
 	Name      string
 	OnlyProxy bool
 	NoLink    bool // 必须本机返回的
+	ApiProxy  bool // 使用API中转的
+}
+
+type Args struct {
+	Path string
+	IP   string
 }
 
 type Driver interface {
+	// Config 配置
 	Config() DriverConfig
+	// Items 账号所需参数
 	Items() []Item
+	// Save 保存时处理
 	Save(account *model.Account, old *model.Account) error
+	// File 取文件
 	File(path string, account *model.Account) (*model.File, error)
+	// Files 取文件夹
 	Files(path string, account *model.Account) ([]model.File, error)
-	Link(path string, account *model.Account) (*Link, error)
+	// Link 取链接
+	Link(args Args, account *model.Account) (*Link, error)
+	// Path 取路径（文件或文件夹）
 	Path(path string, account *model.Account) (*model.File, []model.File, error)
+	// Proxy 代理处理
 	Proxy(c *gin.Context, account *model.Account)
+	// Preview 预览
 	Preview(path string, account *model.Account) (interface{}, error)
+	// MakeDir 创建文件夹
+	MakeDir(path string, account *model.Account) error
+	// Move 移动/改名
+	Move(src string, dst string, account *model.Account) error
+	// Copy 拷贝
+	Copy(src string, dst string, account *model.Account) error
+	// Delete 删除
+	Delete(path string, account *model.Account) error
+	// Upload 上传
+	Upload(file *model.FileStream, account *model.Account) error
 	// TODO
 	//Search(path string, keyword string, account *model.Account) ([]*model.File, error)
-	MakeDir(path string, account *model.Account) error
-	Move(src string, dst string, account *model.Account) error
-	Copy(src string, dst string, account *model.Account) error
-	Delete(path string, account *model.Account) error
-	Upload(file *model.FileStream, account *model.Account) error
 }
 
 type Item struct {
@@ -90,12 +110,14 @@ func GetDrivers() map[string][]Item {
 				Label: "down_proxy_url",
 				Type:  TypeString,
 			},
-			{
+		}, res[k]...)
+		if v.Config().ApiProxy {
+			res[k] = append(res[k], Item{
 				Name:  "api_proxy_url",
 				Label: "api_proxy_url",
 				Type:  TypeString,
-			},
-		}, res[k]...)
+			})
+		}
 	}
 	return res
 }

@@ -15,8 +15,8 @@ type GoogleDrive struct{}
 
 func (driver GoogleDrive) Config() base.DriverConfig {
 	return base.DriverConfig{
-		Name:       "GoogleDrive",
-		OnlyProxy:  true,
+		Name:      "GoogleDrive",
+		OnlyProxy: true,
 	}
 }
 
@@ -116,8 +116,8 @@ func (driver GoogleDrive) Files(path string, account *model.Account) ([]model.Fi
 	return files, nil
 }
 
-func (driver GoogleDrive) Link(path string, account *model.Account) (*base.Link, error) {
-	file, err := driver.File(path, account)
+func (driver GoogleDrive) Link(args base.Args, account *model.Account) (*base.Link, error) {
+	file, err := driver.File(args.Path, account)
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +136,7 @@ func (driver GoogleDrive) Link(path string, account *model.Account) (*base.Link,
 				_ = model.SaveAccount(account)
 				return nil, err
 			}
-			return driver.Link(path, account)
+			return driver.Link(args, account)
 		}
 		return nil, fmt.Errorf("%s: %v", e.Error.Message, e.Error.Errors)
 	}
@@ -144,7 +144,7 @@ func (driver GoogleDrive) Link(path string, account *model.Account) (*base.Link,
 		Url: url + "&alt=media",
 		Headers: []base.Header{
 			{
-				Name: "Authorization",
+				Name:  "Authorization",
 				Value: "Bearer " + account.AccessToken,
 			},
 		},

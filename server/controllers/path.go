@@ -94,7 +94,7 @@ func Link(c *gin.Context) {
 		})
 		return
 	}
-	link, err := driver.Link(path, account)
+	link, err := driver.Link(base.Args{Path: path}, account)
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return

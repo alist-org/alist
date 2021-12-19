@@ -138,8 +138,8 @@ func (driver Cloud189) Files(path string, account *model.Account) ([]model.File,
 	return files, nil
 }
 
-func (driver Cloud189) Link(path string, account *model.Account) (*base.Link, error) {
-	file, err := driver.File(utils.ParsePath(path), account)
+func (driver Cloud189) Link(args base.Args, account *model.Account) (*base.Link, error) {
+	file, err := driver.File(utils.ParsePath(args.Path), account)
 	if err != nil {
 		return nil, err
 	}
@@ -167,7 +167,7 @@ func (driver Cloud189) Link(path string, account *model.Account) (*base.Link, er
 			if err != nil {
 				return nil, err
 			}
-			return driver.Link(path, account)
+			return driver.Link(args, account)
 		}
 	}
 	if resp.ResCode != 0 {
@@ -194,7 +194,7 @@ func (driver Cloud189) Path(path string, account *model.Account) (*model.File, [
 		return nil, nil, err
 	}
 	if !file.IsDir() {
-		link, err := driver.Link(path, account)
+		link, err := driver.Link(base.Args{Path: path}, account)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -229,7 +229,7 @@ func (driver Cloud189) MakeDir(path string, account *model.Account) error {
 		"parentFolderId": parent.Id,
 		"folderName":     name,
 	}
-	_, err = driver.Request("https://cloud.189.cn/api/open/file/createFolder.action", "POST", form,nil, account)
+	_, err = driver.Request("https://cloud.189.cn/api/open/file/createFolder.action", "POST", form, nil, account)
 	if err == nil {
 		_ = base.DeleteCache(dir, account)
 	}
@@ -257,7 +257,7 @@ func (driver Cloud189) Move(src string, dst string, account *model.Account) erro
 			idKey:   srcFile.Id,
 			nameKey: dstName,
 		}
-		_, err = driver.Request(url, "POST", form,nil, account)
+		_, err = driver.Request(url, "POST", form, nil, account)
 	} else {
 		// move
 		dstDirFile, err := driver.File(dstDir, account)
@@ -284,7 +284,7 @@ func (driver Cloud189) Move(src string, dst string, account *model.Account) erro
 			"targetFolderId": dstDirFile.Id,
 			"taskInfos":      string(taskInfosBytes),
 		}
-		_, err = driver.Request("https://cloud.189.cn/api/open/batch/createBatchTask.action", "POST", form,nil, account)
+		_, err = driver.Request("https://cloud.189.cn/api/open/batch/createBatchTask.action", "POST", form, nil, account)
 	}
 	if err == nil {
 		_ = base.DeleteCache(srcDir, account)
@@ -323,7 +323,7 @@ func (driver Cloud189) Copy(src string, dst string, account *model.Account) erro
 		"targetFolderId": dstDirFile.Id,
 		"taskInfos":      string(taskInfosBytes),
 	}
-	_, err = driver.Request("https://cloud.189.cn/api/open/batch/createBatchTask.action", "POST", form,nil, account)
+	_, err = driver.Request("https://cloud.189.cn/api/open/batch/createBatchTask.action", "POST", form, nil, account)
 	if err == nil {
 		_ = base.DeleteCache(dstDir, account)
 	}
@@ -356,7 +356,7 @@ func (driver Cloud189) Delete(path string, account *model.Account) error {
 		"targetFolderId": "",
 		"taskInfos":      string(taskInfosBytes),
 	}
-	_, err = driver.Request("https://cloud.189.cn/api/open/batch/createBatchTask.action", "POST", form,nil, account)
+	_, err = driver.Request("https://cloud.189.cn/api/open/batch/createBatchTask.action", "POST", form, nil, account)
 	if err == nil {
 		_ = base.DeleteCache(utils.Dir(path), account)
 	}
@@ -377,11 +377,11 @@ func (driver Cloud189) Upload(file *model.FileStream, account *model.Account) er
 	}
 	res, err := driver.UploadRequest("/person/initMultiUpload", map[string]string{
 		"parentFolderId": parentFile.Id,
-		"fileName": file.Name,
-		"fileSize": strconv.FormatInt(int64(file.Size),10),
-		"sliceSize": strconv.FormatInt(int64(DEFAULT),10),
-		"lazyCheck": "1",
-	},account)
+		"fileName":       file.Name,
+		"fileSize":       strconv.FormatInt(int64(file.Size), 10),
+		"sliceSize":      strconv.FormatInt(int64(DEFAULT), 10),
+		"lazyCheck":      "1",
+	}, account)
 	if err != nil {
 		return err
 	}
@@ -409,21 +409,21 @@ func (driver Cloud189) Upload(file *model.FileStream, account *model.Account) er
 		md5s = append(md5s, md5Str)
 		md5Sum.Write(byteData)
 		res, err = driver.UploadRequest("/person/getMultiUploadUrls", map[string]string{
-			"partInfo": fmt.Sprintf("%s-%s",strconv.FormatInt(i,10),md5Base64),
+			"partInfo":     fmt.Sprintf("%s-%s", strconv.FormatInt(i, 10), md5Base64),
 			"uploadFileId": uploadFileId,
-		},account)
+		}, account)
 		if err != nil {
 			return err
 		}
-		uploadData := jsoniter.Get(res,"uploadUrls.partNumber_"+strconv.FormatInt(i,10))
-		headers := strings.Split(uploadData.Get("requestHeader").ToString(),"&")
+		uploadData := jsoniter.Get(res, "uploadUrls.partNumber_"+strconv.FormatInt(i, 10))
+		headers := strings.Split(uploadData.Get("requestHeader").ToString(), "&")
 		req, err := http.NewRequest("PUT", uploadData.Get("requestURL").ToString(), bytes.NewBuffer(byteData))
 		if err != nil {
 			return err
 		}
-		for _,header := range headers{
+		for _, header := range headers {
 			kv := strings.Split(header, "=")
-			req.Header.Set(kv[0],strings.Join(kv[1:],"="))
+			req.Header.Set(kv[0], strings.Join(kv[1:], "="))
 		}
 		res, err := base.HttpClient.Do(req)
 		if err != nil {
@@ -432,12 +432,12 @@ func (driver Cloud189) Upload(file *model.FileStream, account *model.Account) er
 		log.Debugf("%+v", res)
 	}
 	id := md5Sum.Sum(nil)
-	res,err = driver.UploadRequest("/person/commitMultiUploadFile", map[string]string{
+	res, err = driver.UploadRequest("/person/commitMultiUploadFile", map[string]string{
 		"uploadFileId": uploadFileId,
-		"fileMd5": hex.EncodeToString(id),
-		"sliceMd5": utils.GetMD5Encode(strings.Join(md5s,"\n")),
-		"lazyCheck":"1",
-	},account)
+		"fileMd5":      hex.EncodeToString(id),
+		"sliceMd5":     utils.GetMD5Encode(strings.Join(md5s, "\n")),
+		"lazyCheck":    "1",
+	}, account)
 	if err == nil {
 		_ = base.DeleteCache(file.ParentPath, account)
 	}

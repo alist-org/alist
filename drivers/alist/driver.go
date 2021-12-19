@@ -101,7 +101,8 @@ func (driver Alist) Files(path string, account *model.Account) ([]model.File, er
 	return files, nil
 }
 
-func (driver Alist) Link(path string, account *model.Account) (*base.Link, error) {
+func (driver Alist) Link(args base.Args, account *model.Account) (*base.Link, error) {
+	path := args.Path
 	path = utils.ParsePath(path)
 	name := utils.Base(path)
 	flag := "d"

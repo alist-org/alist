@@ -123,7 +123,7 @@ func (fs *FileSystem) Link(r *http.Request, rawPath string) (string, error) {
 			link += "?sign" + sign
 		}
 	} else {
-		link_, err := driver.Link(path_, account)
+		link_, err := driver.Link(base.Args{Path: path_}, account)
 		if err != nil {
 			return "", err
 		}
@@ -145,7 +145,7 @@ func (fs *FileSystem) CreateDirectory(ctx context.Context, rawPath string) error
 	if err != nil {
 		return err
 	}
-	return driver.MakeDir(path_,account)
+	return driver.MakeDir(path_, account)
 }
 
 func (fs *FileSystem) Upload(ctx context.Context, r *http.Request, rawPath string) error {
@@ -218,7 +218,7 @@ func moveFiles(ctx context.Context, fs *FileSystem, src string, dst string, over
 	if srcAccount.Name != dstAccount.Name {
 		return http.StatusMethodNotAllowed, errInvalidDestination
 	}
-	err = driver.Move(srcPath,dstPath,srcAccount)
+	err = driver.Move(srcPath, dstPath, srcAccount)
 	if err != nil {
 		log.Debug(err)
 		return http.StatusInternalServerError, err
@@ -248,7 +248,7 @@ func copyFiles(ctx context.Context, fs *FileSystem, src string, dst string, over
 		// TODO 跨账号复制
 		return http.StatusMethodNotAllowed, errInvalidDestination
 	}
-	err = driver.Copy(srcPath,dstPath,srcAccount)
+	err = driver.Copy(srcPath, dstPath, srcAccount)
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}

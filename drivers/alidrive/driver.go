@@ -158,8 +158,8 @@ func (driver AliDrive) Files(path string, account *model.Account) ([]model.File,
 	return files, nil
 }
 
-func (driver AliDrive) Link(path string, account *model.Account) (*base.Link, error) {
-	file, err := driver.File(path, account)
+func (driver AliDrive) Link(args base.Args, account *model.Account) (*base.Link, error) {
+	file, err := driver.File(args.Path, account)
 	if err != nil {
 		return nil, err
 	}
@@ -183,7 +183,7 @@ func (driver AliDrive) Link(path string, account *model.Account) (*base.Link, er
 				return nil, err
 			} else {
 				_ = model.SaveAccount(account)
-				return driver.Link(path, account)
+				return driver.Link(args, account)
 			}
 		}
 		return nil, fmt.Errorf("%s", e.Message)
@@ -201,7 +201,7 @@ func (driver AliDrive) Path(path string, account *model.Account) (*model.File, [
 		return nil, nil, err
 	}
 	if !file.IsDir() {
-		link, err := driver.Link(path, account)
+		link, err := driver.Link(base.Args{Path: path}, account)
 		if err != nil {
 			return nil, nil, err
 		}

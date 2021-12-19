@@ -125,8 +125,8 @@ func (driver Pan123) Files(path string, account *model.Account) ([]model.File, e
 	return files, nil
 }
 
-func (driver Pan123) Link(path string, account *model.Account) (*base.Link, error) {
-	file, err := driver.GetFile(utils.ParsePath(path), account)
+func (driver Pan123) Link(args base.Args, account *model.Account) (*base.Link, error) {
+	file, err := driver.GetFile(utils.ParsePath(args.Path), account)
 	if err != nil {
 		return nil, err
 	}
@@ -160,9 +160,9 @@ func (driver Pan123) Link(path string, account *model.Account) (*base.Link, erro
 	link := base.Link{
 		Url: resp.Data.DownloadUrl,
 	}
-	//if res.StatusCode() == 302 {
-	//	link.Url = res.Header().Get("location")
-	//}
+	if res.StatusCode() == 302 {
+		link.Url = res.Header().Get("location")
+	}
 	return &link, nil
 }
 
@@ -174,7 +174,7 @@ func (driver Pan123) Path(path string, account *model.Account) (*model.File, []m
 		return nil, nil, err
 	}
 	if !file.IsDir() {
-		link, err := driver.Link(path, account)
+		link, err := driver.Link(base.Args{Path: path}, account)
 		if err != nil {
 			return nil, nil, err
 		}
