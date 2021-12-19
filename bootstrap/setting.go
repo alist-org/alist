@@ -61,7 +61,7 @@ func InitSettings() {
 		},
 		{
 			Key:         "text types",
-			Value:       "txt,htm,html,xml,java,properties,sql,js,md,json,conf,ini,vue,php,py,bat,gitignore,yml,go,sh,c,cpp,h,hpp,tsx",
+			Value:       "txt,htm,html,xml,java,properties,sql,js,md,json,conf,ini,vue,php,py,bat,gitignore,yml,go,sh,c,cpp,h,hpp,tsx,vtt,srt,ass",
 			Type:        "string",
 			Description: "text type extensions",
 		},
