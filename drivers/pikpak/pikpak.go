@@ -2,6 +2,7 @@ package pikpak
 
 import (
 	"errors"
+	"fmt"
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
@@ -20,6 +21,10 @@ type RespErr struct {
 }
 
 func (driver PikPak) Login(account *model.Account) error {
+	url := "https://user.mypikpak.com/v1/auth/signin"
+	if account.APIProxyUrl != "" {
+		url = fmt.Sprintf("%s/%s", account.APIProxyUrl, url)
+	}
 	var e RespErr
 	res, err := base.RestyClient.R().SetError(&e).SetBody(base.Json{
 		"captcha_token": "",
@@ -27,11 +32,12 @@ func (driver PikPak) Login(account *model.Account) error {
 		"client_secret": "dbw2OtmVEeuUvIptb1Coyg",
 		"username":      account.Username,
 		"password":      account.Password,
-	}).Post("https://user.mypikpak.com/v1/auth/signin")
+	}).Post(url)
 	if err != nil {
 		account.Status = err.Error()
 		return err
 	}
+	log.Debug(res.String())
 	if e.ErrorCode != 0 {
 		account.Status = e.Error
 		return errors.New(e.Error)
@@ -44,13 +50,17 @@ func (driver PikPak) Login(account *model.Account) error {
 }
 
 func (driver PikPak) RefreshToken(account *model.Account) error {
+	url := "https://user.mypikpak.com/v1/auth/token"
+	if account.APIProxyUrl != "" {
+		url = fmt.Sprintf("%s/%s", account.APIProxyUrl, url)
+	}
 	var e RespErr
 	res, err := base.RestyClient.R().SetError(&e).SetBody(base.Json{
 		"client_id":     "YNxT9w7GMdWvEOKa",
 		"client_secret": "dbw2OtmVEeuUvIptb1Coyg",
 		"grant_type":    "refresh_token",
 		"refresh_token": account.RefreshToken,
-	}).Post("https://user.mypikpak.com/v1/auth/token")
+	}).Post(url)
 	if err != nil {
 		account.Status = err.Error()
 		return err
@@ -69,6 +79,9 @@ func (driver PikPak) RefreshToken(account *model.Account) error {
 }
 
 func (driver PikPak) Request(url string, method int, query map[string]string, data *base.Json, resp interface{}, account *model.Account) ([]byte, error) {
+	if account.APIProxyUrl != "" {
+		url = fmt.Sprintf("%s/%s", account.APIProxyUrl, url)
+	}
 	req := base.RestyClient.R()
 	req.SetHeader("Authorization", "Bearer "+account.AccessToken)
 	if query != nil {
@@ -97,6 +110,7 @@ func (driver PikPak) Request(url string, method int, query map[string]string, da
 	if err != nil {
 		return nil, err
 	}
+	log.Debug(res.String())
 	if e.ErrorCode != 0 {
 		if e.ErrorCode == 16 {
 			// login / refresh token

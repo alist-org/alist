@@ -48,18 +48,26 @@ func Proxy(c *gin.Context) {
 		common.ErrorResp(c, err, 500)
 		return
 	}
-	// 只有三种情况允许中转：
+	// 只有以下几种情况允许中转：
 	// 1. 账号开启中转
 	// 2. driver只能中转
 	// 3. 是文本类型文件
+	// 4. 开启webdav中转（需要验证sign）
 	if !account.Proxy && !driver.Config().OnlyProxy && utils.GetFileType(filepath.Ext(rawPath)) != conf.TEXT {
-		common.ErrorResp(c, fmt.Errorf("[%s] not allowed proxy", account.Name), 403)
-		return
+		// 只开启了webdav中转，验证sign
+		ok := false
+		if account.WebdavProxy {
+			_, ok = c.Get("sign")
+		}
+		if !ok {
+			common.ErrorResp(c, fmt.Errorf("[%s] not allowed proxy", account.Name), 403)
+			return
+		}
 	}
 	// 中转时有中转机器使用中转机器，若携带标志位则表明不能再走中转机器了
-	if account.ProxyUrl != "" && c.Param("d") != "1" {
+	if account.DownProxyUrl != "" && c.Param("d") != "1" {
 		name := utils.Base(rawPath)
-		link := fmt.Sprintf("%s%s?sign=%s", account.ProxyUrl, rawPath, utils.SignWithToken(name, conf.Token))
+		link := fmt.Sprintf("%s%s?sign=%s", account.DownProxyUrl, rawPath, utils.SignWithToken(name, conf.Token))
 		c.Redirect(302, link)
 		return
 	}

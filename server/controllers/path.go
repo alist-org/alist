@@ -41,8 +41,8 @@ func Path(c *gin.Context) {
 	if file != nil {
 		// 对于中转文件或只能中转,将链接修改为中转链接
 		if driver.Config().OnlyProxy || account.Proxy {
-			if account.ProxyUrl != "" {
-				file.Url = fmt.Sprintf("%s%s?sign=%s", account.ProxyUrl, req.Path, utils.SignWithToken(file.Name, conf.Token))
+			if account.DownProxyUrl != "" {
+				file.Url = fmt.Sprintf("%s%s?sign=%s", account.DownProxyUrl, req.Path, utils.SignWithToken(file.Name, conf.Token))
 			} else {
 				file.Url = fmt.Sprintf("//%s/d%s", c.Request.Host, req.Path)
 			}

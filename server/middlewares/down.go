@@ -14,6 +14,7 @@ func DownCheck(c *gin.Context) {
 	rawPath = utils.ParsePath(rawPath)
 	name := utils.Base(rawPath)
 	if sign == utils.SignWithToken(name, conf.Token) {
+		c.Set("sign", true)
 		c.Next()
 		return
 	}
