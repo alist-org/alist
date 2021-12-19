@@ -131,28 +131,21 @@ func (driver Pan123) Link(path string, account *model.Account) (*base.Link, erro
 		return nil, err
 	}
 	var resp Pan123DownResp
-	_, err = pan123Client.R().SetResult(&resp).SetHeader("authorization", "Bearer "+account.AccessToken).
-		SetBody(base.Json{
-			"driveId":   0,
-			"etag":      file.Etag,
-			"fileId":    file.FileId,
-			"fileName":  file.FileName,
-			"s3keyFlag": file.S3KeyFlag,
-			"size":      file.Size,
-			"type":      file.Type,
-		}).Post("https://www.123pan.com/api/file/download_info")
+	data := base.Json{
+		"driveId":   0,
+		"etag":      file.Etag,
+		"fileId":    file.FileId,
+		"fileName":  file.FileName,
+		"s3keyFlag": file.S3KeyFlag,
+		"size":      file.Size,
+		"type":      file.Type,
+	}
+	_, err = driver.Request("https://www.123pan.com/api/file/download_info",
+		base.Post, nil, &data, &resp, true, account)
+	//_, err = pan123Client.R().SetResult(&resp).SetHeader("authorization", "Bearer "+account.AccessToken).
+	//	SetBody().Post("https://www.123pan.com/api/file/download_info")
 	if err != nil {
 		return nil, err
-	}
-	if resp.Code != 0 {
-		if resp.Code == 401 {
-			err := driver.Login(account)
-			if err != nil {
-				return nil, err
-			}
-			return driver.Link(path, account)
-		}
-		return nil, fmt.Errorf(resp.Message)
 	}
 	u, err := url.Parse(resp.Data.DownloadUrl)
 	if err != nil {
@@ -164,12 +157,12 @@ func (driver Pan123) Link(path string, account *model.Account) (*base.Link, erro
 		return nil, err
 	}
 	log.Debug(res.String())
-	link := base.Link{}
-	if res.StatusCode() == 302 {
-		link.Url = res.Header().Get("location")
-	} else {
-		link.Url = resp.Data.DownloadUrl
+	link := base.Link{
+		Url: resp.Data.DownloadUrl,
 	}
+	//if res.StatusCode() == 302 {
+	//	link.Url = res.Header().Get("location")
+	//}
 	return &link, nil
 }
 
@@ -221,7 +214,9 @@ func (driver Pan123) MakeDir(path string, account *model.Account) error {
 		"size":         0,
 		"type":         1,
 	}
-	_, err = driver.Post("https://www.123pan.com/api/file/upload_request", data, account)
+	_, err = driver.Request("https://www.123pan.com/api/file/upload_request",
+		base.Post, nil, &data, nil, false, account)
+	//_, err = driver.Post("https://www.123pan.com/api/file/upload_request", data, account)
 	if err == nil {
 		_ = base.DeleteCache(dir, account)
 	}
@@ -243,7 +238,9 @@ func (driver Pan123) Move(src string, dst string, account *model.Account) error 
 			"fileId":   fileId,
 			"fileName": dstName,
 		}
-		_, err = driver.Post("https://www.123pan.com/api/file/rename", data, account)
+		_, err = driver.Request("https://www.123pan.com/api/file/rename",
+			base.Post, nil, &data, nil, false, account)
+		//_, err = driver.Post("https://www.123pan.com/api/file/rename", data, account)
 	} else {
 		// move
 		dstDirFile, err := driver.File(dstDir, account)
@@ -255,7 +252,9 @@ func (driver Pan123) Move(src string, dst string, account *model.Account) error 
 			"fileId":       fileId,
 			"parentFileId": parentFileId,
 		}
-		_, err = driver.Post("https://www.123pan.com/api/file/mod_pid", data, account)
+		_, err = driver.Request("https://www.123pan.com/api/file/mod_pid",
+			base.Post, nil, &data, nil, false, account)
+		//_, err = driver.Post("https://www.123pan.com/api/file/mod_pid", data, account)
 	}
 	if err != nil {
 		_ = base.DeleteCache(srcDir, account)
@@ -278,7 +277,9 @@ func (driver Pan123) Delete(path string, account *model.Account) error {
 		"operation":         true,
 		"fileTrashInfoList": file,
 	}
-	_, err = driver.Post("https://www.123pan.com/api/file/trash", data, account)
+	_, err = driver.Request("https://www.123pan.com/api/file/trash",
+		base.Post, nil, &data, nil, false, account)
+	//_, err = driver.Post("https://www.123pan.com/api/file/trash", data, account)
 	if err == nil {
 		_ = base.DeleteCache(utils.Dir(path), account)
 	}
@@ -311,7 +312,9 @@ func (driver Pan123) Upload(file *model.FileStream, account *model.Account) erro
 		"size":         file.GetSize(),
 		"type":         0,
 	}
-	res, err := driver.Post("https://www.123pan.com/api/file/upload_request", data, account)
+	res, err := driver.Request("https://www.123pan.com/api/file/upload_request",
+		base.Post, nil, &data, nil, false, account)
+	//res, err := driver.Post("https://www.123pan.com/api/file/upload_request", data, account)
 	if err != nil {
 		return err
 	}
@@ -319,19 +322,19 @@ func (driver Pan123) Upload(file *model.FileStream, account *model.Account) erro
 	var resp UploadResp
 	kSecret := jsoniter.Get(res, "data.SecretAccessKey").ToString()
 	nowTimeStr := time.Now().String()
-	Date := strings.ReplaceAll(strings.Split(nowTimeStr, "T")[0],"-","")
+	Date := strings.ReplaceAll(strings.Split(nowTimeStr, "T")[0], "-", "")
 
 	StringToSign := fmt.Sprintf("%s\n%s\n%s\n%s",
 		"AWS4-HMAC-SHA256",
 		nowTimeStr,
 		fmt.Sprintf("%s/us-east-1/s3/aws4_request", Date),
-		)
+	)
 
 	kDate := HMAC("AWS4"+kSecret, Date)
 	kRegion := HMAC(kDate, "us-east-1")
 	kService := HMAC(kRegion, "s3")
 	kSigning := HMAC(kService, "aws4_request")
-	_, err = pan123Client.R().SetResult(&resp).SetHeaders(map[string]string{
+	_, err = base.RestyClient.R().SetResult(&resp).SetHeaders(map[string]string{
 		"Authorization": fmt.Sprintf("AWS4-HMAC-SHA256 Credential=%s/%s/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date;x-amz-security-token;x-amz-user-agent, Signature=%s",
 			jsoniter.Get(res, "data.AccessKeyId"),
 			Date,

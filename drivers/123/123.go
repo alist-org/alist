@@ -11,13 +11,12 @@ import (
 	"github.com/Xhofe/alist/utils"
 	"github.com/go-resty/resty/v2"
 	jsoniter "github.com/json-iterator/go"
+	log "github.com/sirupsen/logrus"
 	"math/rand"
 	"path/filepath"
 	"strconv"
 	"time"
 )
-
-var pan123Client = resty.New()
 
 type BaseResp struct {
 	Code    int    `json:"code"`
@@ -43,7 +42,7 @@ type Pan123File struct {
 
 type Pan123Files struct {
 	BaseResp
-	Data    struct {
+	Data struct {
 		InfoList []Pan123File `json:"InfoList"`
 		Next     string       `json:"Next"`
 	} `json:"data"`
@@ -51,19 +50,23 @@ type Pan123Files struct {
 
 type Pan123DownResp struct {
 	BaseResp
-	Data    struct {
+	Data struct {
 		DownloadUrl string `json:"DownloadUrl"`
 	} `json:"data"`
 }
 
 func (driver Pan123) Login(account *model.Account) error {
+	url := "https://www.123pan.com/api/user/sign_in"
+	if account.APIProxyUrl != "" {
+		url = fmt.Sprintf("%s/%s", account.APIProxyUrl, url)
+	}
 	var resp Pan123TokenResp
-	_, err := pan123Client.R().
+	_, err := base.RestyClient.R().
 		SetResult(&resp).
 		SetBody(base.Json{
 			"passport": account.Username,
 			"password": account.Password,
-		}).Post("https://www.123pan.com/api/user/sign_in")
+		}).Post(url)
 	if err != nil {
 		return err
 	}
@@ -99,29 +102,19 @@ func (driver Pan123) GetFiles(parentId string, account *model.Account) ([]Pan123
 	res := make([]Pan123File, 0)
 	for next != "-1" {
 		var resp Pan123Files
-		_, err := pan123Client.R().SetResult(&resp).
-			SetHeader("authorization", "Bearer "+account.AccessToken).
-			SetQueryParams(map[string]string{
-				"driveId":        "0",
-				"limit":          "100",
-				"next":           next,
-				"orderBy":        account.OrderBy,
-				"orderDirection": account.OrderDirection,
-				"parentFileId":   parentId,
-				"trashed":        "false",
-			}).Get("https://www.123pan.com/api/file/list")
+		query := map[string]string{
+			"driveId":        "0",
+			"limit":          "100",
+			"next":           next,
+			"orderBy":        account.OrderBy,
+			"orderDirection": account.OrderDirection,
+			"parentFileId":   parentId,
+			"trashed":        "false",
+		}
+		_, err := driver.Request("https://www.123pan.com/api/file/list",
+			base.Get, query, nil, &resp, false, account)
 		if err != nil {
 			return nil, err
-		}
-		if resp.Code != 0 {
-			if resp.Code == 401 {
-				err := driver.Login(account)
-				if err != nil {
-					return nil, err
-				}
-				return driver.GetFiles(parentId, account)
-			}
-			return nil, fmt.Errorf(resp.Message)
 		}
 		next = resp.Data.Next
 		res = append(res, resp.Data.InfoList...)
@@ -129,19 +122,65 @@ func (driver Pan123) GetFiles(parentId string, account *model.Account) ([]Pan123
 	return res, nil
 }
 
-func (driver Pan123) Post(url string, data base.Json, account *model.Account) ([]byte, error) {
-	res, err := pan123Client.R().
-		SetHeader("authorization", "Bearer "+account.AccessToken).
-		SetBody(data).Post(url)
+func (driver Pan123) Request(url string, method int, query map[string]string, data *base.Json, resp interface{}, proxy bool, account *model.Account) ([]byte, error) {
+	rawUrl := url
+	if account.APIProxyUrl != "" {
+		url = fmt.Sprintf("%s/%s", account.APIProxyUrl, url)
+	}
+	log.Debugf("request: %s", url)
+	req := base.RestyClient.R()
+	req.SetHeader("Authorization", "Bearer "+account.AccessToken)
+	if query != nil {
+		req.SetQueryParams(query)
+	}
+	if data != nil {
+		req.SetBody(data)
+	}
+	if resp != nil {
+		req.SetResult(resp)
+	}
+	var res *resty.Response
+	var err error
+	switch method {
+	case base.Get:
+		res, err = req.Get(url)
+	case base.Post:
+		res, err = req.Post(url)
+	default:
+		return nil, base.ErrNotSupport
+	}
 	if err != nil {
 		return nil, err
 	}
+	log.Debug(res.String())
 	body := res.Body()
-	if jsoniter.Get(body, "code").ToInt() != 0 {
+	code := jsoniter.Get(body, "code").ToInt()
+	if code != 0 {
+		if code == 401 {
+			err := driver.Login(account)
+			if err != nil {
+				return nil, err
+			}
+			return driver.Request(rawUrl, method, query, data, resp, proxy, account)
+		}
 		return nil, errors.New(jsoniter.Get(body, "message").ToString())
 	}
 	return body, nil
 }
+
+//func (driver Pan123) Post(url string, data base.Json, account *model.Account) ([]byte, error) {
+//	res, err := pan123Client.R().
+//		SetHeader("authorization", "Bearer "+account.AccessToken).
+//		SetBody(data).Post(url)
+//	if err != nil {
+//		return nil, err
+//	}
+//	body := res.Body()
+//	if jsoniter.Get(body, "code").ToInt() != 0 {
+//		return nil, errors.New(jsoniter.Get(body, "message").ToString())
+//	}
+//	return body, nil
+//}
 
 func (driver Pan123) GetFile(path string, account *model.Account) (*Pan123File, error) {
 	dir, name := filepath.Split(path)
@@ -168,7 +207,7 @@ func RandStr(length int) string {
 	str := "123456789abcdefghijklmnopqrstuvwxyz"
 	bytes := []byte(str)
 	var result []byte
-	rand.Seed(time.Now().UnixNano()+ int64(rand.Intn(100)))
+	rand.Seed(time.Now().UnixNano() + int64(rand.Intn(100)))
 	for i := 0; i < length; i++ {
 		result = append(result, bytes[rand.Intn(len(bytes))])
 	}
@@ -188,5 +227,4 @@ func HMAC(message string, secret string) string {
 
 func init() {
 	base.RegisterDriver(&Pan123{})
-	pan123Client.SetRetryCount(3)
 }

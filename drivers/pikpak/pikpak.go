@@ -79,6 +79,7 @@ func (driver PikPak) RefreshToken(account *model.Account) error {
 }
 
 func (driver PikPak) Request(url string, method int, query map[string]string, data *base.Json, resp interface{}, account *model.Account) ([]byte, error) {
+	rawUrl := url
 	if account.APIProxyUrl != "" {
 		url = fmt.Sprintf("%s/%s", account.APIProxyUrl, url)
 	}
@@ -119,7 +120,7 @@ func (driver PikPak) Request(url string, method int, query map[string]string, da
 				return nil, err
 			}
 			_ = model.SaveAccount(account)
-			return driver.Request(url, method, query, data, resp, account)
+			return driver.Request(rawUrl, method, query, data, resp, account)
 		} else {
 			return nil, errors.New(e.Error)
 		}
