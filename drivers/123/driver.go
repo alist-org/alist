@@ -149,7 +149,7 @@ func (driver Pan123) Link(args base.Args, account *model.Account) (*base.Link, e
 		"type":      file.Type,
 	}
 	_, err = driver.Request("https://www.123pan.com/api/file/download_info",
-		base.Post, headers, nil, &data, &resp, true, account)
+		base.Post, headers, nil, &data, &resp, false, account)
 	//_, err = pan123Client.R().SetResult(&resp).SetHeader("authorization", "Bearer "+account.AccessToken).
 	//	SetBody().Post("https://www.123pan.com/api/file/download_info")
 	if err != nil {

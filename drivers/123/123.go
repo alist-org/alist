@@ -124,7 +124,7 @@ func (driver Pan123) GetFiles(parentId string, account *model.Account) ([]Pan123
 
 func (driver Pan123) Request(url string, method int, headers, query map[string]string, data *base.Json, resp interface{}, proxy bool, account *model.Account) ([]byte, error) {
 	rawUrl := url
-	if account.APIProxyUrl != "" {
+	if account.APIProxyUrl != "" && proxy {
 		url = fmt.Sprintf("%s/%s", account.APIProxyUrl, url)
 	}
 	log.Debugf("request: %s", url)

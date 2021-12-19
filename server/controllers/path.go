@@ -79,7 +79,7 @@ func Path(c *gin.Context) {
 	}
 }
 
-// 返回真实的链接，且携带头,只提供给中转程序使用
+// Link 返回真实的链接，且携带头,只提供给中转程序使用
 func Link(c *gin.Context) {
 	var req common.PathReq
 	if err := c.ShouldBind(&req); err != nil {
