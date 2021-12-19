@@ -9,10 +9,11 @@ import (
 )
 
 type DriverConfig struct {
-	Name      string
-	OnlyProxy bool
-	NoLink    bool // 必须本机返回的
-	ApiProxy  bool // 使用API中转的
+	Name        string
+	OnlyProxy   bool
+	NoLink      bool // 必须本机返回的
+	ApiProxy    bool // 使用API中转的
+	NeedSetLink bool // 需要设置链接的
 }
 
 type Args struct {

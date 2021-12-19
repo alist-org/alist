@@ -22,8 +22,8 @@ type Pan123 struct{}
 
 func (driver Pan123) Config() base.DriverConfig {
 	return base.DriverConfig{
-		Name:      "123Pan",
-		OnlyProxy: false,
+		Name:        "123Pan",
+		NeedSetLink: true,
 	}
 }
 
@@ -126,11 +126,19 @@ func (driver Pan123) Files(path string, account *model.Account) ([]model.File, e
 }
 
 func (driver Pan123) Link(args base.Args, account *model.Account) (*base.Link, error) {
+	log.Debugf("%+v", args)
 	file, err := driver.GetFile(utils.ParsePath(args.Path), account)
 	if err != nil {
 		return nil, err
 	}
 	var resp Pan123DownResp
+	var headers map[string]string
+	if args.IP != "" && args.IP != "::1" {
+		headers = map[string]string{
+			//"X-Real-IP":       "1.1.1.1",
+			"X-Forwarded-For": args.IP,
+		}
+	}
 	data := base.Json{
 		"driveId":   0,
 		"etag":      file.Etag,
@@ -141,7 +149,7 @@ func (driver Pan123) Link(args base.Args, account *model.Account) (*base.Link, e
 		"type":      file.Type,
 	}
 	_, err = driver.Request("https://www.123pan.com/api/file/download_info",
-		base.Post, nil, &data, &resp, true, account)
+		base.Post, headers, nil, &data, &resp, true, account)
 	//_, err = pan123Client.R().SetResult(&resp).SetHeader("authorization", "Bearer "+account.AccessToken).
 	//	SetBody().Post("https://www.123pan.com/api/file/download_info")
 	if err != nil {
@@ -174,11 +182,6 @@ func (driver Pan123) Path(path string, account *model.Account) (*model.File, []m
 		return nil, nil, err
 	}
 	if !file.IsDir() {
-		link, err := driver.Link(base.Args{Path: path}, account)
-		if err != nil {
-			return nil, nil, err
-		}
-		file.Url = link.Url
 		return file, nil, nil
 	}
 	files, err := driver.Files(path, account)
@@ -215,7 +218,7 @@ func (driver Pan123) MakeDir(path string, account *model.Account) error {
 		"type":         1,
 	}
 	_, err = driver.Request("https://www.123pan.com/api/file/upload_request",
-		base.Post, nil, &data, nil, false, account)
+		base.Post, nil, nil, &data, nil, false, account)
 	//_, err = driver.Post("https://www.123pan.com/api/file/upload_request", data, account)
 	if err == nil {
 		_ = base.DeleteCache(dir, account)
@@ -239,7 +242,7 @@ func (driver Pan123) Move(src string, dst string, account *model.Account) error 
 			"fileName": dstName,
 		}
 		_, err = driver.Request("https://www.123pan.com/api/file/rename",
-			base.Post, nil, &data, nil, false, account)
+			base.Post, nil, nil, &data, nil, false, account)
 		//_, err = driver.Post("https://www.123pan.com/api/file/rename", data, account)
 	} else {
 		// move
@@ -253,7 +256,7 @@ func (driver Pan123) Move(src string, dst string, account *model.Account) error 
 			"parentFileId": parentFileId,
 		}
 		_, err = driver.Request("https://www.123pan.com/api/file/mod_pid",
-			base.Post, nil, &data, nil, false, account)
+			base.Post, nil, nil, &data, nil, false, account)
 		//_, err = driver.Post("https://www.123pan.com/api/file/mod_pid", data, account)
 	}
 	if err != nil {
@@ -278,7 +281,7 @@ func (driver Pan123) Delete(path string, account *model.Account) error {
 		"fileTrashInfoList": file,
 	}
 	_, err = driver.Request("https://www.123pan.com/api/file/trash",
-		base.Post, nil, &data, nil, false, account)
+		base.Post, nil, nil, &data, nil, false, account)
 	//_, err = driver.Post("https://www.123pan.com/api/file/trash", data, account)
 	if err == nil {
 		_ = base.DeleteCache(utils.Dir(path), account)
@@ -313,7 +316,7 @@ func (driver Pan123) Upload(file *model.FileStream, account *model.Account) erro
 		"type":         0,
 	}
 	res, err := driver.Request("https://www.123pan.com/api/file/upload_request",
-		base.Post, nil, &data, nil, false, account)
+		base.Post, nil, nil, &data, nil, false, account)
 	//res, err := driver.Post("https://www.123pan.com/api/file/upload_request", data, account)
 	if err != nil {
 		return err

@@ -159,8 +159,7 @@ func (driver GoogleDrive) Path(path string, account *model.Account) (*model.File
 	if err != nil {
 		return nil, nil, err
 	}
-	if file.Type != conf.FOLDER {
-		//file.Url, _ = driver.Link(path, account)
+	if !file.IsDir() {
 		return file, nil, nil
 	}
 	files, err := driver.Files(path, account)

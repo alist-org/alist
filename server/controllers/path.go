@@ -46,6 +46,13 @@ func Path(c *gin.Context) {
 			} else {
 				file.Url = fmt.Sprintf("//%s/d%s", c.Request.Host, req.Path)
 			}
+		} else if driver.Config().NeedSetLink {
+			link, err := driver.Link(base.Args{Path: path, IP: c.ClientIP()}, account)
+			if err != nil {
+				common.ErrorResp(c, err, 500)
+				return
+			}
+			file.Url = link.Url
 		}
 		c.JSON(200, common.Resp{
 			Code:    200,
@@ -94,7 +101,7 @@ func Link(c *gin.Context) {
 		})
 		return
 	}
-	link, err := driver.Link(base.Args{Path: path}, account)
+	link, err := driver.Link(base.Args{Path: path, IP: c.ClientIP()}, account)
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return

@@ -12,6 +12,7 @@ import (
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
 	log "github.com/sirupsen/logrus"
+	"net"
 	"net/http"
 	"path"
 	"path/filepath"
@@ -101,6 +102,25 @@ func (fs *FileSystem) Files(rawPath string) ([]model.File, error) {
 //	}
 //}
 
+func ClientIP(r *http.Request) string {
+	xForwardedFor := r.Header.Get("X-Forwarded-For")
+	ip := strings.TrimSpace(strings.Split(xForwardedFor, ",")[0])
+	if ip != "" {
+		return ip
+	}
+
+	ip = strings.TrimSpace(r.Header.Get("X-Real-Ip"))
+	if ip != "" {
+		return ip
+	}
+
+	if ip, _, err := net.SplitHostPort(strings.TrimSpace(r.RemoteAddr)); err == nil {
+		return ip
+	}
+
+	return ""
+}
+
 func (fs *FileSystem) Link(r *http.Request, rawPath string) (string, error) {
 	rawPath = utils.ParsePath(rawPath)
 	log.Debugf("get link path: %s", rawPath)
@@ -123,7 +143,7 @@ func (fs *FileSystem) Link(r *http.Request, rawPath string) (string, error) {
 			link += "?sign" + sign
 		}
 	} else {
-		link_, err := driver.Link(base.Args{Path: path_}, account)
+		link_, err := driver.Link(base.Args{Path: path_, IP: ClientIP(r)}, account)
 		if err != nil {
 			return "", err
 		}

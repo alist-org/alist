@@ -112,7 +112,7 @@ func (driver Pan123) GetFiles(parentId string, account *model.Account) ([]Pan123
 			"trashed":        "false",
 		}
 		_, err := driver.Request("https://www.123pan.com/api/file/list",
-			base.Get, query, nil, &resp, false, account)
+			base.Get, nil, query, nil, &resp, false, account)
 		if err != nil {
 			return nil, err
 		}
@@ -122,7 +122,7 @@ func (driver Pan123) GetFiles(parentId string, account *model.Account) ([]Pan123
 	return res, nil
 }
 
-func (driver Pan123) Request(url string, method int, query map[string]string, data *base.Json, resp interface{}, proxy bool, account *model.Account) ([]byte, error) {
+func (driver Pan123) Request(url string, method int, headers, query map[string]string, data *base.Json, resp interface{}, proxy bool, account *model.Account) ([]byte, error) {
 	rawUrl := url
 	if account.APIProxyUrl != "" {
 		url = fmt.Sprintf("%s/%s", account.APIProxyUrl, url)
@@ -130,6 +130,9 @@ func (driver Pan123) Request(url string, method int, query map[string]string, da
 	log.Debugf("request: %s", url)
 	req := base.RestyClient.R()
 	req.SetHeader("Authorization", "Bearer "+account.AccessToken)
+	if headers != nil {
+		req.SetHeaders(headers)
+	}
 	if query != nil {
 		req.SetQueryParams(query)
 	}
@@ -161,7 +164,7 @@ func (driver Pan123) Request(url string, method int, query map[string]string, da
 			if err != nil {
 				return nil, err
 			}
-			return driver.Request(rawUrl, method, query, data, resp, proxy, account)
+			return driver.Request(rawUrl, method, headers, query, data, resp, proxy, account)
 		}
 		return nil, errors.New(jsoniter.Get(body, "message").ToString())
 	}

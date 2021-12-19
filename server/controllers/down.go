@@ -30,7 +30,7 @@ func Down(c *gin.Context) {
 		Proxy(c)
 		return
 	}
-	link, err := driver.Link(base.Args{Path: path}, account)
+	link, err := driver.Link(base.Args{Path: path, IP: c.ClientIP()}, account)
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return
@@ -71,6 +71,7 @@ func Proxy(c *gin.Context) {
 		c.Redirect(302, link)
 		return
 	}
+	// 对于中转，不需要重设IP
 	link, err := driver.Link(base.Args{Path: path}, account)
 	if err != nil {
 		common.ErrorResp(c, err, 500)

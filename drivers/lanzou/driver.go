@@ -14,8 +14,8 @@ type Lanzou struct{}
 
 func (driver Lanzou) Config() base.DriverConfig {
 	return base.DriverConfig{
-		Name:      "Lanzou",
-		OnlyProxy: false,
+		Name:        "Lanzou",
+		NeedSetLink: true,
 	}
 }
 
@@ -145,11 +145,6 @@ func (driver Lanzou) Path(path string, account *model.Account) (*model.File, []m
 		return nil, nil, err
 	}
 	if !file.IsDir() {
-		link, err := driver.Link(base.Args{Path: path}, account)
-		if err != nil {
-			return nil, nil, err
-		}
-		file.Url = link.Url
 		return file, nil, nil
 	}
 	files, err := driver.Files(path, account)

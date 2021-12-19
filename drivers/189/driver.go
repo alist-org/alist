@@ -26,8 +26,8 @@ type Cloud189 struct{}
 
 func (driver Cloud189) Config() base.DriverConfig {
 	return base.DriverConfig{
-		Name:      "189Cloud",
-		OnlyProxy: false,
+		Name:        "189Cloud",
+		NeedSetLink: true,
 	}
 }
 
@@ -194,11 +194,6 @@ func (driver Cloud189) Path(path string, account *model.Account) (*model.File, [
 		return nil, nil, err
 	}
 	if !file.IsDir() {
-		link, err := driver.Link(base.Args{Path: path}, account)
-		if err != nil {
-			return nil, nil, err
-		}
-		file.Url = link.Url
 		return file, nil, nil
 	}
 	files, err := driver.Files(path, account)

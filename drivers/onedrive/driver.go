@@ -16,8 +16,7 @@ type Onedrive struct{}
 
 func (driver Onedrive) Config() base.DriverConfig {
 	return base.DriverConfig{
-		Name:      "Onedrive",
-		OnlyProxy: false,
+		Name: "Onedrive",
 	}
 }
 
@@ -193,7 +192,6 @@ func (driver Onedrive) Path(path string, account *model.Account) (*model.File, [
 		return nil, nil, err
 	}
 	if !file.IsDir() {
-		//file.Url, _ = driver.Link(path, account)
 		return file, nil, nil
 	}
 	files, err := driver.Files(path, account)

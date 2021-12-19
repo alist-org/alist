@@ -21,8 +21,8 @@ type AliDrive struct{}
 
 func (driver AliDrive) Config() base.DriverConfig {
 	return base.DriverConfig{
-		Name:      "AliDrive",
-		OnlyProxy: false,
+		Name:        "AliDrive",
+		NeedSetLink: true,
 	}
 }
 
@@ -201,11 +201,6 @@ func (driver AliDrive) Path(path string, account *model.Account) (*model.File, [
 		return nil, nil, err
 	}
 	if !file.IsDir() {
-		link, err := driver.Link(base.Args{Path: path}, account)
-		if err != nil {
-			return nil, nil, err
-		}
-		file.Url = link.Url
 		return file, nil, nil
 	}
 	files, err := driver.Files(path, account)
