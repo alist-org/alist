@@ -17,6 +17,7 @@ func (driver PikPak) Config() base.DriverConfig {
 	return base.DriverConfig{
 		Name:        "PikPak",
 		NeedSetLink: true,
+		ApiProxy:    true,
 	}
 }
 

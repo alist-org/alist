@@ -158,7 +158,8 @@ async function handleRequest(event) {
                 ) {
                     fp.body = await request.text();
                 } else if (ct.includes("form")) {
-                    fp.body = await request.formData();
+                    // fp.body = await request.formData();
+                    fp.body = await request.text();
                 } else {
                     fp.body = await request.blob();
                 }
