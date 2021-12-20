@@ -29,7 +29,9 @@ var (
 )
 
 var (
-	TextTypes   = []string{"txt", "go", "md"}
+	TextTypes = []string{"txt", "htm", "html", "xml", "java", "properties", "sql",
+		"js", "md", "json", "conf", "ini", "vue", "php", "py", "bat", "gitignore", "yml",
+		"go", "sh", "c", "cpp", "h", "hpp", "tsx", "vtt", "srt", "ass"}
 	OfficeTypes = []string{"doc", "docx", "xls", "xlsx", "ppt", "pptx", "pdf"}
 	VideoTypes  = []string{"mp4", "mkv", "avi", "mov", "rmvb", "webm"}
 	AudioTypes  = []string{"mp3", "flac", "ogg", "m4a"}

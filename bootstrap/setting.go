@@ -5,6 +5,7 @@ import (
 	"github.com/Xhofe/alist/model"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
+	"strings"
 )
 
 func InitSettings() {
@@ -61,7 +62,7 @@ func InitSettings() {
 		},
 		{
 			Key:         "text types",
-			Value:       "txt,htm,html,xml,java,properties,sql,js,md,json,conf,ini,vue,php,py,bat,gitignore,yml,go,sh,c,cpp,h,hpp,tsx,vtt,srt,ass",
+			Value:       strings.Join(conf.TextTypes, ","),
 			Type:        "string",
 			Description: "text type extensions",
 		},
