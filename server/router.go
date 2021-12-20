@@ -49,8 +49,8 @@ func InitApiRouter(r *gin.Engine) {
 
 		admin.POST("/link", controllers.Link)
 	}
-	Static(r)
 	WebDav(r)
+	Static(r)
 }
 
 func Cors(r *gin.Engine) {

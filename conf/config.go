@@ -17,6 +17,7 @@ type Config struct {
 	Https    bool     `json:"https"`
 	CertFile string   `json:"cert_file"`
 	KeyFile  string   `json:"key_file"`
+	Local    bool     `json:"local"`
 }
 
 func DefaultConfig() *Config {

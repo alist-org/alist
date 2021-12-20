@@ -37,6 +37,11 @@ yarn
 if [ "$1" == "release" ]; then
   yarn build --base="https://cdn.jsdelivr.net/gh/Xhofe/alist-web@cdn/v2/$webCommit"
   mv dist/assets ..
+  mv dist/ ../alist/public
+  #  构建local
+  yarn build
+  mv dist/index.html dist/local.html
+  mv dist/ ../alist/public
 else
   yarn build
 fi
@@ -60,8 +65,6 @@ ldflags="\
 -X 'github.com/Xhofe/alist/conf.GitCommit=$gitCommit' \
 -X 'github.com/Xhofe/alist/conf.GitTag=$gitTag' \
 "
-
-cp -R ../alist-web/dist/* public
 
 if [ "$1" == "release" ]; then
   xgo -out alist -ldflags="$ldflags" .

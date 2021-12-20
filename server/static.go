@@ -10,11 +10,16 @@ import (
 	"net/http"
 )
 
-
-func init() {
-	index, err := public.Public.Open("index.html")
+func InitIndex() {
+	var index fs.File
+	var err error
+	if conf.Conf.Local {
+		index, err = public.Public.Open("local.html")
+	} else {
+		index, err = public.Public.Open("index.html")
+	}
 	if err != nil {
-		log.Errorf(err.Error())
+		log.Fatalf(err.Error())
 		return
 	}
 	data, _ := ioutil.ReadAll(index)
@@ -22,6 +27,7 @@ func init() {
 }
 
 func Static(r *gin.Engine) {
+	InitIndex()
 	assets, err := fs.Sub(public.Public, "assets")
 	if err != nil {
 		log.Fatalf("can't find assets folder")
