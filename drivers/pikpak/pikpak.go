@@ -46,6 +46,7 @@ func (driver PikPak) Login(account *model.Account) error {
 	account.Status = "work"
 	account.RefreshToken = jsoniter.Get(data, "refresh_token").ToString()
 	account.AccessToken = jsoniter.Get(data, "access_token").ToString()
+	_ = model.SaveAccount(account)
 	return nil
 }
 
@@ -55,7 +56,8 @@ func (driver PikPak) RefreshToken(account *model.Account) error {
 		url = fmt.Sprintf("%s/%s", account.APIProxyUrl, url)
 	}
 	var e RespErr
-	res, err := base.RestyClient.R().SetError(&e).SetBody(base.Json{
+	res, err := base.RestyClient.R().SetError(&e).
+		SetHeader("user-agent", "").SetBody(base.Json{
 		"client_id":     "YNxT9w7GMdWvEOKa",
 		"client_secret": "dbw2OtmVEeuUvIptb1Coyg",
 		"grant_type":    "refresh_token",
@@ -70,11 +72,14 @@ func (driver PikPak) RefreshToken(account *model.Account) error {
 			// refresh_token 失效，重新登陆
 			return driver.Login(account)
 		}
+		return errors.New(e.Error)
 	}
 	data := res.Body()
 	account.Status = "work"
 	account.RefreshToken = jsoniter.Get(data, "refresh_token").ToString()
 	account.AccessToken = jsoniter.Get(data, "access_token").ToString()
+	log.Debugf("%s\n %+v", res.String(), account)
+	_ = model.SaveAccount(account)
 	return nil
 }
 
@@ -119,7 +124,6 @@ func (driver PikPak) Request(url string, method int, query map[string]string, da
 			if err != nil {
 				return nil, err
 			}
-			_ = model.SaveAccount(account)
 			return driver.Request(rawUrl, method, query, data, resp, account)
 		} else {
 			return nil, errors.New(e.Error)

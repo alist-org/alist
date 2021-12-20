@@ -46,7 +46,6 @@ func (driver PikPak) Items() []base.Item {
 
 func (driver PikPak) Save(account *model.Account, old *model.Account) error {
 	err := driver.Login(account)
-	_ = model.SaveAccount(account)
 	return err
 }
 
