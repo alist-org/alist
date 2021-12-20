@@ -37,14 +37,14 @@ yarn
 if [ "$1" == "release" ]; then
   yarn build --base="https://cdn.jsdelivr.net/gh/Xhofe/alist-web@cdn/v2/$webCommit"
   mv dist/assets ..
-  mv dist/ ../alist/public
+  mv dist/index.html ../alist/public
   #  构建local
   yarn build
   mv dist/index.html dist/local.html
-  mv dist/ ../alist/public
+  mv dist/* ../alist/public
 else
   yarn build
-  mv dist/ ../alist/public
+  mv dist/* ../alist/public
 fi
 cd ..
 
