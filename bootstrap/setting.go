@@ -119,24 +119,23 @@ func InitSettings() {
 		},
 		{
 			Key: "customize head",
-			Value: `<style>
-.chakra-ui-light{
-  background-image: linear-gradient(120deg,#e0c3fc 0%,#8ec5fc 100%) !important;
-  background-attachment: fixed;
+			Value: `.chakra-ui-light{
+  background-color: #FFF5F5;
 }
 .main-box {
   border-radius: 15px !important;
+  box-shadow: unset !important;
 }
 .chakra-ui-light .main-box {
-  background-color: white !important;
+  background-color: rgba(255,255,255,0.9) !important;
 }
 .chakra-ui-light .readme-box {
-  background-color: white !important;
+  background-color: rgba(255,255,255,0.9) !important;
 }
 .readme-box {
   border-radius: 15px !important;
-}
-</style>`,
+  box-shadow: unset !important;
+}`,
 			Type:        "text",
 			Description: "Customize head, placed at the beginning of the head",
 			Group:       model.PRIVATE,
