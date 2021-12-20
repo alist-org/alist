@@ -44,6 +44,7 @@ if [ "$1" == "release" ]; then
   mv dist/ ../alist/public
 else
   yarn build
+  mv dist/ ../alist/public
 fi
 cd ..
 
