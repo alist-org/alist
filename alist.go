@@ -25,6 +25,7 @@ func Init() bool {
 		log.Infof("current password: %s", pass.Value)
 		return false
 	}
+	server.InitIndex()
 	bootstrap.InitSettings()
 	bootstrap.InitAccounts()
 	bootstrap.InitCache()

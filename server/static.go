@@ -27,7 +27,7 @@ func InitIndex() {
 }
 
 func Static(r *gin.Engine) {
-	InitIndex()
+	//InitIndex()
 	assets, err := fs.Sub(public.Public, "assets")
 	if err != nil {
 		log.Fatalf("can't find assets folder")
