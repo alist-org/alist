@@ -120,7 +120,8 @@ func InitSettings() {
 		},
 		{
 			Key: "customize head",
-			Value: `.chakra-ui-light{
+			Value: `<style>
+.chakra-ui-light{
   background-color: #FFF5F5;
 }
 .main-box {
@@ -136,7 +137,8 @@ func InitSettings() {
 .readme-box {
   border-radius: 15px !important;
   box-shadow: unset !important;
-}`,
+}
+</style>`,
 			Type:        "text",
 			Description: "Customize head, placed at the beginning of the head",
 			Group:       model.PRIVATE,
