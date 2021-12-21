@@ -55,7 +55,7 @@ func InitSettings() {
 		},
 		{
 			Key:         "icon color",
-			Value:       "teal.300",
+			Value:       "#1890ff",
 			Description: "icon's color",
 			Type:        "string",
 			Group:       model.PUBLIC,
@@ -122,7 +122,7 @@ func InitSettings() {
 			Key: "customize head",
 			Value: `<style>
 .chakra-ui-light{
-  background-color: #FFF5F5;
+  background-color: #FAF5FF;
 }
 .main-box {
   border-radius: 15px !important;
