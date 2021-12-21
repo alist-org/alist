@@ -34,7 +34,7 @@ var (
 		"go", "sh", "c", "cpp", "h", "hpp", "tsx", "vtt", "srt", "ass"}
 	OfficeTypes = []string{"doc", "docx", "xls", "xlsx", "ppt", "pptx", "pdf"}
 	VideoTypes  = []string{"mp4", "mkv", "avi", "mov", "rmvb", "webm"}
-	AudioTypes  = []string{"mp3", "flac", "ogg", "m4a"}
+	AudioTypes  = []string{"mp3", "flac", "ogg", "m4a", "wav"}
 	ImageTypes  = []string{"jpg", "tiff", "jpeg", "png", "gif", "bmp", "svg"}
 )
 
