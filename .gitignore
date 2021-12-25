@@ -25,4 +25,5 @@ bin/*
 *.json
 public/index.html
 public/assets/
+public/public/
 data/

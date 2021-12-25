@@ -127,6 +127,9 @@ func (driver FTP) Files(path string, account *model.Account) ([]model.File, erro
 	res := make([]model.File, 0)
 	for i, _ := range entries {
 		entry := entries[i]
+		if entry.Name == "." || entry.Name == ".." {
+			continue
+		}
 		f := model.File{
 			Name:      entry.Name,
 			Size:      int64(entry.Size),
