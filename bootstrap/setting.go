@@ -122,7 +122,7 @@ func InitSettings() {
 			Key: "customize head",
 			Value: `<style>
 .chakra-ui-light{
-  background-color: #FAF5FF;
+  background-color: #edddfd;
 }
 .main-box {
   border-radius: 15px !important;
