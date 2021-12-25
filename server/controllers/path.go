@@ -12,6 +12,21 @@ import (
 	"strings"
 )
 
+func Hide(files []model.File, path string) []model.File {
+	meta, _ := model.GetMetaByPath(path)
+	if meta != nil && meta.Hide != "" {
+		tmpFiles := make([]model.File, 0)
+		hideFiles := strings.Split(meta.Hide, ",")
+		for _, item := range files {
+			if !utils.IsContain(hideFiles, item.Name) {
+				tmpFiles = append(tmpFiles, item)
+			}
+		}
+		files = tmpFiles
+	}
+	return files
+}
+
 func Path(c *gin.Context) {
 	reqV, _ := c.Get("req")
 	req := reqV.(common.PathReq)
@@ -21,6 +36,7 @@ func Path(c *gin.Context) {
 			common.ErrorResp(c, err, 500)
 			return
 		}
+		files = Hide(files, req.Path)
 		c.JSON(200, common.Resp{
 			Code:    200,
 			Message: "folder",
@@ -60,17 +76,7 @@ func Path(c *gin.Context) {
 			Data:    []*model.File{file},
 		})
 	} else {
-		meta, _ := model.GetMetaByPath(req.Path)
-		if meta != nil && meta.Hide != "" {
-			tmpFiles := make([]model.File, 0)
-			hideFiles := strings.Split(meta.Hide, ",")
-			for _, item := range files {
-				if !utils.IsContain(hideFiles, item.Name) {
-					tmpFiles = append(tmpFiles, item)
-				}
-			}
-			files = tmpFiles
-		}
+		files = Hide(files, req.Path)
 		c.JSON(200, common.Resp{
 			Code:    200,
 			Message: "folder",
