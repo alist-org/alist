@@ -6,6 +6,7 @@ import (
 	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
 	"net/http"
+	"strings"
 )
 
 type DriverConfig struct {
@@ -14,6 +15,7 @@ type DriverConfig struct {
 	NoLink      bool // 必须本机返回的
 	ApiProxy    bool // 使用API中转的
 	NeedSetLink bool // 需要设置链接的
+	NoCors      bool // 不可以跨域
 }
 
 type Args struct {
@@ -73,6 +75,16 @@ func RegisterDriver(driver Driver) {
 func GetDriver(name string) (driver Driver, ok bool) {
 	driver, ok = driversMap[name]
 	return
+}
+
+func GetNoCors() string {
+	res := make([]string, 0)
+	for k, v := range driversMap {
+		if v.Config().NoCors {
+			res = append(res, k)
+		}
+	}
+	return strings.Join(res, ",")
 }
 
 func GetDrivers() map[string][]Item {

@@ -16,6 +16,7 @@ func (driver Lanzou) Config() base.DriverConfig {
 	return base.DriverConfig{
 		Name:        "Lanzou",
 		NeedSetLink: true,
+		NoCors:      true,
 	}
 }
 

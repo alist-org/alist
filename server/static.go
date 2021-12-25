@@ -19,7 +19,7 @@ func InitIndex() {
 		index, err = public.Public.Open("index.html")
 	}
 	if err != nil {
-		log.Fatalf(err.Error())
+		//log.Fatalf(err.Error())
 		return
 	}
 	data, _ := ioutil.ReadAll(index)

@@ -113,6 +113,7 @@ func GetAccountFiles() ([]File, error) {
 		files = append(files, File{
 			Name:      v.Name,
 			Size:      0,
+			Driver:    v.Type,
 			Type:      conf.FOLDER,
 			UpdatedAt: v.UpdatedAt,
 		})
