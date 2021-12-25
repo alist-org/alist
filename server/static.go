@@ -32,7 +32,12 @@ func Static(r *gin.Engine) {
 	if err != nil {
 		log.Fatalf("can't find assets folder")
 	}
+	pub, err := fs.Sub(public.Public, "public")
+	if err != nil {
+		log.Fatalf("can't find public folder")
+	}
 	r.StaticFS("/assets/", http.FS(assets))
+	r.StaticFS("/public/", http.FS(pub))
 	r.NoRoute(func(c *gin.Context) {
 		c.Status(200)
 		c.Header("Content-Type", "text/html")
