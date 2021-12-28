@@ -41,6 +41,8 @@ English | [中文](./README_cn.md)
 - [x] WebDav (readonly)
 - [x] [Docker Deploy](https://hub.docker.com/r/xhofe/alist)
 - [x] Cloudflare workers proxy
+- [x] File/Folder package download
+- [x] Support video list playback and subtitles(ass,srt,vtt)
 
 ## Discussion
 

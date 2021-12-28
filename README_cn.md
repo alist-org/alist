@@ -40,6 +40,8 @@
 - [x] WebDav（只读）
 - [x] [Docker 部署](https://hub.docker.com/r/xhofe/alist)
 - [x] Cloudflare workers 中转
+- [x] 文件/文件夹打包下载
+- [x] 支持视频列表播放和字幕(ass,srt,vtt)
 
 ## 讨论
 
