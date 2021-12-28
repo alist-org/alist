@@ -3,6 +3,7 @@ package server
 import (
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/server/webdav"
+	"github.com/Xhofe/alist/utils"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -33,7 +34,7 @@ func WebDav(r *gin.Engine) {
 
 func ServeWebDAV(c *gin.Context) {
 	fs := webdav.FileSystem{}
-	handler.ServeHTTP(c.Writer,c.Request,&fs)
+	handler.ServeHTTP(c.Writer, c.Request, &fs)
 }
 
 func WebDAVAuth(c *gin.Context) {
@@ -48,13 +49,16 @@ func WebDAVAuth(c *gin.Context) {
 		c.Abort()
 		return
 	}
-	if conf.DavUsername != "" && conf.DavUsername != username {
-		c.Status(http.StatusUnauthorized)
-		c.Abort()
+	if conf.DavUsername == username && conf.DavPassword == password {
+		c.Next()
+		return
 	}
-	if conf.DavPassword != "" && conf.DavPassword != password {
-		c.Status(http.StatusUnauthorized)
-		c.Abort()
+	if (conf.VisitorDavUsername == username && conf.VisitorDavPassword == password) || (conf.VisitorDavUsername == "" && conf.VisitorDavPassword == "") {
+		if !utils.IsContain([]string{"PUT", "DELETE", "PROPPATCH", "MKCOL", "COPY", "MOVE"}, c.Request.Method) {
+			c.Next()
+			return
+		}
 	}
-	c.Next()
+	c.Status(http.StatusUnauthorized)
+	c.Abort()
 }

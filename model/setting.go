@@ -132,4 +132,12 @@ func LoadSettings() {
 	if err == nil {
 		conf.DavPassword = davPassword.Value
 	}
+	visitorDavUsername, err := GetSettingByKey("Visitor WebDAV username")
+	if err == nil {
+		conf.VisitorDavUsername = visitorDavUsername.Value
+	}
+	visitorDavPassword, err := GetSettingByKey("Visitor WebDAV password")
+	if err == nil {
+		conf.VisitorDavPassword = visitorDavPassword.Value
+	}
 }

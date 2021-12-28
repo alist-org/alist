@@ -45,7 +45,9 @@ var (
 	CheckParent  bool
 	CheckDown    bool
 
-	Token       string
-	DavUsername string
-	DavPassword string
+	Token              string
+	DavUsername        string
+	DavPassword        string
+	VisitorDavUsername string
+	VisitorDavPassword string
 )
