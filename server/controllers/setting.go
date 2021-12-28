@@ -5,6 +5,7 @@ import (
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/server/common"
 	"github.com/gin-gonic/gin"
+	"strconv"
 )
 
 func SaveSettings(c *gin.Context) {
@@ -22,7 +23,17 @@ func SaveSettings(c *gin.Context) {
 }
 
 func GetSettings(c *gin.Context) {
-	settings, err := model.GetSettings()
+	groupStr := c.Query("group")
+	var settings []model.SettingItem
+	var err error
+	if groupStr == "" {
+		settings, err = model.GetSettings()
+	} else {
+		group, err := strconv.Atoi(groupStr)
+		if err == nil {
+			settings, err = model.GetSettingsByGroup(group)
+		}
+	}
 	if err != nil {
 		common.ErrorResp(c, err, 400)
 		return
@@ -36,7 +47,7 @@ func GetSettingsPublic(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	*settings = append(*settings, model.SettingItem{
+	settings = append(settings, model.SettingItem{
 		Key:         "no cors",
 		Value:       base.GetNoCors(),
 		Description: "",

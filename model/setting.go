@@ -13,14 +13,31 @@ const (
 	CONST
 )
 
+const (
+	FRONT = iota
+	BACK
+	OTHER
+)
+
 type SettingItem struct {
 	Key         string `json:"key" gorm:"primaryKey" binding:"required"`
 	Value       string `json:"value"`
 	Description string `json:"description"`
 	Type        string `json:"type"`
 	Group       int    `json:"group"`
+	Access      int    `json:"access"`
 	Values      string `json:"values"`
 	Version     string `json:"version"`
+}
+
+var Version = SettingItem{
+	Key:         "version",
+	Value:       conf.GitTag,
+	Description: "version",
+	Type:        "string",
+	Access:      CONST,
+	Version:     conf.GitTag,
+	Group:       OTHER,
 }
 
 func SaveSettings(items []SettingItem) error {
@@ -31,20 +48,29 @@ func SaveSetting(item SettingItem) error {
 	return conf.DB.Save(item).Error
 }
 
-func GetSettingsPublic() (*[]SettingItem, error) {
+func GetSettingsPublic() ([]SettingItem, error) {
 	var items []SettingItem
-	if err := conf.DB.Where("`group` <> ?", 1).Find(&items).Error; err != nil {
+	if err := conf.DB.Where("`access` <> ?", 1).Find(&items).Error; err != nil {
 		return nil, err
 	}
-	return &items, nil
+	return items, nil
 }
 
-func GetSettings() (*[]SettingItem, error) {
+func GetSettingsByGroup(group int) ([]SettingItem, error) {
+	var items []SettingItem
+	if err := conf.DB.Where("`group` = ?", group).Find(&items).Error; err != nil {
+		return nil, err
+	}
+	items = append([]SettingItem{Version}, items...)
+	return items, nil
+}
+
+func GetSettings() ([]SettingItem, error) {
 	var items []SettingItem
 	if err := conf.DB.Find(&items).Error; err != nil {
 		return nil, err
 	}
-	return &items, nil
+	return items, nil
 }
 
 func DeleteSetting(key string) error {
