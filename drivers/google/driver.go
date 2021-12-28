@@ -8,6 +8,7 @@ import (
 	"github.com/Xhofe/alist/utils"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
+	"io/ioutil"
 	"path/filepath"
 )
 
@@ -168,23 +169,105 @@ func (driver GoogleDrive) Preview(path string, account *model.Account) (interfac
 }
 
 func (driver GoogleDrive) MakeDir(path string, account *model.Account) error {
-	return base.ErrNotImplement
+	parentFile, err := driver.File(utils.Dir(path), account)
+	if err != nil {
+		return err
+	}
+	data := base.Json{
+		"name":     utils.Base(path),
+		"parents":  []string{parentFile.Id},
+		"mimeType": "application/vnd.google-apps.folder",
+	}
+	_, err = driver.Request("https://www.googleapis.com/drive/v3/files", base.Post, nil, nil, nil, &data, nil, account)
+	if err == nil {
+		_ = base.DeleteCache(utils.Dir(path), account)
+	}
+	return err
 }
 
 func (driver GoogleDrive) Move(src string, dst string, account *model.Account) error {
-	return base.ErrNotImplement
+	srcFile, err := driver.File(src, account)
+	url := "https://www.googleapis.com/drive/v3/files/" + srcFile.Id
+	if err != nil {
+		return err
+	}
+	if utils.Dir(src) == utils.Dir(dst) {
+		// rename
+		data := base.Json{
+			"name": utils.Base(dst),
+		}
+		_, err = driver.Request(url, base.Patch, nil, nil, nil, &data, nil, account)
+	} else {
+		dstParentFile, err := driver.File(utils.Dir(dst), account)
+		if err != nil {
+			return err
+		}
+		query := map[string]string{
+			"addParents":    dstParentFile.Id,
+			"removeParents": "root",
+		}
+		_, err = driver.Request(url, base.Patch, nil, query, nil, nil, nil, account)
+	}
+	if err == nil {
+		_ = base.DeleteCache(utils.Dir(src), account)
+		if utils.Dir(src) != utils.Dir(dst) {
+			_ = base.DeleteCache(utils.Dir(dst), account)
+		}
+	}
+	return err
 }
 
 func (driver GoogleDrive) Copy(src string, dst string, account *model.Account) error {
-	return base.ErrNotImplement
+	return base.ErrNotSupport
 }
 
 func (driver GoogleDrive) Delete(path string, account *model.Account) error {
-	return base.ErrNotImplement
+	file, err := driver.File(path, account)
+	url := "https://www.googleapis.com/drive/v3/files/" + file.Id
+	if err != nil {
+		return err
+	}
+	_, err = driver.Request(url, base.Delete, nil, nil, nil, nil, nil, account)
+	if err == nil {
+		_ = base.DeleteCache(utils.Dir(path), account)
+	}
+	return err
 }
 
 func (driver GoogleDrive) Upload(file *model.FileStream, account *model.Account) error {
-	return base.ErrNotImplement
+	parentFile, err := driver.File(file.ParentPath, account)
+	if err != nil {
+		return err
+	}
+	data := base.Json{
+		"name":    file.Name,
+		"parents": []string{parentFile.Id},
+	}
+	var e Error
+	res, err := base.NoRedirectClient.R().SetHeader("Authorization", "Bearer "+account.AccessToken).
+		SetError(&e).SetBody(data).
+		Post("https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&supportsAllDrives=true")
+	if err != nil {
+		return err
+	}
+	if e.Error.Code != 0 {
+		if e.Error.Code == 401 {
+			err = driver.RefreshToken(account)
+			if err != nil {
+				_ = model.SaveAccount(account)
+				return err
+			}
+			return driver.Upload(file, account)
+		}
+		return fmt.Errorf("%s: %v", e.Error.Message, e.Error.Errors)
+	}
+	putUrl := res.Header().Get("location")
+	byteData, _ := ioutil.ReadAll(file)
+	_, err = driver.Request(putUrl, base.Put, nil, nil, nil, byteData, nil, account)
+	if err == nil {
+		_ = base.DeleteCache(file.ParentPath, account)
+	}
+	return err
 }
 
 var _ base.Driver = (*GoogleDrive)(nil)

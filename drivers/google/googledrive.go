@@ -103,13 +103,13 @@ func (driver GoogleDrive) GetFiles(id string, account *model.Account) ([]File, e
 		}
 		var resp Files
 		query := map[string]string{
-			"orderBy":                   "folder,name,modifiedTime desc",
-			"fields":                    "files(id,name,mimeType,size,modifiedTime),nextPageToken",
-			"pageSize":                  "1000",
-			"q":                         fmt.Sprintf("'%s' in parents and trashed = false", id),
-			"includeItemsFromAllDrives": "true",
-			"supportsAllDrives":         "true",
-			"pageToken":                 pageToken,
+			"orderBy":  "folder,name,modifiedTime desc",
+			"fields":   "files(id,name,mimeType,size,modifiedTime),nextPageToken",
+			"pageSize": "1000",
+			"q":        fmt.Sprintf("'%s' in parents and trashed = false", id),
+			//"includeItemsFromAllDrives": "true",
+			//"supportsAllDrives":         "true",
+			"pageToken": pageToken,
 		}
 		_, err := driver.Request("https://www.googleapis.com/drive/v3/files",
 			base.Get, nil, query, nil, nil, &resp, account)
@@ -122,13 +122,15 @@ func (driver GoogleDrive) GetFiles(id string, account *model.Account) ([]File, e
 	return res, nil
 }
 
-func (driver GoogleDrive) Request(url string, method int, headers, query, form map[string]string, data *base.Json, resp interface{}, account *model.Account) ([]byte, error) {
+func (driver GoogleDrive) Request(url string, method int, headers, query, form map[string]string, data interface{}, resp interface{}, account *model.Account) ([]byte, error) {
 	rawUrl := url
 	if account.APIProxyUrl != "" {
 		url = fmt.Sprintf("%s/%s", account.APIProxyUrl, url)
 	}
 	req := base.RestyClient.R()
 	req.SetHeader("Authorization", "Bearer "+account.AccessToken)
+	req.SetQueryParam("includeItemsFromAllDrives", "true")
+	req.SetQueryParam("supportsAllDrives", "true")
 	if headers != nil {
 		req.SetHeaders(headers)
 	}
@@ -153,6 +155,12 @@ func (driver GoogleDrive) Request(url string, method int, headers, query, form m
 		res, err = req.Get(url)
 	case base.Post:
 		res, err = req.Post(url)
+	case base.Delete:
+		res, err = req.Delete(url)
+	case base.Patch:
+		res, err = req.Patch(url)
+	case base.Put:
+		res, err = req.Put(url)
 	default:
 		return nil, base.ErrNotSupport
 	}

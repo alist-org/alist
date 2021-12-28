@@ -165,6 +165,7 @@ func (fs *FileSystem) CreateDirectory(ctx context.Context, rawPath string) error
 	if err != nil {
 		return err
 	}
+	log.Debugf("mkdir: %s", path_)
 	return driver.MakeDir(path_, account)
 }
 
