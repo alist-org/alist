@@ -1,6 +1,7 @@
 package onedrive
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"github.com/Xhofe/alist/conf"
@@ -8,8 +9,13 @@ import (
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
 	"github.com/go-resty/resty/v2"
+	jsoniter "github.com/json-iterator/go"
 	log "github.com/sirupsen/logrus"
+	"io"
+	"io/ioutil"
+	"net/http"
 	"path/filepath"
+	"strconv"
 	"time"
 )
 
@@ -111,6 +117,7 @@ func (driver Onedrive) refreshToken(account *model.Account) error {
 }
 
 type OneFile struct {
+	Id                   string     `json:"id"`
 	Name                 string     `json:"name"`
 	Size                 int64      `json:"size"`
 	LastModifiedDateTime *time.Time `json:"lastModifiedDateTime"`
@@ -118,11 +125,14 @@ type OneFile struct {
 	File                 struct {
 		MimeType string `json:"mimeType"`
 	} `json:"file"`
-	Thumbnails []struct{
-		Medium struct{
+	Thumbnails []struct {
+		Medium struct {
 			Url string `json:"url"`
 		} `json:"medium"`
 	} `json:"thumbnails"`
+	ParentReference struct {
+		DriveId string `json:"driveId"`
+	} `json:"parentReference"`
 }
 
 type OneFiles struct {
@@ -144,6 +154,7 @@ func (driver Onedrive) FormatFile(file *OneFile) *model.File {
 		UpdatedAt: file.LastModifiedDateTime,
 		Driver:    driver.Config().Name,
 		Url:       file.Url,
+		Id:        file.Id,
 	}
 	if len(file.Thumbnails) > 0 {
 		f.Thumbnail = file.Thumbnails[0].Medium.Url
@@ -196,6 +207,109 @@ func (driver Onedrive) GetFile(account *model.Account, path string) (*OneFile, e
 		return nil, fmt.Errorf("%s", e.Error.Message)
 	}
 	return &file, nil
+}
+
+func (driver Onedrive) Request(url string, method int, headers, query, form map[string]string, data interface{}, resp interface{}, account *model.Account) ([]byte, error) {
+	rawUrl := url
+	if account.APIProxyUrl != "" {
+		url = fmt.Sprintf("%s/%s", account.APIProxyUrl, url)
+	}
+	req := base.RestyClient.R()
+	req.SetHeader("Authorization", "Bearer "+account.AccessToken)
+	if headers != nil {
+		req.SetHeaders(headers)
+	}
+	if query != nil {
+		req.SetQueryParams(query)
+	}
+	if form != nil {
+		req.SetFormData(form)
+	}
+	if data != nil {
+		req.SetBody(data)
+	}
+	if resp != nil {
+		req.SetResult(resp)
+	}
+	var res *resty.Response
+	var err error
+	var e OneRespErr
+	req.SetError(&e)
+	switch method {
+	case base.Get:
+		res, err = req.Get(url)
+	case base.Post:
+		res, err = req.Post(url)
+	case base.Patch:
+		res, err = req.Patch(url)
+	case base.Delete:
+		res, err = req.Delete(url)
+	case base.Put:
+		res, err = req.Put(url)
+	default:
+		return nil, base.ErrNotSupport
+	}
+	if err != nil {
+		return nil, err
+	}
+	log.Debug(res.String())
+	if e.Error.Code != "" {
+		if e.Error.Code == "InvalidAuthenticationToken" {
+			err = driver.RefreshToken(account)
+			if err != nil {
+				_ = model.SaveAccount(account)
+				return nil, err
+			}
+			return driver.Request(rawUrl, method, headers, query, form, data, resp, account)
+		}
+		return nil, errors.New(e.Error.Message)
+	}
+	return res.Body(), nil
+}
+
+func (driver Onedrive) UploadSmall(file *model.FileStream, account *model.Account) error {
+	url := driver.GetMetaUrl(account, false, utils.Join(file.ParentPath, file.Name)) + "/content"
+	data, err := ioutil.ReadAll(file)
+	if err != nil {
+		return err
+	}
+	_, err = driver.Request(url, base.Put, nil, nil, nil, data, nil, account)
+	return err
+}
+
+func (driver Onedrive) UploadBig(file *model.FileStream, account *model.Account) error {
+	url := driver.GetMetaUrl(account, false, utils.Join(file.ParentPath, file.Name)) + "/createUploadSession"
+	res, err := driver.Request(url, base.Post, nil, nil, nil, nil, nil, account)
+	if err != nil {
+		return err
+	}
+	uploadUrl := jsoniter.Get(res, "uploadUrl").ToString()
+	var finish uint64 = 0
+	const DEFAULT = 4 * 1024 * 1024
+	for finish < file.GetSize() {
+		log.Debugf("upload: %d", finish)
+		var byteSize uint64 = DEFAULT
+		left := file.GetSize() - finish
+		if left < DEFAULT {
+			byteSize = left
+		}
+		byteData := make([]byte, byteSize)
+		n, err := io.ReadFull(file, byteData)
+		log.Debug(err, n)
+		if err != nil {
+			return err
+		}
+		req, err := http.NewRequest("PUT", uploadUrl, bytes.NewBuffer(byteData))
+		req.Header.Set("Content-Length", strconv.Itoa(int(byteSize)))
+		req.Header.Set("Content-Range", fmt.Sprintf("bytes %d-%d/%d", finish, finish+byteSize-1, file.Size))
+		finish += byteSize
+		res, err := base.HttpClient.Do(req)
+		if res.StatusCode != 201 && res.StatusCode != 202 {
+			data, _ := ioutil.ReadAll(res.Body)
+			return errors.New(string(data))
+		}
+	}
+	return nil
 }
 
 func init() {

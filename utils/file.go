@@ -6,6 +6,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 )
@@ -34,7 +35,7 @@ func GetFileType(ext string) int {
 	if ext == "" {
 		return conf.UNKNOWN
 	}
-	ext = strings.ToLower(strings.TrimLeft(ext,"."))
+	ext = strings.ToLower(strings.TrimLeft(ext, "."))
 	if IsContain(conf.OfficeTypes, ext) {
 		return conf.OFFICE
 	}
@@ -116,7 +117,7 @@ func Base(path string) string {
 }
 
 func Join(elem ...string) string {
-	res := filepath.Join(elem...)
+	res := path.Join(elem...)
 	if res == "\\" {
 		res = "/"
 	}
