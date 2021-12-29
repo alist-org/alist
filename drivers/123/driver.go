@@ -22,8 +22,7 @@ type Pan123 struct{}
 
 func (driver Pan123) Config() base.DriverConfig {
 	return base.DriverConfig{
-		Name:        "123Pan",
-		NeedSetLink: true,
+		Name: "123Pan",
 	}
 }
 

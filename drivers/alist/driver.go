@@ -17,9 +17,9 @@ type Alist struct{}
 
 func (driver Alist) Config() base.DriverConfig {
 	return base.DriverConfig{
-		Name:      "Alist",
-		OnlyProxy: false,
-		NoCors:    true,
+		Name:          "Alist",
+		NoNeedSetLink: true,
+		NoCors:        true,
 	}
 }
 

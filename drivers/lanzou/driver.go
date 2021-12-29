@@ -14,9 +14,8 @@ type Lanzou struct{}
 
 func (driver Lanzou) Config() base.DriverConfig {
 	return base.DriverConfig{
-		Name:        "Lanzou",
-		NeedSetLink: true,
-		NoCors:      true,
+		Name:   "Lanzou",
+		NoCors: true,
 	}
 }
 

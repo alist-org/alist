@@ -60,9 +60,9 @@ func Path(c *gin.Context) {
 			if account.DownProxyUrl != "" {
 				file.Url = fmt.Sprintf("%s%s?sign=%s", account.DownProxyUrl, req.Path, utils.SignWithToken(file.Name, conf.Token))
 			} else {
-				file.Url = fmt.Sprintf("//%s/d%s", c.Request.Host, req.Path)
+				file.Url = fmt.Sprintf("//%s/p%s?sign=%s", c.Request.Host, req.Path, utils.SignWithToken(file.Name, conf.Token))
 			}
-		} else if driver.Config().NeedSetLink {
+		} else if !driver.Config().NoNeedSetLink {
 			link, err := driver.Link(base.Args{Path: path, IP: c.ClientIP()}, account)
 			if err != nil {
 				common.ErrorResp(c, err, 500)
@@ -103,7 +103,7 @@ func Link(c *gin.Context) {
 	}
 	if driver.Config().NoLink {
 		common.SuccessResp(c, base.Link{
-			Url: fmt.Sprintf("//%s/d%s?d=1&sign=%s", c.Request.Host, req.Path, utils.SignWithToken(utils.Base(rawPath), conf.Token)),
+			Url: fmt.Sprintf("//%s/p%s?d=1&sign=%s", c.Request.Host, req.Path, utils.SignWithToken(utils.Base(rawPath), conf.Token)),
 		})
 		return
 	}

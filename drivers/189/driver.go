@@ -26,8 +26,7 @@ type Cloud189 struct{}
 
 func (driver Cloud189) Config() base.DriverConfig {
 	return base.DriverConfig{
-		Name:        "189Cloud",
-		NeedSetLink: true,
+		Name: "189Cloud",
 	}
 }
 

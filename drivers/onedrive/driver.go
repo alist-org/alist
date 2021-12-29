@@ -16,7 +16,8 @@ type Onedrive struct{}
 
 func (driver Onedrive) Config() base.DriverConfig {
 	return base.DriverConfig{
-		Name: "Onedrive",
+		Name:          "Onedrive",
+		NoNeedSetLink: true,
 	}
 }
 

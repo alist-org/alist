@@ -16,9 +16,10 @@ type FTP struct{}
 
 func (driver FTP) Config() base.DriverConfig {
 	return base.DriverConfig{
-		Name:      "FTP",
-		OnlyProxy: true,
-		NoLink:    true,
+		Name:          "FTP",
+		OnlyProxy:     true,
+		NoLink:        true,
+		NoNeedSetLink: true,
 	}
 }
 

@@ -21,8 +21,7 @@ type AliDrive struct{}
 
 func (driver AliDrive) Config() base.DriverConfig {
 	return base.DriverConfig{
-		Name:        "AliDrive",
-		NeedSetLink: true,
+		Name: "AliDrive",
 	}
 }
 

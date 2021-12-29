@@ -19,9 +19,10 @@ type Native struct{}
 
 func (driver Native) Config() base.DriverConfig {
 	return base.DriverConfig{
-		Name:      "Native",
-		OnlyProxy: true,
-		NoLink:    true,
+		Name:          "Native",
+		OnlyProxy:     true,
+		NoLink:        true,
+		NoNeedSetLink: true,
 	}
 }
 
