@@ -35,17 +35,19 @@ func (driver PikPak) Login(account *model.Account) error {
 	}).Post(url)
 	if err != nil {
 		account.Status = err.Error()
+		_ = model.SaveAccount(account)
 		return err
 	}
 	log.Debug(res.String())
 	if e.ErrorCode != 0 {
 		account.Status = e.Error
-		return errors.New(e.Error)
+		err = errors.New(e.Error)
+	} else {
+		data := res.Body()
+		account.Status = "work"
+		account.RefreshToken = jsoniter.Get(data, "refresh_token").ToString()
+		account.AccessToken = jsoniter.Get(data, "access_token").ToString()
 	}
-	data := res.Body()
-	account.Status = "work"
-	account.RefreshToken = jsoniter.Get(data, "refresh_token").ToString()
-	account.AccessToken = jsoniter.Get(data, "access_token").ToString()
 	_ = model.SaveAccount(account)
 	return nil
 }
@@ -72,6 +74,8 @@ func (driver PikPak) RefreshToken(account *model.Account) error {
 			// refresh_token 失效，重新登陆
 			return driver.Login(account)
 		}
+		account.Status = e.Error
+		_ = model.SaveAccount(account)
 		return errors.New(e.Error)
 	}
 	data := res.Body()

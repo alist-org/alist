@@ -34,11 +34,14 @@ func (driver Shandian) Login(account *model.Account) error {
 		return err
 	}
 	if resp.Code != 0 {
-		return errors.New(resp.Msg)
+		account.Status = resp.Msg
+		err = errors.New(resp.Msg)
+	} else {
+		account.Status = "work"
+		account.AccessToken = resp.Data.Token
 	}
-	account.AccessToken = resp.Data.Token
 	_ = model.SaveAccount(account)
-	return nil
+	return err
 }
 
 type File struct {
