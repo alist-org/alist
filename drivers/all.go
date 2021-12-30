@@ -11,5 +11,6 @@ import (
 	_ "github.com/Xhofe/alist/drivers/native"
 	_ "github.com/Xhofe/alist/drivers/onedrive"
 	_ "github.com/Xhofe/alist/drivers/pikpak"
+	_ "github.com/Xhofe/alist/drivers/s3"
 	_ "github.com/Xhofe/alist/drivers/shandian"
 )

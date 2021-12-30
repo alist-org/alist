@@ -36,6 +36,13 @@ type Account struct {
 	//AllowProxy     bool       `json:"allow_proxy"` // 是否允许中转下载
 	DownProxyUrl string `json:"down_proxy_url"` // 用于中转下载服务的URL 两处 1. path请求中返回的链接 2. down下载时进行302
 	APIProxyUrl  string `json:"api_proxy_url"`  // 用于中转api的地址
+	// for s3
+	Bucket       string `json:"bucket"`
+	Endpoint     string `json:"endpoint"`
+	Region       string `json:"region"`
+	AccessKey    string `json:"access_key"`
+	AccessSecret string `json:"access_secret"`
+	CustomHost   string `json:"custom_host"`
 }
 
 var accountsMap = map[string]Account{}
