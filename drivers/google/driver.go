@@ -20,6 +20,7 @@ func (driver GoogleDrive) Config() base.DriverConfig {
 		OnlyProxy:     true,
 		ApiProxy:      true,
 		NoNeedSetLink: true,
+		LocalSort:     true,
 	}
 }
 

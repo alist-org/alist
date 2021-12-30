@@ -28,6 +28,18 @@ func (driver AliDrive) Config() base.DriverConfig {
 func (driver AliDrive) Items() []base.Item {
 	return []base.Item{
 		{
+			Name:     "refresh_token",
+			Label:    "refresh token",
+			Type:     base.TypeString,
+			Required: true,
+		},
+		{
+			Name:     "root_folder",
+			Label:    "root folder file_id",
+			Type:     base.TypeString,
+			Required: false,
+		},
+		{
 			Name:     "order_by",
 			Label:    "order_by",
 			Type:     base.TypeSelect,
@@ -39,18 +51,6 @@ func (driver AliDrive) Items() []base.Item {
 			Label:    "order_direction",
 			Type:     base.TypeSelect,
 			Values:   "ASC,DESC",
-			Required: false,
-		},
-		{
-			Name:     "refresh_token",
-			Label:    "refresh token",
-			Type:     base.TypeString,
-			Required: true,
-		},
-		{
-			Name:     "root_folder",
-			Label:    "root folder file_id",
-			Type:     base.TypeString,
 			Required: false,
 		},
 		{

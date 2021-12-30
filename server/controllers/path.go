@@ -77,6 +77,9 @@ func Path(c *gin.Context) {
 		})
 	} else {
 		files = Hide(files, req.Path)
+		if driver.Config().LocalSort {
+			model.SortFiles(files, account)
+		}
 		c.JSON(200, common.Resp{
 			Code:    200,
 			Message: "folder",

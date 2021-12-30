@@ -23,6 +23,7 @@ func (driver Native) Config() base.DriverConfig {
 		OnlyProxy:     true,
 		NoLink:        true,
 		NoNeedSetLink: true,
+		LocalSort:     true,
 	}
 }
 
@@ -33,20 +34,6 @@ func (driver Native) Items() []base.Item {
 			Label:    "root folder path",
 			Type:     base.TypeString,
 			Required: true,
-		},
-		{
-			Name:     "order_by",
-			Label:    "order_by",
-			Type:     base.TypeSelect,
-			Values:   "name,size,updated_at",
-			Required: false,
-		},
-		{
-			Name:     "order_direction",
-			Label:    "order_direction",
-			Type:     base.TypeSelect,
-			Values:   "ASC,DESC",
-			Required: false,
 		},
 	}
 }
@@ -153,7 +140,7 @@ func (driver Native) Path(path string, account *model.Account) (*model.File, []m
 	if err != nil {
 		return nil, nil, err
 	}
-	model.SortFiles(files, account)
+	//model.SortFiles(files, account)
 	return nil, files, nil
 }
 

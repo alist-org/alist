@@ -15,8 +15,9 @@ type PikPak struct{}
 
 func (driver PikPak) Config() base.DriverConfig {
 	return base.DriverConfig{
-		Name:     "PikPak",
-		ApiProxy: true,
+		Name:      "PikPak",
+		ApiProxy:  true,
+		LocalSort: true,
 	}
 }
 

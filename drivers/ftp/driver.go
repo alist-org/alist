@@ -20,6 +20,7 @@ func (driver FTP) Config() base.DriverConfig {
 		OnlyProxy:     true,
 		NoLink:        true,
 		NoNeedSetLink: true,
+		LocalSort:     true,
 	}
 }
 
@@ -47,20 +48,6 @@ func (driver FTP) Items() []base.Item {
 			Name:     "root_folder",
 			Label:    "root folder path",
 			Type:     base.TypeString,
-			Required: false,
-		},
-		{
-			Name:     "order_by",
-			Label:    "order_by",
-			Type:     base.TypeSelect,
-			Values:   "name,size,updated_at",
-			Required: false,
-		},
-		{
-			Name:     "order_direction",
-			Label:    "order_direction",
-			Type:     base.TypeSelect,
-			Values:   "ASC,DESC",
 			Required: false,
 		},
 	}
@@ -187,7 +174,6 @@ func (driver FTP) Path(path string, account *model.Account) (*model.File, []mode
 	if err != nil {
 		return nil, nil, err
 	}
-	model.SortFiles(files, account)
 	return nil, files, nil
 }
 

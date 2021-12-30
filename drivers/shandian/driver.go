@@ -18,6 +18,7 @@ func (driver Shandian) Config() base.DriverConfig {
 	return base.DriverConfig{
 		Name:          "ShandianPan",
 		NoNeedSetLink: true,
+		LocalSort:     true,
 	}
 }
 

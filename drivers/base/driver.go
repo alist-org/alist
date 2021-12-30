@@ -16,6 +16,7 @@ type DriverConfig struct {
 	ApiProxy      bool // 使用API中转的
 	NoNeedSetLink bool // 不需要设置链接的
 	NoCors        bool // 不可以跨域
+	LocalSort     bool // 本地排序
 }
 
 type Args struct {
@@ -132,6 +133,24 @@ func GetDrivers() map[string][]Item {
 					Type:  TypeString,
 				},
 			}, res[k]...)
+		}
+		if v.Config().LocalSort {
+			res[k] = append(res[k], []Item{
+				{
+					Name:     "order_by",
+					Label:    "order_by",
+					Type:     TypeSelect,
+					Values:   "name,size,updated_at",
+					Required: false,
+				},
+				{
+					Name:     "order_direction",
+					Label:    "order_direction",
+					Type:     TypeSelect,
+					Values:   "ASC,DESC",
+					Required: false,
+				},
+			}...)
 		}
 	}
 	return res
