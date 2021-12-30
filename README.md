@@ -29,6 +29,8 @@ English | [中文](./README_cn.md)
   - [x] [Alist](https://github.com/Xhofe/alist)
   - [x] FTP
   - [x] [PikPak](https://www.mypikpak.com/)
+  - [x] [ShandianPan](https://shandianpan.com/)
+  - [x] [S3](https://aws.amazon.com/s3/)
 - [x] File preview (PDF, markdown, code, plain text, ...)
 - [x] Image preview in gallery mode
 - [x] Video and audio preview (mp4, mp3, ...)

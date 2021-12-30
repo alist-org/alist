@@ -28,6 +28,8 @@
   - [x] [Alist](https://github.com/Xhofe/alist)
   - [x] FTP
   - [x] [PikPak](https://www.mypikpak.com/)
+  - [x] [闪电盘](https://shandianpan.com/)
+  - [x] [S3](https://aws.amazon.com/cn/s3/)
 - [x] 文件预览（PDF、markdown、代码、纯文本……）
 - [x] 画廊模式下的图像预览
 - [x] 视频和音频预览（mp4、mp3 等）
