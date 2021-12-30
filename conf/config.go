@@ -10,14 +10,25 @@ type Database struct {
 	TablePrefix string `json:"table_prefix"`
 	DBFile      string `json:"db_file"`
 }
+
+type Scheme struct {
+	Https    bool   `json:"https"`
+	CertFile string `json:"cert_file"`
+	KeyFile  string `json:"key_file"`
+}
+
+type CacheConfig struct {
+	Expiration      int64 `json:"expiration"`
+	CleanupInterval int64 `json:"cleanup_interval"`
+}
+
 type Config struct {
-	Address  string   `json:"address"`
-	Port     int      `json:"port"`
-	Database Database `json:"database"`
-	Https    bool     `json:"https"`
-	CertFile string   `json:"cert_file"`
-	KeyFile  string   `json:"key_file"`
-	Local    bool     `json:"local"`
+	Address  string      `json:"address"`
+	Port     int         `json:"port"`
+	Local    bool        `json:"local"`
+	Database Database    `json:"database"`
+	Scheme   Scheme      `json:"scheme"`
+	Cache    CacheConfig `json:"cache"`
 }
 
 func DefaultConfig() *Config {
@@ -29,6 +40,10 @@ func DefaultConfig() *Config {
 			Port:        0,
 			TablePrefix: "x_",
 			DBFile:      "data/data.db",
+		},
+		Cache: CacheConfig{
+			Expiration:      60,
+			CleanupInterval: 120,
 		},
 	}
 }

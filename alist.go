@@ -48,8 +48,8 @@ func main() {
 	base := fmt.Sprintf("%s:%d", conf.Conf.Address, conf.Conf.Port)
 	log.Infof("start server @ %s", base)
 	var err error
-	if conf.Conf.Https {
-		err = r.RunTLS(base, conf.Conf.CertFile, conf.Conf.KeyFile)
+	if conf.Conf.Scheme.Https {
+		err = r.RunTLS(base, conf.Conf.Scheme.CertFile, conf.Conf.Scheme.KeyFile)
 	} else {
 		err = r.Run(base)
 	}

@@ -12,7 +12,11 @@ import (
 // InitCache init cache
 func InitCache() {
 	log.Infof("init cache...")
-	goCacheClient := goCache.New(60*time.Minute, 120*time.Minute)
+	c := conf.Conf.Cache
+	if c.Expiration == 0 {
+		c.Expiration, c.CleanupInterval = 60, 120
+	}
+	goCacheClient := goCache.New(time.Duration(c.Expiration)*time.Minute, time.Duration(c.CleanupInterval)*time.Minute)
 	goCacheStore := store.NewGoCache(goCacheClient, nil)
 	conf.Cache = cache.New(goCacheStore)
 }
