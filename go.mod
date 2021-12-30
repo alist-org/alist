@@ -57,6 +57,7 @@ require (
 	github.com/prometheus/common v0.18.0 // indirect
 	github.com/prometheus/procfs v0.6.0 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
+	github.com/studio-b12/gowebdav v0.0.0-20211109083228-3f8721cd4b6f // indirect
 	github.com/ugorji/go/codec v1.2.6 // indirect
 	go.opentelemetry.io/otel v0.20.0 // indirect
 	go.opentelemetry.io/otel/metric v0.20.0 // indirect

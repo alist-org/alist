@@ -8,7 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jlaffaye/ftp"
 	log "github.com/sirupsen/logrus"
-	"io/ioutil"
 	"path/filepath"
 )
 
@@ -18,7 +17,7 @@ func (driver FTP) Config() base.DriverConfig {
 	return base.DriverConfig{
 		Name:          "FTP",
 		OnlyProxy:     true,
-		NoLink:        true,
+		OnlyLocal:     true,
 		NoNeedSetLink: true,
 		LocalSort:     true,
 	}
@@ -150,13 +149,13 @@ func (driver FTP) Link(args base.Args, account *model.Account) (*base.Link, erro
 	if err != nil {
 		return nil, err
 	}
-	defer func() { _ = resp.Close() }()
-	data, err := ioutil.ReadAll(resp)
-	if err != nil {
-		return nil, err
-	}
+	//defer func() { _ = resp.Close() }()
+	//data, err := ioutil.ReadAll(resp)
+	//if err != nil {
+	//	return nil, err
+	//}
 	return &base.Link{
-		Data: data,
+		Data: resp,
 	}, nil
 }
 
@@ -214,7 +213,9 @@ func (driver FTP) Move(src string, dst string, account *model.Account) error {
 	err = conn.Rename(realSrc, realDst)
 	if err != nil {
 		_ = base.DeleteCache(utils.Dir(src), account)
-		_ = base.DeleteCache(utils.Dir(dst), account)
+		if utils.Dir(src) != utils.Dir(dst) {
+			_ = base.DeleteCache(utils.Dir(dst), account)
+		}
 	}
 	return err
 }

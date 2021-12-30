@@ -104,7 +104,7 @@ func Link(c *gin.Context) {
 		common.ErrorResp(c, err, 500)
 		return
 	}
-	if driver.Config().NoLink {
+	if driver.Config().OnlyLocal {
 		common.SuccessResp(c, base.Link{
 			Url: fmt.Sprintf("//%s/p%s?d=1&sign=%s", c.Request.Host, req.Path, utils.SignWithToken(utils.Base(rawPath), conf.Token)),
 		})

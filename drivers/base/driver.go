@@ -11,8 +11,8 @@ import (
 
 type DriverConfig struct {
 	Name          string
-	OnlyProxy     bool
-	NoLink        bool // 必须本机返回的
+	OnlyProxy     bool // 必须使用代理（本机或者其他机器）
+	OnlyLocal     bool // 必须本机返回的
 	ApiProxy      bool // 使用API中转的
 	NoNeedSetLink bool // 不需要设置链接的
 	NoCors        bool // 不可以跨域

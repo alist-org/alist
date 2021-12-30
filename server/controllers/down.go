@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
+	"io"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -78,8 +79,17 @@ func Proxy(c *gin.Context) {
 		return
 	}
 	// 本机读取数据
-	if account.Type == "FTP" {
-		c.Data(http.StatusOK, "application/octet-stream", link.Data)
+	if link.Data != nil {
+		//c.Data(http.StatusOK, "application/octet-stream", link.Data)
+		defer func() {
+			_ = link.Data.Close()
+		}()
+		c.Status(http.StatusOK)
+		c.Header("content", "application/octet-stream")
+		_, err = io.Copy(c.Writer, link.Data)
+		if err != nil {
+			_, _ = c.Writer.WriteString(err.Error())
+		}
 		return
 	}
 	// 本机文件直接返回文件

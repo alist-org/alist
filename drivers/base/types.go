@@ -2,6 +2,7 @@ package base
 
 import (
 	"errors"
+	"io"
 )
 
 var (
@@ -34,13 +35,13 @@ type TokenResp struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
-type Header struct{
-	Name string `json:"name"`
+type Header struct {
+	Name  string `json:"name"`
 	Value string `json:"value"`
 }
 
 type Link struct {
-	Url string `json:"url"`
+	Url     string   `json:"url"`
 	Headers []Header `json:"headers"`
-	Data []byte
+	Data    io.ReadCloser
 }

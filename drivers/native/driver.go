@@ -21,7 +21,7 @@ func (driver Native) Config() base.DriverConfig {
 	return base.DriverConfig{
 		Name:          "Native",
 		OnlyProxy:     true,
-		NoLink:        true,
+		OnlyLocal:     true,
 		NoNeedSetLink: true,
 		LocalSort:     true,
 	}
