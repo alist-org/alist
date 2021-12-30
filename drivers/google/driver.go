@@ -20,7 +20,6 @@ func (driver GoogleDrive) Config() base.DriverConfig {
 		OnlyProxy:     true,
 		ApiProxy:      true,
 		NoNeedSetLink: true,
-		LocalSort:     true,
 	}
 }
 
@@ -48,6 +47,20 @@ func (driver GoogleDrive) Items() []base.Item {
 			Name:     "root_folder",
 			Label:    "root folder file_id",
 			Type:     base.TypeString,
+			Required: false,
+		},
+		{
+			Name:        "order_by",
+			Label:       "order_by",
+			Type:        base.TypeString,
+			Required:    false,
+			Description: "such as: folder,name,modifiedTime",
+		},
+		{
+			Name:     "order_direction",
+			Label:    "order_direction",
+			Type:     base.TypeSelect,
+			Values:   "asc,desc",
 			Required: false,
 		},
 	}
@@ -115,7 +128,7 @@ func (driver GoogleDrive) Files(path string, account *model.Account) ([]model.Fi
 	}
 	files := make([]model.File, 0)
 	for _, file := range rawFiles {
-		files = append(files, *driver.FormatFile(&file))
+		files = append(files, *driver.FormatFile(&file, account))
 	}
 	return files, nil
 }

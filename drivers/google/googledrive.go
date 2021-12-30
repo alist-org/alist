@@ -45,24 +45,24 @@ func (driver GoogleDrive) RefreshToken(account *model.Account) error {
 }
 
 type File struct {
-	Id           string     `json:"id"`
-	Name         string     `json:"name"`
-	MimeType     string     `json:"mimeType"`
-	ModifiedTime *time.Time `json:"modifiedTime"`
-	Size         string     `json:"size"`
+	Id            string     `json:"id"`
+	Name          string     `json:"name"`
+	MimeType      string     `json:"mimeType"`
+	ModifiedTime  *time.Time `json:"modifiedTime"`
+	Size          string     `json:"size"`
+	ThumbnailLink string     `json:"thumbnailLink"`
 }
 
 func (driver GoogleDrive) IsDir(mimeType string) bool {
 	return mimeType == "application/vnd.google-apps.folder" || mimeType == "application/vnd.google-apps.shortcut"
 }
 
-func (driver GoogleDrive) FormatFile(file *File) *model.File {
+func (driver GoogleDrive) FormatFile(file *File, account *model.Account) *model.File {
 	f := &model.File{
 		Id:        file.Id,
 		Name:      file.Name,
 		Driver:    driver.Config().Name,
 		UpdatedAt: file.ModifiedTime,
-		Thumbnail: "",
 		Url:       "",
 	}
 	if driver.IsDir(file.MimeType) {
@@ -71,6 +71,13 @@ func (driver GoogleDrive) FormatFile(file *File) *model.File {
 		size, _ := strconv.ParseInt(file.Size, 10, 64)
 		f.Size = size
 		f.Type = utils.GetFileType(filepath.Ext(file.Name))
+	}
+	if file.ThumbnailLink != "" {
+		if account.DownProxyUrl != "" {
+			f.Thumbnail = fmt.Sprintf("%s/%s", account.DownProxyUrl, file.ThumbnailLink)
+		} else {
+			f.Thumbnail = file.ThumbnailLink
+		}
 	}
 	return f
 }
@@ -102,9 +109,13 @@ func (driver GoogleDrive) GetFiles(id string, account *model.Account) ([]File, e
 			pageToken = ""
 		}
 		var resp Files
+		orderBy := "folder,name,modifiedTime desc"
+		if account.OrderBy != "" {
+			orderBy = account.OrderBy + " " + account.OrderDirection
+		}
 		query := map[string]string{
-			"orderBy":  "folder,name,modifiedTime desc",
-			"fields":   "files(id,name,mimeType,size,modifiedTime),nextPageToken",
+			"orderBy":  orderBy,
+			"fields":   "files(id,name,mimeType,size,modifiedTime,thumbnailLink),nextPageToken",
 			"pageSize": "1000",
 			"q":        fmt.Sprintf("'%s' in parents and trashed = false", id),
 			//"includeItemsFromAllDrives": "true",
