@@ -297,6 +297,7 @@ type UploadResp struct {
 
 // TODO unfinished
 func (driver Pan123) Upload(file *model.FileStream, account *model.Account) error {
+	return base.ErrNotImplement
 	parentFile, err := driver.File(file.ParentPath, account)
 	if err != nil {
 		return err

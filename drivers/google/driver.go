@@ -259,9 +259,13 @@ func (driver GoogleDrive) Upload(file *model.FileStream, account *model.Account)
 		"parents": []string{parentFile.Id},
 	}
 	var e Error
+	url := "https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&supportsAllDrives=true"
+	if account.APIProxyUrl != "" {
+		url = fmt.Sprintf("%s/%s", account.APIProxyUrl, url)
+	}
 	res, err := base.NoRedirectClient.R().SetHeader("Authorization", "Bearer "+account.AccessToken).
 		SetError(&e).SetBody(data).
-		Post("https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&supportsAllDrives=true")
+		Post(url)
 	if err != nil {
 		return err
 	}

@@ -359,6 +359,7 @@ func (driver Cloud189) Delete(path string, account *model.Account) error {
 
 // Upload Error: decrypt encryptionText failed
 func (driver Cloud189) Upload(file *model.FileStream, account *model.Account) error {
+	return base.ErrNotImplement
 	const DEFAULT uint64 = 10485760
 	var count = int64(math.Ceil(float64(file.GetSize()) / float64(DEFAULT)))
 	var finish uint64 = 0
