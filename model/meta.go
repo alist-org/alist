@@ -10,6 +10,7 @@ type Meta struct {
 	Path     string `json:"path" gorm:"unique" binding:"required"`
 	Password string `json:"password"`
 	Hide     string `json:"hide"`
+	Upload   bool   `json:"upload"`
 }
 
 func GetMetaByPath(path string) (*Meta, error) {

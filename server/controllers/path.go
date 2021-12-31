@@ -12,8 +12,8 @@ import (
 	"strings"
 )
 
-func Hide(files []model.File, path string) []model.File {
-	meta, _ := model.GetMetaByPath(path)
+func Hide(meta *model.Meta, files []model.File, path string) []model.File {
+	//meta, _ := model.GetMetaByPath(path)
 	if meta != nil && meta.Hide != "" {
 		tmpFiles := make([]model.File, 0)
 		hideFiles := strings.Split(meta.Hide, ",")
@@ -27,29 +27,41 @@ func Hide(files []model.File, path string) []model.File {
 	return files
 }
 
+type Meta struct {
+	Driver string `json:"driver"`
+	Upload bool   `json:"upload"`
+}
+
 type PathResp struct {
-	Type   string       `json:"type"`
-	Driver string       `json:"driver"`
-	Files  []model.File `json:"files"`
+	Type  string       `json:"type"`
+	Meta  Meta         `json:"meta"`
+	Files []model.File `json:"files"`
 }
 
 func Path(c *gin.Context) {
 	reqV, _ := c.Get("req")
 	req := reqV.(common.PathReq)
+	meta, _ := model.GetMetaByPath(req.Path)
+	upload := false
+	if meta != nil && meta.Upload {
+		upload = true
+	}
 	if model.AccountsCount() > 1 && req.Path == "/" {
 		files, err := model.GetAccountFiles()
 		if err != nil {
 			common.ErrorResp(c, err, 500)
 			return
 		}
-		files = Hide(files, req.Path)
+		files = Hide(meta, files, req.Path)
 		c.JSON(200, common.Resp{
 			Code:    200,
 			Message: "success",
 			Data: PathResp{
-				Type:   "folder",
-				Driver: "root",
-				Files:  files,
+				Type: "folder",
+				Meta: Meta{
+					Driver: "root",
+				},
+				Files: files,
 			},
 		})
 		return
@@ -84,13 +96,15 @@ func Path(c *gin.Context) {
 			Code:    200,
 			Message: "success",
 			Data: PathResp{
-				Type:   "file",
-				Driver: driver.Config().Name,
-				Files:  []model.File{*file},
+				Type: "file",
+				Meta: Meta{
+					Driver: driver.Config().Name,
+				},
+				Files: []model.File{*file},
 			},
 		})
 	} else {
-		files = Hide(files, req.Path)
+		files = Hide(meta, files, req.Path)
 		if driver.Config().LocalSort {
 			model.SortFiles(files, account)
 		}
@@ -98,9 +112,12 @@ func Path(c *gin.Context) {
 			Code:    200,
 			Message: "success",
 			Data: PathResp{
-				Type:   "folder",
-				Driver: "root",
-				Files:  files,
+				Type: "folder",
+				Meta: Meta{
+					Driver: driver.Config().Name,
+					Upload: upload,
+				},
+				Files: files,
 			},
 		})
 	}

@@ -1,6 +1,7 @@
 package common
 
 import (
+	"errors"
 	"fmt"
 	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
@@ -29,6 +30,9 @@ func ParsePath(rawPath string) (*model.Account, string, base.Driver, error) {
 		path = rawPath
 		break
 	default:
+		if path == "/" {
+			return nil, "", nil, errors.New("can't operate root of multiple accounts")
+		}
 		paths := strings.Split(rawPath, "/")
 		path = "/" + strings.Join(paths[2:], "/")
 		name = paths[1]

@@ -23,6 +23,7 @@ func InitApiRouter(r *gin.Engine) {
 		path.POST("/preview", controllers.Preview)
 
 		//path.POST("/link",middlewares.Auth, controllers.Link)
+		public.POST("/upload", controllers.UploadFile)
 
 		public.GET("/settings", controllers.GetSettingsPublic)
 	}
