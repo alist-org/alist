@@ -46,6 +46,7 @@ English | [中文](./README_cn.md)
 - [x] Cloudflare workers proxy
 - [x] File/Folder package download
 - [x] Support video list playback and subtitles(ass,srt,vtt)
+- [x] Web upload(Can allow visitors to upload)
 
 ## Discussion
 
