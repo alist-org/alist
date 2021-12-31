@@ -6,9 +6,12 @@ import (
 	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
+	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 	"github.com/gin-gonic/gin"
+	jsoniter "github.com/json-iterator/go"
 	log "github.com/sirupsen/logrus"
 	"path/filepath"
+	"strings"
 )
 
 type PikPak struct{}
@@ -230,7 +233,51 @@ func (driver PikPak) Delete(path string, account *model.Account) error {
 }
 
 func (driver PikPak) Upload(file *model.FileStream, account *model.Account) error {
-	return base.ErrNotImplement
+	if file == nil {
+		return base.ErrEmptyFile
+	}
+	parentFile, err := driver.File(file.ParentPath, account)
+	if err != nil {
+		return err
+	}
+	data := base.Json{
+		"kind":        "drive#file",
+		"name":        file.GetFileName(),
+		"size":        file.GetSize(),
+		"hash":        "1CF254FBC456E1B012CD45C546636AA62CF8350E",
+		"upload_type": "UPLOAD_TYPE_RESUMABLE",
+		"objProvider": base.Json{"provider": "UPLOAD_TYPE_UNKNOWN"},
+		"parent_id":   parentFile.Id,
+	}
+	res, err := driver.Request("https://api-drive.mypikpak.com/drive/v1/files", base.Post, nil, &data, nil, account)
+	if err != nil {
+		return err
+	}
+	params := jsoniter.Get(res, "resumable").Get("params")
+	endpoint := params.Get("endpoint").ToString()
+	endpointS := strings.Split(endpoint, ".")
+	endpoint = strings.Join(endpointS[1:], ".")
+	accessKeyId := params.Get("access_key_id").ToString()
+	accessKeySecret := params.Get("access_key_secret").ToString()
+	securityToken := params.Get("security_token").ToString()
+	client, err := oss.New("https://"+endpoint, accessKeyId,
+		accessKeySecret, oss.SecurityToken(securityToken))
+	if err != nil {
+		return err
+	}
+	bucket, err := client.Bucket(params.Get("bucket").ToString())
+	if err != nil {
+		return err
+	}
+	signedURL, err := bucket.SignURL(params.Get("key").ToString(), oss.HTTPPut, 60)
+	if err != nil {
+		return err
+	}
+	err = bucket.PutObjectWithURL(signedURL, file)
+	if err == nil {
+		_ = base.DeleteCache(file.ParentPath, account)
+	}
+	return err
 }
 
 var _ base.Driver = (*PikPak)(nil)
