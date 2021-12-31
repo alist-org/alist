@@ -27,6 +27,12 @@ func Hide(files []model.File, path string) []model.File {
 	return files
 }
 
+type PathResp struct {
+	Type   string       `json:"type"`
+	Driver string       `json:"driver"`
+	Files  []model.File `json:"files"`
+}
+
 func Path(c *gin.Context) {
 	reqV, _ := c.Get("req")
 	req := reqV.(common.PathReq)
@@ -39,8 +45,12 @@ func Path(c *gin.Context) {
 		files = Hide(files, req.Path)
 		c.JSON(200, common.Resp{
 			Code:    200,
-			Message: "folder",
-			Data:    files,
+			Message: "success",
+			Data: PathResp{
+				Type:   "folder",
+				Driver: "root",
+				Files:  files,
+			},
 		})
 		return
 	}
@@ -72,8 +82,12 @@ func Path(c *gin.Context) {
 		}
 		c.JSON(200, common.Resp{
 			Code:    200,
-			Message: "file",
-			Data:    []*model.File{file},
+			Message: "success",
+			Data: PathResp{
+				Type:   "file",
+				Driver: driver.Config().Name,
+				Files:  []model.File{*file},
+			},
 		})
 	} else {
 		files = Hide(files, req.Path)
@@ -82,8 +96,12 @@ func Path(c *gin.Context) {
 		}
 		c.JSON(200, common.Resp{
 			Code:    200,
-			Message: "folder",
-			Data:    files,
+			Message: "success",
+			Data: PathResp{
+				Type:   "folder",
+				Driver: "root",
+				Files:  files,
+			},
 		})
 	}
 }
