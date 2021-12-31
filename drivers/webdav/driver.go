@@ -182,6 +182,9 @@ func (driver WebDav) Delete(path string, account *model.Account) error {
 }
 
 func (driver WebDav) Upload(file *model.FileStream, account *model.Account) error {
+	if file == nil {
+		return base.ErrEmptyFile
+	}
 	c := driver.NewClient(account)
 	path := utils.Join(file.ParentPath, file.Name)
 	err := c.WriteStream(driver.WebDavPath(path), file, 0644)

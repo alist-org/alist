@@ -240,6 +240,9 @@ func (driver FTP) Delete(path string, account *model.Account) error {
 }
 
 func (driver FTP) Upload(file *model.FileStream, account *model.Account) error {
+	if file == nil {
+		return base.ErrEmptyFile
+	}
 	realPath := utils.Join(account.RootFolder, file.ParentPath, file.Name)
 	conn, err := driver.Login(account)
 	if err != nil {

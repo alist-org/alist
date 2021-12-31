@@ -364,6 +364,9 @@ type UploadResp struct {
 }
 
 func (driver AliDrive) Upload(file *model.FileStream, account *model.Account) error {
+	if file == nil {
+		return base.ErrEmptyFile
+	}
 	const DEFAULT uint64 = 10485760
 	var count = int64(math.Ceil(float64(file.GetSize()) / float64(DEFAULT)))
 	var finish uint64 = 0

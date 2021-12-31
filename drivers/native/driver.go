@@ -196,6 +196,9 @@ func (driver Native) Delete(path string, account *model.Account) error {
 }
 
 func (driver Native) Upload(file *model.FileStream, account *model.Account) error {
+	if file == nil {
+		return base.ErrEmptyFile
+	}
 	fullPath := filepath.Join(account.RootFolder, file.ParentPath, file.Name)
 	_, err := driver.File(filepath.Join(file.ParentPath, file.Name), account)
 	if err == nil {

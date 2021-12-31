@@ -232,6 +232,9 @@ func (driver S3) Delete(path string, account *model.Account) error {
 }
 
 func (driver S3) Upload(file *model.FileStream, account *model.Account) error {
+	if file == nil {
+		return base.ErrEmptyFile
+	}
 	s, ok := sessionsMap[account.Name]
 	if !ok {
 		return fmt.Errorf("can't find [%s] session", account.Name)

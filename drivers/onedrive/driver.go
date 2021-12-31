@@ -280,6 +280,9 @@ func (driver Onedrive) Delete(path string, account *model.Account) error {
 }
 
 func (driver Onedrive) Upload(file *model.FileStream, account *model.Account) error {
+	if file == nil {
+		return base.ErrEmptyFile
+	}
 	var err error
 	if file.GetSize() <= 4*1024*1024 {
 		err = driver.UploadSmall(file, account)

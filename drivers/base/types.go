@@ -11,6 +11,7 @@ var (
 	ErrNotImplement = errors.New("not implement")
 	ErrNotSupport   = errors.New("not support")
 	ErrNotFolder    = errors.New("not a folder")
+	ErrEmptyFile    = errors.New("empty file")
 )
 
 const (

@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"github.com/Xhofe/alist/drivers/base"
+	"github.com/Xhofe/alist/drivers"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/server/common"
 	"github.com/gin-gonic/gin"
@@ -47,12 +47,17 @@ func GetSettingsPublic(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	settings = append(settings, model.SettingItem{
+	settings = append(settings, []model.SettingItem{{
 		Key:         "no cors",
-		Value:       base.GetNoCors(),
+		Value:       drivers.NoCors,
 		Description: "",
 		Type:        "string",
-	})
+	}, {
+		Key:         "no upload",
+		Value:       drivers.NoUpload,
+		Description: "",
+		Type:        "string",
+	}}...)
 	common.SuccessResp(c, settings)
 }
 

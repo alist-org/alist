@@ -6,7 +6,6 @@ import (
 	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
 	"net/http"
-	"strings"
 )
 
 type DriverConfig struct {
@@ -78,14 +77,8 @@ func GetDriver(name string) (driver Driver, ok bool) {
 	return
 }
 
-func GetNoCors() string {
-	res := make([]string, 0)
-	for k, v := range driversMap {
-		if v.Config().NoCors {
-			res = append(res, k)
-		}
-	}
-	return strings.Join(res, ",")
+func GetDriversMap() map[string]Driver {
+	return driversMap
 }
 
 func GetDrivers() map[string][]Item {

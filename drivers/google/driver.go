@@ -250,6 +250,9 @@ func (driver GoogleDrive) Delete(path string, account *model.Account) error {
 }
 
 func (driver GoogleDrive) Upload(file *model.FileStream, account *model.Account) error {
+	if file == nil {
+		return base.ErrEmptyFile
+	}
 	parentFile, err := driver.File(file.ParentPath, account)
 	if err != nil {
 		return err
