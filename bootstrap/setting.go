@@ -94,15 +94,6 @@ func InitSettings() {
 			Group:       model.FRONT,
 		},
 		{
-			Key:         "markdown theme",
-			Value:       "vuepress",
-			Description: "default | github | vuepress",
-			Access:      model.PUBLIC,
-			Type:        "select",
-			Values:      "default,github,vuepress",
-			Group:       model.FRONT,
-		},
-		{
 			Key:    "autoplay video",
 			Value:  "false",
 			Type:   "bool",
