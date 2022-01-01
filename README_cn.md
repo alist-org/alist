@@ -31,6 +31,7 @@
   - [x] [闪电盘](https://shandianpan.com/)
   - [x] [S3](https://aws.amazon.com/cn/s3/)
   - [x] WebDav
+- [x] 部署方便，开箱即用
 - [x] 文件预览（PDF、markdown、代码、纯文本……）
 - [x] 画廊模式下的图像预览
 - [x] 视频和音频预览（mp4、mp3 等）
@@ -40,7 +41,7 @@
 - [x] 黑暗模式
 - [x] 国际化
 - [x] 受保护的路由（密码保护和身份验证）
-- [x] WebDav（只读）
+- [x] WebDav（少部分只读，具体见https://alist-doc.nn.ci/docs/intro ）
 - [x] [Docker 部署](https://hub.docker.com/r/xhofe/alist)
 - [x] Cloudflare workers 中转
 - [x] 文件/文件夹打包下载

@@ -32,6 +32,7 @@ English | [中文](./README_cn.md)
   - [x] [ShandianPan](https://shandianpan.com/)
   - [x] [S3](https://aws.amazon.com/s3/)
   - [x] WebDav
+- [x] Easy to deploy and out-of-the-box
 - [x] File preview (PDF, markdown, code, plain text, ...)
 - [x] Image preview in gallery mode
 - [x] Video and audio preview (mp4, mp3, ...)
@@ -41,7 +42,7 @@ English | [中文](./README_cn.md)
 - [x] Dark mode
 - [x] I18n
 - [x] Protected routes (password protection and authentication) 
-- [x] WebDav (readonly)
+- [x] WebDav (A small part readonly, see https://alist-doc.nn.ci/en/docs/intro for details)
 - [x] [Docker Deploy](https://hub.docker.com/r/xhofe/alist)
 - [x] Cloudflare workers proxy
 - [x] File/Folder package download
