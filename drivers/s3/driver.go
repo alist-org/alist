@@ -59,6 +59,12 @@ func (driver S3) Items() []base.Item {
 			Required: true,
 		},
 		{
+			Name:     "root_folder",
+			Label:    "root folder path",
+			Type:     base.TypeString,
+			Required: false,
+		},
+		{
 			Name:  "custom_host",
 			Label: "Custom Host",
 			Type:  base.TypeString,
