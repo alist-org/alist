@@ -32,7 +32,7 @@ func GetConfig() {
 		}
 	}
 	NoCors = strings.Trim(NoCors, ",")
-	NoUpload = strings.Trim(NoUpload, ",")
+	NoUpload += "root"
 }
 
 func init() {
