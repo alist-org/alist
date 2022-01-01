@@ -248,7 +248,6 @@ func (driver Cloud189) GetFiles(fileId string, account *model.Account) ([]Cloud1
 		if resp.FileListAO.Count == 0 {
 			break
 		}
-		res = append(res, resp.FileListAO.FileList...)
 		for _, folder := range resp.FileListAO.FolderList {
 			res = append(res, Cloud189File{
 				Id:         folder.Id,
@@ -257,6 +256,7 @@ func (driver Cloud189) GetFiles(fileId string, account *model.Account) ([]Cloud1
 				Size:       -1,
 			})
 		}
+		res = append(res, resp.FileListAO.FileList...)
 		pageNum++
 	}
 	return res, nil
@@ -300,8 +300,8 @@ func (driver Cloud189) Request(url string, method string, form map[string]string
 		}
 	}
 	//log.Debug(res, jsoniter.Get(res.Body(),"res_code").ToInt())
-	if jsoniter.Get(res.Body(),"res_code").ToInt() != 0 {
-		err = errors.New(jsoniter.Get(res.Body(),"res_message").ToString())
+	if jsoniter.Get(res.Body(), "res_code").ToInt() != 0 {
+		err = errors.New(jsoniter.Get(res.Body(), "res_message").ToString())
 	}
 	return res.Body(), err
 }
