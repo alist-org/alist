@@ -134,7 +134,7 @@ func InitSettings() {
 		{
 			Key:         "home emoji",
 			Value:       "🏠",
-			Type:        "text",
+			Type:        "string",
 			Description: "emoji in front of home in nav",
 			Access:      model.PUBLIC,
 			Group:       model.FRONT,
