@@ -136,13 +136,13 @@ func (driver Alist) Path(path string, account *model.Account) (*model.File, []mo
 	if resp.Code != 200 {
 		return nil, nil, errors.New(resp.Message)
 	}
-	if resp.Message == "file" {
-		return &resp.Data[0], nil, nil
+	if resp.Data.Type == "file" {
+		return &resp.Data.Files[0], nil, nil
 	}
-	if len(resp.Data) > 0 {
-		_ = base.SetCache(path, resp.Data, account)
+	if len(resp.Data.Files) > 0 {
+		_ = base.SetCache(path, resp.Data.Files, account)
 	}
-	return nil, resp.Data, nil
+	return nil, resp.Data.Files, nil
 }
 
 func (driver Alist) Proxy(c *gin.Context, account *model.Account) {}

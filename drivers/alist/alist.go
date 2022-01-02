@@ -13,7 +13,11 @@ type BaseResp struct {
 
 type PathResp struct {
 	BaseResp
-	Data []model.File `json:"data"`
+	Data struct {
+		Type string `json:"type"`
+		//Meta  Meta         `json:"meta"`
+		Files []model.File `json:"files"`
+	} `json:"data"`
 }
 
 type PreviewResp struct {
@@ -25,7 +29,7 @@ func (driver *Alist) Login(account *model.Account) error {
 	var resp BaseResp
 	_, err := base.RestyClient.R().SetResult(&resp).
 		SetHeader("Authorization", account.AccessToken).
-		Get(account.SiteUrl+"/api/admin/login")
+		Get(account.SiteUrl + "/api/admin/login")
 	if err != nil {
 		return err
 	}
