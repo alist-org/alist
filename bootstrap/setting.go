@@ -132,6 +132,14 @@ func InitSettings() {
 			Group:       model.FRONT,
 		},
 		{
+			Key:         "home emoji",
+			Value:       "🏠",
+			Type:        "text",
+			Description: "emoji in front of home in nav",
+			Access:      model.PUBLIC,
+			Group:       model.FRONT,
+		},
+		{
 			Key:         "animation",
 			Value:       "true",
 			Type:        "bool",
