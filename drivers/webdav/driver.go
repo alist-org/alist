@@ -189,7 +189,7 @@ func (driver WebDav) Upload(file *model.FileStream, account *model.Account) erro
 	path := utils.Join(file.ParentPath, file.Name)
 	err := c.WriteStream(driver.WebDavPath(path), file, 0644)
 	if err == nil {
-		_ = base.DeleteCache(utils.Dir(file.ParentPath), account)
+		_ = base.DeleteCache(file.ParentPath, account)
 	}
 	return err
 }

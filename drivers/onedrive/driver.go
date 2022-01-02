@@ -290,7 +290,7 @@ func (driver Onedrive) Upload(file *model.FileStream, account *model.Account) er
 		err = driver.UploadBig(file, account)
 	}
 	if err == nil {
-		_ = base.DeleteCache(utils.Dir(file.ParentPath), account)
+		_ = base.DeleteCache(file.ParentPath, account)
 	}
 	return err
 }

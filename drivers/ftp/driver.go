@@ -251,7 +251,7 @@ func (driver FTP) Upload(file *model.FileStream, account *model.Account) error {
 	defer func() { _ = conn.Quit() }()
 	err = conn.Stor(realPath, file)
 	if err == nil {
-		_ = base.DeleteCache(utils.Dir(file.ParentPath), account)
+		_ = base.DeleteCache(file.ParentPath, account)
 	}
 	return err
 }
