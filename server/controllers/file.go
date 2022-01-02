@@ -46,7 +46,7 @@ func UploadFile(c *gin.Context) {
 		Size:       uint64(file.Size),
 		ParentPath: path_,
 		Name:       file.Filename,
-		MIMEType:   c.GetHeader("Content-Type"),
+		MIMEType:   file.Header.Get("Content-Type"),
 	}
 	err = driver.Upload(&fileStream, account)
 	if err != nil {
