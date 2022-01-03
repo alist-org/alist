@@ -308,9 +308,10 @@ func (driver Pan123) Upload(file *model.FileStream, account *model.Account) erro
 		return err
 	}
 	cfg := &aws.Config{
-		Credentials: credentials.NewStaticCredentials(resp.Data.AccessKeyId, resp.Data.SecretAccessKey, resp.Data.SessionToken),
-		Region:      aws.String("123pan"),
-		Endpoint:    aws.String("123pan.com/" + resp.Data.Bucket),
+		Credentials:      credentials.NewStaticCredentials(resp.Data.AccessKeyId, resp.Data.SecretAccessKey, resp.Data.SessionToken),
+		Region:           aws.String("123pan"),
+		Endpoint:         aws.String("file.123pan.com"),
+		S3ForcePathStyle: aws.Bool(true),
 	}
 	s, err := session.NewSession(cfg)
 	if err != nil {
@@ -318,7 +319,7 @@ func (driver Pan123) Upload(file *model.FileStream, account *model.Account) erro
 	}
 	uploader := s3manager.NewUploader(s)
 	input := &s3manager.UploadInput{
-		Bucket: aws.String("file"),
+		Bucket: &resp.Data.Bucket,
 		Key:    &resp.Data.Key,
 		Body:   file,
 	}
