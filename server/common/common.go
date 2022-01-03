@@ -19,6 +19,8 @@ type Resp struct {
 type PathReq struct {
 	Path     string `json:"path"`
 	Password string `json:"password"`
+	PageNum  int    `json:"page_num"`
+	PageSize int    `json:"page_size"`
 }
 
 func ParsePath(rawPath string) (*model.Account, string, base.Driver, error) {

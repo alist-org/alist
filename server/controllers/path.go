@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"errors"
 	"fmt"
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/drivers/base"
@@ -12,7 +13,7 @@ import (
 	"strings"
 )
 
-func Hide(meta *model.Meta, files []model.File, path string) []model.File {
+func Hide(meta *model.Meta, files []model.File) []model.File {
 	//meta, _ := model.GetMetaByPath(path)
 	if meta != nil && meta.Hide != "" {
 		tmpFiles := make([]model.File, 0)
@@ -27,9 +28,31 @@ func Hide(meta *model.Meta, files []model.File, path string) []model.File {
 	return files
 }
 
+func Pagination(files []model.File, pageNum, pageSize int) (int, []model.File) {
+	total := len(files)
+	start := (pageNum - 1) * pageSize
+	if start > total {
+		return total, []model.File{}
+	}
+	end := start + pageSize
+	if end > total {
+		end = total
+	}
+	return total, files[start:end]
+}
+
+func CheckPagination(req common.PathReq) error {
+	if req.PageNum < 1 {
+		return errors.New("page_num can't be less than 1")
+	}
+	return nil
+}
+
 type Meta struct {
 	Driver string `json:"driver"`
 	Upload bool   `json:"upload"`
+	Total  int    `json:"total"`
+	//Pages  int    `json:"pages"`
 }
 
 type PathResp struct {
@@ -52,7 +75,7 @@ func Path(c *gin.Context) {
 			common.ErrorResp(c, err, 500)
 			return
 		}
-		files = Hide(meta, files, req.Path)
+		files = Hide(meta, files)
 		c.JSON(200, common.Resp{
 			Code:    200,
 			Message: "success",
@@ -64,6 +87,11 @@ func Path(c *gin.Context) {
 				Files: files,
 			},
 		})
+		return
+	}
+	err := CheckPagination(req)
+	if err != nil {
+		common.ErrorResp(c, err, 400)
 		return
 	}
 	account, path, driver, err := common.ParsePath(req.Path)
@@ -104,10 +132,11 @@ func Path(c *gin.Context) {
 			},
 		})
 	} else {
-		files = Hide(meta, files, req.Path)
+		files = Hide(meta, files)
 		if driver.Config().LocalSort {
 			model.SortFiles(files, account)
 		}
+		total, files := Pagination(files, req.PageNum, req.PageSize)
 		c.JSON(200, common.Resp{
 			Code:    200,
 			Message: "success",
@@ -116,6 +145,7 @@ func Path(c *gin.Context) {
 				Meta: Meta{
 					Driver: driver.Config().Name,
 					Upload: upload,
+					Total:  total,
 				},
 				Files: files,
 			},
