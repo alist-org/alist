@@ -218,50 +218,46 @@ func (driver Pan123) MakeDir(path string, account *model.Account) error {
 	}
 	_, err = driver.Request("https://www.123pan.com/api/file/upload_request",
 		base.Post, nil, nil, &data, nil, false, account)
-	//_, err = driver.Post("https://www.123pan.com/api/file/upload_request", data, account)
-	if err == nil {
-		_ = base.DeleteCache(dir, account)
-	}
 	return err
 }
 
 func (driver Pan123) Move(src string, dst string, account *model.Account) error {
-	srcDir, _ := filepath.Split(src)
-	dstDir, dstName := filepath.Split(dst)
+	dstDir, _ := filepath.Split(dst)
 	srcFile, err := driver.File(src, account)
 	if err != nil {
 		return err
 	}
 	fileId, _ := strconv.Atoi(srcFile.Id)
-	// rename
-	if srcDir == dstDir {
-		data := base.Json{
-			"driveId":  0,
-			"fileId":   fileId,
-			"fileName": dstName,
-		}
-		_, err = driver.Request("https://www.123pan.com/api/file/rename",
-			base.Post, nil, nil, &data, nil, false, account)
-		//_, err = driver.Post("https://www.123pan.com/api/file/rename", data, account)
-	} else {
-		// move
-		dstDirFile, err := driver.File(dstDir, account)
-		if err != nil {
-			return err
-		}
-		parentFileId, _ := strconv.Atoi(dstDirFile.Id)
-		data := base.Json{
-			"fileId":       fileId,
-			"parentFileId": parentFileId,
-		}
-		_, err = driver.Request("https://www.123pan.com/api/file/mod_pid",
-			base.Post, nil, nil, &data, nil, false, account)
-		//_, err = driver.Post("https://www.123pan.com/api/file/mod_pid", data, account)
-	}
+
+	dstDirFile, err := driver.File(dstDir, account)
 	if err != nil {
-		_ = base.DeleteCache(srcDir, account)
-		_ = base.DeleteCache(dstDir, account)
+		return err
 	}
+	parentFileId, _ := strconv.Atoi(dstDirFile.Id)
+	data := base.Json{
+		"fileId":       fileId,
+		"parentFileId": parentFileId,
+	}
+	_, err = driver.Request("https://www.123pan.com/api/file/mod_pid",
+		base.Post, nil, nil, &data, nil, false, account)
+	return err
+}
+
+func (driver Pan123) Rename(src string, dst string, account *model.Account) error {
+	_, dstName := filepath.Split(dst)
+	srcFile, err := driver.File(src, account)
+	if err != nil {
+		return err
+	}
+	fileId, _ := strconv.Atoi(srcFile.Id)
+
+	data := base.Json{
+		"driveId":  0,
+		"fileId":   fileId,
+		"fileName": dstName,
+	}
+	_, err = driver.Request("https://www.123pan.com/api/file/rename",
+		base.Post, nil, nil, &data, nil, false, account)
 	return err
 }
 
@@ -281,10 +277,6 @@ func (driver Pan123) Delete(path string, account *model.Account) error {
 	}
 	_, err = driver.Request("https://www.123pan.com/api/file/trash",
 		base.Post, nil, nil, &data, nil, false, account)
-	//_, err = driver.Post("https://www.123pan.com/api/file/trash", data, account)
-	if err == nil {
-		_ = base.DeleteCache(utils.Dir(path), account)
-	}
 	return err
 }
 

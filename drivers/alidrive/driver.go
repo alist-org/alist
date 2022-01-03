@@ -286,34 +286,32 @@ func (driver AliDrive) MakeDir(path string, account *model.Account) error {
 		return fmt.Errorf("%s", e.Message)
 	}
 	if resp["file_name"] == name {
-		_ = base.DeleteCache(dir, account)
 		return nil
 	}
 	return fmt.Errorf("%+v", resp)
 }
 
 func (driver AliDrive) Move(src string, dst string, account *model.Account) error {
-	srcDir, _ := filepath.Split(src)
-	dstDir, dstName := filepath.Split(dst)
+	dstDir, _ := filepath.Split(dst)
 	srcFile, err := driver.File(src, account)
 	if err != nil {
 		return err
 	}
-	// rename
-	if srcDir == dstDir {
-		err = driver.Rename(srcFile.Id, dstName, account)
-	} else {
-		// move
-		dstDirFile, err := driver.File(dstDir, account)
-		if err != nil {
-			return err
-		}
-		err = driver.Batch(srcFile.Id, dstDirFile.Id, account)
-	}
+	dstDirFile, err := driver.File(dstDir, account)
 	if err != nil {
-		_ = base.DeleteCache(srcDir, account)
-		_ = base.DeleteCache(dstDir, account)
+		return err
 	}
+	err = driver.batch(srcFile.Id, dstDirFile.Id, account)
+	return err
+}
+
+func (driver AliDrive) Rename(src string, dst string, account *model.Account) error {
+	_, dstName := filepath.Split(dst)
+	srcFile, err := driver.File(src, account)
+	if err != nil {
+		return err
+	}
+	err = driver.rename(srcFile.Id, dstName, account)
 	return err
 }
 
@@ -349,7 +347,6 @@ func (driver AliDrive) Delete(path string, account *model.Account) error {
 		return fmt.Errorf("%s", e.Message)
 	}
 	if res.StatusCode() == 204 {
-		_ = base.DeleteCache(utils.Dir(path), account)
 		return nil
 	}
 	return errors.New(res.String())
@@ -471,7 +468,6 @@ func (driver AliDrive) Upload(file *model.FileStream, account *model.Account) er
 		return fmt.Errorf("%s", e.Message)
 	}
 	if resp2["file_id"] == resp.FileId {
-		_ = base.DeleteCache(file.ParentPath, account)
 		return nil
 	}
 	return fmt.Errorf("%+v", resp2)

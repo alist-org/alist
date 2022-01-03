@@ -169,9 +169,6 @@ func (driver Shandian) MakeDir(path string, account *model.Account) error {
 		"name": utils.Base(path),
 	}
 	_, err = driver.Post("https://shandianpan.com/api/pan/mkdir", data, nil, account)
-	if err == nil {
-		_ = base.DeleteCache(utils.Dir(path), account)
-	}
 	return err
 }
 
@@ -180,30 +177,28 @@ func (driver Shandian) Move(src string, dst string, account *model.Account) erro
 	if err != nil {
 		return err
 	}
-	if utils.Dir(src) == utils.Dir(dst) {
-		// rename
-		data := map[string]interface{}{
-			"id":   srcFile.Id,
-			"name": utils.Base(dst),
-		}
-		_, err = driver.Post("https://shandianpan.com/api/pan/change", data, nil, account)
-	} else {
-		dstParentFile, err := driver.File(utils.Dir(dst), account)
-		if err != nil {
-			return err
-		}
-		data := map[string]interface{}{
-			"id":    srcFile.Id,
-			"to_id": dstParentFile.Id,
-		}
-		_, err = driver.Post("https://shandianpan.com/api/pan/move", data, nil, account)
+	dstParentFile, err := driver.File(utils.Dir(dst), account)
+	if err != nil {
+		return err
 	}
-	if err == nil {
-		_ = base.DeleteCache(utils.Dir(src), account)
-		if utils.Dir(src) != utils.Dir(dst) {
-			_ = base.DeleteCache(utils.Dir(dst), account)
-		}
+	data := map[string]interface{}{
+		"id":    srcFile.Id,
+		"to_id": dstParentFile.Id,
 	}
+	_, err = driver.Post("https://shandianpan.com/api/pan/move", data, nil, account)
+	return err
+}
+
+func (driver Shandian) Rename(src string, dst string, account *model.Account) error {
+	srcFile, err := driver.File(src, account)
+	if err != nil {
+		return err
+	}
+	data := map[string]interface{}{
+		"id":   srcFile.Id,
+		"name": utils.Base(dst),
+	}
+	_, err = driver.Post("https://shandianpan.com/api/pan/change", data, nil, account)
 	return err
 }
 
@@ -220,9 +215,6 @@ func (driver Shandian) Delete(path string, account *model.Account) error {
 		"id": file.Id,
 	}
 	_, err = driver.Post("https://shandianpan.com/api/pan/recycle-in", data, nil, account)
-	if err == nil {
-		_ = base.DeleteCache(utils.Dir(path), account)
-	}
 	return err
 }
 
@@ -272,7 +264,6 @@ func (driver Shandian) Upload(file *model.FileStream, account *model.Account) er
 		return err
 	}
 	if r.Code == 0 {
-		_ = base.DeleteCache(file.ParentPath, account)
 		return nil
 	}
 	return errors.New(r.Msg)

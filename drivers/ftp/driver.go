@@ -193,16 +193,10 @@ func (driver FTP) MakeDir(path string, account *model.Account) error {
 	}
 	defer func() { _ = conn.Quit() }()
 	err = conn.MakeDir(realPath)
-	if err == nil {
-		_ = base.DeleteCache(utils.Dir(path), account)
-	}
 	return err
 }
 
 func (driver FTP) Move(src string, dst string, account *model.Account) error {
-	//if utils.Dir(src) != utils.Dir(dst) {
-	//	return base.ErrNotSupport
-	//}
 	realSrc := utils.Join(account.RootFolder, src)
 	realDst := utils.Join(account.RootFolder, dst)
 	conn, err := driver.Login(account)
@@ -211,13 +205,11 @@ func (driver FTP) Move(src string, dst string, account *model.Account) error {
 	}
 	defer func() { _ = conn.Quit() }()
 	err = conn.Rename(realSrc, realDst)
-	if err != nil {
-		_ = base.DeleteCache(utils.Dir(src), account)
-		if utils.Dir(src) != utils.Dir(dst) {
-			_ = base.DeleteCache(utils.Dir(dst), account)
-		}
-	}
 	return err
+}
+
+func (driver FTP) Rename(src string, dst string, account *model.Account) error {
+	return driver.Move(src, dst, account)
 }
 
 func (driver FTP) Copy(src string, dst string, account *model.Account) error {
@@ -233,9 +225,6 @@ func (driver FTP) Delete(path string, account *model.Account) error {
 	}
 	defer func() { _ = conn.Quit() }()
 	err = conn.Delete(realPath)
-	if err == nil {
-		_ = base.DeleteCache(utils.Dir(path), account)
-	}
 	return err
 }
 
@@ -250,9 +239,6 @@ func (driver FTP) Upload(file *model.FileStream, account *model.Account) error {
 	}
 	defer func() { _ = conn.Quit() }()
 	err = conn.Stor(realPath, file)
-	if err == nil {
-		_ = base.DeleteCache(file.ParentPath, account)
-	}
 	return err
 }
 

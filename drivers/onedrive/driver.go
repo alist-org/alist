@@ -218,14 +218,10 @@ func (driver Onedrive) MakeDir(path string, account *model.Account) error {
 		"@microsoft.graph.conflictBehavior": "rename",
 	}
 	_, err := driver.Request(url, base.Post, nil, nil, nil, &data, nil, account)
-	if err == nil {
-		_ = base.DeleteCache(utils.Dir(path), account)
-	}
 	return err
 }
 
 func (driver Onedrive) Move(src string, dst string, account *model.Account) error {
-	log.Debugf("onedrive move")
 	dstParentFile, err := driver.GetFile(account, utils.Dir(dst))
 	if err != nil {
 		return err
@@ -238,13 +234,11 @@ func (driver Onedrive) Move(src string, dst string, account *model.Account) erro
 	}
 	url := driver.GetMetaUrl(account, false, src)
 	_, err = driver.Request(url, base.Patch, nil, nil, nil, &data, nil, account)
-	if err == nil {
-		_ = base.DeleteCache(utils.Dir(src), account)
-		if utils.Dir(src) != utils.Dir(dst) {
-			_ = base.DeleteCache(utils.Dir(dst), account)
-		}
-	}
 	return err
+}
+
+func (driver Onedrive) Rename(src string, dst string, account *model.Account) error {
+	return driver.Move(src, dst, account)
 }
 
 func (driver Onedrive) Copy(src string, dst string, account *model.Account) error {
@@ -261,21 +255,12 @@ func (driver Onedrive) Copy(src string, dst string, account *model.Account) erro
 	}
 	url := driver.GetMetaUrl(account, false, src) + "/copy"
 	_, err = driver.Request(url, base.Post, nil, nil, nil, &data, nil, account)
-	if err == nil {
-		_ = base.DeleteCache(utils.Dir(src), account)
-		if utils.Dir(src) != utils.Dir(dst) {
-			_ = base.DeleteCache(utils.Dir(dst), account)
-		}
-	}
 	return err
 }
 
 func (driver Onedrive) Delete(path string, account *model.Account) error {
 	url := driver.GetMetaUrl(account, false, path)
 	_, err := driver.Request(url, base.Delete, nil, nil, nil, nil, nil, account)
-	if err == nil {
-		_ = base.DeleteCache(utils.Dir(path), account)
-	}
 	return err
 }
 
@@ -288,9 +273,6 @@ func (driver Onedrive) Upload(file *model.FileStream, account *model.Account) er
 		err = driver.UploadSmall(file, account)
 	} else {
 		err = driver.UploadBig(file, account)
-	}
-	if err == nil {
-		_ = base.DeleteCache(file.ParentPath, account)
 	}
 	return err
 }

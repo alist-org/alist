@@ -164,6 +164,10 @@ func (driver Native) Move(src string, dst string, account *model.Account) error 
 	return os.Rename(fullSrc, fullDst)
 }
 
+func (driver Native) Rename(src string, dst string, account *model.Account) error {
+	return driver.Move(src, dst, account)
+}
+
 func (driver Native) Copy(src string, dst string, account *model.Account) error {
 	fullSrc := filepath.Join(account.RootFolder, src)
 	fullDst := filepath.Join(account.RootFolder, dst)

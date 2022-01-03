@@ -158,7 +158,7 @@ func (driver AliDrive) RefreshToken(account *model.Account) error {
 	return nil
 }
 
-func (driver AliDrive) Rename(fileId, name string, account *model.Account) error {
+func (driver AliDrive) rename(fileId, name string, account *model.Account) error {
 	var resp base.Json
 	var e AliRespError
 	_, err := aliClient.R().SetResult(&resp).SetError(&e).
@@ -179,7 +179,7 @@ func (driver AliDrive) Rename(fileId, name string, account *model.Account) error
 				return err
 			} else {
 				_ = model.SaveAccount(account)
-				return driver.Rename(fileId, name, account)
+				return driver.rename(fileId, name, account)
 			}
 		}
 		return fmt.Errorf("%s", e.Message)
@@ -190,7 +190,7 @@ func (driver AliDrive) Rename(fileId, name string, account *model.Account) error
 	return fmt.Errorf("%+v", resp)
 }
 
-func (driver AliDrive) Batch(srcId,dstId string, account *model.Account) error {
+func (driver AliDrive) batch(srcId, dstId string, account *model.Account) error {
 	var e AliRespError
 	res, err := aliClient.R().SetError(&e).
 		SetHeader("authorization", "Bearer\t"+account.AccessToken).
@@ -200,13 +200,13 @@ func (driver AliDrive) Batch(srcId,dstId string, account *model.Account) error {
 					"headers": base.Json{
 						"Content-Type": "application/json",
 					},
-					"method":"POST",
-					"id":srcId,
-					"body":base.Json{
-						"drive_id": account.DriveId,
-						"file_id":srcId,
-						"to_drive_id":account.DriveId,
-						"to_parent_file_id":dstId,
+					"method": "POST",
+					"id":     srcId,
+					"body": base.Json{
+						"drive_id":          account.DriveId,
+						"file_id":           srcId,
+						"to_drive_id":       account.DriveId,
+						"to_parent_file_id": dstId,
 					},
 				},
 			},
@@ -222,7 +222,7 @@ func (driver AliDrive) Batch(srcId,dstId string, account *model.Account) error {
 				return err
 			} else {
 				_ = model.SaveAccount(account)
-				return driver.Batch(srcId, dstId, account)
+				return driver.batch(srcId, dstId, account)
 			}
 		}
 		return fmt.Errorf("%s", e.Message)

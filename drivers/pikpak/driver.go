@@ -159,41 +159,37 @@ func (driver PikPak) MakeDir(path string, account *model.Account) error {
 		"parent_id": parentFile.Id,
 		"name":      name,
 	}, nil, account)
-	if err == nil {
-		_ = base.DeleteCache(dir, account)
-	}
 	return err
 }
 
 func (driver PikPak) Move(src string, dst string, account *model.Account) error {
-	srcDir, _ := filepath.Split(src)
-	dstDir, dstName := filepath.Split(dst)
+	dstDir, _ := filepath.Split(dst)
 	srcFile, err := driver.File(src, account)
 	if err != nil {
 		return err
 	}
-	// rename
-	if srcDir == dstDir {
-		_, err = driver.Request("https://api-drive.mypikpak.com/drive/v1/files/"+srcFile.Id, base.Patch, nil, &base.Json{
-			"name": dstName,
-		}, nil, account)
-	} else {
-		// move
-		dstDirFile, err := driver.File(dstDir, account)
-		if err != nil {
-			return err
-		}
-		_, err = driver.Request("https://api-drive.mypikpak.com/drive/v1/files:batchMove", base.Post, nil, &base.Json{
-			"ids": []string{srcFile.Id},
-			"to": base.Json{
-				"parent_id": dstDirFile.Id,
-			},
-		}, nil, account)
+	dstDirFile, err := driver.File(dstDir, account)
+	if err != nil {
+		return err
 	}
-	if err == nil {
-		_ = base.DeleteCache(srcDir, account)
-		_ = base.DeleteCache(dstDir, account)
+	_, err = driver.Request("https://api-drive.mypikpak.com/drive/v1/files:batchMove", base.Post, nil, &base.Json{
+		"ids": []string{srcFile.Id},
+		"to": base.Json{
+			"parent_id": dstDirFile.Id,
+		},
+	}, nil, account)
+	return err
+}
+
+func (driver PikPak) Rename(src string, dst string, account *model.Account) error {
+	_, dstName := filepath.Split(dst)
+	srcFile, err := driver.File(src, account)
+	if err != nil {
+		return err
 	}
+	_, err = driver.Request("https://api-drive.mypikpak.com/drive/v1/files/"+srcFile.Id, base.Patch, nil, &base.Json{
+		"name": dstName,
+	}, nil, account)
 	return err
 }
 
@@ -212,9 +208,6 @@ func (driver PikPak) Copy(src string, dst string, account *model.Account) error 
 			"parent_id": dstDirFile.Id,
 		},
 	}, nil, account)
-	if err == nil {
-		_ = base.DeleteCache(utils.Dir(dst), account)
-	}
 	return err
 }
 
@@ -226,9 +219,6 @@ func (driver PikPak) Delete(path string, account *model.Account) error {
 	_, err = driver.Request("https://api-drive.mypikpak.com/drive/v1/files:batchTrash", base.Post, nil, &base.Json{
 		"ids": []string{file.Id},
 	}, nil, account)
-	if err == nil {
-		_ = base.DeleteCache(utils.Dir(path), account)
-	}
 	return err
 }
 
@@ -274,9 +264,6 @@ func (driver PikPak) Upload(file *model.FileStream, account *model.Account) erro
 		return err
 	}
 	err = bucket.PutObjectWithURL(signedURL, file)
-	if err == nil {
-		_ = base.DeleteCache(file.ParentPath, account)
-	}
 	return err
 }
 

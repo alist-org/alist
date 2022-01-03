@@ -194,9 +194,6 @@ func (driver GoogleDrive) MakeDir(path string, account *model.Account) error {
 		"mimeType": "application/vnd.google-apps.folder",
 	}
 	_, err = driver.Request("https://www.googleapis.com/drive/v3/files", base.Post, nil, nil, nil, &data, nil, account)
-	if err == nil {
-		_ = base.DeleteCache(utils.Dir(path), account)
-	}
 	return err
 }
 
@@ -206,29 +203,28 @@ func (driver GoogleDrive) Move(src string, dst string, account *model.Account) e
 	if err != nil {
 		return err
 	}
-	if utils.Dir(src) == utils.Dir(dst) {
-		// rename
-		data := base.Json{
-			"name": utils.Base(dst),
-		}
-		_, err = driver.Request(url, base.Patch, nil, nil, nil, &data, nil, account)
-	} else {
-		dstParentFile, err := driver.File(utils.Dir(dst), account)
-		if err != nil {
-			return err
-		}
-		query := map[string]string{
-			"addParents":    dstParentFile.Id,
-			"removeParents": "root",
-		}
-		_, err = driver.Request(url, base.Patch, nil, query, nil, nil, nil, account)
+	dstParentFile, err := driver.File(utils.Dir(dst), account)
+	if err != nil {
+		return err
 	}
-	if err == nil {
-		_ = base.DeleteCache(utils.Dir(src), account)
-		if utils.Dir(src) != utils.Dir(dst) {
-			_ = base.DeleteCache(utils.Dir(dst), account)
-		}
+	query := map[string]string{
+		"addParents":    dstParentFile.Id,
+		"removeParents": "root",
 	}
+	_, err = driver.Request(url, base.Patch, nil, query, nil, nil, nil, account)
+	return err
+}
+
+func (driver GoogleDrive) Rename(src string, dst string, account *model.Account) error {
+	srcFile, err := driver.File(src, account)
+	url := "https://www.googleapis.com/drive/v3/files/" + srcFile.Id
+	if err != nil {
+		return err
+	}
+	data := base.Json{
+		"name": utils.Base(dst),
+	}
+	_, err = driver.Request(url, base.Patch, nil, nil, nil, &data, nil, account)
 	return err
 }
 
@@ -243,9 +239,6 @@ func (driver GoogleDrive) Delete(path string, account *model.Account) error {
 		return err
 	}
 	_, err = driver.Request(url, base.Delete, nil, nil, nil, nil, nil, account)
-	if err == nil {
-		_ = base.DeleteCache(utils.Dir(path), account)
-	}
 	return err
 }
 
@@ -286,9 +279,6 @@ func (driver GoogleDrive) Upload(file *model.FileStream, account *model.Account)
 	putUrl := res.Header().Get("location")
 	byteData, _ := ioutil.ReadAll(file)
 	_, err = driver.Request(putUrl, base.Put, nil, nil, nil, byteData, nil, account)
-	if err == nil {
-		_ = base.DeleteCache(file.ParentPath, account)
-	}
 	return err
 }
 

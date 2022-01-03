@@ -145,39 +145,28 @@ func (driver WebDav) Preview(path string, account *model.Account) (interface{}, 
 func (driver WebDav) MakeDir(path string, account *model.Account) error {
 	c := driver.NewClient(account)
 	err := c.MkdirAll(driver.WebDavPath(path), 0644)
-	if err == nil {
-		_ = base.DeleteCache(utils.Dir(path), account)
-	}
 	return err
 }
 
 func (driver WebDav) Move(src string, dst string, account *model.Account) error {
 	c := driver.NewClient(account)
 	err := c.Rename(driver.WebDavPath(src), driver.WebDavPath(dst), true)
-	if err == nil {
-		_ = base.DeleteCache(utils.Dir(src), account)
-		if utils.Dir(src) != utils.Dir(dst) {
-			_ = base.DeleteCache(utils.Dir(dst), account)
-		}
-	}
 	return err
+}
+
+func (driver WebDav) Rename(src string, dst string, account *model.Account) error {
+	return driver.Move(src, dst, account)
 }
 
 func (driver WebDav) Copy(src string, dst string, account *model.Account) error {
 	c := driver.NewClient(account)
 	err := c.Copy(driver.WebDavPath(src), driver.WebDavPath(dst), true)
-	if err == nil {
-		_ = base.DeleteCache(utils.Dir(dst), account)
-	}
 	return err
 }
 
 func (driver WebDav) Delete(path string, account *model.Account) error {
 	c := driver.NewClient(account)
 	err := c.RemoveAll(driver.WebDavPath(path))
-	if err == nil {
-		_ = base.DeleteCache(utils.Dir(path), account)
-	}
 	return err
 }
 
@@ -188,9 +177,6 @@ func (driver WebDav) Upload(file *model.FileStream, account *model.Account) erro
 	c := driver.NewClient(account)
 	path := utils.Join(file.ParentPath, file.Name)
 	err := c.WriteStream(driver.WebDavPath(path), file, 0644)
-	if err == nil {
-		_ = base.DeleteCache(file.ParentPath, account)
-	}
 	return err
 }
 

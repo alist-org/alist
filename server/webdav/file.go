@@ -9,7 +9,9 @@ import (
 	"fmt"
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/drivers/base"
+	"github.com/Xhofe/alist/drivers/operate"
 	"github.com/Xhofe/alist/model"
+	"github.com/Xhofe/alist/server/common"
 	"github.com/Xhofe/alist/utils"
 	log "github.com/sirupsen/logrus"
 	"net"
@@ -21,30 +23,6 @@ import (
 )
 
 type FileSystem struct{}
-
-func ParsePath(rawPath string) (*model.Account, string, base.Driver, error) {
-	var internalPath, name string
-	switch model.AccountsCount() {
-	case 0:
-		return nil, "", nil, fmt.Errorf("no accounts,please add one first")
-	case 1:
-		internalPath = rawPath
-		break
-	default:
-		paths := strings.Split(rawPath, "/")
-		internalPath = "/" + strings.Join(paths[2:], "/")
-		name = paths[1]
-	}
-	account, ok := model.GetAccount(name)
-	if !ok {
-		return nil, "", nil, fmt.Errorf("no [%s] account", name)
-	}
-	driver, ok := base.GetDriver(account.Type)
-	if !ok {
-		return nil, "", nil, fmt.Errorf("no [%s] driver", account.Type)
-	}
-	return &account, internalPath, driver, nil
-}
 
 func (fs *FileSystem) File(rawPath string) (*model.File, error) {
 	rawPath = utils.ParsePath(rawPath)
@@ -58,7 +36,7 @@ func (fs *FileSystem) File(rawPath string) (*model.File, error) {
 			UpdatedAt: &now,
 		}, nil
 	}
-	account, path_, driver, err := ParsePath(rawPath)
+	account, path_, driver, err := common.ParsePath(rawPath)
 	if err != nil {
 		return nil, err
 	}
@@ -74,33 +52,12 @@ func (fs *FileSystem) Files(rawPath string) ([]model.File, error) {
 		}
 		return files, nil
 	}
-	account, path_, driver, err := ParsePath(rawPath)
+	account, path_, driver, err := common.ParsePath(rawPath)
 	if err != nil {
 		return nil, err
 	}
 	return driver.Files(path_, account)
 }
-
-//func GetPW(path string, name string) string {
-//	if !conf.CheckDown {
-//		return ""
-//	}
-//	meta, err := model.GetMetaByPath(path)
-//	if err == nil {
-//		if meta.Password != "" {
-//			return utils.SignWithPassword(name, meta.Password)
-//		}
-//		return ""
-//	} else {
-//		if !conf.CheckParent {
-//			return ""
-//		}
-//		if path == "/" {
-//			return ""
-//		}
-//		return GetPW(utils.Dir(path), name)
-//	}
-//}
 
 func ClientIP(r *http.Request) string {
 	xForwardedFor := r.Header.Get("X-Forwarded-For")
@@ -127,7 +84,7 @@ func (fs *FileSystem) Link(r *http.Request, rawPath string) (string, error) {
 	if model.AccountsCount() > 1 && rawPath == "/" {
 		// error
 	}
-	account, path_, driver, err := ParsePath(rawPath)
+	account, path_, driver, err := common.ParsePath(rawPath)
 	if err != nil {
 		return "", err
 	}
@@ -161,12 +118,12 @@ func (fs *FileSystem) CreateDirectory(ctx context.Context, rawPath string) error
 	if model.AccountsCount() > 1 && len(strings.Split(rawPath, "/")) < 2 {
 		return ErrNotImplemented
 	}
-	account, path_, driver, err := ParsePath(rawPath)
+	account, path_, driver, err := common.ParsePath(rawPath)
 	if err != nil {
 		return err
 	}
 	log.Debugf("mkdir: %s", path_)
-	return driver.MakeDir(path_, account)
+	return operate.MakeDir(driver, account, path_, true)
 }
 
 func (fs *FileSystem) Upload(ctx context.Context, r *http.Request, rawPath string) error {
@@ -174,7 +131,7 @@ func (fs *FileSystem) Upload(ctx context.Context, r *http.Request, rawPath strin
 	if model.AccountsCount() > 1 && rawPath == "/" {
 		return ErrNotImplemented
 	}
-	account, path_, driver, err := ParsePath(rawPath)
+	account, path_, driver, err := common.ParsePath(rawPath)
 	if err != nil {
 		return err
 	}
@@ -191,7 +148,7 @@ func (fs *FileSystem) Upload(ctx context.Context, r *http.Request, rawPath strin
 		Name:       fileName,
 		ParentPath: filePath,
 	}
-	return driver.Upload(&fileData, account)
+	return operate.Upload(driver, account, &fileData, true)
 }
 
 func (fs *FileSystem) Delete(rawPath string) error {
@@ -202,11 +159,11 @@ func (fs *FileSystem) Delete(rawPath string) error {
 	if model.AccountsCount() > 1 && len(strings.Split(rawPath, "/")) < 2 {
 		return ErrNotImplemented
 	}
-	account, path_, driver, err := ParsePath(rawPath)
+	account, path_, driver, err := common.ParsePath(rawPath)
 	if err != nil {
 		return err
 	}
-	return driver.Delete(path_, account)
+	return operate.Delete(driver, account, path_, true)
 }
 
 // slashClean is equivalent to but slightly more efficient than
@@ -228,18 +185,18 @@ func moveFiles(ctx context.Context, fs *FileSystem, src string, dst string, over
 	if src == dst {
 		return http.StatusMethodNotAllowed, errDestinationEqualsSource
 	}
-	srcAccount, srcPath, driver, err := ParsePath(src)
+	srcAccount, srcPath, driver, err := common.ParsePath(src)
 	if err != nil {
 		return http.StatusMethodNotAllowed, err
 	}
-	dstAccount, dstPath, _, err := ParsePath(dst)
+	dstAccount, dstPath, _, err := common.ParsePath(dst)
 	if err != nil {
 		return http.StatusMethodNotAllowed, err
 	}
 	if srcAccount.Name != dstAccount.Name {
 		return http.StatusMethodNotAllowed, errInvalidDestination
 	}
-	err = driver.Move(srcPath, dstPath, srcAccount)
+	err = operate.Move(driver, srcAccount, srcPath, dstPath, true)
 	if err != nil {
 		log.Debug(err)
 		return http.StatusInternalServerError, err
@@ -257,11 +214,11 @@ func copyFiles(ctx context.Context, fs *FileSystem, src string, dst string, over
 	if src == dst {
 		return http.StatusMethodNotAllowed, errDestinationEqualsSource
 	}
-	srcAccount, srcPath, driver, err := ParsePath(src)
+	srcAccount, srcPath, driver, err := common.ParsePath(src)
 	if err != nil {
 		return http.StatusMethodNotAllowed, err
 	}
-	dstAccount, dstPath, _, err := ParsePath(dst)
+	dstAccount, dstPath, _, err := common.ParsePath(dst)
 	if err != nil {
 		return http.StatusMethodNotAllowed, err
 	}
@@ -269,7 +226,7 @@ func copyFiles(ctx context.Context, fs *FileSystem, src string, dst string, over
 		// TODO 跨账号复制
 		return http.StatusMethodNotAllowed, errInvalidDestination
 	}
-	err = driver.Copy(srcPath, dstPath, srcAccount)
+	err = operate.Copy(driver, srcAccount, srcPath, dstPath, true)
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}

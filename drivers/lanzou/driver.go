@@ -170,6 +170,10 @@ func (driver *Lanzou) Move(src string, dst string, account *model.Account) error
 	return base.ErrNotImplement
 }
 
+func (driver *Lanzou) Rename(src string, dst string, account *model.Account) error {
+	return base.ErrNotImplement
+}
+
 func (driver *Lanzou) Copy(src string, dst string, account *model.Account) error {
 	return base.ErrNotImplement
 }

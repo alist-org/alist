@@ -193,6 +193,10 @@ func (driver S3) Move(src string, dst string, account *model.Account) error {
 	return driver.Delete(src, account)
 }
 
+func (driver S3) Rename(src string, dst string, account *model.Account) error {
+	return driver.Move(src, dst, account)
+}
+
 func (driver S3) Copy(src string, dst string, account *model.Account) error {
 	client, err := driver.GetClient(account)
 	if err != nil {
@@ -210,9 +214,6 @@ func (driver S3) Copy(src string, dst string, account *model.Account) error {
 		Key:        &dstKey,
 	}
 	_, err = client.CopyObject(input)
-	if err == nil {
-		_ = base.DeleteCache(dst, account)
-	}
 	return err
 }
 
@@ -231,9 +232,6 @@ func (driver S3) Delete(path string, account *model.Account) error {
 		Key:    &key,
 	}
 	_, err = client.DeleteObject(input)
-	if err == nil {
-		_ = base.DeleteCache(utils.Dir(path), account)
-	}
 	return err
 }
 
@@ -253,9 +251,6 @@ func (driver S3) Upload(file *model.FileStream, account *model.Account) error {
 		Body:   file,
 	}
 	_, err := uploader.Upload(input)
-	if err == nil {
-		_ = base.DeleteCache(file.ParentPath, account)
-	}
 	return err
 }
 

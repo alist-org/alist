@@ -224,66 +224,63 @@ func (driver Cloud189) MakeDir(path string, account *model.Account) error {
 		"folderName":     name,
 	}
 	_, err = driver.Request("https://cloud.189.cn/api/open/file/createFolder.action", "POST", form, nil, account)
-	if err == nil {
-		_ = base.DeleteCache(dir, account)
-	}
 	return err
 }
 
 func (driver Cloud189) Move(src string, dst string, account *model.Account) error {
-	srcDir, _ := filepath.Split(src)
 	dstDir, dstName := filepath.Split(dst)
 	srcFile, err := driver.File(src, account)
 	if err != nil {
 		return err
 	}
-	// rename
-	if srcDir == dstDir {
-		url := "https://cloud.189.cn/api/open/file/renameFile.action"
-		idKey := "fileId"
-		nameKey := "destFileName"
-		if srcFile.IsDir() {
-			url = "https://cloud.189.cn/api/open/file/renameFolder.action"
-			idKey = "folderId"
-			nameKey = "destFolderName"
-		}
-		form := map[string]string{
-			idKey:   srcFile.Id,
-			nameKey: dstName,
-		}
-		_, err = driver.Request(url, "POST", form, nil, account)
-	} else {
-		// move
-		dstDirFile, err := driver.File(dstDir, account)
-		if err != nil {
-			return err
-		}
-		isFolder := 0
-		if srcFile.IsDir() {
-			isFolder = 1
-		}
-		taskInfos := []base.Json{
-			{
-				"fileId":   srcFile.Id,
-				"fileName": dstName,
-				"isFolder": isFolder,
-			},
-		}
-		taskInfosBytes, err := json.Marshal(taskInfos)
-		if err != nil {
-			return err
-		}
-		form := map[string]string{
-			"type":           "MOVE",
-			"targetFolderId": dstDirFile.Id,
-			"taskInfos":      string(taskInfosBytes),
-		}
-		_, err = driver.Request("https://cloud.189.cn/api/open/batch/createBatchTask.action", "POST", form, nil, account)
+
+	dstDirFile, err := driver.File(dstDir, account)
+	if err != nil {
+		return err
 	}
-	if err == nil {
-		_ = base.DeleteCache(srcDir, account)
-		_ = base.DeleteCache(dstDir, account)
+	isFolder := 0
+	if srcFile.IsDir() {
+		isFolder = 1
 	}
+	taskInfos := []base.Json{
+		{
+			"fileId":   srcFile.Id,
+			"fileName": dstName,
+			"isFolder": isFolder,
+		},
+	}
+	taskInfosBytes, err := json.Marshal(taskInfos)
+	if err != nil {
+		return err
+	}
+	form := map[string]string{
+		"type":           "MOVE",
+		"targetFolderId": dstDirFile.Id,
+		"taskInfos":      string(taskInfosBytes),
+	}
+	_, err = driver.Request("https://cloud.189.cn/api/open/batch/createBatchTask.action", "POST", form, nil, account)
+	return err
+}
+
+func (driver Cloud189) Rename(src string, dst string, account *model.Account) error {
+	_, dstName := filepath.Split(dst)
+	srcFile, err := driver.File(src, account)
+	if err != nil {
+		return err
+	}
+	url := "https://cloud.189.cn/api/open/file/renameFile.action"
+	idKey := "fileId"
+	nameKey := "destFileName"
+	if srcFile.IsDir() {
+		url = "https://cloud.189.cn/api/open/file/renameFolder.action"
+		idKey = "folderId"
+		nameKey = "destFolderName"
+	}
+	form := map[string]string{
+		idKey:   srcFile.Id,
+		nameKey: dstName,
+	}
+	_, err = driver.Request(url, "POST", form, nil, account)
 	return err
 }
 
@@ -318,9 +315,6 @@ func (driver Cloud189) Copy(src string, dst string, account *model.Account) erro
 		"taskInfos":      string(taskInfosBytes),
 	}
 	_, err = driver.Request("https://cloud.189.cn/api/open/batch/createBatchTask.action", "POST", form, nil, account)
-	if err == nil {
-		_ = base.DeleteCache(dstDir, account)
-	}
 	return err
 }
 
@@ -351,9 +345,6 @@ func (driver Cloud189) Delete(path string, account *model.Account) error {
 		"taskInfos":      string(taskInfosBytes),
 	}
 	_, err = driver.Request("https://cloud.189.cn/api/open/batch/createBatchTask.action", "POST", form, nil, account)
-	if err == nil {
-		_ = base.DeleteCache(utils.Dir(path), account)
-	}
 	return err
 }
 

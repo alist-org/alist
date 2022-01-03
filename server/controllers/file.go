@@ -3,6 +3,7 @@ package controllers
 import (
 	"errors"
 	"github.com/Xhofe/alist/conf"
+	"github.com/Xhofe/alist/drivers/operate"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/server/common"
 	"github.com/Xhofe/alist/utils"
@@ -48,7 +49,7 @@ func UploadFile(c *gin.Context) {
 		Name:       file.Filename,
 		MIMEType:   file.Header.Get("Content-Type"),
 	}
-	err = driver.Upload(&fileStream, account)
+	err = operate.Upload(driver, account, &fileStream, true)
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return

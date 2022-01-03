@@ -171,6 +171,10 @@ func (driver Alist) Move(src string, dst string, account *model.Account) error {
 	return base.ErrNotImplement
 }
 
+func (driver Alist) Rename(src string, dst string, account *model.Account) error {
+	return base.ErrNotImplement
+}
+
 func (driver Alist) Copy(src string, dst string, account *model.Account) error {
 	return base.ErrNotImplement
 }

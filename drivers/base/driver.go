@@ -46,6 +46,8 @@ type Driver interface {
 	MakeDir(path string, account *model.Account) error
 	// Move 移动/改名
 	Move(src string, dst string, account *model.Account) error
+	// Rename 改名
+	Rename(src string, dst string, account *model.Account) error
 	// Copy 拷贝
 	Copy(src string, dst string, account *model.Account) error
 	// Delete 删除
