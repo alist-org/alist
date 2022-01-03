@@ -5,7 +5,6 @@ import (
 	"crypto/md5"
 	"encoding/base64"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/drivers/base"
@@ -233,7 +232,6 @@ func (driver Cloud189) Move(src string, dst string, account *model.Account) erro
 	if err != nil {
 		return err
 	}
-
 	dstDirFile, err := driver.File(dstDir, account)
 	if err != nil {
 		return err
@@ -249,7 +247,7 @@ func (driver Cloud189) Move(src string, dst string, account *model.Account) erro
 			"isFolder": isFolder,
 		},
 	}
-	taskInfosBytes, err := json.Marshal(taskInfos)
+	taskInfosBytes, err := utils.Json.Marshal(taskInfos)
 	if err != nil {
 		return err
 	}
@@ -305,7 +303,7 @@ func (driver Cloud189) Copy(src string, dst string, account *model.Account) erro
 			"isFolder": isFolder,
 		},
 	}
-	taskInfosBytes, err := json.Marshal(taskInfos)
+	taskInfosBytes, err := utils.Json.Marshal(taskInfos)
 	if err != nil {
 		return err
 	}
@@ -335,7 +333,7 @@ func (driver Cloud189) Delete(path string, account *model.Account) error {
 			"isFolder": isFolder,
 		},
 	}
-	taskInfosBytes, err := json.Marshal(taskInfos)
+	taskInfosBytes, err := utils.Json.Marshal(taskInfos)
 	if err != nil {
 		return err
 	}
@@ -424,9 +422,6 @@ func (driver Cloud189) Upload(file *model.FileStream, account *model.Account) er
 		"sliceMd5":     utils.GetMD5Encode(strings.Join(md5s, "\n")),
 		"lazyCheck":    "1",
 	}, account)
-	if err == nil {
-		_ = base.DeleteCache(file.ParentPath, account)
-	}
 	return err
 }
 

@@ -10,7 +10,6 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/hex"
-	"encoding/json"
 	"encoding/pem"
 	"errors"
 	"fmt"
@@ -158,7 +157,7 @@ func (driver Cloud189) Login(account *model.Account) error {
 	if err != nil {
 		return err
 	}
-	err = json.Unmarshal(res.Body(), &loginResp)
+	err = utils.Json.Unmarshal(res.Body(), &loginResp)
 	if err != nil {
 		log.Error(err.Error())
 		return err

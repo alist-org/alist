@@ -235,7 +235,11 @@ func (driver Shandian) Upload(file *model.FileStream, account *model.Account) er
 		"id":   parentId,
 		"name": file.GetFileName(),
 	}
-	_, err = driver.Post("https://shandianpan.com/api/pan/upload", data, &resp, account)
+	res, err := driver.Post("https://shandianpan.com/api/pan/upload", data, nil, account)
+	if err != nil {
+		return err
+	}
+	err = utils.Json.Unmarshal(res, &resp)
 	if err != nil {
 		return err
 	}

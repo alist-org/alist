@@ -26,7 +26,7 @@ if [ "$1" == "docker" ]; then
 -X 'github.com/Xhofe/alist/conf.GitCommit=$gitCommit' \
 -X 'github.com/Xhofe/alist/conf.GitTag=$gitTag' \
 "
-  go build -o ./bin/alist -ldflags="$ldflags" alist.go
+  go build -o ./bin/alist -ldflags="$ldflags" -tags=jsoniter alist.go
   exit 0
 fi
 
@@ -68,9 +68,9 @@ ldflags="\
 "
 
 if [ "$1" == "release" ]; then
-  xgo -out alist -ldflags="$ldflags" .
+  xgo -out alist -ldflags="$ldflags" -tags=jsoniter .
 else
-  xgo -targets=linux/amd64,windows/amd64 -out alist -ldflags="$ldflags" .
+  xgo -targets=linux/amd64,windows/amd64 -out alist -ldflags="$ldflags" -tags=jsoniter .
 fi
 mkdir "build"
 mv alist-* build
