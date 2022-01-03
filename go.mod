@@ -13,6 +13,7 @@ require (
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/robfig/cron/v3 v3.0.0
 	github.com/sirupsen/logrus v1.8.1
+	github.com/studio-b12/gowebdav v0.0.0-20211109083228-3f8721cd4b6f
 	golang.org/x/text v0.3.7
 	gorm.io/driver/mysql v1.1.2
 	gorm.io/driver/postgres v1.1.2
@@ -22,7 +23,6 @@ require (
 
 require (
 	github.com/XiaoMi/pegasus-go-client v0.0.0-20210427083443-f3b6b08bc4c2 // indirect
-	github.com/aliyun/aliyun-oss-go-sdk v2.2.0+incompatible // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bradfitz/gomemcache v0.0.0-20190913173617-a41fca850d0b // indirect
 	github.com/cenkalti/backoff/v4 v4.1.0 // indirect
@@ -58,7 +58,6 @@ require (
 	github.com/prometheus/common v0.18.0 // indirect
 	github.com/prometheus/procfs v0.6.0 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
-	github.com/studio-b12/gowebdav v0.0.0-20211109083228-3f8721cd4b6f // indirect
 	github.com/ugorji/go/codec v1.2.6 // indirect
 	go.opentelemetry.io/otel v0.20.0 // indirect
 	go.opentelemetry.io/otel/metric v0.20.0 // indirect
@@ -66,7 +65,6 @@ require (
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
 	golang.org/x/net v0.0.0-20211209124913-491a49abca63 // indirect
 	golang.org/x/sys v0.0.0-20211023085530-d6a326fbbf70 // indirect
-	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 	gopkg.in/tomb.v2 v2.0.0-20161208151619-d5d1b5820637 // indirect

@@ -1,8 +1,6 @@
 package _23
 
 import (
-	"crypto/hmac"
-	"crypto/sha256"
 	"errors"
 	"fmt"
 	"github.com/Xhofe/alist/conf"
@@ -12,7 +10,6 @@ import (
 	"github.com/go-resty/resty/v2"
 	jsoniter "github.com/json-iterator/go"
 	log "github.com/sirupsen/logrus"
-	"math/rand"
 	"path/filepath"
 	"strconv"
 	"time"
@@ -52,6 +49,18 @@ type Pan123DownResp struct {
 	BaseResp
 	Data struct {
 		DownloadUrl string `json:"DownloadUrl"`
+	} `json:"data"`
+}
+
+type UploadResp struct {
+	BaseResp
+	Data struct {
+		AccessKeyId     string `json:"AccessKeyId"`
+		Bucket          string `json:"Bucket"`
+		Key             string `json:"Key"`
+		SecretAccessKey string `json:"SecretAccessKey"`
+		SessionToken    string `json:"SessionToken"`
+		FileId          int64  `json:"FileId"`
 	} `json:"data"`
 }
 
@@ -205,27 +214,16 @@ func (driver Pan123) GetFile(path string, account *model.Account) (*Pan123File, 
 	return nil, base.ErrPathNotFound
 }
 
-func RandStr(length int) string {
-	str := "123456789abcdefghijklmnopqrstuvwxyz"
-	bytes := []byte(str)
-	var result []byte
-	rand.Seed(time.Now().UnixNano() + int64(rand.Intn(100)))
-	for i := 0; i < length; i++ {
-		result = append(result, bytes[rand.Intn(len(bytes))])
-	}
-	return string(result)
-}
-
-func HMAC(message string, secret string) string {
-	key := []byte(secret)
-	h := hmac.New(sha256.New, key)
-	h.Write([]byte(message))
-	//	fmt.Println(h.Sum(nil))
-	//sha := hex.EncodeToString(h.Sum(nil))
-	//	fmt.Println(sha)
-	//return sha
-	return string(h.Sum(nil))
-}
+//func HMAC(message string, secret string) string {
+//	key := []byte(secret)
+//	h := hmac.New(sha256.New, key)
+//	h.Write([]byte(message))
+//	//	fmt.Println(h.Sum(nil))
+//	//sha := hex.EncodeToString(h.Sum(nil))
+//	//	fmt.Println(sha)
+//	//return sha
+//	return string(h.Sum(nil))
+//}
 
 func init() {
 	base.RegisterDriver(&Pan123{})

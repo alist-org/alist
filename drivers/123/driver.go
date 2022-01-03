@@ -1,21 +1,20 @@
 package _23
 
 import (
-	"encoding/hex"
-	"encoding/xml"
 	"fmt"
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/gin-gonic/gin"
-	jsoniter "github.com/json-iterator/go"
 	log "github.com/sirupsen/logrus"
 	"net/url"
 	"path/filepath"
 	"strconv"
-	"strings"
-	"time"
 )
 
 type Pan123 struct{}
@@ -280,16 +279,10 @@ func (driver Pan123) Delete(path string, account *model.Account) error {
 	return err
 }
 
-type UploadResp struct {
-	XMLName  xml.Name `xml:"InitiateMultipartUploadResult"`
-	Bucket   string   `xml:"Bucket"`
-	Key      string   `xml:"Key"`
-	UploadId string   `xml:"UploadId"`
-}
-
-// TODO unfinished
 func (driver Pan123) Upload(file *model.FileStream, account *model.Account) error {
-	return base.ErrNotImplement
+	if file == nil {
+		return base.ErrEmptyFile
+	}
 	parentFile, err := driver.File(file.ParentPath, account)
 	if err != nil {
 		return err
@@ -301,47 +294,106 @@ func (driver Pan123) Upload(file *model.FileStream, account *model.Account) erro
 	data := base.Json{
 		"driveId":      0,
 		"duplicate":    true,
-		"etag":         RandStr(32), //maybe file's md5
+		"etag":         "836aae6cac845e17fce51919594737d0", //maybe file's md5
 		"fileName":     file.GetFileName(),
 		"parentFileId": parentFileId,
 		"size":         file.GetSize(),
 		"type":         0,
 	}
-	res, err := driver.Request("https://www.123pan.com/api/file/upload_request",
-		base.Post, nil, nil, &data, nil, false, account)
+	var resp UploadResp
+	_, err = driver.Request("https://www.123pan.com/api/file/upload_request",
+		base.Post, nil, nil, &data, &resp, false, account)
 	//res, err := driver.Post("https://www.123pan.com/api/file/upload_request", data, account)
 	if err != nil {
 		return err
 	}
-	baseUrl := fmt.Sprintf("https://file.123pan.com/%s/%s", jsoniter.Get(res, "data.Bucket").ToString(), jsoniter.Get(res, "data.Key").ToString())
-	var resp UploadResp
-	kSecret := jsoniter.Get(res, "data.SecretAccessKey").ToString()
-	nowTimeStr := time.Now().String()
-	Date := strings.ReplaceAll(strings.Split(nowTimeStr, "T")[0], "-", "")
-
-	StringToSign := fmt.Sprintf("%s\n%s\n%s\n%s",
-		"AWS4-HMAC-SHA256",
-		nowTimeStr,
-		fmt.Sprintf("%s/us-east-1/s3/aws4_request", Date),
-	)
-
-	kDate := HMAC("AWS4"+kSecret, Date)
-	kRegion := HMAC(kDate, "us-east-1")
-	kService := HMAC(kRegion, "s3")
-	kSigning := HMAC(kService, "aws4_request")
-	_, err = base.RestyClient.R().SetResult(&resp).SetHeaders(map[string]string{
-		"Authorization": fmt.Sprintf("AWS4-HMAC-SHA256 Credential=%s/%s/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date;x-amz-security-token;x-amz-user-agent, Signature=%s",
-			jsoniter.Get(res, "data.AccessKeyId"),
-			Date,
-			hex.EncodeToString([]byte(HMAC(StringToSign, kSigning)))),
-		"X-Amz-Content-Sha256": "UNSIGNED-PAYLOAD",
-		"X-Amz-Date":           nowTimeStr,
-		"x-amz-security-token": jsoniter.Get(res, "data.SessionToken").ToString(),
-	}).Post(fmt.Sprintf("%s?uploads", baseUrl))
+	cfg := &aws.Config{
+		Credentials: credentials.NewStaticCredentials(resp.Data.AccessKeyId, resp.Data.SecretAccessKey, resp.Data.SessionToken),
+		Region:      aws.String("123pan"),
+		Endpoint:    aws.String("123pan.com/" + resp.Data.Bucket),
+	}
+	s, err := session.NewSession(cfg)
 	if err != nil {
 		return err
 	}
-	return base.ErrNotImplement
+	uploader := s3manager.NewUploader(s)
+	input := &s3manager.UploadInput{
+		Bucket: aws.String("file"),
+		Key:    &resp.Data.Key,
+		Body:   file,
+	}
+	_, err = uploader.Upload(input)
+	if err != nil {
+		return err
+	}
+	_, err = driver.Request("https://www.123pan.com/api/file/upload_complete", base.Post, nil, nil, &base.Json{
+		"fileId": resp.Data.FileId,
+	}, nil, false, account)
+	return err
 }
+
+//type UploadResp struct {
+//	XMLName  xml.Name `xml:"InitiateMultipartUploadResult"`
+//	Bucket   string   `xml:"Bucket"`
+//	Key      string   `xml:"Key"`
+//	UploadId string   `xml:"UploadId"`
+//}
+
+// TODO unfinished
+//func (driver Pan123) Upload(file *model.FileStream, account *model.Account) error {
+//	return base.ErrNotImplement
+//	parentFile, err := driver.File(file.ParentPath, account)
+//	if err != nil {
+//		return err
+//	}
+//	if !parentFile.IsDir() {
+//		return base.ErrNotFolder
+//	}
+//	parentFileId, _ := strconv.Atoi(parentFile.Id)
+//	data := base.Json{
+//		"driveId":      0,
+//		"duplicate":    true,
+//		"etag":         RandStr(32), //maybe file's md5
+//		"fileName":     file.GetFileName(),
+//		"parentFileId": parentFileId,
+//		"size":         file.GetSize(),
+//		"type":         0,
+//	}
+//	res, err := driver.Request("https://www.123pan.com/api/file/upload_request",
+//		base.Post, nil, nil, &data, nil, false, account)
+//	//res, err := driver.Post("https://www.123pan.com/api/file/upload_request", data, account)
+//	if err != nil {
+//		return err
+//	}
+//	baseUrl := fmt.Sprintf("https://file.123pan.com/%s/%s", jsoniter.Get(res, "data.Bucket").ToString(), jsoniter.Get(res, "data.Key").ToString())
+//	var resp UploadResp
+//	kSecret := jsoniter.Get(res, "data.SecretAccessKey").ToString()
+//	nowTimeStr := time.Now().String()
+//	Date := strings.ReplaceAll(strings.Split(nowTimeStr, "T")[0], "-", "")
+//
+//	StringToSign := fmt.Sprintf("%s\n%s\n%s\n%s",
+//		"AWS4-HMAC-SHA256",
+//		nowTimeStr,
+//		fmt.Sprintf("%s/us-east-1/s3/aws4_request", Date),
+//	)
+//
+//	kDate := HMAC("AWS4"+kSecret, Date)
+//	kRegion := HMAC(kDate, "us-east-1")
+//	kService := HMAC(kRegion, "s3")
+//	kSigning := HMAC(kService, "aws4_request")
+//	_, err = base.RestyClient.R().SetResult(&resp).SetHeaders(map[string]string{
+//		"Authorization": fmt.Sprintf("AWS4-HMAC-SHA256 Credential=%s/%s/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date;x-amz-security-token;x-amz-user-agent, Signature=%s",
+//			jsoniter.Get(res, "data.AccessKeyId"),
+//			Date,
+//			hex.EncodeToString([]byte(HMAC(StringToSign, kSigning)))),
+//		"X-Amz-Content-Sha256": "UNSIGNED-PAYLOAD",
+//		"X-Amz-Date":           nowTimeStr,
+//		"x-amz-security-token": jsoniter.Get(res, "data.SessionToken").ToString(),
+//	}).Post(fmt.Sprintf("%s?uploads", baseUrl))
+//	if err != nil {
+//		return err
+//	}
+//	return base.ErrNotImplement
+//}
 
 var _ base.Driver = (*Pan123)(nil)
