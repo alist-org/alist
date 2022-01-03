@@ -123,37 +123,6 @@ func Path(c *gin.Context) {
 	}
 }
 
-// Link 返回真实的链接，且携带头,只提供给中转程序使用
-func Link(c *gin.Context) {
-	var req common.PathReq
-	if err := c.ShouldBind(&req); err != nil {
-		common.ErrorResp(c, err, 400)
-		return
-	}
-	req.Path = utils.ParsePath(req.Path)
-	rawPath := req.Path
-	rawPath = utils.ParsePath(rawPath)
-	log.Debugf("link: %s", rawPath)
-	account, path, driver, err := common.ParsePath(rawPath)
-	if err != nil {
-		common.ErrorResp(c, err, 500)
-		return
-	}
-	if driver.Config().OnlyLocal {
-		common.SuccessResp(c, base.Link{
-			Url: fmt.Sprintf("//%s/p%s?d=1&sign=%s", c.Request.Host, req.Path, utils.SignWithToken(utils.Base(rawPath), conf.Token)),
-		})
-		return
-	}
-	link, err := driver.Link(base.Args{Path: path, IP: c.ClientIP()}, account)
-	if err != nil {
-		common.ErrorResp(c, err, 500)
-		return
-	}
-	common.SuccessResp(c, link)
-	return
-}
-
 func Preview(c *gin.Context) {
 	reqV, _ := c.Get("req")
 	req := reqV.(common.PathReq)
