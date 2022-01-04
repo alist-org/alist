@@ -19,6 +19,7 @@ import (
 
 func InitModel() {
 	log.Infof("init model...")
+	var err error
 	databaseConfig := conf.Conf.Database
 	newLogger := logger.New(
 		log2.New(os.Stdout, "\r\n", log2.LstdFlags),
@@ -72,9 +73,13 @@ func InitModel() {
 		log.Fatalf("not supported database type: %s", databaseConfig.Type)
 	}
 	log.Infof("auto migrate model...")
-	err := conf.DB.AutoMigrate(&model.SettingItem{}, &model.Account{}, &model.Meta{})
+	if databaseConfig.Type == "mysql" {
+		err = conf.DB.Set("gorm:table_options", "ENGINE=InnoDB CHARSET=utf8mb4").
+			AutoMigrate(&model.SettingItem{}, &model.Account{}, &model.Meta{})
+	} else {
+		err = conf.DB.AutoMigrate(&model.SettingItem{}, &model.Account{}, &model.Meta{})
+	}
 	if err != nil {
 		log.Fatalf("failed to auto migrate")
 	}
 }
-
