@@ -93,14 +93,7 @@ func LoadSettings() {
 	if err == nil {
 		conf.TextTypes = strings.Split(textTypes.Value, ",")
 	}
-	checkParent, err := GetSettingByKey("check parent folder")
-	if err == nil {
-		conf.CheckParent = checkParent.Value == "true"
-	}
-	checkDown, err := GetSettingByKey("check down link")
-	if err == nil {
-		conf.CheckDown = checkDown.Value == "true"
-	}
+	// html
 	favicon, err := GetSettingByKey("favicon")
 	if err == nil {
 		//conf.Favicon = favicon.Value
@@ -118,26 +111,16 @@ func LoadSettings() {
 	if err == nil {
 		conf.IndexHtml = strings.Replace(conf.IndexHtml, "<!-- customize body -->", customizeBody.Value, 1)
 	}
-
+	// token
 	adminPassword, err := GetSettingByKey("password")
 	if err == nil {
 		conf.Token = utils.GetMD5Encode(fmt.Sprintf("https://github.com/Xhofe/alist-%s", adminPassword.Value))
 	}
-
-	davUsername, err := GetSettingByKey("WebDAV username")
-	if err == nil {
-		conf.DavUsername = davUsername.Value
-	}
-	davPassword, err := GetSettingByKey("WebDAV password")
-	if err == nil {
-		conf.DavPassword = davPassword.Value
-	}
-	visitorDavUsername, err := GetSettingByKey("Visitor WebDAV username")
-	if err == nil {
-		conf.VisitorDavUsername = visitorDavUsername.Value
-	}
-	visitorDavPassword, err := GetSettingByKey("Visitor WebDAV password")
-	if err == nil {
-		conf.VisitorDavPassword = visitorDavPassword.Value
+	// load settings
+	for _, key := range conf.LoadSettings {
+		vm, err := GetSettingByKey(key)
+		if err == nil {
+			conf.Set(key, vm.Value)
+		}
 	}
 }

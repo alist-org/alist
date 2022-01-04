@@ -203,6 +203,21 @@ func InitSettings() {
 			Access:      model.PRIVATE,
 			Group:       model.BACK,
 		},
+		{
+			Key:    "load type",
+			Value:  "all",
+			Type:   "select",
+			Values: "all,load more,auto load more,pagination",
+			Access: model.PUBLIC,
+			Group:  model.FRONT,
+		},
+		{
+			Key:    "default page size",
+			Value:  "30",
+			Type:   "number",
+			Access: model.PUBLIC,
+			Group:  model.FRONT,
+		},
 	}
 	for i, _ := range settings {
 		v := settings[i]

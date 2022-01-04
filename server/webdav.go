@@ -49,11 +49,14 @@ func WebDAVAuth(c *gin.Context) {
 		c.Abort()
 		return
 	}
-	if conf.DavUsername == username && conf.DavPassword == password {
+	if conf.GetStr("WebDAV username") == username && conf.GetStr("WebDAV password") == password {
 		c.Next()
 		return
 	}
-	if (conf.VisitorDavUsername == username && conf.VisitorDavPassword == password) || (conf.VisitorDavUsername == "" && conf.VisitorDavPassword == "") {
+	if (conf.GetStr("Visitor WebDAV username") == username &&
+		conf.GetStr("Visitor WebDAV password") == password) ||
+		(conf.GetStr("Visitor WebDAV username") == "" &&
+			conf.GetStr("Visitor WebDAV password") == "") {
 		if !utils.IsContain([]string{"PUT", "DELETE", "PROPPATCH", "MKCOL", "COPY", "MOVE"}, c.Request.Method) {
 			c.Next()
 			return

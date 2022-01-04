@@ -95,7 +95,7 @@ func (fs *FileSystem) Link(r *http.Request, rawPath string) (string, error) {
 	}
 	if driver.Config().OnlyProxy || account.WebdavProxy {
 		link = fmt.Sprintf("%s://%s/p%s", protocol, r.Host, rawPath)
-		if conf.CheckDown {
+		if conf.GetBool("check down link") {
 			sign := utils.SignWithToken(utils.Base(rawPath), conf.Token)
 			link += "?sign" + sign
 		}

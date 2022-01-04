@@ -30,6 +30,12 @@ func Hide(meta *model.Meta, files []model.File) []model.File {
 
 func Pagination(files []model.File, pageNum, pageSize int) (int, []model.File) {
 	total := len(files)
+	switch conf.GetStr("load type") {
+	case "all":
+		return total, files
+		//case "pagination":
+		//
+	}
 	start := (pageNum - 1) * pageSize
 	if start > total {
 		return total, []model.File{}
@@ -41,9 +47,15 @@ func Pagination(files []model.File, pageNum, pageSize int) (int, []model.File) {
 	return total, files[start:end]
 }
 
-func CheckPagination(req common.PathReq) error {
+func CheckPagination(req *common.PathReq) error {
+	if conf.GetStr("loading type") == "all" {
+		return nil
+	}
 	if req.PageNum < 1 {
 		return errors.New("page_num can't be less than 1")
+	}
+	if req.PageSize == 0 {
+		req.PageSize = conf.GetInt("default page size", 30)
 	}
 	return nil
 }
@@ -89,7 +101,7 @@ func Path(c *gin.Context) {
 		})
 		return
 	}
-	err := CheckPagination(req)
+	err := CheckPagination(&req)
 	if err != nil {
 		common.ErrorResp(c, err, 400)
 		return

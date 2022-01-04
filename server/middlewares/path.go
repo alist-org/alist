@@ -16,7 +16,7 @@ func PathCheck(c *gin.Context) {
 		return
 	}
 	req.Path = utils.ParsePath(req.Path)
-	c.Set("req",req)
+	c.Set("req", req)
 	token := c.GetHeader("Authorization")
 	if token == conf.Token {
 		c.Next()
@@ -29,7 +29,7 @@ func PathCheck(c *gin.Context) {
 			c.Abort()
 			return
 		}
-	} else if conf.CheckParent {
+	} else if conf.GetBool("check parent folder") {
 		if !common.CheckParent(utils.Dir(req.Path), req.Password) {
 			common.ErrorResp(c, fmt.Errorf("wrong password"), 401)
 			c.Abort()

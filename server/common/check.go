@@ -28,7 +28,7 @@ func CheckParent(path string, password string) bool {
 }
 
 func CheckDownLink(path string, passwordMd5 string, name string) bool {
-	if !conf.CheckDown {
+	if !conf.GetBool("check down link") {
 		return true
 	}
 	meta, err := model.GetMetaByPath(path)
@@ -40,7 +40,7 @@ func CheckDownLink(path string, passwordMd5 string, name string) bool {
 		}
 		return true
 	} else {
-		if !conf.CheckParent {
+		if !conf.GetBool("check parent folder") {
 			return true
 		}
 		if path == "/" {
