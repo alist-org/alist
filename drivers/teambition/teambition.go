@@ -105,6 +105,9 @@ func (driver Teambition) GetFiles(parentId string, account *model.Account) ([]mo
 		}
 		page++
 		for _, collection := range collections {
+			if collection.Title == "" {
+				continue
+			}
 			files = append(files, model.File{
 				Id:        collection.ID,
 				Name:      collection.Title,
