@@ -76,7 +76,7 @@ type File struct {
 	CreatedAt    time.Time     `json:"created_at"`
 	DeletedAt    string        `json:"deleted_at"`
 	Description  string        `json:"description"`
-	File         struct {
+	File         *struct {
 		Cover string `json:"cover"`
 		Src   string `json:"src"`
 	} `json:"file"`
@@ -97,7 +97,7 @@ func (driver MediaTrack) formatFile(file *File) *model.File {
 		Driver:    driver.Config().Name,
 		UpdatedAt: &file.UpdatedAt,
 	}
-	if file.Category == 0 {
+	if file.File == nil {
 		// folder
 		f.Type = conf.FOLDER
 	} else {
