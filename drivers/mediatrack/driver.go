@@ -1,6 +1,9 @@
 package mediatrack
 
 import (
+	"bytes"
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/drivers/base"
@@ -11,8 +14,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	jsoniter "github.com/json-iterator/go"
 	log "github.com/sirupsen/logrus"
+	"io"
 	"path/filepath"
 )
 
@@ -226,11 +231,14 @@ func (driver MediaTrack) Delete(path string, account *model.Account) error {
 }
 
 func (driver MediaTrack) Upload(file *model.FileStream, account *model.Account) error {
+	if file == nil {
+		return base.ErrEmptyFile
+	}
 	parentFile, err := driver.File(file.ParentPath, account)
 	if err != nil {
 		return err
 	}
-	src := "assets/56461b45-6d08-40a0-bfbf-0a47689bffaa" // random?
+	src := "assets/" + uuid.New().String()
 	var resp UploadResp
 	_, err = driver.Request("https://jayce.api.mediatrack.cn/v3/storage/tokens/asset", base.Get, nil, map[string]string{
 		"src": src,
@@ -248,21 +256,29 @@ func (driver MediaTrack) Upload(file *model.FileStream, account *model.Account) 
 	if err != nil {
 		return err
 	}
+	var buf bytes.Buffer
+	read := io.TeeReader(file, &buf)
 	uploader := s3manager.NewUploader(s)
 	input := &s3manager.UploadInput{
 		Bucket: &resp.Data.Bucket,
 		Key:    &resp.Data.Object,
-		Body:   file,
+		Body:   read,
 	}
 	_, err = uploader.Upload(input)
 	if err != nil {
 		return err
 	}
 	url := fmt.Sprintf("https://jayce.api.mediatrack.cn/v3/assets/%s/children", parentFile.Id)
+	h := md5.New()
+	_, err = io.Copy(h, &buf)
+	if err != nil {
+		return err
+	}
+	hash := hex.EncodeToString(h.Sum(nil))
 	data := base.Json{
-		"category":    10,
+		"category":    0,
 		"description": file.GetFileName(),
-		"hash":        "c459fda4d79554d692555932a5d5e6c1",
+		"hash":        hash,
 		"mime":        file.MIMEType,
 		"size":        file.GetSize(),
 		"src":         src,
