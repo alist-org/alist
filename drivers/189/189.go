@@ -107,6 +107,10 @@ func (driver Cloud189) Login(account *model.Account) error {
 		if err != nil {
 			return err
 		}
+		// 已经登陆
+		if res.StatusCode() == 302 {
+			return nil
+		}
 		b = res.String()
 		ltTextArr := ltText.FindStringSubmatch(b)
 		if len(ltTextArr) > 0 {
@@ -207,39 +211,32 @@ type Cloud189Files struct {
 	} `json:"fileListAO"`
 }
 
+func (driver Cloud189) isFamily(account *model.Account) bool {
+	return account.InternalType == "Family"
+}
+
 func (driver Cloud189) GetFiles(fileId string, account *model.Account) ([]Cloud189File, error) {
-	client, ok := client189Map[account.Name]
-	if !ok {
-		return nil, fmt.Errorf("can't find [%s] client", account.Name)
-	}
 	res := make([]Cloud189File, 0)
 	pageNum := 1
+
 	for {
-		var e Cloud189Error
 		var resp Cloud189Files
-		_, err := client.R().SetResult(&resp).SetError(&e).
-			SetHeader("Accept", "application/json;charset=UTF-8").
-			SetQueryParams(map[string]string{
-				"noCache":    random(),
-				"pageSize":   "60",
-				"pageNum":    strconv.Itoa(pageNum),
-				"mediaType":  "0",
-				"folderId":   fileId,
-				"iconOption": "5",
-				"orderBy":    account.OrderBy,
-				"descending": account.OrderDirection,
-			}).Get("https://cloud.189.cn/api/open/file/listFiles.action")
+		body, err := driver.Request("https://cloud.189.cn/api/open/file/listFiles.action", base.Get, map[string]string{
+			//"noCache":    random(),
+			"pageSize":   "60",
+			"pageNum":    strconv.Itoa(pageNum),
+			"mediaType":  "0",
+			"folderId":   fileId,
+			"iconOption": "5",
+			"orderBy":    account.OrderBy,
+			"descending": account.OrderDirection,
+		}, nil, nil, account)
 		if err != nil {
 			return nil, err
 		}
-		if e.ErrorCode != "" {
-			if e.ErrorCode == "InvalidSessionKey" {
-				err = driver.Login(account)
-				if err != nil {
-					return nil, err
-				}
-				return driver.GetFiles(fileId, account)
-			}
+		err = utils.Json.Unmarshal(body, &resp)
+		if err != nil {
+			return nil, err
 		}
 		if resp.ResCode != 0 {
 			return nil, fmt.Errorf(resp.ResMessage)
@@ -261,18 +258,30 @@ func (driver Cloud189) GetFiles(fileId string, account *model.Account) ([]Cloud1
 	return res, nil
 }
 
-func (driver Cloud189) Request(url string, method string, form map[string]string, headers map[string]string, account *model.Account) ([]byte, error) {
+func (driver Cloud189) Request(url string, method int, query, form map[string]string, headers map[string]string, account *model.Account) ([]byte, error) {
 	client, ok := client189Map[account.Name]
 	if !ok {
 		return nil, fmt.Errorf("can't find [%s] client", account.Name)
 	}
 	//var resp base.Json
+	if driver.isFamily(account) {
+		url = strings.Replace(url, "/api/open", "/api/open/family", 1)
+		if query != nil {
+			query["familyId"] = account.SiteId
+		}
+		if form != nil {
+			form["familyId"] = account.SiteId
+		}
+	}
 	var e Cloud189Error
 	req := client.R().SetError(&e).
 		SetHeader("Accept", "application/json;charset=UTF-8").
 		SetQueryParams(map[string]string{
 			"noCache": random(),
 		})
+	if query != nil {
+		req = req.SetQueryParams(query)
+	}
 	if form != nil {
 		req = req.SetFormData(form)
 	}
@@ -281,24 +290,27 @@ func (driver Cloud189) Request(url string, method string, form map[string]string
 	}
 	var err error
 	var res *resty.Response
-	if strings.ToUpper(method) == "GET" {
+	switch method {
+	case base.Get:
 		res, err = req.Get(url)
-	} else {
+	case base.Post:
 		res, err = req.Post(url)
+	default:
+		return nil, base.ErrNotSupport
 	}
 	if err != nil {
 		return nil, err
 	}
+	log.Debug(res.String())
 	if e.ErrorCode != "" {
 		if e.ErrorCode == "InvalidSessionKey" {
 			err = driver.Login(account)
 			if err != nil {
 				return nil, err
 			}
-			return driver.Request(url, method, form, nil, account)
+			return driver.Request(url, method, query, form, nil, account)
 		}
 	}
-	//log.Debug(res, jsoniter.Get(res.Body(),"res_code").ToInt())
 	if jsoniter.Get(res.Body(), "res_code").ToInt() != 0 {
 		err = errors.New(jsoniter.Get(res.Body(), "res_message").ToString())
 	}
@@ -306,7 +318,7 @@ func (driver Cloud189) Request(url string, method string, form map[string]string
 }
 
 func (driver Cloud189) GetSessionKey(account *model.Account) (string, error) {
-	resp, err := driver.Request("https://cloud.189.cn/v2/getUserBriefInfo.action", "GET", nil, nil, account)
+	resp, err := driver.Request("https://cloud.189.cn/v2/getUserBriefInfo.action", base.Get, nil, nil, nil, account)
 	if err != nil {
 		return "", err
 	}
@@ -314,7 +326,7 @@ func (driver Cloud189) GetSessionKey(account *model.Account) (string, error) {
 }
 
 func (driver Cloud189) GetResKey(account *model.Account) (string, string, error) {
-	resp, err := driver.Request("https://cloud.189.cn/api/security/generateRsaKey.action", "GET", nil, nil, account)
+	resp, err := driver.Request("https://cloud.189.cn/api/security/generateRsaKey.action", base.Get, nil, nil, nil, account)
 	if err != nil {
 		return "", "", err
 	}

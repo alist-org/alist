@@ -51,6 +51,18 @@ func (driver Cloud189) Items() []base.Item {
 			Type:     base.TypeString,
 			Required: true,
 		},
+		//{
+		//	Name:     "internal_type",
+		//	Label:    "189cloud type",
+		//	Type:     base.TypeSelect,
+		//	Required: true,
+		//	Values:   "Personal,Family",
+		//},
+		//{
+		//	Name:  "site_id",
+		//	Label: "family id",
+		//	Type:  base.TypeString,
+		//},
 		{
 			Name:     "order_by",
 			Label:    "order_by",
@@ -144,29 +156,17 @@ func (driver Cloud189) Link(args base.Args, account *model.Account) (*base.Link,
 	if file.Type == conf.FOLDER {
 		return nil, base.ErrNotFile
 	}
-	client, ok := client189Map[account.Name]
-	if !ok {
-		return nil, fmt.Errorf("can't find [%s] client", account.Name)
-	}
-	var e Cloud189Error
 	var resp Cloud189Down
-	_, err = client.R().SetResult(&resp).SetError(&e).
-		SetHeader("Accept", "application/json;charset=UTF-8").
-		SetQueryParams(map[string]string{
-			"noCache": random(),
-			"fileId":  file.Id,
-		}).Get("https://cloud.189.cn/api/open/file/getFileDownloadUrl.action")
+	u := "https://cloud.189.cn/api/open/file/getFileDownloadUrl.action"
+	body, err := driver.Request(u, base.Get, map[string]string{
+		"fileId": file.Id,
+	}, nil, nil, account)
 	if err != nil {
 		return nil, err
 	}
-	if e.ErrorCode != "" {
-		if e.ErrorCode == "InvalidSessionKey" {
-			err = driver.Login(account)
-			if err != nil {
-				return nil, err
-			}
-			return driver.Link(args, account)
-		}
+	err = utils.Json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, err
 	}
 	if resp.ResCode != 0 {
 		return nil, fmt.Errorf(resp.ResMessage)
@@ -222,7 +222,7 @@ func (driver Cloud189) MakeDir(path string, account *model.Account) error {
 		"parentFolderId": parent.Id,
 		"folderName":     name,
 	}
-	_, err = driver.Request("https://cloud.189.cn/api/open/file/createFolder.action", "POST", form, nil, account)
+	_, err = driver.Request("https://cloud.189.cn/api/open/file/createFolder.action", base.Post, nil, form, nil, account)
 	return err
 }
 
@@ -256,7 +256,7 @@ func (driver Cloud189) Move(src string, dst string, account *model.Account) erro
 		"targetFolderId": dstDirFile.Id,
 		"taskInfos":      string(taskInfosBytes),
 	}
-	_, err = driver.Request("https://cloud.189.cn/api/open/batch/createBatchTask.action", "POST", form, nil, account)
+	_, err = driver.Request("https://cloud.189.cn/api/open/batch/createBatchTask.action", base.Post, nil, form, nil, account)
 	return err
 }
 
@@ -278,7 +278,7 @@ func (driver Cloud189) Rename(src string, dst string, account *model.Account) er
 		idKey:   srcFile.Id,
 		nameKey: dstName,
 	}
-	_, err = driver.Request(url, "POST", form, nil, account)
+	_, err = driver.Request(url, base.Post, nil, form, nil, account)
 	return err
 }
 
@@ -312,7 +312,7 @@ func (driver Cloud189) Copy(src string, dst string, account *model.Account) erro
 		"targetFolderId": dstDirFile.Id,
 		"taskInfos":      string(taskInfosBytes),
 	}
-	_, err = driver.Request("https://cloud.189.cn/api/open/batch/createBatchTask.action", "POST", form, nil, account)
+	_, err = driver.Request("https://cloud.189.cn/api/open/batch/createBatchTask.action", base.Post, nil, form, nil, account)
 	return err
 }
 
@@ -342,7 +342,7 @@ func (driver Cloud189) Delete(path string, account *model.Account) error {
 		"targetFolderId": "",
 		"taskInfos":      string(taskInfosBytes),
 	}
-	_, err = driver.Request("https://cloud.189.cn/api/open/batch/createBatchTask.action", "POST", form, nil, account)
+	_, err = driver.Request("https://cloud.189.cn/api/open/batch/createBatchTask.action", base.Post, nil, form, nil, account)
 	return err
 }
 
