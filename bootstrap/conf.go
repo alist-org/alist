@@ -32,4 +32,13 @@ func InitConf() {
 		log.Fatalf("load config error: %s", err.Error())
 	}
 	log.Debugf("config:%+v", conf.Conf)
+	// update config.json struct
+	confBody, err := utils.Json.Marshal(conf.Conf)
+	if err != nil {
+		log.Fatalf("marshal config error:%s", err.Error())
+	}
+	err = ioutil.WriteFile(conf.ConfigFile, confBody, 0777)
+	if err != nil {
+		log.Fatalf("update config struct error: %s", err.Error())
+	}
 }
