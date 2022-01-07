@@ -57,6 +57,6 @@ func InitApiRouter(r *gin.Engine) {
 func Cors(r *gin.Engine) {
 	config := cors.DefaultConfig()
 	config.AllowAllOrigins = true
-	config.AllowHeaders = append(config.AllowHeaders, "Authorization")
+	config.AllowHeaders = append(config.AllowHeaders, "Authorization", "range")
 	r.Use(cors.New(config))
 }
