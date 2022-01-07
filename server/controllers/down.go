@@ -66,7 +66,7 @@ func Proxy(c *gin.Context) {
 		}
 	}
 	// 中转时有中转机器使用中转机器，若携带标志位则表明不能再走中转机器了
-	if account.DownProxyUrl != "" && c.Param("d") != "1" {
+	if account.DownProxyUrl != "" && c.Query("d") != "1" {
 		name := utils.Base(rawPath)
 		link := fmt.Sprintf("%s%s?sign=%s", account.DownProxyUrl, rawPath, utils.SignWithToken(name, conf.Token))
 		c.Redirect(302, link)
