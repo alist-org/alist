@@ -108,7 +108,7 @@ func (driver Cloud189) Login(account *model.Account) error {
 			return err
 		}
 		// 已经登陆
-		if res.StatusCode() == 302 {
+		if res.RawResponse.Request.URL.String() == "https://cloud.189.cn/web/main" {
 			return nil
 		}
 		b = res.String()
