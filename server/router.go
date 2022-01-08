@@ -3,6 +3,7 @@ package server
 import (
 	"github.com/Xhofe/alist/server/common"
 	"github.com/Xhofe/alist/server/controllers"
+	"github.com/Xhofe/alist/server/controllers/file"
 	"github.com/Xhofe/alist/server/middlewares"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -23,7 +24,7 @@ func InitApiRouter(r *gin.Engine) {
 		path.POST("/preview", controllers.Preview)
 
 		//path.POST("/link",middlewares.Auth, controllers.Link)
-		public.POST("/upload", controllers.UploadFile)
+		public.POST("/upload", file.UploadFiles)
 
 		public.GET("/settings", controllers.GetSettingsPublic)
 	}
@@ -49,6 +50,7 @@ func InitApiRouter(r *gin.Engine) {
 		admin.DELETE("/meta", controllers.DeleteMeta)
 
 		admin.POST("/link", controllers.Link)
+		admin.DELETE("/files", file.DeleteFiles)
 	}
 	WebDav(r)
 	Static(r)

@@ -1,4 +1,4 @@
-package controllers
+package file
 
 import (
 	"errors"
@@ -11,7 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func UploadFile(c *gin.Context) {
+func UploadFiles(c *gin.Context) {
 	path := c.PostForm("path")
 	path = utils.ParsePath(path)
 	token := c.GetHeader("Authorization")
