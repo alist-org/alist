@@ -35,14 +35,16 @@ func (driver Teambition) Items() []base.Item {
 			Description: "Unknown expiration time",
 		},
 		{
-			Name:  "zone",
-			Label: "Project id",
-			Type:  base.TypeString,
+			Name:     "zone",
+			Label:    "Project id",
+			Type:     base.TypeString,
+			Required: true,
 		},
 		{
-			Name:  "root_folder",
-			Label: "root folder file_id",
-			Type:  base.TypeString,
+			Name:     "root_folder",
+			Label:    "root folder file_id",
+			Type:     base.TypeString,
+			Required: true,
 		},
 		{
 			Name:     "order_by",
