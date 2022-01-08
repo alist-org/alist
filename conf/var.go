@@ -83,6 +83,7 @@ var (
 
 var (
 	RawIndexHtml string
+	ManageHtml   string
 	IndexHtml    string
 	Token        string
 

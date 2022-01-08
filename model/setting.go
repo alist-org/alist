@@ -97,15 +97,15 @@ func LoadSettings() {
 	favicon, err := GetSettingByKey("favicon")
 	if err == nil {
 		//conf.Favicon = favicon.Value
-		conf.IndexHtml = strings.Replace(conf.RawIndexHtml, "https://store.heytapimage.com/cdo-portal/feedback/202110/30/d43c41c5d257c9bc36366e310374fb19.png", favicon.Value, 1)
+		conf.ManageHtml = strings.Replace(conf.RawIndexHtml, "https://store.heytapimage.com/cdo-portal/feedback/202110/30/d43c41c5d257c9bc36366e310374fb19.png", favicon.Value, 1)
 	}
 	title, err := GetSettingByKey("title")
 	if err == nil {
-		conf.IndexHtml = strings.Replace(conf.IndexHtml, "Loading...", title.Value, 1)
+		conf.ManageHtml = strings.Replace(conf.ManageHtml, "Loading...", title.Value, 1)
 	}
 	customizeHead, err := GetSettingByKey("customize head")
 	if err == nil {
-		conf.IndexHtml = strings.Replace(conf.IndexHtml, "<!-- customize head -->", customizeHead.Value, 1)
+		conf.IndexHtml = strings.Replace(conf.ManageHtml, "<!-- customize head -->", customizeHead.Value, 1)
 	}
 	customizeBody, err := GetSettingByKey("customize body")
 	if err == nil {

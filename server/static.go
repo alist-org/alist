@@ -8,6 +8,7 @@ import (
 	"io/fs"
 	"io/ioutil"
 	"net/http"
+	"strings"
 )
 
 func InitIndex() {
@@ -41,7 +42,11 @@ func Static(r *gin.Engine) {
 	r.NoRoute(func(c *gin.Context) {
 		c.Status(200)
 		c.Header("Content-Type", "text/html")
-		_, _ = c.Writer.WriteString(conf.IndexHtml)
+		if strings.HasPrefix(c.Request.URL.Path, "/@manage") {
+			_, _ = c.Writer.WriteString(conf.ManageHtml)
+		} else {
+			_, _ = c.Writer.WriteString(conf.IndexHtml)
+		}
 		c.Writer.Flush()
 		c.Writer.WriteHeaderNow()
 	})
