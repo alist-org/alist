@@ -51,6 +51,9 @@ func Delete(driver base.Driver, account *model.Account, path string, clearCache 
 }
 
 func Upload(driver base.Driver, account *model.Account, file *model.FileStream, clearCache bool) error {
+	defer func() {
+		_ = file.Close()
+	}()
 	err := driver.Upload(file, account)
 	if err == nil && clearCache {
 		_ = base.DeleteCache(file.ParentPath, account)

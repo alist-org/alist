@@ -3,6 +3,7 @@ package controllers
 import (
 	"errors"
 	"github.com/Xhofe/alist/conf"
+	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/drivers/operate"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/server/common"
@@ -26,33 +27,38 @@ func UploadFile(c *gin.Context) {
 			return
 		}
 	}
-	file, err := c.FormFile("file")
-	if err != nil {
-		common.ErrorResp(c, err, 400)
-	}
-	open, err := file.Open()
-	defer func() {
-		_ = open.Close()
-	}()
-	if err != nil {
-		return
-	}
 	account, path_, driver, err := common.ParsePath(path)
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return
 	}
-	fileStream := model.FileStream{
-		File:       open,
-		Size:       uint64(file.Size),
-		ParentPath: path_,
-		Name:       file.Filename,
-		MIMEType:   file.Header.Get("Content-Type"),
-	}
-	err = operate.Upload(driver, account, &fileStream, true)
+	form, err := c.MultipartForm()
 	if err != nil {
-		common.ErrorResp(c, err, 500)
+		common.ErrorResp(c, err, 400)
+	}
+	files := form.File["files"]
+	if err != nil {
 		return
+	}
+	for i, file := range files {
+		open, err := file.Open()
+		fileStream := model.FileStream{
+			File:       open,
+			Size:       uint64(file.Size),
+			ParentPath: path_,
+			Name:       file.Filename,
+			MIMEType:   file.Header.Get("Content-Type"),
+		}
+		clearCache := false
+		if i == len(files)-1 {
+			clearCache = true
+		}
+		err = operate.Upload(driver, account, &fileStream, clearCache)
+		if err != nil {
+			_ = base.DeleteCache(path_, account)
+			common.ErrorResp(c, err, 500)
+			return
+		}
 	}
 	common.SuccessResp(c)
 }
