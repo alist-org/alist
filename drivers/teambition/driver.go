@@ -31,6 +31,7 @@ func (driver Teambition) Items() []base.Item {
 			Name:        "access_token",
 			Label:       "Cookie",
 			Type:        base.TypeString,
+			Required:    true,
 			Description: "Unknown expiration time",
 		},
 		{
