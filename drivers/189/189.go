@@ -1,6 +1,7 @@
 package _89
 
 import (
+	"bytes"
 	"crypto/aes"
 	"crypto/hmac"
 	"crypto/md5"
@@ -18,9 +19,13 @@ import (
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
 	"github.com/go-resty/resty/v2"
+	"github.com/google/uuid"
 	jsoniter "github.com/json-iterator/go"
 	log "github.com/sirupsen/logrus"
+	"io"
+	"math"
 	mathRand "math/rand"
+	"net/http"
 	"net/url"
 	"path/filepath"
 	"regexp"
@@ -342,13 +347,13 @@ func (driver Cloud189) UploadRequest(url string, form map[string]string, account
 	if err != nil {
 		return nil, err
 	}
-	xRId := "e007e99a-370c-4a14-a143-1b1541972fcf"
-	pkey := strings.ReplaceAll(xRId, "-", "")
+	xRId := uuid.New().String()
+	pkey := strings.ReplaceAll(xRId, "-", "")[:mathRand.Intn(16)+16]
 	params := aesEncrypt(qs(form), pkey[:16])
 	date := strconv.FormatInt(time.Now().Unix(), 10)
 	signature := hmacSha1(fmt.Sprintf("SessionKey=%s&Operate=GET&RequestURI=%s&Date=%s&params=%s", sessionKey, url, date, params), pkey)
 	encryptionText := RsaEncode([]byte(pkey), pubKey)
-	res, err := base.RestyClient.R().SetHeaders(map[string]string{
+	headers := map[string]string{
 		"signature":      signature,
 		"sessionKey":     sessionKey,
 		"encryptionText": encryptionText,
@@ -357,7 +362,9 @@ func (driver Cloud189) UploadRequest(url string, form map[string]string, account
 		"x-request-date": date,
 		"origin":         "https://cloud.189.cn",
 		"referer":        "https://cloud.189.cn/",
-	}).SetQueryParam("params", params).Get("https://upload.cloud.189.cn" + url)
+	}
+	log.Debugf("%+v\n%s", headers, params)
+	res, err := base.RestyClient.R().SetHeaders(headers).SetQueryParam("params", params).Get("https://upload.cloud.189.cn" + url)
 	if err != nil {
 		return nil, err
 	}
@@ -367,6 +374,84 @@ func (driver Cloud189) UploadRequest(url string, form map[string]string, account
 		return nil, errors.New(jsoniter.Get(data, "msg").ToString())
 	}
 	return data, nil
+}
+
+// Upload Error: decrypt encryptionText failed
+func (driver Cloud189) NewUpload(file *model.FileStream, account *model.Account) error {
+	const DEFAULT uint64 = 10485760
+	var count = int64(math.Ceil(float64(file.GetSize()) / float64(DEFAULT)))
+	var finish uint64 = 0
+	parentFile, err := driver.File(file.ParentPath, account)
+	if err != nil {
+		return err
+	}
+	if !parentFile.IsDir() {
+		return base.ErrNotFolder
+	}
+	res, err := driver.UploadRequest("/person/initMultiUpload", map[string]string{
+		"parentFolderId": parentFile.Id,
+		"fileName":       file.Name,
+		"fileSize":       strconv.FormatInt(int64(file.Size), 10),
+		"sliceSize":      strconv.FormatInt(int64(DEFAULT), 10),
+		"lazyCheck":      "1",
+	}, account)
+	if err != nil {
+		return err
+	}
+	uploadFileId := jsoniter.Get(res, "data.uploadFileId").ToString()
+	var i int64
+	var byteSize uint64
+	md5s := make([]string, 0)
+	md5Sum := md5.New()
+	for i = 1; i <= count; i++ {
+		byteSize = file.GetSize() - finish
+		if DEFAULT < byteSize {
+			byteSize = DEFAULT
+		}
+		log.Debugf("%d,%d", byteSize, finish)
+		byteData := make([]byte, byteSize)
+		n, err := io.ReadFull(file, byteData)
+		log.Debug(err, n)
+		if err != nil {
+			return err
+		}
+		finish += uint64(n)
+		md5Bytes := getMd5(byteData)
+		md5Str := hex.EncodeToString(md5Bytes)
+		md5Base64 := base64.StdEncoding.EncodeToString(md5Bytes)
+		md5s = append(md5s, md5Str)
+		md5Sum.Write(byteData)
+		res, err = driver.UploadRequest("/person/getMultiUploadUrls", map[string]string{
+			"partInfo":     fmt.Sprintf("%s-%s", strconv.FormatInt(i, 10), md5Base64),
+			"uploadFileId": uploadFileId,
+		}, account)
+		if err != nil {
+			return err
+		}
+		uploadData := jsoniter.Get(res, "uploadUrls.partNumber_"+strconv.FormatInt(i, 10))
+		headers := strings.Split(uploadData.Get("requestHeader").ToString(), "&")
+		req, err := http.NewRequest("PUT", uploadData.Get("requestURL").ToString(), bytes.NewBuffer(byteData))
+		if err != nil {
+			return err
+		}
+		for _, header := range headers {
+			kv := strings.Split(header, "=")
+			req.Header.Set(kv[0], strings.Join(kv[1:], "="))
+		}
+		res, err := base.HttpClient.Do(req)
+		if err != nil {
+			return err
+		}
+		log.Debugf("%+v", res)
+	}
+	id := md5Sum.Sum(nil)
+	res, err = driver.UploadRequest("/person/commitMultiUploadFile", map[string]string{
+		"uploadFileId": uploadFileId,
+		"fileMd5":      hex.EncodeToString(id),
+		"sliceMd5":     utils.GetMD5Encode(strings.Join(md5s, "\n")),
+		"lazyCheck":    "1",
+	}, account)
+	return err
 }
 
 func random() string {

@@ -1,10 +1,7 @@
 package _89
 
 import (
-	"bytes"
-	"crypto/md5"
-	"encoding/base64"
-	"encoding/hex"
+	"errors"
 	"fmt"
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/drivers/base"
@@ -13,12 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	jsoniter "github.com/json-iterator/go"
 	log "github.com/sirupsen/logrus"
-	"io"
-	"math"
-	"net/http"
 	"path/filepath"
-	"strconv"
-	"strings"
 )
 
 type Cloud189 struct{}
@@ -89,12 +81,15 @@ func (driver Cloud189) Save(account *model.Account, old *model.Account) error {
 		_ = model.SaveAccount(account)
 		return err
 	}
-	account.Status = "work"
-	err := model.SaveAccount(account)
+	sessionKey, err := driver.GetSessionKey(account)
 	if err != nil {
-		return err
+		account.Status = err.Error()
+	} else {
+		account.Status = "work"
+		account.DriveId = sessionKey
 	}
-	return nil
+	_ = model.SaveAccount(account)
+	return err
 }
 
 func (driver Cloud189) File(path string, account *model.Account) (*model.File, error) {
@@ -346,83 +341,34 @@ func (driver Cloud189) Delete(path string, account *model.Account) error {
 	return err
 }
 
-// Upload Error: decrypt encryptionText failed
 func (driver Cloud189) Upload(file *model.FileStream, account *model.Account) error {
-	return base.ErrNotImplement
-	const DEFAULT uint64 = 10485760
-	var count = int64(math.Ceil(float64(file.GetSize()) / float64(DEFAULT)))
-	var finish uint64 = 0
+	//return base.ErrNotImplement
+	if file == nil {
+		return base.ErrEmptyFile
+	}
+	client, ok := client189Map[account.Name]
+	if !ok {
+		return fmt.Errorf("can't find [%s] client", account.Name)
+	}
 	parentFile, err := driver.File(file.ParentPath, account)
 	if err != nil {
 		return err
 	}
-	if !parentFile.IsDir() {
-		return base.ErrNotFolder
-	}
-	res, err := driver.UploadRequest("/person/initMultiUpload", map[string]string{
-		"parentFolderId": parentFile.Id,
-		"fileName":       file.Name,
-		"fileSize":       strconv.FormatInt(int64(file.Size), 10),
-		"sliceSize":      strconv.FormatInt(int64(DEFAULT), 10),
-		"lazyCheck":      "1",
-	}, account)
+	// api refer to PanIndex
+	res, err := client.R().SetMultipartFormData(map[string]string{
+		"parentId":   parentFile.Id,
+		"sessionKey": account.DriveId,
+		"opertype":   "1",
+		"fname":      file.GetFileName(),
+	}).SetMultipartField("Filedata", file.GetFileName(), file.GetMIMEType(), file).Post("https://hb02.upload.cloud.189.cn/v1/DCIWebUploadAction")
 	if err != nil {
 		return err
 	}
-	uploadFileId := jsoniter.Get(res, "data.uploadFileId").ToString()
-	var i int64
-	var byteSize uint64
-	md5s := make([]string, 0)
-	md5Sum := md5.New()
-	for i = 1; i <= count; i++ {
-		byteSize = file.GetSize() - finish
-		if DEFAULT < byteSize {
-			byteSize = DEFAULT
-		}
-		log.Debugf("%d,%d", byteSize, finish)
-		byteData := make([]byte, byteSize)
-		n, err := io.ReadFull(file, byteData)
-		log.Debug(err, n)
-		if err != nil {
-			return err
-		}
-		finish += uint64(n)
-		md5Bytes := getMd5(byteData)
-		md5Str := hex.EncodeToString(md5Bytes)
-		md5Base64 := base64.StdEncoding.EncodeToString(md5Bytes)
-		md5s = append(md5s, md5Str)
-		md5Sum.Write(byteData)
-		res, err = driver.UploadRequest("/person/getMultiUploadUrls", map[string]string{
-			"partInfo":     fmt.Sprintf("%s-%s", strconv.FormatInt(i, 10), md5Base64),
-			"uploadFileId": uploadFileId,
-		}, account)
-		if err != nil {
-			return err
-		}
-		uploadData := jsoniter.Get(res, "uploadUrls.partNumber_"+strconv.FormatInt(i, 10))
-		headers := strings.Split(uploadData.Get("requestHeader").ToString(), "&")
-		req, err := http.NewRequest("PUT", uploadData.Get("requestURL").ToString(), bytes.NewBuffer(byteData))
-		if err != nil {
-			return err
-		}
-		for _, header := range headers {
-			kv := strings.Split(header, "=")
-			req.Header.Set(kv[0], strings.Join(kv[1:], "="))
-		}
-		res, err := base.HttpClient.Do(req)
-		if err != nil {
-			return err
-		}
-		log.Debugf("%+v", res)
+	if jsoniter.Get(res.Body(), "MD5").ToString() != "" {
+		return nil
 	}
-	id := md5Sum.Sum(nil)
-	res, err = driver.UploadRequest("/person/commitMultiUploadFile", map[string]string{
-		"uploadFileId": uploadFileId,
-		"fileMd5":      hex.EncodeToString(id),
-		"sliceMd5":     utils.GetMD5Encode(strings.Join(md5s, "\n")),
-		"lazyCheck":    "1",
-	}, account)
-	return err
+	log.Debugf(res.String())
+	return errors.New(res.String())
 }
 
 var _ base.Driver = (*Cloud189)(nil)
