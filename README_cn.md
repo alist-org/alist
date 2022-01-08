@@ -31,6 +31,8 @@
   - [x] [闪电盘](https://shandianpan.com/)
   - [x] [S3](https://aws.amazon.com/cn/s3/)
   - [x] WebDav
+  - [x] Teambition（[中国](https://www.teambition.com/ )，[国际](https://us.teambition.com/ )）
+  - [x] [分秒帧](https://www.mediatrack.cn/)
 - [x] 部署方便，开箱即用
 - [x] 文件预览（PDF、markdown、代码、纯文本……）
 - [x] 画廊模式下的图像预览
@@ -41,7 +43,7 @@
 - [x] 黑暗模式
 - [x] 国际化
 - [x] 受保护的路由（密码保护和身份验证）
-- [x] WebDav（少部分只读，具体见https://alist-doc.nn.ci/docs/intro ）
+- [x] WebDav（具体见https://alist-doc.nn.ci/docs/webdav ）
 - [x] [Docker 部署](https://hub.docker.com/r/xhofe/alist)
 - [x] Cloudflare workers 中转
 - [x] 文件/文件夹打包下载

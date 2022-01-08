@@ -32,6 +32,8 @@ English | [中文](./README_cn.md)
   - [x] [ShandianPan](https://shandianpan.com/)
   - [x] [S3](https://aws.amazon.com/s3/)
   - [x] WebDav
+  - [x] Teambition（[China](https://www.teambition.com/ )，[International](https://us.teambition.com/ )）
+  - [x] [mediatrack](https://www.mediatrack.cn/)
 - [x] Easy to deploy and out-of-the-box
 - [x] File preview (PDF, markdown, code, plain text, ...)
 - [x] Image preview in gallery mode
@@ -42,7 +44,7 @@ English | [中文](./README_cn.md)
 - [x] Dark mode
 - [x] I18n
 - [x] Protected routes (password protection and authentication) 
-- [x] WebDav (A small part readonly, see https://alist-doc.nn.ci/en/docs/intro for details)
+- [x] WebDav (see https://alist-doc.nn.ci/en/docs/webdav for details)
 - [x] [Docker Deploy](https://hub.docker.com/r/xhofe/alist)
 - [x] Cloudflare workers proxy
 - [x] File/Folder package download
