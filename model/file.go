@@ -25,6 +25,14 @@ func SortFiles(files []File, account *Account) {
 		return
 	}
 	sort.Slice(files, func(i, j int) bool {
+		if files[i].IsDir() || files[j].IsDir() {
+			if !files[i].IsDir() {
+				return false
+			}
+			if !files[j].IsDir() {
+				return true
+			}
+		}
 		switch account.OrderBy {
 		case "name":
 			{
