@@ -2,6 +2,7 @@ package drivers
 
 import (
 	_ "github.com/Xhofe/alist/drivers/123"
+	_ "github.com/Xhofe/alist/drivers/139"
 	_ "github.com/Xhofe/alist/drivers/189"
 	_ "github.com/Xhofe/alist/drivers/alidrive"
 	_ "github.com/Xhofe/alist/drivers/alist"

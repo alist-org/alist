@@ -1,0 +1,57 @@
+package _39
+
+import (
+	"encoding/base64"
+	"github.com/Xhofe/alist/model"
+	"github.com/Xhofe/alist/utils"
+	"math/rand"
+	"net/url"
+	"sort"
+	"strconv"
+	"strings"
+	"time"
+)
+
+func randomStr(n int) string {
+	builder := strings.Builder{}
+	t := "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+	for i := 0; i < n; i++ {
+		r := rand.Intn(len(t))
+		builder.WriteString(t[r : r+1])
+	}
+	return builder.String()
+}
+
+func encodeURIComponent(str string) string {
+	r := url.QueryEscape(str)
+	r = strings.Replace(r, "+", "%20", -1)
+	return r
+}
+
+func calSign(body, ts, randStr string) string {
+	body = strings.ReplaceAll(body, "\n", "")
+	body = strings.ReplaceAll(body, " ", "")
+	body = encodeURIComponent(body)
+	strs := strings.Split(body, "")
+	sort.Strings(strs)
+	body = strings.Join(strs, "")
+	body = base64.StdEncoding.EncodeToString([]byte(body))
+	res := utils.GetMD5Encode(body) + utils.GetMD5Encode(ts+":"+randStr)
+	res = strings.ToUpper(utils.GetMD5Encode(res))
+	return res
+}
+
+func getTime(t string) *time.Time {
+	stamp, _ := time.ParseInLocation("20060102150405", t, time.Local)
+	return &stamp
+}
+
+func isFamily(account *model.Account) bool {
+	return account.InternalType == "Family"
+}
+
+func unicode(str string) string {
+	textQuoted := strconv.QuoteToASCII(str)
+	textUnquoted := textQuoted[1 : len(textQuoted)-1]
+	return textUnquoted
+}
