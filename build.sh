@@ -1,17 +1,24 @@
 #!/bin/bash
-if [ "$1" == "web" ]; then
-  git clone https://github.com/Xhofe/alist-web.git
-  cd alist-web || exit
+
+# 构建前端,在当前目录产生一个dist文件夹
+BUILD_WEB() {
+  git clone https://github.com/alist-org/alist-web.git
+  cd alist-web
   yarn
   yarn build
-  mv dist/* ../public
+  mv dist ..
   cd ..
-  exit 0
-fi
+  rm -rf alist-web
+}
 
-go env -w GOPROXY=https://goproxy.cn,https://mirrors.aliyun.com/goproxy/,https://goproxy.io,direct
+CDN_WEB() {
+  curl -L https://github.com/alist-org/alist-web/releases/latest/download/dist.tar.gz -o dist.tar.gz
+  tar -zxvf dist.tar.gz
+  rm -f dist.tar.gz
+}
 
-if [ "$1" == "docker" ]; then
+# 在DOCKER中构建
+BUILD_DOCKER() {
   appName="alist"
   builtAt="$(date +'%F %T %z')"
   goVersion=$(go version | sed 's/go version //')
@@ -25,40 +32,20 @@ if [ "$1" == "docker" ]; then
 -X 'github.com/Xhofe/alist/conf.GitAuthor=$gitAuthor' \
 -X 'github.com/Xhofe/alist/conf.GitCommit=$gitCommit' \
 -X 'github.com/Xhofe/alist/conf.GitTag=$gitTag' \
-"
+  "
   go build -o ./bin/alist -ldflags="$ldflags" -tags=jsoniter alist.go
-  exit 0
-fi
+}
 
-cd alist-web || exit
-webCommit=$(git log --pretty=format:"%h" -1)
-echo "web commit id: $webCommit"
-yarn
-if [ "$1" == "release" ]; then
-  yarn build --base="https://cdn.jsdelivr.net/gh/Xhofe/alist-web@cdn/v2/$webCommit"
-  mv dist/assets ..
-  mv dist/index.html ../alist/public
-  #  构建local
-  yarn build
-  mv dist/index.html dist/local.html
-  mv dist/* ../alist/public
-else
-  yarn build
-  mv dist/* ../alist/public
-fi
-cd ..
-
-cd alist
-appName="alist"
-builtAt="$(date +'%F %T %z')"
-goVersion=$(go version | sed 's/go version //')
-gitAuthor=$(git show -s --format='format:%aN <%ae>' HEAD)
-gitCommit=$(git log --pretty=format:"%h" -1)
-gitTag=$(git describe --long --tags --dirty --always)
-
-echo "build version: $gitTag"
-
-ldflags="\
+BUILD() {
+  cd alist
+  appName="alist"
+  builtAt="$(date +'%F %T %z')"
+  goVersion=$(go version | sed 's/go version //')
+  gitAuthor=$(git show -s --format='format:%aN <%ae>' HEAD)
+  gitCommit=$(git log --pretty=format:"%h" -1)
+  gitTag=$(git describe --long --tags --dirty --always)
+  echo "build version: $gitTag"
+  ldflags="\
 -w -s \
 -X 'github.com/Xhofe/alist/conf.BuiltAt=$builtAt' \
 -X 'github.com/Xhofe/alist/conf.GoVersion=$goVersion' \
@@ -67,44 +54,47 @@ ldflags="\
 -X 'github.com/Xhofe/alist/conf.GitTag=$gitTag' \
 "
 
-if [ "$1" == "release" ]; then
-  xgo -out alist -ldflags="$ldflags" -tags=jsoniter .
-else
-  xgo -targets=linux/amd64,windows/amd64,darwin/amd64 -out alist -ldflags="$ldflags" -tags=jsoniter .
-fi
-mkdir "build"
-mv alist-* build
-cd build || exit
-upx -9 ./*
-find . -type f -print0 | xargs -0 md5sum > md5.txt
-cat md5.txt
-# compress file (release)
-if [ "$1" == "release" ]; then
-    mkdir compress
-    mv md5.txt compress
-    for i in `find . -type f -name "$appName-linux-*"`
-    do
-      tar -czvf compress/"$i".tar.gz "$i"
-    done
-    for i in `find . -type f -name "$appName-darwin-*"`
-    do
-      tar -czvf compress/"$i".tar.gz "$i"
-    done
-    for i in `find . -type f -name "$appName-windows-*"`
-    do
-      zip compress/$(echo $i | sed 's/\.[^.]*$//').zip "$i"
-    done
-fi
-cd ../..
+  if [ "$1" == "release" ]; then
+    xgo -out "$appName" -ldflags="$ldflags" -tags=jsoniter .
+  else
+    xgo -targets=linux/amd64,windows/amd64 -out alist -ldflags="$ldflags" -tags=jsoniter .
+  fi
+  mkdir "build"
+  mv alist-* build
+  cd build
+  upx -9 ./*
+  find . -type f -print0 | xargs -0 md5sum >md5.txt
+  cat md5.txt
+  cd ../..
+}
 
-if [ "$1" == "release" ]; then
-  cd alist-web
-  git checkout cdn
-  mkdir "v2/$webCommit"
-  mv ../assets/ v2/$webCommit
-  git add .
-  git config --local user.email "i@nn.ci"
-  git config --local user.name "Xhofe"
-  git commit --allow-empty -m "upload $webCommit assets files" -a
-  cd ..
+RELEASE() {
+  cd alist/build
+  mkdir compress
+  mv md5.txt compress
+  for i in $(find . -type f -name "$appName-linux-*"); do
+    tar -czvf compress/"$i".tar.gz "$i"
+  done
+  for i in $(find . -type f -name "$appName-darwin-*"); do
+    tar -czvf compress/"$i".tar.gz "$i"
+  done
+  for i in $(find . -type f -name "$appName-windows-*"); do
+    zip compress/$(echo $i | sed 's/\.[^.]*$//').zip "$i"
+  done
+  cd ../..
+}
+
+if [ "$1" = "web" ]; then
+  BUILD_WEB
+elif [ "$1" = "cdn" ]; then
+  CDN_WEB
+elif [ "$1" = "docker" ]; then
+  BUILD_DOCKER
+elif [ "$1" = "build" ]; then
+  BUILD
+elif [ "$1" = "release" ]; then
+  BUILD
+  RELEASE
+else
+  echo -e "${RED_COLOR} 错误的命令${RES}"
 fi
