@@ -25,9 +25,6 @@ jobs:
         with:
           node-version: '16'
 
-#      - name: Setup docker
-#        uses: docker-practice/actions-setup-docker@master
-
       - name: Checkout
         uses: actions/checkout@v2
         with:
@@ -43,8 +40,8 @@ jobs:
 
       - name: Set up xgo
         run: |
-          docker pull techknowlogick/xgo:latest
-          go install src.techknowlogick.com/xgo@latest
+          docker pull crazymax/xgo:latest
+          go install github.com/crazy-max/xgo
           sudo apt install upx
 
       - name: Build

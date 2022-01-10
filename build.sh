@@ -70,7 +70,7 @@ ldflags="\
 if [ "$1" == "release" ]; then
   xgo -out alist -ldflags="$ldflags" -tags=jsoniter .
 else
-  xgo -targets=linux/amd64,windows/amd64 -out alist -ldflags="$ldflags" -tags=jsoniter .
+  xgo -targets=linux/amd64,windows/amd64,darwin/amd64 -out alist -ldflags="$ldflags" -tags=jsoniter .
 fi
 mkdir "build"
 mv alist-* build
