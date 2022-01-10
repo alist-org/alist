@@ -231,7 +231,7 @@ func InitSettings() {
 					log.Fatalf("failed write setting: %s", err.Error())
 				}
 			} else {
-				log.Fatal("can't get setting: %s", err.Error())
+				log.Fatalf("can't get setting: %s", err.Error())
 			}
 		} else {
 			//o.Version = conf.GitTag
