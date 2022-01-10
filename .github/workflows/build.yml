@@ -41,7 +41,7 @@ jobs:
       - name: Set up xgo
         run: |
           docker pull crazymax/xgo:latest
-          go install github.com/crazy-max/xgo
+          go install github.com/crazy-max/xgo@latest
           sudo apt install upx
 
       - name: Build
