@@ -67,7 +67,7 @@ Available at: <https://alist.nn.ci>.
 
 ## License
 
-The `AList` is open-source software licensed under the MIT license.
+The `AList` is open-source software licensed under the AGPL-3.0 license.
 
 ---
 
