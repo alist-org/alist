@@ -2,6 +2,7 @@ package _39
 
 import (
 	"encoding/base64"
+	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
 	"math/rand"
@@ -54,4 +55,27 @@ func unicode(str string) string {
 	textQuoted := strconv.QuoteToASCII(str)
 	textUnquoted := textQuoted[1 : len(textQuoted)-1]
 	return textUnquoted
+}
+
+func MergeMap(mObj ...map[string]interface{}) map[string]interface{} {
+	newObj := map[string]interface{}{}
+	for _, m := range mObj {
+		for k, v := range m {
+			newObj[k] = v
+		}
+	}
+	return newObj
+}
+
+func newJson(data map[string]interface{}, account *model.Account) map[string]interface{} {
+	common := map[string]interface{}{
+		"catalogType": 3,
+		"cloudID":     account.SiteId,
+		"cloudType":   1,
+		"commonAccountInfo": base.Json{
+			"account":     account.Username,
+			"accountType": 1,
+		},
+	}
+	return MergeMap(data, common)
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/Xhofe/alist/utils"
 	"github.com/go-resty/resty/v2"
 	jsoniter "github.com/json-iterator/go"
+	log "github.com/sirupsen/logrus"
 	"path"
 	"time"
 )
@@ -18,11 +19,16 @@ func (driver Cloud139) Request(pathname string, method int, headers, query, form
 	req := base.RestyClient.R()
 	randStr := randomStr(16)
 	ts := time.Now().Format("2006-01-02 15:04:05")
+	log.Debugf("%+v", data)
 	body, err := utils.Json.Marshal(data)
 	if err != nil {
 		return nil, err
 	}
 	sign := calSign(string(body), ts, randStr)
+	svcType := "1"
+	if isFamily(account) {
+		svcType = "2"
+	}
 	req.SetHeaders(map[string]string{
 		"Accept":         "application/json, text/plain, */*",
 		"CMS-DEVICE":     "default",
@@ -40,7 +46,7 @@ func (driver Cloud139) Request(pathname string, method int, headers, query, form
 		"x-inner-ntwk":        "2",
 		"x-m4c-caller":        "PC",
 		"x-m4c-src":           "10002",
-		"x-SvcType":           "1",
+		"x-SvcType":           svcType,
 	})
 	if headers != nil {
 		req.SetHeaders(headers)
@@ -75,6 +81,7 @@ func (driver Cloud139) Request(pathname string, method int, headers, query, form
 	if err != nil {
 		return nil, err
 	}
+	log.Debugln(res.String())
 	if !e.Success {
 		return nil, errors.New(e.Message)
 	}

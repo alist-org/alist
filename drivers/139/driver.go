@@ -54,6 +54,12 @@ func (driver Cloud139) Items() []base.Item {
 			Type:     base.TypeString,
 			Required: true,
 		},
+		{
+			Name:     "site_id",
+			Label:    "cloud_id",
+			Type:     base.TypeString,
+			Required: false,
+		},
 	}
 }
 
@@ -105,7 +111,11 @@ func (driver Cloud139) Files(path string, account *model.Account) ([]model.File,
 		if err != nil {
 			return nil, err
 		}
-		files, err = driver.GetFiles(file.Id, account)
+		if isFamily(account) {
+			files, err = driver.familyGetFiles(file.Id, account)
+		} else {
+			files, err = driver.GetFiles(file.Id, account)
+		}
 		if err != nil {
 			return nil, err
 		}
@@ -169,12 +179,26 @@ func (driver Cloud139) MakeDir(path string, account *model.Account) error {
 		},
 	}
 	pathname := "/orchestration/personalCloud/catalog/v1.0/createCatalogExt"
+	if isFamily(account) {
+		data = base.Json{
+			"cloudID": account.SiteId,
+			"commonAccountInfo": base.Json{
+				"account":     account.Username,
+				"accountType": 1,
+			},
+			"docLibName": utils.Base(path),
+		}
+		pathname = "/orchestration/familyCloud/cloudCatalog/v1.0/createCloudDoc"
+	}
 	_, err = driver.Post(pathname,
 		data, nil, account)
 	return err
 }
 
 func (driver Cloud139) Move(src string, dst string, account *model.Account) error {
+	if isFamily(account) {
+		return base.ErrNotSupport
+	}
 	srcFile, err := driver.File(src, account)
 	if err != nil {
 		return err
@@ -211,6 +235,9 @@ func (driver Cloud139) Move(src string, dst string, account *model.Account) erro
 }
 
 func (driver Cloud139) Rename(src string, dst string, account *model.Account) error {
+	if isFamily(account) {
+		return base.ErrNotSupport
+	}
 	srcFile, err := driver.File(src, account)
 	if err != nil {
 		return err
@@ -243,6 +270,9 @@ func (driver Cloud139) Rename(src string, dst string, account *model.Account) er
 }
 
 func (driver Cloud139) Copy(src string, dst string, account *model.Account) error {
+	if isFamily(account) {
+		return base.ErrNotSupport
+	}
 	srcFile, err := driver.File(src, account)
 	if err != nil {
 		return err
@@ -251,19 +281,21 @@ func (driver Cloud139) Copy(src string, dst string, account *model.Account) erro
 	if err != nil {
 		return err
 	}
-	argName := "contentInfoList"
+	var contentInfoList []string
+	var catalogInfoList []string
 	if srcFile.IsDir() {
-		argName = "catalogInfoList"
+		catalogInfoList = append(catalogInfoList, srcFile.Id)
+	} else {
+		contentInfoList = append(contentInfoList, srcFile.Id)
 	}
 	data := base.Json{
 		"createBatchOprTaskReq": base.Json{
 			"taskType":   3,
 			"actionType": 309,
 			"taskInfo": base.Json{
-				"contentInfoList": []string{},
-				"catalogInfoList": []string{},
+				"contentInfoList": contentInfoList,
+				"catalogInfoList": catalogInfoList,
 				"newCatalogID":    dstParentFile.Id,
-				argName:           []string{srcFile.Id},
 			},
 			"commonAccountInfo": base.Json{
 				"account":     "18627147660",
@@ -281,17 +313,21 @@ func (driver Cloud139) Delete(path string, account *model.Account) error {
 	if err != nil {
 		return err
 	}
-	argName := "contentInfoList"
+	var contentInfoList []string
+	var catalogInfoList []string
 	if file.IsDir() {
-		argName = "catalogInfoList"
+		catalogInfoList = append(catalogInfoList, file.Id)
+	} else {
+		contentInfoList = append(contentInfoList, file.Id)
 	}
 	data := base.Json{
 		"createBatchOprTaskReq": base.Json{
 			"taskType":   2,
 			"actionType": 201,
 			"taskInfo": base.Json{
-				"newCatalogID": "",
-				argName:        []string{file.Id},
+				"newCatalogID":    "",
+				"contentInfoList": contentInfoList,
+				"catalogInfoList": contentInfoList,
 			},
 			"commonAccountInfo": base.Json{
 				"account":     "18627147660",
@@ -300,6 +336,19 @@ func (driver Cloud139) Delete(path string, account *model.Account) error {
 		},
 	}
 	pathname := "/orchestration/personalCloud/batchOprTask/v1.0/createBatchOprTask"
+	if isFamily(account) {
+		data = base.Json{
+			"catalogList": catalogInfoList,
+			"contentList": contentInfoList,
+			"commonAccountInfo": base.Json{
+				"account":     "18627147660",
+				"accountType": 1,
+			},
+			"sourceCatalogType": 1002,
+			"taskType":          2,
+		}
+		pathname = "/orchestration/familyCloud/batchOprTask/v1.0/createBatchOprTask"
+	}
 	_, err = driver.Post(pathname, data, nil, account)
 	return err
 }
@@ -333,6 +382,23 @@ func (driver Cloud139) Upload(file *model.FileStream, account *model.Account) er
 		},
 	}
 	pathname := "/orchestration/personalCloud/uploadAndDownload/v1.0/pcUploadFileRequest"
+	if isFamily(account) {
+		data = newJson(base.Json{
+			"fileCount":    1,
+			"manualRename": 2,
+			"operation":    0,
+			"path":         "",
+			"seqNo":        "",
+			"totalSize":    file.Size,
+			"uploadContentList": []base.Json{{
+				"contentName": file.Name,
+				"contentSize": file.Size,
+				// "digest": "5a3231986ce7a6b46e408612d385bafa"
+			}},
+		}, account)
+		pathname = "/orchestration/familyCloud/content/v1.0/getFileUploadURL"
+		return base.ErrNotSupport
+	}
 	var resp UploadResp
 	_, err = driver.Post(pathname, data, &resp, account)
 	if err != nil {
