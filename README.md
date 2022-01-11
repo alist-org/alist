@@ -21,7 +21,7 @@ English | [中文](./README_cn.md)
 - [x] Multiple storage
   - [x] Local storage
   - [x] [Aliyundrive](https://www.aliyundrive.com/)
-  - [x] OneDrive / Sharepoint ([global](https://www.office.com/), [cn](https://portal.partner.microsoftonline.cn),de,us）
+  - [x] OneDrive / Sharepoint ([global](https://www.office.com/), [cn](https://portal.partner.microsoftonline.cn),de,us)
   - [x] [189cloud](https://cloud.189.cn)
   - [x] [GoogleDrive](https://drive.google.com/)
   - [x] [123pan](https://www.123pan.com/)
@@ -32,8 +32,9 @@ English | [中文](./README_cn.md)
   - [x] [ShandianPan](https://shandianpan.com/)
   - [x] [S3](https://aws.amazon.com/s3/)
   - [x] WebDav
-  - [x] Teambition（[China](https://www.teambition.com/ ),[International](https://us.teambition.com/ )）
+  - [x] Teambition([China](https://www.teambition.com/ ),[International](https://us.teambition.com/ ))
   - [x] [Mediatrack](https://www.mediatrack.cn/)
+  - [x] [139yun](https://yun.139.com/) (Personal, Family)
 - [x] Easy to deploy and out-of-the-box
 - [x] File preview (PDF, markdown, code, plain text, ...)
 - [x] Image preview in gallery mode
