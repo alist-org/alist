@@ -28,8 +28,12 @@ func Hide(meta *model.Meta, files []model.File) []model.File {
 	return files
 }
 
-func Pagination(files []model.File, pageNum, pageSize int) (int, []model.File) {
+func Pagination(files []model.File, req *common.PathReq) (int, []model.File) {
+	pageNum, pageSize := req.PageNum, req.PageSize
 	total := len(files)
+	if isAll(req) {
+		return total, files
+	}
 	switch conf.GetStr("load type") {
 	case "all":
 		return total, files
@@ -47,7 +51,14 @@ func Pagination(files []model.File, pageNum, pageSize int) (int, []model.File) {
 	return total, files[start:end]
 }
 
+func isAll(req *common.PathReq) bool {
+	return req.PageNum == 0 && req.PageSize == 0
+}
+
 func CheckPagination(req *common.PathReq) error {
+	if isAll(req) {
+		return nil
+	}
 	if conf.GetStr("loading type") == "all" {
 		return nil
 	}
@@ -148,7 +159,7 @@ func Path(c *gin.Context) {
 		if driver.Config().LocalSort {
 			model.SortFiles(files, account)
 		}
-		total, files := Pagination(files, req.PageNum, req.PageSize)
+		total, files := Pagination(files, &req)
 		c.JSON(200, common.Resp{
 			Code:    200,
 			Message: "success",
