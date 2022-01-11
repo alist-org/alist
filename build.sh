@@ -91,9 +91,9 @@ elif [ "$1" = "cdn" ]; then
 elif [ "$1" = "docker" ]; then
   BUILD_DOCKER
 elif [ "$1" = "build" ]; then
-  BUILD
+  BUILD build
 elif [ "$1" = "release" ]; then
-  BUILD
+  BUILD release
   RELEASE
 else
   echo -e "${RED_COLOR} 错误的命令${RES}"
