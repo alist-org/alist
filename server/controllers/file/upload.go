@@ -55,7 +55,9 @@ func UploadFiles(c *gin.Context) {
 		}
 		err = operate.Upload(driver, account, &fileStream, clearCache)
 		if err != nil {
-			_ = base.DeleteCache(path_, account)
+			if i != 0 {
+				_ = base.DeleteCache(path_, account)
+			}
 			common.ErrorResp(c, err, 500)
 			return
 		}

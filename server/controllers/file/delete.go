@@ -36,7 +36,9 @@ func DeleteFiles(c *gin.Context) {
 		}
 		err = operate.Delete(driver, account, path_, clearCache)
 		if err != nil {
-			_ = base.DeleteCache(utils.Dir(path_), account)
+			if i == 0 {
+				_ = base.DeleteCache(utils.Dir(path_), account)
+			}
 			common.ErrorResp(c, err, 500)
 			return
 		}
