@@ -6,7 +6,13 @@ import (
 	"github.com/jlaffaye/ftp"
 )
 
+var connMap map[string]*ftp.ServerConn
+
 func (driver FTP) Login(account *model.Account) (*ftp.ServerConn, error) {
+	conn, ok := connMap[account.Name]
+	if ok {
+		return conn, nil
+	}
 	conn, err := ftp.Connect(account.SiteUrl)
 	if err != nil {
 		return nil, err

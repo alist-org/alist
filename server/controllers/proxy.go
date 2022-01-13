@@ -11,8 +11,10 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 )
 
 func Proxy(c *gin.Context) {
@@ -47,6 +49,12 @@ func Proxy(c *gin.Context) {
 		c.Redirect(302, link)
 		return
 	}
+	// 检查文件
+	file, err := driver.File(path, account)
+	if err != nil {
+		common.ErrorResp(c, err, 500)
+		return
+	}
 	// 对于中转，不需要重设IP
 	link, err := driver.Link(base.Args{Path: path}, account)
 	if err != nil {
@@ -60,7 +68,9 @@ func Proxy(c *gin.Context) {
 			_ = link.Data.Close()
 		}()
 		c.Status(http.StatusOK)
-		c.Header("content", "application/octet-stream")
+		c.Header("Content-Type", "application/octet-stream")
+		c.Header("Content-Disposition", fmt.Sprintf(`attachment; filename=%s`, url.QueryEscape(file.Name)))
+		c.Header("Content-Length", strconv.FormatInt(file.Size, 10))
 		_, err = io.Copy(c.Writer, link.Data)
 		if err != nil {
 			_, _ = c.Writer.WriteString(err.Error())

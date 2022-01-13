@@ -53,15 +53,22 @@ func (driver FTP) Items() []base.Item {
 }
 
 func (driver FTP) Save(account *model.Account, old *model.Account) error {
+	if old != nil {
+		conn, ok := connMap[old.Name]
+		if ok {
+			err := conn.Quit()
+			log.Error("ftp:", err)
+			delete(connMap, old.Name)
+		}
+	}
 	if account.RootFolder == "" {
 		account.RootFolder = "/"
 	}
-	conn, err := driver.Login(account)
+	_, err := driver.Login(account)
 	if err != nil {
 		account.Status = err.Error()
 	} else {
 		account.Status = "work"
-		_ = conn.Quit()
 	}
 	_ = model.SaveAccount(account)
 	return err
@@ -106,7 +113,7 @@ func (driver FTP) Files(path string, account *model.Account) ([]model.File, erro
 	if err != nil {
 		return nil, err
 	}
-	defer func() { _ = conn.Quit() }()
+	//defer func() { _ = conn.Quit() }()
 	entries, err := conn.List(realPath)
 	if err != nil {
 		return nil, err
@@ -144,7 +151,7 @@ func (driver FTP) Link(args base.Args, account *model.Account) (*base.Link, erro
 	if err != nil {
 		return nil, err
 	}
-	defer func() { _ = conn.Quit() }()
+	//defer func() { _ = conn.Quit() }()
 	resp, err := conn.Retr(realPath)
 	if err != nil {
 		return nil, err
@@ -191,7 +198,7 @@ func (driver FTP) MakeDir(path string, account *model.Account) error {
 	if err != nil {
 		return err
 	}
-	defer func() { _ = conn.Quit() }()
+	//defer func() { _ = conn.Quit() }()
 	err = conn.MakeDir(realPath)
 	return err
 }
@@ -203,7 +210,7 @@ func (driver FTP) Move(src string, dst string, account *model.Account) error {
 	if err != nil {
 		return err
 	}
-	defer func() { _ = conn.Quit() }()
+	//defer func() { _ = conn.Quit() }()
 	err = conn.Rename(realSrc, realDst)
 	return err
 }
@@ -223,7 +230,7 @@ func (driver FTP) Delete(path string, account *model.Account) error {
 	if err != nil {
 		return err
 	}
-	defer func() { _ = conn.Quit() }()
+	//defer func() { _ = conn.Quit() }()
 	err = conn.Delete(realPath)
 	return err
 }
@@ -237,7 +244,7 @@ func (driver FTP) Upload(file *model.FileStream, account *model.Account) error {
 	if err != nil {
 		return err
 	}
-	defer func() { _ = conn.Quit() }()
+	//defer func() { _ = conn.Quit() }()
 	err = conn.Stor(realPath, file)
 	return err
 }
