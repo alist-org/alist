@@ -131,7 +131,12 @@ func (driver Cloud139) Link(args base.Args, account *model.Account) (*base.Link,
 	if err != nil {
 		return nil, err
 	}
-	u, err := driver.GetLink(file.Id, account)
+	var u string
+	//if isFamily(account) {
+	//	u, err = driver.familyLink(file.Id, account)
+	//} else {
+	u, err = driver.GetLink(file.Id, account)
+	//}
 	if err != nil {
 		return nil, err
 	}

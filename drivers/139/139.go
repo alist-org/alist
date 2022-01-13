@@ -158,7 +158,7 @@ func (driver Cloud139) GetLink(contentId string, account *model.Account) (string
 		"appName":   "",
 		"contentID": contentId,
 		"commonAccountInfo": base.Json{
-			"account":     "18627147660",
+			"account":     account.Username,
 			"accountType": 1,
 		},
 	}
