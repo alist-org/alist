@@ -115,6 +115,7 @@ func Proxy(c *gin.Context) {
 			common.ErrorResp(c, err, 500)
 			return
 		}
+		w.WriteHeader(res.StatusCode)
 		for h, v := range res.Header {
 			w.Header()[h] = v
 		}
