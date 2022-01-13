@@ -1,7 +1,6 @@
 package file
 
 import (
-	"errors"
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/drivers/operate"
@@ -19,11 +18,11 @@ func UploadFiles(c *gin.Context) {
 		password := c.PostForm("password")
 		meta, _ := model.GetMetaByPath(path)
 		if meta == nil || !meta.Upload {
-			common.ErrorResp(c, errors.New("not allow upload"), 403)
+			common.ErrorStrResp(c, "Not allow upload", 403)
 			return
 		}
 		if meta.Password != "" && meta.Password != password {
-			common.ErrorResp(c, errors.New("wrong password"), 403)
+			common.ErrorStrResp(c, "Wrong password", 403)
 			return
 		}
 	}

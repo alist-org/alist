@@ -36,7 +36,7 @@ func Proxy(c *gin.Context) {
 			_, ok = c.Get("sign")
 		}
 		if !ok {
-			common.ErrorResp(c, fmt.Errorf("[%s] not allowed proxy", account.Name), 403)
+			common.ErrorStrResp(c, fmt.Sprintf("[%s] not allowed proxy", account.Name), 403)
 			return
 		}
 	}

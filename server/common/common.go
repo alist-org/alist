@@ -60,6 +60,16 @@ func ErrorResp(c *gin.Context, err error, code int) {
 	c.Abort()
 }
 
+func ErrorStrResp(c *gin.Context, str string, code int) {
+	log.Error(str)
+	c.JSON(200, Resp{
+		Code:    code,
+		Message: str,
+		Data:    nil,
+	})
+	c.Abort()
+}
+
 func SuccessResp(c *gin.Context, data ...interface{}) {
 	if len(data) == 0 {
 		c.JSON(200, Resp{

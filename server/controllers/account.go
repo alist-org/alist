@@ -28,7 +28,7 @@ func CreateAccount(c *gin.Context) {
 	}
 	driver, ok := base.GetDriver(req.Type)
 	if !ok {
-		common.ErrorResp(c, fmt.Errorf("no [%s] driver", req.Type), 400)
+		common.ErrorStrResp(c, fmt.Sprintf("No [%s] driver", req.Type), 400)
 		return
 	}
 	now := time.Now()
@@ -54,7 +54,7 @@ func SaveAccount(c *gin.Context) {
 	}
 	driver, ok := base.GetDriver(req.Type)
 	if !ok {
-		common.ErrorResp(c, fmt.Errorf("no [%s] driver", req.Type), 400)
+		common.ErrorStrResp(c, fmt.Sprintf("No [%s] driver", req.Type), 400)
 		return
 	}
 	old, err := model.GetAccountById(req.ID)

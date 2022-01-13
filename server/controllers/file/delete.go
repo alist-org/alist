@@ -1,7 +1,6 @@
 package file
 
 import (
-	"errors"
 	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/drivers/operate"
 	"github.com/Xhofe/alist/server/common"
@@ -21,13 +20,17 @@ func DeleteFiles(c *gin.Context) {
 		return
 	}
 	if len(req.Names) == 0 {
-		common.ErrorResp(c, errors.New("empty file names"), 400)
+		common.ErrorStrResp(c, "Empty file names", 400)
 		return
 	}
 	for i, name := range req.Names {
 		account, path_, driver, err := common.ParsePath(utils.Join(req.Path, name))
 		if err != nil {
 			common.ErrorResp(c, err, 500)
+			return
+		}
+		if path_ == "/" {
+			common.ErrorStrResp(c, "Delete root folder is not allowed", 400)
 			return
 		}
 		clearCache := false
