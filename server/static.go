@@ -21,7 +21,7 @@ func InitIndex() {
 	//	index, err = public.Public.Open("index.html")
 	//}
 	if conf.Conf.Assets == "" {
-		conf.Conf.Assets = "jsdelivr"
+		conf.Conf.Assets = conf.DefaultConfig().Assets
 	}
 	index, err = public.Public.Open(fmt.Sprintf("%s.html", conf.Conf.Assets))
 	if err != nil {
