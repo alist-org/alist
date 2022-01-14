@@ -87,6 +87,7 @@ type PathResp struct {
 func Path(c *gin.Context) {
 	reqV, _ := c.Get("req")
 	req := reqV.(common.PathReq)
+	_, ok := c.Get("admin")
 	meta, _ := model.GetMetaByPath(req.Path)
 	upload := false
 	if meta != nil && meta.Upload {
@@ -98,7 +99,9 @@ func Path(c *gin.Context) {
 			common.ErrorResp(c, err, 500)
 			return
 		}
-		files = Hide(meta, files)
+		if !ok {
+			files = Hide(meta, files)
+		}
 		c.JSON(200, common.Resp{
 			Code:    200,
 			Message: "success",
@@ -155,7 +158,9 @@ func Path(c *gin.Context) {
 			},
 		})
 	} else {
-		files = Hide(meta, files)
+		if !ok {
+			files = Hide(meta, files)
+		}
 		if driver.Config().LocalSort {
 			model.SortFiles(files, account)
 		}

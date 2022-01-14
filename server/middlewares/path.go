@@ -18,6 +18,7 @@ func PathCheck(c *gin.Context) {
 	c.Set("req", req)
 	token := c.GetHeader("Authorization")
 	if token == conf.Token {
+		c.Set("admin", true)
 		c.Next()
 		return
 	}
