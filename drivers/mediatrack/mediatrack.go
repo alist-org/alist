@@ -8,6 +8,7 @@ import (
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
 	"github.com/go-resty/resty/v2"
+	log "github.com/sirupsen/logrus"
 	"path"
 	"strconv"
 	"time"
@@ -58,6 +59,7 @@ func (driver MediaTrack) Request(url string, method int, headers, query, form ma
 	if err != nil {
 		return nil, err
 	}
+	log.Debugln(res.String())
 	if e.Status != "SUCCESS" {
 		return nil, errors.New(e.Message)
 	}

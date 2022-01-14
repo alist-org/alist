@@ -36,11 +36,13 @@ func (driver MediaTrack) Items() []base.Item {
 			Label:       "Token",
 			Type:        base.TypeString,
 			Description: "Unknown expiration time",
+			Required:    true,
 		},
 		{
-			Name:  "root_folder",
-			Label: "root folder file_id",
-			Type:  base.TypeString,
+			Name:     "root_folder",
+			Label:    "root folder file_id",
+			Type:     base.TypeString,
+			Required: true,
 		},
 		{
 			Name:     "order_by",
@@ -155,7 +157,7 @@ func (driver MediaTrack) MakeDir(path string, account *model.Account) error {
 	if err != nil {
 		return err
 	}
-	url := fmt.Sprintf("https://jayce.api.mediatrack.cn/v4/assets/%s/children", parentFile.Id)
+	url := fmt.Sprintf("https://jayce.api.mediatrack.cn/v3/assets/%s/children", parentFile.Id)
 	_, err = driver.Request(url, base.Post, nil, nil, nil, base.Json{
 		"type":  1,
 		"title": utils.Base(path),

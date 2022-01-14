@@ -4,12 +4,16 @@ import (
 	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
+	log "github.com/sirupsen/logrus"
 )
 
 func MakeDir(driver base.Driver, account *model.Account, path string, clearCache bool) error {
 	err := driver.MakeDir(path, account)
 	if err == nil && clearCache {
 		_ = base.DeleteCache(utils.Dir(path), account)
+	}
+	if err != nil {
+		log.Errorf("mkdir error: %s", err.Error())
 	}
 	return err
 }
@@ -31,6 +35,9 @@ func Move(driver base.Driver, account *model.Account, src, dst string, clearCach
 			_ = base.DeleteCache(utils.Dir(dst), account)
 		}
 	}
+	if err != nil {
+		log.Errorf("move error: %s", err.Error())
+	}
 	return err
 }
 
@@ -39,6 +46,9 @@ func Copy(driver base.Driver, account *model.Account, src, dst string, clearCach
 	if err == nil && clearCache {
 		_ = base.DeleteCache(utils.Dir(dst), account)
 	}
+	if err != nil {
+		log.Errorf("copy error: %s", err.Error())
+	}
 	return err
 }
 
@@ -46,6 +56,9 @@ func Delete(driver base.Driver, account *model.Account, path string, clearCache 
 	err := driver.Delete(path, account)
 	if err == nil && clearCache {
 		_ = base.DeleteCache(utils.Dir(path), account)
+	}
+	if err != nil {
+		log.Errorf("delete error: %s", err.Error())
 	}
 	return err
 }
@@ -57,6 +70,9 @@ func Upload(driver base.Driver, account *model.Account, file *model.FileStream, 
 	err := driver.Upload(file, account)
 	if err == nil && clearCache {
 		_ = base.DeleteCache(file.ParentPath, account)
+	}
+	if err != nil {
+		log.Errorf("upload error: %s", err.Error())
 	}
 	return err
 }
