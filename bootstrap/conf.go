@@ -33,7 +33,7 @@ func InitConf() {
 	}
 	log.Debugf("config:%+v", conf.Conf)
 	// update config.json struct
-	confBody, err := utils.Json.Marshal(conf.Conf)
+	confBody, err := utils.Json.MarshalIndent(conf.Conf, "", "  ")
 	if err != nil {
 		log.Fatalf("marshal config error:%s", err.Error())
 	}

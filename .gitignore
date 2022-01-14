@@ -23,7 +23,7 @@ dist/
 bin/*
 /alist
 *.json
-public/index.html
+public/*.html
 public/assets/
 public/public/
 data/

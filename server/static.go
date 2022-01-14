@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/public"
 	"github.com/gin-gonic/gin"
@@ -14,13 +15,17 @@ import (
 func InitIndex() {
 	var index fs.File
 	var err error
-	if conf.Conf.Local {
-		index, err = public.Public.Open("local.html")
-	} else {
-		index, err = public.Public.Open("index.html")
+	//if conf.Conf.Local {
+	//	index, err = public.Public.Open("local.html")
+	//} else {
+	//	index, err = public.Public.Open("index.html")
+	//}
+	if conf.Conf.Assets == "" {
+		conf.Conf.Assets = "jsdelivr"
 	}
+	index, err = public.Public.Open(fmt.Sprintf("%s.html", conf.Conf.Assets))
 	if err != nil {
-		//log.Fatalf(err.Error())
+		log.Fatalf(err.Error())
 		return
 	}
 	data, _ := ioutil.ReadAll(index)

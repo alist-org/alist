@@ -25,7 +25,7 @@ type CacheConfig struct {
 type Config struct {
 	Address  string      `json:"address"`
 	Port     int         `json:"port"`
-	Local    bool        `json:"local"`
+	Assets   string      `json:"assets"`
 	Database Database    `json:"database"`
 	Scheme   Scheme      `json:"scheme"`
 	Cache    CacheConfig `json:"cache"`
@@ -35,6 +35,7 @@ func DefaultConfig() *Config {
 	return &Config{
 		Address: "0.0.0.0",
 		Port:    5244,
+		Assets:  "jsdelivr",
 		Database: Database{
 			Type:        "sqlite3",
 			Port:        0,
