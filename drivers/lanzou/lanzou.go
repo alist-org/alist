@@ -8,6 +8,7 @@ import (
 	"github.com/Xhofe/alist/utils"
 	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
+	"net/url"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -103,6 +104,10 @@ func (driver *Lanzou) GetFiles(folderId string, account *model.Account) ([]LanZo
 func (driver *Lanzou) GetFilesByUrl(account *model.Account) ([]LanZouFile, error) {
 	files := make([]LanZouFile, 0)
 	shareUrl := account.SiteUrl
+	u, err := url.Parse(shareUrl)
+	if err != nil {
+		return nil, err
+	}
 	res, err := lanzouClient.R().Get(shareUrl)
 	if err != nil {
 		return nil, err
@@ -135,7 +140,7 @@ func (driver *Lanzou) GetFilesByUrl(account *model.Account) ([]LanZouFile, error
 			"up":  up,
 			"ls":  ls,
 			"pwd": account.Password,
-		}).Post("https://wwa.lanzouo.com/filemoreajax.php")
+		}).Post(fmt.Sprintf("https://%s/filemoreajax.php", u.Host))
 		if err != nil {
 			log.Debug(err)
 			break
@@ -158,7 +163,7 @@ func (driver *Lanzou) GetFilesByUrl(account *model.Account) ([]LanZouFile, error
 //	IsNewd string `json:"is_newd"`
 //}
 
-// 获取下载页面的ID
+// GetDownPageId 获取下载页面的ID
 func (driver *Lanzou) GetDownPageId(fileId string, account *model.Account) (string, error) {
 	var resp LanZouFilesResp
 	res, err := lanzouClient.R().SetResult(&resp).SetHeader("Cookie", account.AccessToken).
@@ -190,8 +195,13 @@ type LanzouLinkResp struct {
 	Zt  int    `json:"zt"`
 }
 
-func (driver *Lanzou) GetLink(downId string) (string, error) {
-	res, err := lanzouClient.R().Get("https://wwa.lanzouo.com/" + downId)
+func (driver *Lanzou) GetLink(downId string, account *model.Account) (string, error) {
+	shareUrl := account.SiteUrl
+	u, err := url.Parse(shareUrl)
+	if err != nil {
+		return "", err
+	}
+	res, err := lanzouClient.R().Get(fmt.Sprintf("https://%s/%s", u.Host, downId))
 	if err != nil {
 		return "", err
 	}
@@ -210,6 +220,7 @@ func (driver *Lanzou) GetLink(downId string) (string, error) {
 	}
 	signs := ajaxdata[1]
 	sign := regexp.MustCompile(`var ispostdowns = '(.+?)';`).FindStringSubmatch(res.String())[1]
+	websign := regexp.MustCompile(`'websign':'(.+?)'`).FindStringSubmatch(res.String())[1]
 	websignkey := regexp.MustCompile(`'websignkey':'(.+?)'`).FindStringSubmatch(res.String())[1]
 	var resp LanzouLinkResp
 	form := map[string]string{
@@ -217,14 +228,18 @@ func (driver *Lanzou) GetLink(downId string) (string, error) {
 		"signs":      signs,
 		"sign":       sign,
 		"ves":        "1",
-		"websign":    "",
+		"websign":    websign,
 		"websignkey": websignkey,
 	}
 	log.Debugf("form: %+v", form)
-	_, err = lanzouClient.R().SetResult(&resp).
-		SetHeader("origin", "https://wwa.lanzouo.com").
+	res, err = lanzouClient.R().SetResult(&resp).
+		SetHeader("origin", "https://"+u.Host).
 		SetHeader("referer", iframeUrl).
-		SetFormData(form).Post("https://wwa.lanzouo.com/ajaxm.php")
+		SetFormData(form).Post(fmt.Sprintf("https://%s/ajaxm.php", u.Host))
+	log.Debug(res.String())
+	if err != nil {
+		return "", err
+	}
 	if resp.Zt == 1 {
 		return resp.Dom + "/file/" + resp.Url, nil
 	}

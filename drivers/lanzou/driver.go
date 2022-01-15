@@ -33,15 +33,17 @@ func (driver Lanzou) Items() []base.Item {
 			Label:       "cookie",
 			Type:        base.TypeString,
 			Description: "about 15 days valid",
+			Required:    true,
+		},
+		{
+			Name:     "site_url",
+			Label:    "share url",
+			Type:     base.TypeString,
+			Required: true,
 		},
 		{
 			Name:  "root_folder",
 			Label: "root folder file_id",
-			Type:  base.TypeString,
-		},
-		{
-			Name:  "site_url",
-			Label: "share url",
 			Type:  base.TypeString,
 		},
 		{
@@ -130,7 +132,7 @@ func (driver Lanzou) Link(args base.Args, account *model.Account) (*base.Link, e
 			return nil, err
 		}
 	}
-	url, err := driver.GetLink(downId)
+	url, err := driver.GetLink(downId, account)
 	if err != nil {
 		return nil, err
 	}
