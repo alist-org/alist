@@ -73,9 +73,10 @@ func (driver S3) List(prefix string, account *model.Account) ([]model.File, erro
 			return nil, err
 		}
 		for _, object := range listObjectsResult.CommonPrefixes {
+			name := utils.Base(strings.Trim(*object.Prefix, "/"))
 			file := model.File{
 				//Id:        *object.Key,
-				Name:      utils.Base(strings.Trim(*object.Prefix, "/")),
+				Name:      name,
 				Driver:    driver.Config().Name,
 				UpdatedAt: account.UpdatedAt,
 				TimeStr:   "-",
@@ -84,9 +85,13 @@ func (driver S3) List(prefix string, account *model.Account) ([]model.File, erro
 			files = append(files, file)
 		}
 		for _, object := range listObjectsResult.Contents {
+			name := utils.Base(*object.Key)
+			if name == account.Zone {
+				continue
+			}
 			file := model.File{
 				//Id:        *object.Key,
-				Name:      utils.Base(*object.Key),
+				Name:      name,
 				Size:      *object.Size,
 				Driver:    driver.Config().Name,
 				UpdatedAt: object.LastModified,

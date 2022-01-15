@@ -12,7 +12,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"net/url"
 	"path/filepath"
-	"strings"
 	"time"
 )
 
@@ -71,9 +70,15 @@ func (driver S3) Items() []base.Item {
 		},
 		{
 			Name:        "limit",
-			Label:       "url expire time(hours)",
+			Label:       "Sign url expire time(hours)",
 			Type:        base.TypeNumber,
 			Description: "default 4 hours",
+		},
+		{
+			Name:        "zone",
+			Label:       "placeholder filename",
+			Type:        base.TypeNumber,
+			Description: "default empty string",
 		},
 	}
 }
@@ -141,15 +146,24 @@ func (driver S3) Link(args base.Args, account *model.Account) (*base.Link, error
 	if err != nil {
 		return nil, err
 	}
-	path := strings.TrimPrefix(args.Path, "/")
+	path := driver.GetKey(args.Path, account, false)
 	disposition := fmt.Sprintf(`attachment;filename="%s"`, url.QueryEscape(utils.Base(path)))
 	input := &s3.GetObjectInput{
-		Bucket:                     &account.Bucket,
-		Key:                        &path,
-		ResponseContentDisposition: &disposition,
+		Bucket: &account.Bucket,
+		Key:    &path,
+		//ResponseContentDisposition: &disposition,
+	}
+	if account.CustomHost == "" {
+		input.ResponseContentDisposition = &disposition
 	}
 	req, _ := client.GetObjectRequest(input)
-	link, err := req.Presign(time.Hour * time.Duration(account.Limit))
+	var link string
+	if account.CustomHost != "" {
+		err = req.Build()
+		link = req.HTTPRequest.URL.String()
+	} else {
+		link, err = req.Presign(time.Hour * time.Duration(account.Limit))
+	}
 	if err != nil {
 		return nil, err
 	}
