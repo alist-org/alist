@@ -62,6 +62,9 @@ func (driver MediaTrack) Items() []base.Item {
 }
 
 func (driver MediaTrack) Save(account *model.Account, old *model.Account) error {
+	if account == nil {
+		return nil
+	}
 	return nil
 }
 

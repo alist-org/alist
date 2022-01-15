@@ -64,6 +64,9 @@ func (driver Cloud139) Items() []base.Item {
 }
 
 func (driver Cloud139) Save(account *model.Account, old *model.Account) error {
+	if account == nil {
+		return nil
+	}
 	_, err := driver.Request("/orchestration/personalCloud/user/v1.0/qryUserExternInfo", base.Post, nil, nil, nil, base.Json{
 		"qryUserExternInfoReq": base.Json{
 			"commonAccountInfo": base.Json{

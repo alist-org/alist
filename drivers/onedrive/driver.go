@@ -92,12 +92,15 @@ func (driver Onedrive) Items() []base.Item {
 }
 
 func (driver Onedrive) Save(account *model.Account, old *model.Account) error {
+	if old != nil {
+		conf.Cron.Remove(cron.EntryID(old.CronId))
+	}
+	if account == nil {
+		return nil
+	}
 	_, ok := onedriveHostMap[account.Zone]
 	if !ok {
 		return fmt.Errorf("no [%s] zone", account.Zone)
-	}
-	if old != nil {
-		conf.Cron.Remove(cron.EntryID(old.CronId))
 	}
 	account.RootFolder = utils.ParsePath(account.RootFolder)
 	err := driver.RefreshToken(account)

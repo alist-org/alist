@@ -67,6 +67,9 @@ func (driver GoogleDrive) Items() []base.Item {
 }
 
 func (driver GoogleDrive) Save(account *model.Account, old *model.Account) error {
+	if account == nil {
+		return nil
+	}
 	account.Proxy = true
 	err := driver.RefreshToken(account)
 	if err != nil {

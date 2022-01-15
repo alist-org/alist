@@ -2,7 +2,8 @@ package model
 
 import (
 	"github.com/Xhofe/alist/conf"
-	"github.com/robfig/cron/v3"
+	"github.com/Xhofe/alist/drivers/base"
+	log "github.com/sirupsen/logrus"
 	"time"
 )
 
@@ -71,7 +72,12 @@ func DeleteAccount(id uint) error {
 		return err
 	}
 	name := account.Name
-	conf.Cron.Remove(cron.EntryID(account.CronId))
+	driver, ok := base.GetDriver(account.Type)
+	if ok {
+		_ = driver.Save(nil, &account)
+	} else {
+		log.Errorf("no driver: %s", account.Type)
+	}
 	if err := conf.DB.Delete(&account).Error; err != nil {
 		return err
 	}

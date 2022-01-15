@@ -48,6 +48,9 @@ func (driver Shandian) Items() []base.Item {
 }
 
 func (driver Shandian) Save(account *model.Account, old *model.Account) error {
+	if account == nil {
+		return nil
+	}
 	if account.RootFolder == "" {
 		account.RootFolder = "0"
 	}

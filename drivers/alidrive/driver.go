@@ -67,6 +67,9 @@ func (driver AliDrive) Save(account *model.Account, old *model.Account) error {
 	if old != nil {
 		conf.Cron.Remove(cron.EntryID(old.CronId))
 	}
+	if account == nil {
+		return nil
+	}
 	if account.RootFolder == "" {
 		account.RootFolder = "root"
 	}

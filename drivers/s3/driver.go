@@ -79,6 +79,9 @@ func (driver S3) Items() []base.Item {
 }
 
 func (driver S3) Save(account *model.Account, old *model.Account) error {
+	if account == nil {
+		return nil
+	}
 	if account.Limit == 0 {
 		account.Limit = 4
 	}

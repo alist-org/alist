@@ -64,6 +64,9 @@ func (driver Teambition) Items() []base.Item {
 }
 
 func (driver Teambition) Save(account *model.Account, old *model.Account) error {
+	if account == nil {
+		return nil
+	}
 	_, err := driver.Request("/api/v2/roles", base.Get, nil, nil, nil, nil, nil, account)
 	return err
 }

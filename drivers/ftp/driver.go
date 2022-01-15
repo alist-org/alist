@@ -61,6 +61,9 @@ func (driver FTP) Save(account *model.Account, old *model.Account) error {
 			delete(connMap, old.Name)
 		}
 	}
+	if account == nil {
+		return nil
+	}
 	if account.RootFolder == "" {
 		account.RootFolder = "/"
 	}

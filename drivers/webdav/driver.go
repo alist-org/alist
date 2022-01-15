@@ -45,6 +45,9 @@ func (driver WebDav) Items() []base.Item {
 }
 
 func (driver WebDav) Save(account *model.Account, old *model.Account) error {
+	if account == nil {
+		return nil
+	}
 	account.Status = "work"
 	_ = model.SaveAccount(account)
 	return nil

@@ -65,6 +65,9 @@ func (driver Pan123) Items() []base.Item {
 }
 
 func (driver Pan123) Save(account *model.Account, old *model.Account) error {
+	if account == nil {
+		return nil
+	}
 	if account.RootFolder == "" {
 		account.RootFolder = "0"
 	}

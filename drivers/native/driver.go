@@ -39,6 +39,9 @@ func (driver Native) Items() []base.Item {
 }
 
 func (driver Native) Save(account *model.Account, old *model.Account) error {
+	if account == nil {
+		return nil
+	}
 	log.Debugf("save a account: [%s]", account.Name)
 	if !utils.Exists(account.RootFolder) {
 		account.Status = fmt.Sprintf("[%s] not exist", account.RootFolder)

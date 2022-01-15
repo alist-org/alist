@@ -48,6 +48,9 @@ func (driver Alist) Items() []base.Item {
 }
 
 func (driver Alist) Save(account *model.Account, old *model.Account) error {
+	if account == nil {
+		return nil
+	}
 	account.SiteUrl = strings.TrimRight(account.SiteUrl, "/")
 	if account.RootFolder == "" {
 		account.RootFolder = "/"

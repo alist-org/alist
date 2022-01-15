@@ -73,8 +73,11 @@ func (driver Cloud189) Items() []base.Item {
 }
 
 func (driver Cloud189) Save(account *model.Account, old *model.Account) error {
-	if old != nil && old.Name != account.Name {
+	if old != nil {
 		delete(client189Map, old.Name)
+	}
+	if account == nil {
+		return nil
 	}
 	if err := driver.Login(account); err != nil {
 		account.Status = err.Error()
