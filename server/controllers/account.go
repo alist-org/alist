@@ -87,9 +87,16 @@ func DeleteAccount(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	if err := model.DeleteAccount(uint(id)); err != nil {
+	if account, err := model.DeleteAccount(uint(id)); err != nil {
 		common.ErrorResp(c, err, 500)
 		return
+	} else {
+		driver, ok := base.GetDriver(account.Type)
+		if ok {
+			_ = driver.Save(nil, account)
+		} else {
+			log.Errorf("no driver: %s", account.Type)
+		}
 	}
 	common.SuccessResp(c)
 }

@@ -2,8 +2,6 @@ package model
 
 import (
 	"github.com/Xhofe/alist/conf"
-	"github.com/Xhofe/alist/drivers/base"
-	log "github.com/sirupsen/logrus"
 	"time"
 )
 
@@ -65,24 +63,18 @@ func CreateAccount(account *Account) error {
 	return nil
 }
 
-func DeleteAccount(id uint) error {
+func DeleteAccount(id uint) (*Account, error) {
 	var account Account
 	account.ID = id
 	if err := conf.DB.First(&account).Error; err != nil {
-		return err
+		return nil, err
 	}
 	name := account.Name
-	driver, ok := base.GetDriver(account.Type)
-	if ok {
-		_ = driver.Save(nil, &account)
-	} else {
-		log.Errorf("no driver: %s", account.Type)
-	}
 	if err := conf.DB.Delete(&account).Error; err != nil {
-		return err
+		return nil, err
 	}
 	delete(accountsMap, name)
-	return nil
+	return &account, nil
 }
 
 func DeleteAccountFromMap(name string) {
