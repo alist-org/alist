@@ -232,7 +232,7 @@ func (driver Cloud139) Move(src string, dst string, account *model.Account) erro
 				"newCatalogID":    dstParentFile.Id,
 			},
 			"commonAccountInfo": base.Json{
-				"account":     "18627147660",
+				"account":     account.Username,
 				"accountType": 1,
 			},
 		},
@@ -257,7 +257,7 @@ func (driver Cloud139) Rename(src string, dst string, account *model.Account) er
 			"catalogID":   srcFile.Id,
 			"catalogName": utils.Base(dst),
 			"commonAccountInfo": base.Json{
-				"account":     "18627147660",
+				"account":     account.Username,
 				"accountType": 1,
 			},
 		}
@@ -267,7 +267,7 @@ func (driver Cloud139) Rename(src string, dst string, account *model.Account) er
 			"contentID":   srcFile.Id,
 			"contentName": utils.Base(dst),
 			"commonAccountInfo": base.Json{
-				"account":     "18627147660",
+				"account":     account.Username,
 				"accountType": 1,
 			},
 		}
@@ -306,7 +306,7 @@ func (driver Cloud139) Copy(src string, dst string, account *model.Account) erro
 				"newCatalogID":    dstParentFile.Id,
 			},
 			"commonAccountInfo": base.Json{
-				"account":     "18627147660",
+				"account":     account.Username,
 				"accountType": 1,
 			},
 		},
@@ -338,7 +338,7 @@ func (driver Cloud139) Delete(path string, account *model.Account) error {
 				"catalogInfoList": contentInfoList,
 			},
 			"commonAccountInfo": base.Json{
-				"account":     "18627147660",
+				"account":     account.Username,
 				"accountType": 1,
 			},
 		},
@@ -349,7 +349,7 @@ func (driver Cloud139) Delete(path string, account *model.Account) error {
 			"catalogList": catalogInfoList,
 			"contentList": contentInfoList,
 			"commonAccountInfo": base.Json{
-				"account":     "18627147660",
+				"account":     account.Username,
 				"accountType": 1,
 			},
 			"sourceCatalogType": 1002,
@@ -385,7 +385,7 @@ func (driver Cloud139) Upload(file *model.FileStream, account *model.Account) er
 		"parentCatalogID": parentFile.Id,
 		"newCatalogName":  "",
 		"commonAccountInfo": base.Json{
-			"account":     "18627147660",
+			"account":     account.Username,
 			"accountType": 1,
 		},
 	}
