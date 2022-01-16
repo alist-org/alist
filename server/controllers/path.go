@@ -164,6 +164,7 @@ func Path(c *gin.Context) {
 		if driver.Config().LocalSort {
 			model.SortFiles(files, account)
 		}
+		model.ExtractFolder(files, account)
 		total, files := Pagination(files, &req)
 		c.JSON(200, common.Resp{
 			Code:    200,

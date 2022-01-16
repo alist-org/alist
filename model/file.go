@@ -25,14 +25,6 @@ func SortFiles(files []File, account *Account) {
 		return
 	}
 	sort.Slice(files, func(i, j int) bool {
-		if files[i].IsDir() || files[j].IsDir() {
-			if !files[i].IsDir() {
-				return false
-			}
-			if !files[j].IsDir() {
-				return true
-			}
-		}
 		switch account.OrderBy {
 		case "name":
 			{
@@ -54,6 +46,24 @@ func SortFiles(files []File, account *Account) {
 				return files[i].UpdatedAt.After(*files[j].UpdatedAt)
 			}
 			return files[i].UpdatedAt.Before(*files[j].UpdatedAt)
+		}
+		return false
+	})
+}
+
+func ExtractFolder(files []File, account *Account) {
+	if account.ExtractFolder == "" {
+		return
+	}
+	front := account.ExtractFolder == "front"
+	sort.Slice(files, func(i, j int) bool {
+		if files[i].IsDir() || files[j].IsDir() {
+			if !files[i].IsDir() {
+				return !front
+			}
+			if !files[j].IsDir() {
+				return front
+			}
 		}
 		return false
 	})

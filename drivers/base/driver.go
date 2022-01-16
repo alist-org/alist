@@ -119,6 +119,12 @@ func GetDrivers() map[string][]Item {
 				Label: "down_proxy_url",
 				Type:  TypeString,
 			},
+			{
+				Name:   "extract_folder",
+				Label:  "extract_folder",
+				Values: "front,back",
+				Type:   TypeSelect,
+			},
 		}, res[k]...)
 		if v.Config().ApiProxy {
 			res[k] = append([]Item{

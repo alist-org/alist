@@ -110,7 +110,6 @@ func (driver Native) Files(path string, account *model.Account) ([]model.File, e
 		}
 		files = append(files, file)
 	}
-	model.SortFiles(files, account)
 	return files, nil
 }
 
