@@ -36,6 +36,22 @@ import (
 
 var client189Map map[string]*resty.Client
 
+func (driver Cloud189) getClient(account *model.Account) (*resty.Client, error) {
+	client, ok := client189Map[account.Name]
+	if ok {
+		return client, nil
+	}
+	err := driver.Login(account)
+	if err != nil {
+		return nil, err
+	}
+	client, ok = client189Map[account.Name]
+	if !ok {
+		return nil, fmt.Errorf("can't find [%s] client", account.Name)
+	}
+	return client, nil
+}
+
 func (driver Cloud189) FormatFile(file *Cloud189File) *model.File {
 	f := &model.File{
 		Id:        strconv.FormatInt(file.Id, 10),
@@ -264,9 +280,9 @@ func (driver Cloud189) GetFiles(fileId string, account *model.Account) ([]Cloud1
 }
 
 func (driver Cloud189) Request(url string, method int, query, form map[string]string, headers map[string]string, account *model.Account) ([]byte, error) {
-	client, ok := client189Map[account.Name]
-	if !ok {
-		return nil, fmt.Errorf("can't find [%s] client", account.Name)
+	client, err := driver.getClient(account)
+	if err != nil {
+		return nil, err
 	}
 	//var resp base.Json
 	if driver.isFamily(account) {
@@ -293,7 +309,6 @@ func (driver Cloud189) Request(url string, method int, query, form map[string]st
 	if headers != nil {
 		req = req.SetHeaders(headers)
 	}
-	var err error
 	var res *resty.Response
 	switch method {
 	case base.Get:

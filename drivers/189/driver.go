@@ -349,9 +349,9 @@ func (driver Cloud189) Upload(file *model.FileStream, account *model.Account) er
 	if file == nil {
 		return base.ErrEmptyFile
 	}
-	client, ok := client189Map[account.Name]
-	if !ok {
-		return fmt.Errorf("can't find [%s] client", account.Name)
+	client, err := driver.getClient(account)
+	if err != nil {
+		return err
 	}
 	parentFile, err := driver.File(file.ParentPath, account)
 	if err != nil {
