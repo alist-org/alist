@@ -10,23 +10,7 @@ import (
 	"github.com/Xhofe/alist/utils"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
-	"strings"
 )
-
-func Hide(meta *model.Meta, files []model.File) []model.File {
-	//meta, _ := model.GetMetaByPath(path)
-	if meta != nil && meta.Hide != "" {
-		tmpFiles := make([]model.File, 0)
-		hideFiles := strings.Split(meta.Hide, ",")
-		for _, item := range files {
-			if !utils.IsContain(hideFiles, item.Name) {
-				tmpFiles = append(tmpFiles, item)
-			}
-		}
-		files = tmpFiles
-	}
-	return files
-}
 
 func Pagination(files []model.File, req *common.PathReq) (int, []model.File) {
 	pageNum, pageSize := req.PageNum, req.PageSize
@@ -100,7 +84,7 @@ func Path(c *gin.Context) {
 			return
 		}
 		if !ok {
-			files = Hide(meta, files)
+			files = common.Hide(meta, files)
 		}
 		c.JSON(200, common.Resp{
 			Code:    200,
@@ -159,7 +143,7 @@ func Path(c *gin.Context) {
 		})
 	} else {
 		if !ok {
-			files = Hide(meta, files)
+			files = common.Hide(meta, files)
 		}
 		if driver.Config().LocalSort {
 			model.SortFiles(files, account)

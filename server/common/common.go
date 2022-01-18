@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
+	"github.com/Xhofe/alist/utils"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"strings"
@@ -84,4 +85,19 @@ func SuccessResp(c *gin.Context, data ...interface{}) {
 		Message: "success",
 		Data:    data[0],
 	})
+}
+
+func Hide(meta *model.Meta, files []model.File) []model.File {
+	//meta, _ := model.GetMetaByPath(path)
+	if meta != nil && meta.Hide != "" {
+		tmpFiles := make([]model.File, 0)
+		hideFiles := strings.Split(meta.Hide, ",")
+		for _, item := range files {
+			if !utils.IsContain(hideFiles, item.Name) {
+				tmpFiles = append(tmpFiles, item)
+			}
+		}
+		files = tmpFiles
+	}
+	return files
 }

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/server/webdav"
 	"github.com/Xhofe/alist/utils"
@@ -58,6 +59,8 @@ func WebDAVAuth(c *gin.Context) {
 		(conf.GetStr("Visitor WebDAV username") == "" &&
 			conf.GetStr("Visitor WebDAV password") == "") {
 		if !utils.IsContain([]string{"PUT", "DELETE", "PROPPATCH", "MKCOL", "COPY", "MOVE"}, c.Request.Method) {
+			ctx := context.WithValue(c.Request.Context(), "visitor", true)
+			c.Request = c.Request.WithContext(ctx)
 			c.Next()
 			return
 		}

@@ -43,7 +43,7 @@ func (fs *FileSystem) File(rawPath string) (*model.File, error) {
 	return driver.File(path_, account)
 }
 
-func (fs *FileSystem) Files(rawPath string) ([]model.File, error) {
+func (fs *FileSystem) Files(ctx context.Context, rawPath string) ([]model.File, error) {
 	rawPath = utils.ParsePath(rawPath)
 	if model.AccountsCount() > 1 && rawPath == "/" {
 		files, err := model.GetAccountFiles()
@@ -56,7 +56,20 @@ func (fs *FileSystem) Files(rawPath string) ([]model.File, error) {
 	if err != nil {
 		return nil, err
 	}
-	return driver.Files(path_, account)
+	files, err := driver.Files(path_, account)
+	if err != nil {
+		return nil, err
+	}
+	meta, _ := model.GetMetaByPath(rawPath)
+	if visitor := ctx.Value("visitor"); visitor != nil {
+		if visitor.(bool) {
+			log.Debug("visitor")
+			files = common.Hide(meta, files)
+		}
+	} else {
+		log.Debug("admin")
+	}
+	return files, nil
 }
 
 func ClientIP(r *http.Request) string {
@@ -260,7 +273,7 @@ func walkFS(
 		depth = 0
 	}
 
-	files, err := fs.Files(name)
+	files, err := fs.Files(ctx, name)
 	if err != nil {
 		return err
 	}
