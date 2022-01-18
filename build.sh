@@ -96,5 +96,5 @@ elif [ "$1" = "release" ]; then
   BUILD release
   RELEASE
 else
-  echo -e "${RED_COLOR} 错误的命令${RES}"
+  echo -e "${RED_COLOR} Parameter error ${RES}"
 fi

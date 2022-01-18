@@ -25,8 +25,11 @@ func InitIndex() {
 	}
 	index, err = public.Public.Open(fmt.Sprintf("%s.html", conf.Conf.Assets))
 	if err != nil {
-		log.Fatalf(err.Error())
-		return
+		log.Error(err.Error())
+		index, err = public.Public.Open("index.html")
+		if err != nil {
+			log.Fatal(err.Error())
+		}
 	}
 	data, _ := ioutil.ReadAll(index)
 	conf.RawIndexHtml = string(data)
