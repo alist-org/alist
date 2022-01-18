@@ -128,6 +128,7 @@ func Proxy(c *gin.Context) {
 		defer func() {
 			_ = res.Body.Close()
 		}()
+		log.Debugf("proxy status: %d", res.StatusCode)
 		w.WriteHeader(res.StatusCode)
 		for h, v := range res.Header {
 			w.Header()[h] = v

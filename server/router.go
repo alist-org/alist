@@ -51,6 +51,8 @@ func InitApiRouter(r *gin.Engine) {
 
 		admin.POST("/link", controllers.Link)
 		admin.DELETE("/files", file.DeleteFiles)
+		admin.POST("/mkdir", file.Mkdir)
+		admin.POST("rename", file.Rename)
 	}
 	WebDav(r)
 	Static(r)
