@@ -9,6 +9,7 @@ type Database struct {
 	Name        string `json:"name"`
 	TablePrefix string `json:"table_prefix"`
 	DBFile      string `json:"db_file"`
+	SslMode     string `json:"ssl_mode"`
 }
 
 type Scheme struct {
@@ -41,6 +42,7 @@ func DefaultConfig() *Config {
 			Port:        0,
 			TablePrefix: "x_",
 			DBFile:      "data/data.db",
+			SslMode:     "disable",
 		},
 		Cache: CacheConfig{
 			Expiration:      60,

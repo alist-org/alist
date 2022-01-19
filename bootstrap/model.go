@@ -60,14 +60,13 @@ func InitModel() {
 		}
 	case "postgres":
 		{
-			dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=disable TimeZone=Asia/Shanghai",
-				databaseConfig.Host, databaseConfig.User, databaseConfig.Password, databaseConfig.Name, databaseConfig.Port)
+			dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=%s TimeZone=Asia/Shanghai",
+				databaseConfig.Host, databaseConfig.User, databaseConfig.Password, databaseConfig.Name, databaseConfig.Port, databaseConfig.SslMode)
 			db, err := gorm.Open(postgres.Open(dsn), gormConfig)
 			if err != nil {
 				log.Errorf("failed to connect database:%s", err.Error())
 			}
 			conf.DB = db
-
 		}
 	default:
 		log.Fatalf("not supported database type: %s", databaseConfig.Type)
