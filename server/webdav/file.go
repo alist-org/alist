@@ -110,7 +110,7 @@ func (fs *FileSystem) Link(r *http.Request, rawPath string) (string, error) {
 		link = fmt.Sprintf("%s://%s/p%s", protocol, r.Host, rawPath)
 		if conf.GetBool("check down link") {
 			sign := utils.SignWithToken(utils.Base(rawPath), conf.Token)
-			link += "?sign" + sign
+			link += "?sign=" + sign
 		}
 	} else {
 		link_, err := driver.Link(base.Args{Path: path_, IP: ClientIP(r)}, account)
