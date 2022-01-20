@@ -77,7 +77,7 @@ func Path(c *gin.Context) {
 	if meta != nil && meta.Upload {
 		upload = true
 	}
-	if model.AccountsCount() > 1 && req.Path == "/" {
+	if model.AccountsCount() > 1 && (req.Path == "/" || req.Path == "") {
 		files, err := model.GetAccountFiles()
 		if err != nil {
 			common.ErrorResp(c, err, 500)

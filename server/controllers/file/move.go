@@ -3,6 +3,7 @@ package file
 import (
 	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/drivers/operate"
+	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/server/common"
 	"github.com/Xhofe/alist/utils"
 	"github.com/gin-gonic/gin"
@@ -22,6 +23,10 @@ func Move(c *gin.Context) {
 	}
 	if len(req.Names) == 0 {
 		common.ErrorStrResp(c, "Empty file names", 400)
+		return
+	}
+	if model.AccountsCount() > 1 && (req.SrcDir == "/" || req.DstDir == "/") {
+		common.ErrorStrResp(c, "Can't operate root folder", 400)
 		return
 	}
 	srcAccount, srcPath, srcDriver, err := common.ParsePath(utils.Join(req.SrcDir, req.Names[0]))

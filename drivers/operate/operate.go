@@ -8,6 +8,7 @@ import (
 )
 
 func MakeDir(driver base.Driver, account *model.Account, path string, clearCache bool) error {
+	log.Debugf("mkdir: %s", path)
 	err := driver.MakeDir(path, account)
 	if err == nil && clearCache {
 		_ = base.DeleteCache(utils.Dir(path), account)
@@ -19,6 +20,7 @@ func MakeDir(driver base.Driver, account *model.Account, path string, clearCache
 }
 
 func Move(driver base.Driver, account *model.Account, src, dst string, clearCache bool) error {
+	log.Debugf("move %s to %s", src, dst)
 	rename := false
 	if utils.Dir(src) == utils.Dir(dst) {
 		rename = true
@@ -42,6 +44,7 @@ func Move(driver base.Driver, account *model.Account, src, dst string, clearCach
 }
 
 func Copy(driver base.Driver, account *model.Account, src, dst string, clearCache bool) error {
+	log.Debugf("copy %s to %s", src, dst)
 	err := driver.Copy(src, dst, account)
 	if err == nil && clearCache {
 		_ = base.DeleteCache(utils.Dir(dst), account)
@@ -53,6 +56,7 @@ func Copy(driver base.Driver, account *model.Account, src, dst string, clearCach
 }
 
 func Delete(driver base.Driver, account *model.Account, path string, clearCache bool) error {
+	log.Debugf("delete %s", path)
 	err := driver.Delete(path, account)
 	if err == nil && clearCache {
 		_ = base.DeleteCache(utils.Dir(path), account)

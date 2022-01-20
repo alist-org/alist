@@ -16,9 +16,9 @@ func Folder(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	var files []model.File
+	var files = make([]model.File, 0)
 	var err error
-	if model.AccountsCount() > 1 && req.Path == "/" {
+	if model.AccountsCount() > 1 && (req.Path == "/" || req.Path == "") {
 		files, err = model.GetAccountFiles()
 		if err != nil {
 			common.ErrorResp(c, err, 500)
