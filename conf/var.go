@@ -36,7 +36,7 @@ var (
 	OfficeTypes = []string{"doc", "docx", "xls", "xlsx", "ppt", "pptx", "pdf"}
 	VideoTypes  = []string{"mp4", "mkv", "avi", "mov", "rmvb", "webm", "flv"}
 	AudioTypes  = []string{"mp3", "flac", "ogg", "m4a", "wav"}
-	ImageTypes  = []string{"jpg", "tiff", "jpeg", "png", "gif", "bmp", "svg", "ico"}
+	ImageTypes  = []string{"jpg", "tiff", "jpeg", "png", "gif", "bmp", "svg", "ico", "swf"}
 )
 
 var settingsMap = make(map[string]string, 0)
