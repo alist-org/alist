@@ -136,7 +136,7 @@ func (driver Cloud139) GetFiles(catalogID string, account *model.Account) ([]mod
 			f := model.File{
 				Id:        content.ContentID,
 				Name:      content.ContentName,
-				Size:      int64(content.ContentSize),
+				Size:      content.ContentSize,
 				Type:      utils.GetFileType(path.Ext(content.ContentName)),
 				Driver:    driver.Config().Name,
 				UpdatedAt: getTime(content.UpdateTime),

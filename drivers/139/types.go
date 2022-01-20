@@ -40,7 +40,7 @@ type Content struct {
 	ContentID   string `json:"contentID"`
 	ContentName string `json:"contentName"`
 	//ContentSuffix   string      `json:"contentSuffix"`
-	ContentSize int `json:"contentSize"`
+	ContentSize int64 `json:"contentSize"`
 	//ContentDesc     string      `json:"contentDesc"`
 	//ContentType     int         `json:"contentType"`
 	//ContentOrigin   int         `json:"contentOrigin"`
@@ -132,43 +132,43 @@ type UploadResp struct {
 }
 
 type CloudContent struct {
-	ContentID        string      `json:"contentID"`
-	Modifier         string      `json:"modifier"`
-	Nickname         string      `json:"nickname"`
-	CloudNickName    string      `json:"cloudNickName"`
-	ContentName      string      `json:"contentName"`
-	ContentType      int         `json:"contentType"`
-	ContentSuffix    string      `json:"contentSuffix"`
-	ContentSize      int         `json:"contentSize"`
-	ContentDesc      string      `json:"contentDesc"`
-	CreateTime       string      `json:"createTime"`
-	Shottime         interface{} `json:"shottime"`
-	LastUpdateTime   string      `json:"lastUpdateTime"`
-	ThumbnailURL     string      `json:"thumbnailURL"`
-	MidthumbnailURL  string      `json:"midthumbnailURL"`
-	BigthumbnailURL  string      `json:"bigthumbnailURL"`
-	PresentURL       string      `json:"presentURL"`
-	PresentLURL      string      `json:"presentLURL"`
-	PresentHURL      string      `json:"presentHURL"`
-	ParentCatalogID  string      `json:"parentCatalogID"`
-	Uploader         string      `json:"uploader"`
-	UploaderNickName string      `json:"uploaderNickName"`
-	TreeInfo         interface{} `json:"treeInfo"`
-	UpdateTime       interface{} `json:"updateTime"`
-	ExtInfo          struct {
-		Uploader string `json:"uploader"`
-	} `json:"extInfo"`
-	EtagOprType interface{} `json:"etagOprType"`
+	ContentID string `json:"contentID"`
+	//Modifier         string      `json:"modifier"`
+	//Nickname         string      `json:"nickname"`
+	//CloudNickName    string      `json:"cloudNickName"`
+	ContentName string `json:"contentName"`
+	//ContentType      int         `json:"contentType"`
+	//ContentSuffix    string      `json:"contentSuffix"`
+	ContentSize int64 `json:"contentSize"`
+	//ContentDesc      string      `json:"contentDesc"`
+	//CreateTime       string      `json:"createTime"`
+	//Shottime         interface{} `json:"shottime"`
+	LastUpdateTime string `json:"lastUpdateTime"`
+	ThumbnailURL   string `json:"thumbnailURL"`
+	//MidthumbnailURL  string      `json:"midthumbnailURL"`
+	//BigthumbnailURL  string      `json:"bigthumbnailURL"`
+	//PresentURL       string      `json:"presentURL"`
+	//PresentLURL      string      `json:"presentLURL"`
+	//PresentHURL      string      `json:"presentHURL"`
+	//ParentCatalogID  string      `json:"parentCatalogID"`
+	//Uploader         string      `json:"uploader"`
+	//UploaderNickName string      `json:"uploaderNickName"`
+	//TreeInfo         interface{} `json:"treeInfo"`
+	//UpdateTime       interface{} `json:"updateTime"`
+	//ExtInfo          struct {
+	//	Uploader string `json:"uploader"`
+	//} `json:"extInfo"`
+	//EtagOprType interface{} `json:"etagOprType"`
 }
 
 type CloudCatalog struct {
-	CatalogID       string `json:"catalogID"`
-	CatalogName     string `json:"catalogName"`
-	CloudID         string `json:"cloudID"`
-	CreateTime      string `json:"createTime"`
-	LastUpdateTime  string `json:"lastUpdateTime"`
-	Creator         string `json:"creator"`
-	CreatorNickname string `json:"creatorNickname"`
+	CatalogID   string `json:"catalogID"`
+	CatalogName string `json:"catalogName"`
+	//CloudID         string `json:"cloudID"`
+	//CreateTime      string `json:"createTime"`
+	LastUpdateTime string `json:"lastUpdateTime"`
+	//Creator         string `json:"creator"`
+	//CreatorNickname string `json:"creatorNickname"`
 }
 
 type QueryContentListResp struct {
