@@ -59,7 +59,7 @@ BUILD() {
   else
     xgo -targets=linux/amd64,windows/amd64 -out "$appName" -ldflags="$ldflags" -tags=jsoniter .
   fi
-  mkdir "build"
+  mkdir -p "build"
   mv alist-* build
   if [ "$1" != "release" ]; then
       cd build
@@ -72,7 +72,7 @@ BUILD() {
 }
 
 BUILD_MUSL() {
-  BASE="https://musl.cc"
+  BASE="https://musl.cc/"
   FILES=(x86_64-linux-musl-cross aarch64-linux-musl-cross arm-linux-musleabihf-cross mips-linux-musl-cross mips64-linux-musl-cross mips64el-linux-musl-cross mipsel-linux-musl-cross powerpc64le-linux-musl-cross s390x-linux-musl-cross)
   for i in "${FILES[@]}"; do
     url="${BASE}${i}.tgz"
@@ -96,7 +96,7 @@ BUILD_MUSL() {
   "
   OS_ARCHES=(linux-musl-amd64 linux-musl-arm64 linux-musl-arm linux-musl-mips linux-musl-mips64 linux-musl-mips64le linux-musl-mipsle linux-musl-ppc64le linux-musl-s390x)
   CGO_ARGS=(x86_64-linux-musl-gcc aarch64-linux-musl-gcc arm-linux-musleabihf-gcc mips-linux-musl-gcc mips64-linux-musl-gcc mips64el-linux-musl-gcc mipsel-linux-musl-gcc powerpc64le-linux-musl-gcc s390x-linux-musl-gcc)
-  for i in "${!BUILDS[@]}"; do
+  for i in "${!OS_ARCHES[@]}"; do
       os_arch=${OS_ARCHES[$i]}
       cgo_cc=${CGO_ARGS[$i]}
       echo building for ${os_arch}
