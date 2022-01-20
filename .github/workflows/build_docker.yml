@@ -1,4 +1,4 @@
-name: build
+name: build_docker
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [ v2 ]
 
 jobs:
-  docker_build:
+  build_docker:
     name: Docker
     runs-on: ubuntu-latest
     steps:

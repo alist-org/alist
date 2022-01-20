@@ -3,7 +3,7 @@ LABEL stage=go-builder
 WORKDIR /app/
 COPY ./ ./
 RUN apk add --no-cache bash git go gcc musl-dev; \
-    sh build.sh docker
+    bash build.sh docker
 
 FROM alpine:edge
 LABEL MAINTAINER="i@nn.ci"
