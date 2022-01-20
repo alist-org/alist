@@ -61,14 +61,25 @@ BUILD() {
   fi
   mkdir "build"
   mv alist-* build
-  cd build
-  upx -9 ./*
-  find . -type f -print0 | xargs -0 md5sum >md5.txt
-  cat md5.txt
-  cd ../..
+  if [ "$1" != "release" ]; then
+      cd build
+      upx -9 ./*
+      find . -type f -print0 | xargs -0 md5sum >md5.txt
+      cat md5.txt
+      cd ..
+  fi
+  cd ..
 }
 
 BUILD_MUSL() {
+  BASE="https://musl.cc"
+  FILES=(x86_64-linux-musl-cross aarch64-linux-musl-cross arm-linux-musleabihf-cross mips-linux-musl-cross mips64-linux-musl-cross mips64el-linux-musl-cross mipsel-linux-musl-cross powerpc64le-linux-musl-cross s390x-linux-musl-cross)
+  for i in "${FILES[@]}"; do
+    url="${BASE}${i}.tgz"
+    curl -L -o "${i}.tgz" "${url}"
+    sudo tar xf "${i}.tgz" --strip-components 1 -C /usr/local
+  done
+  cd alist
   appName="alist"
   builtAt="$(date +'%F %T %z')"
   goVersion=$(go version | sed 's/go version //')
@@ -83,14 +94,6 @@ BUILD_MUSL() {
 -X 'github.com/Xhofe/alist/conf.GitCommit=$gitCommit' \
 -X 'github.com/Xhofe/alist/conf.GitTag=$gitTag' \
   "
-  BASE="https://musl.cc"
-  files=(x86_64-linux-musl-cross aarch64-linux-musl-cross arm-linux-musleabihf-cross mips-linux-musl-cross mips64-linux-musl-cross mips64el-linux-musl-cross mipsel-linux-musl-cross powerpc64le-linux-musl-cross s390x-linux-musl-cross)
-  for i in "${files[@]}"; do
-    url="${base_url}${i}.tgz"
-    curl -L -o "${i}.tgz" "${url}"
-    sudo tar xf "${i}.tgz" --strip-components 1 -C /usr/local
-  done
-  cd alist
   OS_ARCHES=(linux-musl-amd64 linux-musl-arm64 linux-musl-arm linux-musl-mips linux-musl-mips64 linux-musl-mips64le linux-musl-mipsle linux-musl-ppc64le linux-musl-s390x)
   CGO_ARGS=(x86_64-linux-musl-gcc aarch64-linux-musl-gcc arm-linux-musleabihf-gcc mips-linux-musl-gcc mips64-linux-musl-gcc mips64el-linux-musl-gcc mipsel-linux-musl-gcc powerpc64le-linux-musl-gcc s390x-linux-musl-gcc)
   for i in "${!BUILDS[@]}"; do
@@ -103,10 +106,14 @@ BUILD_MUSL() {
       export CGO_ENABLED=1
       go build -o ./build/$appName-$os_arch -ldflags="$ldflags" -tags=jsoniter alist.go
   done
+  cd ..
 }
 
 RELEASE() {
   cd alist/build
+  upx -9 ./*
+  find . -type f -print0 | xargs -0 md5sum >md5.txt
+  cat md5.txt
   mkdir compress
   mv md5.txt compress
   for i in $(find . -type f -name "$appName-linux-*"); do
