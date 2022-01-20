@@ -237,7 +237,7 @@ func (driver Pan123) Move(src string, dst string, account *model.Account) error 
 	}
 	parentFileId, _ := strconv.Atoi(dstDirFile.Id)
 	data := base.Json{
-		"fileId":       fileId,
+		"fileIdList":   []base.Json{{"FileId": fileId}},
 		"parentFileId": parentFileId,
 	}
 	_, err = driver.Request("https://www.123pan.com/api/file/mod_pid",
