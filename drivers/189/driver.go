@@ -17,7 +17,8 @@ type Cloud189 struct{}
 
 func (driver Cloud189) Config() base.DriverConfig {
 	return base.DriverConfig{
-		Name: "189Cloud",
+		Name:      "189Cloud",
+		LocalSort: true,
 	}
 }
 
@@ -55,20 +56,20 @@ func (driver Cloud189) Items() []base.Item {
 		//	Label: "family id",
 		//	Type:  base.TypeString,
 		//},
-		{
-			Name:     "order_by",
-			Label:    "order_by",
-			Type:     base.TypeSelect,
-			Values:   "name,size,lastOpTime,createdDate",
-			Required: true,
-		},
-		{
-			Name:     "order_direction",
-			Label:    "desc",
-			Type:     base.TypeSelect,
-			Values:   "true,false",
-			Required: true,
-		},
+		//{
+		//	Name:     "order_by",
+		//	Label:    "order_by",
+		//	Type:     base.TypeSelect,
+		//	Values:   "name,size,lastOpTime,createdDate",
+		//	Required: true,
+		//},
+		//{
+		//	Name:     "order_direction",
+		//	Label:    "desc",
+		//	Type:     base.TypeSelect,
+		//	Values:   "true,false",
+		//	Required: true,
+		//},
 	}
 }
 

@@ -249,8 +249,8 @@ func (driver Cloud189) GetFiles(fileId string, account *model.Account) ([]Cloud1
 			"mediaType":  "0",
 			"folderId":   fileId,
 			"iconOption": "5",
-			"orderBy":    account.OrderBy,
-			"descending": account.OrderDirection,
+			"orderBy":    "lastOpTime", //account.OrderBy
+			"descending": "true",       //account.OrderDirection
 		}, nil, nil, account)
 		if err != nil {
 			return nil, err
