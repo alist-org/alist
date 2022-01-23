@@ -19,6 +19,7 @@ func InitAccounts() {
 		if !ok {
 			log.Errorf("no [%s] driver", account.Type)
 		} else {
+			log.Infof("start init account: [%s], type: [%s]", account.Name, account.Type)
 			err := driver.Save(&accounts[i], nil)
 			if err != nil {
 				log.Errorf("init account [%s] error:[%s]", account.Name, err.Error())

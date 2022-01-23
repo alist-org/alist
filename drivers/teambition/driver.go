@@ -252,7 +252,34 @@ func (driver Teambition) Delete(path string, account *model.Account) error {
 }
 
 func (driver Teambition) Upload(file *model.FileStream, account *model.Account) error {
-	return base.ErrNotImplement
+	if file == nil {
+		return base.ErrEmptyFile
+	}
+	parentFile, err := driver.File(file.ParentPath, account)
+	if !parentFile.IsDir() {
+		return base.ErrNotFolder
+	}
+	if err != nil {
+		return err
+	}
+	res, err := driver.Request("/projects", base.Get, nil, nil, nil, nil, nil, account)
+	if err != nil {
+		return err
+	}
+	token := GetBetweenStr(string(res), "strikerAuth&quot;:&quot;", "&quot;,&quot;phoneForLogin")
+	var newFile *FileUpload
+	if file.Size <= 20971520 {
+		// post upload
+		newFile, err = driver.upload(file, token, account)
+	} else {
+		// chunk upload
+		err = base.ErrNotImplement
+		//newFile, err = driver.chunkUpload(file, token, account)
+	}
+	if err != nil {
+		return err
+	}
+	return driver.finishUpload(newFile, parentFile.Id, account)
 }
 
 var _ base.Driver = (*Teambition)(nil)

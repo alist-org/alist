@@ -2,11 +2,14 @@ package teambition
 
 import (
 	"errors"
+	"fmt"
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
 	"github.com/go-resty/resty/v2"
+	log "github.com/sirupsen/logrus"
+	"io"
 	"path"
 	"strconv"
 	"time"
@@ -64,25 +67,6 @@ func (driver Teambition) Request(pathname string, method int, headers, query, fo
 		return nil, errors.New(e.Message)
 	}
 	return res.Body(), nil
-}
-
-type Collection struct {
-	ID      string    `json:"_id"`
-	Title   string    `json:"title"`
-	Updated time.Time `json:"updated"`
-}
-
-type Work struct {
-	ID           string    `json:"_id"`
-	FileName     string    `json:"fileName"`
-	FileSize     int64     `json:"fileSize"`
-	FileKey      string    `json:"fileKey"`
-	FileCategory string    `json:"fileCategory"`
-	DownloadURL  string    `json:"downloadUrl"`
-	ThumbnailURL string    `json:"thumbnailUrl"`
-	Thumbnail    string    `json:"thumbnail"`
-	Updated      time.Time `json:"updated"`
-	PreviewURL   string    `json:"previewUrl"`
 }
 
 func (driver Teambition) GetFiles(parentId string, account *model.Account) ([]model.File, error) {
@@ -149,6 +133,94 @@ func (driver Teambition) GetFiles(parentId string, account *model.Account) ([]mo
 		}
 	}
 	return files, nil
+}
+
+func (driver Teambition) upload(file *model.FileStream, token string, account *model.Account) (*FileUpload, error) {
+	prefix := "tcs"
+	if account.InternalType == "International" {
+		prefix = "us-tcs"
+	}
+	var newFile FileUpload
+	_, err := base.RestyClient.R().SetResult(&newFile).SetHeader("Authorization", token).
+		SetMultipartFormData(map[string]string{
+			"name": file.GetFileName(),
+			"type": file.GetMIMEType(),
+			"size": strconv.FormatUint(file.GetSize(), 10),
+			//"lastModifiedDate": "",
+		}).SetMultipartField("file", file.GetFileName(), file.GetMIMEType(), file).
+		Post(fmt.Sprintf("https://%s.teambition.net/upload", prefix))
+	if err != nil {
+		return nil, err
+	}
+	return &newFile, nil
+}
+
+func (driver Teambition) chunkUpload(file *model.FileStream, token string, account *model.Account) (*FileUpload, error) {
+	prefix := "tcs"
+	if account.InternalType == "International" {
+		prefix = "us-tcs"
+	}
+	var newChunk ChunkUpload
+	_, err := base.RestyClient.R().SetResult(&newChunk).SetHeader("Authorization", token).
+		SetBody(base.Json{
+			"fileName":    file.GetFileName(),
+			"fileSize":    file.GetSize(),
+			"lastUpdated": time.Now(),
+		}).Post(fmt.Sprintf("https://%s.teambition.net/upload/chunk", prefix))
+	if err != nil {
+		return nil, err
+	}
+	for i := 0; i < newChunk.Chunks; i++ {
+		chunkSize := newChunk.ChunkSize
+		if i == newChunk.Chunks-1 {
+			chunkSize = int(file.GetSize()) - i*chunkSize
+		}
+		log.Debugf("%d : %d", i, chunkSize)
+		chunkData := make([]byte, chunkSize)
+		_, err = io.ReadFull(file, chunkData)
+		if err != nil {
+			return nil, err
+		}
+		u := fmt.Sprintf("https://%s.teambition.net/upload/chunk/%s?chunk=%d&chunks=%d",
+			prefix, newChunk.FileKey, i+1, newChunk.Chunks)
+		log.Debugf("url: %s", u)
+		res, err := base.RestyClient.R().SetHeaders(map[string]string{
+			"Authorization": token,
+			"Content-Type":  "application/octet-stream",
+			"Referer":       "https://www.teambition.com/",
+		}).SetBody(chunkData).Post(u)
+		if err != nil {
+			return nil, err
+		}
+		log.Debug(res.Status(), res.String())
+		//req, err := http.NewRequest("POST",
+		//	u,
+		//	bytes.NewBuffer(chunkData))
+		//if err != nil {
+		//	return nil, err
+		//}
+		//req.Header.Set("Authorization", token)
+		//req.Header.Set("Content-Type", "application/octet-stream")
+		//req.Header.Set("Referer", "https://www.teambition.com/")
+		//resp, err := base.HttpClient.Do(req)
+		//res, _ := ioutil.ReadAll(resp.Body)
+		//log.Debugf("chunk upload status: %s, res: %s", resp.Status, string(res))
+		if err != nil {
+			return nil, err
+		}
+	}
+	return &newChunk.FileUpload, nil
+}
+
+func (driver Teambition) finishUpload(file *FileUpload, parentId string, account *model.Account) error {
+	file.InvolveMembers = []interface{}{}
+	file.Visible = "members"
+	file.ParentId = parentId
+	_, err := driver.Request("/api/works", base.Post, nil, nil, nil, base.Json{
+		"works":     []FileUpload{*file},
+		"_parentId": parentId,
+	}, nil, account)
+	return err
 }
 
 func init() {
