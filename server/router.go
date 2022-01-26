@@ -54,6 +54,7 @@ func InitApiRouter(r *gin.Engine) {
 		admin.POST("/mkdir", file.Mkdir)
 		admin.POST("/rename", file.Rename)
 		admin.POST("/move", file.Move)
+		admin.POST("/copy", file.Copy)
 		admin.POST("/folder", file.Folder)
 	}
 	WebDav(r)

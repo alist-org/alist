@@ -9,13 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type MoveCopyReq struct {
-	SrcDir string   `json:"src_dir"`
-	DstDir string   `json:"dst_dir"`
-	Names  []string `json:"names"`
-}
-
-func Move(c *gin.Context) {
+func Copy(c *gin.Context) {
 	var req MoveCopyReq
 	if err := c.ShouldBind(&req); err != nil {
 		common.ErrorResp(c, err, 400)
@@ -40,11 +34,11 @@ func Move(c *gin.Context) {
 		return
 	}
 	if srcAccount.Name != dstAccount.Name {
-		common.ErrorStrResp(c, "Can't move files between two accounts", 400)
+		common.ErrorStrResp(c, "Can't copy files between two accounts", 400)
 		return
 	}
 	if srcPath == "/" || dstPath == "/" {
-		common.ErrorStrResp(c, "Can't move root folder", 400)
+		common.ErrorStrResp(c, "Can't copy root folder", 400)
 		return
 	}
 	srcDir, dstDir := utils.Dir(srcPath), utils.Dir(dstPath)
@@ -53,7 +47,7 @@ func Move(c *gin.Context) {
 		if i == len(req.Names)-1 {
 			clearCache = true
 		}
-		err := operate.Move(srcDriver, srcAccount, utils.Join(srcDir, name), utils.Join(dstDir, name), clearCache)
+		err := operate.Copy(srcDriver, srcAccount, utils.Join(srcDir, name), utils.Join(dstDir, name), clearCache)
 		if err != nil {
 			if i == 0 {
 				_ = base.DeleteCache(srcDir, srcAccount)

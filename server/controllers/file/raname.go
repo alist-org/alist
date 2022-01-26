@@ -24,7 +24,7 @@ func Rename(c *gin.Context) {
 		return
 	}
 	if path_ == "/" {
-		common.ErrorStrResp(c, "Can't account name here", 400)
+		common.ErrorStrResp(c, "Can't edit account name here", 400)
 		return
 	}
 	err = operate.Move(driver, account, path_, utils.Join(utils.Dir(path_), req.Name), true)
