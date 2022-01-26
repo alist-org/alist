@@ -273,8 +273,8 @@ func (driver Teambition) Upload(file *model.FileStream, account *model.Account) 
 		newFile, err = driver.upload(file, token, account)
 	} else {
 		// chunk upload
-		err = base.ErrNotImplement
-		//newFile, err = driver.chunkUpload(file, token, account)
+		//err = base.ErrNotImplement
+		newFile, err = driver.chunkUpload(file, token, account)
 	}
 	if err != nil {
 		return err

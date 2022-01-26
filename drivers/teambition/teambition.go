@@ -209,6 +209,13 @@ func (driver Teambition) chunkUpload(file *model.FileStream, token string, accou
 			return nil, err
 		}
 	}
+	res, err := base.RestyClient.R().SetHeader("Authorization", token).Post(
+		fmt.Sprintf("https://%s.teambition.net/upload/chunk/%s",
+			prefix, newChunk.FileKey))
+	log.Debug(res.Status(), res.String())
+	if err != nil {
+		return nil, err
+	}
 	return &newChunk.FileUpload, nil
 }
 
