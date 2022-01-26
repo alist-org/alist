@@ -19,7 +19,7 @@ func Auth(c *gin.Context) {
 	//}
 	//if token != utils.GetMD5Encode(password.Value) {
 	if token != conf.Token {
-		common.ErrorStrResp(c, "Wrong password", 401)
+		common.ErrorStrResp(c, "Invalid token", 401)
 		return
 	}
 	c.Next()
