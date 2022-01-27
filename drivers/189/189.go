@@ -153,6 +153,29 @@ func (driver Cloud189) Login(account *model.Account) error {
 	vCodeRS := ""
 	if vCodeID != "" {
 		// need ValidateCode
+		log.Debugf("try to identify verification codes")
+		timeStamp := strconv.FormatInt(time.Now().UnixNano()/1e6, 10)
+		u := "https://open.e.189.cn/api/logbox/oauth2/picCaptcha.do?token=" + vCodeID + timeStamp
+		imgRes, err := client.R().SetHeaders(map[string]string{
+			"User-Agent":     "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/76.0",
+			"Referer":        "https://open.e.pan.cn/",
+			"Sec-Fetch-Dest": "image",
+			"Sec-Fetch-Mode": "no-cors",
+			"Sec-Fetch-Site": "same-origin",
+		}).Get(u)
+		if err != nil {
+			return err
+		}
+		vRes, err := client.R().SetMultipartField(
+			"image", "validateCode.png", "image/png", bytes.NewReader(imgRes.Body())).
+			Post(conf.GetStr("ocr api"))
+		if err != nil {
+			return err
+		}
+		if jsoniter.Get(vRes.Body(), "status").ToInt() != 200 {
+			return errors.New("ocr error:" + jsoniter.Get(vRes.Body(), "msg").ToString())
+		}
+		vCodeRS = jsoniter.Get(vRes.Body(), "result").ToString()
 	}
 	userRsa := RsaEncode([]byte(account.Username), jRsakey)
 	passwordRsa := RsaEncode([]byte(account.Password), jRsakey)

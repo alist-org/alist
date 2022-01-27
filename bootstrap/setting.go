@@ -219,6 +219,14 @@ func InitSettings() {
 			Access: model.PUBLIC,
 			Group:  model.FRONT,
 		},
+		{
+			Key:         "ocr api",
+			Value:       "https://api.xhofe.top/ocr/file/json",
+			Description: "Used to identify verification codes",
+			Type:        "string",
+			Access:      model.PRIVATE,
+			Group:       model.BACK,
+		},
 	}
 	for i, _ := range settings {
 		v := settings[i]
