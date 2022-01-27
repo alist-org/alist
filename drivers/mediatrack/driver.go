@@ -1,7 +1,6 @@
 package mediatrack
 
 import (
-	"bytes"
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
@@ -18,6 +17,8 @@ import (
 	jsoniter "github.com/json-iterator/go"
 	log "github.com/sirupsen/logrus"
 	"io"
+	"io/ioutil"
+	"os"
 	"path/filepath"
 )
 
@@ -265,21 +266,39 @@ func (driver MediaTrack) Upload(file *model.FileStream, account *model.Account) 
 	if err != nil {
 		return err
 	}
-	var buf bytes.Buffer
-	read := io.TeeReader(file, &buf)
+	tempFile, err := ioutil.TempFile("data/temp", "file-*")
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = tempFile.Close()
+		_ = os.Remove(tempFile.Name())
+	}()
+	_, err = io.Copy(tempFile, file)
+	if err != nil {
+		return err
+	}
+	_, err = tempFile.Seek(0, io.SeekStart)
+	if err != nil {
+		return err
+	}
 	uploader := s3manager.NewUploader(s)
 	input := &s3manager.UploadInput{
 		Bucket: &resp.Data.Bucket,
 		Key:    &resp.Data.Object,
-		Body:   read,
+		Body:   tempFile,
 	}
 	_, err = uploader.Upload(input)
 	if err != nil {
 		return err
 	}
 	url := fmt.Sprintf("https://jayce.api.mediatrack.cn/v3/assets/%s/children", parentFile.Id)
+	_, err = tempFile.Seek(0, io.SeekStart)
+	if err != nil {
+		return err
+	}
 	h := md5.New()
-	_, err = io.Copy(h, &buf)
+	_, err = io.Copy(h, tempFile)
 	if err != nil {
 		return err
 	}

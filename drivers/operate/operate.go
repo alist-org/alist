@@ -5,6 +5,7 @@ import (
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
 	log "github.com/sirupsen/logrus"
+	"runtime/debug"
 )
 
 func MakeDir(driver base.Driver, account *model.Account, path string, clearCache bool) error {
@@ -78,5 +79,6 @@ func Upload(driver base.Driver, account *model.Account, file *model.FileStream, 
 	if err != nil {
 		log.Errorf("upload error: %s", err.Error())
 	}
+	debug.FreeOSMemory()
 	return err
 }

@@ -1,6 +1,8 @@
 package _23
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/drivers/base"
@@ -12,7 +14,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
+	"io"
+	"io/ioutil"
 	"net/url"
+	"os"
 	"path/filepath"
 	"strconv"
 )
@@ -294,10 +299,37 @@ func (driver Pan123) Upload(file *model.FileStream, account *model.Account) erro
 		return base.ErrNotFolder
 	}
 	parentFileId, _ := strconv.Atoi(parentFile.Id)
+	tempFile, err := ioutil.TempFile("data/temp", "file-*")
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = tempFile.Close()
+		_ = os.Remove(tempFile.Name())
+	}()
+	_, err = io.Copy(tempFile, file)
+	if err != nil {
+		return err
+	}
+	_, err = tempFile.Seek(0, io.SeekStart)
+	if err != nil {
+		return err
+	}
+	h := md5.New()
+	_, err = io.Copy(h, tempFile)
+	if err != nil {
+		return err
+	}
+	etag := hex.EncodeToString(h.Sum(nil))
+	log.Debugln("md5:", etag)
+	_, err = tempFile.Seek(0, io.SeekStart)
+	if err != nil {
+		return err
+	}
 	data := base.Json{
 		"driveId":      0,
 		"duplicate":    true,
-		"etag":         "836aae6cac845e17fce51919594737d0", //maybe file's md5
+		"etag":         etag,
 		"fileName":     file.GetFileName(),
 		"parentFileId": parentFileId,
 		"size":         file.GetSize(),
@@ -309,6 +341,9 @@ func (driver Pan123) Upload(file *model.FileStream, account *model.Account) erro
 	//res, err := driver.Post("https://www.123pan.com/api/file/upload_request", data, account)
 	if err != nil {
 		return err
+	}
+	if resp.Data.Key == "" {
+		return nil
 	}
 	cfg := &aws.Config{
 		Credentials:      credentials.NewStaticCredentials(resp.Data.AccessKeyId, resp.Data.SecretAccessKey, resp.Data.SessionToken),
@@ -324,7 +359,7 @@ func (driver Pan123) Upload(file *model.FileStream, account *model.Account) erro
 	input := &s3manager.UploadInput{
 		Bucket: &resp.Data.Bucket,
 		Key:    &resp.Data.Key,
-		Body:   file,
+		Body:   tempFile,
 	}
 	_, err = uploader.Upload(input)
 	if err != nil {

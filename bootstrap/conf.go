@@ -5,6 +5,7 @@ import (
 	"github.com/Xhofe/alist/utils"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
+	"os"
 )
 
 // InitConf init config
@@ -40,5 +41,9 @@ func InitConf() {
 	err = ioutil.WriteFile(conf.ConfigFile, confBody, 0777)
 	if err != nil {
 		log.Fatalf("update config struct error: %s", err.Error())
+	}
+	err = os.MkdirAll("data/temp", 0700)
+	if err != nil {
+		log.Fatalf("create temp dir error: %s", err.Error())
 	}
 }

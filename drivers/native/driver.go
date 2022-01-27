@@ -249,6 +249,16 @@ func (driver Native) Upload(file *model.FileStream, account *model.Account) erro
 	defer func() {
 		_ = out.Close()
 	}()
+	//var buf bytes.Buffer
+	//reader := io.TeeReader(file, &buf)
+	//h := md5.New()
+	//_, err = io.Copy(h, reader)
+	//if err != nil {
+	//	return err
+	//}
+	//hash := hex.EncodeToString(h.Sum(nil))
+	//log.Debugln("md5:", hash)
+	//_, err = io.Copy(out, &buf)
 	_, err = io.Copy(out, file)
 	return err
 }
