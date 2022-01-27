@@ -1,7 +1,6 @@
 package native
 
 import (
-	"errors"
 	"fmt"
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/drivers/base"
@@ -60,7 +59,7 @@ func (driver Native) Save(account *model.Account, old *model.Account) error {
 
 func (driver Native) File(path string, account *model.Account) (*model.File, error) {
 	if utils.IsContain(strings.Split(path, "/"), "..") {
-		return nil, errors.New("access using relative path is not allowed")
+		return nil, base.ErrRelativePath
 	}
 	fullPath := filepath.Join(account.RootFolder, path)
 	if !utils.Exists(fullPath) {
@@ -86,6 +85,9 @@ func (driver Native) File(path string, account *model.Account) (*model.File, err
 }
 
 func (driver Native) Files(path string, account *model.Account) ([]model.File, error) {
+	if utils.IsContain(strings.Split(path, "/"), "..") {
+		return nil, base.ErrRelativePath
+	}
 	fullPath := filepath.Join(account.RootFolder, path)
 	if !utils.Exists(fullPath) {
 		return nil, base.ErrPathNotFound
@@ -163,12 +165,18 @@ func (driver Native) Preview(path string, account *model.Account) (interface{}, 
 }
 
 func (driver Native) MakeDir(path string, account *model.Account) error {
+	if utils.IsContain(strings.Split(path, "/"), "..") {
+		return base.ErrRelativePath
+	}
 	fullPath := filepath.Join(account.RootFolder, path)
 	err := os.MkdirAll(fullPath, 0700)
 	return err
 }
 
 func (driver Native) Move(src string, dst string, account *model.Account) error {
+	if utils.IsContain(strings.Split(src+"/"+dst, "/"), "..") {
+		return base.ErrRelativePath
+	}
 	fullSrc := filepath.Join(account.RootFolder, src)
 	fullDst := filepath.Join(account.RootFolder, dst)
 	return os.Rename(fullSrc, fullDst)
@@ -179,6 +187,9 @@ func (driver Native) Rename(src string, dst string, account *model.Account) erro
 }
 
 func (driver Native) Copy(src string, dst string, account *model.Account) error {
+	if utils.IsContain(strings.Split(src+"/"+dst, "/"), "..") {
+		return base.ErrRelativePath
+	}
 	fullSrc := filepath.Join(account.RootFolder, src)
 	fullDst := filepath.Join(account.RootFolder, dst)
 	srcFile, err := driver.File(src, account)
@@ -198,6 +209,9 @@ func (driver Native) Copy(src string, dst string, account *model.Account) error 
 }
 
 func (driver Native) Delete(path string, account *model.Account) error {
+	if utils.IsContain(strings.Split(path, "/"), "..") {
+		return base.ErrRelativePath
+	}
 	fullPath := filepath.Join(account.RootFolder, path)
 	file, err := driver.File(path, account)
 	if err != nil {
@@ -212,6 +226,9 @@ func (driver Native) Delete(path string, account *model.Account) error {
 func (driver Native) Upload(file *model.FileStream, account *model.Account) error {
 	if file == nil {
 		return base.ErrEmptyFile
+	}
+	if utils.IsContain(strings.Split(file.ParentPath, "/"), "..") {
+		return base.ErrRelativePath
 	}
 	fullPath := filepath.Join(account.RootFolder, file.ParentPath, file.Name)
 	_, err := driver.File(filepath.Join(file.ParentPath, file.Name), account)
