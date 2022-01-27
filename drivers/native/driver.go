@@ -1,6 +1,7 @@
 package native
 
 import (
+	"errors"
 	"fmt"
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/drivers/base"
@@ -58,6 +59,9 @@ func (driver Native) Save(account *model.Account, old *model.Account) error {
 }
 
 func (driver Native) File(path string, account *model.Account) (*model.File, error) {
+	if utils.IsContain(strings.Split(path, "/"), "..") {
+		return nil, errors.New("access using relative path is not allowed")
+	}
 	fullPath := filepath.Join(account.RootFolder, path)
 	if !utils.Exists(fullPath) {
 		return nil, base.ErrPathNotFound
