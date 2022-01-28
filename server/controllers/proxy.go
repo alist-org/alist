@@ -101,10 +101,10 @@ func Proxy(c *gin.Context) {
 		c.File(link.Url)
 		return
 	} else {
-		if utils.GetFileType(filepath.Ext(rawPath)) == conf.TEXT {
-			Text(c, link)
-			return
-		}
+		//if utils.GetFileType(filepath.Ext(rawPath)) == conf.TEXT {
+		//	Text(c, link)
+		//	return
+		//}
 		driver.Proxy(c, account)
 		r := c.Request
 		w := c.Writer
