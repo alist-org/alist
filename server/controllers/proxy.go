@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/drivers/base"
+	"github.com/Xhofe/alist/drivers/operate"
 	"github.com/Xhofe/alist/server/common"
 	"github.com/Xhofe/alist/utils"
 	"github.com/gin-gonic/gin"
@@ -50,7 +51,7 @@ func Proxy(c *gin.Context) {
 		return
 	}
 	// 检查文件
-	file, err := driver.File(path, account)
+	file, err := operate.File(driver, account, path)
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return

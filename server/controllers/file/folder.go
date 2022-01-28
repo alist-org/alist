@@ -1,6 +1,7 @@
 package file
 
 import (
+	"github.com/Xhofe/alist/drivers/operate"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/server/common"
 	"github.com/gin-gonic/gin"
@@ -30,7 +31,7 @@ func Folder(c *gin.Context) {
 			common.ErrorResp(c, err, 500)
 			return
 		}
-		file, rawFiles, err := driver.Path(path, account)
+		file, rawFiles, err := operate.Path(driver, account, path)
 		if err != nil {
 			common.ErrorResp(c, err, 500)
 			return

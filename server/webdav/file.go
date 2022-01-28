@@ -40,7 +40,7 @@ func (fs *FileSystem) File(rawPath string) (*model.File, error) {
 	if err != nil {
 		return nil, err
 	}
-	return driver.File(path_, account)
+	return operate.File(driver, account, path_)
 }
 
 func (fs *FileSystem) Files(ctx context.Context, rawPath string) ([]model.File, error) {
@@ -56,7 +56,7 @@ func (fs *FileSystem) Files(ctx context.Context, rawPath string) ([]model.File, 
 	if err != nil {
 		return nil, err
 	}
-	files, err := driver.Files(path_, account)
+	files, err := operate.Files(driver, account, path_)
 	if err != nil {
 		return nil, err
 	}

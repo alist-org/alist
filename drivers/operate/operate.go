@@ -8,6 +8,32 @@ import (
 	"runtime/debug"
 )
 
+func Path(driver base.Driver, account *model.Account, path string) (*model.File, []model.File, error) {
+	return driver.Path(path, account)
+}
+
+func Files(driver base.Driver, account *model.Account, path string) ([]model.File, error) {
+	_, files, err := Path(driver, account, path)
+	if err != nil {
+		return nil, err
+	}
+	if files == nil {
+		return nil, base.ErrNotFolder
+	}
+	return files, nil
+}
+
+func File(driver base.Driver, account *model.Account, path string) (*model.File, error) {
+	file, _, err := Path(driver, account, path)
+	if err != nil {
+		return nil, err
+	}
+	if file == nil {
+		return nil, base.ErrNotFolder
+	}
+	return file, nil
+}
+
 func MakeDir(driver base.Driver, account *model.Account, path string, clearCache bool) error {
 	log.Debugf("mkdir: %s", path)
 	err := driver.MakeDir(path, account)

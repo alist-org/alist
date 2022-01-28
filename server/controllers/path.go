@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/drivers/base"
+	"github.com/Xhofe/alist/drivers/operate"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/server/common"
 	"github.com/Xhofe/alist/utils"
@@ -109,7 +110,7 @@ func Path(c *gin.Context) {
 		common.ErrorResp(c, err, 500)
 		return
 	}
-	file, files, err := driver.Path(path, account)
+	file, files, err := operate.Path(driver, account, path)
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return
