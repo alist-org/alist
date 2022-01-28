@@ -1,14 +1,12 @@
 package _89
 
 import (
-	"errors"
 	"fmt"
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
 	"github.com/gin-gonic/gin"
-	jsoniter "github.com/json-iterator/go"
 	log "github.com/sirupsen/logrus"
 	"path/filepath"
 )
@@ -350,29 +348,8 @@ func (driver Cloud189) Upload(file *model.FileStream, account *model.Account) er
 	if file == nil {
 		return base.ErrEmptyFile
 	}
-	client, err := driver.getClient(account)
-	if err != nil {
-		return err
-	}
-	parentFile, err := driver.File(file.ParentPath, account)
-	if err != nil {
-		return err
-	}
-	// api refer to PanIndex
-	res, err := client.R().SetMultipartFormData(map[string]string{
-		"parentId":   parentFile.Id,
-		"sessionKey": account.DriveId,
-		"opertype":   "1",
-		"fname":      file.GetFileName(),
-	}).SetMultipartField("Filedata", file.GetFileName(), file.GetMIMEType(), file).Post("https://hb02.upload.cloud.189.cn/v1/DCIWebUploadAction")
-	if err != nil {
-		return err
-	}
-	if jsoniter.Get(res.Body(), "MD5").ToString() != "" {
-		return nil
-	}
-	log.Debugf(res.String())
-	return errors.New(res.String())
+	//return driver.NewUpload(file, account)
+	return driver.OldUpload(file, account)
 }
 
 var _ base.Driver = (*Cloud189)(nil)
