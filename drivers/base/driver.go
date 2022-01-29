@@ -84,7 +84,7 @@ func GetDriversMap() map[string]Driver {
 }
 
 func GetDrivers() map[string][]Item {
-	res := make(map[string][]Item, 0)
+	res := make(map[string][]Item)
 	for k, v := range driversMap {
 		if v.Config().OnlyProxy {
 			res[k] = v.Items()

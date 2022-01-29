@@ -26,7 +26,7 @@ import (
 )
 
 var client189Map map[string]*resty.Client
-var infoMap = make(map[string]Rsa, 0)
+var infoMap = make(map[string]Rsa)
 
 func (driver Cloud189) getClient(account *model.Account) (*resty.Client, error) {
 	client, ok := client189Map[account.Name]

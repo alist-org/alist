@@ -27,4 +27,5 @@ func (driver FTP) Login(account *model.Account) (*ftp.ServerConn, error) {
 
 func init() {
 	base.RegisterDriver(&FTP{})
+	connMap = make(map[string]*ftp.ServerConn)
 }

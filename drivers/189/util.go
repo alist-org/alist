@@ -156,7 +156,7 @@ func getMd5(data []byte) []byte {
 
 func init() {
 	base.RegisterDriver(&Cloud189{})
-	client189Map = make(map[string]*resty.Client, 0)
+	client189Map = make(map[string]*resty.Client)
 }
 
 func decodeURIComponent(str string) string {

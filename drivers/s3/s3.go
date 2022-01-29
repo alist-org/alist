@@ -118,6 +118,6 @@ func (driver S3) GetKey(path string, account *model.Account, dir bool) string {
 }
 
 func init() {
-	sessionsMap = make(map[string]*session.Session, 0)
+	sessionsMap = make(map[string]*session.Session)
 	base.RegisterDriver(&S3{})
 }
