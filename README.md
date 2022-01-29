@@ -50,7 +50,7 @@ English | [中文](./README_cn.md)
 - [x] Cloudflare workers proxy
 - [x] File/Folder package download
 - [x] Support video list playback and subtitles(ass,srt,vtt)
-- [x] Web upload(Can allow visitors to upload), delete, mkdir, rename and move
+- [x] Web upload(Can allow visitors to upload), delete, mkdir, rename, move and copy
 
 ## Discussion
 
