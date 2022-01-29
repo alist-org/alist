@@ -24,14 +24,7 @@ func Files(driver base.Driver, account *model.Account, path string) ([]model.Fil
 }
 
 func File(driver base.Driver, account *model.Account, path string) (*model.File, error) {
-	file, _, err := Path(driver, account, path)
-	if err != nil {
-		return nil, err
-	}
-	if file == nil {
-		return nil, base.ErrNotFolder
-	}
-	return file, nil
+	return driver.File(path, account)
 }
 
 func MakeDir(driver base.Driver, account *model.Account, path string, clearCache bool) error {
