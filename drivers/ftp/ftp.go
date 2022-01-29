@@ -21,6 +21,7 @@ func (driver FTP) Login(account *model.Account) (*ftp.ServerConn, error) {
 	if err != nil {
 		return nil, err
 	}
+	connMap[account.Name] = conn
 	return conn, nil
 }
 
