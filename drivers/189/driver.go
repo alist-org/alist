@@ -348,8 +348,8 @@ func (driver Cloud189) Upload(file *model.FileStream, account *model.Account) er
 	if file == nil {
 		return base.ErrEmptyFile
 	}
-	//return driver.NewUpload(file, account)
-	return driver.OldUpload(file, account)
+	return driver.NewUpload(file, account)
+	//return driver.OldUpload(file, account)
 }
 
 var _ base.Driver = (*Cloud189)(nil)

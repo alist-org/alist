@@ -122,7 +122,7 @@ func EncodeParam(v url.Values) string {
 	return buf.String()
 }
 
-func aesEncrypt(data, key []byte) []byte {
+func AesEncrypt(data, key []byte) []byte {
 	block, _ := aes.NewCipher(key)
 	if block == nil {
 		return []byte{}
@@ -180,9 +180,9 @@ func Random(v string) string {
 	return string(data)
 }
 
-func SHA1(v, l string) []byte {
-	key := []byte(l)
-	mac := hmac.New(sha1.New, key)
-	mac.Write([]byte(v))
-	return mac.Sum(nil)
-}
+//func SHA1(v, l string) []byte {
+//	key := []byte(l)
+//	mac := hmac.New(sha1.New, key)
+//	mac.Write([]byte(v))
+//	return mac.Sum(nil)
+//}

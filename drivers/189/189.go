@@ -18,7 +18,6 @@ import (
 	"math"
 	mathRand "math/rand"
 	"net/http"
-	"net/url"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -361,52 +360,103 @@ func (driver Cloud189) GetResKey(account *model.Account) (string, string, error)
 	return pubKey, pkId, nil
 }
 
-func (driver Cloud189) UploadRequest1(uri string, form map[string]string, account *model.Account, resp interface{}) ([]byte, error) {
-	//sessionKey, err := driver.GetSessionKey(account)
-	//if err != nil {
-	//	return nil, err
-	//}
-	sessionKey := account.DriveId
-	pubKey, pkId, err := driver.GetResKey(account)
-	log.Debugln(sessionKey, pubKey, pkId)
-	if err != nil {
-		return nil, err
-	}
-	xRId := Random("xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx")
-	pkey := Random("xxxxxxxxxxxx4xxxyxxxxxxxxxxxxxxx")[0 : 16+int(16*mathRand.Float32())]
-	params := hex.EncodeToString(aesEncrypt([]byte(qs(form)), []byte(pkey[0:16])))
-	date := strconv.FormatInt(time.Now().Unix(), 10)
-	a := make(url.Values)
-	a.Set("SessionKey", sessionKey)
-	a.Set("Operate", http.MethodGet)
-	a.Set("RequestURI", uri)
-	a.Set("Date", date)
-	a.Set("params", params)
-	signature := hex.EncodeToString(SHA1(EncodeParam(a), pkey))
-	encryptionText := RsaEncode([]byte(pkey), pubKey, false)
-	headers := map[string]string{
-		"signature":      signature,
-		"sessionKey":     sessionKey,
-		"encryptionText": encryptionText,
-		"pkId":           pkId,
-		"x-request-id":   xRId,
-		"x-request-date": date,
-	}
-	req := base.RestyClient.R().SetHeaders(headers).SetQueryParam("params", params)
-	if resp != nil {
-		req.SetResult(resp)
-	}
-	res, err := req.Get("https://upload.cloud.189.cn" + uri)
-	if err != nil {
-		return nil, err
-	}
-	//log.Debug(res.String())
-	data := res.Body()
-	if jsoniter.Get(data, "code").ToString() != "SUCCESS" {
-		return nil, errors.New(uri + "---" + jsoniter.Get(data, "msg").ToString())
-	}
-	return data, nil
-}
+//func (driver Cloud189) UploadRequest1(uri string, form map[string]string, account *model.Account, resp interface{}) ([]byte, error) {
+//	//sessionKey, err := driver.GetSessionKey(account)
+//	//if err != nil {
+//	//	return nil, err
+//	//}
+//	sessionKey := account.DriveId
+//	pubKey, pkId, err := driver.GetResKey(account)
+//	log.Debugln(sessionKey, pubKey, pkId)
+//	if err != nil {
+//		return nil, err
+//	}
+//	xRId := Random("xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx")
+//	pkey := Random("xxxxxxxxxxxx4xxxyxxxxxxxxxxxxxxx")[0 : 16+int(16*mathRand.Float32())]
+//	params := hex.EncodeToString(AesEncrypt([]byte(qs(form)), []byte(pkey[0:16])))
+//	date := strconv.FormatInt(time.Now().Unix(), 10)
+//	a := make(url.Values)
+//	a.Set("SessionKey", sessionKey)
+//	a.Set("Operate", http.MethodGet)
+//	a.Set("RequestURI", uri)
+//	a.Set("Date", date)
+//	a.Set("params", params)
+//	signature := hex.EncodeToString(SHA1(EncodeParam(a), pkey))
+//	encryptionText := RsaEncode([]byte(pkey), pubKey, false)
+//	headers := map[string]string{
+//		"signature":      signature,
+//		"sessionKey":     sessionKey,
+//		"encryptionText": encryptionText,
+//		"pkId":           pkId,
+//		"x-request-id":   xRId,
+//		"x-request-date": date,
+//	}
+//	req := base.RestyClient.R().SetHeaders(headers).SetQueryParam("params", params)
+//	if resp != nil {
+//		req.SetResult(resp)
+//	}
+//	res, err := req.Get("https://upload.cloud.189.cn" + uri)
+//	if err != nil {
+//		return nil, err
+//	}
+//	//log.Debug(res.String())
+//	data := res.Body()
+//	if jsoniter.Get(data, "code").ToString() != "SUCCESS" {
+//		return nil, errors.New(uri + "---" + jsoniter.Get(data, "msg").ToString())
+//	}
+//	return data, nil
+//}
+//
+//func (driver Cloud189) UploadRequest2(uri string, form map[string]string, account *model.Account, resp interface{}) ([]byte, error) {
+//	c := strconv.FormatInt(time.Now().UnixMilli(), 10)
+//	r := Random("xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx")
+//	l := Random("xxxxxxxxxxxx4xxxyxxxxxxxxxxxxxxx")
+//	l = l[0 : 16+int(16*mathRand.Float32())]
+//
+//	e := qs(form)
+//	data := AesEncrypt([]byte(e), []byte(l[0:16]))
+//	h := hex.EncodeToString(data)
+//
+//	sessionKey := account.DriveId
+//	a := make(url.Values)
+//	a.Set("SessionKey", sessionKey)
+//	a.Set("Operate", http.MethodGet)
+//	a.Set("RequestURI", uri)
+//	a.Set("Date", c)
+//	a.Set("params", h)
+//	g := SHA1(EncodeParam(a), l)
+//
+//	pubKey, pkId, err := driver.GetResKey(account)
+//	if err != nil {
+//		return nil, err
+//	}
+//	b := RsaEncode([]byte(l), pubKey, false)
+//	client, err := driver.getClient(account)
+//	if err != nil {
+//		return nil, err
+//	}
+//	req := client.R()
+//	req.Header.Set("accept", "application/json;charset=UTF-8")
+//	req.Header.Set("SessionKey", sessionKey)
+//	req.Header.Set("Signature", hex.EncodeToString(g))
+//	req.Header.Set("X-Request-Date", c)
+//	req.Header.Set("X-Request-ID", r)
+//	req.Header.Set("EncryptionText", b)
+//	req.Header.Set("PkId", pkId)
+//	if resp != nil {
+//		req.SetResult(resp)
+//	}
+//	res, err := req.Get("https://upload.cloud.189.cn" + uri + "?params=" + h)
+//	if err != nil {
+//		return nil, err
+//	}
+//	//log.Debug(res.String())
+//	data = res.Body()
+//	if jsoniter.Get(data, "code").ToString() != "SUCCESS" {
+//		return nil, errors.New(uri + "---" + jsoniter.Get(data, "msg").ToString())
+//	}
+//	return data, nil
+//}
 
 func (driver Cloud189) UploadRequest(uri string, form map[string]string, account *model.Account, resp interface{}) ([]byte, error) {
 	c := strconv.FormatInt(time.Now().UnixMilli(), 10)
@@ -415,28 +465,25 @@ func (driver Cloud189) UploadRequest(uri string, form map[string]string, account
 	l = l[0 : 16+int(16*mathRand.Float32())]
 
 	e := qs(form)
-	data := aesEncrypt([]byte(e), []byte(l[0:16]))
+	data := AesEncrypt([]byte(e), []byte(l[0:16]))
 	h := hex.EncodeToString(data)
 
 	sessionKey := account.DriveId
-	a := make(url.Values)
-	a.Set("SessionKey", sessionKey)
-	a.Set("Operate", http.MethodGet)
-	a.Set("RequestURI", uri)
-	a.Set("Date", c)
-	a.Set("params", h)
-	g := SHA1(EncodeParam(a), l)
+	signature := hmacSha1(fmt.Sprintf("SessionKey=%s&Operate=GET&RequestURI=%s&Date=%s&params=%s", sessionKey, uri, c, h), l)
 
 	pubKey, pkId, err := driver.GetResKey(account)
 	if err != nil {
 		return nil, err
 	}
 	b := RsaEncode([]byte(l), pubKey, false)
-
-	req := base.RestyClient.R()
+	client, err := driver.getClient(account)
+	if err != nil {
+		return nil, err
+	}
+	req := client.R()
 	req.Header.Set("accept", "application/json;charset=UTF-8")
 	req.Header.Set("SessionKey", sessionKey)
-	req.Header.Set("Signature", hex.EncodeToString(g))
+	req.Header.Set("Signature", signature)
 	req.Header.Set("X-Request-Date", c)
 	req.Header.Set("X-Request-ID", r)
 	req.Header.Set("EncryptionText", b)
@@ -458,6 +505,14 @@ func (driver Cloud189) UploadRequest(uri string, form map[string]string, account
 
 // NewUpload Error: signature check false
 func (driver Cloud189) NewUpload(file *model.FileStream, account *model.Account) error {
+	sessionKey, err := driver.GetSessionKey(account)
+	if err != nil {
+		account.Status = err.Error()
+	} else {
+		account.Status = "work"
+		account.DriveId = sessionKey
+	}
+	_ = model.SaveAccount(account)
 	const DEFAULT uint64 = 10485760
 	var count = int64(math.Ceil(float64(file.GetSize()) / float64(DEFAULT)))
 	var finish uint64 = 0
@@ -491,10 +546,10 @@ func (driver Cloud189) NewUpload(file *model.FileStream, account *model.Account)
 		if DEFAULT < byteSize {
 			byteSize = DEFAULT
 		}
-		log.Debugf("%d,%d", byteSize, finish)
+		//log.Debugf("%d,%d", byteSize, finish)
 		byteData := make([]byte, byteSize)
 		n, err := io.ReadFull(file, byteData)
-		log.Debug(err, n)
+		//log.Debug(err, n)
 		if err != nil {
 			return err
 		}
@@ -504,7 +559,7 @@ func (driver Cloud189) NewUpload(file *model.FileStream, account *model.Account)
 		md5Base64 := base64.StdEncoding.EncodeToString(md5Bytes)
 		md5s = append(md5s, strings.ToUpper(md5Hex))
 		md5Sum.Write(byteData)
-		log.Debugf("md5Bytes: %+v,md5Str:%s,md5Base64:%s", md5Bytes, md5Hex, md5Base64)
+		//log.Debugf("md5Bytes: %+v,md5Str:%s,md5Base64:%s", md5Bytes, md5Hex, md5Base64)
 		var resp UploadUrlsResp
 		res, err = driver.UploadRequest("/person/getMultiUploadUrls", map[string]string{
 			"partInfo":     fmt.Sprintf("%s-%s", strconv.FormatInt(i, 10), md5Base64),
