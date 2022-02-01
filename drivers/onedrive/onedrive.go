@@ -81,7 +81,7 @@ type OneTokenErr struct {
 
 func (driver Onedrive) RefreshToken(account *model.Account) error {
 	err := driver.refreshToken(account)
-	if err != nil && err.Error() == "empty refresh_token" {
+	if err != nil && err == base.ErrEmptyToken {
 		return driver.refreshToken(account)
 	}
 	return err
@@ -109,8 +109,8 @@ func (driver Onedrive) refreshToken(account *model.Account) error {
 		account.Status = "work"
 	}
 	if resp.RefreshToken == "" {
-		account.Status = "empty refresh_token"
-		return errors.New("empty refresh_token")
+		account.Status = base.ErrEmptyToken.Error()
+		return base.ErrEmptyToken
 	}
 	account.RefreshToken, account.AccessToken = resp.RefreshToken, resp.AccessToken
 	return nil

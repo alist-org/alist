@@ -5,8 +5,8 @@ import (
 	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
-	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
+	"net/http"
 	"path/filepath"
 )
 
@@ -159,8 +159,8 @@ func (driver Lanzou) Path(path string, account *model.Account) (*model.File, []m
 	return nil, files, nil
 }
 
-func (driver Lanzou) Proxy(c *gin.Context, account *model.Account) {
-	c.Request.Header.Del("Origin")
+func (driver Lanzou) Proxy(r *http.Request, account *model.Account) {
+	r.Header.Del("Origin")
 }
 
 func (driver Lanzou) Preview(path string, account *model.Account) (interface{}, error) {

@@ -13,6 +13,7 @@ var (
 	ErrNotFolder    = errors.New("not a folder")
 	ErrEmptyFile    = errors.New("empty file")
 	ErrRelativePath = errors.New("access using relative path is not allowed")
+	ErrEmptyToken   = errors.New("empty token")
 )
 
 const (

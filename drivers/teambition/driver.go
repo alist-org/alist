@@ -5,8 +5,8 @@ import (
 	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
-	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
+	"net/http"
 	"path/filepath"
 )
 
@@ -149,7 +149,7 @@ func (driver Teambition) Path(path string, account *model.Account) (*model.File,
 	return nil, files, nil
 }
 
-func (driver Teambition) Proxy(c *gin.Context, account *model.Account) {
+func (driver Teambition) Proxy(r *http.Request, account *model.Account) {
 
 }
 

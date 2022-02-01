@@ -105,7 +105,6 @@ func Proxy(c *gin.Context) {
 		//	Text(c, link)
 		//	return
 		//}
-		driver.Proxy(c, account)
 		r := c.Request
 		w := c.Writer
 		//target, err := url.Parse(link.Url)
@@ -121,6 +120,7 @@ func Proxy(c *gin.Context) {
 		for h, val := range r.Header {
 			req.Header[h] = val
 		}
+		driver.Proxy(req, account)
 		res, err := HttpClient.Do(req)
 		if err != nil {
 			common.ErrorResp(c, err, 500)

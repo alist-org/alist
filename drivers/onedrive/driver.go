@@ -6,9 +6,9 @@ import (
 	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
-	"github.com/gin-gonic/gin"
 	"github.com/robfig/cron/v3"
 	log "github.com/sirupsen/logrus"
+	"net/http"
 	"path/filepath"
 )
 
@@ -205,8 +205,8 @@ func (driver Onedrive) Path(path string, account *model.Account) (*model.File, [
 	return nil, files, nil
 }
 
-func (driver Onedrive) Proxy(c *gin.Context, account *model.Account) {
-	c.Request.Header.Del("Origin")
+func (driver Onedrive) Proxy(r *http.Request, account *model.Account) {
+	r.Header.Del("Origin")
 }
 
 func (driver Onedrive) Preview(path string, account *model.Account) (interface{}, error) {

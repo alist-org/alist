@@ -2,7 +2,6 @@ package base
 
 import (
 	"github.com/Xhofe/alist/model"
-	"github.com/gin-gonic/gin"
 	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
 	"net/http"
@@ -39,7 +38,7 @@ type Driver interface {
 	// Path 取路径（文件或文件夹）
 	Path(path string, account *model.Account) (*model.File, []model.File, error)
 	// Proxy 代理处理
-	Proxy(c *gin.Context, account *model.Account)
+	Proxy(r *http.Request, account *model.Account)
 	// Preview 预览
 	Preview(path string, account *model.Account) (interface{}, error)
 	// MakeDir 创建文件夹
@@ -62,6 +61,7 @@ type Item struct {
 	Name        string `json:"name"`
 	Label       string `json:"label"`
 	Type        string `json:"type"`
+	Default     string `json:"default"`
 	Values      string `json:"values"`
 	Required    bool   `json:"required"`
 	Description string `json:"description"`

@@ -6,8 +6,8 @@ import (
 	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
-	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
+	"net/http"
 	"path/filepath"
 	"strconv"
 )
@@ -154,7 +154,7 @@ func (driver Shandian) Path(path string, account *model.Account) (*model.File, [
 	return nil, files, nil
 }
 
-func (driver Shandian) Proxy(c *gin.Context, account *model.Account) {
+func (driver Shandian) Proxy(r *http.Request, account *model.Account) {
 
 }
 

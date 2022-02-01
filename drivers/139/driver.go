@@ -7,7 +7,6 @@ import (
 	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
-	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"io"
 	"math"
@@ -163,7 +162,7 @@ func (driver Cloud139) Path(path string, account *model.Account) (*model.File, [
 	return nil, files, nil
 }
 
-func (driver Cloud139) Proxy(c *gin.Context, account *model.Account) {
+func (driver Cloud139) Proxy(r *http.Request, account *model.Account) {
 
 }
 

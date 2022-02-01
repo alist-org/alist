@@ -12,12 +12,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	jsoniter "github.com/json-iterator/go"
 	log "github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path/filepath"
 )
@@ -148,7 +148,7 @@ func (driver MediaTrack) Path(path string, account *model.Account) (*model.File,
 	return nil, files, nil
 }
 
-func (driver MediaTrack) Proxy(c *gin.Context, account *model.Account) {
+func (driver MediaTrack) Proxy(r *http.Request, account *model.Account) {
 
 }
 

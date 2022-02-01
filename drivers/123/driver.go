@@ -12,10 +12,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -197,8 +197,8 @@ func (driver Pan123) Path(path string, account *model.Account) (*model.File, []m
 	return nil, files, nil
 }
 
-func (driver Pan123) Proxy(c *gin.Context, account *model.Account) {
-	c.Request.Header.Del("origin")
+func (driver Pan123) Proxy(r *http.Request, account *model.Account) {
+	r.Header.Del("origin")
 }
 
 func (driver Pan123) Preview(path string, account *model.Account) (interface{}, error) {

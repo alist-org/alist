@@ -6,10 +6,10 @@ import (
 	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
-	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -156,7 +156,7 @@ func (driver Native) Path(path string, account *model.Account) (*model.File, []m
 	return nil, files, nil
 }
 
-func (driver Native) Proxy(c *gin.Context, account *model.Account) {
+func (driver Native) Proxy(r *http.Request, account *model.Account) {
 	// unnecessary
 }
 

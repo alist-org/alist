@@ -6,9 +6,9 @@ import (
 	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
-	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
+	"net/http"
 	"path/filepath"
 )
 
@@ -178,8 +178,8 @@ func (driver GoogleDrive) Path(path string, account *model.Account) (*model.File
 	return nil, files, nil
 }
 
-func (driver GoogleDrive) Proxy(c *gin.Context, account *model.Account) {
-	c.Request.Header.Add("Authorization", "Bearer "+account.AccessToken)
+func (driver GoogleDrive) Proxy(r *http.Request, account *model.Account) {
+	r.Header.Add("Authorization", "Bearer "+account.AccessToken)
 }
 
 func (driver GoogleDrive) Preview(path string, account *model.Account) (interface{}, error) {
