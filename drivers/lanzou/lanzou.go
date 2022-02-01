@@ -209,19 +209,24 @@ func (driver *Lanzou) GetLink(downId string, account *model.Account) (string, er
 	if len(iframe) == 0 {
 		return "", fmt.Errorf("get down empty page")
 	}
-	iframeUrl := "https://wwa.lanzouo.com" + iframe[1]
+	iframeUrl := fmt.Sprintf("https://%s%s", u.Host, iframe[1])
 	res, err = lanzouClient.R().Get(iframeUrl)
 	if err != nil {
 		return "", err
 	}
+	log.Debugln(res.String())
 	ajaxdata := regexp.MustCompile(`var ajaxdata = '(.+?)'`).FindStringSubmatch(res.String())
 	if len(ajaxdata) == 0 {
 		return "", fmt.Errorf("get iframe empty page")
 	}
 	signs := ajaxdata[1]
-	sign := regexp.MustCompile(`var ispostdowns = '(.+?)';`).FindStringSubmatch(res.String())[1]
-	websign := regexp.MustCompile(`'websign':'(.+?)'`).FindStringSubmatch(res.String())[1]
-	websignkey := regexp.MustCompile(`'websignkey':'(.+?)'`).FindStringSubmatch(res.String())[1]
+	//sign := regexp.MustCompile(`var ispostdowns = '(.+?)';`).FindStringSubmatch(res.String())[1]
+	sign := regexp.MustCompile(`'sign':'(.+?)',`).FindStringSubmatch(res.String())[1]
+	//websign := regexp.MustCompile(`'websign':'(.+?)'`).FindStringSubmatch(res.String())[1]
+	//websign := regexp.MustCompile(`var websign = '(.+?)'`).FindStringSubmatch(res.String())[1]
+	websign := ""
+	//websignkey := regexp.MustCompile(`'websignkey':'(.+?)'`).FindStringSubmatch(res.String())[1]
+	websignkey := regexp.MustCompile(`var websignkey = '(.+?)';`).FindStringSubmatch(res.String())[1]
 	var resp LanzouLinkResp
 	form := map[string]string{
 		"action":     "downprocess",
