@@ -77,7 +77,7 @@ func (driver S3) Items() []base.Item {
 		{
 			Name:        "zone",
 			Label:       "placeholder filename",
-			Type:        base.TypeNumber,
+			Type:        base.TypeString,
 			Description: "default empty string",
 		},
 	}
@@ -142,7 +142,7 @@ func (driver S3) Files(path string, account *model.Account) ([]model.File, error
 }
 
 func (driver S3) Link(args base.Args, account *model.Account) (*base.Link, error) {
-	client, err := driver.GetClient(account)
+	client, err := driver.GetClient(account, true)
 	if err != nil {
 		return nil, err
 	}
@@ -215,7 +215,7 @@ func (driver S3) Rename(src string, dst string, account *model.Account) error {
 }
 
 func (driver S3) Copy(src string, dst string, account *model.Account) error {
-	client, err := driver.GetClient(account)
+	client, err := driver.GetClient(account, false)
 	if err != nil {
 		return err
 	}
@@ -235,7 +235,7 @@ func (driver S3) Copy(src string, dst string, account *model.Account) error {
 }
 
 func (driver S3) Delete(path string, account *model.Account) error {
-	client, err := driver.GetClient(account)
+	client, err := driver.GetClient(account, false)
 	if err != nil {
 		return err
 	}

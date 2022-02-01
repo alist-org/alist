@@ -29,13 +29,13 @@ func (driver S3) NewSession(account *model.Account) (*session.Session, error) {
 	return session.NewSession(cfg)
 }
 
-func (driver S3) GetClient(account *model.Account) (*s3.S3, error) {
+func (driver S3) GetClient(account *model.Account, link bool) (*s3.S3, error) {
 	s, ok := sessionsMap[account.Name]
 	if !ok {
 		return nil, fmt.Errorf("can't find [%s] session", account.Name)
 	}
 	client := s3.New(s)
-	if account.CustomHost != "" {
+	if link && account.CustomHost != "" {
 		cURL, err := url.Parse(account.CustomHost)
 		if err != nil {
 			return nil, err
@@ -54,7 +54,7 @@ func (driver S3) GetClient(account *model.Account) (*s3.S3, error) {
 func (driver S3) List(prefix string, account *model.Account) ([]model.File, error) {
 	prefix = driver.GetKey(prefix, account, true)
 	log.Debugf("list: %s", prefix)
-	client, err := driver.GetClient(account)
+	client, err := driver.GetClient(account, false)
 	if err != nil {
 		return nil, err
 	}
