@@ -19,8 +19,6 @@ import (
 	"time"
 )
 
-var oneClient = resty.New()
-
 type Host struct {
 	Oauth string
 	Api   string
@@ -91,7 +89,7 @@ func (driver Onedrive) refreshToken(account *model.Account) error {
 	url := driver.GetMetaUrl(account, true, "") + "/common/oauth2/v2.0/token"
 	var resp base.TokenResp
 	var e OneTokenErr
-	_, err := oneClient.R().SetResult(&resp).SetError(&e).SetFormData(map[string]string{
+	_, err := base.RestyClient.R().SetResult(&resp).SetError(&e).SetFormData(map[string]string{
 		"grant_type":    "refresh_token",
 		"client_id":     account.ClientId,
 		"client_secret": account.ClientSecret,
@@ -178,16 +176,17 @@ func (driver Onedrive) GetFiles(account *model.Account, path string) ([]OneFile,
 	}
 	for nextLink != "" {
 		var files OneFiles
-		var e OneRespErr
-		_, err := oneClient.R().SetResult(&files).SetError(&e).
-			SetHeader("Authorization", "Bearer  "+account.AccessToken).
-			Get(nextLink)
+		_, err := driver.Request(nextLink, base.Get, nil, nil, nil, nil, &files, account)
+		//var e OneRespErr
+		//_, err := oneClient.R().SetResult(&files).SetError(&e).
+		//	SetHeader("Authorization", "Bearer  "+account.AccessToken).
+		//	Get(nextLink)
 		if err != nil {
 			return nil, err
 		}
-		if e.Error.Code != "" {
-			return nil, fmt.Errorf("%s", e.Error.Message)
-		}
+		//if e.Error.Code != "" {
+		//	return nil, fmt.Errorf("%s", e.Error.Message)
+		//}
 		res = append(res, files.Value...)
 		nextLink = files.NextLink
 	}
@@ -196,16 +195,18 @@ func (driver Onedrive) GetFiles(account *model.Account, path string) ([]OneFile,
 
 func (driver Onedrive) GetFile(account *model.Account, path string) (*OneFile, error) {
 	var file OneFile
-	var e OneRespErr
-	_, err := oneClient.R().SetResult(&file).SetError(&e).
-		SetHeader("Authorization", "Bearer  "+account.AccessToken).
-		Get(driver.GetMetaUrl(account, false, path))
+	//var e OneRespErr
+	u := driver.GetMetaUrl(account, false, path)
+	_, err := driver.Request(u, base.Get, nil, nil, nil, nil, &file, account)
+	//_, err := oneClient.R().SetResult(&file).SetError(&e).
+	//	SetHeader("Authorization", "Bearer  "+account.AccessToken).
+	//	Get(driver.GetMetaUrl(account, false, path))
 	if err != nil {
 		return nil, err
 	}
-	if e.Error.Code != "" {
-		return nil, fmt.Errorf("%s", e.Error.Message)
-	}
+	//if e.Error.Code != "" {
+	//	return nil, fmt.Errorf("%s", e.Error.Message)
+	//}
 	return &file, nil
 }
 
@@ -314,5 +315,4 @@ func (driver Onedrive) UploadBig(file *model.FileStream, account *model.Account)
 
 func init() {
 	base.RegisterDriver(&Onedrive{})
-	oneClient.SetRetryCount(3)
 }

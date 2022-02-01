@@ -6,7 +6,6 @@ import (
 	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
-	"github.com/robfig/cron/v3"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 	"path/filepath"
@@ -92,9 +91,9 @@ func (driver Onedrive) Items() []base.Item {
 }
 
 func (driver Onedrive) Save(account *model.Account, old *model.Account) error {
-	if old != nil {
-		conf.Cron.Remove(cron.EntryID(old.CronId))
-	}
+	//if old != nil {
+	//	conf.Cron.Remove(cron.EntryID(old.CronId))
+	//}
 	if account == nil {
 		return nil
 	}
@@ -104,28 +103,25 @@ func (driver Onedrive) Save(account *model.Account, old *model.Account) error {
 	}
 	account.RootFolder = utils.ParsePath(account.RootFolder)
 	err := driver.RefreshToken(account)
+	_ = model.SaveAccount(account)
 	if err != nil {
 		return err
 	}
-	cronId, err := conf.Cron.AddFunc("@every 1h", func() {
-		name := account.Name
-		log.Debugf("onedrive account name: %s", name)
-		newAccount, ok := model.GetAccount(name)
-		log.Debugf("onedrive account: %+v", newAccount)
-		if !ok {
-			return
-		}
-		err = driver.RefreshToken(&newAccount)
-		_ = model.SaveAccount(&newAccount)
-	})
-	if err != nil {
-		return err
-	}
-	account.CronId = int(cronId)
-	err = model.SaveAccount(account)
-	if err != nil {
-		return err
-	}
+	//cronId, err := conf.Cron.AddFunc("@every 1h", func() {
+	//	name := account.Name
+	//	log.Debugf("onedrive account name: %s", name)
+	//	newAccount, ok := model.GetAccount(name)
+	//	log.Debugf("onedrive account: %+v", newAccount)
+	//	if !ok {
+	//		return
+	//	}
+	//	err = driver.RefreshToken(&newAccount)
+	//	_ = model.SaveAccount(&newAccount)
+	//})
+	//if err != nil {
+	//	return err
+	//}
+	//account.CronId = int(cronId)
 	return nil
 }
 
