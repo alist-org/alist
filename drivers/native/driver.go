@@ -9,7 +9,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -156,9 +155,9 @@ func (driver Native) Path(path string, account *model.Account) (*model.File, []m
 	return nil, files, nil
 }
 
-func (driver Native) Proxy(r *http.Request, account *model.Account) {
-	// unnecessary
-}
+//func (driver Native) Proxy(r *http.Request, account *model.Account) {
+//	// unnecessary
+//}
 
 func (driver Native) Preview(path string, account *model.Account) (interface{}, error) {
 	return nil, base.ErrNotSupport

@@ -13,7 +13,6 @@ import (
 	"io"
 	"io/ioutil"
 	"math"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -170,9 +169,9 @@ func (driver Baidu) Path(path string, account *model.Account) (*model.File, []mo
 	return nil, files, nil
 }
 
-func (driver Baidu) Proxy(r *http.Request, account *model.Account) {
-	r.Header.Set("User-Agent", "pan.baidu.com")
-}
+//func (driver Baidu) Proxy(r *http.Request, account *model.Account) {
+//	r.Header.Set("User-Agent", "pan.baidu.com")
+//}
 
 func (driver Baidu) Preview(path string, account *model.Account) (interface{}, error) {
 	return nil, base.ErrNotSupport

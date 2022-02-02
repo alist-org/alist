@@ -7,7 +7,6 @@ import (
 	"github.com/Xhofe/alist/utils"
 	"github.com/jlaffaye/ftp"
 	log "github.com/sirupsen/logrus"
-	"net/http"
 	"path/filepath"
 )
 
@@ -186,9 +185,9 @@ func (driver FTP) Path(path string, account *model.Account) (*model.File, []mode
 	return nil, files, nil
 }
 
-func (driver FTP) Proxy(r *http.Request, account *model.Account) {
-
-}
+//func (driver FTP) Proxy(r *http.Request, account *model.Account) {
+//
+//}
 
 func (driver FTP) Preview(path string, account *model.Account) (interface{}, error) {
 	return nil, base.ErrNotSupport

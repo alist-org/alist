@@ -162,9 +162,9 @@ func (driver Cloud139) Path(path string, account *model.Account) (*model.File, [
 	return nil, files, nil
 }
 
-func (driver Cloud139) Proxy(r *http.Request, account *model.Account) {
-
-}
+//func (driver Cloud139) Proxy(r *http.Request, account *model.Account) {
+//
+//}
 
 func (driver Cloud139) Preview(path string, account *model.Account) (interface{}, error) {
 	return nil, base.ErrNotSupport

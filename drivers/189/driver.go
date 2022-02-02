@@ -7,7 +7,6 @@ import (
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
 	log "github.com/sirupsen/logrus"
-	"net/http"
 	"path/filepath"
 )
 
@@ -198,9 +197,9 @@ func (driver Cloud189) Path(path string, account *model.Account) (*model.File, [
 	return nil, files, nil
 }
 
-func (driver Cloud189) Proxy(r *http.Request, account *model.Account) {
-	r.Header.Del("Origin")
-}
+//func (driver Cloud189) Proxy(r *http.Request, account *model.Account) {
+//	r.Header.Del("Origin")
+//}
 
 func (driver Cloud189) Preview(path string, account *model.Account) (interface{}, error) {
 	return nil, base.ErrNotSupport

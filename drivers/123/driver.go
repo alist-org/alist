@@ -15,7 +15,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
-	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -197,9 +196,9 @@ func (driver Pan123) Path(path string, account *model.Account) (*model.File, []m
 	return nil, files, nil
 }
 
-func (driver Pan123) Proxy(r *http.Request, account *model.Account) {
-	r.Header.Del("origin")
-}
+//func (driver Pan123) Proxy(r *http.Request, account *model.Account) {
+//	r.Header.Del("origin")
+//}
 
 func (driver Pan123) Preview(path string, account *model.Account) (interface{}, error) {
 	return nil, base.ErrNotSupport

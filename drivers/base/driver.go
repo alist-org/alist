@@ -37,8 +37,8 @@ type Driver interface {
 	Link(args Args, account *model.Account) (*Link, error)
 	// Path 取路径（文件或文件夹）
 	Path(path string, account *model.Account) (*model.File, []model.File, error)
-	// Proxy 代理处理
-	Proxy(r *http.Request, account *model.Account)
+	// Deprecated Proxy 代理处理
+	//Proxy(r *http.Request, account *model.Account)
 	// Preview 预览
 	Preview(path string, account *model.Account) (interface{}, error)
 	// MakeDir 创建文件夹

@@ -120,7 +120,9 @@ func Proxy(c *gin.Context) {
 		for h, val := range r.Header {
 			req.Header[h] = val
 		}
-		driver.Proxy(req, account)
+		for _, header := range link.Headers {
+			req.Header.Set(header.Name, header.Value)
+		}
 		res, err := HttpClient.Do(req)
 		if err != nil {
 			common.ErrorResp(c, err, 500)

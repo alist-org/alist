@@ -190,6 +190,12 @@ func (driver AliDrive) Link(args base.Args, account *model.Account) (*base.Link,
 		return nil, fmt.Errorf("%s", e.Message)
 	}
 	return &base.Link{
+		Headers: []base.Header{
+			{
+				Name:  "Referer",
+				Value: "https://www.aliyundrive.com/",
+			},
+		},
 		Url: resp["url"].(string),
 	}, nil
 }
@@ -211,10 +217,10 @@ func (driver AliDrive) Path(path string, account *model.Account) (*model.File, [
 	return nil, files, nil
 }
 
-func (driver AliDrive) Proxy(r *http.Request, account *model.Account) {
-	r.Header.Del("Origin")
-	r.Header.Set("Referer", "https://www.aliyundrive.com/")
-}
+//func (driver AliDrive) Proxy(r *http.Request, account *model.Account) {
+//	r.Header.Del("Origin")
+//	r.Header.Set("Referer", "https://www.aliyundrive.com/")
+//}
 
 func (driver AliDrive) Preview(path string, account *model.Account) (interface{}, error) {
 	file, err := driver.GetFile(path, account)

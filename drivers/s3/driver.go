@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	log "github.com/sirupsen/logrus"
-	"net/http"
 	"net/url"
 	"path/filepath"
 	"time"
@@ -189,9 +188,9 @@ func (driver S3) Path(path string, account *model.Account) (*model.File, []model
 	return nil, files, nil
 }
 
-func (driver S3) Proxy(r *http.Request, account *model.Account) {
-
-}
+//func (driver S3) Proxy(r *http.Request, account *model.Account) {
+//
+//}
 
 func (driver S3) Preview(path string, account *model.Account) (interface{}, error) {
 	return nil, base.ErrNotSupport

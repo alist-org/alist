@@ -17,7 +17,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"path/filepath"
 )
@@ -148,9 +147,9 @@ func (driver MediaTrack) Path(path string, account *model.Account) (*model.File,
 	return nil, files, nil
 }
 
-func (driver MediaTrack) Proxy(r *http.Request, account *model.Account) {
-
-}
+//func (driver MediaTrack) Proxy(r *http.Request, account *model.Account) {
+//
+//}
 
 func (driver MediaTrack) Preview(path string, account *model.Account) (interface{}, error) {
 	return nil, base.ErrNotImplement

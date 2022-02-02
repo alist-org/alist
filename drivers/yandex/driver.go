@@ -144,9 +144,9 @@ func (driver Yandex) Path(path string, account *model.Account) (*model.File, []m
 	return nil, files, nil
 }
 
-func (driver Yandex) Proxy(r *http.Request, account *model.Account) {
-
-}
+//func (driver Yandex) Proxy(r *http.Request, account *model.Account) {
+//
+//}
 
 func (driver Yandex) Preview(path string, account *model.Account) (interface{}, error) {
 	return nil, base.ErrNotSupport

@@ -7,7 +7,6 @@ import (
 	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
-	"net/http"
 	"path/filepath"
 	"strings"
 	"time"
@@ -148,7 +147,7 @@ func (driver Alist) Path(path string, account *model.Account) (*model.File, []mo
 	return nil, resp.Data.Files, nil
 }
 
-func (driver Alist) Proxy(r *http.Request, account *model.Account) {}
+//func (driver Alist) Proxy(r *http.Request, account *model.Account) {}
 
 func (driver Alist) Preview(path string, account *model.Account) (interface{}, error) {
 	var resp PathResp

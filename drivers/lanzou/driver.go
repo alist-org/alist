@@ -6,7 +6,6 @@ import (
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
 	log "github.com/sirupsen/logrus"
-	"net/http"
 	"path/filepath"
 )
 
@@ -159,9 +158,9 @@ func (driver Lanzou) Path(path string, account *model.Account) (*model.File, []m
 	return nil, files, nil
 }
 
-func (driver Lanzou) Proxy(r *http.Request, account *model.Account) {
-	r.Header.Del("Origin")
-}
+//func (driver Lanzou) Proxy(r *http.Request, account *model.Account) {
+//	r.Header.Del("Origin")
+//}
 
 func (driver Lanzou) Preview(path string, account *model.Account) (interface{}, error) {
 	return nil, base.ErrNotSupport
