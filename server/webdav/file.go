@@ -24,8 +24,13 @@ import (
 
 type FileSystem struct{}
 
+var upFileMap = make(map[string]*model.File)
+
 func (fs *FileSystem) File(rawPath string) (*model.File, error) {
 	rawPath = utils.ParsePath(rawPath)
+	if f, ok := upFileMap[rawPath]; ok {
+		return f, nil
+	}
 	if model.AccountsCount() > 1 && rawPath == "/" {
 		now := time.Now()
 		return &model.File{
@@ -154,6 +159,17 @@ func (fs *FileSystem) Upload(ctx context.Context, r *http.Request, rawPath strin
 	//	return err
 	//}
 	filePath, fileName := filepath.Split(path_)
+	now := time.Now()
+	if fileSize == 0 {
+		upFileMap[rawPath] = &model.File{
+			Name:      fileName,
+			Size:      0,
+			UpdatedAt: &now,
+		}
+		return nil
+	} else {
+		delete(upFileMap, rawPath)
+	}
 	fileData := model.FileStream{
 		MIMEType:   r.Header.Get("Content-Type"),
 		File:       r.Body,
