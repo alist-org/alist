@@ -123,3 +123,7 @@ func Join(elem ...string) string {
 	}
 	return res
 }
+
+func Split(p string) (string, string) {
+	return path.Split(p)
+}
