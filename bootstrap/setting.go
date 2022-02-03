@@ -36,7 +36,7 @@ func InitSettings() {
 		},
 		{
 			Key:         "logo",
-			Value:       "https://store.heytapimage.com/cdo-portal/feedback/202112/05/1542f45f86b8609495b69c5380753135.png",
+			Value:       "https://u.pigax.cn/gh/alist-org/assets@main/logo.svg",
 			Description: "logo",
 			Type:        "string",
 			Access:      model.PUBLIC,
@@ -44,7 +44,7 @@ func InitSettings() {
 		},
 		{
 			Key:         "favicon",
-			Value:       "https://store.heytapimage.com/cdo-portal/feedback/202112/05/1542f45f86b8609495b69c5380753135.png",
+			Value:       "https://u.pigax.cn/gh/alist-org/assets@main/logo.svg",
 			Description: "favicon",
 			Type:        "string",
 			Access:      model.PUBLIC,
