@@ -17,7 +17,7 @@ import (
 func (driver Cloud139) Request(pathname string, method int, headers, query, form map[string]string, data interface{}, resp interface{}, account *model.Account) ([]byte, error) {
 	url := "https://yun.139.com" + pathname
 	req := base.RestyClient.R()
-	randStr := randomStr(16)
+	randStr := utils.RandomStr(16)
 	ts := time.Now().Format("2006-01-02 15:04:05")
 	log.Debugf("%+v", data)
 	body, err := utils.Json.Marshal(data)
