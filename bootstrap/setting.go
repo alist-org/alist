@@ -36,7 +36,7 @@ func InitSettings() {
 		},
 		{
 			Key:         "logo",
-			Value:       "https://u.pigax.cn/gh/alist-org/assets@main/logo.svg",
+			Value:       "https://cdn.jsdelivr.net/gh/alist-org/logo@main/can_circle.svg",
 			Description: "logo",
 			Type:        "string",
 			Access:      model.PUBLIC,
@@ -44,7 +44,7 @@ func InitSettings() {
 		},
 		{
 			Key:         "favicon",
-			Value:       "https://u.pigax.cn/gh/alist-org/assets@main/logo.svg",
+			Value:       "https://cdn.jsdelivr.net/gh/alist-org/logo@main/logo.svg",
 			Description: "favicon",
 			Type:        "string",
 			Access:      model.PUBLIC,
