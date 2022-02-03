@@ -1,5 +1,5 @@
 <div align="center">
-  <h3><a href="https://alist.nn.ci">Alist</a></h3>
+  <a href="https://alist.nn.ci"><img height="100px" alt="logo" src="https://cdn.jsdelivr.net/gh/alist-org/assets@main/logo.svg"/></a>
   <p><em>🗂️一个支持多存储的文件列表程序，使用 Gin 和 React 。</em></p>
   <a href="https://github.com/Xhofe/alist/releases"><img src="https://img.shields.io/github/release/Xhofe/alist?style=flat-square" alt="latest version"></a>
   <a href="https://github.com/Xhofe/alist/discussions"><img src="https://img.shields.io/github/discussions/Xhofe/alist?color=%23ED8936&style=flat-square" alt="discussions"></a>
@@ -10,6 +10,7 @@
     <img src="https://img.shields.io/badge/%24-donate-ff69b4.svg?style=flat-square" alt="donate">
   </a>
 </div>
+
 
 ---
 
@@ -34,6 +35,8 @@
   - [x] Teambition（[中国](https://www.teambition.com/ )，[国际](https://us.teambition.com/ )）
   - [x] [分秒帧](https://www.mediatrack.cn/)
   - [x] [和彩云](https://yun.139.com/) (个人云, 家庭云)
+  - [x] [Yandex.Disk](https://disk.yandex.com/)
+  - [x] [百度云](http://pan.baidu.com/)
 - [x] 部署方便，开箱即用
 - [x] 文件预览（PDF、markdown、代码、纯文本……）
 - [x] 画廊模式下的图像预览
