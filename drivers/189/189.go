@@ -16,7 +16,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io"
 	"math"
-	mathRand "math/rand"
 	"net/http"
 	"path/filepath"
 	"regexp"
@@ -462,7 +461,7 @@ func (driver Cloud189) UploadRequest(uri string, form map[string]string, account
 	c := strconv.FormatInt(time.Now().UnixMilli(), 10)
 	r := Random("xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx")
 	l := Random("xxxxxxxxxxxx4xxxyxxxxxxxxxxxxxxx")
-	l = l[0 : 16+int(16*mathRand.Float32())]
+	l = l[0 : 16+int(16*utils.Rand.Float32())]
 
 	e := qs(form)
 	data := AesEncrypt([]byte(e), []byte(l[0:16]))

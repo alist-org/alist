@@ -14,18 +14,17 @@ import (
 	"encoding/pem"
 	"fmt"
 	"github.com/Xhofe/alist/drivers/base"
+	"github.com/Xhofe/alist/utils"
 	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
-	mathRand "math/rand"
 	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 )
 
 func random() string {
-	return fmt.Sprintf("0.%17v", mathRand.New(mathRand.NewSource(time.Now().UnixNano())).Int63n(100000000000000000))
+	return fmt.Sprintf("0.%17v", utils.Rand.Int63n(100000000000000000))
 }
 
 func RsaEncode(origData []byte, j_rsakey string, hex bool) string {
@@ -169,7 +168,7 @@ func Random(v string) string {
 	reg := regexp.MustCompilePOSIX("[xy]")
 	data := reg.ReplaceAllFunc([]byte(v), func(msg []byte) []byte {
 		var i int64
-		t := int64(16 * mathRand.Float32())
+		t := int64(16 * utils.Rand.Float32())
 		if msg[0] == 120 {
 			i = t
 		} else {
