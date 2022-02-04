@@ -22,7 +22,7 @@ func Init() bool {
 			log.Errorf(err.Error())
 			return false
 		}
-		log.Infof("current password: %s", pass.Value)
+		fmt.Printf("your password: %s\n", pass.Value)
 		return false
 	}
 	server.InitIndex()

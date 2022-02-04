@@ -12,6 +12,9 @@ func InitLog() {
 		log.SetLevel(log.DebugLevel)
 		log.SetReportCaller(true)
 	}
+	if conf.Password {
+		log.SetLevel(log.WarnLevel)
+	}
 	log.SetFormatter(&log.TextFormatter{
 		//DisableColors: true,
 		ForceColors:               true,
