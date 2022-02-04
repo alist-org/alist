@@ -158,7 +158,7 @@ func InitSettings() {
 		},
 		{
 			Key:         "WebDAV username",
-			Value:       "alist_admin",
+			Value:       "admin",
 			Description: "WebDAV username",
 			Type:        "string",
 			Access:      model.PRIVATE,
@@ -166,7 +166,7 @@ func InitSettings() {
 		},
 		{
 			Key:         "WebDAV password",
-			Value:       "alist_admin",
+			Value:       utils.RandomStr(8),
 			Description: "WebDAV password",
 			Type:        "string",
 			Access:      model.PRIVATE,
@@ -190,7 +190,7 @@ func InitSettings() {
 		},
 		{
 			Key:         "Visitor WebDAV username",
-			Value:       "alist_visitor",
+			Value:       "guest",
 			Description: "Visitor WebDAV username",
 			Type:        "string",
 			Access:      model.PRIVATE,
@@ -198,7 +198,7 @@ func InitSettings() {
 		},
 		{
 			Key:         "Visitor WebDAV password",
-			Value:       "alist_visitor",
+			Value:       "guest",
 			Description: "Visitor WebDAV password",
 			Type:        "string",
 			Access:      model.PRIVATE,
