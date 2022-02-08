@@ -108,7 +108,7 @@ func GetAccount(name string) (Account, bool) {
 func GetAccountsByName(name string) []Account {
 	accounts := make([]Account, 0)
 	for _, v := range accountsMap {
-		if v.Name == name || (strings.HasSuffix(v.Name, balance) && strings.HasPrefix(v.Name, name)) {
+		if v.Name == name || v.Name == name+balance {
 			accounts = append(accounts, v)
 		}
 	}
