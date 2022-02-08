@@ -45,7 +45,7 @@ var onedriveHostMap = map[string]Host{
 
 func (driver Onedrive) GetMetaUrl(account *model.Account, auth bool, path string) string {
 	path = filepath.Join(account.RootFolder, path)
-	log.Debugf(path)
+	//log.Debugf(path)
 	host, _ := onedriveHostMap[account.Zone]
 	if auth {
 		return host.Oauth
@@ -253,7 +253,7 @@ func (driver Onedrive) Request(url string, method int, headers, query, form map[
 	if err != nil {
 		return nil, err
 	}
-	log.Debug(res.String())
+	//log.Debug(res.String())
 	if e.Error.Code != "" {
 		if e.Error.Code == "InvalidAuthenticationToken" {
 			err = driver.RefreshToken(account)

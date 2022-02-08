@@ -40,7 +40,7 @@ func ParsePath(rawPath string) (*model.Account, string, base.Driver, error) {
 		path = "/" + strings.Join(paths[2:], "/")
 		name = paths[1]
 	}
-	account, ok := model.GetAccount(name)
+	account, ok := model.GetBalancedAccount(name)
 	if !ok {
 		return nil, "", nil, fmt.Errorf("no [%s] account", name)
 	}

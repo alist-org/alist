@@ -2,6 +2,9 @@ package model
 
 import (
 	"github.com/Xhofe/alist/conf"
+	log "github.com/sirupsen/logrus"
+	"strings"
+	"sync"
 	"time"
 )
 
@@ -45,7 +48,9 @@ type Account struct {
 	ExtractFolder string `json:"extract_folder"`
 }
 
-var accountsMap = map[string]Account{}
+var accountsMap = make(map[string]Account)
+
+var balance = ".balance"
 
 // SaveAccount save account to database
 func SaveAccount(account *Account) error {
@@ -100,6 +105,41 @@ func GetAccount(name string) (Account, bool) {
 	return account, ok
 }
 
+func GetAccountsByName(name string) []Account {
+	accounts := make([]Account, 0)
+	for _, v := range accountsMap {
+		if v.Name == name || (strings.HasSuffix(v.Name, balance) && strings.HasPrefix(v.Name, name)) {
+			accounts = append(accounts, v)
+		}
+	}
+	return accounts
+}
+
+var balanceMap sync.Map
+
+func GetBalancedAccount(name string) (Account, bool) {
+	accounts := GetAccountsByName(name)
+	accountNum := len(accounts)
+	switch accountNum {
+	case 0:
+		return Account{}, false
+	case 1:
+		return accounts[0], true
+	default:
+		cur, ok := balanceMap.Load(name)
+		if ok {
+			i := cur.(int)
+			i = (i + 1) % accountNum
+			balanceMap.Store(name, i)
+			log.Debugln("use: ", i)
+			return accounts[i], true
+		} else {
+			balanceMap.Store(name, 0)
+			return accounts[0], true
+		}
+	}
+}
+
 func GetAccountById(id uint) (*Account, error) {
 	var account Account
 	account.ID = id
@@ -116,6 +156,9 @@ func GetAccountFiles() ([]File, error) {
 		return nil, err
 	}
 	for _, v := range accounts {
+		if strings.HasSuffix(v.Name, balance) {
+			continue
+		}
 		files = append(files, File{
 			Name:      v.Name,
 			Size:      0,
