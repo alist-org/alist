@@ -74,7 +74,7 @@ func InitSettings() {
 		},
 		{
 			Key:         "music cover",
-			Value:       "https://store.heytapimage.com/cdo-portal/feedback/202110/30/d43c41c5d257c9bc36366e310374fb19.png",
+			Value:       "https://cdn.jsdelivr.net/gh/alist-org/logo@main/circle_center.svg",
 			Description: "music cover image",
 			Type:        "string",
 			Access:      model.PUBLIC,

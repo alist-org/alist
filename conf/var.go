@@ -78,7 +78,7 @@ var (
 		"check parent folder", "check down link", "WebDAV username", "WebDAV password",
 		"Visitor WebDAV username", "Visitor WebDAV password",
 		"default page size", "load type",
-		"ocr api",
+		"ocr api", "favicon",
 	}
 )
 
