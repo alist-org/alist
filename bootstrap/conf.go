@@ -10,6 +10,10 @@ import (
 
 // InitConf init config
 func InitConf() {
+	err := os.MkdirAll("data/temp", 0700)
+	if err != nil {
+		log.Fatalf("create temp dir error: %s", err.Error())
+	}
 	log.Infof("reading config file: %s", conf.ConfigFile)
 	if !utils.Exists(conf.ConfigFile) {
 		log.Infof("config file not exists, creating default config file")
@@ -41,9 +45,5 @@ func InitConf() {
 	err = ioutil.WriteFile(conf.ConfigFile, confBody, 0777)
 	if err != nil {
 		log.Fatalf("update config struct error: %s", err.Error())
-	}
-	err = os.MkdirAll("data/temp", 0700)
-	if err != nil {
-		log.Fatalf("create temp dir error: %s", err.Error())
 	}
 }
