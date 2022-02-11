@@ -107,6 +107,11 @@ func GetAccount(name string) (Account, bool) {
 
 func GetAccountsByName(name string) []Account {
 	accounts := make([]Account, 0)
+	if AccountsCount() == 1 {
+		account, _ := GetAccount("")
+		accounts = append(accounts, account)
+		return accounts
+	}
 	for _, v := range accountsMap {
 		if v.Name == name || v.Name == name+balance {
 			accounts = append(accounts, v)
