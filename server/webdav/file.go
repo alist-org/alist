@@ -50,18 +50,17 @@ func (fs *FileSystem) File(rawPath string) (*model.File, error) {
 
 func (fs *FileSystem) Files(ctx context.Context, rawPath string) ([]model.File, error) {
 	rawPath = utils.ParsePath(rawPath)
+	var files []model.File
+	var err error
 	if model.AccountsCount() > 1 && rawPath == "/" {
-		files, err := model.GetAccountFiles()
+		files, err = model.GetAccountFiles()
+	} else {
+		account, path_, driver, err := common.ParsePath(rawPath)
 		if err != nil {
 			return nil, err
 		}
-		return files, nil
+		files, err = operate.Files(driver, account, path_)
 	}
-	account, path_, driver, err := common.ParsePath(rawPath)
-	if err != nil {
-		return nil, err
-	}
-	files, err := operate.Files(driver, account, path_)
 	if err != nil {
 		return nil, err
 	}
