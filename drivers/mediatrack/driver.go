@@ -45,11 +45,12 @@ func (driver MediaTrack) Items() []base.Item {
 			Required: true,
 		},
 		{
-			Name:     "order_by",
-			Label:    "order_by",
-			Type:     base.TypeSelect,
-			Values:   "updated_at,title,size",
-			Required: true,
+			Name:        "order_by",
+			Label:       "order_by",
+			Type:        base.TypeSelect,
+			Values:      "updated_at,title,size",
+			Required:    true,
+			Description: "title",
 		},
 		{
 			Name:     "order_direction",
@@ -57,6 +58,7 @@ func (driver MediaTrack) Items() []base.Item {
 			Type:     base.TypeSelect,
 			Values:   "true,false",
 			Required: true,
+			Default:  "false",
 		},
 	}
 }

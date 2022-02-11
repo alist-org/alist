@@ -57,6 +57,7 @@ func (driver Pan123) Items() []base.Item {
 			Type:     base.TypeSelect,
 			Values:   "name,fileId,updateAt,createAt",
 			Required: true,
+			Default:  "name",
 		},
 		{
 			Name:     "order_direction",
@@ -64,6 +65,7 @@ func (driver Pan123) Items() []base.Item {
 			Type:     base.TypeSelect,
 			Values:   "asc,desc",
 			Required: true,
+			Default:  "asc",
 		},
 	}
 }

@@ -51,6 +51,7 @@ func (driver Teambition) Items() []base.Item {
 			Type:     base.TypeSelect,
 			Values:   "fileName,fileSize,updated,created",
 			Required: true,
+			Default:  "fileName",
 		},
 		{
 			Name:     "order_direction",
@@ -58,6 +59,7 @@ func (driver Teambition) Items() []base.Item {
 			Type:     base.TypeSelect,
 			Values:   "Asc,Desc",
 			Required: true,
+			Default:  "Asc",
 		},
 	}
 }
