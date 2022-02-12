@@ -160,6 +160,7 @@ func GetDrivers() map[string][]Item {
 var NoRedirectClient *resty.Client
 var RestyClient = resty.New()
 var HttpClient = &http.Client{}
+var UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36"
 
 func init() {
 	NoRedirectClient = resty.New().SetRedirectPolicy(
@@ -167,8 +168,7 @@ func init() {
 			return http.ErrUseLastResponse
 		}),
 	)
-	userAgent := "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36"
-	NoRedirectClient.SetHeader("user-agent", userAgent)
-	RestyClient.SetHeader("user-agent", userAgent)
+	NoRedirectClient.SetHeader("user-agent", UserAgent)
+	RestyClient.SetHeader("user-agent", UserAgent)
 	RestyClient.SetRetryCount(3)
 }

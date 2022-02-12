@@ -11,6 +11,7 @@ import (
 	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -117,12 +118,14 @@ func Proxy(c *gin.Context) {
 			common.ErrorResp(c, err, 500)
 			return
 		}
+		log.Debugf("%+v", r.Header)
 		for h, val := range r.Header {
 			req.Header[h] = val
 		}
 		for _, header := range link.Headers {
 			req.Header.Set(header.Name, header.Value)
 		}
+		log.Debugf("%+v", req.Header)
 		res, err := HttpClient.Do(req)
 		if err != nil {
 			common.ErrorResp(c, err, 500)
@@ -133,6 +136,12 @@ func Proxy(c *gin.Context) {
 		}()
 		log.Debugf("proxy status: %d", res.StatusCode)
 		w.WriteHeader(res.StatusCode)
+		if res.StatusCode >= 400 {
+			all, _ := ioutil.ReadAll(res.Body)
+			log.Debugln(string(all))
+			common.ErrorStrResp(c, string(all), 500)
+			return
+		}
 		for h, v := range res.Header {
 			w.Header()[h] = v
 		}

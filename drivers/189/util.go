@@ -115,7 +115,7 @@ func EncodeParam(v url.Values) string {
 			}
 			buf.WriteString(k)
 			buf.WriteByte('=')
-			buf.WriteString(v)
+			buf.WriteString(strings.ReplaceAll(v, "&", "%26"))
 		}
 	}
 	return buf.String()

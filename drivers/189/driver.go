@@ -171,7 +171,12 @@ func (driver Cloud189) Link(args base.Args, account *model.Account) (*base.Link,
 	if err != nil {
 		return nil, err
 	}
-	link := base.Link{}
+	link := base.Link{
+		Headers: []base.Header{
+			{Name: "User-Agent", Value: base.UserAgent},
+			{Name: "Authorization", Value: ""},
+		},
+	}
 	if res.StatusCode() == 302 {
 		link.Url = res.Header().Get("location")
 	} else {
