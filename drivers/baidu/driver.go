@@ -140,13 +140,13 @@ func (driver Baidu) Link(args base.Args, account *model.Account) (*base.Link, er
 		return nil, err
 	}
 	u := fmt.Sprintf("%s&access_token=%s", resp.List[0].Dlink, account.AccessToken)
-	res, err := base.NoRedirectClient.R().Head(u)
+	res, err := base.NoRedirectClient.R().SetHeader("User-Agent", "pan.baidu.com").Head(u)
 	if err != nil {
 		return nil, err
 	}
-	if res.StatusCode() == 302 {
-		u = res.Header().Get("location")
-	}
+	//if res.StatusCode() == 302 {
+	u = res.Header().Get("location")
+	//}
 	return &base.Link{
 		Url: u,
 		Headers: []base.Header{
