@@ -115,10 +115,16 @@ func EncodeParam(v url.Values) string {
 			}
 			buf.WriteString(k)
 			buf.WriteByte('=')
-			buf.WriteString(strings.ReplaceAll(v, "&", "%26"))
+			buf.WriteString(encode(v))
 		}
 	}
 	return buf.String()
+}
+
+func encode(str string) string {
+	str = strings.ReplaceAll(str, "&", "%26")
+	str = strings.ReplaceAll(str, "+", "%2B")
+	return str
 }
 
 func AesEncrypt(data, key []byte) []byte {
