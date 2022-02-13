@@ -137,6 +137,9 @@ func (driver Lanzou) Link(args base.Args, account *model.Account) (*base.Link, e
 	}
 	link := base.Link{
 		Url: url,
+		Headers: []base.Header{
+			{Name: "User-Agent", Value: base.UserAgent},
+		},
 	}
 	return &link, nil
 }
