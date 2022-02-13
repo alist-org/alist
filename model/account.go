@@ -33,8 +33,9 @@ type Account struct {
 	SiteUrl        string     `json:"site_url"`
 	SiteId         string     `json:"site_id"`
 	InternalType   string     `json:"internal_type"`
-	WebdavProxy    bool       `json:"webdav_proxy"` // 开启之后只会webdav走中转
-	Proxy          bool       `json:"proxy"`        // 是否中转,开启之后web和webdav都会走中转
+	WebdavProxy    bool       `json:"webdav_proxy"`  // 开启之后只会webdav走中转
+	Proxy          bool       `json:"proxy"`         // 是否中转,开启之后web和webdav都会走中转
+	WebdavDirect   bool       `json:"webdav_direct"` // webdav 下载不跳转
 	//AllowProxy     bool       `json:"allow_proxy"` // 是否允许中转下载
 	DownProxyUrl string `json:"down_proxy_url"` // 用于中转下载服务的URL 两处 1. path请求中返回的链接 2. down下载时进行302
 	APIProxyUrl  string `json:"api_proxy_url"`  // 用于中转api的地址

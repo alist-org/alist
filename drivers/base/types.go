@@ -44,7 +44,8 @@ type Header struct {
 }
 
 type Link struct {
-	Url     string   `json:"url"`
-	Headers []Header `json:"headers"`
-	Data    io.ReadCloser
+	Url      string   `json:"url"`
+	Headers  []Header `json:"headers"`
+	Data     io.ReadCloser
+	FilePath string `json:"path"` // for native
 }

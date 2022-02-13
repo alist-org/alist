@@ -95,7 +95,7 @@ func ClientIP(r *http.Request) string {
 	return ""
 }
 
-func (fs *FileSystem) Link(r *http.Request, rawPath string) (string, error) {
+func (fs *FileSystem) Link(w http.ResponseWriter, r *http.Request, rawPath string) (string, error) {
 	rawPath = utils.ParsePath(rawPath)
 	log.Debugf("get link path: %s", rawPath)
 	if model.AccountsCount() > 1 && rawPath == "/" {
@@ -109,6 +109,19 @@ func (fs *FileSystem) Link(r *http.Request, rawPath string) (string, error) {
 	protocol := "http"
 	if r.TLS != nil {
 		protocol = "https"
+	}
+	// 直接返回
+	if account.WebdavDirect {
+		file, err := fs.File(rawPath)
+		if err != nil {
+			return "", err
+		}
+		link_, err := driver.Link(base.Args{Path: path_}, account)
+		if err != nil {
+			return "", err
+		}
+		err = common.Proxy(w, r, link_, file)
+		return "", err
 	}
 	if driver.Config().OnlyProxy || account.WebdavProxy {
 		link = fmt.Sprintf("%s://%s/p%s", protocol, r.Host, rawPath)

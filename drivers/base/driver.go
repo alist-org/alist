@@ -111,6 +111,13 @@ func GetDrivers() map[string][]Item {
 					Required:    true,
 					Description: "Transfer the WebDAV of this account through the server",
 				},
+				{
+					Name:        "webdav_direct",
+					Label:       "webdav direct",
+					Type:        TypeBool,
+					Required:    true,
+					Description: "Transfer the WebDAV of this account through the native",
+				},
 			}, v.Items()...)
 		}
 		res[k] = append([]Item{

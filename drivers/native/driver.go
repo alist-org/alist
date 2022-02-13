@@ -132,7 +132,7 @@ func (driver Native) Link(args base.Args, account *model.Account) (*base.Link, e
 		return nil, base.ErrNotFile
 	}
 	link := base.Link{
-		Url: fullPath,
+		FilePath: fullPath,
 	}
 	return &link, nil
 }
