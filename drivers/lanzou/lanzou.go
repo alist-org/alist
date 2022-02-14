@@ -6,7 +6,6 @@ import (
 	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
-	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
 	"net/url"
 	"path/filepath"
@@ -14,8 +13,6 @@ import (
 	"strconv"
 	"time"
 )
-
-var lanzouClient = resty.New()
 
 type LanZouFile struct {
 	Name    string `json:"name"`
@@ -58,7 +55,7 @@ func (driver *Lanzou) GetFiles(folderId string, account *model.Account) ([]LanZo
 		files := make([]LanZouFile, 0)
 		var resp LanZouFilesResp
 		// folders
-		res, err := lanzouClient.R().SetResult(&resp).SetHeader("Cookie", account.AccessToken).
+		res, err := base.RestyClient.R().SetResult(&resp).SetHeader("Cookie", account.AccessToken).
 			SetFormData(map[string]string{
 				"task":      "47",
 				"folder_id": folderId,
@@ -77,7 +74,7 @@ func (driver *Lanzou) GetFiles(folderId string, account *model.Account) ([]LanZo
 		// files
 		pg := 1
 		for {
-			_, err = lanzouClient.R().SetResult(&resp).SetHeader("Cookie", account.AccessToken).
+			_, err = base.RestyClient.R().SetResult(&resp).SetHeader("Cookie", account.AccessToken).
 				SetFormData(map[string]string{
 					"task":      "5",
 					"folder_id": folderId,
@@ -108,7 +105,7 @@ func (driver *Lanzou) GetFilesByUrl(account *model.Account) ([]LanZouFile, error
 	if err != nil {
 		return nil, err
 	}
-	res, err := lanzouClient.R().Get(shareUrl)
+	res, err := base.RestyClient.R().Get(shareUrl)
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +126,7 @@ func (driver *Lanzou) GetFilesByUrl(account *model.Account) ([]LanZouFile, error
 	pg := 1
 	for {
 		var resp LanZouFilesResp
-		res, err = lanzouClient.R().SetResult(&resp).SetFormData(map[string]string{
+		res, err = base.RestyClient.R().SetResult(&resp).SetFormData(map[string]string{
 			"lx":  lx,
 			"fid": fid,
 			"uid": uid,
@@ -166,7 +163,7 @@ func (driver *Lanzou) GetFilesByUrl(account *model.Account) ([]LanZouFile, error
 // GetDownPageId 获取下载页面的ID
 func (driver *Lanzou) GetDownPageId(fileId string, account *model.Account) (string, error) {
 	var resp LanZouFilesResp
-	res, err := lanzouClient.R().SetResult(&resp).SetHeader("Cookie", account.AccessToken).
+	res, err := base.RestyClient.R().SetResult(&resp).SetHeader("Cookie", account.AccessToken).
 		SetFormData(map[string]string{
 			"task":    "22",
 			"file_id": fileId,
@@ -201,7 +198,7 @@ func (driver *Lanzou) GetLink(downId string, account *model.Account) (string, er
 	if err != nil {
 		return "", err
 	}
-	res, err := lanzouClient.R().Get(fmt.Sprintf("https://%s/%s", u.Host, downId))
+	res, err := base.RestyClient.R().Get(fmt.Sprintf("https://%s/%s", u.Host, downId))
 	if err != nil {
 		return "", err
 	}
@@ -210,7 +207,7 @@ func (driver *Lanzou) GetLink(downId string, account *model.Account) (string, er
 		return "", fmt.Errorf("get down empty page")
 	}
 	iframeUrl := fmt.Sprintf("https://%s%s", u.Host, iframe[1])
-	res, err = lanzouClient.R().Get(iframeUrl)
+	res, err = base.RestyClient.R().Get(iframeUrl)
 	if err != nil {
 		return "", err
 	}
@@ -237,7 +234,7 @@ func (driver *Lanzou) GetLink(downId string, account *model.Account) (string, er
 		"websignkey": websignkey,
 	}
 	log.Debugf("form: %+v", form)
-	res, err = lanzouClient.R().SetResult(&resp).
+	res, err = base.RestyClient.R().SetResult(&resp).
 		SetHeader("origin", "https://"+u.Host).
 		SetHeader("referer", iframeUrl).
 		SetFormData(form).Post(fmt.Sprintf("https://%s/ajaxm.php", u.Host))
@@ -253,7 +250,4 @@ func (driver *Lanzou) GetLink(downId string, account *model.Account) (string, er
 
 func init() {
 	base.RegisterDriver(&Lanzou{})
-	lanzouClient.
-		SetRetryCount(3).
-		SetHeader("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36")
 }

@@ -67,7 +67,7 @@ var client *resty.Client
 
 func init() {
 	client = resty.New()
-	client.SetRetryCount(3)
+	client.SetRetryCount(3).SetTimeout(base.DefaultTimeout)
 }
 
 func Text(c *gin.Context, link *base.Link) {

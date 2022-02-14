@@ -107,6 +107,7 @@ func (driver Cloud189) Login(account *model.Account) error {
 		//cookieJar, _ := cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
 		client = resty.New()
 		//client.SetCookieJar(cookieJar)
+		client.SetTimeout(base.DefaultTimeout)
 		client.SetRetryCount(3)
 		client.SetHeader("Referer", "https://cloud.189.cn/")
 	}
