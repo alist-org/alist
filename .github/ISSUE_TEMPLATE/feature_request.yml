@@ -18,7 +18,7 @@ body:
   - type: textarea
     id: additional-context
     attributes:
-      label: 附件 / Additional context
+      label: Additional context / 附件
       description: |
         Any other context or screenshots about the feature request here, or information you find helpful.
         相关的任何其他上下文或截图，或者你觉得有帮助的信息
