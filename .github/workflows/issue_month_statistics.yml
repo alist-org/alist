@@ -1,0 +1,17 @@
+name: Issue Month Statistics
+
+on:
+  schedule:
+    - cron: "0 1 1 * *"
+
+jobs:
+  month-statistics:
+    runs-on: ubuntu-latest
+    steps:
+      - name: month-statistics
+        uses: actions-cool/issues-helper@v2
+        with:
+          actions: 'month-statistics'
+          token: ${{ secrets.GITHUB_TOKEN }}
+          count-lables: 'true'
+          count-comments: 'true'
