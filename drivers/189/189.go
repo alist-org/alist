@@ -524,7 +524,7 @@ func (driver Cloud189) NewUpload(file *model.FileStream, account *model.Account)
 	}
 	res, err := driver.UploadRequest("/person/initMultiUpload", map[string]string{
 		"parentFolderId": parentFile.Id,
-		"fileName":       file.Name,
+		"fileName":       encode(file.Name),
 		"fileSize":       strconv.FormatInt(int64(file.Size), 10),
 		"sliceSize":      strconv.FormatInt(int64(DEFAULT), 10),
 		"lazyCheck":      "1",

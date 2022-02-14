@@ -115,17 +115,22 @@ func EncodeParam(v url.Values) string {
 			}
 			buf.WriteString(k)
 			buf.WriteByte('=')
-			buf.WriteString(encode(v))
+			//if k == "fileName" {
+			//	buf.WriteString(encode(v))
+			//} else {
+			buf.WriteString(v)
+			//}
 		}
 	}
 	return buf.String()
 }
 
 func encode(str string) string {
-	str = strings.ReplaceAll(str, "%", "%25")
-	str = strings.ReplaceAll(str, "&", "%26")
-	str = strings.ReplaceAll(str, "+", "%2B")
-	return str
+	//str = strings.ReplaceAll(str, "%", "%25")
+	//str = strings.ReplaceAll(str, "&", "%26")
+	//str = strings.ReplaceAll(str, "+", "%2B")
+	//return str
+	return url.QueryEscape(str)
 }
 
 func AesEncrypt(data, key []byte) []byte {
