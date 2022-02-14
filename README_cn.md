@@ -56,7 +56,7 @@
 
 ## 讨论
 
-一般问题请到[讨论论坛](https://github.com/Xhofe/alist/discussions) ，**issue仅针对错误报告。**
+一般问题请到[讨论论坛](https://github.com/Xhofe/alist/discussions) ，**issue仅针对错误报告和功能请求。**
 
 ## 演示
 

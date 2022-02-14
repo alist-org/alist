@@ -57,7 +57,7 @@ English | [中文](./README_cn.md)
 
 ## Discussion
 
-Please go to our [discussion forum](https://github.com/Xhofe/alist/discussions) for general questions, **issues are for bug reports  only.**
+Please go to our [discussion forum](https://github.com/Xhofe/alist/discussions) for general questions, **issues are for bug reports and feature request only.**
 
 ## Demo
 
