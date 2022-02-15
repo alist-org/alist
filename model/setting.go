@@ -114,7 +114,11 @@ func LoadSettings() {
 	// token
 	adminPassword, err := GetSettingByKey("password")
 	if err == nil {
-		conf.Token = utils.GetMD5Encode(fmt.Sprintf("https://github.com/Xhofe/alist-%s", adminPassword.Value))
+		if adminPassword.Value != "" {
+			conf.Token = utils.GetMD5Encode(fmt.Sprintf("https://github.com/Xhofe/alist-%s", adminPassword.Value))
+		} else {
+			conf.Token = ""
+		}
 	}
 	// load settings
 	for _, key := range conf.LoadSettings {
