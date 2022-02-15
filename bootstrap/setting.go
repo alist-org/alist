@@ -65,11 +65,18 @@ func InitSettings() {
 			Description: "text type extensions",
 			Group:       model.FRONT,
 		},
+		//{
+		//	Key:         "hide readme file",
+		//	Value:       "true",
+		//	Type:        "bool",
+		//	Description: "hide readme file? ",
+		//	Group:       model.FRONT,
+		//},
 		{
-			Key:         "hide readme file",
-			Value:       "true",
-			Type:        "bool",
-			Description: "hide readme file? ",
+			Key:         "hide files",
+			Value:       "/\\/README.md/i",
+			Type:        "text",
+			Description: "hide files, support RegExp, one per line",
 			Group:       model.FRONT,
 		},
 		{
