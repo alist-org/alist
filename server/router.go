@@ -16,6 +16,7 @@ func InitApiRouter(r *gin.Engine) {
 	r.GET("/d/*path", middlewares.DownCheck, controllers.Down)
 	r.GET("/p/*path", middlewares.DownCheck, controllers.Proxy)
 	r.GET("/favicon.ico", controllers.Favicon)
+	r.GET("/i/:data/ipa.plist", controllers.Plist)
 
 	api := r.Group("/api")
 	public := api.Group("/public")
