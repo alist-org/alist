@@ -127,3 +127,11 @@ func Join(elem ...string) string {
 func Split(p string) (string, string) {
 	return path.Split(p)
 }
+
+// FormatName TODO
+func FormatName(name string) string {
+	name = strings.ReplaceAll(name, "/", " ")
+	name = strings.ReplaceAll(name, "#", " ")
+	name = strings.ReplaceAll(name, "?", " ")
+	return name
+}

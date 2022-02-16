@@ -300,7 +300,7 @@ func (driver Pan123) Upload(file *model.FileStream, account *model.Account) erro
 		return base.ErrNotFolder
 	}
 	parentFileId, _ := strconv.Atoi(parentFile.Id)
-	tempFile, err := ioutil.TempFile("data/temp", "file-*")
+	tempFile, err := ioutil.TempFile(conf.Conf.TempDir, "file-*")
 	if err != nil {
 		return err
 	}

@@ -234,7 +234,7 @@ func (driver Baidu) Upload(file *model.FileStream, account *model.Account) error
 	if file == nil {
 		return base.ErrEmptyFile
 	}
-	tempFile, err := ioutil.TempFile("data/temp", "file-*")
+	tempFile, err := ioutil.TempFile(conf.Conf.TempDir, "file-*")
 	if err != nil {
 		return err
 	}

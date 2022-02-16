@@ -267,7 +267,7 @@ func (driver MediaTrack) Upload(file *model.FileStream, account *model.Account) 
 	if err != nil {
 		return err
 	}
-	tempFile, err := ioutil.TempFile("data/temp", "file-*")
+	tempFile, err := ioutil.TempFile(conf.Conf.TempDir, "file-*")
 	if err != nil {
 		return err
 	}
