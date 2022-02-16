@@ -42,9 +42,9 @@ func Plist(c *gin.Context) {
                 <key>metadata</key>
                 <dict>
                     <key>bundle-identifier</key>
-                     <string>ci.nn.alist-doc</string>
+                     <string>ci.nn.%s</string>
                      <key>bundle-version</key>
-                    <string>1</string>
+                    <string>1.0.0</string>
                     <key>kind</key>
                     <string>software</string>
                     <key>title</key>
@@ -53,7 +53,7 @@ func Plist(c *gin.Context) {
             </dict>
         </array>
     </dict>
-</plist>`, u, name)
+</plist>`, u, name, name)
 	c.Status(200)
 	c.Header("Content-Type", "application/xml;charset=utf-8")
 	_, _ = c.Writer.WriteString(plist)
