@@ -238,8 +238,8 @@ func (h *Handler) handleGetHeadPost(w http.ResponseWriter, r *http.Request, fs *
 	w.Header().Set("ETag", etag)
 	log.Debugf("url: %+v", r.URL)
 	link, err := fs.Link(w, r, reqPath)
-	log.Debugf("webdav link error: %s", err.Error())
 	if err != nil {
+		log.Debugf("webdav link error: %s", err.Error())
 		return http.StatusInternalServerError, err
 	}
 	if link != "" {
