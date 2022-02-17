@@ -87,17 +87,19 @@ func GetDriversMap() map[string]Driver {
 func GetDrivers() map[string][]Item {
 	res := make(map[string][]Item)
 	for k, v := range driversMap {
+		webdavDirect := Item{
+			Name:        "webdav_direct",
+			Label:       "webdav direct",
+			Type:        TypeBool,
+			Required:    true,
+			Description: "Transfer the WebDAV of this account through the native",
+		}
 		if v.Config().OnlyProxy {
-			res[k] = v.Items()
+			res[k] = append([]Item{
+				webdavDirect,
+			}, v.Items()...)
 		} else {
 			res[k] = append([]Item{
-				//{
-				//	Name:        "allow_proxy",
-				//	Label:       "allow_proxy",
-				//	Type:        TypeBool,
-				//	Required:    true,
-				//	Description: "allow proxy",
-				//},
 				{
 					Name:        "proxy",
 					Label:       "proxy",
@@ -112,13 +114,7 @@ func GetDrivers() map[string][]Item {
 					Required:    true,
 					Description: "Transfer the WebDAV of this account through the server",
 				},
-				{
-					Name:        "webdav_direct",
-					Label:       "webdav direct",
-					Type:        TypeBool,
-					Required:    true,
-					Description: "Transfer the WebDAV of this account through the native",
-				},
+				webdavDirect,
 			}, v.Items()...)
 		}
 		res[k] = append([]Item{
