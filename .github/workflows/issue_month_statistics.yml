@@ -9,9 +9,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: month-statistics
-        uses: actions-cool/issues-helper@v2
+        uses: actions-cool/issues-month-statistics@v1
         with:
-          actions: 'month-statistics'
-          token: ${{ secrets.GITHUB_TOKEN }}
-          count-lables: 'true'
-          count-comments: 'true'
+          count-lables: true
+          count-comments: true
+          emoji: 'eyes'
