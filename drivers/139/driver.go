@@ -334,7 +334,7 @@ func (driver Cloud139) Delete(path string, account *model.Account) error {
 			"taskInfo": base.Json{
 				"newCatalogID":    "",
 				"contentInfoList": contentInfoList,
-				"catalogInfoList": contentInfoList,
+				"catalogInfoList": catalogInfoList,
 			},
 			"commonAccountInfo": base.Json{
 				"account":     account.Username,
