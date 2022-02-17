@@ -44,9 +44,9 @@ func Plist(c *gin.Context) {
                 <key>metadata</key>
                 <dict>
                     <key>bundle-identifier</key>
-                     <string>ci.nn.%s</string>
-                     <key>bundle-version</key>
-                    <string>1.0.0</string>
+					<string>ci.nn.%s</string>
+					<key>bundle-version</key>
+                    <string>4.0</string>
                     <key>kind</key>
                     <string>software</string>
                     <key>title</key>
