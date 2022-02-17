@@ -47,6 +47,7 @@ type Account struct {
 	AccessSecret  string `json:"access_secret"`
 	CustomHost    string `json:"custom_host"`
 	ExtractFolder string `json:"extract_folder"`
+	Bool1         bool   `json:"bool_1"`
 }
 
 var accountsMap = make(map[string]Account)

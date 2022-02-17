@@ -1,6 +1,7 @@
 package s3
 
 import (
+	"errors"
 	"fmt"
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/drivers/base"
@@ -22,9 +23,10 @@ var sessionsMap map[string]*session.Session
 
 func (driver S3) NewSession(account *model.Account) (*session.Session, error) {
 	cfg := &aws.Config{
-		Credentials: credentials.NewStaticCredentials(account.AccessKey, account.AccessSecret, ""),
-		Region:      &account.Region,
-		Endpoint:    &account.Endpoint,
+		Credentials:      credentials.NewStaticCredentials(account.AccessKey, account.AccessSecret, ""),
+		Region:           &account.Region,
+		Endpoint:         &account.Endpoint,
+		S3ForcePathStyle: aws.Bool(account.Bool1),
 	}
 	return session.NewSession(cfg)
 }
@@ -99,11 +101,81 @@ func (driver S3) List(prefix string, account *model.Account) ([]model.File, erro
 			}
 			files = append(files, file)
 		}
+		if listObjectsResult.IsTruncated == nil {
+			return nil, errors.New("IsTruncated nil")
+		}
 		if *listObjectsResult.IsTruncated {
 			marker = *listObjectsResult.NextMarker
 		} else {
 			break
 		}
+	}
+	return files, nil
+}
+
+func (driver S3) ListV2(prefix string, account *model.Account) ([]model.File, error) {
+	prefix = driver.GetKey(prefix, account, true)
+	//if prefix == "" {
+	//	prefix = "/"
+	//}
+	log.Debugf("list: %s", prefix)
+	client, err := driver.GetClient(account, false)
+	if err != nil {
+		return nil, err
+	}
+	files := make([]model.File, 0)
+	var continuationToken, startAfter *string
+	for {
+		input := &s3.ListObjectsV2Input{
+			Bucket:            &account.Bucket,
+			ContinuationToken: continuationToken,
+			Prefix:            &prefix,
+			Delimiter:         aws.String("/"),
+			StartAfter:        startAfter,
+		}
+		listObjectsResult, err := client.ListObjectsV2(input)
+		if err != nil {
+			return nil, err
+		}
+		log.Debugf("resp: %+v", listObjectsResult)
+		for _, object := range listObjectsResult.CommonPrefixes {
+			name := utils.Base(strings.Trim(*object.Prefix, "/"))
+			file := model.File{
+				//Id:        *object.Key,
+				Name:      name,
+				Driver:    driver.Config().Name,
+				UpdatedAt: account.UpdatedAt,
+				TimeStr:   "-",
+				Type:      conf.FOLDER,
+			}
+			files = append(files, file)
+		}
+		for _, object := range listObjectsResult.Contents {
+			name := utils.Base(*object.Key)
+			if name == account.Zone {
+				continue
+			}
+			file := model.File{
+				//Id:        *object.Key,
+				Name:      name,
+				Size:      *object.Size,
+				Driver:    driver.Config().Name,
+				UpdatedAt: object.LastModified,
+				Type:      utils.GetFileType(path.Ext(*object.Key)),
+			}
+			files = append(files, file)
+		}
+		if !aws.BoolValue(listObjectsResult.IsTruncated) {
+			break
+		}
+		if listObjectsResult.NextContinuationToken != nil {
+			continuationToken = listObjectsResult.NextContinuationToken
+			continue
+		}
+		if len(listObjectsResult.Contents) == 0 {
+			break
+		}
+		startAfter = listObjectsResult.Contents[len(listObjectsResult.Contents)-1].Key
 	}
 	return files, nil
 }

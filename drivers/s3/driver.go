@@ -79,6 +79,18 @@ func (driver S3) Items() []base.Item {
 			Type:        base.TypeString,
 			Description: "default empty string",
 		},
+		{
+			Name:  "bool_1",
+			Label: "S3ForcePathStyle",
+			Type:  base.TypeBool,
+		},
+		{
+			Name:    "internal_type",
+			Label:   "ListObject Version",
+			Type:    base.TypeSelect,
+			Values:  "v1,v2",
+			Default: "v1",
+		},
 	}
 }
 
@@ -132,7 +144,11 @@ func (driver S3) Files(path string, account *model.Account) ([]model.File, error
 	if err == nil {
 		files, _ = cache.([]model.File)
 	} else {
-		files, err = driver.List(path, account)
+		if account.InternalType == "v2" {
+			files, err = driver.ListV2(path, account)
+		} else {
+			files, err = driver.List(path, account)
+		}
 		if err == nil && len(files) > 0 {
 			_ = base.SetCache(path, files, account)
 		}
