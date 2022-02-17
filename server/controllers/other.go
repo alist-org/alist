@@ -16,6 +16,8 @@ func Favicon(c *gin.Context) {
 
 func Plist(c *gin.Context) {
 	data := c.Param("data")
+	data = strings.ReplaceAll(data, "_", "/")
+	data = strings.ReplaceAll(data, "-", "=")
 	bytes, err := base64.StdEncoding.DecodeString(data)
 	if err != nil {
 		common.ErrorResp(c, err, 500)
