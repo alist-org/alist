@@ -26,7 +26,7 @@ func InitConf() {
 		if err != nil {
 			log.Fatalf("reading config file error:%s", err.Error())
 		}
-		conf.Conf = new(conf.Config)
+		conf.Conf = conf.DefaultConfig()
 		err = utils.Json.Unmarshal(config, conf.Conf)
 		if err != nil {
 			log.Fatalf("load config error: %s", err.Error())
