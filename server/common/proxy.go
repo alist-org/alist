@@ -24,10 +24,10 @@ func Proxy(w http.ResponseWriter, r *http.Request, link *base.Link, file *model.
 		defer func() {
 			_ = link.Data.Close()
 		}()
-		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/octet-stream")
 		w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename=%s`, url.QueryEscape(file.Name)))
 		w.Header().Set("Content-Length", strconv.FormatInt(file.Size, 10))
+		w.WriteHeader(http.StatusOK)
 		_, err = io.Copy(w, link.Data)
 		if err != nil {
 			return err
@@ -47,6 +47,8 @@ func Proxy(w http.ResponseWriter, r *http.Request, link *base.Link, file *model.
 		if err != nil {
 			return err
 		}
+		w.Header().Set("Content-Type", "application/octet-stream")
+		w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename=%s`, url.QueryEscape(file.Name)))
 		http.ServeContent(w, r, file.Name, fileStat.ModTime(), f)
 		return nil
 	} else {
@@ -68,15 +70,15 @@ func Proxy(w http.ResponseWriter, r *http.Request, link *base.Link, file *model.
 			_ = res.Body.Close()
 		}()
 		log.Debugf("proxy status: %d", res.StatusCode)
+		for h, v := range res.Header {
+			w.Header()[h] = v
+		}
 		w.WriteHeader(res.StatusCode)
 		if res.StatusCode >= 400 {
 			all, _ := ioutil.ReadAll(res.Body)
 			msg := string(all)
 			log.Debugln(msg)
 			return errors.New(msg)
-		}
-		for h, v := range res.Header {
-			w.Header()[h] = v
 		}
 		_, err = io.Copy(w, res.Body)
 		if err != nil {
