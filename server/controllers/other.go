@@ -25,7 +25,10 @@ func Plist(c *gin.Context) {
 	}
 	u := string(bytes)
 	name := utils.Base(u)
-	name = strings.TrimRight(name, ".ipa")
+	ipaIndex := strings.Index(name, ".ipa")
+	if ipaIndex != -1 {
+		name = name[:ipaIndex]
+	}
 	plist := fmt.Sprintf(`<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
     <dict>
@@ -46,7 +49,7 @@ func Plist(c *gin.Context) {
                     <key>bundle-identifier</key>
 					<string>ci.nn.%s</string>
 					<key>bundle-version</key>
-                    <string>4.0</string>
+                    <string>4.4</string>
                     <key>kind</key>
                     <string>software</string>
                     <key>title</key>
