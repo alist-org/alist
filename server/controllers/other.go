@@ -56,7 +56,7 @@ func Plist(c *gin.Context) {
         </array>
     </dict>
 </plist>`, u, name, name)
-	c.Status(200)
 	c.Header("Content-Type", "application/xml;charset=utf-8")
+	c.Status(200)
 	_, _ = c.Writer.WriteString(plist)
 }
