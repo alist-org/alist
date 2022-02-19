@@ -79,6 +79,6 @@ func InitModel() {
 		err = conf.DB.AutoMigrate(&model.SettingItem{}, &model.Account{}, &model.Meta{})
 	}
 	if err != nil {
-		log.Fatalf("failed to auto migrate")
+		log.Fatalf("failed to auto migrate: %s", err.Error())
 	}
 }
