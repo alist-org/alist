@@ -4,9 +4,10 @@
 BUILD_WEB() {
   git clone https://github.com/alist-org/alist-web.git
   cd alist-web
-  sed -i -e "s/\/CDN_URL\//\//g" index.html
   yarn
-  yarn build --base="/"
+  yarn build --base="CDN_URL"
+  sed -i -e "s/\/CDN_URL\//\//g" dist/index.html
+  rm -f dist/index.html-e
   mv dist ..
   cd ..
   rm -rf alist-web
