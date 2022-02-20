@@ -163,7 +163,7 @@ func GetAccountFiles() ([]File, error) {
 		return nil, err
 	}
 	for _, v := range accounts {
-		if strings.HasSuffix(v.Name, balance) {
+		if strings.Contains(v.Name, balance) {
 			continue
 		}
 		files = append(files, File{
