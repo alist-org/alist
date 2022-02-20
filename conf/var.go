@@ -14,6 +14,7 @@ var (
 	GitAuthor string
 	GitCommit string
 	GitTag    string = "dev"
+	WebTag    string
 )
 
 var (

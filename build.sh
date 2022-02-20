@@ -4,8 +4,9 @@
 BUILD_WEB() {
   git clone https://github.com/alist-org/alist-web.git
   cd alist-web
+  sed -i -e "s/\/CDN_URL\//\//g" index.html
   yarn
-  yarn build
+  yarn build --base="/"
   mv dist ..
   cd ..
   rm -rf alist-web
@@ -25,6 +26,7 @@ BUILD_DOCKER() {
   gitAuthor=$(git show -s --format='format:%aN <%ae>' HEAD)
   gitCommit=$(git log --pretty=format:"%h" -1)
   gitTag=$(git describe --long --tags --dirty --always)
+  webTag=$(wget -qO- -t1 -T2 "https://api.github.com/repos/alist-org/alist-web/releases/latest" | grep "tag_name" | head -n 1 | awk -F ":" '{print $2}' | sed 's/\"//g;s/,//g;s/ //g')
   ldflags="\
 -w -s \
 -X 'github.com/Xhofe/alist/conf.BuiltAt=$builtAt' \
@@ -32,6 +34,7 @@ BUILD_DOCKER() {
 -X 'github.com/Xhofe/alist/conf.GitAuthor=$gitAuthor' \
 -X 'github.com/Xhofe/alist/conf.GitCommit=$gitCommit' \
 -X 'github.com/Xhofe/alist/conf.GitTag=$gitTag' \
+-X 'github.com/Xhofe/alist/conf.WebTag=$webTag' \
   "
   go build -o ./bin/alist -ldflags="$ldflags" -tags=jsoniter alist.go
 }
@@ -44,6 +47,7 @@ BUILD() {
   gitAuthor=$(git show -s --format='format:%aN <%ae>' HEAD)
   gitCommit=$(git log --pretty=format:"%h" -1)
   gitTag=$(git describe --long --tags --dirty --always)
+  webTag=$(wget -qO- -t1 -T2 "https://api.github.com/repos/alist-org/alist-web/releases/latest" | grep "tag_name" | head -n 1 | awk -F ":" '{print $2}' | sed 's/\"//g;s/,//g;s/ //g')
   echo "build version: $gitTag"
   ldflags="\
 -w -s \
@@ -52,6 +56,7 @@ BUILD() {
 -X 'github.com/Xhofe/alist/conf.GitAuthor=$gitAuthor' \
 -X 'github.com/Xhofe/alist/conf.GitCommit=$gitCommit' \
 -X 'github.com/Xhofe/alist/conf.GitTag=$gitTag' \
+-X 'github.com/Xhofe/alist/conf.WebTag=$webTag' \
 "
 
   if [ "$1" == "release" ]; then
@@ -86,6 +91,7 @@ BUILD_MUSL() {
   gitAuthor=$(git show -s --format='format:%aN <%ae>' HEAD)
   gitCommit=$(git log --pretty=format:"%h" -1)
   gitTag=$(git describe --long --tags --dirty --always)
+  webTag=$(wget -qO- -t1 -T2 "https://api.github.com/repos/alist-org/alist-web/releases/latest" | grep "tag_name" | head -n 1 | awk -F ":" '{print $2}' | sed 's/\"//g;s/,//g;s/ //g')
   ldflags="\
 -w -s \
 -X 'github.com/Xhofe/alist/conf.BuiltAt=$builtAt' \
@@ -93,6 +99,7 @@ BUILD_MUSL() {
 -X 'github.com/Xhofe/alist/conf.GitAuthor=$gitAuthor' \
 -X 'github.com/Xhofe/alist/conf.GitCommit=$gitCommit' \
 -X 'github.com/Xhofe/alist/conf.GitTag=$gitTag' \
+-X 'github.com/Xhofe/alist/conf.WebTag=$webTag' \
   "
   OS_ARCHES=(linux-musl-amd64 linux-musl-arm64 linux-musl-arm linux-musl-mips linux-musl-mips64 linux-musl-mips64le linux-musl-mipsle linux-musl-ppc64le linux-musl-s390x)
   CGO_ARGS=(x86_64-linux-musl-gcc aarch64-linux-musl-gcc arm-linux-musleabihf-gcc mips-linux-musl-gcc mips64-linux-musl-gcc mips64el-linux-musl-gcc mipsel-linux-musl-gcc powerpc64le-linux-musl-gcc s390x-linux-musl-gcc)

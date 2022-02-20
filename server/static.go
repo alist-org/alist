@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/public"
 	"github.com/gin-gonic/gin"
@@ -15,24 +14,18 @@ import (
 func InitIndex() {
 	var index fs.File
 	var err error
-	//if conf.Conf.Local {
-	//	index, err = public.Public.Open("local.html")
-	//} else {
-	//	index, err = public.Public.Open("index.html")
-	//}
-	if conf.Conf.Assets == "" {
+	if !strings.Contains(conf.Conf.Assets, "/") {
 		conf.Conf.Assets = conf.DefaultConfig().Assets
 	}
-	index, err = public.Public.Open(fmt.Sprintf("%s.html", conf.Conf.Assets))
+	index, err = public.Public.Open("index.html")
 	if err != nil {
-		log.Error(err.Error())
-		index, err = public.Public.Open("index.html")
-		if err != nil {
-			log.Fatal(err.Error())
-		}
+		log.Fatal(err.Error())
 	}
 	data, _ := ioutil.ReadAll(index)
+	cdnUrl := strings.ReplaceAll(conf.Conf.Assets, "$version", conf.WebTag)
+	cdnUrl = strings.TrimRight(cdnUrl, "/")
 	conf.RawIndexHtml = string(data)
+	conf.RawIndexHtml = strings.ReplaceAll(conf.RawIndexHtml, "/CDN_URL", cdnUrl)
 }
 
 func Static(r *gin.Engine) {
