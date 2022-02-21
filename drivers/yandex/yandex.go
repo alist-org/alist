@@ -131,7 +131,7 @@ func (driver Yandex) GetFiles(rawPath string, account *model.Account) ([]model.F
 				Name:      file.Name,
 				Size:      file.Size,
 				Driver:    driver.Config().Name,
-				UpdatedAt: &file.Modified,
+				UpdatedAt: file.Modified,
 				Thumbnail: file.Preview,
 				Url:       file.File,
 			}

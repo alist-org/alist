@@ -3,22 +3,22 @@ package teambition
 import "time"
 
 type Collection struct {
-	ID      string    `json:"_id"`
-	Title   string    `json:"title"`
-	Updated time.Time `json:"updated"`
+	ID      string     `json:"_id"`
+	Title   string     `json:"title"`
+	Updated *time.Time `json:"updated"`
 }
 
 type Work struct {
-	ID           string    `json:"_id"`
-	FileName     string    `json:"fileName"`
-	FileSize     int64     `json:"fileSize"`
-	FileKey      string    `json:"fileKey"`
-	FileCategory string    `json:"fileCategory"`
-	DownloadURL  string    `json:"downloadUrl"`
-	ThumbnailURL string    `json:"thumbnailUrl"`
-	Thumbnail    string    `json:"thumbnail"`
-	Updated      time.Time `json:"updated"`
-	PreviewURL   string    `json:"previewUrl"`
+	ID           string     `json:"_id"`
+	FileName     string     `json:"fileName"`
+	FileSize     int64      `json:"fileSize"`
+	FileKey      string     `json:"fileKey"`
+	FileCategory string     `json:"fileCategory"`
+	DownloadURL  string     `json:"downloadUrl"`
+	ThumbnailURL string     `json:"thumbnailUrl"`
+	Thumbnail    string     `json:"thumbnail"`
+	Updated      *time.Time `json:"updated"`
+	PreviewURL   string     `json:"previewUrl"`
 }
 
 type FileUpload struct {

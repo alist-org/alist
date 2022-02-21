@@ -26,7 +26,7 @@ type File struct {
 	//} `json:"exif"`
 	//Created    time.Time `json:"created"`
 	//ResourceId string    `json:"resource_id"`
-	Modified time.Time `json:"modified"`
+	Modified *time.Time `json:"modified"`
 	//MimeType   string    `json:"mime_type"`
 	File string `json:"file"`
 	//MediaType  string    `json:"media_type"`

@@ -98,7 +98,7 @@ func (driver Teambition) GetFiles(parentId string, account *model.Account) ([]mo
 				Size:      0,
 				Type:      conf.FOLDER,
 				Driver:    driver.Config().Name,
-				UpdatedAt: &collection.Updated,
+				UpdatedAt: collection.Updated,
 			})
 		}
 	}
@@ -126,7 +126,7 @@ func (driver Teambition) GetFiles(parentId string, account *model.Account) ([]mo
 				Size:      work.FileSize,
 				Type:      utils.GetFileType(path.Ext(work.FileName)),
 				Driver:    driver.Config().Name,
-				UpdatedAt: &work.Updated,
+				UpdatedAt: work.Updated,
 				Thumbnail: work.Thumbnail,
 				Url:       work.DownloadURL,
 			})
