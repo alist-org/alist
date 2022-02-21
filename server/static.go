@@ -26,6 +26,7 @@ func InitIndex() {
 	cdnUrl = strings.TrimRight(cdnUrl, "/")
 	conf.RawIndexHtml = string(data)
 	conf.RawIndexHtml = strings.ReplaceAll(conf.RawIndexHtml, "/CDN_URL", cdnUrl)
+	conf.RawIndexHtml = strings.ReplaceAll(conf.RawIndexHtml, "assets/", cdnUrl+"/assets/")
 }
 
 func Static(r *gin.Engine) {

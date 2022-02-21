@@ -12,7 +12,7 @@ func InitLog() {
 		log.SetLevel(log.DebugLevel)
 		log.SetReportCaller(true)
 	}
-	if conf.Password {
+	if conf.Password || conf.Version {
 		log.SetLevel(log.WarnLevel)
 	}
 	log.SetFormatter(&log.TextFormatter{
