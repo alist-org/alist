@@ -34,7 +34,7 @@ func InitApiRouter(r *gin.Engine) {
 	admin := api.Group("/admin")
 	{
 		admin.Use(middlewares.Auth)
-		admin.GET("/login", common.Login)
+		admin.Any("/login", common.Login)
 		admin.GET("/settings", controllers.GetSettings)
 		admin.POST("/settings", controllers.SaveSettings)
 		admin.DELETE("/setting", controllers.DeleteSetting)
