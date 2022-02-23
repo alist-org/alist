@@ -8,12 +8,14 @@ require (
 	github.com/gin-contrib/cors v1.3.1
 	github.com/gin-gonic/gin v1.7.4
 	github.com/go-resty/resty/v2 v2.6.0
+	github.com/google/uuid v1.3.0
 	github.com/jlaffaye/ftp v0.0.0-20211117213618-11820403398b
 	github.com/json-iterator/go v1.1.12
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/robfig/cron/v3 v3.0.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/studio-b12/gowebdav v0.0.0-20211109083228-3f8721cd4b6f
+	github.com/upyun/go-sdk/v3 v3.0.2
 	golang.org/x/text v0.3.7
 	gorm.io/driver/mysql v1.2.3
 	gorm.io/driver/postgres v1.2.3
@@ -35,7 +37,6 @@ require (
 	github.com/go-redis/redis/v8 v8.9.0 // indirect
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
-	github.com/google/uuid v1.3.0 // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
 	github.com/jackc/pgconn v1.10.1 // indirect
 	github.com/jackc/pgio v1.0.0 // indirect
