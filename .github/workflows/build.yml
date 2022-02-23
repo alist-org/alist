@@ -2,9 +2,9 @@ name: build
 
 on:
   push:
-    branches: [ v2 ]
+    branches: [ '**' ]
   pull_request:
-    branches: [ v2 ]
+    branches: [ '**' ]
 
 jobs:
   build:
@@ -28,7 +28,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         with:
-          ref: v2
           path: alist
 
       - name: Set up xgo
