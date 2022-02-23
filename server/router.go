@@ -58,6 +58,7 @@ func InitApiRouter(r *gin.Engine) {
 		admin.POST("/move", file.Move)
 		admin.POST("/copy", file.Copy)
 		admin.POST("/folder", file.Folder)
+		admin.POST("/refresh", file.RefreshFolder)
 	}
 	WebDav(r)
 	Static(r)
