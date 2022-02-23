@@ -68,12 +68,12 @@ func (driver USS) Items() []base.Item {
 			Default:     "4",
 			Description: "default 4 hours",
 		},
-		{
-			Name:        "zone",
-			Label:       "placeholder filename",
-			Type:        base.TypeString,
-			Description: "default empty string",
-		},
+		//{
+		//	Name:        "zone",
+		//	Label:       "placeholder filename",
+		//	Type:        base.TypeString,
+		//	Description: "default empty string",
+		//},
 	}
 }
 
