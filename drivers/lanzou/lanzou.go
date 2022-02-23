@@ -118,7 +118,10 @@ func (driver *Lanzou) GetFilesByUrl(account *model.Account) ([]LanZouFile, error
 	uid := regexp.MustCompile(`'uid':'(.+?)',`).FindStringSubmatch(res.String())[1]
 	rep := regexp.MustCompile(`'rep':'(.+?)',`).FindStringSubmatch(res.String())[1]
 	up := regexp.MustCompile(`'up':(.+?),`).FindStringSubmatch(res.String())[1]
-	ls := regexp.MustCompile(`'ls':(.+?),`).FindStringSubmatch(res.String())[1]
+	ls := ""
+	if account.Password != "" {
+		ls = regexp.MustCompile(`'ls':(.+?),`).FindStringSubmatch(res.String())[1]
+	}
 	tName := regexp.MustCompile(`'t':(.+?),`).FindStringSubmatch(res.String())[1]
 	kName := regexp.MustCompile(`'k':(.+?),`).FindStringSubmatch(res.String())[1]
 	t := regexp.MustCompile(`var ` + tName + ` = '(.+?)';`).FindStringSubmatch(res.String())[1]
