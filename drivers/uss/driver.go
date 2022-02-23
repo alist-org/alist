@@ -40,13 +40,13 @@ func (driver USS) Items() []base.Item {
 		},
 		{
 			Name:     "access_key",
-			Label:    "Access Key",
+			Label:    "Operator Name",
 			Type:     base.TypeString,
 			Required: true,
 		},
 		{
 			Name:     "access_secret",
-			Label:    "Access Secret",
+			Label:    "Operator Password",
 			Type:     base.TypeString,
 			Required: true,
 		},
