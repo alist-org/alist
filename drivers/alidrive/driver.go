@@ -309,7 +309,7 @@ func (driver AliDrive) Move(src string, dst string, account *model.Account) erro
 	if err != nil {
 		return err
 	}
-	err = driver.batch(srcFile.Id, dstDirFile.Id, account)
+	err = driver.batch(srcFile.Id, dstDirFile.Id, "/file/move", account)
 	return err
 }
 
@@ -324,7 +324,17 @@ func (driver AliDrive) Rename(src string, dst string, account *model.Account) er
 }
 
 func (driver AliDrive) Copy(src string, dst string, account *model.Account) error {
-	return base.ErrNotSupport
+	dstDir, _ := filepath.Split(dst)
+	srcFile, err := driver.File(src, account)
+	if err != nil {
+		return err
+	}
+	dstDirFile, err := driver.File(dstDir, account)
+	if err != nil {
+		return err
+	}
+	err = driver.batch(srcFile.Id, dstDirFile.Id, "/file/copy", account)
+	return err
 }
 
 func (driver AliDrive) Delete(path string, account *model.Account) error {
