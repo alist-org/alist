@@ -30,10 +30,8 @@ jobs:
         with:
           path: alist
 
-      - name: Set up xgo
+      - name: Install upx
         run: |
-          docker pull techknowlogick/xgo:latest
-          go install src.techknowlogick.com/xgo@latest
           sudo apt install upx
 
       - name: Build
