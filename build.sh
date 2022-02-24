@@ -77,9 +77,7 @@ BUILD() {
       fi
   done
   cd build
-  for i in $(find . -type f -name "$appName-*"); do
-    upx -9 -o $i-upx $i
-  done
+  upx -9 ./*
   find . -type f -print0 | xargs -0 md5sum >md5.txt
   cat md5.txt
   cd ..
