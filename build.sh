@@ -78,7 +78,7 @@ BUILD() {
   done
   cd build
   upx -9 ./*
-  find . -type f -print0 | xargs -0 md5sum >md5.txt
+  find ./alist-* -type f -print0 | xargs -0 md5 >md5.txt
   cat md5.txt
   cd ..
   cd ..
