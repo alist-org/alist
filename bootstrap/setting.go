@@ -65,13 +65,14 @@ func InitSettings() {
 			Description: "text type extensions",
 			Group:       model.FRONT,
 		},
-		//{
-		//	Key:         "hide readme file",
-		//	Value:       "true",
-		//	Type:        "bool",
-		//	Description: "hide readme file? ",
-		//	Group:       model.FRONT,
-		//},
+		{
+			Key:         "d_proxy types",
+			Value:       strings.Join(conf.DProxyTypes, ","),
+			Type:        "string",
+			Description: "/d but proxy",
+			Access:      model.PRIVATE,
+			Group:       model.BACK,
+		},
 		{
 			Key:         "hide files",
 			Value:       "/\\/README.md/i",

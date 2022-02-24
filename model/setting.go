@@ -93,6 +93,10 @@ func LoadSettings() {
 	if err == nil {
 		conf.TextTypes = strings.Split(textTypes.Value, ",")
 	}
+	dProxyTypes, err := GetSettingByKey("d_proxy types")
+	if err == nil {
+		conf.DProxyTypes = strings.Split(dProxyTypes.Value, ",")
+	}
 	// html
 	favicon, err := GetSettingByKey("favicon")
 	if err == nil {
