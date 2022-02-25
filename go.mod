@@ -16,6 +16,7 @@ require (
 	github.com/robfig/cron/v3 v3.0.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/studio-b12/gowebdav v0.0.0-20211109083228-3f8721cd4b6f
+	github.com/upyun/go-sdk/v3 v3.0.2
 	golang.org/x/text v0.3.7
 	gorm.io/driver/mysql v1.2.3
 	gorm.io/driver/postgres v1.2.3
