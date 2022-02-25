@@ -10,7 +10,7 @@ jobs:
   build:
     strategy:
       matrix:
-        platform: [macos-latest]
+        platform: [ubuntu-latest]
         go-version: [1.17]
     name: Build
     runs-on: ${{ matrix.platform }}
@@ -32,7 +32,9 @@ jobs:
 
       - name: Install upx
         run: |
-          brew install upx
+          docker pull techknowlogick/xgo:latest
+          go install src.techknowlogick.com/xgo@latest
+          sudo apt install upx
 
       - name: Build
         run: |
