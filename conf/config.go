@@ -37,7 +37,7 @@ func DefaultConfig() *Config {
 	return &Config{
 		Address: "0.0.0.0",
 		Port:    5244,
-		Assets:  "https://npm.elemecdn.com/alist-web@$version",
+		Assets:  "https://npm.elemecdn.com/alist-web@$version/dist",
 		TempDir: "data/temp",
 		Database: Database{
 			Type:        "sqlite3",
