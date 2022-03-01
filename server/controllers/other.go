@@ -7,6 +7,7 @@ import (
 	"github.com/Xhofe/alist/server/common"
 	"github.com/Xhofe/alist/utils"
 	"github.com/gin-gonic/gin"
+	"net/url"
 	"strings"
 )
 
@@ -24,11 +25,19 @@ func Plist(c *gin.Context) {
 		return
 	}
 	u := string(bytes)
+	uUrl, err := url.Parse(u)
+	if err != nil {
+		common.ErrorResp(c, err, 500)
+		return
+	}
 	name := utils.Base(u)
+	u = uUrl.String()
 	ipaIndex := strings.Index(name, ".ipa")
 	if ipaIndex != -1 {
 		name = name[:ipaIndex]
 	}
+	name = strings.ReplaceAll(name, "<", "[")
+	name = strings.ReplaceAll(name, ">", "]")
 	plist := fmt.Sprintf(`<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
     <dict>
