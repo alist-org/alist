@@ -47,7 +47,6 @@ func Proxy(w http.ResponseWriter, r *http.Request, link *base.Link, file *model.
 		if err != nil {
 			return err
 		}
-		w.Header().Set("Content-Type", "application/octet-stream")
 		w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename=%s`, url.QueryEscape(file.Name)))
 		http.ServeContent(w, r, file.Name, fileStat.ModTime(), f)
 		return nil
