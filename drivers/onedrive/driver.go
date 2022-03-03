@@ -175,7 +175,7 @@ func (driver Onedrive) Link(args base.Args, account *model.Account) (*base.Link,
 	if err != nil {
 		return nil, err
 	}
-	if file.File.MimeType == "" {
+	if file.File == nil {
 		return nil, base.ErrNotFile
 	}
 	link := base.Link{

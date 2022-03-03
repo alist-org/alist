@@ -120,7 +120,7 @@ type OneFile struct {
 	Size                 int64      `json:"size"`
 	LastModifiedDateTime *time.Time `json:"lastModifiedDateTime"`
 	Url                  string     `json:"@microsoft.graph.downloadUrl"`
-	File                 struct {
+	File                 *struct {
 		MimeType string `json:"mimeType"`
 	} `json:"file"`
 	Thumbnails []struct {
@@ -157,7 +157,7 @@ func (driver Onedrive) FormatFile(file *OneFile) *model.File {
 	if len(file.Thumbnails) > 0 {
 		f.Thumbnail = file.Thumbnails[0].Medium.Url
 	}
-	if file.File.MimeType == "" {
+	if file.File == nil {
 		f.Type = conf.FOLDER
 	} else {
 		f.Type = utils.GetFileType(filepath.Ext(file.Name))
