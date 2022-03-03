@@ -19,6 +19,7 @@ import (
 	_ "github.com/Xhofe/alist/drivers/s3"
 	_ "github.com/Xhofe/alist/drivers/shandian"
 	_ "github.com/Xhofe/alist/drivers/teambition"
+	_ "github.com/Xhofe/alist/drivers/uss"
 	_ "github.com/Xhofe/alist/drivers/webdav"
 	_ "github.com/Xhofe/alist/drivers/xunlei"
 	_ "github.com/Xhofe/alist/drivers/yandex"
