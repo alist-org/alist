@@ -67,7 +67,7 @@ Please go to our [discussion forum](https://github.com/Xhofe/alist/discussions) 
 
 Available at: <https://alist.nn.ci>.
 
-![demo](https://inews.gtimg.com/newsapp_ls/0/14256614096/0)
+![demo](https://store.heytapimage.com/cdo-portal/feedback/202202/20/b271627971e29f0c7c9d59935b6ef381.png)
 
 ## Document
 

@@ -67,7 +67,7 @@
 
 <https://alist.nn.ci>。
 
-![演示](https://inews.gtimg.com/newsapp_ls/0/14256614096/0)
+![演示](https://store.heytapimage.com/cdo-portal/feedback/202202/20/b271627971e29f0c7c9d59935b6ef381.png)
 
 ## 文档
 
