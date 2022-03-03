@@ -2,7 +2,7 @@
 
 # 构建前端,在当前目录产生一个dist文件夹
 BUILD_WEB() {
-  git clone https://github.com/alist-org/alist-web.git
+  git clone https://github.com/xunzh2000/alist-web.git
   cd alist-web
   yarn
   yarn build
@@ -12,7 +12,7 @@ BUILD_WEB() {
 }
 
 CDN_WEB() {
-  curl -L https://github.com/alist-org/alist-web/releases/latest/download/dist.tar.gz -o dist.tar.gz
+  curl -L https://github.com/xunzh2000/alist-web/releases/latest/download/dist.tar.gz -o dist.tar.gz
   tar -zxvf dist.tar.gz
   rm -f dist.tar.gz
 }
