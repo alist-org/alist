@@ -25,6 +25,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "DaoChen6",
+      "name": "道辰",
+      "avatar_url": "https://avatars.githubusercontent.com/u/63903027?v=4",
+      "profile": "https://www.iflu.cf/",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,
