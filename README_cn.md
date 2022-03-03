@@ -11,10 +11,13 @@
   </a>
 </div>
 
-
 ---
 
 [English](./README.md) | 中文
+
+<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+[![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors-)
+<!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 ## 支持
 
@@ -70,10 +73,30 @@
 
 <https://alist-doc.nn.ci/>
 
+## Contributors ✨
+
+Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<table>
+  <tr>
+    <td align="center"><a href="http://nn.ci"><img src="https://avatars.githubusercontent.com/u/36558727?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Xhofe</b></sub></a><br /><a href="https://github.com/Xhofe/alist/commits?author=Xhofe" title="Code">💻</a> <a href="#ideas-Xhofe" title="Ideas, Planning, & Feedback">🤔</a></td>
+  </tr>
+</table>
+
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+
+This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!
+
 ##  许可
 
 `AList` 是在 AGPL-3.0 许可下许可的开源软件。
 
 ---
 
-> [@Blog](https://www.nn.ci/) · [@GitHub](https://github.com/Xhofe)
+> [@Blog](https://www.nn.ci/) · [@GitHub](https://github.com/Xhofe) · [@TelegramGroup](https://t.me/alist_chat) · [@QQGroup](https://jq.qq.com/?_wv=1027&k=OVPJcv2b)
