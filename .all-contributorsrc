@@ -1,0 +1,25 @@
+{
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "contributors": [
+    {
+      "login": "Xhofe",
+      "name": "Xhofe",
+      "avatar_url": "https://avatars.githubusercontent.com/u/36558727?v=4",
+      "profile": "http://nn.ci",
+      "contributions": [
+        "code",
+        "ideas"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "projectName": "alist",
+  "projectOwner": "Xhofe",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "skipCi": true
+}
