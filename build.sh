@@ -12,7 +12,7 @@ BUILD_WEB() {
 }
 
 CDN_WEB() {
-  curl -L https://github.com/xunzh2000/alist-web/releases/latest/download/dist.tar.gz -o dist.tar.gz
+  curl -L https://github.com/alist-org/alist-web/releases/latest/download/dist.tar.gz -o dist.tar.gz
   tar -zxvf dist.tar.gz
   rm -f dist.tar.gz
 }
