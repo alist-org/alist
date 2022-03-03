@@ -2,7 +2,7 @@ name: release
 
 on:
   push:
-    branches: master
+    branches: v2
 
 jobs:
   release:
