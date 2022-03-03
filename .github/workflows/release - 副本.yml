@@ -1,0 +1,45 @@
+name: release
+
+on:
+  push:
+    branches: master
+
+jobs:
+  release:
+    strategy:
+      matrix:
+        platform: [ubuntu-latest]
+        go-version: [1.17]
+    name: Release
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: v2
+          path: alist
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Install upx
+        run: |
+          docker pull techknowlogick/xgo:latest
+          go install src.techknowlogick.com/xgo@latest
+          sudo apt install upx
+
+      - name: Build
+        run: |
+          mv alist/build.sh .
+          bash build.sh cdn
+          mv dist/* alist/public
+          bash build.sh release
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: alist/build/compress/*

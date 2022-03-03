@@ -62,7 +62,7 @@ Please go to our [discussion forum](https://github.com/Xhofe/alist/discussions) 
 
 ## Demo
 
-Available at: <https://alist.nn.ci>.
+Available: <https://alist.nn.ci>.
 
 ![demo](https://inews.gtimg.com/newsapp_ls/0/14256614096/0)
 
