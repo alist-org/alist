@@ -39,6 +39,7 @@ English | [中文](./README_cn.md)
   - [x] [Yandex.Disk](https://disk.yandex.com/)
   - [x] [Baidu Disk](http://pan.baidu.com/)
   - [x] [Quark](https://pan.quark.cn)
+  - [x] [XunleiCloud](https://pan.xunlei.com/)
 - [x] Easy to deploy and out-of-the-box
 - [x] File preview (PDF, markdown, code, plain text, ...)
 - [x] Image preview in gallery mode
