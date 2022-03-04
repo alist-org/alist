@@ -16,7 +16,7 @@
 English | [中文](./README_cn.md)
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-3-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-4-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 ## Features
@@ -85,6 +85,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="http://nn.ci"><img src="https://avatars.githubusercontent.com/u/36558727?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Xhofe</b></sub></a><br /><a href="https://github.com/Xhofe/alist/commits?author=Xhofe" title="Code">💻</a> <a href="#ideas-Xhofe" title="Ideas, Planning, & Feedback">🤔</a> <a href="https://github.com/Xhofe/alist/commits?author=Xhofe" title="Documentation">📖</a></td>
     <td align="center"><a href="https://github.com/foxxorcat"><img src="https://avatars.githubusercontent.com/u/95907542?v=4?s=100" width="100px;" alt=""/><br /><sub><b>foxxorcat</b></sub></a><br /><a href="https://github.com/Xhofe/alist/commits?author=foxxorcat" title="Code">💻</a></td>
     <td align="center"><a href="https://www.iflu.cf/"><img src="https://avatars.githubusercontent.com/u/63903027?v=4?s=100" width="100px;" alt=""/><br /><sub><b>道辰</b></sub></a><br /><a href="https://github.com/Xhofe/alist/commits?author=DaoChen6" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://vg-land.github.io/"><img src="https://avatars.githubusercontent.com/u/16739728?v=4?s=100" width="100px;" alt=""/><br /><sub><b>vg-land</b></sub></a><br /><a href="https://github.com/Xhofe/alist/commits?author=vg-land" title="Code">💻</a></td>
   </tr>
 </table>
 
