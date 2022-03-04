@@ -89,14 +89,19 @@ func (driver XunLeiCloud) File(path string, account *model.Account) (*model.File
 }
 
 func (driver XunLeiCloud) Files(path string, account *model.Account) ([]model.File, error) {
+	cache, err := base.GetCache(path, account)
+	if err == nil {
+		files, _ := cache.([]model.File)
+		return files, nil
+	}
 	file, err := driver.File(utils.ParsePath(path), account)
 	if err != nil {
 		return nil, err
 	}
 
 	var fileList FileList
-	url := fmt.Sprintf("https://api-pan.xunlei.com/drive/v1/files?parent_id=%s&page_token=%s&with_audit=true&filters=%s", file.Id, "", url.QueryEscape(`{"phase": {"eq": "PHASE_TYPE_COMPLETE"}, "trashed":{"eq":false}}`))
-	if err = GetState(account).Request("GET", url, nil, &fileList, account); err != nil {
+	u := fmt.Sprintf("https://api-pan.xunlei.com/drive/v1/files?parent_id=%s&page_token=%s&with_audit=true&filters=%s", file.Id, "", url.QueryEscape(`{"phase": {"eq": "PHASE_TYPE_COMPLETE"}, "trashed":{"eq":false}}`))
+	if err = GetState(account).Request("GET", u, nil, &fileList, account); err != nil {
 		return nil, err
 	}
 
@@ -105,6 +110,9 @@ func (driver XunLeiCloud) Files(path string, account *model.Account) ([]model.Fi
 		if file.Kind == FOLDER || (file.Kind == FILE && file.Audit.Status == "STATUS_OK") {
 			files = append(files, *driver.formatFile(&file))
 		}
+	}
+	if len(files) > 0 {
+		_ = base.SetCache(path, files, account)
 	}
 	return files, nil
 }
@@ -134,15 +142,15 @@ func (driver XunLeiCloud) Link(args base.Args, account *model.Account) (*base.Li
 	if file.Type == conf.FOLDER {
 		return nil, base.ErrNotFile
 	}
-	var lfile Files
-	if err = GetState(account).Request("GET", fmt.Sprintf("https://api-pan.xunlei.com/drive/v1/files/%s?&with_audit=true", file.Id), nil, &lfile, account); err != nil {
+	var lFile Files
+	if err = GetState(account).Request("GET", fmt.Sprintf("https://api-pan.xunlei.com/drive/v1/files/%s?&with_audit=true", file.Id), nil, &lFile, account); err != nil {
 		return nil, err
 	}
 	return &base.Link{
 		Headers: []base.Header{
 			{Name: "User-Agent", Value: base.UserAgent},
 		},
-		Url: lfile.WebContentLink,
+		Url: lFile.WebContentLink,
 	}, nil
 }
 
