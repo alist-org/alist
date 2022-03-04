@@ -6,6 +6,9 @@ BUILD_WEB() {
   cd alist-web
   yarn
   yarn build
+  sed -i -e "s/\/CDN_URL\//\//g" dist/index.html
+  sed -i -e "s/assets/\/assets/g" dist/index.html
+  rm -f dist/index.html-e
   mv dist ..
   cd .. || exit
   rm -rf alist-web
