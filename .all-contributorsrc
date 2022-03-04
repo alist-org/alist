@@ -34,6 +34,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "vg-land",
+      "name": "vg-land",
+      "avatar_url": "https://avatars.githubusercontent.com/u/16739728?v=4",
+      "profile": "https://vg-land.github.io/",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
