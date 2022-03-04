@@ -23,7 +23,10 @@ require (
 	gorm.io/gorm v1.23.1
 )
 
-require golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
+require (
+	github.com/baiyubin/aliyun-sts-go-sdk v0.0.0-20180326062324-cfa1a18b161f // indirect
+	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
+)
 
 require (
 	github.com/XiaoMi/pegasus-go-client v0.0.0-20210427083443-f3b6b08bc4c2 // indirect
