@@ -33,11 +33,13 @@ func Plist(c *gin.Context) {
 	name := utils.Base(u)
 	u = uUrl.String()
 	ipaIndex := strings.Index(name, ".ipa")
+	decodeName := name
 	if ipaIndex != -1 {
 		name = name[:ipaIndex]
-		decodeName, err := url.PathUnescape(name)
+		decodeName = name
+		tmp, err := url.PathUnescape(name)
 		if err == nil {
-			name = decodeName
+			decodeName = tmp
 		}
 	}
 	name = strings.ReplaceAll(name, "<", "[")
@@ -71,7 +73,7 @@ func Plist(c *gin.Context) {
             </dict>
         </array>
     </dict>
-</plist>`, u, name, name)
+</plist>`, u, name, decodeName)
 	c.Header("Content-Type", "application/xml;charset=utf-8")
 	c.Status(200)
 	_, _ = c.Writer.WriteString(plist)
