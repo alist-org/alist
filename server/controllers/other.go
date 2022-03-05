@@ -35,6 +35,10 @@ func Plist(c *gin.Context) {
 	ipaIndex := strings.Index(name, ".ipa")
 	if ipaIndex != -1 {
 		name = name[:ipaIndex]
+		decodeName, err := url.PathUnescape(name)
+		if err == nil {
+			name = decodeName
+		}
 	}
 	name = strings.ReplaceAll(name, "<", "[")
 	name = strings.ReplaceAll(name, ">", "]")
