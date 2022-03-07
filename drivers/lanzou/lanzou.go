@@ -153,6 +153,7 @@ func (driver *Lanzou) GetFilesByUrl(account *model.Account) ([]LanZouFile, error
 			break
 		}
 		pg++
+		time.Sleep(time.Second)
 		files = append(files, resp.Text...)
 	}
 	return files, nil
