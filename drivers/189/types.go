@@ -53,3 +53,15 @@ type Rsa struct {
 	PkId   string `json:"pkId"`
 	PubKey string `json:"pubKey"`
 }
+
+type Cloud189Down struct {
+	ResCode         int    `json:"res_code"`
+	ResMessage      string `json:"res_message"`
+	FileDownloadUrl string `json:"fileDownloadUrl"`
+}
+
+type DownResp struct {
+	ResCode         int    `json:"res_code"`
+	ResMessage      string `json:"res_message"`
+	FileDownloadUrl string `json:"downloadUrl"`
+}

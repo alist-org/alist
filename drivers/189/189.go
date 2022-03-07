@@ -88,12 +88,6 @@ func (driver Cloud189) FormatFile(file *Cloud189File) *model.File {
 //	return nil, ErrPathNotFound
 //}
 
-type Cloud189Down struct {
-	ResCode         int    `json:"res_code"`
-	ResMessage      string `json:"res_message"`
-	FileDownloadUrl string `json:"fileDownloadUrl"`
-}
-
 type LoginResp struct {
 	Msg    string `json:"msg"`
 	Result int    `json:"result"`
