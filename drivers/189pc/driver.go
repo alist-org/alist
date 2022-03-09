@@ -268,7 +268,12 @@ func (driver Cloud189) Link(args base.Args, account *model.Account) (*base.Link,
 	if err != nil {
 		return nil, err
 	}
-	return &base.Link{Url: strings.ReplaceAll(downloadUrl.URL, "&amp;", "&")}, nil
+	return &base.Link{
+		Headers: []base.Header{
+			{Name: "User-Agent", Value: base.UserAgent},
+		},
+		Url: strings.ReplaceAll(downloadUrl.URL, "&amp;", "&"),
+	}, nil
 }
 
 func (driver Cloud189) Preview(path string, account *model.Account) (interface{}, error) {
@@ -437,11 +442,6 @@ func (driver Cloud189) Copy(src string, dst string, account *model.Account) erro
 		return err
 	}
 
-	isFolder := 0
-	if srcFile.IsDir() {
-		isFolder = 1
-	}
-
 	_, err = GetState(account).Request("POST", API_URL+"/batch/createBatchTask.action", nil, func(r *resty.Request) {
 		r.SetFormData(clientSuffix()).SetFormData(map[string]string{
 			"type": "COPY",
@@ -450,7 +450,7 @@ func (driver Cloud189) Copy(src string, dst string, account *model.Account) erro
 					{
 						FileId:   srcFile.Id,
 						FileName: srcFile.Name,
-						IsFolder: isFolder,
+						IsFolder: BoolToNumber(srcFile.IsDir()),
 					},
 				}))),
 			"targetFolderId": dstDirFile.Id,
@@ -533,7 +533,7 @@ func (driver Cloud189) uploadFamily(file *model.FileStream, parentFile *model.Fi
 		r.SetQueryParams(map[string]string{
 			"fileMd5":      hex.EncodeToString(fileMd5.Sum(nil)),
 			"fileName":     file.Name,
-			"familyId":     fmt.Sprint(account.SiteId),
+			"familyId":     account.SiteId,
 			"parentId":     parentFile.Id,
 			"resumePolicy": "1",
 			"fileSize":     fmt.Sprint(file.Size),
@@ -554,7 +554,7 @@ func (driver Cloud189) uploadFamily(file *model.FileStream, parentFile *model.Fi
 	_, err = client.Request("GET", createUpload.FileCommitUrl, nil, func(r *resty.Request) {
 		r.SetQueryParams(clientSuffix())
 		r.SetHeaders(map[string]string{
-			"FamilyId":     fmt.Sprint(account.SiteId),
+			"FamilyId":     account.SiteId,
 			"uploadFileId": fmt.Sprint(createUpload.UploadFileId),
 			"ResumePolicy": "1",
 		})
@@ -643,7 +643,7 @@ func (driver Cloud189) uploadFileData(file *model.FileStream, tempFile *os.File,
 				"Expect":                 "100-continue",
 			})
 			if isFamily(account) {
-				r.SetHeader("FamilyId", fmt.Sprint(account.SiteId))
+				r.SetHeader("FamilyId", account.SiteId)
 			}
 			r.SetBody(tempFile)
 		}, account)
@@ -669,7 +669,7 @@ func (driver Cloud189) getUploadFileState(uploadFileId int64, account *model.Acc
 			"resumePolicy": "1",
 		})
 		if isFamily(account) {
-			r.SetQueryParam("familyId", fmt.Sprint(account.SiteId))
+			r.SetQueryParam("familyId", account.SiteId)
 		}
 		r.SetResult(&uploadFileState)
 	}, account)

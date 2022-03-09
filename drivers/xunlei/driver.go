@@ -60,7 +60,13 @@ func (driver XunLeiCloud) Save(account *model.Account, old *model.Account) error
 	if account == nil {
 		return nil
 	}
-	return GetState(account).Login(account)
+	state := GetState(account)
+	if state.isTokensExpires() {
+		return state.Login(account)
+	}
+	account.Status = "work"
+	model.SaveAccount(account)
+	return nil
 }
 
 func (driver XunLeiCloud) File(path string, account *model.Account) (*model.File, error) {
@@ -99,16 +105,20 @@ func (driver XunLeiCloud) Files(path string, account *model.Account) ([]model.Fi
 		return nil, err
 	}
 
-	var fileList FileList
-	u := fmt.Sprintf("https://api-pan.xunlei.com/drive/v1/files?parent_id=%s&page_token=%s&with_audit=true&filters=%s", file.Id, "", url.QueryEscape(`{"phase": {"eq": "PHASE_TYPE_COMPLETE"}, "trashed":{"eq":false}}`))
-	if err = GetState(account).Request("GET", u, nil, &fileList, account); err != nil {
-		return nil, err
-	}
-
-	files := make([]model.File, 0, len(fileList.Files))
-	for _, file := range fileList.Files {
-		if file.Kind == FOLDER || (file.Kind == FILE && file.Audit.Status == "STATUS_OK") {
-			files = append(files, *driver.formatFile(&file))
+	files := make([]model.File, 0)
+	for {
+		var fileList FileList
+		u := fmt.Sprintf("https://api-pan.xunlei.com/drive/v1/files?parent_id=%s&page_token=%s&with_audit=true&filters=%s", file.Id, fileList.NextPageToken, url.QueryEscape(`{"phase": {"eq": "PHASE_TYPE_COMPLETE"}, "trashed":{"eq":false}}`))
+		if err = GetState(account).Request("GET", u, nil, &fileList, account); err != nil {
+			return nil, err
+		}
+		for _, file := range fileList.Files {
+			if file.Kind == FOLDER || (file.Kind == FILE && file.Audit.Status == "STATUS_OK") {
+				files = append(files, *driver.formatFile(&file))
+			}
+		}
+		if fileList.NextPageToken == "" {
+			break
 		}
 	}
 	if len(files) > 0 {

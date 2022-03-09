@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/Xhofe/alist/utils"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -14,6 +13,7 @@ import (
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
+	"github.com/Xhofe/alist/utils"
 	"github.com/go-resty/resty/v2"
 	"github.com/google/uuid"
 	jsoniter "github.com/json-iterator/go"
@@ -34,7 +34,7 @@ func GetState(account *model.Account) *State {
 	state := &State{client: resty.New().
 		SetHeaders(map[string]string{
 			"Accept":     "application/json;charset=UTF-8",
-			"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/76.0",
+			"User-Agent": base.UserAgent,
 		}),
 	}
 	userStateCache.States[account.Username] = state
@@ -200,10 +200,10 @@ func (s *State) refreshSession(account *model.Account) error {
 		}).
 		SetHeader("X-Request-ID", uuid.NewString()).
 		Get("https://api.cloud.189.cn/getSessionForPC.action")
-	log.Debug(res.String())
 	if err != nil {
 		return err
 	}
+	log.Debug(res.String())
 	if erron.ResCode != "" {
 		return fmt.Errorf(erron.ResMessage)
 	}
