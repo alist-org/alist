@@ -2,10 +2,9 @@ package _189
 
 import (
 	"bytes"
-	"crypto/tls"
-	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/Xhofe/alist/utils"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -33,7 +32,6 @@ func GetState(account *model.Account) *State {
 		return v
 	}
 	state := &State{client: resty.New().
-		SetProxy("http://192.168.0.30:8888").SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true}).
 		SetHeaders(map[string]string{
 			"Accept":     "application/json;charset=UTF-8",
 			"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/76.0",
@@ -156,11 +154,10 @@ func (s *State) getLoginParam() (*LoginParam, error) {
 			"timeStamp":  fmt.Sprint(timestamp()),
 		}).
 		Get(WEB_URL + "/api/portal/unifyLoginForPC.action")
-	log.Debug(res.String())
 	if err != nil {
 		return nil, err
 	}
-
+	log.Debug(res.String())
 	param := &LoginParam{
 		CaptchaToken: regexp.MustCompile(`'captchaToken' value='(.+?)'`).FindStringSubmatch(res.String())[1],
 		Lt:           regexp.MustCompile(`lt = "(.+?)"`).FindStringSubmatch(res.String())[1],
@@ -221,7 +218,7 @@ func (s *State) refreshSession(account *model.Account) error {
 		return s.login(account)
 	default:
 		account.Status = userSessionResp.ResMessage
-		model.SaveAccount(account)
+		_ = model.SaveAccount(account)
 		return fmt.Errorf(userSessionResp.ResMessage)
 	}
 	return nil
@@ -296,7 +293,7 @@ func (s *State) Request(method string, fullUrl string, params url.Values, callba
 	log.Debug(res.String())
 
 	var erron Erron
-	json.Unmarshal(res.Body(), &erron)
+	utils.Json.Unmarshal(res.Body(), &erron)
 	if erron.ResCode != "" {
 		return nil, fmt.Errorf(erron.ResMessage)
 	}

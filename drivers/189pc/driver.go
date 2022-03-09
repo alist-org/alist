@@ -210,6 +210,9 @@ func (driver Cloud189) Files(path string, account *model.Account) ([]model.File,
 			})
 		}
 	}
+	if len(files) > 0 {
+		_ = base.SetCache(path, files, account)
+	}
 	return files, nil
 }
 
