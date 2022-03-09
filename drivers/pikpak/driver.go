@@ -119,9 +119,14 @@ func (driver PikPak) Link(args base.Args, account *model.Account) (*base.Link, e
 	if err != nil {
 		return nil, err
 	}
-	return &base.Link{
+	link := base.Link{
 		Url: resp.WebContentLink,
-	}, nil
+	}
+	if len(resp.Medias) > 0 && resp.Medias[0].Link.Url != "" {
+		log.Debugln("use media link")
+		link.Url = resp.Medias[0].Link.Url
+	}
+	return &link, nil
 }
 
 func (driver PikPak) Path(path string, account *model.Account) (*model.File, []model.File, error) {
