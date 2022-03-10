@@ -29,12 +29,14 @@ func (driver GoogleDrive) Items() []base.Item {
 			Label:    "client id",
 			Type:     base.TypeString,
 			Required: true,
+			Default:  "202264815644.apps.googleusercontent.com",
 		},
 		{
 			Name:     "client_secret",
 			Label:    "client secret",
 			Type:     base.TypeString,
 			Required: true,
+			Default:  "X4Z3ca8xfWDb1Voo-F9a7ZxJ",
 		},
 		{
 			Name:     "refresh_token",
