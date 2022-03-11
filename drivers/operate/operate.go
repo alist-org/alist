@@ -29,7 +29,11 @@ func File(driver base.Driver, account *model.Account, path string) (*model.File,
 
 func MakeDir(driver base.Driver, account *model.Account, path string, clearCache bool) error {
 	log.Debugf("mkdir: %s", path)
-	err := driver.MakeDir(path, account)
+	_, err := Files(driver, account, path)
+	if err != base.ErrPathNotFound {
+		return nil
+	}
+	err = driver.MakeDir(path, account)
 	if err == nil && clearCache {
 		_ = base.DeleteCache(utils.Dir(path), account)
 	}
