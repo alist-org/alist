@@ -125,13 +125,19 @@ func (driver Lanzou) Link(args base.Args, account *model.Account) (*base.Link, e
 	}
 	log.Debugf("down file: %+v", file)
 	downId := file.Id
+	pwd := ""
 	if account.InternalType == "cookie" {
-		downId, err = driver.GetDownPageId(file.Id, account)
+		downId, pwd, err = driver.GetDownPageId(file.Id, account)
 		if err != nil {
 			return nil, err
 		}
 	}
-	url, err := driver.GetLink(downId, account)
+	var url string
+	//if pwd != "" {
+	//url, err = driver.GetLinkWithPassword(downId, pwd, account)
+	//} else {
+	url, err = driver.GetLink(downId, pwd, account)
+	//}
 	if err != nil {
 		return nil, err
 	}

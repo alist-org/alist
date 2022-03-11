@@ -165,29 +165,21 @@ func (driver *Lanzou) GetFilesByUrl(account *model.Account) ([]LanZouFile, error
 //}
 
 // GetDownPageId 获取下载页面的ID
-func (driver *Lanzou) GetDownPageId(fileId string, account *model.Account) (string, error) {
-	var resp LanZouFilesResp
+func (driver *Lanzou) GetDownPageId(fileId string, account *model.Account) (string, string, error) {
+	var resp DownPageResp
 	res, err := base.RestyClient.R().SetResult(&resp).SetHeader("Cookie", account.AccessToken).
 		SetFormData(map[string]string{
 			"task":    "22",
 			"file_id": fileId,
 		}).Post("https://pc.woozooo.com/doupload.php")
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	log.Debug(res.String())
 	if resp.Zt != 1 {
-		return "", fmt.Errorf("%v", resp.Info)
+		return "", "", fmt.Errorf("%v", resp.Info)
 	}
-	info, ok := resp.Info.(map[string]interface{})
-	if !ok {
-		return "", fmt.Errorf("%v", resp.Info)
-	}
-	fid, ok := info["f_id"].(string)
-	if !ok {
-		return "", fmt.Errorf("%v", info["f_id"])
-	}
-	return fid, nil
+	return resp.Info.FId, resp.Info.Pwd, nil
 }
 
 type LanzouLinkResp struct {
@@ -196,7 +188,7 @@ type LanzouLinkResp struct {
 	Zt  int    `json:"zt"`
 }
 
-func (driver *Lanzou) GetLink(downId string, account *model.Account) (string, error) {
+func (driver *Lanzou) GetLink(downId string, pwd string, account *model.Account) (string, error) {
 	shareUrl := account.SiteUrl
 	u, err := url.Parse(shareUrl)
 	if err != nil {
@@ -209,7 +201,7 @@ func (driver *Lanzou) GetLink(downId string, account *model.Account) (string, er
 	}
 	iframe := regexp.MustCompile(`<iframe class="ifr2" name=".{2,20}" src="(.+?)"`).FindStringSubmatch(res.String())
 	if len(iframe) == 0 {
-		return "", fmt.Errorf("get down empty page")
+		return driver.GetLinkWithPassword(downId, pwd, res.String(), account)
 	}
 	iframeUrl := fmt.Sprintf("https://%s%s", u.Host, iframe[1])
 	res, err = base.RestyClient.R().Get(iframeUrl)
@@ -254,7 +246,38 @@ func (driver *Lanzou) GetLink(downId string, account *model.Account) (string, er
 	if resp.Zt == 1 {
 		return resp.Dom + "/file/" + resp.Url, nil
 	}
-	return "", fmt.Errorf("can't get link")
+	return "", fmt.Errorf("failed get link")
+}
+
+func (driver *Lanzou) GetLinkWithPassword(downId string, pwd string, html string, account *model.Account) (string, error) {
+	shareUrl := account.SiteUrl
+	u, err := url.Parse(shareUrl)
+	if err != nil {
+		return "", err
+	}
+	if html == "" {
+		log.Debugln(fmt.Sprintf("https://%s/%s", u.Host, downId))
+		res, err := base.RestyClient.R().Get(fmt.Sprintf("https://%s/%s", u.Host, downId))
+		if err != nil {
+			return "", err
+		}
+		html = res.String()
+	}
+
+	data := regexp.MustCompile(`data : '(.+?)'\+pwd,`).FindStringSubmatch(html)[1] + pwd
+	var resp LanzouLinkResp
+	_, err = base.RestyClient.R().SetResult(&resp).SetHeaders(map[string]string{
+		"Referer":      fmt.Sprintf("https://%s/%s", u.Host, downId),
+		"Origin":       "https://" + u.Host,
+		"content-type": "application/x-www-form-urlencoded",
+	}).SetBody(data).Post(fmt.Sprintf("https://%s/ajaxm.php", u.Host))
+	if err != nil {
+		return "", err
+	}
+	if resp.Zt == 1 {
+		return resp.Dom + "/file/" + resp.Url, nil
+	}
+	return "", fmt.Errorf("failed get link with password")
 }
 
 func init() {
