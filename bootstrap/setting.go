@@ -245,7 +245,7 @@ func InitSettings() {
 			if err == gorm.ErrRecordNotFound {
 				err = model.SaveSetting(v)
 				if v.Key == "password" {
-					log.Infof("Initial password: %s", v.Value)
+					log.Infof("Initial password: %s", conf.C.Sprintf(v.Value))
 				}
 				if err != nil {
 					log.Fatalf("failed write setting: %s", err.Error())
@@ -260,6 +260,9 @@ func InitSettings() {
 			err = model.SaveSetting(v)
 			if err != nil {
 				log.Fatalf("failed write setting: %s", err.Error())
+			}
+			if v.Key == "password" {
+				log.Infof("Your password: %s", conf.C.Sprintf(v.Value))
 			}
 		}
 	}

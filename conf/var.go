@@ -3,6 +3,7 @@ package conf
 import (
 	"context"
 	"github.com/eko/gocache/v2/cache"
+	"github.com/fatih/color"
 	"github.com/robfig/cron/v3"
 	"gorm.io/gorm"
 	"strconv"
@@ -28,6 +29,8 @@ var (
 	Cache *cache.Cache
 	Ctx   = context.TODO()
 	Cron  *cron.Cron
+
+	C = color.New(color.FgHiBlue, color.Bold, color.BgHiWhite, color.Underline)
 )
 
 var (
