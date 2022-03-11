@@ -202,6 +202,7 @@ func (driver *Lanzou) GetLink(downId string, account *model.Account) (string, er
 	if err != nil {
 		return "", err
 	}
+	log.Debugln(fmt.Sprintf("https://%s/%s", u.Host, downId))
 	res, err := base.RestyClient.R().Get(fmt.Sprintf("https://%s/%s", u.Host, downId))
 	if err != nil {
 		return "", err
@@ -224,8 +225,12 @@ func (driver *Lanzou) GetLink(downId string, account *model.Account) (string, er
 	//sign := regexp.MustCompile(`var ispostdowns = '(.+?)';`).FindStringSubmatch(res.String())[1]
 	sign := regexp.MustCompile(`'sign':'(.+?)',`).FindStringSubmatch(res.String())[1]
 	//websign := regexp.MustCompile(`'websign':'(.+?)'`).FindStringSubmatch(res.String())[1]
-	//websign := regexp.MustCompile(`var websign = '(.+?)'`).FindStringSubmatch(res.String())[1]
 	websign := ""
+	websignR := regexp.MustCompile(`var websign = '(.+?)'`).FindStringSubmatch(res.String())
+	if len(websignR) > 1 {
+		websign = websignR[1]
+	}
+	//websign := ""
 	//websignkey := regexp.MustCompile(`'websignkey':'(.+?)'`).FindStringSubmatch(res.String())[1]
 	websignkey := regexp.MustCompile(`var websignkey = '(.+?)';`).FindStringSubmatch(res.String())[1]
 	var resp LanzouLinkResp
