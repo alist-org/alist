@@ -59,6 +59,14 @@ func InitSettings() {
 			Group:       model.FRONT,
 		},
 		{
+			Key:         "announcement",
+			Value:       "This is a test announcement.",
+			Description: "announcement message",
+			Type:        "text",
+			Access:      model.PUBLIC,
+			Group:       model.FRONT,
+		},
+		{
 			Key:         "text types",
 			Value:       strings.Join(conf.TextTypes, ","),
 			Type:        "string",
