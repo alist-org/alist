@@ -3,6 +3,7 @@ package bootstrap
 import (
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/utils"
+	"github.com/caarlos0/env/v6"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
@@ -42,8 +43,18 @@ func InitConf() {
 			log.Fatalf("update config struct error: %s", err.Error())
 		}
 	}
+	if !conf.Conf.Force {
+		confFromEnv()
+	}
 	err := os.MkdirAll(conf.Conf.TempDir, 0700)
 	if err != nil {
 		log.Fatalf("create temp dir error: %s", err.Error())
+	}
+	log.Debugf("config: %+v", conf.Conf)
+}
+
+func confFromEnv() {
+	if err := env.Parse(conf.Conf); err != nil {
+		log.Fatalf("load config from env error: %s", err.Error())
 	}
 }
