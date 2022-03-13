@@ -88,12 +88,24 @@ func SuccessResp(c *gin.Context, data ...interface{}) {
 }
 
 func Hide(meta *model.Meta, files []model.File) []model.File {
-	//meta, _ := model.GetMetaByPath(path)
-	if meta != nil && meta.Hide != "" {
+	if meta == nil {
+		return files
+	}
+	if meta.Hide != "" {
 		tmpFiles := make([]model.File, 0)
 		hideFiles := strings.Split(meta.Hide, ",")
 		for _, item := range files {
 			if !utils.IsContain(hideFiles, item.Name) {
+				tmpFiles = append(tmpFiles, item)
+			}
+		}
+		files = tmpFiles
+	}
+	if meta.OnlyShows != "" {
+		tmpFiles := make([]model.File, 0)
+		showFiles := strings.Split(meta.OnlyShows, ",")
+		for _, item := range files {
+			if utils.IsContain(showFiles, item.Name) {
 				tmpFiles = append(tmpFiles, item)
 			}
 		}
