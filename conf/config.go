@@ -19,7 +19,7 @@ type Scheme struct {
 }
 
 type CacheConfig struct {
-	Expiration      int64 `json:"expiration" env:"A_LIST_DB_EXPIRATION"`
+	Expiration      int64 `json:"expiration" env:"A_LIST_EXPIRATION"`
 	CleanupInterval int64 `json:"cleanup_interval" env:"A_LIST_CLEANUP_INTERVAL"`
 }
 
