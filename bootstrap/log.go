@@ -30,6 +30,7 @@ func init() {
 	flag.BoolVar(&conf.Debug, "debug", false, "start with debug mode")
 	flag.BoolVar(&conf.Version, "version", false, "print version info")
 	flag.BoolVar(&conf.Password, "password", false, "print current password")
+	flag.BoolVar(&conf.Docker, "docker", false, "is using docker")
 	flag.Parse()
 	InitLog()
 }

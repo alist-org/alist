@@ -24,6 +24,7 @@ var (
 	Debug      bool
 	Version    bool
 	Password   bool
+	Docker     bool
 
 	DB    *gorm.DB
 	Cache *cache.Cache

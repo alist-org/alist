@@ -54,7 +54,13 @@ func InitConf() {
 }
 
 func confFromEnv() {
-	if err := env.Parse(conf.Conf); err != nil {
+	prefix := "ALIST_"
+	if conf.Docker {
+		prefix = ""
+	}
+	if err := env.Parse(conf.Conf, env.Options{
+		Prefix: prefix,
+	}); err != nil {
 		log.Fatalf("load config from env error: %s", err.Error())
 	}
 }

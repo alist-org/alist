@@ -1,37 +1,37 @@
 package conf
 
 type Database struct {
-	Type        string `json:"type" env:"A_LIST_DB_TYPE"`
-	User        string `json:"user" env:"A_LIST_DB_USER"`
-	Password    string `json:"password" env:"A_LIST_DB_PASS"`
-	Host        string `json:"host" env:"A_LIST_DB_HOST"`
-	Port        int    `json:"port" env:"A_LIST_DB_PORT"`
-	Name        string `json:"name" env:"A_LIST_DB_NAME"`
-	TablePrefix string `json:"table_prefix" env:"A_LIST_DB_TABLE_PREFIX"`
-	DBFile      string `json:"db_file" env:"A_LIST_DB_FILE"`
-	SslMode     string `json:"ssl_mode" env:"A_LIST_SLL_MODE"`
+	Type        string `json:"type" env:"DB_TYPE"`
+	Host        string `json:"host" env:"DB_HOST"`
+	Port        int    `json:"port" env:"DB_PORT"`
+	User        string `json:"user" env:"DB_USER"`
+	Password    string `json:"password" env:"DB_PASS"`
+	Name        string `json:"name" env:"DB_NAME"`
+	DBFile      string `json:"db_file" env:"DB_FILE"`
+	TablePrefix string `json:"table_prefix" env:"DB_TABLE_PREFIX"`
+	SslMode     string `json:"ssl_mode" env:"DB_SLL_MODE"`
 }
 
 type Scheme struct {
-	Https    bool   `json:"https" env:"A_LIST_HTTPS"`
-	CertFile string `json:"cert_file" env:"A_LIST_CERT"`
-	KeyFile  string `json:"key_file" env:"A_LIST_KEY"`
+	Https    bool   `json:"https" env:"HTTPS"`
+	CertFile string `json:"cert_file" env:"CERT_FILE"`
+	KeyFile  string `json:"key_file" env:"KEY_FILE"`
 }
 
 type CacheConfig struct {
-	Expiration      int64 `json:"expiration" env:"A_LIST_EXPIRATION"`
-	CleanupInterval int64 `json:"cleanup_interval" env:"A_LIST_CLEANUP_INTERVAL"`
+	Expiration      int64 `json:"expiration" env:"CACHE_EXPIRATION"`
+	CleanupInterval int64 `json:"cleanup_interval" env:"CLEANUP_INTERVAL"`
 }
 
 type Config struct {
 	Force    bool        `json:"force"`
-	Address  string      `json:"address" env:"A_LIST_ADDR"`
-	Port     int         `json:"port" env:"A_LIST_PORT"`
-	Assets   string      `json:"assets" env:"A_LIST_ASSETS"`
+	Address  string      `json:"address" env:"ADDR"`
+	Port     int         `json:"port" env:"PORT"`
+	Assets   string      `json:"assets" env:"ASSETS"`
 	Database Database    `json:"database"`
 	Scheme   Scheme      `json:"scheme"`
 	Cache    CacheConfig `json:"cache"`
-	TempDir  string      `json:"temp_dir" env:"A_LIST_TEMP_DIR"`
+	TempDir  string      `json:"temp_dir" env:"TEMP_DIR"`
 }
 
 func DefaultConfig() *Config {
