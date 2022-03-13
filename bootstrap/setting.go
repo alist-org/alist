@@ -61,7 +61,7 @@ func InitSettings() {
 		{
 			Key:         "announcement",
 			Value:       "This is a test announcement.",
-			Description: "announcement message",
+			Description: "announcement message (support markdown)",
 			Type:        "text",
 			Access:      model.PUBLIC,
 			Group:       model.FRONT,
