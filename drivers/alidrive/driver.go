@@ -412,7 +412,7 @@ func (driver AliDrive) Upload(file *model.FileStream, account *model.Account) er
 	buf := make([]byte, 1024)
 	n, _ := file.Read(buf[:])
 	reqBody := base.Json{
-		"check_name_mode": "auto_rename",
+		"check_name_mode": "overwrite",
 		"drive_id":        account.DriveId,
 		"name":            file.GetFileName(),
 		"parent_file_id":  parentFile.Id,
