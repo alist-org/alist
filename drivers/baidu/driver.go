@@ -76,6 +76,9 @@ func (driver Baidu) Items() []base.Item {
 }
 
 func (driver Baidu) Save(account *model.Account, old *model.Account) error {
+	if account == nil {
+		return nil
+	}
 	return driver.RefreshToken(account)
 }
 
