@@ -140,7 +140,7 @@ func (driver Pan123) Link(args base.Args, account *model.Account) (*base.Link, e
 	}
 	var resp Pan123DownResp
 	var headers map[string]string
-	if args.IP != "" && args.IP != "::1" {
+	if !utils.IsLocalIPAddr(args.IP) {
 		headers = map[string]string{
 			//"X-Real-IP":       "1.1.1.1",
 			"X-Forwarded-For": args.IP,
