@@ -24,13 +24,8 @@ import (
 
 type FileSystem struct{}
 
-var upFileMap = make(map[string]*model.File)
-
 func (fs *FileSystem) File(rawPath string) (*model.File, error) {
 	rawPath = utils.ParsePath(rawPath)
-	if f, ok := upFileMap[rawPath]; ok {
-		return f, nil
-	}
 	if model.AccountsCount() > 1 && rawPath == "/" {
 		now := time.Now()
 		return &model.File{
@@ -156,31 +151,26 @@ func (fs *FileSystem) CreateDirectory(ctx context.Context, rawPath string) error
 	return operate.MakeDir(driver, account, path_, true)
 }
 
-func (fs *FileSystem) Upload(ctx context.Context, r *http.Request, rawPath string) error {
+func (fs *FileSystem) Upload(ctx context.Context, r *http.Request, rawPath string) (FileInfo, error) {
 	rawPath = utils.ParsePath(rawPath)
 	if model.AccountsCount() > 1 && rawPath == "/" {
-		return ErrNotImplemented
+		return nil, ErrNotImplemented
 	}
 	account, path_, driver, err := common.ParsePath(rawPath)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	//fileSize, err := strconv.ParseUint(r.Header.Get("Content-Length"), 10, 64)
 	fileSize := uint64(r.ContentLength)
-	//if err != nil {
-	//	return err
-	//}
 	filePath, fileName := filepath.Split(path_)
 	now := time.Now()
+	fi := &model.File{
+		Name:      fileName,
+		Size:      0,
+		UpdatedAt: &now,
+	}
 	if fileSize == 0 {
-		upFileMap[rawPath] = &model.File{
-			Name:      fileName,
-			Size:      0,
-			UpdatedAt: &now,
-		}
-		return nil
-	} else {
-		delete(upFileMap, rawPath)
+		// 如果文件大小为0，默认成功
+		return fi, nil
 	}
 	fileData := model.FileStream{
 		MIMEType:   r.Header.Get("Content-Type"),
@@ -189,7 +179,7 @@ func (fs *FileSystem) Upload(ctx context.Context, r *http.Request, rawPath strin
 		Name:       fileName,
 		ParentPath: filePath,
 	}
-	return operate.Upload(driver, account, &fileData, true)
+	return fi, operate.Upload(driver, account, &fileData, true)
 }
 
 func (fs *FileSystem) Delete(rawPath string) error {
