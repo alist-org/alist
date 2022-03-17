@@ -24,8 +24,13 @@ import (
 
 type FileSystem struct{}
 
+var upFileMap = make(map[string]*model.File)
+
 func (fs *FileSystem) File(rawPath string) (*model.File, error) {
 	rawPath = utils.ParsePath(rawPath)
+	if f, ok := upFileMap[rawPath]; ok {
+		return f, nil
+	}
 	if model.AccountsCount() > 1 && rawPath == "/" {
 		now := time.Now()
 		return &model.File{
@@ -170,7 +175,10 @@ func (fs *FileSystem) Upload(ctx context.Context, r *http.Request, rawPath strin
 	}
 	if fileSize == 0 {
 		// 如果文件大小为0，默认成功
+		upFileMap[rawPath] = fi
 		return fi, nil
+	} else {
+		delete(upFileMap, rawPath)
 	}
 	fileData := model.FileStream{
 		MIMEType:   r.Header.Get("Content-Type"),
