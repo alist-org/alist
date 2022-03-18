@@ -69,6 +69,10 @@ Available at: <https://alist.nn.ci>.
 
 <https://alist-doc.nn.ci/en/>
 
+## Special sponsors
+- [Find Resources - Aliyundrive Resource Search Engine](https://zhaoziyuan.la/)
+- [JetBrains: Essential tools for software developers and teams](https://www.jetbrains.com/)
+
 ## License
 
 The `AList` is open-source software licensed under the AGPL-3.0 license.
