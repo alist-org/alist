@@ -2,6 +2,7 @@ package xunlei
 
 import (
 	"fmt"
+	"net/http"
 	"sync"
 	"time"
 
@@ -12,7 +13,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-var xunleiClient = resty.New().SetTimeout(120 * time.Second)
+var xunleiClient = resty.New().SetHeaders(map[string]string{"Accept": "application/json;charset=UTF-8"})
 
 // 一个账户只允许登陆一次
 var userStateCache = struct {
@@ -102,16 +103,16 @@ func (s *State) newCaptchaToken(action string, meta map[string]string, account *
 	var e Erron
 	var resp CaptchaTokenResponse
 	_, err := xunleiClient.R().
-		SetHeader("X-Device-Id", driverID).
 		SetBody(&creq).
 		SetError(&e).
 		SetResult(&resp).
-		Post("https://xluser-ssl.xunlei.com/v1/shield/captcha/init?client_id=" + CLIENT_ID)
+		SetHeader("X-Device-Id", driverID).
+		SetQueryParam("client_id", CLIENT_ID).
+		Post(XLUSER_API_URL + "/shield/captcha/init")
 	if err != nil {
 		return "", err
 	}
 	if e.ErrorCode != 0 {
-		log.Debugf("%+v\n %+v", e, account)
 		return "", fmt.Errorf("%s : %s", e.Error, e.ErrorDescription)
 	}
 	if resp.Url != "" {
@@ -120,7 +121,6 @@ func (s *State) newCaptchaToken(action string, meta map[string]string, account *
 
 	s.captchaTokenExpiresTime = (ctime + resp.ExpiresIn*1000) - 30000
 	s.captchaToken = resp.CaptchaToken
-	log.Debugf("%+v\n %+v", s.captchaToken, account)
 	return s.captchaToken, nil
 }
 
@@ -136,7 +136,7 @@ func (s *State) refreshToken_(account *model.Account) error {
 			"client_secret": CLIENT_SECRET,
 		}).
 		SetHeader("X-Device-Id", utils.GetMD5Encode(account.Username)).SetQueryParam("client_id", CLIENT_ID).
-		Post("https://xluser-ssl.xunlei.com/v1/auth/token")
+		Post(XLUSER_API_URL + "/auth/token")
 	if err != nil {
 		return err
 	}
@@ -152,7 +152,6 @@ func (s *State) refreshToken_(account *model.Account) error {
 		s.userID = resp.UserID
 		return nil
 	default:
-		log.Debugf("%+v\n %+v", e, account)
 		return fmt.Errorf("%s : %s", e.Error, e.ErrorDescription)
 	}
 }
@@ -160,7 +159,7 @@ func (s *State) refreshToken_(account *model.Account) error {
 func (s *State) login(account *model.Account) error {
 	s.init()
 	ctime := time.Now().UnixMilli()
-	url := "https://xluser-ssl.xunlei.com/v1/auth/signin"
+	url := XLUSER_API_URL + "/auth/signin"
 	captchaToken, err := s.newCaptchaToken(getAction("POST", url), map[string]string{"username": account.Username}, account)
 	if err != nil {
 		return err
@@ -190,7 +189,6 @@ func (s *State) login(account *model.Account) error {
 	defer model.SaveAccount(account)
 	if e.ErrorCode != 0 {
 		account.Status = e.Error
-		log.Debugf("%+v\n %+v", e, account)
 		return fmt.Errorf("%s : %s", e.Error, e.ErrorDescription)
 	}
 	account.Status = "work"
@@ -199,67 +197,68 @@ func (s *State) login(account *model.Account) error {
 	s.accessToken = resp.AccessToken
 	s.refreshToken = resp.RefreshToken
 	s.userID = resp.UserID
-	log.Debugf("%+v\n %+v", resp, account)
 	return nil
 }
 
-func (s *State) Request(method string, url string, body interface{}, resp interface{}, account *model.Account) error {
+func (s *State) Request(method string, url string, callback func(*resty.Request), account *model.Account) (*resty.Response, error) {
 	s.Lock()
 	token, err := s.getToken(account)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	captchaToken, err := s.getCaptchaToken(getAction(method, url), account)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	s.Unlock()
-	var e Erron
+
 	req := xunleiClient.R().
-		SetError(&e).
-		SetHeader("X-Device-Id", utils.GetMD5Encode(account.Username)).
-		SetHeader("Authorization", token).
-		SetHeader("X-Captcha-Token", captchaToken).
+		SetHeaders(map[string]string{
+			"X-Device-Id":     utils.GetMD5Encode(account.Username),
+			"Authorization":   token,
+			"X-Captcha-Token": captchaToken,
+		}).
 		SetQueryParam("client_id", CLIENT_ID)
 
-	if body != nil {
-		req.SetBody(body)
-	}
-	if resp != nil {
-		req.SetResult(resp)
-	}
+	callback(req)
+	s.Unlock()
 
+	var res *resty.Response
 	switch method {
 	case "GET":
-		_, err = req.Get(url)
+		res, err = req.Get(url)
 	case "POST":
-		_, err = req.Post(url)
+		res, err = req.Post(url)
 	case "DELETE":
-		_, err = req.Delete(url)
+		res, err = req.Delete(url)
 	case "PATCH":
-		_, err = req.Patch(url)
+		res, err = req.Patch(url)
 	case "PUT":
-		_, err = req.Put(url)
+		res, err = req.Put(url)
 	default:
-		return base.ErrNotSupport
+		return nil, base.ErrNotSupport
 	}
 
 	if err != nil {
-		return err
+		return nil, err
 	}
+	log.Debug(res.String())
 
+	var e Erron
+	utils.Json.Unmarshal(res.Body(), &e)
 	switch e.ErrorCode {
-	case 0:
-		return nil
 	case 9:
 		s.newCaptchaToken(getAction(method, url), nil, account)
 		fallthrough
 	case 4122, 4121:
-		return s.Request(method, url, body, resp, account)
+		return s.Request(method, url, callback, account)
+	case 0:
+		if res.StatusCode() == http.StatusOK {
+			return res, nil
+		}
+		return nil, fmt.Errorf(res.String())
 	default:
-		log.Debugf("%+v\n %+v", e, account)
-		return fmt.Errorf("%s : %s", e.Error, e.ErrorDescription)
+		return nil, fmt.Errorf("%s : %s", e.Error, e.ErrorDescription)
 	}
 }
 

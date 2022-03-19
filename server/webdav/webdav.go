@@ -94,7 +94,6 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request, fs *FileSyst
 	}
 }
 
-// OK
 func (h *Handler) lock(now time.Time, root string, fs *FileSystem) (token string, status int, err error) {
 	token, err = h.LockSystem.Create(now, LockDetails{
 		Root:      root,
@@ -110,7 +109,6 @@ func (h *Handler) lock(now time.Time, root string, fs *FileSystem) (token string
 	return token, 0, nil
 }
 
-// ok
 func (h *Handler) confirmLocks(r *http.Request, src, dst string, fs *FileSystem) (release func(), status int, err error) {
 	hdr := r.Header.Get("If")
 	if hdr == "" {
@@ -189,7 +187,6 @@ func (h *Handler) confirmLocks(r *http.Request, src, dst string, fs *FileSystem)
 	return nil, http.StatusPreconditionFailed, ErrLocked
 }
 
-//OK
 func (h *Handler) handleOptions(w http.ResponseWriter, r *http.Request, fs *FileSystem) (status int, err error) {
 	reqPath, status, err := h.stripPrefix(r.URL.Path)
 	if err != nil {
@@ -213,7 +210,6 @@ func (h *Handler) handleOptions(w http.ResponseWriter, r *http.Request, fs *File
 	return 0, nil
 }
 
-// OK
 func (h *Handler) handleGetHeadPost(w http.ResponseWriter, r *http.Request, fs *FileSystem) (status int, err error) {
 
 	reqPath, status, err := h.stripPrefix(r.URL.Path)
@@ -248,7 +244,6 @@ func (h *Handler) handleGetHeadPost(w http.ResponseWriter, r *http.Request, fs *
 	return 0, nil
 }
 
-// OK
 func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request, fs *FileSystem) (status int, err error) {
 
 	reqPath, status, err := h.stripPrefix(r.URL.Path)
@@ -267,7 +262,6 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request, fs *FileS
 	return http.StatusNoContent, nil
 }
 
-// OK
 func (h *Handler) handlePut(w http.ResponseWriter, r *http.Request, fs *FileSystem) (status int, err error) {
 	reqPath, status, err := h.stripPrefix(r.URL.Path)
 	if err != nil {
@@ -283,12 +277,13 @@ func (h *Handler) handlePut(w http.ResponseWriter, r *http.Request, fs *FileSyst
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	err = fs.Upload(ctx, r, reqPath)
+	fi, err := fs.Upload(ctx, r, reqPath)
 	if err != nil {
 		return http.StatusMethodNotAllowed, err
 	}
 
-	_, fi := isPathExist(ctx, fs, reqPath)
+	//_, fi := isPathExist(ctx, fs, reqPath)
+	// 为防止有些网盘上传有延时，这里认为上传没有报错就已经成功了,不再去判断是否存在
 	etag, err := findETag(ctx, fs, h.LockSystem, reqPath, fi)
 	if err != nil {
 		return http.StatusInternalServerError, err
@@ -297,7 +292,6 @@ func (h *Handler) handlePut(w http.ResponseWriter, r *http.Request, fs *FileSyst
 	return http.StatusCreated, nil
 }
 
-// OK
 func (h *Handler) handleMkcol(w http.ResponseWriter, r *http.Request, fs *FileSystem) (status int, err error) {
 	reqPath, status, err := h.stripPrefix(r.URL.Path)
 	if err != nil {
@@ -325,7 +319,6 @@ func (h *Handler) handleMkcol(w http.ResponseWriter, r *http.Request, fs *FileSy
 	return http.StatusCreated, nil
 }
 
-// OK
 func (h *Handler) handleCopyMove(w http.ResponseWriter, r *http.Request, fs *FileSystem) (status int, err error) {
 
 	hdr := r.Header.Get("Destination")
@@ -410,7 +403,6 @@ func (h *Handler) handleCopyMove(w http.ResponseWriter, r *http.Request, fs *Fil
 	return moveFiles(ctx, fs, src, dst, r.Header.Get("Overwrite") == "T")
 }
 
-// OK
 func (h *Handler) handleLock(w http.ResponseWriter, r *http.Request, fs *FileSystem) (retStatus int, retErr error) {
 
 	duration, err := parseTimeout(r.Header.Get("Timeout"))
@@ -506,7 +498,6 @@ func (h *Handler) handleLock(w http.ResponseWriter, r *http.Request, fs *FileSys
 	return 0, nil
 }
 
-// OK
 func (h *Handler) handleUnlock(w http.ResponseWriter, r *http.Request, fs *FileSystem) (status int, err error) {
 
 	// http://www.webdav.org/specs/rfc4918.html#HEADER_Lock-Token says that the
@@ -531,7 +522,6 @@ func (h *Handler) handleUnlock(w http.ResponseWriter, r *http.Request, fs *FileS
 	}
 }
 
-// OK
 func (h *Handler) handlePropfind(w http.ResponseWriter, r *http.Request, fs *FileSystem) (status int, err error) {
 	reqPath, status, err := h.stripPrefix(r.URL.Path)
 	if err != nil {

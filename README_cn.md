@@ -69,6 +69,10 @@
 
 <https://alist-doc.nn.ci/>
 
+## 特别赞助
+- [找资源 - 阿里云盘资源搜索引擎](https://zhaoziyuan.la/)
+- [JetBrains: Essential tools for software developers and teams](https://www.jetbrains.com/)
+
 ##  许可
 
 `AList` 是在 AGPL-3.0 许可下许可的开源软件。

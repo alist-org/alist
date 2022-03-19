@@ -16,7 +16,6 @@ import (
 	"github.com/Xhofe/alist/utils"
 	"github.com/go-resty/resty/v2"
 	"github.com/google/uuid"
-	jsoniter "github.com/json-iterator/go"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -110,7 +109,7 @@ func (s *State) login(account *model.Account) error {
 	if err != nil {
 		return err
 	}
-	toUrl := jsoniter.Get(res.Body(), "toUrl").ToString()
+	toUrl := utils.Json.Get(res.Body(), "toUrl").ToString()
 	if toUrl == "" {
 		log.Error(res.String())
 		return fmt.Errorf(res.String())
@@ -179,10 +178,10 @@ func (s *State) getLoginParam() (*LoginParam, error) {
 		if err != nil {
 			return nil, err
 		}
-		if jsoniter.Get(vRes.Body(), "status").ToInt() != 200 {
-			return nil, errors.New("ocr error:" + jsoniter.Get(vRes.Body(), "msg").ToString())
+		if utils.Json.Get(vRes.Body(), "status").ToInt() != 200 {
+			return nil, errors.New("ocr error:" + utils.Json.Get(vRes.Body(), "msg").ToString())
 		}
-		param.vCodeRS = jsoniter.Get(vRes.Body(), "result").ToString()
+		param.vCodeRS = utils.Json.Get(vRes.Body(), "result").ToString()
 		log.Debugln("code: ", param.vCodeRS)
 	}
 	return param, nil
@@ -308,9 +307,9 @@ func (s *State) Request(method string, fullUrl string, params url.Values, callba
 	}
 
 	if account != nil {
-		switch jsoniter.Get(res.Body(), "res_code").ToInt64() {
+		switch utils.Json.Get(res.Body(), "res_code").ToInt64() {
 		case 11, 18:
-			if err := s.refreshSession(account); err != nil {
+			if err := s.RefreshSession(account); err != nil {
 				return nil, err
 			}
 			return s.Request(method, fullUrl, params, callback, account)
@@ -324,8 +323,8 @@ func (s *State) Request(method string, fullUrl string, params url.Values, callba
 		}
 	}
 
-	if jsoniter.Get(res.Body(), "res_code").ToInt64() != 0 {
-		return res, fmt.Errorf(jsoniter.Get(res.Body(), "res_message").ToString())
+	if utils.Json.Get(res.Body(), "res_code").ToInt64() != 0 {
+		return res, fmt.Errorf(utils.Json.Get(res.Body(), "res_message").ToString())
 	}
 	return res, nil
 }

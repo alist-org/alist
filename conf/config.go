@@ -45,7 +45,6 @@ func DefaultConfig() *Config {
 			Port:        0,
 			TablePrefix: "x_",
 			DBFile:      "data/data.db",
-			SslMode:     "disable",
 		},
 		Cache: CacheConfig{
 			Expiration:      60,

@@ -3,7 +3,6 @@ package _189
 import (
 	"crypto/md5"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -64,9 +63,10 @@ func (driver Cloud189) Items() []base.Item {
 			Values:   "Personal,Family",
 		},
 		{
-			Name:  "site_id",
-			Label: "family id",
-			Type:  base.TypeString,
+			Name:     "site_id",
+			Label:    "family id",
+			Type:     base.TypeString,
+			Required: true,
 		},
 		{
 			Name:     "order_by",
@@ -96,11 +96,39 @@ func (driver Cloud189) Save(account *model.Account, old *model.Account) error {
 
 	state := GetState(account)
 	if !state.IsLogin() {
-		return state.Login(account)
+		if err := state.Login(account); err != nil {
+			return err
+		}
 	}
+
+	if isFamily(account) {
+		list, err := driver.getFamilyInfoList(account)
+		if err != nil {
+			return err
+		}
+		for _, l := range list {
+			if account.SiteId == "" {
+				account.SiteId = fmt.Sprint(l.FamilyID)
+			}
+			log.Infof("天翼家庭云 用户名：%s FamilyID %d\n", l.RemarkName, l.FamilyID)
+		}
+	}
+
 	account.Status = "work"
 	model.SaveAccount(account)
 	return nil
+}
+
+func (driver Cloud189) getFamilyInfoList(account *model.Account) ([]FamilyInfoResp, error) {
+	var resp FamilyInfoListResp
+	_, err := GetState(account).Request("GET", API_URL+"/family/manage/getFamilyList.action", nil, func(r *resty.Request) {
+		r.SetQueryParams(clientSuffix())
+		r.SetResult(&resp)
+	}, account)
+	if err != nil {
+		return nil, err
+	}
+	return resp.FamilyInfoResp, nil
 }
 
 func (driver Cloud189) File(path string, account *model.Account) (*model.File, error) {
@@ -329,7 +357,7 @@ func (driver Cloud189) Move(src string, dst string, account *model.Account) erro
 	_, err = GetState(account).Request("POST", API_URL+"/batch/createBatchTask.action", nil, func(r *resty.Request) {
 		r.SetFormData(clientSuffix()).SetFormData(map[string]string{
 			"type": "MOVE",
-			"taskInfos": string(MustToBytes(json.Marshal(
+			"taskInfos": string(MustToBytes(utils.Json.Marshal(
 				[]*BatchTaskInfo{
 					{
 						FileId:   srcFile.Id,
@@ -445,7 +473,7 @@ func (driver Cloud189) Copy(src string, dst string, account *model.Account) erro
 	_, err = GetState(account).Request("POST", API_URL+"/batch/createBatchTask.action", nil, func(r *resty.Request) {
 		r.SetFormData(clientSuffix()).SetFormData(map[string]string{
 			"type": "COPY",
-			"taskInfos": string(MustToBytes(json.Marshal(
+			"taskInfos": string(MustToBytes(utils.Json.Marshal(
 				[]*BatchTaskInfo{
 					{
 						FileId:   srcFile.Id,
@@ -475,7 +503,7 @@ func (driver Cloud189) Delete(path string, account *model.Account) error {
 	_, err = GetState(account).Request("POST", API_URL+"/batch/createBatchTask.action", nil, func(r *resty.Request) {
 		r.SetFormData(clientSuffix()).SetFormData(map[string]string{
 			"type": "DELETE",
-			"taskInfos": string(MustToBytes(json.Marshal(
+			"taskInfos": string(MustToBytes(utils.Json.Marshal(
 				[]*BatchTaskInfo{
 					{
 						FileId:   srcFile.Id,
@@ -546,7 +574,7 @@ func (driver Cloud189) uploadFamily(file *model.FileStream, parentFile *model.Fi
 	}
 
 	if createUpload.FileDataExists != 1 {
-		if err = driver.uploadFileData(file, tempFile, createUpload, account); err != nil {
+		if createUpload.UploadFileId, err = driver.uploadFileData(file, tempFile, createUpload, account); err != nil {
 			return err
 		}
 	}
@@ -601,7 +629,7 @@ func (driver Cloud189) uploadPerson(file *model.FileStream, parentFile *model.Fi
 	}
 
 	if createUpload.FileDataExists != 1 {
-		if err = driver.uploadFileData(file, tempFile, createUpload, account); err != nil {
+		if createUpload.UploadFileId, err = driver.uploadFileData(file, tempFile, createUpload, account); err != nil {
 			return err
 		}
 	}
@@ -618,40 +646,39 @@ func (driver Cloud189) uploadPerson(file *model.FileStream, parentFile *model.Fi
 	return err
 }
 
-func (driver Cloud189) uploadFileData(file *model.FileStream, tempFile *os.File, createUpload CreateUploadFileResult, account *model.Account) error {
-	var uploadFileState *UploadFileStatusResult
-	var err error
-	for i := 0; i < 10; i++ {
-		if uploadFileState, err = driver.getUploadFileState(createUpload.UploadFileId, account); err != nil {
-			return err
-		}
-
-		if uploadFileState.FileDataExists == 1 || uploadFileState.DataSize == int64(file.Size) {
-			return nil
-		}
-
-		if _, err = tempFile.Seek(uploadFileState.DataSize, io.SeekStart); err != nil {
-			return err
-		}
-
-		_, err = GetState(account).Request("PUT", uploadFileState.FileUploadUrl, nil, func(r *resty.Request) {
-			r.SetQueryParams(clientSuffix())
-			r.SetHeaders(map[string]string{
-				"ResumePolicy":           "1",
-				"Edrive-UploadFileId":    fmt.Sprint(createUpload.UploadFileId),
-				"Edrive-UploadFileRange": fmt.Sprintf("bytes=%d-%d", uploadFileState.DataSize, file.Size),
-				"Expect":                 "100-continue",
-			})
-			if isFamily(account) {
-				r.SetHeader("FamilyId", account.SiteId)
-			}
-			r.SetBody(tempFile)
-		}, account)
-		if err == nil {
-			break
-		}
+func (driver Cloud189) uploadFileData(file *model.FileStream, tempFile *os.File, createUpload CreateUploadFileResult, account *model.Account) (int64, error) {
+	uploadFileState, err := driver.getUploadFileState(createUpload.UploadFileId, account)
+	if err != nil {
+		return 0, err
 	}
-	return err
+
+	if uploadFileState.FileDataExists == 1 || uploadFileState.DataSize == int64(file.Size) {
+		return uploadFileState.UploadFileId, nil
+	}
+
+	if _, err = tempFile.Seek(uploadFileState.DataSize, io.SeekStart); err != nil {
+		return 0, err
+	}
+
+	_, err = GetState(account).Request("PUT", uploadFileState.FileUploadUrl, nil, func(r *resty.Request) {
+		r.SetQueryParams(clientSuffix())
+		r.SetHeaders(map[string]string{
+			"Content-Type":           "application/octet-stream",
+			"ResumePolicy":           "1",
+			"Edrive-UploadFileRange": fmt.Sprintf("bytes=%d-%d", uploadFileState.DataSize, file.Size),
+			"Expect":                 "100-continue",
+		})
+		if isFamily(account) {
+			r.SetHeaders(map[string]string{
+				"familyId":     account.SiteId,
+				"UploadFileId": fmt.Sprint(uploadFileState.UploadFileId),
+			})
+		} else {
+			r.SetHeader("Edrive-UploadFileId", fmt.Sprint(uploadFileState.UploadFileId))
+		}
+		r.SetBody(tempFile)
+	}, account)
+	return uploadFileState.UploadFileId, err
 }
 
 func (driver Cloud189) getUploadFileState(uploadFileId int64, account *model.Account) (*UploadFileStatusResult, error) {

@@ -156,29 +156,27 @@ func (fs *FileSystem) CreateDirectory(ctx context.Context, rawPath string) error
 	return operate.MakeDir(driver, account, path_, true)
 }
 
-func (fs *FileSystem) Upload(ctx context.Context, r *http.Request, rawPath string) error {
+func (fs *FileSystem) Upload(ctx context.Context, r *http.Request, rawPath string) (FileInfo, error) {
 	rawPath = utils.ParsePath(rawPath)
 	if model.AccountsCount() > 1 && rawPath == "/" {
-		return ErrNotImplemented
+		return nil, ErrNotImplemented
 	}
 	account, path_, driver, err := common.ParsePath(rawPath)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	//fileSize, err := strconv.ParseUint(r.Header.Get("Content-Length"), 10, 64)
 	fileSize := uint64(r.ContentLength)
-	//if err != nil {
-	//	return err
-	//}
 	filePath, fileName := filepath.Split(path_)
 	now := time.Now()
+	fi := &model.File{
+		Name:      fileName,
+		Size:      0,
+		UpdatedAt: &now,
+	}
 	if fileSize == 0 {
-		upFileMap[rawPath] = &model.File{
-			Name:      fileName,
-			Size:      0,
-			UpdatedAt: &now,
-		}
-		return nil
+		// 如果文件大小为0，默认成功
+		upFileMap[rawPath] = fi
+		return fi, nil
 	} else {
 		delete(upFileMap, rawPath)
 	}
@@ -189,7 +187,7 @@ func (fs *FileSystem) Upload(ctx context.Context, r *http.Request, rawPath strin
 		Name:       fileName,
 		ParentPath: filePath,
 	}
-	return operate.Upload(driver, account, &fileData, true)
+	return fi, operate.Upload(driver, account, &fileData, true)
 }
 
 func (fs *FileSystem) Delete(rawPath string) error {
