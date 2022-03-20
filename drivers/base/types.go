@@ -21,6 +21,7 @@ const (
 	TypeSelect = "select"
 	TypeBool   = "bool"
 	TypeNumber = "number"
+	TypeText   = "text"
 )
 
 const (

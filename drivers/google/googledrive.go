@@ -73,8 +73,8 @@ func (driver GoogleDrive) FormatFile(file *File, account *model.Account) *model.
 		f.Type = utils.GetFileType(filepath.Ext(file.Name))
 	}
 	if file.ThumbnailLink != "" {
-		if account.DownProxyUrl != "" {
-			f.Thumbnail = fmt.Sprintf("%s/%s", account.DownProxyUrl, file.ThumbnailLink)
+		if account.APIProxyUrl != "" {
+			f.Thumbnail = fmt.Sprintf("%s/%s", account.APIProxyUrl, file.ThumbnailLink)
 		} else {
 			f.Thumbnail = file.ThumbnailLink
 		}

@@ -121,7 +121,7 @@ func GetDrivers() map[string][]Item {
 			{
 				Name:  "down_proxy_url",
 				Label: "down_proxy_url",
-				Type:  TypeString,
+				Type:  TypeText,
 			},
 			{
 				Name:   "extract_folder",
