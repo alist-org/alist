@@ -30,7 +30,7 @@ func Proxy(c *gin.Context) {
 	// 4. 开启webdav中转（需要验证sign）
 	if !account.Proxy && !driver.Config().OnlyProxy &&
 		utils.GetFileType(filepath.Ext(rawPath)) != conf.TEXT &&
-		!utils.IsContain(conf.DProxyTypes, filepath.Ext(rawPath)) {
+		!utils.IsContain(conf.DProxyTypes, utils.Ext(rawPath)) {
 		// 只开启了webdav中转，验证sign
 		ok := false
 		if account.WebdavProxy {

@@ -7,7 +7,6 @@ import (
 	"github.com/Xhofe/alist/utils"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
-	"path"
 )
 
 func Down(c *gin.Context) {
@@ -19,7 +18,7 @@ func Down(c *gin.Context) {
 		common.ErrorResp(c, err, 500)
 		return
 	}
-	if driver.Config().OnlyProxy || account.Proxy || utils.IsContain(conf.DProxyTypes, path.Ext(rawPath)) {
+	if driver.Config().OnlyProxy || account.Proxy || utils.IsContain(conf.DProxyTypes, utils.Ext(rawPath)) {
 		Proxy(c)
 		return
 	}
