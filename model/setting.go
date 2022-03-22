@@ -50,7 +50,7 @@ func SaveSetting(item SettingItem) error {
 
 func GetSettingsPublic() ([]SettingItem, error) {
 	var items []SettingItem
-	if err := conf.DB.Where("`access` <> ?", 1).Find(&items).Error; err != nil {
+	if err := conf.DB.Where(fmt.Sprintf("%s <> ?", columnName("access")), 1).Find(&items).Error; err != nil {
 		return nil, err
 	}
 	return items, nil
@@ -58,7 +58,7 @@ func GetSettingsPublic() ([]SettingItem, error) {
 
 func GetSettingsByGroup(group int) ([]SettingItem, error) {
 	var items []SettingItem
-	if err := conf.DB.Where("`group` = ?", group).Find(&items).Error; err != nil {
+	if err := conf.DB.Where(fmt.Sprintf("%s = ?", columnName("group")), group).Find(&items).Error; err != nil {
 		return nil, err
 	}
 	items = append([]SettingItem{Version}, items...)
@@ -82,7 +82,7 @@ func DeleteSetting(key string) error {
 
 func GetSettingByKey(key string) (*SettingItem, error) {
 	var items SettingItem
-	if err := conf.DB.Where("`key` = ?", key).First(&items).Error; err != nil {
+	if err := conf.DB.Where(fmt.Sprintf("%s = ?", columnName("key")), key).First(&items).Error; err != nil {
 		return nil, err
 	}
 	return &items, nil
