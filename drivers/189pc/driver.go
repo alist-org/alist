@@ -638,7 +638,7 @@ func (driver Cloud189) uploadPerson(file *model.FileStream, parentFile *model.Fi
 		r.SetQueryParams(clientSuffix())
 		r.SetFormData(map[string]string{
 			"uploadFileId": fmt.Sprint(createUpload.UploadFileId),
-			"opertype":     "1", //5 覆盖
+			"opertype":     "5", //5 覆盖 1 重命名
 			"ResumePolicy": "1",
 			"isLog":        "0",
 		})
