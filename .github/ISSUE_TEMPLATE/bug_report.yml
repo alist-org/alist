@@ -29,7 +29,7 @@ body:
         Please provide a link to a repo that can reproduce the problem you ran into.
         请提供能复现此问题的链接
     validations:
-      required: false
+      required: true
   - type: textarea
     id: logs
     attributes:

@@ -35,7 +35,7 @@ func GetFileType(ext string) int {
 	if ext == "" {
 		return conf.UNKNOWN
 	}
-	ext = strings.ToLower(strings.TrimLeft(ext, "."))
+	ext = strings.ToLower(strings.TrimPrefix(ext, "."))
 	if IsContain(conf.OfficeTypes, ext) {
 		return conf.OFFICE
 	}
@@ -128,10 +128,6 @@ func Split(p string) (string, string) {
 	return path.Split(p)
 }
 
-// FormatName TODO
-func FormatName(name string) string {
-	name = strings.ReplaceAll(name, "/", " ")
-	name = strings.ReplaceAll(name, "#", " ")
-	name = strings.ReplaceAll(name, "?", " ")
-	return name
+func Ext(name string) string {
+	return strings.TrimPrefix(path.Ext(name), ".")
 }

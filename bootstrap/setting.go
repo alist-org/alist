@@ -74,6 +74,20 @@ func InitSettings() {
 			Group:       model.FRONT,
 		},
 		{
+			Key:         "audio types",
+			Value:       strings.Join(conf.AudioTypes, ","),
+			Type:        "string",
+			Description: "audio type extensions",
+			Group:       model.FRONT,
+		},
+		{
+			Key:         "video types",
+			Value:       strings.Join(conf.VideoTypes, ","),
+			Type:        "string",
+			Description: "video type extensions",
+			Group:       model.FRONT,
+		},
+		{
 			Key:         "d_proxy types",
 			Value:       strings.Join(conf.DProxyTypes, ","),
 			Type:        "string",

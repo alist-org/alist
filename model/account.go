@@ -159,7 +159,7 @@ func GetAccountById(id uint) (*Account, error) {
 func GetAccountFiles() ([]File, error) {
 	files := make([]File, 0)
 	var accounts []Account
-	if err := conf.DB.Order("`index`").Find(&accounts).Error; err != nil {
+	if err := conf.DB.Order(columnName("index")).Find(&accounts).Error; err != nil {
 		return nil, err
 	}
 	for _, v := range accounts {
@@ -179,7 +179,7 @@ func GetAccountFiles() ([]File, error) {
 
 func GetAccounts() ([]Account, error) {
 	var accounts []Account
-	if err := conf.DB.Order("`index`").Find(&accounts).Error; err != nil {
+	if err := conf.DB.Order(columnName("index")).Find(&accounts).Error; err != nil {
 		return nil, err
 	}
 	return accounts, nil
