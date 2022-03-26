@@ -93,6 +93,14 @@ func LoadSettings() {
 	if err == nil {
 		conf.TextTypes = strings.Split(textTypes.Value, ",")
 	}
+	audioTypes, err := GetSettingByKey("text types")
+	if err == nil {
+		conf.AudioTypes = strings.Split(audioTypes.Value, ",")
+	}
+	videoTypes, err := GetSettingByKey("text types")
+	if err == nil {
+		conf.VideoTypes = strings.Split(videoTypes.Value, ",")
+	}
 	dProxyTypes, err := GetSettingByKey("d_proxy types")
 	if err == nil {
 		conf.DProxyTypes = strings.Split(dProxyTypes.Value, ",")
