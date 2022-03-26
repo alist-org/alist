@@ -10,6 +10,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"net/http"
 	"path/filepath"
+	"strings"
 )
 
 type Cloud189 struct{}
@@ -198,6 +199,7 @@ func (driver Cloud189) Link(args base.Args, account *model.Account) (*base.Link,
 	} else {
 		link.Url = resp.FileDownloadUrl
 	}
+	link.Url = strings.Replace(link.Url, "http://", "https://", 1)
 	return &link, nil
 }
 
