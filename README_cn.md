@@ -21,7 +21,7 @@
   - [x] 本地存储
   - [x] [阿里云盘](https://www.aliyundrive.com/)
   - [x] OneDrive / Sharepoint（[国际版](https://www.office.com/), [世纪互联](https://portal.partner.microsoftonline.cn),de,us）
-  - [x] [天翼云盘](https://cloud.189.cn)
+  - [x] [天翼云盘](https://cloud.189.cn) (个人云, 家庭云)
   - [x] [GoogleDrive](https://drive.google.com/)
   - [x] [123云盘](https://www.123pan.com/)
   - [x] [蓝奏云](https://pc.woozooo.com/)
@@ -76,6 +76,13 @@
 ##  许可
 
 `AList` 是在 AGPL-3.0 许可下许可的开源软件。
+
+## 免责声明
+- 本程序为免费开源项目，旨在分享网盘文件，方便下载以及学习golang，使用时请遵守相关法律法规，请勿滥用；
+- 本程序通过调用官方sdk/接口实现，无破坏官方接口行为；
+- 本程序仅做302重定向/流量转发，不拦截、存储、篡改任何用户数据；
+- 在使用本程序之前，你应了解并承担相应的风险，包括但不限于账号被ban，下载限速等，与本程序无关；
+- 如有侵权，请通过[邮件](mailto:i@nn.ci)与我联系，会及时处理。
 
 ---
 

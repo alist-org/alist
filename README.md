@@ -21,7 +21,7 @@ English | [中文](./README_cn.md) | [Contributors](./CONTRIBUTORS.md) | [Contri
   - [x] Local storage
   - [x] [Aliyundrive](https://www.aliyundrive.com/)
   - [x] OneDrive / Sharepoint ([global](https://www.office.com/), [cn](https://portal.partner.microsoftonline.cn),de,us)
-  - [x] [189cloud](https://cloud.189.cn)
+  - [x] [189cloud](https://cloud.189.cn) (Personal, Family)
   - [x] [GoogleDrive](https://drive.google.com/)
   - [x] [123pan](https://www.123pan.com/)
   - [x] [Lanzou](https://pc.woozooo.com/)
@@ -76,6 +76,13 @@ Available at: <https://alist.nn.ci>.
 ## License
 
 The `AList` is open-source software licensed under the AGPL-3.0 license.
+
+## Disclaimer
+- This program is a free and open source project. It is designed to share files on the network disk, which is convenient for downloading and learning golang. Please abide by relevant laws and regulations when using it, and do not abuse it;
+- This program is implemented by calling the official sdk/interface, without destroying the official interface behavior;
+- This program only does 302 redirect/traffic forwarding, and does not intercept, store, or tamper with any user data;
+- Before using this program, you should understand and bear the corresponding risks, including but not limited to account ban, download speed limit, etc., which is none of this program's business;
+- If there is any infringement, please contact me by [email](mailto:i@nn.ci), and it will be dealt with in time.
 
 ---
 
