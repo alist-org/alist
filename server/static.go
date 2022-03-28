@@ -12,12 +12,10 @@ import (
 )
 
 func InitIndex() {
-	var index fs.File
-	var err error
 	if !strings.Contains(conf.Conf.Assets, "/") {
 		conf.Conf.Assets = conf.DefaultConfig().Assets
 	}
-	index, err = public.Public.Open("index.html")
+	index, err := public.Public.Open("index.html")
 	if err != nil {
 		log.Fatal(err.Error())
 	}

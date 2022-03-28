@@ -78,3 +78,18 @@ func Plist(c *gin.Context) {
 	c.Status(200)
 	_, _ = c.Writer.WriteString(plist)
 }
+
+func Options(c *gin.Context) {
+	c.Header("Accept-Ranges", "bytes")
+	c.Header("allow", "OPTIONS, GET, POST, HEAD, PROPFIND")
+	c.Header("Accept-Ranges", "bytes")
+	c.Header("MS-Author-Via", "DAV")
+	c.Header("DAV", "1, 2, 3")
+	c.Status(204)
+}
+
+func Propfind(c *gin.Context) {
+	c.Header("Content-Type", "text/xml; charset=utf-8")
+	c.Status(207)
+	_, _ = c.Writer.WriteString(`<?xml version="1.0" encoding="UTF-8"?><D:multistatus xmlns:D="DAV:"><D:response><D:href>/</D:href><D:propstat><D:prop><D:resourcetype><D:collection xmlns:D="DAV:"/></D:resourcetype><D:getlastmodified/></D:prop><D:status>HTTP/1.1 200 OK</D:status></D:propstat></D:response><D:response><D:href>/dav/</D:href><D:propstat><D:prop><D:resourcetype><D:collection xmlns:D="DAV:"/></D:resourcetype><D:getlastmodified/><D:supportedlock><D:lockentry xmlns:D="DAV:"><D:lockscope><D:exclusive/></D:lockscope><D:locktype><D:write/></D:locktype></D:lockentry></D:supportedlock></D:prop><D:status>HTTP/1.1 200 OK</D:status></D:propstat></D:response></D:multistatus>`)
+}
