@@ -34,6 +34,19 @@ func SetCookie(cookies []*http.Cookie, name, value string) []*http.Cookie {
 	return cookies
 }
 
+func DelCookie(cookies []*http.Cookie, name string) []*http.Cookie {
+	delIndex := -1
+	for i, cookie := range cookies {
+		if cookie.Name == name {
+			delIndex = i
+		}
+	}
+	if delIndex > -1 {
+		cookies = append(cookies[:delIndex], cookies[delIndex+1:]...)
+	}
+	return cookies
+}
+
 func GetCookie(cookies []*http.Cookie, name string) *http.Cookie {
 	for _, cookie := range cookies {
 		if cookie.Name == name {
@@ -56,4 +69,10 @@ func GetStr(cookiesStr, name string) string {
 		return ""
 	}
 	return cookie.Value
+}
+
+func DelStr(cookiesStr, name string) string {
+	cookies := Parse(cookiesStr)
+	cookies = DelCookie(cookies, name)
+	return ToString(cookies)
 }

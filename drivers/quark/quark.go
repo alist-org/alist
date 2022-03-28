@@ -17,7 +17,7 @@ import (
 	"time"
 )
 
-func (driver Quark) Request(pathname string, method int, headers, query, form map[string]string, data interface{}, resp interface{}, account *model.Account) ([]byte, error) {
+func (driver Quark) Request(pathname string, method int, headers, query, form map[string]string, data interface{}, resp interface{}, account *model.Account) (*resty.Response, error) {
 	u := "https://drive.quark.cn/1/clouddrive" + pathname
 	req := base.RestyClient.R()
 	req.SetHeaders(map[string]string{
@@ -63,23 +63,18 @@ func (driver Quark) Request(pathname string, method int, headers, query, form ma
 	if err != nil {
 		return nil, err
 	}
-	__puus := cookie.GetCookie(res.Cookies(), "__puus")
-	if __puus != nil {
-		account.AccessToken = cookie.SetStr(account.AccessToken, "__puus", __puus.Value)
-		_ = model.SaveAccount(account)
-	}
 	//log.Debugf("%s response: %s", pathname, res.String())
 	if e.Status >= 400 || e.Code != 0 {
 		return nil, errors.New(e.Message)
 	}
-	return res.Body(), nil
+	return res, nil
 }
 
-func (driver Quark) Get(pathname string, query map[string]string, resp interface{}, account *model.Account) ([]byte, error) {
+func (driver Quark) Get(pathname string, query map[string]string, resp interface{}, account *model.Account) (*resty.Response, error) {
 	return driver.Request(pathname, base.Get, nil, query, nil, nil, resp, account)
 }
 
-func (driver Quark) Post(pathname string, data interface{}, resp interface{}, account *model.Account) ([]byte, error) {
+func (driver Quark) Post(pathname string, data interface{}, resp interface{}, account *model.Account) (*resty.Response, error) {
 	return driver.Request(pathname, base.Post, nil, nil, nil, data, resp, account)
 }
 
@@ -139,6 +134,21 @@ func (driver Quark) UpHash(md5, sha1, taskId string, account *model.Account) (bo
 	var resp HashResp
 	_, err := driver.Post("/file/update/hash", data, &resp, account)
 	return resp.Data.Finish, err
+}
+
+func (driver Quark) RefreshToken(account *model.Account) error {
+	headers := map[string]string{
+		"Cookie": cookie.DelStr(account.AccessToken, "__puus"),
+	}
+	response, err := driver.Request("/config", base.Get, headers, nil, nil, nil, nil, account)
+	if err != nil {
+		return err
+	}
+	__puus := cookie.GetCookie(response.Cookies(), "__puus")
+	if __puus != nil {
+		account.AccessToken = cookie.SetStr(account.AccessToken, "__puus", __puus.Value)
+	}
+	return nil
 }
 
 func (driver Quark) UpPart(pre UpPreResp, mineType string, partNumber int, bytes []byte, account *model.Account) (string, error) {

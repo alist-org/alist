@@ -8,6 +8,7 @@ import (
 	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
+	"github.com/robfig/cron/v3"
 	log "github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
@@ -60,11 +61,36 @@ func (driver Quark) Items() []base.Item {
 }
 
 func (driver Quark) Save(account *model.Account, old *model.Account) error {
+	if old != nil {
+		conf.Cron.Remove(cron.EntryID(old.CronId))
+	}
 	if account == nil {
 		return nil
 	}
-	_, err := driver.Get("/config", nil, nil, account)
-	return err
+	err := driver.RefreshToken(account)
+	if err != nil {
+		return err
+	}
+	cronId, err := conf.Cron.AddFunc("@every 2h", func() {
+		name := account.Name
+		log.Debugf("quark account name: %s", name)
+		newAccount, ok := model.GetAccount(name)
+		log.Debugf("quark account: %+v", newAccount)
+		if !ok {
+			return
+		}
+		err = driver.RefreshToken(&newAccount)
+		_ = model.SaveAccount(&newAccount)
+	})
+	if err != nil {
+		return err
+	}
+	account.CronId = int(cronId)
+	err = model.SaveAccount(account)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (driver Quark) File(path string, account *model.Account) (*model.File, error) {
