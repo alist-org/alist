@@ -125,10 +125,10 @@ func (fs *FileSystem) Link(w http.ResponseWriter, r *http.Request, rawPath strin
 	}
 	if driver.Config().OnlyProxy || account.WebdavProxy {
 		link = fmt.Sprintf("%s://%s/p%s", protocol, r.Host, rawPath)
-		if conf.GetBool("check down link") {
-			sign := utils.SignWithToken(utils.Base(rawPath), conf.Token)
-			link += "?sign=" + sign
-		}
+		//if conf.GetBool("check down link") {
+		sign := utils.SignWithToken(utils.Base(rawPath), conf.Token)
+		link += "?sign=" + sign
+		//}
 	} else {
 		link_, err := driver.Link(base.Args{Path: path_, IP: ClientIP(r)}, account)
 		if err != nil {
