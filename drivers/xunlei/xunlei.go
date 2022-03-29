@@ -13,7 +13,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-var xunleiClient = resty.New().SetHeaders(map[string]string{"Accept": "application/json;charset=UTF-8"})
+var xunleiClient = resty.New().SetHeaders(map[string]string{"Accept": "application/json;charset=UTF-8"}).SetTimeout(base.DefaultTimeout)
 
 // 一个账户只允许登陆一次
 var userStateCache = struct {
