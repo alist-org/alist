@@ -64,6 +64,12 @@ func (driver Quark) Save(account *model.Account, old *model.Account) error {
 		return nil
 	}
 	_, err := driver.Get("/config", nil, nil, account)
+	if err == nil {
+		account.Status = "work"
+	} else {
+		account.Status = err.Error()
+	}
+	_ = model.SaveAccount(account)
 	return err
 }
 
