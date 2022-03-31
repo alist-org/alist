@@ -33,7 +33,12 @@ func ParsePath(rawPath string) (*model.Account, string, base.Driver, error) {
 	if !ok {
 		return nil, "", nil, fmt.Errorf("no [%s] driver", account.Type)
 	}
-	return &account, strings.TrimPrefix(rawPath, utils.ParsePath(account.Name)), driver, nil
+	name := utils.ParsePath(account.Name)
+	bIndex := strings.LastIndex(name, ".balance")
+	if bIndex != -1 {
+		name = name[:bIndex]
+	}
+	return &account, strings.TrimPrefix(rawPath, name), driver, nil
 }
 
 func ErrorResp(c *gin.Context, err error, code int) {

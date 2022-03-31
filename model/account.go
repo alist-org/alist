@@ -4,6 +4,7 @@ import (
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/utils"
 	log "github.com/sirupsen/logrus"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -131,6 +132,7 @@ var balanceMap sync.Map
 // GetBalancedAccount 根据名称获取账号，负载均衡之后的
 func GetBalancedAccount(name string) (Account, bool) {
 	accounts := GetAccountsByPath(name)
+	log.Debugf("accounts: %+v", accounts)
 	accountNum := len(accounts)
 	switch accountNum {
 	case 0:
@@ -203,7 +205,7 @@ func GetAccountsByPath(path string) []Account {
 		name := utils.ParsePath(v.Name)
 		bIndex := strings.LastIndex(name, balance)
 		if bIndex != -1 {
-			name = v.Name[:bIndex]
+			name = name[:bIndex]
 		}
 		// 不是这个账号
 		if path != name && !strings.HasPrefix(path, name+"/") {
@@ -220,18 +222,29 @@ func GetAccountsByPath(path string) []Account {
 		}
 		accounts = append(accounts, v)
 	}
+	sort.Slice(accounts, func(i, j int) bool {
+		return accounts[i].Name < accounts[j].Name
+	})
 	return accounts
 }
 
 // GetAccountFilesByPath 根据路径获取账号虚拟文件
 // 如有账号： /a/b,/a/c,/a/d/e,/a/b.balance1,/av
 // GetAccountFilesByPath(/a) => b,c,d
-func GetAccountFilesByPath(prefix string) ([]File, error) {
+func GetAccountFilesByPath(prefix string) []File {
 	files := make([]File, 0)
-	var accounts []Account
-	if err := conf.DB.Order(columnName("index")).Find(&accounts).Error; err != nil {
-		return nil, err
+	accounts := make([]Account, AccountsCount())
+	i := 0
+	for _, v := range accountsMap {
+		accounts[i] = v
+		i += 1
 	}
+	sort.Slice(accounts, func(i, j int) bool {
+		if accounts[i].Index == accounts[j].Index {
+			return accounts[i].Name < accounts[j].Name
+		}
+		return accounts[i].Index < accounts[j].Index
+	})
 	prefix = utils.ParsePath(prefix)
 	set := make(map[string]interface{})
 	for _, v := range accounts {
@@ -257,5 +270,5 @@ func GetAccountFilesByPath(prefix string) ([]File, error) {
 		})
 		set[name] = nil
 	}
-	return files, nil
+	return files
 }
