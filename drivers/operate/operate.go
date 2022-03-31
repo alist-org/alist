@@ -8,6 +8,10 @@ import (
 	"runtime/debug"
 )
 
+func Save(driver base.Driver, account, old *model.Account) error {
+	return driver.Save(account, old)
+}
+
 func Path(driver base.Driver, account *model.Account, path string) (*model.File, []model.File, error) {
 	return driver.Path(path, account)
 }

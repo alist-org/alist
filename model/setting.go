@@ -93,11 +93,11 @@ func LoadSettings() {
 	if err == nil {
 		conf.TextTypes = strings.Split(textTypes.Value, ",")
 	}
-	audioTypes, err := GetSettingByKey("text types")
+	audioTypes, err := GetSettingByKey("audio types")
 	if err == nil {
 		conf.AudioTypes = strings.Split(audioTypes.Value, ",")
 	}
-	videoTypes, err := GetSettingByKey("text types")
+	videoTypes, err := GetSettingByKey("video types")
 	if err == nil {
 		conf.VideoTypes = strings.Split(videoTypes.Value, ",")
 	}

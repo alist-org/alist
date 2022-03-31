@@ -50,17 +50,18 @@ func (fs *FileSystem) File(rawPath string) (*model.File, error) {
 
 func (fs *FileSystem) Files(ctx context.Context, rawPath string) ([]model.File, error) {
 	rawPath = utils.ParsePath(rawPath)
-	var files []model.File
-	var err error
-	if model.AccountsCount() > 1 && rawPath == "/" {
-		files, err = model.GetAccountFiles()
-	} else {
-		account, path_, driver, err := common.ParsePath(rawPath)
-		if err != nil {
-			return nil, err
-		}
-		files, err = operate.Files(driver, account, path_)
-	}
+	//var files []model.File
+	//var err error
+	//if model.AccountsCount() > 1 && rawPath == "/" {
+	//	files, err = model.GetAccountFilesByPath("/")
+	//} else {
+	//	account, path_, driver, err := common.ParsePath(rawPath)
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//	files, err = operate.Files(driver, account, path_)
+	//}
+	_, files, _, _, _, err := common.Path(rawPath)
 	if err != nil {
 		return nil, err
 	}
@@ -125,10 +126,10 @@ func (fs *FileSystem) Link(w http.ResponseWriter, r *http.Request, rawPath strin
 	}
 	if driver.Config().OnlyProxy || account.WebdavProxy {
 		link = fmt.Sprintf("%s://%s/p%s", protocol, r.Host, rawPath)
-		if conf.GetBool("check down link") {
-			sign := utils.SignWithToken(utils.Base(rawPath), conf.Token)
-			link += "?sign=" + sign
-		}
+		//if conf.GetBool("check down link") {
+		sign := utils.SignWithToken(utils.Base(rawPath), conf.Token)
+		link += "?sign=" + sign
+		//}
 	} else {
 		link_, err := driver.Link(base.Args{Path: path_, IP: ClientIP(r)}, account)
 		if err != nil {

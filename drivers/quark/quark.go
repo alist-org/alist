@@ -8,6 +8,7 @@ import (
 	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
+	"github.com/Xhofe/alist/utils/cookie"
 	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
 	"net/http"
@@ -62,7 +63,12 @@ func (driver Quark) Request(pathname string, method int, headers, query, form ma
 	if err != nil {
 		return nil, err
 	}
-	log.Debugf("%s response: %s", pathname, res.String())
+	__puus := cookie.GetCookie(res.Cookies(), "__puus")
+	if __puus != nil {
+		account.AccessToken = cookie.SetStr(account.AccessToken, "__puus", __puus.Value)
+		_ = model.SaveAccount(account)
+	}
+	//log.Debugf("%s response: %s", pathname, res.String())
 	if e.Status >= 400 || e.Code != 0 {
 		return nil, errors.New(e.Message)
 	}

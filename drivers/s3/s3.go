@@ -88,7 +88,7 @@ func (driver S3) List(prefix string, account *model.Account) ([]model.File, erro
 		}
 		for _, object := range listObjectsResult.Contents {
 			name := utils.Base(*object.Key)
-			if name == account.Zone {
+			if name == getPlaceholderName(account.Zone) {
 				continue
 			}
 			file := model.File{
@@ -152,7 +152,7 @@ func (driver S3) ListV2(prefix string, account *model.Account) ([]model.File, er
 		}
 		for _, object := range listObjectsResult.Contents {
 			name := utils.Base(*object.Key)
-			if name == account.Zone {
+			if name == getPlaceholderName(account.Zone) {
 				continue
 			}
 			file := model.File{
