@@ -18,6 +18,10 @@ func RefreshFolder(c *gin.Context) {
 	}
 	account, path_, _, err := common.ParsePath(req.Path)
 	if err != nil {
+		if err.Error() == "path not found" && req.Path == "/" {
+			common.SuccessResp(c)
+			return
+		}
 		common.ErrorResp(c, err, 500)
 		return
 	}
