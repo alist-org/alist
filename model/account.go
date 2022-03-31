@@ -2,6 +2,7 @@ package model
 
 import (
 	"github.com/Xhofe/alist/conf"
+	"github.com/Xhofe/alist/utils"
 	log "github.com/sirupsen/logrus"
 	"strings"
 	"sync"
@@ -97,6 +98,7 @@ func RegisterAccount(account Account) {
 	accountsMap[account.Name] = account
 }
 
+// GetAccount 根据名称获取账号（不包含负载均衡账号） 用于定时任务更新账号
 func GetAccount(name string) (Account, bool) {
 	if len(accountsMap) == 1 {
 		for _, v := range accountsMap {
@@ -107,25 +109,28 @@ func GetAccount(name string) (Account, bool) {
 	return account, ok
 }
 
-func GetAccountsByName(name string) []Account {
-	accounts := make([]Account, 0)
-	if AccountsCount() == 1 {
-		account, _ := GetAccount("")
-		accounts = append(accounts, account)
-		return accounts
-	}
-	for _, v := range accountsMap {
-		if v.Name == name || strings.HasPrefix(v.Name, name+balance) {
-			accounts = append(accounts, v)
-		}
-	}
-	return accounts
-}
+// GetAccountsByName 根据名称获取账号（包含负载均衡账号）
+//func GetAccountsByName(name string) []Account {
+//	accounts := make([]Account, 0)
+//	if AccountsCount() == 1 {
+//		for _, v := range accountsMap {
+//			accounts = append(accounts, v)
+//		}
+//		return accounts
+//	}
+//	for _, v := range accountsMap {
+//		if v.Name == name || strings.HasPrefix(v.Name, name+balance) {
+//			accounts = append(accounts, v)
+//		}
+//	}
+//	return accounts
+//}
 
 var balanceMap sync.Map
 
+// GetBalancedAccount 根据名称获取账号，负载均衡之后的
 func GetBalancedAccount(name string) (Account, bool) {
-	accounts := GetAccountsByName(name)
+	accounts := GetAccountsByPath(name)
 	accountNum := len(accounts)
 	switch accountNum {
 	case 0:
@@ -147,6 +152,7 @@ func GetBalancedAccount(name string) (Account, bool) {
 	}
 }
 
+// GetAccountById 根据id获取账号，用于更新账号
 func GetAccountById(id uint) (*Account, error) {
 	var account Account
 	account.ID = id
@@ -156,31 +162,100 @@ func GetAccountById(id uint) (*Account, error) {
 	return &account, nil
 }
 
-func GetAccountFiles() ([]File, error) {
-	files := make([]File, 0)
-	var accounts []Account
-	if err := conf.DB.Order(columnName("index")).Find(&accounts).Error; err != nil {
-		return nil, err
-	}
-	for _, v := range accounts {
-		if strings.Contains(v.Name, balance) {
-			continue
-		}
-		files = append(files, File{
-			Name:      v.Name,
-			Size:      0,
-			Driver:    v.Type,
-			Type:      conf.FOLDER,
-			UpdatedAt: v.UpdatedAt,
-		})
-	}
-	return files, nil
-}
+// GetAccountFiles 获取账号虚拟文件（去除负载均衡）
+//func GetAccountFiles() ([]File, error) {
+//	files := make([]File, 0)
+//	var accounts []Account
+//	if err := conf.DB.Order(columnName("index")).Find(&accounts).Error; err != nil {
+//		return nil, err
+//	}
+//	for _, v := range accounts {
+//		if strings.Contains(v.Name, balance) {
+//			continue
+//		}
+//		files = append(files, File{
+//			Name:      v.Name,
+//			Size:      0,
+//			Driver:    v.Type,
+//			Type:      conf.FOLDER,
+//			UpdatedAt: v.UpdatedAt,
+//		})
+//	}
+//	return files, nil
+//}
 
+// GetAccounts 获取所有账号
 func GetAccounts() ([]Account, error) {
 	var accounts []Account
 	if err := conf.DB.Order(columnName("index")).Find(&accounts).Error; err != nil {
 		return nil, err
 	}
 	return accounts, nil
+}
+
+// GetAccountsByPath 根据路径获取账号，最长匹配，未负载均衡
+// 如有账号： /a/b,/a/c,/a/d/e,/a/d/e.balance
+// GetAccountsByPath(/a/d/e/f) => /a/d/e,/a/d/e.balance
+func GetAccountsByPath(path string) []Account {
+	accounts := make([]Account, 0)
+	curSlashCount := 0
+	for _, v := range accountsMap {
+		name := utils.ParsePath(v.Name)
+		bIndex := strings.LastIndex(name, balance)
+		if bIndex != -1 {
+			name = v.Name[:bIndex]
+		}
+		// 不是这个账号
+		if path != name && !strings.HasPrefix(path, name+"/") {
+			continue
+		}
+		slashCount := strings.Count(name, "/")
+		// 不是最长匹配
+		if slashCount < curSlashCount {
+			continue
+		}
+		if slashCount > curSlashCount {
+			accounts = accounts[:0]
+			curSlashCount = slashCount
+		}
+		accounts = append(accounts, v)
+	}
+	return accounts
+}
+
+// GetAccountFilesByPath 根据路径获取账号虚拟文件
+// 如有账号： /a/b,/a/c,/a/d/e,/a/b.balance1,/av
+// GetAccountFilesByPath(/a) => b,c,d
+func GetAccountFilesByPath(prefix string) ([]File, error) {
+	files := make([]File, 0)
+	var accounts []Account
+	if err := conf.DB.Order(columnName("index")).Find(&accounts).Error; err != nil {
+		return nil, err
+	}
+	prefix = utils.ParsePath(prefix)
+	set := make(map[string]interface{})
+	for _, v := range accounts {
+		// 负载均衡账号
+		if strings.Contains(v.Name, balance) {
+			continue
+		}
+		full := utils.ParsePath(v.Name)
+		// 不是以prefix为前缀
+		if !strings.HasPrefix(full, prefix+"/") && prefix != "/" {
+			continue
+		}
+		name := strings.Split(strings.TrimPrefix(strings.TrimPrefix(full, prefix), "/"), "/")[0]
+		if _, ok := set[name]; ok {
+			continue
+		}
+		files = append(files, File{
+			Name:      name,
+			Size:      0,
+			Driver:    v.Type,
+			Type:      conf.FOLDER,
+			UpdatedAt: v.UpdatedAt,
+		})
+		set[name] = nil
+	}
+	return files, nil
 }

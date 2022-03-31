@@ -94,15 +94,15 @@ func (driver AliDrive) Save(account *model.Account, old *model.Account) error {
 	log.Debugf("user info: %+v", resp)
 	account.DriveId = resp["default_drive_id"].(string)
 	cronId, err := conf.Cron.AddFunc("@every 2h", func() {
-		name := account.Name
-		log.Debugf("ali account name: %s", name)
-		newAccount, ok := model.GetAccount(name)
+		id := account.ID
+		log.Debugf("ali account id: %d", id)
+		newAccount, err := model.GetAccountById(id)
 		log.Debugf("ali account: %+v", newAccount)
-		if !ok {
+		if err != nil {
 			return
 		}
-		err = driver.RefreshToken(&newAccount)
-		_ = model.SaveAccount(&newAccount)
+		err = driver.RefreshToken(newAccount)
+		_ = model.SaveAccount(newAccount)
 	})
 	if err != nil {
 		return err

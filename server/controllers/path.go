@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/drivers/base"
-	"github.com/Xhofe/alist/drivers/operate"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/server/common"
 	"github.com/Xhofe/alist/utils"
@@ -79,39 +78,12 @@ func Path(c *gin.Context) {
 	if meta != nil && meta.Upload {
 		upload = true
 	}
-	if model.AccountsCount() > 1 && (req.Path == "/" || req.Path == "") {
-		files, err := model.GetAccountFiles()
-		if err != nil {
-			common.ErrorResp(c, err, 500)
-			return
-		}
-		if !ok {
-			files = common.Hide(meta, files)
-		}
-		c.JSON(200, common.Resp{
-			Code:    200,
-			Message: "success",
-			Data: PathResp{
-				Type: "folder",
-				Meta: Meta{
-					Driver: "root",
-				},
-				Files: files,
-			},
-		})
-		return
-	}
 	err := CheckPagination(&req)
 	if err != nil {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	account, path, driver, err := common.ParsePath(req.Path)
-	if err != nil {
-		common.ErrorResp(c, err, 500)
-		return
-	}
-	file, files, err := operate.Path(driver, account, path)
+	file, files, account, driver, path, err := common.Path(req.Path)
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return
@@ -147,10 +119,14 @@ func Path(c *gin.Context) {
 		if !ok {
 			files = common.Hide(meta, files)
 		}
-		if driver.Config().LocalSort {
-			model.SortFiles(files, account)
+		driverName := "root"
+		if driver != nil {
+			if driver.Config().LocalSort {
+				model.SortFiles(files, account)
+			}
+			model.ExtractFolder(files, account)
+			driverName = driver.Config().Name
 		}
-		model.ExtractFolder(files, account)
 		total, files := Pagination(files, &req)
 		c.JSON(200, common.Resp{
 			Code:    200,
@@ -158,7 +134,7 @@ func Path(c *gin.Context) {
 			Data: PathResp{
 				Type: "folder",
 				Meta: Meta{
-					Driver: driver.Config().Name,
+					Driver: driverName,
 					Upload: upload,
 					Total:  total,
 				},
