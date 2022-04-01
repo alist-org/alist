@@ -38,6 +38,9 @@ func ParsePath(rawPath string) (*model.Account, string, base.Driver, error) {
 	if bIndex != -1 {
 		name = name[:bIndex]
 	}
+	if name == "/" {
+		name = ""
+	}
 	return &account, strings.TrimPrefix(rawPath, name), driver, nil
 }
 

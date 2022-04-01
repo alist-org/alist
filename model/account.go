@@ -207,6 +207,9 @@ func GetAccountsByPath(path string) []Account {
 		if bIndex != -1 {
 			name = name[:bIndex]
 		}
+		if name == "/" {
+			name = ""
+		}
 		// 不是这个账号
 		if path != name && !strings.HasPrefix(path, name+"/") {
 			continue
@@ -253,6 +256,9 @@ func GetAccountFilesByPath(prefix string) []File {
 			continue
 		}
 		full := utils.ParsePath(v.Name)
+		if len(full) <= len(prefix) {
+			continue
+		}
 		// 不是以prefix为前缀
 		if !strings.HasPrefix(full, prefix+"/") && prefix != "/" {
 			continue
