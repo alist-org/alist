@@ -31,18 +31,21 @@ func (fs *FileSystem) File(rawPath string) (*model.File, error) {
 	if f, ok := upFileMap[rawPath]; ok {
 		return f, nil
 	}
-	if model.AccountsCount() > 1 && rawPath == "/" {
-		now := time.Now()
-		return &model.File{
-			Name:      "root",
-			Size:      0,
-			Type:      conf.FOLDER,
-			Driver:    "root",
-			UpdatedAt: &now,
-		}, nil
-	}
 	account, path_, driver, err := common.ParsePath(rawPath)
+	log.Debugln(account, path_, driver, err)
 	if err != nil {
+		if err.Error() == "path not found" {
+			accountFiles := model.GetAccountFilesByPath(rawPath)
+			if len(accountFiles) != 0 {
+				now := time.Now()
+				return &model.File{
+					Name:      "root",
+					Size:      0,
+					Type:      conf.FOLDER,
+					UpdatedAt: &now,
+				}, nil
+			}
+		}
 		return nil, err
 	}
 	return operate.File(driver, account, path_)
