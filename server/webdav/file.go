@@ -42,6 +42,7 @@ func (fs *FileSystem) File(rawPath string) (*model.File, error) {
 		}, nil
 	}
 	account, path_, driver, err := common.ParsePath(rawPath)
+	log.Debugln(account, path_, driver, err)
 	if err != nil {
 		return nil, err
 	}
