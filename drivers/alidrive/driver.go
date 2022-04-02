@@ -371,7 +371,7 @@ func (driver AliDrive) Delete(path string, account *model.Account) error {
 		}
 		return fmt.Errorf("%s", e.Message)
 	}
-	if res.StatusCode() == 204 {
+	if res.StatusCode() < 400 {
 		return nil
 	}
 	return errors.New(res.String())
