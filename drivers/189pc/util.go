@@ -15,6 +15,7 @@ import (
 	rand2 "math/rand"
 	"net/http"
 	"net/url"
+	"sort"
 	"strings"
 	"time"
 
@@ -118,19 +119,17 @@ func toFamilyOrderBy(o string) string {
 	}
 }
 
-func MapToUrlValues(m map[string]interface{}) url.Values {
-	url := make(url.Values, len(m))
-	for k, v := range m {
-		url.Add(k, fmt.Sprint(v))
+func ParseHttpHeader(str string) map[string]string {
+	header := make(map[string]string)
+	for _, value := range strings.Split(str, "&") {
+		i := strings.Index(value, "=")
+		header[strings.TrimSpace(value[0:i])] = strings.TrimSpace(value[i+1:])
 	}
-	return url
+	return header
 }
 
-func decodeURIComponent(str string) string {
-	r, _ := url.QueryUnescape(str)
-	//r, _ := url.PathUnescape(str)
-	//r = strings.ReplaceAll(r, " ", "+")
-	return r
+func MustString(str string, err error) string {
+	return str
 }
 
 func MustToBytes(b []byte, err error) []byte {
@@ -142,4 +141,36 @@ func BoolToNumber(b bool) int {
 		return 1
 	}
 	return 0
+}
+
+func MustParseTime(str string) *time.Time {
+	time, _ := http.ParseTime(str)
+	return &time
+}
+
+type Params map[string]string
+
+func (p Params) Set(k, v string) {
+	p[k] = v
+}
+
+func (p Params) Encode() string {
+	if p == nil {
+		return ""
+	}
+	var buf strings.Builder
+	keys := make([]string, 0, len(p))
+	for k := range p {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		if buf.Len() > 0 {
+			buf.WriteByte('&')
+		}
+		buf.WriteString(k)
+		buf.WriteByte('=')
+		buf.WriteString(p[k])
+	}
+	return buf.String()
 }

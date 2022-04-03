@@ -66,6 +66,11 @@ func (driver AliDrive) Items() []base.Item {
 			Required:    false,
 			Description: ">0 and <=200",
 		},
+		{
+			Name:  "bool_1",
+			Label: "fast upload",
+			Type:  base.TypeBool,
+		},
 	}
 }
 
@@ -391,8 +396,7 @@ func (driver AliDrive) Upload(file *model.FileStream, account *model.Account) er
 	if file == nil {
 		return base.ErrEmptyFile
 	}
-	const DEFAULT int64 = 10485760
-	var count = int64(math.Ceil(float64(file.GetSize()) / float64(DEFAULT)))
+
 	parentFile, err := driver.File(file.ParentPath, account)
 	if err != nil {
 		return err
@@ -401,16 +405,14 @@ func (driver AliDrive) Upload(file *model.FileStream, account *model.Account) er
 		return base.ErrNotFolder
 	}
 
+	const DEFAULT int64 = 10485760
+	var count = int(math.Ceil(float64(file.GetSize()) / float64(DEFAULT)))
+
 	partInfoList := make([]base.Json, 0, count)
-	var i int64
-	for i = 0; i < count; i++ {
-		partInfoList = append(partInfoList, base.Json{
-			"part_number": i + 1,
-		})
+	for i := 1; i <= count; i++ {
+		partInfoList = append(partInfoList, base.Json{"part_number": i})
 	}
 
-	buf := make([]byte, 1024)
-	n, _ := file.Read(buf[:])
 	reqBody := base.Json{
 		"check_name_mode": "overwrite",
 		"drive_id":        account.DriveId,
@@ -419,9 +421,17 @@ func (driver AliDrive) Upload(file *model.FileStream, account *model.Account) er
 		"part_info_list":  partInfoList,
 		"size":            file.GetSize(),
 		"type":            "file",
-		"pre_hash":        utils.GetSHA1Encode(string(buf[:n])),
 	}
-	fileReader := io.MultiReader(bytes.NewReader(buf[:n]), file.File)
+
+	if account.Bool1 {
+		buf := make([]byte, 1024)
+		n, _ := file.Read(buf[:])
+		reqBody["pre_hash"] = utils.GetSHA1Encode(string(buf[:n]))
+		file.File = io.NopCloser(io.MultiReader(bytes.NewReader(buf[:n]), file.File))
+	} else {
+		reqBody["content_hash_name"] = "none"
+		reqBody["proof_version"] = "v1"
+	}
 
 	var resp UploadResp
 	var e AliRespError
@@ -444,7 +454,7 @@ func (driver AliDrive) Upload(file *model.FileStream, account *model.Account) er
 		return fmt.Errorf("%s", e.Message)
 	}
 
-	if e.Code == "PreHashMatched" {
+	if e.Code == "PreHashMatched" && account.Bool1 {
 		tempFile, err := ioutil.TempFile(conf.Conf.TempDir, "file-*")
 		if err != nil {
 			return err
@@ -455,7 +465,7 @@ func (driver AliDrive) Upload(file *model.FileStream, account *model.Account) er
 
 		delete(reqBody, "pre_hash")
 		h := sha1.New()
-		if _, err = io.Copy(tempFile, io.TeeReader(fileReader, h)); err != nil {
+		if _, err = io.Copy(io.MultiWriter(tempFile, h), file.File); err != nil {
 			return err
 		}
 		reqBody["content_hash"] = hex.EncodeToString(h.Sum(nil))
@@ -470,10 +480,11 @@ func (driver AliDrive) Upload(file *model.FileStream, account *model.Account) er
 			o = i ? r.mod(i) : new gt.BigNumber(0);
 			(t.file.slice(o.toNumber(), Math.min(o.plus(8).toNumber(), t.file.size)))
 		*/
+		buf := make([]byte, 8)
 		r, _ := new(big.Int).SetString(utils.GetMD5Encode(account.AccessToken)[:16], 16)
 		i := new(big.Int).SetUint64(file.Size)
 		o := r.Mod(r, i)
-		n, _ = io.NewSectionReader(tempFile, o.Int64(), 8).Read(buf[:8])
+		n, _ := io.NewSectionReader(tempFile, o.Int64(), 8).Read(buf[:8])
 		reqBody["proof_code"] = base64.StdEncoding.EncodeToString(buf[:n])
 
 		_, err = client.Post("https://api.aliyundrive.com/adrive/v2/file/createWithFolders")
@@ -491,11 +502,11 @@ func (driver AliDrive) Upload(file *model.FileStream, account *model.Account) er
 		if _, err = tempFile.Seek(0, io.SeekStart); err != nil {
 			return err
 		}
-		fileReader = tempFile
+		file.File = tempFile
 	}
 
-	for i = 0; i < count; i++ {
-		req, err := http.NewRequest("PUT", resp.PartInfoList[i].UploadUrl, io.LimitReader(fileReader, DEFAULT))
+	for _, partInfo := range resp.PartInfoList {
+		req, err := http.NewRequest("PUT", partInfo.UploadUrl, io.LimitReader(file.File, DEFAULT))
 		if err != nil {
 			return err
 		}
@@ -523,7 +534,7 @@ func (driver AliDrive) Upload(file *model.FileStream, account *model.Account) er
 	if err != nil {
 		return err
 	}
-	if e.Code != "" {
+	if e.Code != "" && e.Code != "PreHashMatched" {
 		//if e.Code == "AccessTokenInvalid" {
 		//	err = driver.RefreshToken(account)
 		//	if err != nil {

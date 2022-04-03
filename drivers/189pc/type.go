@@ -137,6 +137,7 @@ type BatchTaskInfo struct {
 	//SrcParentId string `json:"srcParentId"`
 }
 
+/*
 type CreateUploadFileResult struct {
 	// UploadFileId 上传文件请求ID
 	UploadFileId int64 `json:"uploadFileId"`
@@ -157,8 +158,8 @@ type UploadFileStatusResult struct {
 	FileCommitUrl  string `json:"fileCommitUrl"`
 	FileDataExists int    `json:"fileDataExists"`
 }
+*/
 
-/*
 type InitMultiUploadResp struct {
 	//Code string `json:"code"`
 	Data struct {
@@ -177,4 +178,3 @@ type Part struct {
 	RequestURL    string `json:"requestURL"`
 	RequestHeader string `json:"requestHeader"`
 }
-*/
