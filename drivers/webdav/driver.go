@@ -40,6 +40,15 @@ func (driver WebDav) Items() []base.Item {
 			Type:     base.TypeString,
 			Required: true,
 		},
+		{
+			Name:        "internal_type",
+			Label:       "vendor",
+			Type:        base.TypeSelect,
+			Required:    true,
+			Default:     "other",
+			Values:      "sharepoint,other",
+			Description: "sharepoint temporarily unavailable",
+		},
 	}
 }
 

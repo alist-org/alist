@@ -132,7 +132,7 @@ func (driver Cloud189) Login(account *model.Account) error {
 		}
 	}
 	if lt == "" {
-		return fmt.Errorf("get empty login page")
+		return errors.New(b)
 	}
 	captchaToken := regexp.MustCompile(`captchaToken' value='(.+?)'`).FindStringSubmatch(b)[1]
 	returnUrl := regexp.MustCompile(`returnUrl = '(.+?)'`).FindStringSubmatch(b)[1]
