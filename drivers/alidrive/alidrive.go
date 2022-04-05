@@ -228,7 +228,7 @@ func (driver AliDrive) batch(srcId, dstId string, url string, account *model.Acc
 		}
 		return fmt.Errorf("%s", e.Message)
 	}
-	status := jsoniter.Get(res.Body(), "status").ToInt()
+	status := jsoniter.Get(res.Body(), "responses", 0, "status").ToInt()
 	if status < 400 && status >= 100 {
 		return nil
 	}

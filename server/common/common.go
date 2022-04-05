@@ -1,7 +1,6 @@
 package common
 
 import (
-	"errors"
 	"fmt"
 	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
@@ -25,30 +24,24 @@ type PathReq struct {
 }
 
 func ParsePath(rawPath string) (*model.Account, string, base.Driver, error) {
-	var path, name string
-	switch model.AccountsCount() {
-	case 0:
-		return nil, "", nil, fmt.Errorf("no accounts,please add one first")
-	case 1:
-		path = rawPath
-		break
-	default:
-		if path == "/" {
-			return nil, "", nil, errors.New("can't operate root of multiple accounts")
-		}
-		paths := strings.Split(rawPath, "/")
-		path = "/" + strings.Join(paths[2:], "/")
-		name = paths[1]
-	}
-	account, ok := model.GetBalancedAccount(name)
+	rawPath = utils.ParsePath(rawPath)
+	account, ok := model.GetBalancedAccount(rawPath)
 	if !ok {
-		return nil, "", nil, fmt.Errorf("no [%s] account", name)
+		return nil, "", nil, fmt.Errorf("path not found")
 	}
 	driver, ok := base.GetDriver(account.Type)
 	if !ok {
 		return nil, "", nil, fmt.Errorf("no [%s] driver", account.Type)
 	}
-	return &account, path, driver, nil
+	name := utils.ParsePath(account.Name)
+	bIndex := strings.LastIndex(name, ".balance")
+	if bIndex != -1 {
+		name = name[:bIndex]
+	}
+	//if name == "/" {
+	//	name = ""
+	//}
+	return &account, utils.ParsePath(strings.TrimPrefix(rawPath, name)), driver, nil
 }
 
 func ErrorResp(c *gin.Context, err error, code int) {

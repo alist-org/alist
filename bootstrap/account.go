@@ -3,6 +3,7 @@ package bootstrap
 import (
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/drivers/base"
+	"github.com/Xhofe/alist/drivers/operate"
 	"github.com/Xhofe/alist/model"
 	log "github.com/sirupsen/logrus"
 )
@@ -20,7 +21,8 @@ func InitAccounts() {
 			log.Errorf("no [%s] driver", account.Type)
 		} else {
 			log.Infof("start init account: [%s], type: [%s]", account.Name, account.Type)
-			err := driver.Save(&accounts[i], nil)
+			//err := driver.Save(&accounts[i], nil)
+			err := operate.Save(driver, &accounts[i], nil)
 			if err != nil {
 				log.Errorf("init account [%s] error:[%s]", account.Name, err.Error())
 			} else {
