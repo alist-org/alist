@@ -82,7 +82,6 @@ func Plist(c *gin.Context) {
 func Options(c *gin.Context) {
 	c.Header("Accept-Ranges", "bytes")
 	c.Header("allow", "OPTIONS, GET, POST, HEAD, PROPFIND")
-	c.Header("Accept-Ranges", "bytes")
 	c.Header("MS-Author-Via", "DAV")
 	c.Header("DAV", "1, 2, 3")
 	c.Status(204)
