@@ -118,8 +118,8 @@ func InitSettings() {
 			Group:       model.FRONT,
 		},
 		{
-			Key:         "home readme url",
-			Description: "when have multiple, the readme file to show",
+			Key:         "global readme url",
+			Description: "Default display when directory has no readme",
 			Type:        "string",
 			Access:      model.PUBLIC,
 			Group:       model.FRONT,
