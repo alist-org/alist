@@ -9,9 +9,9 @@ import (
 
 func Path(rawPath string) (*model.File, []model.File, *model.Account, base.Driver, string, error) {
 	account, path, driver, err := ParsePath(rawPath)
+	accountFiles := model.GetAccountFilesByPath(rawPath)
 	if err != nil {
 		if err.Error() == "path not found" {
-			accountFiles := model.GetAccountFilesByPath(rawPath)
 			if len(accountFiles) != 0 {
 				return nil, accountFiles, nil, nil, path, nil
 			}
@@ -21,6 +21,11 @@ func Path(rawPath string) (*model.File, []model.File, *model.Account, base.Drive
 	log.Debugln("use account: ", account.Name)
 	file, files, err := operate.Path(driver, account, path)
 	if err != nil {
+		if err.Error() == "path not found" {
+			if len(accountFiles) != 0 {
+				return nil, accountFiles, nil, nil, path, nil
+			}
+		}
 		return nil, nil, nil, nil, "", err
 	}
 	if file != nil {

@@ -48,7 +48,20 @@ func (fs *FileSystem) File(rawPath string) (*model.File, error) {
 		}
 		return nil, err
 	}
-	return operate.File(driver, account, path_)
+	file, err := operate.File(driver, account, path_)
+	if err != nil && err.Error() == "path not found" {
+		accountFiles := model.GetAccountFilesByPath(rawPath)
+		if len(accountFiles) != 0 {
+			now := time.Now()
+			return &model.File{
+				Name:      "root",
+				Size:      0,
+				Type:      conf.FOLDER,
+				UpdatedAt: &now,
+			}, nil
+		}
+	}
+	return file, err
 }
 
 func (fs *FileSystem) Files(ctx context.Context, rawPath string) ([]model.File, error) {
