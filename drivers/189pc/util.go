@@ -144,8 +144,9 @@ func BoolToNumber(b bool) int {
 }
 
 func MustParseTime(str string) *time.Time {
-	time, _ := http.ParseTime(str)
-	return &time
+	loc, _ := time.LoadLocation("Local")
+	lastOpTime, _ := time.ParseInLocation("2006-01-02 15:04:05", str, loc)
+	return &lastOpTime
 }
 
 type Params map[string]string

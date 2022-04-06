@@ -229,7 +229,7 @@ func (driver Cloud189) Files(path string, account *model.Account) ([]model.File,
 				Size:      0,
 				Type:      conf.FOLDER,
 				Driver:    driver.Config().Name,
-				UpdatedAt: MustParseTime(folder.CreateDate),
+				UpdatedAt: MustParseTime(folder.LastOpTime),
 			})
 		}
 		for _, file := range resp.FileListAO.FileList {
@@ -239,7 +239,7 @@ func (driver Cloud189) Files(path string, account *model.Account) ([]model.File,
 				Size:      file.Size,
 				Type:      utils.GetFileType(filepath.Ext(file.Name)),
 				Driver:    driver.Config().Name,
-				UpdatedAt: MustParseTime(file.CreateDate),
+				UpdatedAt: MustParseTime(file.LastOpTime),
 				Thumbnail: file.Icon.SmallUrl,
 			})
 		}
