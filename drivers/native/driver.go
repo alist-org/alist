@@ -71,7 +71,6 @@ func (driver Native) File(path string, account *model.Account) (*model.File, err
 	time := f.ModTime()
 	file := &model.File{
 		Name:      f.Name(),
-		Size:      f.Size(),
 		UpdatedAt: &time,
 		Driver:    driver.Config().Name,
 	}
@@ -79,6 +78,7 @@ func (driver Native) File(path string, account *model.Account) (*model.File, err
 		file.Type = conf.FOLDER
 	} else {
 		file.Type = utils.GetFileType(filepath.Ext(f.Name()))
+		file.Size = f.Size()
 	}
 	return file, nil
 }
