@@ -2,7 +2,6 @@ package model
 
 import (
 	"github.com/Xhofe/alist/conf"
-	"github.com/Xhofe/alist/utils"
 	"sort"
 	"strings"
 	"time"
@@ -87,5 +86,5 @@ func (f File) IsDir() bool {
 }
 
 func (f File) GetType() int {
-	return utils.GetFileType(utils.Ext(f.GetName()))
+	return f.Type
 }

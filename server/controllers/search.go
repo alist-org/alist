@@ -13,7 +13,7 @@ type SearchReq struct {
 }
 
 func Search(c *gin.Context) {
-	if conf.GetBool("enable search") {
+	if !conf.GetBool("enable search") {
 		common.ErrorStrResp(c, "Not allowed search", 403)
 		return
 	}
