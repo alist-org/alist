@@ -37,7 +37,9 @@ func SaveSearchFiles[T model.ISearchFile](key string, obj []T) {
 
 func SetCache[T model.ISearchFile](path string, obj []T, account *model.Account) error {
 	key := KeyCache(path, account)
-	go SaveSearchFiles(key, obj)
+	if conf.GetBool("enable search") {
+		go SaveSearchFiles(key, obj)
+	}
 	return conf.Cache.Set(conf.Ctx, key, obj, nil)
 }
 
