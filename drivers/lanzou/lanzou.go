@@ -2,27 +2,14 @@ package lanzou
 
 import (
 	"fmt"
-	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
-	"github.com/Xhofe/alist/utils"
 	log "github.com/sirupsen/logrus"
 	"net/url"
-	"path/filepath"
 	"regexp"
 	"strconv"
 	"time"
 )
-
-type LanZouFile struct {
-	Name    string `json:"name"`
-	NameAll string `json:"name_all"`
-	Id      string `json:"id"`
-	FolId   string `json:"fol_id"`
-	Size    string `json:"size"`
-	Time    string `json:"time"`
-	Folder  bool
-}
 
 func (driver *Lanzou) FormatFile(file *LanZouFile) *model.File {
 	now := time.Now()
@@ -35,12 +22,11 @@ func (driver *Lanzou) FormatFile(file *LanZouFile) *model.File {
 		UpdatedAt: &now,
 	}
 	if file.Folder {
-		f.Type = conf.FOLDER
 		f.Id = file.FolId
 	} else {
 		f.Name = file.NameAll
-		f.Type = utils.GetFileType(filepath.Ext(file.NameAll))
 	}
+	f.Type = file.GetType()
 	return f
 }
 
