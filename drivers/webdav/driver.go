@@ -3,6 +3,7 @@ package webdav
 import (
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/drivers/base"
+	"github.com/Xhofe/alist/drivers/webdav/odrvcookie"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
 	"path/filepath"
@@ -47,7 +48,7 @@ func (driver WebDav) Items() []base.Item {
 			Required:    true,
 			Default:     "other",
 			Values:      "sharepoint,other",
-			Description: "sharepoint temporarily unavailable",
+			Description: "webdav vendor",
 		},
 	}
 }
@@ -56,9 +57,17 @@ func (driver WebDav) Save(account *model.Account, old *model.Account) error {
 	if account == nil {
 		return nil
 	}
-	account.Status = "work"
+	var err error
+	if isSharePoint(account) {
+		_, err = odrvcookie.GetCookie(account.Username, account.Password, account.SiteUrl)
+	}
+	if err != nil {
+		account.Status = err.Error()
+	} else {
+		account.Status = "work"
+	}
 	_ = model.SaveAccount(account)
-	return nil
+	return err
 }
 
 func (driver WebDav) File(path string, account *model.Account) (*model.File, error) {

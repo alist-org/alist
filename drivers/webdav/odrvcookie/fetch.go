@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"encoding/xml"
 	"html/template"
-	"log"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -90,25 +89,29 @@ func New(pUser, pPass, pEndpoint string) CookieAuth {
 // Cookies creates a CookieResponse. It fetches the auth token and then
 // retrieves the Cookies
 func (ca *CookieAuth) Cookies() (CookieResponse, error) {
-	return ca.getSPCookie(ca.getSPToken())
+	spToken, err := ca.getSPToken()
+	if err != nil {
+		return CookieResponse{}, err
+	}
+	return ca.getSPCookie(spToken)
 }
 
 func (ca *CookieAuth) getSPCookie(conf *SuccessResponse) (CookieResponse, error) {
 	spRoot, err := url.Parse(ca.endpoint)
 	if err != nil {
-		panic(err)
+		return CookieResponse{}, err
 	}
 
 	u, err := url.Parse("https://" + spRoot.Host + "/_forms/default.aspx?wa=wsignin1.0")
 	if err != nil {
-		log.Fatal(err)
+		return CookieResponse{}, err
 	}
 
 	// To authenticate with davfs or anything else we need two cookies (rtFa and FedAuth)
 	// In order to get them we use the token we got earlier and a cookieJar
 	jar, err := cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
 	if err != nil {
-		log.Fatal(err)
+		return CookieResponse{}, err
 	}
 
 	client := &http.Client{
@@ -117,7 +120,7 @@ func (ca *CookieAuth) getSPCookie(conf *SuccessResponse) (CookieResponse, error)
 
 	// Send the previously aquired Token as a Post parameter
 	if _, err = client.Post(u.String(), "text/xml", strings.NewReader(conf.Succ.Token)); err != nil {
-		log.Fatal(err)
+		return CookieResponse{}, err
 	}
 
 	cookieResponse := CookieResponse{}
@@ -134,7 +137,7 @@ func (ca *CookieAuth) getSPCookie(conf *SuccessResponse) (CookieResponse, error)
 	return cookieResponse, err
 }
 
-func (ca *CookieAuth) getSPToken() *SuccessResponse {
+func (ca *CookieAuth) getSPToken() (*SuccessResponse, error) {
 	reqData := map[string]interface{}{
 		"Username": ca.user,
 		"Password": ca.pass,
@@ -145,20 +148,20 @@ func (ca *CookieAuth) getSPToken() *SuccessResponse {
 
 	buf := &bytes.Buffer{}
 	if err := t.Execute(buf, reqData); err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	// Execute the first request which gives us an auth token for the sharepoint service
 	// With this token we can authenticate on the login page and save the returned cookies
 	req, err := http.NewRequest("POST", "https://login.microsoftonline.com/extSTS.srf", buf)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		panic(err.Error())
+		return nil, err
 	}
 	defer resp.Body.Close()
 
@@ -169,8 +172,8 @@ func (ca *CookieAuth) getSPToken() *SuccessResponse {
 	var conf SuccessResponse
 	err = xml.Unmarshal(s, &conf)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return &conf
+	return &conf, err
 }
