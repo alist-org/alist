@@ -4,6 +4,7 @@ package odrvcookie
 import (
 	"bytes"
 	"encoding/xml"
+	"fmt"
 	"html/template"
 	"net/http"
 	"net/http/cookiejar"
@@ -52,7 +53,7 @@ xmlns:u="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-util
 <a:ReplyTo>
 <a:Address>http://www.w3.org/2005/08/addressing/anonymous</a:Address>
 </a:ReplyTo>
-<a:To s:mustUnderstand="1">https://login.microsoftonline.com/extSTS.srf</a:To>
+<a:To s:mustUnderstand="1">{{ .LoginUrl }}</a:To>
 <o:Security s:mustUnderstand="1"
  xmlns:o="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">
 <o:UsernameToken>
@@ -137,11 +138,37 @@ func (ca *CookieAuth) getSPCookie(conf *SuccessResponse) (CookieResponse, error)
 	return cookieResponse, err
 }
 
+var loginUrlsMap = map[string]string{
+	"com": "https://login.microsoftonline.com",
+	"cn":  "https://login.chinacloudapi.cn",
+	"us":  "https://login.microsoftonline.us",
+	"de":  "https://login.microsoftonline.de",
+}
+
+func getLoginUrl(endpoint string) (string, error) {
+	spRoot, err := url.Parse(endpoint)
+	if err != nil {
+		return "", err
+	}
+	domains := strings.Split(spRoot.Host, ".")
+	tld := domains[len(domains)-1]
+	loginUrl, ok := loginUrlsMap[tld]
+	if !ok {
+		return "", fmt.Errorf("tld %s is not supported", tld)
+	}
+	return loginUrl + "/extSTS.srf", nil
+}
+
 func (ca *CookieAuth) getSPToken() (*SuccessResponse, error) {
-	reqData := map[string]interface{}{
+	loginUrl, err := getLoginUrl(ca.endpoint)
+	if err != nil {
+		return nil, err
+	}
+	reqData := map[string]string{
 		"Username": ca.user,
 		"Password": ca.pass,
 		"Address":  ca.endpoint,
+		"LoginUrl": loginUrl,
 	}
 
 	t := template.Must(template.New("authXML").Parse(reqString))
@@ -153,7 +180,7 @@ func (ca *CookieAuth) getSPToken() (*SuccessResponse, error) {
 
 	// Execute the first request which gives us an auth token for the sharepoint service
 	// With this token we can authenticate on the login page and save the returned cookies
-	req, err := http.NewRequest("POST", "https://login.microsoftonline.com/extSTS.srf", buf)
+	req, err := http.NewRequest("POST", loginUrl, buf)
 	if err != nil {
 		return nil, err
 	}
