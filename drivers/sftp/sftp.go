@@ -1,6 +1,7 @@
 package template
 
 import (
+	"fmt"
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
@@ -23,7 +24,7 @@ func GetClient(account *model.Account) (*Client, error) {
 	if v, ok := clientsMap.clients[account.Name]; ok {
 		return v, nil
 	}
-	conn, err := ssh.Dial("tcp", account.SiteUrl, &ssh.ClientConfig{
+	conn, err := ssh.Dial("tcp", fmt.Sprintf("%s:%d", account.SiteUrl, account.Limit), &ssh.ClientConfig{
 		User:            account.Username,
 		Auth:            []ssh.AuthMethod{ssh.Password(account.Password)},
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
