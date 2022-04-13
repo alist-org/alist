@@ -115,6 +115,10 @@ func (driver Native) Files(path string, account *model.Account) ([]model.File, e
 		}
 		files = append(files, file)
 	}
+	_, err = base.GetCache(path, account)
+	if len(files) != 0 && err != nil {
+		_ = base.SetCache(path, files, account)
+	}
 	return files, nil
 }
 

@@ -25,6 +25,8 @@ func InitApiRouter(r *gin.Engine) {
 		path.POST("/path", controllers.Path)
 		path.POST("/preview", controllers.Preview)
 
+		public.POST("/search", controllers.Search)
+
 		//path.POST("/link",middlewares.Auth, controllers.Link)
 		public.POST("/upload", file.UploadFiles)
 

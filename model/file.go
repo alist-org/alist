@@ -84,3 +84,7 @@ func (f File) ModTime() time.Time {
 func (f File) IsDir() bool {
 	return f.Type == conf.FOLDER
 }
+
+func (f File) GetType() int {
+	return f.Type
+}

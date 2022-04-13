@@ -85,6 +85,7 @@ var (
 		"Visitor WebDAV username", "Visitor WebDAV password",
 		"default page size", "load type",
 		"ocr api", "favicon",
+		"enable search",
 	}
 )
 

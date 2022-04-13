@@ -61,6 +61,7 @@ func Proxy(c *gin.Context) {
 		return
 	}
 	err = common.Proxy(c.Writer, c.Request, link, file)
+	log.Debugln("web proxy error:", err)
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 	}

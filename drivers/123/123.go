@@ -12,57 +12,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"path/filepath"
 	"strconv"
-	"time"
 )
-
-type BaseResp struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-}
-
-type Pan123TokenResp struct {
-	BaseResp
-	Data struct {
-		Token string `json:"token"`
-	} `json:"data"`
-}
-
-type Pan123File struct {
-	FileName  string     `json:"FileName"`
-	Size      int64      `json:"Size"`
-	UpdateAt  *time.Time `json:"UpdateAt"`
-	FileId    int64      `json:"FileId"`
-	Type      int        `json:"Type"`
-	Etag      string     `json:"Etag"`
-	S3KeyFlag string     `json:"S3KeyFlag"`
-}
-
-type Pan123Files struct {
-	BaseResp
-	Data struct {
-		InfoList []Pan123File `json:"InfoList"`
-		Next     string       `json:"Next"`
-	} `json:"data"`
-}
-
-type Pan123DownResp struct {
-	BaseResp
-	Data struct {
-		DownloadUrl string `json:"DownloadUrl"`
-	} `json:"data"`
-}
-
-type UploadResp struct {
-	BaseResp
-	Data struct {
-		AccessKeyId     string `json:"AccessKeyId"`
-		Bucket          string `json:"Bucket"`
-		Key             string `json:"Key"`
-		SecretAccessKey string `json:"SecretAccessKey"`
-		SessionToken    string `json:"SessionToken"`
-		FileId          int64  `json:"FileId"`
-	} `json:"data"`
-}
 
 func (driver Pan123) Login(account *model.Account) error {
 	url := "https://www.123pan.com/api/user/sign_in"
@@ -98,11 +48,7 @@ func (driver Pan123) FormatFile(file *Pan123File) *model.File {
 		Driver:    driver.Config().Name,
 		UpdatedAt: file.UpdateAt,
 	}
-	if file.Type == 1 {
-		f.Type = conf.FOLDER
-	} else {
-		f.Type = utils.GetFileType(filepath.Ext(file.FileName))
-	}
+	f.Type = file.GetType()
 	return f
 }
 

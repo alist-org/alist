@@ -2,15 +2,10 @@ package google
 
 import (
 	"fmt"
-	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
-	"github.com/Xhofe/alist/utils"
 	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
-	"path/filepath"
-	"strconv"
-	"time"
 )
 
 type TokenError struct {
@@ -44,19 +39,6 @@ func (driver GoogleDrive) RefreshToken(account *model.Account) error {
 	return nil
 }
 
-type File struct {
-	Id            string     `json:"id"`
-	Name          string     `json:"name"`
-	MimeType      string     `json:"mimeType"`
-	ModifiedTime  *time.Time `json:"modifiedTime"`
-	Size          string     `json:"size"`
-	ThumbnailLink string     `json:"thumbnailLink"`
-}
-
-func (driver GoogleDrive) IsDir(mimeType string) bool {
-	return mimeType == "application/vnd.google-apps.folder" || mimeType == "application/vnd.google-apps.shortcut"
-}
-
 func (driver GoogleDrive) FormatFile(file *File, account *model.Account) *model.File {
 	f := &model.File{
 		Id:        file.Id,
@@ -65,13 +47,8 @@ func (driver GoogleDrive) FormatFile(file *File, account *model.Account) *model.
 		UpdatedAt: file.ModifiedTime,
 		Url:       "",
 	}
-	if driver.IsDir(file.MimeType) {
-		f.Type = conf.FOLDER
-	} else {
-		size, _ := strconv.ParseInt(file.Size, 10, 64)
-		f.Size = size
-		f.Type = utils.GetFileType(filepath.Ext(file.Name))
-	}
+	f.Size = int64(file.GetSize())
+	f.Type = file.GetType()
 	if file.ThumbnailLink != "" {
 		if account.APIProxyUrl != "" {
 			f.Thumbnail = fmt.Sprintf("%s/%s", account.APIProxyUrl, file.ThumbnailLink)

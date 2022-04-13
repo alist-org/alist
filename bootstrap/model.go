@@ -74,9 +74,9 @@ func InitModel() {
 	log.Infof("auto migrate model...")
 	if databaseConfig.Type == "mysql" {
 		err = conf.DB.Set("gorm:table_options", "ENGINE=InnoDB CHARSET=utf8mb4").
-			AutoMigrate(&model.SettingItem{}, &model.Account{}, &model.Meta{})
+			AutoMigrate(&model.SettingItem{}, &model.Account{}, &model.Meta{}, &model.SearchFile{})
 	} else {
-		err = conf.DB.AutoMigrate(&model.SettingItem{}, &model.Account{}, &model.Meta{})
+		err = conf.DB.AutoMigrate(&model.SettingItem{}, &model.Account{}, &model.Meta{}, &model.SearchFile{})
 	}
 	if err != nil {
 		log.Fatalf("failed to auto migrate: %s", err.Error())

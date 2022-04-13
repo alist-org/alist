@@ -18,7 +18,6 @@ import (
 	"math"
 	"net/http"
 	"net/http/cookiejar"
-	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -60,11 +59,9 @@ func (driver Cloud189) FormatFile(file *Cloud189File) *model.File {
 		f.UpdatedAt = &lastOpTime
 	}
 	if file.Size == -1 {
-		f.Type = conf.FOLDER
 		f.Size = 0
-	} else {
-		f.Type = utils.GetFileType(filepath.Ext(file.Name))
 	}
+	f.Type = file.GetType()
 	return f
 }
 

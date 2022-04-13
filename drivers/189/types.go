@@ -1,5 +1,11 @@
 package _89
 
+import (
+	"github.com/Xhofe/alist/conf"
+	"github.com/Xhofe/alist/utils"
+	"path"
+)
+
 type Cloud189Error struct {
 	ErrorCode string `json:"errorCode"`
 	ErrorMsg  string `json:"errorMsg"`
@@ -15,6 +21,24 @@ type Cloud189File struct {
 		//LargeUrl string `json:"largeUrl"`
 	} `json:"icon"`
 	Url string `json:"url"`
+}
+
+func (f Cloud189File) GetSize() uint64 {
+	if f.Size == -1 {
+		return 0
+	}
+	return uint64(f.Size)
+}
+
+func (f Cloud189File) GetName() string {
+	return f.Name
+}
+
+func (f Cloud189File) GetType() int {
+	if f.Size == -1 {
+		return conf.FOLDER
+	}
+	return utils.GetFileType(path.Ext(f.Name))
 }
 
 type Cloud189Folder struct {
