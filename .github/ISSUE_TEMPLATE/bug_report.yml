@@ -7,6 +7,14 @@ body:
       value: |
         Thanks for taking the time to fill out this bug report, please **confirm that your issue is not a duplicate issue and not because of your operation or version issues**
         感谢您花时间填写此错误报告，请**务必确认您的issue不是重复的且不是因为您的操作或版本问题**
+  - type: checkboxes
+    attributes:
+      label: Please make sure of the following things
+      description: You may select more than one, even select all.
+      options:
+        - label: I have read the [documentation](https://alist-doc.nn.ci).
+        - label: I'm sure there are no duplicate issues or discussions.
+        - label: I'm sure it's due to `alist` and not something else(such as `Dependencies` or `Operational`).
   - type: input
     id: version
     attributes:
