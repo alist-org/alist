@@ -132,7 +132,7 @@ func (driver Baidu) Link(args base.Args, account *model.Account) (*base.Link, er
 	if file.IsDir() {
 		return nil, base.ErrNotFile
 	}
-	var resp DownloadResp
+	/*var resp DownloadResp
 	params := map[string]string{
 		"method": "filemetas",
 		"fsids":  fmt.Sprintf("[%s]", file.Id),
@@ -149,9 +149,20 @@ func (driver Baidu) Link(args base.Args, account *model.Account) (*base.Link, er
 	}
 	//if res.StatusCode() == 302 {
 	u = res.Header().Get("location")
-	//}
+	//}*/
+	var resp DownloadResp2
+	param := map[string]string{
+		"target": fmt.Sprintf("[\"%s\"]", filepath.Join(account.RootFolder, args.Path)),
+		"dlink":  "1",
+		"web":    "5",
+		"origin": "dlna",
+	}
+	_, err = driver.Request("https://pan.baidu.com/api/filemetas", base.Get, nil, param, nil, nil, &resp, account)
+	if err != nil {
+		return nil, err
+	}
 	return &base.Link{
-		Url: u,
+		Url: resp.Info[0].Dlink,
 		Headers: []base.Header{
 			{Name: "User-Agent", Value: "pan.baidu.com"},
 		}}, nil

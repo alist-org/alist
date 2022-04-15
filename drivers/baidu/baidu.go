@@ -48,8 +48,7 @@ func (driver Baidu) refreshToken(account *model.Account) error {
 	return nil
 }
 
-func (driver Baidu) Request(pathname string, method int, headers, query, form map[string]string, data interface{}, resp interface{}, account *model.Account) ([]byte, error) {
-	u := "https://pan.baidu.com/rest/2.0" + pathname
+func (driver Baidu) Request(fullurl string, method int, headers, query, form map[string]string, data interface{}, resp interface{}, account *model.Account) ([]byte, error) {
 	req := base.RestyClient.R()
 	req.SetQueryParam("access_token", account.AccessToken)
 	if headers != nil {
@@ -71,15 +70,15 @@ func (driver Baidu) Request(pathname string, method int, headers, query, form ma
 	var err error
 	switch method {
 	case base.Get:
-		res, err = req.Get(u)
+		res, err = req.Get(fullurl)
 	case base.Post:
-		res, err = req.Post(u)
+		res, err = req.Post(fullurl)
 	case base.Patch:
-		res, err = req.Patch(u)
+		res, err = req.Patch(fullurl)
 	case base.Delete:
-		res, err = req.Delete(u)
+		res, err = req.Delete(fullurl)
 	case base.Put:
-		res, err = req.Put(u)
+		res, err = req.Put(fullurl)
 	default:
 		return nil, base.ErrNotSupport
 	}
@@ -94,7 +93,7 @@ func (driver Baidu) Request(pathname string, method int, headers, query, form ma
 			if err != nil {
 				return nil, err
 			}
-			return driver.Request(pathname, method, headers, query, form, data, resp, account)
+			return driver.Request(fullurl, method, headers, query, form, data, resp, account)
 		}
 		return nil, fmt.Errorf("errno: %d, refer to https://pan.baidu.com/union/doc/", errno)
 	}
@@ -102,11 +101,11 @@ func (driver Baidu) Request(pathname string, method int, headers, query, form ma
 }
 
 func (driver Baidu) Get(pathname string, params map[string]string, resp interface{}, account *model.Account) ([]byte, error) {
-	return driver.Request(pathname, base.Get, nil, params, nil, nil, resp, account)
+	return driver.Request("https://pan.baidu.com/rest/2.0"+pathname, base.Get, nil, params, nil, nil, resp, account)
 }
 
 func (driver Baidu) Post(pathname string, params map[string]string, data interface{}, resp interface{}, account *model.Account) ([]byte, error) {
-	return driver.Request(pathname, base.Post, nil, params, nil, data, resp, account)
+	return driver.Request("https://pan.baidu.com/rest/2.0"+pathname, base.Post, nil, params, nil, data, resp, account)
 }
 
 func (driver Baidu) manage(opera string, filelist interface{}, account *model.Account) ([]byte, error) {
