@@ -32,7 +32,20 @@ func Path(rawPath string) (*model.File, []model.File, *model.Account, base.Drive
 		return file, nil, account, driver, path, nil
 	} else {
 		accountFiles := model.GetAccountFilesByPath(rawPath)
-		files = append(files, accountFiles...)
+		for _, accountFile := range accountFiles {
+			if !containsByName(files, accountFile) {
+				files = append(files, accountFile)
+			}
+		}
 		return nil, files, account, driver, path, nil
 	}
+}
+
+func containsByName(files []model.File, file model.File) bool {
+	for _, f := range files {
+		if f.Name == file.Name {
+			return true
+		}
+	}
+	return false
 }
