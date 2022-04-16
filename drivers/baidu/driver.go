@@ -59,6 +59,14 @@ func (driver Baidu) Items() []base.Item {
 			Required: false,
 		},
 		{
+			Name:     "internal_type",
+			Label:    "download api",
+			Type:     base.TypeSelect,
+			Required: true,
+			Values:   "official,crack",
+			Default:  "official",
+		},
+		{
 			Name:     "client_id",
 			Label:    "client id",
 			Default:  "iYCeC9g08h5vuP9UqvPHKKSVrKFXGa1v",
@@ -125,6 +133,13 @@ func (driver Baidu) Files(path string, account *model.Account) ([]model.File, er
 }
 
 func (driver Baidu) Link(args base.Args, account *model.Account) (*base.Link, error) {
+	if account.InternalType == "crack" {
+		return driver.LinkCrack(args, account)
+	}
+	return driver.LinkOfficial(args, account)
+}
+
+func (driver Baidu) LinkOfficial(args base.Args, account *model.Account) (*base.Link, error) {
 	file, err := driver.File(args.Path, account)
 	if err != nil {
 		return nil, err
@@ -132,7 +147,7 @@ func (driver Baidu) Link(args base.Args, account *model.Account) (*base.Link, er
 	if file.IsDir() {
 		return nil, base.ErrNotFile
 	}
-	/*var resp DownloadResp
+	var resp DownloadResp
 	params := map[string]string{
 		"method": "filemetas",
 		"fsids":  fmt.Sprintf("[%s]", file.Id),
@@ -149,10 +164,25 @@ func (driver Baidu) Link(args base.Args, account *model.Account) (*base.Link, er
 	}
 	//if res.StatusCode() == 302 {
 	u = res.Header().Get("location")
-	//}*/
+	//}
+	return &base.Link{
+		Url: u,
+		Headers: []base.Header{
+			{Name: "User-Agent", Value: "pan.baidu.com"},
+		}}, nil
+}
+
+func (driver Baidu) LinkCrack(args base.Args, account *model.Account) (*base.Link, error) {
+	file, err := driver.File(args.Path, account)
+	if err != nil {
+		return nil, err
+	}
+	if file.IsDir() {
+		return nil, base.ErrNotFile
+	}
 	var resp DownloadResp2
 	param := map[string]string{
-		"target": fmt.Sprintf("[\"%s\"]", filepath.Join(account.RootFolder, args.Path)),
+		"target": fmt.Sprintf("[\"%s\"]", utils.Join(account.RootFolder, args.Path)),
 		"dlink":  "1",
 		"web":    "5",
 		"origin": "dlna",
