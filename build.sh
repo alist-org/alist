@@ -60,11 +60,21 @@ BUILD() {
 -X 'github.com/Xhofe/alist/conf.GitTag=$gitTag' \
 -X 'github.com/Xhofe/alist/conf.WebTag=$webTag' \
 "
-
+  ldflagsDarwin="\
+-w -s \
+-X 'github.com/Xhofe/alist/conf.BuiltAt=$builtAt' \
+-X 'github.com/Xhofe/alist/conf.GoVersion=$goVersion' \
+-X 'github.com/Xhofe/alist/conf.GitAuthor=$gitAuthor' \
+-X 'github.com/Xhofe/alist/conf.GitCommit=$gitCommit' \
+-X 'github.com/Xhofe/alist/conf.GitTag=$gitTag' \
+-X 'github.com/Xhofe/alist/conf.WebTag=$webTag' \
+"
   if [ "$1" == "release" ]; then
-    xgo -out "$appName" -ldflags="$ldflags" -tags=jsoniter .
+    xgo -targets=linux/*,windows/* -out "$appName" -ldflags="$ldflags" -tags=jsoniter .
+    xgo -targets=darwin/* -out "$appName" -ldflags="$ldflagsDarwin" -tags=jsoniter .
   else
-    xgo -targets=linux/amd64,windows/amd64,darwin/amd64 -out "$appName" -ldflags="$ldflags" -tags=jsoniter .
+    xgo -targets=linux/amd64,windows/amd64 -out "$appName" -ldflags="$ldflags" -tags=jsoniter .
+    xgo -targets=darwin/amd64 -out "$appName" -ldflags="$ldflagsDarwin" -tags=jsoniter .
   fi
   mkdir -p "build"
   mv alist-* build
