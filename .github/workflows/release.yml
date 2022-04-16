@@ -10,7 +10,7 @@ jobs:
     strategy:
       matrix:
         platform: [ubuntu-latest]
-        go-version: [1.17]
+        go-version: [1.18]
     name: Release
     runs-on: ${{ matrix.platform }}
     steps:
