@@ -60,6 +60,7 @@ type Meta struct {
 	Driver string `json:"driver"`
 	Upload bool   `json:"upload"`
 	Total  int    `json:"total"`
+	Readme string `json:"readme"`
 	//Pages  int    `json:"pages"`
 }
 
@@ -75,8 +76,10 @@ func Path(c *gin.Context) {
 	_, ok := c.Get("admin")
 	meta, _ := model.GetMetaByPath(req.Path)
 	upload := false
-	if meta != nil && meta.Upload {
-		upload = true
+	readme := ""
+	if meta != nil {
+		upload = meta.Upload
+		readme = meta.Readme
 	}
 	err := CheckPagination(&req)
 	if err != nil {
@@ -137,6 +140,7 @@ func Path(c *gin.Context) {
 					Driver: driverName,
 					Upload: upload,
 					Total:  total,
+					Readme: readme,
 				},
 				Files: files,
 			},

@@ -12,6 +12,7 @@ type Meta struct {
 	Hide      string `json:"hide"`
 	Upload    bool   `json:"upload"`
 	OnlyShows string `json:"only_shows"`
+	Readme    string `json:"readme"`
 }
 
 func GetMetaByPath(path string) (*Meta, error) {

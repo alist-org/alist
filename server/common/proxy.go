@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"os"
 	"strconv"
+	"strings"
 )
 
 var HttpClient = &http.Client{}
@@ -56,8 +57,12 @@ func Proxy(w http.ResponseWriter, r *http.Request, link *base.Link, file *model.
 			return err
 		}
 		for h, val := range r.Header {
+			if strings.ToLower(h) == "authorization" {
+				continue
+			}
 			req.Header[h] = val
 		}
+		log.Debugf("req headers: %+v", r.Header)
 		for _, header := range link.Headers {
 			req.Header.Set(header.Name, header.Value)
 		}

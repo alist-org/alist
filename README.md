@@ -30,7 +30,7 @@ English | [中文](./README_cn.md) | [Contributors](./CONTRIBUTORS.md) | [Contri
   - [x] [PikPak](https://www.mypikpak.com/)
   - [x] [ShandianPan](https://shandianpan.com/)
   - [x] [S3](https://aws.amazon.com/s3/)
-  - [x] WebDav
+  - [x] WebDav(Support OneDrive/SharePoint without API)
   - [x] Teambition([China](https://www.teambition.com/ ),[International](https://us.teambition.com/ ))
   - [x] [Mediatrack](https://www.mediatrack.cn/)
   - [x] [139yun](https://yun.139.com/) (Personal, Family)
@@ -38,6 +38,7 @@ English | [中文](./README_cn.md) | [Contributors](./CONTRIBUTORS.md) | [Contri
   - [x] [Baidu Disk](http://pan.baidu.com/)
   - [x] [Quark](https://pan.quark.cn)
   - [x] [XunleiCloud](https://pan.xunlei.com/)
+  - [x] SFTP
 - [x] Easy to deploy and out-of-the-box
 - [x] File preview (PDF, markdown, code, plain text, ...)
 - [x] Image preview in gallery mode

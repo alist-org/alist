@@ -56,7 +56,7 @@ func ExtractFolder(files []File, account *Account) {
 		return
 	}
 	front := account.ExtractFolder == "front"
-	sort.Slice(files, func(i, j int) bool {
+	sort.SliceStable(files, func(i, j int) bool {
 		if files[i].IsDir() || files[j].IsDir() {
 			if !files[i].IsDir() {
 				return !front
@@ -83,4 +83,8 @@ func (f File) ModTime() time.Time {
 
 func (f File) IsDir() bool {
 	return f.Type == conf.FOLDER
+}
+
+func (f File) GetType() int {
+	return f.Type
 }

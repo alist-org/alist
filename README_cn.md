@@ -30,7 +30,7 @@
   - [x] [PikPak](https://www.mypikpak.com/)
   - [x] [闪电盘](https://shandianpan.com/)
   - [x] [S3](https://aws.amazon.com/cn/s3/)
-  - [x] WebDav
+  - [x] WebDav(支持无API的OneDrive/SharePoint)
   - [x] Teambition（[中国](https://www.teambition.com/ )，[国际](https://us.teambition.com/ )）
   - [x] [分秒帧](https://www.mediatrack.cn/)
   - [x] [和彩云](https://yun.139.com/) (个人云, 家庭云)
@@ -38,6 +38,7 @@
   - [x] [百度网盘](http://pan.baidu.com/)
   - [x] [夸克网盘](https://pan.quark.cn)
   - [x] [迅雷云盘](https://pan.xunlei.com/)
+  - [x] SFTP
 - [x] 部署方便，开箱即用
 - [x] 文件预览（PDF、markdown、代码、纯文本……）
 - [x] 画廊模式下的图像预览

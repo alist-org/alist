@@ -18,6 +18,7 @@ import (
 	_ "github.com/Xhofe/alist/drivers/pikpak"
 	_ "github.com/Xhofe/alist/drivers/quark"
 	_ "github.com/Xhofe/alist/drivers/s3"
+	_ "github.com/Xhofe/alist/drivers/sftp"
 	_ "github.com/Xhofe/alist/drivers/shandian"
 	_ "github.com/Xhofe/alist/drivers/teambition"
 	_ "github.com/Xhofe/alist/drivers/uss"

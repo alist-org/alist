@@ -103,7 +103,7 @@ func (driver Quark) GetFiles(parent string, account *model.Account) ([]model.Fil
 		for _, f := range resp.Data.List {
 			files = append(files, *driver.formatFile(&f))
 		}
-		if page*size >= resp.Metadata.Count {
+		if page*size >= resp.Metadata.Total {
 			break
 		}
 		page++

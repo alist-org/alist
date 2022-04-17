@@ -7,6 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 )
 
 // InitConf init config
@@ -46,7 +47,11 @@ func InitConf() {
 	if !conf.Conf.Force {
 		confFromEnv()
 	}
-	err := os.MkdirAll(conf.Conf.TempDir, 0700)
+	err := os.RemoveAll(filepath.Join(conf.Conf.TempDir))
+	if err != nil {
+		log.Errorln("failed delete temp file:", err)
+	}
+	err = os.MkdirAll(conf.Conf.TempDir, 0700)
 	if err != nil {
 		log.Fatalf("create temp dir error: %s", err.Error())
 	}

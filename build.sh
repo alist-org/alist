@@ -52,6 +52,15 @@ BUILD() {
   webTag=$(wget -qO- -t1 -T2 "https://api.github.com/repos/alist-org/alist-web/releases/latest" | grep "tag_name" | head -n 1 | awk -F ":" '{print $2}' | sed 's/\"//g;s/,//g;s/ //g')
   echo "build version: $gitTag"
   ldflags="\
+-w -s --extldflags '-static -fpic' \
+-X 'github.com/Xhofe/alist/conf.BuiltAt=$builtAt' \
+-X 'github.com/Xhofe/alist/conf.GoVersion=$goVersion' \
+-X 'github.com/Xhofe/alist/conf.GitAuthor=$gitAuthor' \
+-X 'github.com/Xhofe/alist/conf.GitCommit=$gitCommit' \
+-X 'github.com/Xhofe/alist/conf.GitTag=$gitTag' \
+-X 'github.com/Xhofe/alist/conf.WebTag=$webTag' \
+"
+  ldflagsDarwin="\
 -w -s \
 -X 'github.com/Xhofe/alist/conf.BuiltAt=$builtAt' \
 -X 'github.com/Xhofe/alist/conf.GoVersion=$goVersion' \
@@ -60,11 +69,12 @@ BUILD() {
 -X 'github.com/Xhofe/alist/conf.GitTag=$gitTag' \
 -X 'github.com/Xhofe/alist/conf.WebTag=$webTag' \
 "
-
   if [ "$1" == "release" ]; then
-    xgo -out "$appName" -ldflags="$ldflags" -tags=jsoniter .
+    xgo -targets=linux/*,windows/* -out "$appName" -ldflags="$ldflags" -tags=jsoniter .
+    xgo -targets=darwin/* -out "$appName" -ldflags="$ldflagsDarwin" -tags=jsoniter .
   else
-    xgo -targets=linux/amd64,windows/amd64,darwin/amd64 -out "$appName" -ldflags="$ldflags" -tags=jsoniter .
+    xgo -targets=linux/amd64,windows/amd64 -out "$appName" -ldflags="$ldflags" -tags=jsoniter .
+    xgo -targets=darwin/amd64 -out "$appName" -ldflags="$ldflagsDarwin" -tags=jsoniter .
   fi
   mkdir -p "build"
   mv alist-* build
@@ -96,7 +106,7 @@ BUILD_MUSL() {
   gitTag=$(git describe --long --tags --dirty --always)
   webTag=$(wget -qO- -t1 -T2 "https://api.github.com/repos/alist-org/alist-web/releases/latest" | grep "tag_name" | head -n 1 | awk -F ":" '{print $2}' | sed 's/\"//g;s/,//g;s/ //g')
   ldflags="\
--w -s \
+-w -s --extldflags '-static -fpic' \
 -X 'github.com/Xhofe/alist/conf.BuiltAt=$builtAt' \
 -X 'github.com/Xhofe/alist/conf.GoVersion=$goVersion' \
 -X 'github.com/Xhofe/alist/conf.GitAuthor=$gitAuthor' \

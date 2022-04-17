@@ -138,6 +138,7 @@ func (driver Quark) Link(args base.Args, account *model.Account) (*base.Link, er
 		Url: resp.Data[0].DownloadUrl,
 		Headers: []base.Header{
 			{Name: "Cookie", Value: account.AccessToken},
+			{Name: "Referer", Value: "https://pan.quark.cn"},
 		},
 	}, nil
 }

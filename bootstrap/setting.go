@@ -118,8 +118,8 @@ func InitSettings() {
 			Group:       model.FRONT,
 		},
 		{
-			Key:         "home readme url",
-			Description: "when have multiple, the readme file to show",
+			Key:         "global readme url",
+			Description: "Default display when directory has no readme",
 			Type:        "string",
 			Access:      model.PUBLIC,
 			Group:       model.FRONT,
@@ -257,6 +257,14 @@ func InitSettings() {
 			Type:        "string",
 			Access:      model.PRIVATE,
 			Group:       model.BACK,
+		},
+		{
+			Key:         "enable search",
+			Value:       "false",
+			Type:        "bool",
+			Access:      model.PUBLIC,
+			Group:       model.BACK,
+			Description: "Experimental function, not recommended as it's still under development",
 		},
 	}
 	for i, _ := range settings {
