@@ -30,7 +30,7 @@
   - [x] [PikPak](https://www.mypikpak.com/)
   - [x] [闪电盘](https://shandianpan.com/)
   - [x] [S3](https://aws.amazon.com/cn/s3/)
-  - [x] WebDav
+  - [x] WebDav(支持无API的OneDrive/SharePoint)
   - [x] Teambition（[中国](https://www.teambition.com/ )，[国际](https://us.teambition.com/ )）
   - [x] [分秒帧](https://www.mediatrack.cn/)
   - [x] [和彩云](https://yun.139.com/) (个人云, 家庭云)

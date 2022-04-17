@@ -30,7 +30,7 @@ English | [中文](./README_cn.md) | [Contributors](./CONTRIBUTORS.md) | [Contri
   - [x] [PikPak](https://www.mypikpak.com/)
   - [x] [ShandianPan](https://shandianpan.com/)
   - [x] [S3](https://aws.amazon.com/s3/)
-  - [x] WebDav
+  - [x] WebDav(Support OneDrive/SharePoint without API)
   - [x] Teambition([China](https://www.teambition.com/ ),[International](https://us.teambition.com/ ))
   - [x] [Mediatrack](https://www.mediatrack.cn/)
   - [x] [139yun](https://yun.139.com/) (Personal, Family)

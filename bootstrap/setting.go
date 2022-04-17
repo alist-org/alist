@@ -259,11 +259,12 @@ func InitSettings() {
 			Group:       model.BACK,
 		},
 		{
-			Key:    "enable search",
-			Value:  "false",
-			Type:   "bool",
-			Access: model.PUBLIC,
-			Group:  model.BACK,
+			Key:         "enable search",
+			Value:       "false",
+			Type:        "bool",
+			Access:      model.PUBLIC,
+			Group:       model.BACK,
+			Description: "Experimental function, not recommended as it's still under development",
 		},
 	}
 	for i, _ := range settings {
