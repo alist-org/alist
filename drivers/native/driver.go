@@ -103,7 +103,6 @@ func (driver Native) Files(path string, account *model.Account) ([]model.File, e
 		time := f.ModTime()
 		file := model.File{
 			Name:      f.Name(),
-			Size:      f.Size(),
 			Type:      0,
 			UpdatedAt: &time,
 			Driver:    driver.Config().Name,
@@ -112,6 +111,7 @@ func (driver Native) Files(path string, account *model.Account) ([]model.File, e
 			file.Type = conf.FOLDER
 		} else {
 			file.Type = utils.GetFileType(filepath.Ext(f.Name()))
+			file.Size = f.Size()
 		}
 		files = append(files, file)
 	}
