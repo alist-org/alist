@@ -245,12 +245,18 @@ func (s *State) Request(method string, url string, callback func(*resty.Request)
 	log.Debug(res.String())
 
 	var e Erron
-	utils.Json.Unmarshal(res.Body(), &e)
+	err = utils.Json.Unmarshal(res.Body(), &e)
+	if err != nil {
+		return nil, err
+	}
 	switch e.ErrorCode {
 	case 9:
-		s.newCaptchaToken(getAction(method, url), nil, account)
+		_, err = s.newCaptchaToken(getAction(method, url), nil, account)
+		if err != nil {
+			return nil, err
+		}
 		fallthrough
-	case 4122, 4121:
+	case 4122, 4121: // Authorization expired
 		return s.Request(method, url, callback, account)
 	case 0:
 		if res.StatusCode() == http.StatusOK {
