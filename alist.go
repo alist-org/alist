@@ -12,7 +12,6 @@ import (
 )
 
 func Init() bool {
-	//bootstrap.InitLog()
 	bootstrap.InitConf()
 	bootstrap.InitCron()
 	bootstrap.InitModel()
