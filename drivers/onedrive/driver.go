@@ -53,6 +53,7 @@ func (driver Onedrive) Items() []base.Item {
 			Label:    "redirect uri",
 			Type:     base.TypeString,
 			Required: true,
+			Default:  "https://tool.nn.ci/onedrive/callback",
 		},
 		{
 			Name:     "refresh_token",
