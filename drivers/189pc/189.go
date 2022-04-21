@@ -291,6 +291,13 @@ func (s *State) Request(method string, fullUrl string, params Params, callback f
 		return nil, fmt.Errorf(erron.Msg)
 	}
 	if erron.ErrorCode != "" {
+		switch erron.ErrorCode {
+		case "InvalidSessionKey":
+			if err := s.RefreshSession(account); err != nil {
+				return nil, err
+			}
+			return s.Request(method, fullUrl, params, callback, account)
+		}
 		return nil, fmt.Errorf(erron.ErrorMsg)
 	}
 
