@@ -55,7 +55,7 @@ func Proxy(c *gin.Context) {
 		return
 	}
 	// 对于中转，不需要重设IP
-	link, err := driver.Link(base.Args{Path: path}, account)
+	link, err := driver.Link(base.Args{Path: path, Header: c.Request.Header}, account)
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return

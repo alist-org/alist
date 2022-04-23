@@ -16,7 +16,6 @@ require (
 	github.com/pkg/sftp v1.13.4
 	github.com/robfig/cron/v3 v3.0.0
 	github.com/sirupsen/logrus v1.8.1
-	github.com/studio-b12/gowebdav v0.0.0-20211109083228-3f8721cd4b6f
 	github.com/upyun/go-sdk/v3 v3.0.2
 	golang.org/x/text v0.3.7
 	gorm.io/driver/mysql v1.3.2
@@ -77,7 +76,7 @@ require (
 	go.opentelemetry.io/otel/metric v0.20.0 // indirect
 	go.opentelemetry.io/otel/trace v0.20.0 // indirect
 	golang.org/x/crypto v0.0.0-20220331220935-ae2d96664a29
-	golang.org/x/net v0.0.0-20211209124913-491a49abca63 // indirect
+	golang.org/x/net v0.0.0-20211209124913-491a49abca63
 	golang.org/x/sys v0.0.0-20220330033206-e17cdc41300f // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
