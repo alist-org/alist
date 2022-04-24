@@ -192,13 +192,14 @@ func (c *Client) copymove(method string, oldpath string, newpath string, overwri
 	return newPathError(method, oldpath, s)
 }
 
-func (c *Client) put(path string, stream io.Reader) (status int, err error) {
-	rs, err := c.req("PUT", path, stream, nil)
+func (c *Client) put(path string, stream io.Reader, callback func(r *http.Request)) (status int, err error) {
+	rs, err := c.req("PUT", path, stream, callback)
 	if err != nil {
 		return
 	}
 	defer rs.Body.Close()
-
+	//all, _ := io.ReadAll(rs.Body)
+	//logrus.Debugln("put res: ", string(all))
 	status = rs.StatusCode
 	return
 }

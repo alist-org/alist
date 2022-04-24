@@ -211,7 +211,7 @@ func cmdPut(c *d.Client, p0, p1 string) (err error) {
 	}
 	defer stream.Close()
 
-	if err = c.WriteStream(p0, stream, 0644); err == nil {
+	if err = c.WriteStream(p0, stream, 0644, nil); err == nil {
 		fmt.Println("Put: " + p1 + " -> " + p0)
 	}
 	return

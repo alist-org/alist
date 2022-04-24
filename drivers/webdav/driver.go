@@ -213,7 +213,11 @@ func (driver WebDav) Upload(file *model.FileStream, account *model.Account) erro
 	}
 	c := driver.NewClient(account)
 	path := utils.Join(file.ParentPath, file.Name)
-	err := c.WriteStream(driver.WebDavPath(path), file, 0644)
+	callback := func(r *http.Request) {
+		r.Header.Set("Content-Type", file.GetMIMEType())
+		r.ContentLength = int64(file.GetSize())
+	}
+	err := c.WriteStream(driver.WebDavPath(path), file, 0644, callback)
 	return err
 }
 
