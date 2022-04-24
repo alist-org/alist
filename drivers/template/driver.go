@@ -9,6 +9,7 @@ import (
 )
 
 type Template struct {
+	base.Base
 }
 
 func (driver Template) Config() base.DriverConfig {
@@ -111,39 +112,40 @@ func (driver Template) Path(path string, account *model.Account) (*model.File, [
 	return nil, files, nil
 }
 
-func (driver Template) Preview(path string, account *model.Account) (interface{}, error) {
-	//TODO preview interface if driver support
-	return nil, base.ErrNotImplement
-}
-
-func (driver Template) MakeDir(path string, account *model.Account) error {
-	//TODO make dir
-	return base.ErrNotImplement
-}
-
-func (driver Template) Move(src string, dst string, account *model.Account) error {
-	//TODO move file/dir
-	return base.ErrNotImplement
-}
-
-func (driver Template) Rename(src string, dst string, account *model.Account) error {
-	//TODO rename file/dir
-	return base.ErrNotImplement
-}
-
-func (driver Template) Copy(src string, dst string, account *model.Account) error {
-	//TODO copy file/dir
-	return base.ErrNotImplement
-}
-
-func (driver Template) Delete(path string, account *model.Account) error {
-	//TODO delete file/dir
-	return base.ErrNotImplement
-}
-
-func (driver Template) Upload(file *model.FileStream, account *model.Account) error {
-	//TODO upload file
-	return base.ErrNotImplement
-}
+// Optional function
+//func (driver Template) Preview(path string, account *model.Account) (interface{}, error) {
+//	//TODO preview interface if driver support
+//	return nil, base.ErrNotImplement
+//}
+//
+//func (driver Template) MakeDir(path string, account *model.Account) error {
+//	//TODO make dir
+//	return base.ErrNotImplement
+//}
+//
+//func (driver Template) Move(src string, dst string, account *model.Account) error {
+//	//TODO move file/dir
+//	return base.ErrNotImplement
+//}
+//
+//func (driver Template) Rename(src string, dst string, account *model.Account) error {
+//	//TODO rename file/dir
+//	return base.ErrNotImplement
+//}
+//
+//func (driver Template) Copy(src string, dst string, account *model.Account) error {
+//	//TODO copy file/dir
+//	return base.ErrNotImplement
+//}
+//
+//func (driver Template) Delete(path string, account *model.Account) error {
+//	//TODO delete file/dir
+//	return base.ErrNotImplement
+//}
+//
+//func (driver Template) Upload(file *model.FileStream, account *model.Account) error {
+//	//TODO upload file
+//	return base.ErrNotImplement
+//}
 
 var _ base.Driver = (*Template)(nil)
