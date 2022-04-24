@@ -61,6 +61,7 @@ BUILD() {
 -X 'github.com/Xhofe/alist/conf.GitTag=$gitTag' \
 -X 'github.com/Xhofe/alist/conf.WebTag=$webTag' \
 "
+  rm -rf .git/
   if [ "$1" == "release" ]; then
     xgo -out "$appName" -ldflags="$ldflags" -tags=jsoniter .
   else
