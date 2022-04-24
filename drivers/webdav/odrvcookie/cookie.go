@@ -2,6 +2,7 @@ package odrvcookie
 
 import (
 	"github.com/Xhofe/alist/utils/cookie"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 	"sync"
 	"time"
@@ -13,7 +14,7 @@ type SpCookie struct {
 }
 
 func (sp SpCookie) IsExpire() bool {
-	return time.Now().Before(sp.expire)
+	return time.Now().After(sp.expire)
 }
 
 var cookiesMap = struct {
@@ -27,9 +28,11 @@ func GetCookie(username, password, siteUrl string) (string, error) {
 	spCookie, ok := cookiesMap.m[username]
 	if ok {
 		if !spCookie.IsExpire() {
+			log.Debugln("sp use old cookie.")
 			return spCookie.Cookie, nil
 		}
 	}
+	log.Debugln("fetch new cookie")
 	ca := New(username, password, siteUrl)
 	tokenConf, err := ca.Cookies()
 	if err != nil {

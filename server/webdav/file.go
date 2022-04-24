@@ -133,7 +133,7 @@ func (fs *FileSystem) Link(w http.ResponseWriter, r *http.Request, rawPath strin
 		if err != nil {
 			return "", err
 		}
-		link_, err := driver.Link(base.Args{Path: path_}, account)
+		link_, err := driver.Link(base.Args{Path: path_, Header: r.Header}, account)
 		if err != nil {
 			return "", err
 		}

@@ -29,8 +29,8 @@ jobs:
 
       - name: Install upx
         run: |
-          docker pull crazymax/xgo:latest
-          go install github.com/crazy-max/xgo@latest
+          docker pull techknowlogick/xgo:latest
+          go install src.techknowlogick.com/xgo@latest
           sudo apt install upx
 
       - name: Build

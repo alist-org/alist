@@ -19,8 +19,9 @@ type DriverConfig struct {
 }
 
 type Args struct {
-	Path string
-	IP   string
+	Path   string
+	IP     string
+	Header http.Header
 }
 
 type Driver interface {
