@@ -51,37 +51,37 @@ type SortResp struct {
 type DownResp struct {
 	Resp
 	Data []struct {
-		Fid          string `json:"fid"`
-		FileName     string `json:"file_name"`
-		PdirFid      string `json:"pdir_fid"`
-		Category     int    `json:"category"`
-		FileType     int    `json:"file_type"`
-		Size         int    `json:"size"`
-		FormatType   string `json:"format_type"`
-		Status       int    `json:"status"`
-		Tags         string `json:"tags"`
-		LCreatedAt   int64  `json:"l_created_at"`
-		LUpdatedAt   int64  `json:"l_updated_at"`
-		NameSpace    int    `json:"name_space"`
-		Thumbnail    string `json:"thumbnail"`
-		DownloadUrl  string `json:"download_url"`
-		Md5          string `json:"md5"`
-		RiskType     int    `json:"risk_type"`
-		RangeSize    int    `json:"range_size"`
-		BackupSign   int    `json:"backup_sign"`
-		ObjCategory  string `json:"obj_category"`
-		Duration     int    `json:"duration"`
-		FileSource   string `json:"file_source"`
-		File         bool   `json:"file"`
-		CreatedAt    int64  `json:"created_at"`
-		UpdatedAt    int64  `json:"updated_at"`
-		PrivateExtra struct {
-		} `json:"_private_extra"`
+		//Fid          string `json:"fid"`
+		//FileName     string `json:"file_name"`
+		//PdirFid      string `json:"pdir_fid"`
+		//Category     int    `json:"category"`
+		//FileType     int    `json:"file_type"`
+		//Size         int    `json:"size"`
+		//FormatType   string `json:"format_type"`
+		//Status       int    `json:"status"`
+		//Tags         string `json:"tags"`
+		//LCreatedAt   int64  `json:"l_created_at"`
+		//LUpdatedAt   int64  `json:"l_updated_at"`
+		//NameSpace    int    `json:"name_space"`
+		//Thumbnail    string `json:"thumbnail"`
+		DownloadUrl string `json:"download_url"`
+		//Md5          string `json:"md5"`
+		//RiskType     int    `json:"risk_type"`
+		//RangeSize    int    `json:"range_size"`
+		//BackupSign   int    `json:"backup_sign"`
+		//ObjCategory  string `json:"obj_category"`
+		//Duration     int    `json:"duration"`
+		//FileSource   string `json:"file_source"`
+		//File         bool   `json:"file"`
+		//CreatedAt    int64  `json:"created_at"`
+		//UpdatedAt    int64  `json:"updated_at"`
+		//PrivateExtra struct {
+		//} `json:"_private_extra"`
 	} `json:"data"`
-	Metadata struct {
-		Acc2 string `json:"acc2"`
-		Acc1 string `json:"acc1"`
-	} `json:"metadata"`
+	//Metadata struct {
+	//	Acc2 string `json:"acc2"`
+	//	Acc1 string `json:"acc1"`
+	//} `json:"metadata"`
 }
 
 type UpPreResp struct {
