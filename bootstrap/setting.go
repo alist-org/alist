@@ -266,6 +266,22 @@ func InitSettings() {
 			Group:       model.BACK,
 			Description: "Experimental function, not recommended as it's still under development",
 		},
+		{
+			Key:         "Aria2 RPC url",
+			Value:       "http://localhost:6800/jsonrpc",
+			Description: "Aria2 RPC url, e.g. 'http://aria2.example.com:6800/jsonrpc'",
+			Type:        "string",
+			Access:      model.PRIVATE,
+			Group:       model.BACK,
+		},
+		{
+			Key:         "Aria2 RPC secret",
+			Value:       "",
+			Description: "Aria2 RPC secret, e.g. '123456'",
+			Type:        "string",
+			Access:      model.PRIVATE,
+			Group:       model.BACK,
+		},
 	}
 	for i, _ := range settings {
 		v := settings[i]
