@@ -268,7 +268,7 @@ func InitSettings() {
 		},
 		{
 			Key:         "Aria2 RPC url",
-			Value:       "",
+			Value:       "http://localhost:6800/jsonrpc",
 			Description: "Aria2 RPC url, e.g. 'http://aria2.example.com:6800/jsonrpc'",
 			Type:        "string",
 			Access:      model.PRIVATE,
