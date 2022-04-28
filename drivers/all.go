@@ -25,6 +25,7 @@ import (
 	_ "github.com/Xhofe/alist/drivers/webdav"
 	_ "github.com/Xhofe/alist/drivers/xunlei"
 	_ "github.com/Xhofe/alist/drivers/yandex"
+	_ "github.com/Xhofe/alist/drivers/baiduphoto"
 	log "github.com/sirupsen/logrus"
 	"strings"
 )
