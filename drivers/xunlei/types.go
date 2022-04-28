@@ -1,16 +1,24 @@
 package xunlei
 
 import (
+	"fmt"
 	"time"
 )
 
 type Erron struct {
-	Error            string `json:"error"`
 	ErrorCode        int64  `json:"error_code"`
+	ErrorMsg         string `json:"error"`
 	ErrorDescription string `json:"error_description"`
 	//	ErrorDetails   interface{} `json:"error_details"`
 }
 
+func (e *Erron) Error() string {
+	return fmt.Sprintf("ErrorCode: %d ,Error: %s ,ErrorDescription: %s ", e.ErrorCode, e.ErrorMsg, e.ErrorDescription)
+}
+
+/*
+* 验证码Token
+**/
 type CaptchaTokenRequest struct {
 	Action       string            `json:"action"`
 	CaptchaToken string            `json:"captcha_token"`
@@ -26,6 +34,9 @@ type CaptchaTokenResponse struct {
 	Url          string `json:"url"`
 }
 
+/*
+* 登录
+**/
 type TokenResponse struct {
 	TokenType    string `json:"token_type"`
 	AccessToken  string `json:"access_token"`
@@ -34,6 +45,10 @@ type TokenResponse struct {
 
 	Sub    string `json:"sub"`
 	UserID string `json:"user_id"`
+}
+
+func (t *TokenResponse) Token() string {
+	return fmt.Sprint(t.TokenType, " ", t.AccessToken)
 }
 
 type SignInRequest struct {
@@ -46,6 +61,9 @@ type SignInRequest struct {
 	Password string `json:"password"`
 }
 
+/*
+* 文件
+**/
 type FileList struct {
 	Kind            string  `json:"kind"`
 	NextPageToken   string  `json:"next_page_token"`
@@ -116,6 +134,9 @@ type Files struct {
 	//Collection interface{} `json:"collection"`
 }
 
+/*
+* 上传
+**/
 type UploadTaskResponse struct {
 	UploadType string `json:"upload_type"`
 
@@ -151,4 +172,10 @@ type UploadTaskResponse struct {
 	} `json:"resumable"`
 
 	File Files `json:"file"`
+}
+
+type Tasks struct {
+	Tasks         []interface{}
+	NextPageToken string `json:"next_page_token"`
+	//ExpiresIn     int64  `json:"expires_in"`
 }

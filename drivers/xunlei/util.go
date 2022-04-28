@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"net"
 	"net/url"
 
 	"github.com/Xhofe/alist/utils"
@@ -57,12 +58,13 @@ const (
 	UPLOAD_TYPE_URL       = "UPLOAD_TYPE_URL"
 )
 
+// 验证码签名
 func captchaSign(driverID string, time int64) string {
 	str := fmt.Sprint(CLIENT_ID, CLIENT_VERSION, PACKAGE_NAME, driverID, time)
 	for _, algorithm := range Algorithms {
-		str = utils.GetMD5Encode(fmt.Sprint(str, algorithm))
+		str = utils.GetMD5Encode(str + algorithm)
 	}
-	return fmt.Sprint(ALG_VERSION, ".", str)
+	return ALG_VERSION + "." + str
 }
 
 func getAction(method string, u string) string {
@@ -70,34 +72,27 @@ func getAction(method string, u string) string {
 	return fmt.Sprint(method, ":", c.Path)
 }
 
+// 计算文件Gcid
 func getGcid(r io.Reader, size int64) (string, error) {
 	calcBlockSize := func(j int64) int64 {
-		if j >= 0 && j <= 134217728 {
-			return 262144
+		if j >= 0 && j <= 0x8000000 {
+			return 0x40000
 		}
-		if j <= 134217728 || j > 268435456 {
-			if j <= 268435456 || j > 536870912 {
-				return 2097152
+		if j <= 0x8000000 || j > 0x10000000 {
+			if j <= 0x10000000 || j > 0x20000000 {
+				return 0x200000
 			}
-			return 1048576
+			return 0x100000
 		}
-		return 524288
+		return 0x80000
 	}
-	/*
-		calcBlockSize := func(j int64) int64 {
-			psize := int64(0x40000)
-			for j/psize > 0x200 {
-				psize <<= 1
-			}
-			return psize
-		}
-	*/
 
 	hash1 := sha1.New()
 	hash2 := sha1.New()
+	readSize := calcBlockSize(size)
 	for {
 		hash2.Reset()
-		if n, err := io.CopyN(hash2, r, calcBlockSize(size)); err != nil && n == 0 {
+		if n, err := io.CopyN(hash2, r, readSize); err != nil && n == 0 {
 			if err != io.EOF {
 				return "", err
 			}
@@ -106,4 +101,14 @@ func getGcid(r io.Reader, size int64) (string, error) {
 		hash1.Write(hash2.Sum(nil))
 	}
 	return hex.EncodeToString(hash1.Sum(nil)), nil
+}
+
+// 获取driverID
+func getDriverID(username string) string {
+	interfaces, _ := net.Interfaces()
+	str := username
+	for _, inter := range interfaces {
+		str += inter.HardwareAddr.String()
+	}
+	return utils.GetMD5Encode(str)
 }
