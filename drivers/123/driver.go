@@ -108,10 +108,10 @@ func (driver Pan123) File(path string, account *model.Account) (*model.File, err
 
 func (driver Pan123) Files(path string, account *model.Account) ([]model.File, error) {
 	path = utils.ParsePath(path)
-	var rawFiles []Pan123File
+	var rawFiles []File
 	cache, err := base.GetCache(path, account)
 	if err == nil {
-		rawFiles, _ = cache.([]Pan123File)
+		rawFiles, _ = cache.([]File)
 	} else {
 		file, err := driver.File(path, account)
 		if err != nil {
@@ -278,12 +278,13 @@ func (driver Pan123) Delete(path string, account *model.Account) error {
 	if err != nil {
 		return err
 	}
+	log.Debugln("delete 123 file: ", file)
 	data := base.Json{
 		"driveId":           0,
 		"operation":         true,
-		"fileTrashInfoList": file,
+		"fileTrashInfoList": []File{*file},
 	}
-	_, err = driver.Request("https://www.123pan.com/api/file/trash",
+	_, err = driver.Request("https://www.123pan.com/b/api/file/trash",
 		base.Post, nil, nil, &data, nil, false, account)
 	return err
 }

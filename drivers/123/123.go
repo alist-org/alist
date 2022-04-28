@@ -3,7 +3,6 @@ package _23
 import (
 	"errors"
 	"fmt"
-	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
@@ -40,7 +39,7 @@ func (driver Pan123) Login(account *model.Account) error {
 	return err
 }
 
-func (driver Pan123) FormatFile(file *Pan123File) *model.File {
+func (driver Pan123) FormatFile(file *File) *model.File {
 	f := &model.File{
 		Id:        strconv.FormatInt(file.FileId, 10),
 		Name:      file.FileName,
@@ -52,9 +51,9 @@ func (driver Pan123) FormatFile(file *Pan123File) *model.File {
 	return f
 }
 
-func (driver Pan123) GetFiles(parentId string, account *model.Account) ([]Pan123File, error) {
+func (driver Pan123) GetFiles(parentId string, account *model.Account) ([]File, error) {
 	next := "0"
-	res := make([]Pan123File, 0)
+	res := make([]File, 0)
 	for next != "-1" {
 		var resp Pan123Files
 		query := map[string]string{
@@ -139,7 +138,7 @@ func (driver Pan123) Request(url string, method int, headers, query map[string]s
 //	return body, nil
 //}
 
-func (driver Pan123) GetFile(path string, account *model.Account) (*Pan123File, error) {
+func (driver Pan123) GetFile(path string, account *model.Account) (*File, error) {
 	dir, name := filepath.Split(path)
 	dir = utils.ParsePath(dir)
 	_, err := driver.Files(dir, account)
@@ -147,14 +146,15 @@ func (driver Pan123) GetFile(path string, account *model.Account) (*Pan123File, 
 		return nil, err
 	}
 	parentFiles_, _ := base.GetCache(dir, account)
-	parentFiles, _ := parentFiles_.([]Pan123File)
+	parentFiles, _ := parentFiles_.([]File)
 	for _, file := range parentFiles {
 		if file.FileName == name {
-			if file.Type != conf.FOLDER {
-				return &file, err
-			} else {
-				return nil, base.ErrNotFile
-			}
+			//if file.Type != conf.FOLDER {
+			//	return &file, err
+			//} else {
+			//	return nil, base.ErrNotFile
+			//}
+			return &file, nil
 		}
 	}
 	return nil, base.ErrPathNotFound
