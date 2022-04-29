@@ -28,7 +28,7 @@ func GetClient(account *model.Account) *Client {
 
 	client := &Client{
 		Client:   xunleiClient,
-		driverID: getDriverID(account.Username),
+		driverID: account.DeviceId,
 	}
 	userClients.Store(account.Username, client)
 	return client
@@ -47,12 +47,12 @@ type Client struct {
 }
 
 // 请求验证码token
-func (c *Client) requestCaptchaToken(action string, meta map[string]string) error {
+func (c *Client) requestCaptchaToken(action string, meta map[string]string, account *model.Account) error {
 	req := CaptchaTokenRequest{
 		Action:       action,
 		CaptchaToken: c.captchaToken,
-		ClientID:     CLIENT_ID,
-		DeviceID:     c.driverID,
+		ClientID:     account.ClientId,
+		DeviceID:     account.DeviceId,
 		Meta:         meta,
 	}
 
@@ -96,7 +96,7 @@ func (c *Client) Login(account *model.Account) (err error) {
 	}()
 
 	url := XLUSER_API_URL + "/auth/signin"
-	err = c.requestCaptchaToken(getAction(http.MethodPost, url), map[string]string{"username": account.Username})
+	err = c.requestCaptchaToken(getAction(http.MethodPost, url), map[string]string{"username": account.Username}, account)
 	if err != nil {
 		return err
 	}
@@ -108,8 +108,8 @@ func (c *Client) Login(account *model.Account) (err error) {
 		SetError(&e).
 		SetBody(&SignInRequest{
 			CaptchaToken: c.captchaToken,
-			ClientID:     CLIENT_ID,
-			ClientSecret: CLIENT_SECRET,
+			ClientID:     account.ClientId,
+			ClientSecret: account.ClientSecret,
 			Username:     account.Username,
 			Password:     account.Password,
 		}).
@@ -133,22 +133,23 @@ func (c *Client) Login(account *model.Account) (err error) {
 }
 
 // 刷新验证码token
-func (c *Client) RefreshCaptchaToken(action string) error {
+func (c *Client) RefreshCaptchaToken(action string, account *model.Account ) error {
 	c.Lock()
 	defer c.Unlock()
 
-	ctime := time.Now().UnixMilli()
+	// ctime := time.Now().UnixMilli()
+	time.Now().UnixMilli()
 	return c.requestCaptchaToken(action, map[string]string{
-		"captcha_sign":   captchaSign(c.driverID, ctime),
-		"client_version": CLIENT_VERSION,
-		"package_name":   PACKAGE_NAME,
-		"timestamp":      fmt.Sprint(ctime),
+		"captcha_sign":   account.CaptchaSign,
+		"client_version": account.ClientVersion,
+		"package_name":   account.PackageName,
+		"timestamp":      account.Timestamp,
 		"user_id":        c.userID,
-	})
+	},account)
 }
 
 // 刷新token
-func (c *Client) RefreshToken() error {
+func (c *Client) RefreshToken(account *model.Account) error {
 	c.Lock()
 	defer c.Unlock()
 
@@ -160,8 +161,8 @@ func (c *Client) RefreshToken() error {
 		SetBody(&base.Json{
 			"grant_type":    "refresh_token",
 			"refresh_token": c.refreshToken,
-			"client_id":     CLIENT_ID,
-			"client_secret": CLIENT_SECRET,
+			"client_id":     account.ClientId,
+			"client_secret": account.ClientSecret,
 		}).
 		Post(XLUSER_API_URL + "/auth/token")
 	if err != nil {
@@ -180,11 +181,11 @@ func (c *Client) Request(method string, url string, callback func(*resty.Request
 	c.Lock()
 	req := xunleiClient.R().
 		SetHeaders(map[string]string{
-			"X-Device-Id":     c.driverID,
+			"X-Device-Id":     account.DeviceId,
 			"Authorization":   c.token,
 			"X-Captcha-Token": c.captchaToken,
 		}).
-		SetQueryParam("client_id", CLIENT_ID)
+		SetQueryParam("client_id", account.ClientId)
 	if callback != nil {
 		callback(req)
 	}
@@ -206,7 +207,7 @@ func (c *Client) Request(method string, url string, callback func(*resty.Request
 	case 0:
 		return res, nil
 	case 4122, 4121: // token过期
-		if err = c.RefreshToken(); err == nil {
+		if err = c.RefreshToken(account); err == nil {
 			break
 		}
 		fallthrough
@@ -215,7 +216,7 @@ func (c *Client) Request(method string, url string, callback func(*resty.Request
 			return nil, err
 		}
 	case 9: // 验证码token过期
-		if err = c.RefreshCaptchaToken(getAction(method, url)); err != nil {
+		if err = c.RefreshCaptchaToken(getAction(method, url), account); err != nil {
 			return nil, err
 		}
 	default:

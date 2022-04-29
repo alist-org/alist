@@ -49,6 +49,11 @@ type Account struct {
 	AccessSecret  string `json:"access_secret"`
 	CustomHost    string `json:"custom_host"`
 	ExtractFolder string `json:"extract_folder"`
+	ClientVersion string `json:"client_version"`
+	PackageName string `json:"package_name"`
+	Timestamp string `json:"timestamp"`
+	CaptchaSign string `json:"captcha_sign"`
+	DeviceId string `json:"device_id"`
 	Bool1         bool   `json:"bool_1"`
 }
 
