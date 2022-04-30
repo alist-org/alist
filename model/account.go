@@ -50,6 +50,13 @@ type Account struct {
 	CustomHost    string `json:"custom_host"`
 	ExtractFolder string `json:"extract_folder"`
 	Bool1         bool   `json:"bool_1"`
+	// for xunlei
+	Algorithms    string `json:"algorithms"`
+	ClientVersion string `json:"client_version"`
+	PackageName   string `json:"package_name"`
+	UserAgent    string `json:"user_agent"`
+	CaptchaToken string `json:"captcha_token"`
+	DeviceId     string `json:"device_id"`
 }
 
 var accountsMap = make(map[string]Account)

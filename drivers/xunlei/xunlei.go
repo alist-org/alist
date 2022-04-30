@@ -3,6 +3,7 @@ package xunlei
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -13,12 +14,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-var xunleiClient = resty.New().
-	SetHeaders(map[string]string{
-		"Accept": "application/json;charset=UTF-8",
-	}).
-	SetTimeout(base.DefaultTimeout)
-
+// 缓存登录状态
 var userClients sync.Map
 
 func GetClient(account *model.Account) *Client {
@@ -27,8 +23,15 @@ func GetClient(account *model.Account) *Client {
 	}
 
 	client := &Client{
-		Client:   xunleiClient,
-		driverID: getDriverID(account.Username),
+		Client: base.RestyClient,
+
+		clientID:      account.ClientId,
+		clientSecret:  account.ClientSecret,
+		clientVersion: account.ClientVersion,
+		packageName:   account.PackageName,
+		algorithms:    strings.Split(account.Algorithms, ","),
+		userAgent:     account.UserAgent,
+		deviceID:      account.DeviceId,
 	}
 	userClients.Store(account.Username, client)
 	return client
@@ -38,7 +41,14 @@ type Client struct {
 	*resty.Client
 	sync.Mutex
 
-	driverID     string
+	clientID      string
+	clientSecret  string
+	clientVersion string
+	packageName   string
+	algorithms    []string
+	userAgent     string
+	deviceID      string
+
 	captchaToken string
 
 	token        string
@@ -48,25 +58,26 @@ type Client struct {
 
 // 请求验证码token
 func (c *Client) requestCaptchaToken(action string, meta map[string]string) error {
-	req := CaptchaTokenRequest{
+	param := CaptchaTokenRequest{
 		Action:       action,
 		CaptchaToken: c.captchaToken,
-		ClientID:     CLIENT_ID,
-		DeviceID:     c.driverID,
+		ClientID:     c.clientID,
+		DeviceID:     c.deviceID,
 		Meta:         meta,
+		RedirectUri:  "xlaccsdk01://xunlei.com/callback?state=harbor",
 	}
 
 	var e Erron
 	var resp CaptchaTokenResponse
-	_, err := xunleiClient.R().
-		SetBody(&req).
+	_, err := c.Client.R().
+		SetBody(&param).
 		SetError(&e).
 		SetResult(&resp).
 		Post(XLUSER_API_URL + "/shield/captcha/init")
 	if err != nil {
 		return err
 	}
-	if e.ErrorCode != 0 || e.ErrorMsg != "" {
+	if e.HasError() {
 		return &e
 	}
 
@@ -79,6 +90,15 @@ func (c *Client) requestCaptchaToken(action string, meta map[string]string) erro
 	}
 	c.captchaToken = resp.CaptchaToken
 	return nil
+}
+
+// 验证码签名
+func (c *Client) captchaSign(time string) string {
+	str := fmt.Sprint(c.clientID, c.clientVersion, c.packageName, c.deviceID, time)
+	for _, algorithm := range c.algorithms {
+		str = utils.GetMD5Encode(str + algorithm)
+	}
+	return "1." + str
 }
 
 // 登录
@@ -103,13 +123,13 @@ func (c *Client) Login(account *model.Account) (err error) {
 
 	var e Erron
 	var resp TokenResponse
-	_, err = xunleiClient.R().
+	_, err = c.Client.R().
 		SetResult(&resp).
 		SetError(&e).
 		SetBody(&SignInRequest{
 			CaptchaToken: c.captchaToken,
-			ClientID:     CLIENT_ID,
-			ClientSecret: CLIENT_SECRET,
+			ClientID:     c.clientID,
+			ClientSecret: c.clientSecret,
 			Username:     account.Username,
 			Password:     account.Password,
 		}).
@@ -118,7 +138,7 @@ func (c *Client) Login(account *model.Account) (err error) {
 		return err
 	}
 
-	if e.ErrorCode != 0 || e.ErrorMsg != "" {
+	if e.HasError() {
 		return &e
 	}
 
@@ -137,14 +157,15 @@ func (c *Client) RefreshCaptchaToken(action string) error {
 	c.Lock()
 	defer c.Unlock()
 
-	ctime := time.Now().UnixMilli()
-	return c.requestCaptchaToken(action, map[string]string{
-		"captcha_sign":   captchaSign(c.driverID, ctime),
-		"client_version": CLIENT_VERSION,
-		"package_name":   PACKAGE_NAME,
-		"timestamp":      fmt.Sprint(ctime),
+	timestamp := fmt.Sprint(time.Now().UnixMilli())
+	param := map[string]string{
+		"client_version": c.clientVersion,
+		"package_name":   c.packageName,
 		"user_id":        c.userID,
-	})
+		"captcha_sign":   c.captchaSign(timestamp),
+		"timestamp":      timestamp,
+	}
+	return c.requestCaptchaToken(action, param)
 }
 
 // 刷新token
@@ -154,22 +175,27 @@ func (c *Client) RefreshToken() error {
 
 	var e Erron
 	var resp TokenResponse
-	_, err := xunleiClient.R().
+	_, err := c.Client.R().
 		SetError(&e).
 		SetResult(&resp).
 		SetBody(&base.Json{
 			"grant_type":    "refresh_token",
 			"refresh_token": c.refreshToken,
-			"client_id":     CLIENT_ID,
-			"client_secret": CLIENT_SECRET,
+			"client_id":     c.clientID,
+			"client_secret": c.clientSecret,
 		}).
 		Post(XLUSER_API_URL + "/auth/token")
 	if err != nil {
 		return err
 	}
-	if e.ErrorCode != 0 || e.ErrorMsg != "" {
+	if e.HasError() {
 		return &e
 	}
+
+	if resp.RefreshToken == "" {
+		return base.ErrEmptyToken
+	}
+
 	c.token = resp.TokenType + " " + resp.AccessToken
 	c.refreshToken = resp.RefreshToken
 	c.userID = resp.UserID
@@ -178,13 +204,14 @@ func (c *Client) RefreshToken() error {
 
 func (c *Client) Request(method string, url string, callback func(*resty.Request), account *model.Account) (*resty.Response, error) {
 	c.Lock()
-	req := xunleiClient.R().
+	req := c.Client.R().
 		SetHeaders(map[string]string{
-			"X-Device-Id":     c.driverID,
+			"X-Device-Id":     c.deviceID,
 			"Authorization":   c.token,
 			"X-Captcha-Token": c.captchaToken,
-		}).
-		SetQueryParam("client_id", CLIENT_ID)
+			"User-Agent":      c.userAgent,
+			"client_id":       c.clientID,
+		})
 	if callback != nil {
 		callback(req)
 	}
@@ -205,7 +232,7 @@ func (c *Client) Request(method string, url string, callback func(*resty.Request
 	switch e.ErrorCode {
 	case 0:
 		return res, nil
-	case 4122, 4121: // token过期
+	case 4122, 4121, 10: // token过期
 		if err = c.RefreshToken(); err == nil {
 			break
 		}
