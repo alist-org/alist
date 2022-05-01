@@ -7,13 +7,6 @@ package webdav
 import (
 	"context"
 	"fmt"
-	"github.com/Xhofe/alist/conf"
-	"github.com/Xhofe/alist/drivers/base"
-	"github.com/Xhofe/alist/drivers/operate"
-	"github.com/Xhofe/alist/model"
-	"github.com/Xhofe/alist/server/common"
-	"github.com/Xhofe/alist/utils"
-	log "github.com/sirupsen/logrus"
 	"mime"
 	"net"
 	"net/http"
@@ -21,6 +14,14 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/Xhofe/alist/conf"
+	"github.com/Xhofe/alist/drivers/base"
+	"github.com/Xhofe/alist/drivers/operate"
+	"github.com/Xhofe/alist/model"
+	"github.com/Xhofe/alist/server/common"
+	"github.com/Xhofe/alist/utils"
+	log "github.com/sirupsen/logrus"
 )
 
 type FileSystem struct{}
@@ -203,6 +204,8 @@ func (fs *FileSystem) Upload(ctx context.Context, r *http.Request, rawPath strin
 		mimeTypeTmp := mime.TypeByExtension(path.Ext(fileName))
 		if mimeTypeTmp != "" {
 			mimeType = mimeTypeTmp
+		} else {
+			mimeType = "application/octet-stream"
 		}
 	}
 	fileData := model.FileStream{
