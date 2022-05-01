@@ -12,6 +12,10 @@ type Erron struct {
 	//	ErrorDetails   interface{} `json:"error_details"`
 }
 
+func (e *Erron) HasError() bool {
+	return e.ErrorCode != 0 || e.ErrorMsg != "" || e.ErrorDescription != ""
+}
+
 func (e *Erron) Error() string {
 	return fmt.Sprintf("ErrorCode: %d ,Error: %s ,ErrorDescription: %s ", e.ErrorCode, e.ErrorMsg, e.ErrorDescription)
 }
@@ -25,7 +29,7 @@ type CaptchaTokenRequest struct {
 	ClientID     string            `json:"client_id"`
 	DeviceID     string            `json:"device_id"`
 	Meta         map[string]string `json:"meta"`
-	//RedirectUri  string            `json:"redirect_uri"`
+	RedirectUri  string            `json:"redirect_uri"`
 }
 
 type CaptchaTokenResponse struct {
@@ -172,10 +176,4 @@ type UploadTaskResponse struct {
 	} `json:"resumable"`
 
 	File Files `json:"file"`
-}
-
-type Tasks struct {
-	Tasks         []interface{}
-	NextPageToken string `json:"next_page_token"`
-	//ExpiresIn     int64  `json:"expires_in"`
 }
