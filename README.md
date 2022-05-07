@@ -39,6 +39,7 @@ English | [中文](./README_cn.md) | [Contributors](./CONTRIBUTORS.md) | [Contri
   - [x] [Quark](https://pan.quark.cn)
   - [x] [XunleiCloud](https://pan.xunlei.com/)
   - [x] SFTP
+  - [x] [Baidu.Photo](https://photo.baidu.com/)
 - [x] Easy to deploy and out-of-the-box
 - [x] File preview (PDF, markdown, code, plain text, ...)
 - [x] Image preview in gallery mode
