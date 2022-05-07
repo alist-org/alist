@@ -1,5 +1,5 @@
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-7-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-8-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 ## Contributors ✨
@@ -18,6 +18,9 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://c5y.moe"><img src="https://avatars.githubusercontent.com/u/18461360?v=4?s=100" width="100px;" alt=""/><br /><sub><b>凌莞~(=^▽^=)</b></sub></a><br /><a href="https://github.com/Xhofe/alist/commits?author=Clansty" title="Documentation">📖</a></td>
     <td align="center"><a href="https://github.com/Windman1320"><img src="https://avatars.githubusercontent.com/u/9999486?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Windman</b></sub></a><br /><a href="https://github.com/Xhofe/alist/commits?author=Windman1320" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/ericarena"><img src="https://avatars.githubusercontent.com/u/4518927?v=4?s=100" width="100px;" alt=""/><br /><sub><b>ericarena</b></sub></a><br /><a href="https://github.com/Xhofe/alist/commits?author=ericarena" title="Code">💻</a></td>
+  </tr>
+  <tr>
+    <td align="center"><a href="https://github.com/WntFlm"><img src="https://avatars.githubusercontent.com/u/34620278?v=4?s=100" width="100px;" alt=""/><br /><sub><b>WntFlm</b></sub></a><br /><a href="https://github.com/Xhofe/alist/commits?author=WntFlm" title="Code">💻</a></td>
   </tr>
 </table>
 
