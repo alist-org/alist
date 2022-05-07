@@ -39,6 +39,7 @@
   - [x] [夸克网盘](https://pan.quark.cn)
   - [x] [迅雷云盘](https://pan.xunlei.com/)
   - [x] SFTP
+  - [x] [一刻相册](https://photo.baidu.com/)
 - [x] 部署方便，开箱即用
 - [x] 文件预览（PDF、markdown、代码、纯文本……）
 - [x] 画廊模式下的图像预览
