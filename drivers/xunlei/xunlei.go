@@ -3,6 +3,7 @@ package xunlei
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -13,281 +14,239 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-var xunleiClient = resty.New().SetHeaders(map[string]string{"Accept": "application/json;charset=UTF-8"}).SetTimeout(base.DefaultTimeout)
+// 缓存登录状态
+var userClients sync.Map
 
-// 一个账户只允许登陆一次
-var userStateCache = struct {
+func GetClient(account *model.Account) *Client {
+	if v, ok := userClients.Load(account.Username); ok {
+		return v.(*Client)
+	}
+
+	client := &Client{
+		Client: base.RestyClient,
+
+		clientID:      account.ClientId,
+		clientSecret:  account.ClientSecret,
+		clientVersion: account.ClientVersion,
+		packageName:   account.PackageName,
+		algorithms:    strings.Split(account.Algorithms, ","),
+		userAgent:     account.UserAgent,
+		deviceID:      account.DeviceId,
+	}
+	userClients.Store(account.Username, client)
+	return client
+}
+
+type Client struct {
+	*resty.Client
 	sync.Mutex
-	States map[string]*State
-}{States: make(map[string]*State)}
 
-func GetState(account *model.Account) *State {
-	userStateCache.Lock()
-	defer userStateCache.Unlock()
-	if v, ok := userStateCache.States[account.Username]; ok && v != nil {
-		return v
-	}
-	state := new(State).Init()
-	userStateCache.States[account.Username] = state
-	return state
+	clientID      string
+	clientSecret  string
+	clientVersion string
+	packageName   string
+	algorithms    []string
+	userAgent     string
+	deviceID      string
+
+	captchaToken string
+
+	token        string
+	refreshToken string
+	userID       string
 }
 
-type State struct {
-	sync.Mutex
-	captchaToken            string
-	captchaTokenExpiresTime int64
-
-	tokenType        string
-	accessToken      string
-	refreshToken     string
-	tokenExpiresTime int64 //Milli
-
-	userID string
-}
-
-func (s *State) init() *State {
-	s.captchaToken = ""
-	s.captchaTokenExpiresTime = 0
-	s.tokenType = ""
-	s.accessToken = ""
-	s.refreshToken = ""
-	s.tokenExpiresTime = 0
-	s.userID = "0"
-	return s
-}
-
-func (s *State) getToken(account *model.Account) (string, error) {
-	if s.isTokensExpires() {
-		if err := s.refreshToken_(account); err != nil {
-			return "", err
-		}
-	}
-	return fmt.Sprint(s.tokenType, " ", s.accessToken), nil
-}
-
-func (s *State) getCaptchaToken(action string, account *model.Account) (string, error) {
-	if s.isCaptchaTokenExpires() {
-		return s.newCaptchaToken(action, nil, account)
-	}
-	return s.captchaToken, nil
-}
-
-func (s *State) isCaptchaTokenExpires() bool {
-	return time.Now().UnixMilli() >= s.captchaTokenExpiresTime || s.captchaToken == "" || s.tokenType == ""
-}
-
-func (s *State) isTokensExpires() bool {
-	return time.Now().UnixMilli() >= s.tokenExpiresTime || s.accessToken == ""
-}
-
-func (s *State) newCaptchaToken(action string, meta map[string]string, account *model.Account) (string, error) {
-	ctime := time.Now().UnixMilli()
-	driverID := utils.GetMD5Encode(account.Username)
-	creq := CaptchaTokenRequest{
+// 请求验证码token
+func (c *Client) requestCaptchaToken(action string, meta map[string]string) error {
+	param := CaptchaTokenRequest{
 		Action:       action,
-		CaptchaToken: s.captchaToken,
-		ClientID:     CLIENT_ID,
-		DeviceID:     driverID,
-		Meta: map[string]string{
-			"captcha_sign":   captchaSign(driverID, ctime),
-			"client_version": CLIENT_VERSION,
-			"package_name":   PACKAGE_NAME,
-			"timestamp":      fmt.Sprint(ctime),
-			"user_id":        s.userID,
-		},
-	}
-	for k, v := range meta {
-		creq.Meta[k] = v
+		CaptchaToken: c.captchaToken,
+		ClientID:     c.clientID,
+		DeviceID:     c.deviceID,
+		Meta:         meta,
+		RedirectUri:  "xlaccsdk01://xunlei.com/callback?state=harbor",
 	}
 
 	var e Erron
 	var resp CaptchaTokenResponse
-	_, err := xunleiClient.R().
-		SetBody(&creq).
+	_, err := c.Client.R().
+		SetBody(&param).
 		SetError(&e).
 		SetResult(&resp).
-		SetHeader("X-Device-Id", driverID).
-		SetQueryParam("client_id", CLIENT_ID).
 		Post(XLUSER_API_URL + "/shield/captcha/init")
 	if err != nil {
-		return "", err
+		return err
 	}
-	if e.ErrorCode != 0 {
-		return "", fmt.Errorf("%s : %s", e.Error, e.ErrorDescription)
+	if e.HasError() {
+		return &e
 	}
+
 	if resp.Url != "" {
-		return "", fmt.Errorf("需要验证验证码")
+		return fmt.Errorf("need verify:%s", resp.Url)
 	}
 
-	s.captchaTokenExpiresTime = (ctime + resp.ExpiresIn*1000) - 30000
-	s.captchaToken = resp.CaptchaToken
-	return s.captchaToken, nil
+	if resp.CaptchaToken == "" {
+		return fmt.Errorf("empty captchaToken")
+	}
+	c.captchaToken = resp.CaptchaToken
+	return nil
 }
 
-func (s *State) refreshToken_(account *model.Account) error {
-	var e Erron
-	var resp TokenResponse
-	_, err := xunleiClient.R().
-		SetResult(&resp).SetError(&e).
-		SetBody(&base.Json{
-			"grant_type":    "refresh_token",
-			"refresh_token": s.refreshToken,
-			"client_id":     CLIENT_ID,
-			"client_secret": CLIENT_SECRET,
-		}).
-		SetHeader("X-Device-Id", utils.GetMD5Encode(account.Username)).SetQueryParam("client_id", CLIENT_ID).
-		Post(XLUSER_API_URL + "/auth/token")
-	if err != nil {
-		return err
+// 验证码签名
+func (c *Client) captchaSign(time string) string {
+	str := fmt.Sprint(c.clientID, c.clientVersion, c.packageName, c.deviceID, time)
+	for _, algorithm := range c.algorithms {
+		str = utils.GetMD5Encode(str + algorithm)
 	}
-
-	switch e.ErrorCode {
-	case 4122, 4121:
-		return s.login(account)
-	case 0:
-		s.tokenExpiresTime = (time.Now().UnixMilli() + resp.ExpiresIn*1000) - 30000
-		s.tokenType = resp.TokenType
-		s.accessToken = resp.AccessToken
-		s.refreshToken = resp.RefreshToken
-		s.userID = resp.UserID
-		return nil
-	default:
-		return fmt.Errorf("%s : %s", e.Error, e.ErrorDescription)
-	}
+	return "1." + str
 }
 
-func (s *State) login(account *model.Account) error {
-	s.init()
-	ctime := time.Now().UnixMilli()
+// 登录
+func (c *Client) Login(account *model.Account) (err error) {
+	c.Lock()
+	defer c.Unlock()
+
+	defer func() {
+		if err != nil {
+			account.Status = err.Error()
+		} else {
+			account.Status = "work"
+		}
+		model.SaveAccount(account)
+	}()
+
 	url := XLUSER_API_URL + "/auth/signin"
-	captchaToken, err := s.newCaptchaToken(getAction("POST", url), map[string]string{"username": account.Username}, account)
+	err = c.requestCaptchaToken(getAction(http.MethodPost, url), map[string]string{"username": account.Username})
 	if err != nil {
 		return err
 	}
 
-	signReq := SignInRequest{
-		CaptchaToken: captchaToken,
-		ClientID:     CLIENT_ID,
-		ClientSecret: CLIENT_SECRET,
-		Username:     account.Username,
-		Password:     account.Password,
-	}
-
 	var e Erron
 	var resp TokenResponse
-	_, err = xunleiClient.R().
+	_, err = c.Client.R().
 		SetResult(&resp).
 		SetError(&e).
-		SetBody(&signReq).
-		SetHeader("X-Device-Id", utils.GetMD5Encode(account.Username)).
-		SetQueryParam("client_id", CLIENT_ID).
+		SetBody(&SignInRequest{
+			CaptchaToken: c.captchaToken,
+			ClientID:     c.clientID,
+			ClientSecret: c.clientSecret,
+			Username:     account.Username,
+			Password:     account.Password,
+		}).
 		Post(url)
 	if err != nil {
 		return err
 	}
 
-	defer model.SaveAccount(account)
-	if e.ErrorCode != 0 {
-		account.Status = e.Error
-		return fmt.Errorf("%s : %s", e.Error, e.ErrorDescription)
+	if e.HasError() {
+		return &e
 	}
-	account.Status = "work"
-	s.tokenExpiresTime = (ctime + resp.ExpiresIn*1000) - 30000
-	s.tokenType = resp.TokenType
-	s.accessToken = resp.AccessToken
-	s.refreshToken = resp.RefreshToken
-	s.userID = resp.UserID
+
+	if resp.RefreshToken == "" {
+		return base.ErrEmptyToken
+	}
+
+	c.token = resp.Token()
+	c.refreshToken = resp.RefreshToken
+	c.userID = resp.UserID
 	return nil
 }
 
-func (s *State) Request(method string, url string, callback func(*resty.Request), account *model.Account) (*resty.Response, error) {
-	s.Lock()
-	token, err := s.getToken(account)
-	if err != nil {
-		return nil, err
-	}
+// 刷新验证码token
+func (c *Client) RefreshCaptchaToken(action string) error {
+	c.Lock()
+	defer c.Unlock()
 
-	captchaToken, err := s.getCaptchaToken(getAction(method, url), account)
-	if err != nil {
-		return nil, err
+	timestamp := fmt.Sprint(time.Now().UnixMilli())
+	param := map[string]string{
+		"client_version": c.clientVersion,
+		"package_name":   c.packageName,
+		"user_id":        c.userID,
+		"captcha_sign":   c.captchaSign(timestamp),
+		"timestamp":      timestamp,
 	}
+	return c.requestCaptchaToken(action, param)
+}
 
-	req := xunleiClient.R().
-		SetHeaders(map[string]string{
-			"X-Device-Id":     utils.GetMD5Encode(account.Username),
-			"Authorization":   token,
-			"X-Captcha-Token": captchaToken,
+// 刷新token
+func (c *Client) RefreshToken() error {
+	c.Lock()
+	defer c.Unlock()
+
+	var e Erron
+	var resp TokenResponse
+	_, err := c.Client.R().
+		SetError(&e).
+		SetResult(&resp).
+		SetBody(&base.Json{
+			"grant_type":    "refresh_token",
+			"refresh_token": c.refreshToken,
+			"client_id":     c.clientID,
+			"client_secret": c.clientSecret,
 		}).
-		SetQueryParam("client_id", CLIENT_ID)
-
-	callback(req)
-	s.Unlock()
-
-	var res *resty.Response
-	switch method {
-	case "GET":
-		res, err = req.Get(url)
-	case "POST":
-		res, err = req.Post(url)
-	case "DELETE":
-		res, err = req.Delete(url)
-	case "PATCH":
-		res, err = req.Patch(url)
-	case "PUT":
-		res, err = req.Put(url)
-	default:
-		return nil, base.ErrNotSupport
+		Post(XLUSER_API_URL + "/auth/token")
+	if err != nil {
+		return err
+	}
+	if e.HasError() {
+		return &e
 	}
 
+	if resp.RefreshToken == "" {
+		return base.ErrEmptyToken
+	}
+
+	c.token = resp.TokenType + " " + resp.AccessToken
+	c.refreshToken = resp.RefreshToken
+	c.userID = resp.UserID
+	return nil
+}
+
+func (c *Client) Request(method string, url string, callback func(*resty.Request), account *model.Account) (*resty.Response, error) {
+	c.Lock()
+	req := c.Client.R().
+		SetHeaders(map[string]string{
+			"X-Device-Id":     c.deviceID,
+			"Authorization":   c.token,
+			"X-Captcha-Token": c.captchaToken,
+			"User-Agent":      c.userAgent,
+			"client_id":       c.clientID,
+		})
+	if callback != nil {
+		callback(req)
+	}
+	c.Unlock()
+
+	res, err := req.Execute(method, url)
 	if err != nil {
 		return nil, err
 	}
 	log.Debug(res.String())
 
 	var e Erron
-	err = utils.Json.Unmarshal(res.Body(), &e)
-	if err != nil {
+	if err = utils.Json.Unmarshal(res.Body(), &e); err != nil {
 		return nil, err
 	}
+
+	// 处理错误
 	switch e.ErrorCode {
-	case 9:
-		_, err = s.newCaptchaToken(getAction(method, url), nil, account)
-		if err != nil {
-			return nil, err
+	case 0:
+		return res, nil
+	case 4122, 4121, 10: // token过期
+		if err = c.RefreshToken(); err == nil {
+			break
 		}
 		fallthrough
-	case 4122, 4121: // Authorization expired
-		return s.Request(method, url, callback, account)
-	case 0:
-		if res.StatusCode() == http.StatusOK {
-			return res, nil
+	case 16: // 登录失效
+		if err = c.Login(account); err != nil {
+			return nil, err
 		}
-		return nil, fmt.Errorf(res.String())
+	case 9: // 验证码token过期
+		if err = c.RefreshCaptchaToken(getAction(method, url)); err != nil {
+			return nil, err
+		}
 	default:
-		return nil, fmt.Errorf("%s : %s", e.Error, e.ErrorDescription)
+		return nil, &e
 	}
-}
-
-func (s *State) Init() *State {
-	s.Lock()
-	defer s.Unlock()
-	return s.init()
-}
-
-func (s *State) GetCaptchaToken(action string, account *model.Account) (string, error) {
-	s.Lock()
-	defer s.Unlock()
-	return s.getCaptchaToken(action, account)
-}
-
-func (s *State) GetToken(account *model.Account) (string, error) {
-	s.Lock()
-	defer s.Unlock()
-	return s.getToken(account)
-}
-
-func (s *State) Login(account *model.Account) error {
-	s.Lock()
-	defer s.Unlock()
-	return s.login(account)
+	return c.Request(method, url, callback, account)
 }
