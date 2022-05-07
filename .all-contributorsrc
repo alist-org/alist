@@ -51,6 +51,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "Windman1320",
+      "name": "Windman",
+      "avatar_url": "https://avatars.githubusercontent.com/u/9999486?v=4",
+      "profile": "https://github.com/Windman1320",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
