@@ -9,7 +9,6 @@ import (
 	"math"
 	"net/http"
 	"os"
-	"path/filepath"
 
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/drivers/base"
@@ -81,7 +80,7 @@ func (driver Baidu) File(path string, account *model.Account) (*model.File, erro
 		}, nil
 	}
 
-	dir, name := filepath.Split(path)
+	dir, name := utils.Split(path)
 	files, err := driver.Files(dir, account)
 	if err != nil {
 		return nil, err
@@ -123,7 +122,7 @@ func (driver Baidu) Files(path string, account *model.Account) ([]model.File, er
 				Id:        joinID(file.Fsid, file.Uk, file.Tid),
 				Name:      file.Name(),
 				Size:      file.Size,
-				Type:      utils.GetFileType(filepath.Ext(file.Path)),
+				Type:      utils.GetFileType(utils.Ext(file.Path)),
 				Driver:    driver.Config().Name,
 				UpdatedAt: getTime(file.Mtime),
 				Thumbnail: thumbnail,
@@ -165,7 +164,7 @@ func (driver Baidu) Link(args base.Args, account *model.Account) (*base.Link, er
 		return nil, base.ErrNotSupport
 	}
 
-	album, err := driver.File(filepath.Dir(utils.ParsePath(args.Path)), account)
+	album, err := driver.File(utils.Dir(utils.ParsePath(args.Path)), account)
 	if err != nil {
 		return nil, err
 	}
@@ -218,13 +217,13 @@ func (driver Baidu) Rename(src string, dst string, account *model.Account) error
 	}
 
 	if IsAlbum(srcFile) {
-		return driver.SetAlbumName(srcFile.Id, filepath.Base(dst), account)
+		return driver.SetAlbumName(srcFile.Id, utils.Base(dst), account)
 	}
 	return base.ErrNotSupport
 }
 
 func (driver Baidu) MakeDir(path string, account *model.Account) error {
-	dir, name := filepath.Split(path)
+	dir, name := utils.Split(path)
 	parentFile, err := driver.File(dir, account)
 	if err != nil {
 		return err
@@ -244,7 +243,7 @@ func (driver Baidu) Move(src string, dst string, account *model.Account) error {
 
 	if IsAlbumFile(srcFile) {
 		// 移动相册文件
-		dstAlbum, err := driver.File(filepath.Dir(dst), account)
+		dstAlbum, err := driver.File(utils.Dir(dst), account)
 		if err != nil {
 			return err
 		}
@@ -252,7 +251,7 @@ func (driver Baidu) Move(src string, dst string, account *model.Account) error {
 			return base.ErrNotSupport
 		}
 
-		srcAlbum, err := driver.File(filepath.Dir(src), account)
+		srcAlbum, err := driver.File(utils.Dir(src), account)
 		if err != nil {
 			return err
 		}
@@ -282,7 +281,7 @@ func (driver Baidu) Copy(src string, dst string, account *model.Account) error {
 
 	if IsAlbumFile(srcFile) {
 		// 复制相册文件
-		dstAlbum, err := driver.File(filepath.Dir(dst), account)
+		dstAlbum, err := driver.File(utils.Dir(dst), account)
 		if err != nil {
 			return err
 		}
@@ -290,7 +289,7 @@ func (driver Baidu) Copy(src string, dst string, account *model.Account) error {
 			return base.ErrNotSupport
 		}
 
-		srcAlbum, err := driver.File(filepath.Dir(src), account)
+		srcAlbum, err := driver.File(utils.Dir(src), account)
 		if err != nil {
 			return err
 		}
@@ -322,7 +321,7 @@ func (driver Baidu) Delete(path string, account *model.Account) error {
 	// 生成相册文件
 	if IsAlbumFile(file) {
 		// 删除相册文件
-		album, err := driver.File(filepath.Dir(path), account)
+		album, err := driver.File(utils.Dir(path), account)
 		if err != nil {
 			return err
 		}

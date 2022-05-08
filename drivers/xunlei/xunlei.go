@@ -211,7 +211,7 @@ func (c *Client) Request(method string, url string, callback func(*resty.Request
 			"X-Captcha-Token": c.captchaToken,
 			"User-Agent":      c.userAgent,
 			"client_id":       c.clientID,
-		})
+		}).SetQueryParam("client_id", c.clientID)
 	if callback != nil {
 		callback(req)
 	}
