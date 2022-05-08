@@ -252,7 +252,7 @@ func InitSettings() {
 		},
 		{
 			Key:         "ocr api",
-			Value:       "https://api.xhofe.top/ocr/file/json",
+			Value:       "https://api.nn.ci/ocr/file/json",
 			Description: "Used to identify verification codes",
 			Type:        "string",
 			Access:      model.PRIVATE,
