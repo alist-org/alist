@@ -2,7 +2,8 @@ package baiduphoto
 
 import (
 	"fmt"
-	"path/filepath"
+
+	"github.com/Xhofe/alist/utils"
 )
 
 type TokenErrResp struct {
@@ -45,7 +46,7 @@ type (
 )
 
 func (f File) Name() string {
-	return filepath.Base(f.Path)
+	return utils.Base(f.Path)
 }
 
 /*相册部分*/
