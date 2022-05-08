@@ -110,8 +110,10 @@ func (driver Cloud189) Login(account *model.Account) error {
 	b := ""
 	lt := ""
 	ltText := regexp.MustCompile(`lt = "(.+?)"`)
+	var res *resty.Response
+	var err error
 	for i := 0; i < 3; i++ {
-		res, err := client.R().Get(url)
+		res, err = client.R().Get(url)
 		if err != nil {
 			return err
 		}
@@ -129,7 +131,7 @@ func (driver Cloud189) Login(account *model.Account) error {
 		}
 	}
 	if lt == "" {
-		return errors.New("get page: " + b)
+		return fmt.Errorf("get page: %s \nstatus: %d \nrequest url: %s", b, res.StatusCode(), res.RawResponse.Request.URL.String())
 	}
 	captchaToken := regexp.MustCompile(`captchaToken' value='(.+?)'`).FindStringSubmatch(b)[1]
 	returnUrl := regexp.MustCompile(`returnUrl = '(.+?)'`).FindStringSubmatch(b)[1]
