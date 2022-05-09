@@ -44,6 +44,14 @@ func (driver Baidu) Items() []base.Item {
 			Type:  base.TypeString,
 		},
 		{
+			Name:     "internal_type",
+			Label:    "download api",
+			Type:     base.TypeSelect,
+			Required: true,
+			Values:   "file,album",
+			Default:  "album",
+		},
+		{
 			Name:     "client_id",
 			Label:    "client id",
 			Default:  "iYCeC9g08h5vuP9UqvPHKKSVrKFXGa1v",
@@ -156,6 +164,13 @@ func (driver Baidu) Files(path string, account *model.Account) ([]model.File, er
 }
 
 func (driver Baidu) Link(args base.Args, account *model.Account) (*base.Link, error) {
+	if account.InternalType == "file" {
+		return driver.LinkFile(args, account)
+	}
+	return driver.LinkAlbum(args, account)
+}
+
+func (driver Baidu) LinkAlbum(args base.Args, account *model.Account) (*base.Link, error) {
 	file, err := driver.File(args.Path, account)
 	if err != nil {
 		return nil, err
@@ -179,6 +194,43 @@ func (driver Baidu) Link(args base.Args, account *model.Account) (*base.Link, er
 			"uk":           e[1],
 		}).
 		Head(ALBUM_API_URL + "/download")
+	if err != nil {
+		return nil, err
+	}
+	return &base.Link{
+		Headers: []base.Header{
+			{Name: "User-Agent", Value: base.UserAgent},
+		},
+		Url: res.Header().Get("location"),
+	}, nil
+}
+
+func (driver Baidu) LinkFile(args base.Args, account *model.Account) (*base.Link, error) {
+	file, err := driver.File(args.Path, account)
+	if err != nil {
+		return nil, err
+	}
+
+	if !IsAlbumFile(file) {
+		return nil, base.ErrNotSupport
+	}
+
+	album, err := driver.File(utils.Dir(utils.ParsePath(args.Path)), account)
+	if err != nil {
+		return nil, err
+	}
+	// 拷贝到根目录
+	cfile, err := driver.CopyAlbumFile(album.Id, account, file.Id)
+	if err != nil {
+		return nil, err
+	}
+	// 获取文件下载地址
+	res, err := base.NoRedirectClient.R().
+		SetQueryParams(map[string]string{
+			"access_token": account.AccessToken,
+			"fsid":         fmt.Sprint(cfile.Fsid),
+		}).
+		Head(FILE_API_URL + "/download")
 	if err != nil {
 		return nil, err
 	}
