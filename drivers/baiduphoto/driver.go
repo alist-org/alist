@@ -224,13 +224,12 @@ func (driver Baidu) LinkFile(args base.Args, account *model.Account) (*base.Link
 	if err != nil {
 		return nil, err
 	}
-	// 获取文件下载地址
-	res, err := base.NoRedirectClient.R().
-		SetQueryParams(map[string]string{
-			"access_token": account.AccessToken,
-			"fsid":         fmt.Sprint(cfile.Fsid),
-		}).
-		Head(FILE_API_URL + "/download")
+
+	res, err := driver.Request(http.MethodGet, FILE_API_URL_V2+"/download", func(r *resty.Request) {
+		r.SetQueryParams(map[string]string{
+			"fsid": fmt.Sprint(cfile.Fsid),
+		})
+	}, account)
 	if err != nil {
 		return nil, err
 	}
@@ -238,7 +237,7 @@ func (driver Baidu) LinkFile(args base.Args, account *model.Account) (*base.Link
 		Headers: []base.Header{
 			{Name: "User-Agent", Value: base.UserAgent},
 		},
-		Url: res.Header().Get("location"),
+		Url: utils.Json.Get(res.Body(), "dlink").ToString(),
 	}, nil
 }
 
@@ -454,7 +453,7 @@ func (driver Baidu) Upload(file *model.FileStream, account *model.Account) error
 
 	// 预上传
 	var precreateResp PrecreateResp
-	_, err = driver.Request(http.MethodPost, FILE_API_URL+"/precreate", func(r *resty.Request) {
+	_, err = driver.Request(http.MethodPost, FILE_API_URL_V1+"/precreate", func(r *resty.Request) {
 		r.SetFormData(params)
 		r.SetResult(&precreateResp)
 	}, account)
@@ -483,7 +482,7 @@ func (driver Baidu) Upload(file *model.FileStream, account *model.Account) error
 		fallthrough
 	case 2: // 创建文件
 		params["uploadid"] = precreateResp.UploadID
-		_, err = driver.Request(http.MethodPost, FILE_API_URL+"/create", func(r *resty.Request) {
+		_, err = driver.Request(http.MethodPost, FILE_API_URL_V1+"/create", func(r *resty.Request) {
 			r.SetFormData(params)
 			r.SetResult(&precreateResp)
 		}, account)

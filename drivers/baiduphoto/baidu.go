@@ -87,7 +87,7 @@ func (driver Baidu) GetAllFile(account *model.Account) (files []File, err error)
 
 	for {
 		var resp FileListResp
-		_, err = driver.Request(http.MethodGet, FILE_API_URL+"/list", func(r *resty.Request) {
+		_, err = driver.Request(http.MethodGet, FILE_API_URL_V1+"/list", func(r *resty.Request) {
 			r.SetQueryParams(map[string]string{
 				"need_thumbnail":     "1",
 				"need_filter_hidden": "0",
