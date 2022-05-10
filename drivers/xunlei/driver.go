@@ -105,7 +105,7 @@ func (driver XunLeiCloud) Items() []base.Item {
 			Label:    "device id",
 			Default:  utils.GetMD5Encode(uuid.NewString()),
 			Type:     base.TypeString,
-			Required: false,
+			Required: true,
 		},
 	}
 }
@@ -118,8 +118,10 @@ func (driver XunLeiCloud) Save(account *model.Account, old *model.Account) error
 	client := GetClient(account)
 	// 指定验证通过的captchaToken
 	if client.captchaToken != "" {
+		client.Lock()
 		client.captchaToken = account.CaptchaToken
 		account.CaptchaToken = ""
+		client.Unlock()
 	}
 
 	if client.token == "" {

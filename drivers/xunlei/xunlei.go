@@ -73,6 +73,8 @@ func (c *Client) requestCaptchaToken(action string, meta map[string]string) erro
 		SetBody(&param).
 		SetError(&e).
 		SetResult(&resp).
+		SetHeader("X-Device-Id", c.deviceID).
+		SetQueryParam("client_id", c.clientID).
 		Post(XLUSER_API_URL + "/shield/captcha/init")
 	if err != nil {
 		return err
@@ -133,6 +135,8 @@ func (c *Client) Login(account *model.Account) (err error) {
 			Username:     account.Username,
 			Password:     account.Password,
 		}).
+		SetHeader("X-Device-Id", c.deviceID).
+		SetQueryParam("client_id", c.clientID).
 		Post(url)
 	if err != nil {
 		return err
@@ -184,6 +188,8 @@ func (c *Client) RefreshToken() error {
 			"client_id":     c.clientID,
 			"client_secret": c.clientSecret,
 		}).
+		SetHeader("X-Device-Id", c.deviceID).
+		SetQueryParam("client_id", c.clientID).
 		Post(XLUSER_API_URL + "/auth/token")
 	if err != nil {
 		return err
@@ -211,7 +217,8 @@ func (c *Client) Request(method string, url string, callback func(*resty.Request
 			"X-Captcha-Token": c.captchaToken,
 			"User-Agent":      c.userAgent,
 			"client_id":       c.clientID,
-		}).SetQueryParam("client_id", c.clientID)
+		}).
+		SetQueryParam("client_id", c.clientID)
 	if callback != nil {
 		callback(req)
 	}

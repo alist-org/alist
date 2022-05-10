@@ -97,7 +97,7 @@ type (
 type (
 	UploadFile struct {
 		FsID           int64  `json:"fs_id"`
-		Size           int    `json:"size"`
+		Size           int64  `json:"size"`
 		Md5            string `json:"md5"`
 		ServerFilename string `json:"server_filename"`
 		Path           string `json:"path"`

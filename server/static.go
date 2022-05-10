@@ -1,14 +1,16 @@
 package server
 
 import (
+	"io/fs"
+	"io/ioutil"
+	"net/http"
+	"net/http/pprof"
+	"strings"
+
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/public"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
-	"io/fs"
-	"io/ioutil"
-	"net/http"
-	"strings"
 )
 
 func InitIndex() {
@@ -48,6 +50,8 @@ func Static(r *gin.Engine) {
 		c.Status(200)
 		if strings.HasPrefix(c.Request.URL.Path, "/@manage") {
 			_, _ = c.Writer.WriteString(conf.ManageHtml)
+		} else if strings.HasPrefix(c.Request.URL.Path, "/debug/pprof") {
+			pprof.Index(c.Writer, c.Request)
 		} else {
 			_, _ = c.Writer.WriteString(conf.IndexHtml)
 		}
