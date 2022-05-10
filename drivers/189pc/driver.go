@@ -619,8 +619,10 @@ func (driver Cloud189) CommonUpload(file *model.FileStream, parentFile *model.Fi
 		}
 		if r.StatusCode != http.StatusOK {
 			data, _ := io.ReadAll(r.Body)
+			r.Body.Close()
 			return fmt.Errorf(string(data))
 		}
+		r.Body.Close()
 	}
 
 	fileMd5Hex := strings.ToUpper(hex.EncodeToString(fileMd5.Sum(nil)))
@@ -727,8 +729,10 @@ func (driver Cloud189) FastUpload(file *model.FileStream, parentFile *model.File
 			}
 			if r.StatusCode != http.StatusOK {
 				data, _ := io.ReadAll(r.Body)
+				r.Body.Close()
 				return fmt.Errorf(string(data))
 			}
+			r.Body.Close()
 		}
 	}
 

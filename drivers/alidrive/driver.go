@@ -515,6 +515,7 @@ func (driver AliDrive) Upload(file *model.FileStream, account *model.Account) er
 			return err
 		}
 		log.Debugf("%+v", res)
+		res.Body.Close()
 		//res, err := base.BaseClient.R().
 		//	SetHeader("Content-Type","").
 		//	SetBody(byteData).Put(resp.PartInfoList[i].UploadUrl)

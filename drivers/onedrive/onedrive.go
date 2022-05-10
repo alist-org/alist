@@ -307,8 +307,10 @@ func (driver Onedrive) UploadBig(file *model.FileStream, account *model.Account)
 		res, err := base.HttpClient.Do(req)
 		if res.StatusCode != 201 && res.StatusCode != 202 {
 			data, _ := ioutil.ReadAll(res.Body)
+			res.Body.Close()
 			return errors.New(string(data))
 		}
+		res.Body.Close()
 	}
 	return nil
 }
