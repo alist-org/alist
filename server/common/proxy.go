@@ -26,7 +26,7 @@ func Proxy(w http.ResponseWriter, r *http.Request, link *base.Link, file *model.
 			_ = link.Data.Close()
 		}()
 		w.Header().Set("Content-Type", "application/octet-stream")
-		w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename=%s`, url.QueryEscape(file.Name)))
+		w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename=%s`, file.Name))
 		w.Header().Set("Content-Length", strconv.FormatInt(file.Size, 10))
 		if link.Header != nil {
 			for h, val := range link.Header {
