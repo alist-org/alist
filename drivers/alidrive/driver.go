@@ -424,10 +424,17 @@ func (driver AliDrive) Upload(file *model.FileStream, account *model.Account) er
 	}
 
 	if account.Bool1 {
-		buf := make([]byte, 1024)
-		n, _ := file.Read(buf[:])
-		reqBody["pre_hash"] = utils.GetSHA1Encode(string(buf[:n]))
-		file.File = io.NopCloser(io.MultiReader(bytes.NewReader(buf[:n]), file.File))
+		buf := bytes.NewBuffer(make([]byte, 0, 1024))
+		io.CopyN(buf, file, 1024)
+		reqBody["pre_hash"] = utils.GetSHA1Encode(buf.String())
+		// 把头部拼接回去
+		file.File = struct {
+			io.Reader
+			io.Closer
+		}{
+			Reader: io.MultiReader(buf, file.File),
+			Closer: file.File,
+		}
 	} else {
 		reqBody["content_hash_name"] = "none"
 		reqBody["proof_version"] = "v1"
@@ -454,7 +461,7 @@ func (driver AliDrive) Upload(file *model.FileStream, account *model.Account) er
 		return fmt.Errorf("%s", e.Message)
 	}
 
-	if e.Code == "PreHashMatched" && account.Bool1 {
+	if account.Bool1 && e.Code == "PreHashMatched" {
 		tempFile, err := ioutil.TempFile(conf.Conf.TempDir, "file-*")
 		if err != nil {
 			return err
@@ -499,6 +506,7 @@ func (driver AliDrive) Upload(file *model.FileStream, account *model.Account) er
 			return nil
 		}
 
+		// 秒传失败
 		if _, err = tempFile.Seek(0, io.SeekStart); err != nil {
 			return err
 		}
