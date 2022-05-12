@@ -1,20 +1,22 @@
 package _23
 
 import (
-	"github.com/Xhofe/alist/conf"
-	"github.com/Xhofe/alist/utils"
 	"path"
 	"time"
+
+	"github.com/Xhofe/alist/conf"
+	"github.com/Xhofe/alist/utils"
 )
 
 type File struct {
-	FileName  string     `json:"FileName"`
-	Size      int64      `json:"Size"`
-	UpdateAt  *time.Time `json:"UpdateAt"`
-	FileId    int64      `json:"FileId"`
-	Type      int        `json:"Type"`
-	Etag      string     `json:"Etag"`
-	S3KeyFlag string     `json:"S3KeyFlag"`
+	FileName    string     `json:"FileName"`
+	Size        int64      `json:"Size"`
+	UpdateAt    *time.Time `json:"UpdateAt"`
+	FileId      int64      `json:"FileId"`
+	Type        int        `json:"Type"`
+	Etag        string     `json:"Etag"`
+	S3KeyFlag   string     `json:"S3KeyFlag"`
+	DownloadUrl string     `json:"DownloadUrl"`
 }
 
 func (f File) GetSize() uint64 {

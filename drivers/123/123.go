@@ -47,6 +47,7 @@ func (driver Pan123) FormatFile(file *File) *model.File {
 		Size:      file.Size,
 		Driver:    driver.Config().Name,
 		UpdatedAt: file.UpdateAt,
+		Thumbnail: file.DownloadUrl,
 	}
 	f.Type = file.GetType()
 	return f
@@ -66,7 +67,7 @@ func (driver Pan123) GetFiles(parentId string, account *model.Account) ([]File, 
 			"parentFileId":   parentId,
 			"trashed":        "false",
 		}
-		_, err := driver.Request("https://www.123pan.com/api/file/list",
+		_, err := driver.Request("https://www.123pan.com/api/file/list/new",
 			base.Get, nil, query, nil, &resp, false, account)
 		if err != nil {
 			return nil, err

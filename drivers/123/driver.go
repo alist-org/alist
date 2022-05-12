@@ -126,7 +126,7 @@ func (driver Pan123) Files(path string, account *model.Account) ([]model.File, e
 			_ = base.SetCache(path, rawFiles, account)
 		}
 	}
-	files := make([]model.File, 0)
+	files := make([]model.File, 0, len(rawFiles))
 	for _, file := range rawFiles {
 		files = append(files, *driver.FormatFile(&file))
 	}
