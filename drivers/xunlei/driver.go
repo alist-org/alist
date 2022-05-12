@@ -171,14 +171,15 @@ func (driver XunLeiCloud) Files(path string, account *model.Account) ([]model.Fi
 		return nil, err
 	}
 
-	time.Sleep(time.Millisecond * 400)
+	time.Sleep(time.Millisecond * 300)
 	files := make([]model.File, 0)
+	var pageToken string
 	for {
 		var fileList FileList
 		_, err = GetClient(account).Request("GET", FILE_API_URL, func(r *resty.Request) {
 			r.SetQueryParams(map[string]string{
 				"parent_id":  parentFile.Id,
-				"page_token": fileList.NextPageToken,
+				"page_token": pageToken,
 				"with_audit": "true",
 				"filters":    `{"phase": {"eq": "PHASE_TYPE_COMPLETE"}, "trashed":{"eq":false}}`,
 			})
@@ -195,6 +196,7 @@ func (driver XunLeiCloud) Files(path string, account *model.Account) ([]model.Fi
 		if fileList.NextPageToken == "" {
 			break
 		}
+		pageToken = fileList.NextPageToken
 	}
 	if len(files) > 0 {
 		_ = base.SetCache(path, files, account)
