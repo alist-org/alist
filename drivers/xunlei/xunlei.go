@@ -117,8 +117,20 @@ func (c *Client) Login(account *model.Account) (err error) {
 		model.SaveAccount(account)
 	}()
 
+	meta := make(map[string]string)
+	if strings.Contains(account.Username, "@") {
+		meta["email"] = account.Username
+	} else if len(account.Username) >= 11 {
+		if !strings.Contains(account.Username, "+") {
+			account.Username = "+86 " + account.Username
+		}
+		meta["phone_number"] = account.Username
+	} else {
+		meta["username"] = account.Username
+	}
+
 	url := XLUSER_API_URL + "/auth/signin"
-	err = c.requestCaptchaToken(getAction(http.MethodPost, url), map[string]string{"username": account.Username})
+	err = c.requestCaptchaToken(getAction(http.MethodPost, url), meta)
 	if err != nil {
 		return err
 	}
