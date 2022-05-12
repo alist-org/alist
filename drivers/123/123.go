@@ -3,14 +3,15 @@ package _23
 import (
 	"errors"
 	"fmt"
+	"path/filepath"
+	"strconv"
+
 	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
 	"github.com/go-resty/resty/v2"
 	jsoniter "github.com/json-iterator/go"
 	log "github.com/sirupsen/logrus"
-	"path/filepath"
-	"strconv"
 )
 
 func (driver Pan123) Login(account *model.Account) error {
