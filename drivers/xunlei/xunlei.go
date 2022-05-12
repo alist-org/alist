@@ -269,3 +269,14 @@ func (c *Client) Request(method string, url string, callback func(*resty.Request
 	}
 	return c.Request(method, url, callback, account)
 }
+
+func (c *Client) UpdateCaptchaToken(captchaToken string) bool {
+	c.Lock()
+	defer c.Unlock()
+
+	if captchaToken != "" {
+		c.captchaToken = captchaToken
+		return true
+	}
+	return false
+}

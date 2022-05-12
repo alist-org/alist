@@ -117,11 +117,9 @@ func (driver XunLeiCloud) Save(account *model.Account, old *model.Account) error
 
 	client := GetClient(account)
 	// 指定验证通过的captchaToken
-	if client.captchaToken != "" {
-		client.Lock()
-		client.captchaToken = account.CaptchaToken
+	if account.CaptchaToken != "" {
+		client.UpdateCaptchaToken(strings.TrimSpace(account.CaptchaToken))
 		account.CaptchaToken = ""
-		client.Unlock()
 	}
 
 	if client.token == "" {
