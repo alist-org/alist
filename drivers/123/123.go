@@ -3,14 +3,15 @@ package _23
 import (
 	"errors"
 	"fmt"
+	"path/filepath"
+	"strconv"
+
 	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
 	"github.com/go-resty/resty/v2"
 	jsoniter "github.com/json-iterator/go"
 	log "github.com/sirupsen/logrus"
-	"path/filepath"
-	"strconv"
 )
 
 func (driver Pan123) Login(account *model.Account) error {
@@ -46,6 +47,7 @@ func (driver Pan123) FormatFile(file *File) *model.File {
 		Size:      file.Size,
 		Driver:    driver.Config().Name,
 		UpdatedAt: file.UpdateAt,
+		Thumbnail: file.DownloadUrl,
 	}
 	f.Type = file.GetType()
 	return f
@@ -65,7 +67,7 @@ func (driver Pan123) GetFiles(parentId string, account *model.Account) ([]File, 
 			"parentFileId":   parentId,
 			"trashed":        "false",
 		}
-		_, err := driver.Request("https://www.123pan.com/api/file/list",
+		_, err := driver.Request("https://www.123pan.com/api/file/list/new",
 			base.Get, nil, query, nil, &resp, false, account)
 		if err != nil {
 			return nil, err
