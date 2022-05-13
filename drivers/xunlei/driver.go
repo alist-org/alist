@@ -1,10 +1,6 @@
 package xunlei
 
 import (
-	"fmt"
-	"io"
-	"io/ioutil"
-	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -14,7 +10,10 @@ import (
 	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
-	"github.com/aliyun/aliyun-oss-go-sdk/oss"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/go-resty/resty/v2"
 	"github.com/google/uuid"
 )
@@ -105,7 +104,7 @@ func (driver XunLeiCloud) Items() []base.Item {
 			Label:    "device id",
 			Default:  utils.GetMD5Encode(uuid.NewString()),
 			Type:     base.TypeString,
-			Required: false,
+			Required: true,
 		},
 	}
 }
@@ -117,8 +116,8 @@ func (driver XunLeiCloud) Save(account *model.Account, old *model.Account) error
 
 	client := GetClient(account)
 	// 指定验证通过的captchaToken
-	if client.captchaToken != "" {
-		client.captchaToken = account.CaptchaToken
+	if account.CaptchaToken != "" {
+		client.UpdateCaptchaToken(strings.TrimSpace(account.CaptchaToken))
 		account.CaptchaToken = ""
 	}
 
@@ -169,15 +168,17 @@ func (driver XunLeiCloud) Files(path string, account *model.Account) ([]model.Fi
 		return nil, err
 	}
 
-	time.Sleep(time.Millisecond * 400)
+	time.Sleep(time.Millisecond * 300)
 	files := make([]model.File, 0)
+	var pageToken string
 	for {
 		var fileList FileList
 		_, err = GetClient(account).Request("GET", FILE_API_URL, func(r *resty.Request) {
 			r.SetQueryParams(map[string]string{
 				"parent_id":  parentFile.Id,
-				"page_token": fileList.NextPageToken,
+				"page_token": pageToken,
 				"with_audit": "true",
+				"limit":      "100",
 				"filters":    `{"phase": {"eq": "PHASE_TYPE_COMPLETE"}, "trashed":{"eq":false}}`,
 			})
 			r.SetResult(&fileList)
@@ -193,6 +194,7 @@ func (driver XunLeiCloud) Files(path string, account *model.Account) ([]model.Fi
 		if fileList.NextPageToken == "" {
 			break
 		}
+		pageToken = fileList.NextPageToken
 	}
 	if len(files) > 0 {
 		_ = base.SetCache(path, files, account)
@@ -355,19 +357,24 @@ func (driver XunLeiCloud) Upload(file *model.FileStream, account *model.Account)
 		return err
 	}
 
-	tempFile, err := ioutil.TempFile(conf.Conf.TempDir, "file-*")
-	if err != nil {
-		return err
-	}
+	/*
+		tempFile, err := ioutil.TempFile(conf.Conf.TempDir, "file-*")
+		if err != nil {
+			return err
+		}
 
-	defer os.Remove(tempFile.Name())
+		defer tempFile.Close()
+		defer os.Remove(tempFile.Name())
 
-	gcid, err := getGcid(io.TeeReader(file, tempFile), int64(file.Size))
-	if err != nil {
-		return err
-	}
+		gcid, err := getGcid(io.TeeReader(file, tempFile), int64(file.Size))
+		if err != nil {
+			return err
+		}
 
-	tempFile.Close()
+		if _, err = tempFile.Seek(0, io.SeekStart); err != nil {
+			return err
+		}
+	*/
 
 	var resp UploadTaskResponse
 	_, err = GetClient(account).Request("POST", FILE_API_URL, func(r *resty.Request) {
@@ -375,8 +382,8 @@ func (driver XunLeiCloud) Upload(file *model.FileStream, account *model.Account)
 			"kind":        FILE,
 			"parent_id":   parentFile.Id,
 			"name":        file.Name,
-			"size":        fmt.Sprint(file.Size),
-			"hash":        gcid,
+			"size":        file.Size,
+			"hash":        "1CF254FBC456E1B012CD45C546636AA62CF8350E",
 			"upload_type": UPLOAD_TYPE_RESUMABLE,
 		})
 		r.SetResult(&resp)
@@ -388,18 +395,21 @@ func (driver XunLeiCloud) Upload(file *model.FileStream, account *model.Account)
 	param := resp.Resumable.Params
 	if resp.UploadType == UPLOAD_TYPE_RESUMABLE {
 		param.Endpoint = strings.TrimLeft(param.Endpoint, param.Bucket+".")
-		client, err := oss.New(param.Endpoint, param.AccessKeyID, param.AccessKeySecret, oss.SecurityToken(param.SecurityToken), oss.EnableMD5(true))
+		s, err := session.NewSession(&aws.Config{
+			Credentials: credentials.NewStaticCredentials(param.AccessKeyID, param.AccessKeySecret, param.SecurityToken),
+			Region:      aws.String("xunlei"),
+			Endpoint:    aws.String(param.Endpoint),
+		})
 		if err != nil {
 			return err
 		}
-		bucket, err := client.Bucket(param.Bucket)
-		if err != nil {
-			return err
-		}
-		err = bucket.UploadFile(param.Key, tempFile.Name(), 1<<22, oss.Routines(3), oss.Checkpoint(true, ""), oss.Expires(param.Expiration))
-		if err != nil {
-			return err
-		}
+		_, err = s3manager.NewUploader(s).Upload(&s3manager.UploadInput{
+			Bucket:  aws.String(param.Bucket),
+			Key:     aws.String(param.Key),
+			Expires: aws.Time(param.Expiration),
+			Body:    file,
+		})
+		return err
 	}
 	return nil
 }

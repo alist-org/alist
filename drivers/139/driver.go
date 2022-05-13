@@ -448,6 +448,7 @@ func (driver Cloud139) Upload(file *model.FileStream, account *model.Account) er
 			return err
 		}
 		log.Debugf("%+v", res)
+		res.Body.Close()
 		start += byteSize
 	}
 	return nil

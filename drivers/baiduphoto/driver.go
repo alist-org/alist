@@ -44,6 +44,14 @@ func (driver Baidu) Items() []base.Item {
 			Type:  base.TypeString,
 		},
 		{
+			Name:     "internal_type",
+			Label:    "download api",
+			Type:     base.TypeSelect,
+			Required: true,
+			Values:   "file,album",
+			Default:  "album",
+		},
+		{
 			Name:     "client_id",
 			Label:    "client id",
 			Default:  "iYCeC9g08h5vuP9UqvPHKKSVrKFXGa1v",
@@ -156,6 +164,13 @@ func (driver Baidu) Files(path string, account *model.Account) ([]model.File, er
 }
 
 func (driver Baidu) Link(args base.Args, account *model.Account) (*base.Link, error) {
+	if account.InternalType == "file" {
+		return driver.LinkFile(args, account)
+	}
+	return driver.LinkAlbum(args, account)
+}
+
+func (driver Baidu) LinkAlbum(args base.Args, account *model.Account) (*base.Link, error) {
 	file, err := driver.File(args.Path, account)
 	if err != nil {
 		return nil, err
@@ -187,6 +202,42 @@ func (driver Baidu) Link(args base.Args, account *model.Account) (*base.Link, er
 			{Name: "User-Agent", Value: base.UserAgent},
 		},
 		Url: res.Header().Get("location"),
+	}, nil
+}
+
+func (driver Baidu) LinkFile(args base.Args, account *model.Account) (*base.Link, error) {
+	file, err := driver.File(args.Path, account)
+	if err != nil {
+		return nil, err
+	}
+
+	if !IsAlbumFile(file) {
+		return nil, base.ErrNotSupport
+	}
+
+	album, err := driver.File(utils.Dir(utils.ParsePath(args.Path)), account)
+	if err != nil {
+		return nil, err
+	}
+	// 拷贝到根目录
+	cfile, err := driver.CopyAlbumFile(album.Id, account, file.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := driver.Request(http.MethodGet, FILE_API_URL_V2+"/download", func(r *resty.Request) {
+		r.SetQueryParams(map[string]string{
+			"fsid": fmt.Sprint(cfile.Fsid),
+		})
+	}, account)
+	if err != nil {
+		return nil, err
+	}
+	return &base.Link{
+		Headers: []base.Header{
+			{Name: "User-Agent", Value: base.UserAgent},
+		},
+		Url: utils.Json.Get(res.Body(), "dlink").ToString(),
 	}, nil
 }
 
@@ -402,7 +453,7 @@ func (driver Baidu) Upload(file *model.FileStream, account *model.Account) error
 
 	// 预上传
 	var precreateResp PrecreateResp
-	_, err = driver.Request(http.MethodPost, FILE_API_URL+"/precreate", func(r *resty.Request) {
+	_, err = driver.Request(http.MethodPost, FILE_API_URL_V1+"/precreate", func(r *resty.Request) {
 		r.SetFormData(params)
 		r.SetResult(&precreateResp)
 	}, account)
@@ -431,7 +482,7 @@ func (driver Baidu) Upload(file *model.FileStream, account *model.Account) error
 		fallthrough
 	case 2: // 创建文件
 		params["uploadid"] = precreateResp.UploadID
-		_, err = driver.Request(http.MethodPost, FILE_API_URL+"/create", func(r *resty.Request) {
+		_, err = driver.Request(http.MethodPost, FILE_API_URL_V1+"/create", func(r *resty.Request) {
 			r.SetFormData(params)
 			r.SetResult(&precreateResp)
 		}, account)

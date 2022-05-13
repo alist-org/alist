@@ -577,6 +577,7 @@ func (driver Cloud189) NewUpload(file *model.FileStream, account *model.Account)
 
 		r, err := base.HttpClient.Do(req)
 		log.Debugf("%+v %+v", r, r.Request.Header)
+		r.Body.Close()
 		if err != nil {
 			return err
 		}

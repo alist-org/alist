@@ -13,9 +13,10 @@ import (
 )
 
 const (
-	API_URL       = "https://photo.baidu.com/youai"
-	ALBUM_API_URL = API_URL + "/album/v1"
-	FILE_API_URL  = API_URL + "/file/v1"
+	API_URL         = "https://photo.baidu.com/youai"
+	ALBUM_API_URL   = API_URL + "/album/v1"
+	FILE_API_URL_V1 = API_URL + "/file/v1"
+	FILE_API_URL_V2 = API_URL + "/file/v2"
 )
 
 var (

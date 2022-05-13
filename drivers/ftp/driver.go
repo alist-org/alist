@@ -227,13 +227,21 @@ func (driver FTP) Copy(src string, dst string, account *model.Account) error {
 
 func (driver FTP) Delete(path string, account *model.Account) error {
 	path = utils.ParsePath(path)
+	file, err := driver.File(path, account)
+	if err != nil {
+		return err
+	}
 	realPath := utils.Join(account.RootFolder, path)
 	conn, err := driver.Login(account)
 	if err != nil {
 		return err
 	}
 	//defer func() { _ = conn.Quit() }()
-	err = conn.Delete(realPath)
+	if file.IsDir() {
+		err = conn.RemoveDirRecur(realPath)
+	} else {
+		err = conn.Delete(realPath)
+	}
 	return err
 }
 

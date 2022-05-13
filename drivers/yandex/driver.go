@@ -213,7 +213,8 @@ func (driver Yandex) Upload(file *model.FileStream, account *model.Account) erro
 	}
 	req.Header.Set("Content-Length", strconv.FormatUint(file.Size, 10))
 	req.Header.Set("Content-Type", "application/octet-stream")
-	_, err = base.HttpClient.Do(req)
+	res, err := base.HttpClient.Do(req)
+	res.Body.Close()
 	//res, err := base.RestyClient.R().
 	//	SetHeader("Content-Length", strconv.FormatUint(file.Size, 10)).
 	//	SetBody(file).Put(resp.Href)

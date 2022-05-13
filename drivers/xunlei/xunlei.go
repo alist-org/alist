@@ -73,6 +73,8 @@ func (c *Client) requestCaptchaToken(action string, meta map[string]string) erro
 		SetBody(&param).
 		SetError(&e).
 		SetResult(&resp).
+		SetHeader("X-Device-Id", c.deviceID).
+		SetQueryParam("client_id", c.clientID).
 		Post(XLUSER_API_URL + "/shield/captcha/init")
 	if err != nil {
 		return err
@@ -115,8 +117,20 @@ func (c *Client) Login(account *model.Account) (err error) {
 		model.SaveAccount(account)
 	}()
 
+	meta := make(map[string]string)
+	if strings.Contains(account.Username, "@") {
+		meta["email"] = account.Username
+	} else if len(account.Username) >= 11 {
+		if !strings.Contains(account.Username, "+") {
+			account.Username = "+86 " + account.Username
+		}
+		meta["phone_number"] = account.Username
+	} else {
+		meta["username"] = account.Username
+	}
+
 	url := XLUSER_API_URL + "/auth/signin"
-	err = c.requestCaptchaToken(getAction(http.MethodPost, url), map[string]string{"username": account.Username})
+	err = c.requestCaptchaToken(getAction(http.MethodPost, url), meta)
 	if err != nil {
 		return err
 	}
@@ -133,6 +147,8 @@ func (c *Client) Login(account *model.Account) (err error) {
 			Username:     account.Username,
 			Password:     account.Password,
 		}).
+		SetHeader("X-Device-Id", c.deviceID).
+		SetQueryParam("client_id", c.clientID).
 		Post(url)
 	if err != nil {
 		return err
@@ -184,6 +200,8 @@ func (c *Client) RefreshToken() error {
 			"client_id":     c.clientID,
 			"client_secret": c.clientSecret,
 		}).
+		SetHeader("X-Device-Id", c.deviceID).
+		SetQueryParam("client_id", c.clientID).
 		Post(XLUSER_API_URL + "/auth/token")
 	if err != nil {
 		return err
@@ -211,7 +229,8 @@ func (c *Client) Request(method string, url string, callback func(*resty.Request
 			"X-Captcha-Token": c.captchaToken,
 			"User-Agent":      c.userAgent,
 			"client_id":       c.clientID,
-		}).SetQueryParam("client_id", c.clientID)
+		}).
+		SetQueryParam("client_id", c.clientID)
 	if callback != nil {
 		callback(req)
 	}
@@ -249,4 +268,15 @@ func (c *Client) Request(method string, url string, callback func(*resty.Request
 		return nil, &e
 	}
 	return c.Request(method, url, callback, account)
+}
+
+func (c *Client) UpdateCaptchaToken(captchaToken string) bool {
+	c.Lock()
+	defer c.Unlock()
+
+	if captchaToken != "" {
+		c.captchaToken = captchaToken
+		return true
+	}
+	return false
 }

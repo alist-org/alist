@@ -116,7 +116,7 @@ func (driver SFTP) Files(path string, account *model.Account) ([]model.File, err
 	if err != nil {
 		return nil, err
 	}
-	var files []model.File
+	files := make([]model.File, 0)
 	rawFiles, err := client.Files(remotePath)
 	if err != nil {
 		return nil, err
