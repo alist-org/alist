@@ -50,7 +50,7 @@ func Static(r *gin.Engine) {
 		c.Status(200)
 		if strings.HasPrefix(c.Request.URL.Path, "/@manage") {
 			_, _ = c.Writer.WriteString(conf.ManageHtml)
-		} else if strings.HasPrefix(c.Request.URL.Path, "/debug/pprof") {
+		} else if strings.HasPrefix(c.Request.URL.Path, "/debug/pprof") && conf.Debug {
 			pprof.Index(c.Writer, c.Request)
 		} else {
 			_, _ = c.Writer.WriteString(conf.IndexHtml)
