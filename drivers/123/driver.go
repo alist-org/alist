@@ -306,8 +306,10 @@ func (driver Pan123) Upload(file *model.FileStream, account *model.Account) erro
 	if err != nil {
 		return err
 	}
-	defer tempFile.Close()
-	defer os.Remove(tempFile.Name())
+	defer func() {
+		_ = tempFile.Close()
+		_ = os.Remove(tempFile.Name())
+	}()
 	h := md5.New()
 	if _, err = io.Copy(io.MultiWriter(tempFile, h), file); err != nil {
 		return err

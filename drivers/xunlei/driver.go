@@ -363,8 +363,10 @@ func (driver XunLeiCloud) Upload(file *model.FileStream, account *model.Account)
 			return err
 		}
 
-		defer tempFile.Close()
-		defer os.Remove(tempFile.Name())
+		defer func() {
+			_ = tempFile.Close()
+			_ = os.Remove(tempFile.Name())
+		}()
 
 		gcid, err := getGcid(io.TeeReader(file, tempFile), int64(file.Size))
 		if err != nil {

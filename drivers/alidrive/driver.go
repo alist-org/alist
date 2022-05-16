@@ -467,8 +467,10 @@ func (driver AliDrive) Upload(file *model.FileStream, account *model.Account) er
 			return err
 		}
 
-		defer tempFile.Close()
-		defer os.Remove(tempFile.Name())
+		defer func() {
+			_ = tempFile.Close()
+			_ = os.Remove(tempFile.Name())
+		}()
 
 		delete(reqBody, "pre_hash")
 		h := sha1.New()
