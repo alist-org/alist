@@ -1,7 +1,9 @@
 package _23
 
 import (
+	"bytes"
 	"crypto/md5"
+	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	"io"
@@ -67,6 +69,12 @@ func (driver Pan123) Items() []base.Item {
 			Values:   "asc,desc",
 			Required: true,
 			Default:  "asc",
+		},
+		{
+			Name:        "bool_1",
+			Label:       "stream upload",
+			Type:        base.TypeBool,
+			Description: "io stream upload (test)",
 		},
 	}
 }
@@ -302,23 +310,44 @@ func (driver Pan123) Upload(file *model.FileStream, account *model.Account) erro
 		return base.ErrNotFolder
 	}
 
-	tempFile, err := ioutil.TempFile(conf.Conf.TempDir, "file-*")
-	if err != nil {
-		return err
-	}
-	defer tempFile.Close()
-	defer os.Remove(tempFile.Name())
+	const DEFAULT int64 = 10485760
+	var uploadFile io.Reader
 	h := md5.New()
-	if _, err = io.Copy(io.MultiWriter(tempFile, h), file); err != nil {
-		return err
+	if account.Bool1 && file.GetSize() > uint64(DEFAULT) {
+		// 只计算前10MIB
+		buf := bytes.NewBuffer(make([]byte, 0, DEFAULT))
+		if n, err := io.CopyN(io.MultiWriter(buf, h), file, DEFAULT); err != io.EOF && n == 0 {
+			return err
+		}
+		// 增加额外参数防止MD5碰撞
+		h.Write([]byte(file.Name))
+		num := make([]byte, 8)
+		binary.BigEndian.PutUint64(num, file.Size)
+		h.Write(num)
+		// 拼装
+		uploadFile = io.MultiReader(buf, file)
+	} else {
+		// 计算完整文件MD5
+		tempFile, err := ioutil.TempFile(conf.Conf.TempDir, "file-*")
+		if err != nil {
+			return err
+		}
+		defer func() {
+			_ = tempFile.Close()
+			_ = os.Remove(tempFile.Name())
+		}()
+
+		if _, err = io.Copy(io.MultiWriter(tempFile, h), file); err != nil {
+			return err
+		}
+
+		_, err = tempFile.Seek(0, io.SeekStart)
+		if err != nil {
+			return err
+		}
+		uploadFile = tempFile
 	}
 	etag := hex.EncodeToString(h.Sum(nil))
-
-	_, err = tempFile.Seek(0, io.SeekStart)
-	if err != nil {
-		return err
-	}
-
 	data := base.Json{
 		"driveId":      0,
 		"duplicate":    2, // 2->覆盖 1->重命名 0->默认
@@ -352,7 +381,7 @@ func (driver Pan123) Upload(file *model.FileStream, account *model.Account) erro
 	input := &s3manager.UploadInput{
 		Bucket: &resp.Data.Bucket,
 		Key:    &resp.Data.Key,
-		Body:   tempFile,
+		Body:   uploadFile,
 	}
 	_, err = uploader.Upload(input)
 	if err != nil {
