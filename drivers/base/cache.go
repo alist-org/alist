@@ -5,6 +5,7 @@ import (
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
 	log "github.com/sirupsen/logrus"
+	"strings"
 )
 
 func KeyCache(path string, account *model.Account) string {
@@ -15,6 +16,9 @@ func KeyCache(path string, account *model.Account) string {
 }
 
 func SaveSearchFiles[T model.ISearchFile](key string, obj []T) {
+	if strings.Contains(key, ".balance") {
+		return
+	}
 	err := model.DeleteSearchFilesByPath(key)
 	if err != nil {
 		log.Errorln("failed create search files", err)
