@@ -17,7 +17,6 @@ import (
 	"io"
 	"math"
 	"net/http"
-	"net/http/cookiejar"
 	"regexp"
 	"strconv"
 	"strings"
@@ -94,18 +93,11 @@ type LoginResp struct {
 
 // Login refer to PanIndex
 func (driver Cloud189) Login(account *model.Account) error {
-	client, ok := client189Map[account.Name]
-	if !ok {
-		//cookieJar, _ := cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
-		client = resty.New()
-		//client.SetCookieJar(cookieJar)
-		client.SetTimeout(base.DefaultTimeout)
-		client.SetRetryCount(3)
-		client.SetHeader("Referer", "https://cloud.189.cn/")
-	}
-	// clear cookie
-	jar, _ := cookiejar.New(nil)
-	client.SetCookieJar(jar)
+	client := resty.New()
+	//client.SetCookieJar(cookieJar)
+	client.SetTimeout(base.DefaultTimeout)
+	client.SetRetryCount(3)
+	client.SetHeader("Referer", "https://cloud.189.cn/")
 	url := "https://cloud.189.cn/api/portal/loginUrl.action?redirectURL=https%3A%2F%2Fcloud.189.cn%2Fmain.action"
 	b := ""
 	lt := ""
@@ -131,7 +123,8 @@ func (driver Cloud189) Login(account *model.Account) error {
 		}
 	}
 	if lt == "" {
-		return fmt.Errorf("get page: %s \nstatus: %d \nrequest url: %s", b, res.StatusCode(), res.RawResponse.Request.URL.String())
+		return fmt.Errorf("get page: %s \nstatus: %d \nrequest url: %s\nredirect url: %s",
+			b, res.StatusCode(), res.RawResponse.Request.URL.String(), res.Header().Get("location"))
 	}
 	captchaToken := regexp.MustCompile(`captchaToken' value='(.+?)'`).FindStringSubmatch(b)[1]
 	returnUrl := regexp.MustCompile(`returnUrl = '(.+?)'`).FindStringSubmatch(b)[1]
