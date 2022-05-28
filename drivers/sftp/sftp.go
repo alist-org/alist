@@ -49,7 +49,7 @@ func (client *Client) Files(remotePath string) ([]os.FileInfo, error) {
 	return client.ReadDir(remotePath)
 }
 
-func (client *Client) Remove(remotePath string) error {
+func (client *Client) remove(remotePath string) error {
 	f, err := client.Stat(remotePath)
 	if err != nil {
 		return nil

@@ -195,7 +195,7 @@ func (driver SFTP) Delete(path string, account *model.Account) error {
 	if err != nil {
 		return err
 	}
-	return client.Remove(utils.Join(account.RootFolder, path))
+	return client.remove(utils.Join(account.RootFolder, path))
 }
 
 func (driver SFTP) Upload(file *model.FileStream, account *model.Account) error {

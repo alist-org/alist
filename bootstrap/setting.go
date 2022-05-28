@@ -125,6 +125,13 @@ func InitSettings() {
 			Group:       model.FRONT,
 		},
 		{
+			Key:    "pdf viewer url",
+			Type:   "string",
+			Value:  "https://alist-org.github.io/pdf.js/web/viewer.html?file=$url",
+			Access: model.PUBLIC,
+			Group:  model.FRONT,
+		},
+		{
 			Key:    "autoplay video",
 			Value:  "false",
 			Type:   "bool",
