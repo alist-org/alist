@@ -2,15 +2,16 @@ package _89
 
 import (
 	"fmt"
+	"net/http"
+	"path/filepath"
+	"strings"
+
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/drivers/base"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
 	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
-	"net/http"
-	"path/filepath"
-	"strings"
 )
 
 type Cloud189 struct{}
@@ -179,23 +180,27 @@ func (driver Cloud189) Link(args base.Args, account *model.Account) (*base.Link,
 		resty.RedirectPolicyFunc(func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
 		}))
-	res, err := client.R().Get("https:" + resp.FileDownloadUrl)
+	res, err := client.R().SetHeader("User-Agent", base.UserAgent).Get("https:" + resp.FileDownloadUrl)
 	if err != nil {
 		return nil, err
 	}
 	log.Debugln(res.Status())
+	log.Debugln(res.String())
 	link := base.Link{
 		Headers: []base.Header{
 			{Name: "User-Agent", Value: base.UserAgent},
 			//{Name: "Authorization", Value: ""},
 		},
 	}
+	log.Debugln("first url:", resp.FileDownloadUrl)
 	if res.StatusCode() == 302 {
 		link.Url = res.Header().Get("location")
-		res, err = client.R().Get(link.Url)
+		log.Debugln("second url:", link.Url)
+		_, _ = client.R().Get(link.Url)
 		if res.StatusCode() == 302 {
 			link.Url = res.Header().Get("location")
 		}
+		log.Debugln("third url:", link.Url)
 	} else {
 		link.Url = resp.FileDownloadUrl
 	}
