@@ -17,12 +17,12 @@ Clone `alist` and `alist-web` anywhere:
 $ git clone https://github.com/Xhofe/alist.git
 $ git clone https://github.com/Xhofe/alist-web.git
 ```
-You should switch to the dev branch for development.
+You should switch to the `main` branch for development.
 
 ## Preview your change
 ### backend
 ```shell
-$ go run alist.go
+$ go run cmd/alist.go
 ```
 ### frontend
 ```shell
@@ -102,4 +102,4 @@ The rest of the commit message is then used for this.
 ## Submit a pull request
 
 Push your branch to your `alist` fork and open a pull request against the
-`dev` branch.
+`main` branch.
