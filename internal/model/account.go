@@ -6,5 +6,5 @@ type Account struct {
 	Index       int    `json:"index"`
 	Driver      string `json:"driver"`
 	Status      string `json:"status"`
-	Custom      string `json:"custom"`
+	Addition    string `json:"addition"`
 }

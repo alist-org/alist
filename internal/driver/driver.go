@@ -22,11 +22,12 @@ type Writer interface {
 	Rename(ctx context.Context, src, dst string) error
 	Copy(ctx context.Context, src, dst string) error
 	Remove(ctx context.Context, path string) error
-	Put(ctx context.Context, stream FileStream, parent string) error
+	Put(ctx context.Context, stream FileStream, parentPath string) error
 }
 
 type Other interface {
 	Init(ctx context.Context) error
 	Update(ctx context.Context) error
 	Drop(ctx context.Context) error
+	Additional() Addition
 }
