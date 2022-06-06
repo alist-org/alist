@@ -6,6 +6,8 @@ import (
 	"github.com/alist-org/alist/v3/bootstrap"
 	"github.com/alist-org/alist/v3/cmd/args"
 	"github.com/alist-org/alist/v3/conf"
+	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 	"os"
 )
 
@@ -29,4 +31,21 @@ func Init() {
 }
 func main() {
 	Init()
+	if !args.Debug {
+		gin.SetMode(gin.ReleaseMode)
+	}
+	r := gin.New()
+	r.Use(gin.LoggerWithWriter(log.StandardLogger().Out), gin.RecoveryWithWriter(log.StandardLogger().Out))
+	// TODO: setup router
+	base := fmt.Sprintf("%s:%d", conf.Conf.Address, conf.Conf.Port)
+	log.Infof("start server @ %s", base)
+	var err error
+	if conf.Conf.Scheme.Https {
+		err = r.RunTLS(base, conf.Conf.Scheme.CertFile, conf.Conf.Scheme.KeyFile)
+	} else {
+		err = r.Run(base)
+	}
+	if err != nil {
+		log.Errorf("failed to start: %s", err.Error())
+	}
 }

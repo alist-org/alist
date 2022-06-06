@@ -4,16 +4,18 @@ import (
 	"github.com/alist-org/alist/v3/cmd/args"
 	"github.com/alist-org/alist/v3/conf"
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
+	"log"
 	"time"
 )
 
 func Log() {
+	log.SetOutput(logrus.StandardLogger().Out)
 	if args.Debug {
-		log.SetLevel(log.DebugLevel)
-		log.SetReportCaller(true)
+		logrus.SetLevel(logrus.DebugLevel)
+		logrus.SetReportCaller(true)
 	}
-	log.SetFormatter(&log.TextFormatter{
+	logrus.SetFormatter(&logrus.TextFormatter{
 		ForceColors:               true,
 		EnvironmentOverrideColors: true,
 		TimestampFormat:           "2006-01-02 15:04:05",
@@ -40,9 +42,9 @@ func Log() {
 			)
 		}
 		if err != nil {
-			log.Fatalf("failed to create rotate log: %s", err)
+			logrus.Fatalf("failed to create rotate logrus: %s", err)
 		}
-		log.SetOutput(writer)
+		logrus.SetOutput(writer)
 	}
-	log.Infof("init log...")
+	logrus.Infof("init logrus...")
 }
