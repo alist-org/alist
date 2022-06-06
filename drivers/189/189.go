@@ -7,13 +7,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/Xhofe/alist/conf"
-	"github.com/Xhofe/alist/drivers/base"
-	"github.com/Xhofe/alist/model"
-	"github.com/Xhofe/alist/utils"
-	"github.com/go-resty/resty/v2"
-	jsoniter "github.com/json-iterator/go"
-	log "github.com/sirupsen/logrus"
 	"io"
 	"math"
 	"net/http"
@@ -21,6 +14,14 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Xhofe/alist/conf"
+	"github.com/Xhofe/alist/drivers/base"
+	"github.com/Xhofe/alist/model"
+	"github.com/Xhofe/alist/utils"
+	"github.com/go-resty/resty/v2"
+	jsoniter "github.com/json-iterator/go"
+	log "github.com/sirupsen/logrus"
 )
 
 var client189Map map[string]*resty.Client
@@ -98,6 +99,7 @@ func (driver Cloud189) Login(account *model.Account) error {
 	client.SetTimeout(base.DefaultTimeout)
 	client.SetRetryCount(3)
 	client.SetHeader("Referer", "https://cloud.189.cn/")
+	client.SetHeader("User-Agent", base.UserAgent)
 	url := "https://cloud.189.cn/api/portal/loginUrl.action?redirectURL=https%3A%2F%2Fcloud.189.cn%2Fmain.action"
 	b := ""
 	lt := ""
