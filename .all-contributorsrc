@@ -78,11 +78,20 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "XZB-1248",
+      "name": "XZB-1248",
+      "avatar_url": "https://avatars.githubusercontent.com/u/28593573?v=4",
+      "profile": "https://github.com/XZB-1248",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
   "projectName": "alist",
-  "projectOwner": "Xhofe",
+  "projectOwner": "alist-org",
   "repoType": "github",
   "repoHost": "https://github.com",
   "skipCi": true
