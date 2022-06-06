@@ -2,6 +2,7 @@ package driver
 
 import (
 	"context"
+	"github.com/alist-org/alist/v3/internal/model"
 )
 
 type Driver interface {
@@ -26,8 +27,9 @@ type Writer interface {
 }
 
 type Other interface {
-	Init(ctx context.Context) error
-	Update(ctx context.Context) error
+	Init(ctx context.Context, account model.Account) error
+	Update(ctx context.Context, account model.Account) error
 	Drop(ctx context.Context) error
-	Additional() Addition
+	// GetAccount transform additional field to string and assign to account's addition
+	GetAccount() model.Account
 }
