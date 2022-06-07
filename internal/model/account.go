@@ -7,6 +7,7 @@ type Account struct {
 	Driver      string `json:"driver"`
 	Status      string `json:"status"`
 	Addition    string `json:"addition"`
+	Remark      string `json:"remark"`
 	Sort
 	Proxy
 }

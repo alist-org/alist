@@ -6,6 +6,7 @@ import (
 	"github.com/alist-org/alist/v3/bootstrap"
 	"github.com/alist-org/alist/v3/cmd/args"
 	"github.com/alist-org/alist/v3/conf"
+	_ "github.com/alist-org/alist/v3/drivers"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"os"

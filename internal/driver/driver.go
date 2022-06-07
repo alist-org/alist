@@ -6,9 +6,18 @@ import (
 )
 
 type Driver interface {
+	Other
 	Reader
 	Writer
-	Other
+}
+
+type Other interface {
+	Config() Config
+	Init(ctx context.Context, account model.Account) error
+	Update(ctx context.Context, account model.Account) error
+	Drop(ctx context.Context) error
+	// GetAccount transform additional field to string and assign to account's addition
+	GetAccount() model.Account
 }
 
 type Reader interface {
@@ -24,13 +33,4 @@ type Writer interface {
 	Copy(ctx context.Context, src, dst string) error
 	Remove(ctx context.Context, path string) error
 	Put(ctx context.Context, stream FileStream, parentPath string) error
-}
-
-type Other interface {
-	Init(ctx context.Context, account model.Account) error
-	Update(ctx context.Context, account model.Account) error
-	Drop(ctx context.Context) error
-	// GetAccount transform additional field to string and assign to account's addition
-	GetAccount() model.Account
-	Config() Config
 }
