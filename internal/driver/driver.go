@@ -32,4 +32,5 @@ type Other interface {
 	Drop(ctx context.Context) error
 	// GetAccount transform additional field to string and assign to account's addition
 	GetAccount() model.Account
+	Config() Config
 }
