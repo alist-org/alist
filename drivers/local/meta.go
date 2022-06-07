@@ -15,3 +15,7 @@ var config = driver.Config{
 func New() driver.Driver {
 	return &Driver{}
 }
+
+func init() {
+	driver.RegisterDriver(config, New)
+}

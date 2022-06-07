@@ -8,7 +8,7 @@ type New func() Driver
 
 var driversMap = map[string]New{}
 
-func RegisterDriver(name string, new New) {
-	log.Infof("register driver: [%s]", name)
-	driversMap[name] = new
+func RegisterDriver(config Config, driver New) {
+	log.Infof("register driver: [%s]", config.Name)
+	driversMap[config.Name] = driver
 }

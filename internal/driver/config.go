@@ -1,8 +1,9 @@
 package driver
 
 type Config struct {
-	Name      string
-	LocalSort bool
-	OnlyLocal bool
-	OnlyProxy bool
+	Name          string
+	LocalSort     bool
+	OnlyLocal     bool
+	OnlyProxy     bool
+	NoNeedSetLink bool
 }

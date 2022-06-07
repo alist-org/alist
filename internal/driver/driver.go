@@ -6,12 +6,13 @@ import (
 )
 
 type Driver interface {
-	Other
+	Meta
 	Reader
 	Writer
+	Other
 }
 
-type Other interface {
+type Meta interface {
 	Config() Config
 	Init(ctx context.Context, account model.Account) error
 	Update(ctx context.Context, account model.Account) error
@@ -20,8 +21,12 @@ type Other interface {
 	GetAccount() model.Account
 }
 
+type Other interface {
+	Other(ctx context.Context, data interface{}) (interface{}, error)
+}
+
 type Reader interface {
-	File(ctx context.Context, path string) (*FileInfo, error)
+	File(ctx context.Context, path string) (FileInfo, error)
 	List(ctx context.Context, path string) ([]FileInfo, error)
 	Link(ctx context.Context, args LinkArgs) (*Link, error)
 }

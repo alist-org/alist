@@ -6,13 +6,22 @@ import (
 )
 
 type FileInfo interface {
+	GetSize() uint64
 	GetName() string
-	GetModTime() time.Time
-	GetSize() int64
+	ModTime() time.Time
+	IsDir() bool
 }
 
 type FileStream interface {
 	io.ReadCloser
 	FileInfo
 	GetMimetype() string
+}
+
+type URL interface {
+	URL() string
+}
+
+type Thumbnail interface {
+	Thumbnail() string
 }

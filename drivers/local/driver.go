@@ -2,10 +2,12 @@ package local
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/utils"
+	"os"
+	"path/filepath"
 )
 
 type Driver struct {
@@ -18,32 +20,42 @@ func (d Driver) Config() driver.Config {
 }
 
 func (d *Driver) Init(ctx context.Context, account model.Account) error {
+	d.Account = account
 	addition := d.Account.Addition
 	err := utils.Json.UnmarshalFromString(addition, d.Addition)
 	if err != nil {
-		return errors.New("error")
+		return fmt.Errorf("error while unmarshal addition: %w", err)
 	}
 	return nil
 }
 
 func (d *Driver) Update(ctx context.Context, account model.Account) error {
-	//TODO implement me
-	panic("implement me")
+	return d.Init(ctx, account)
 }
 
 func (d *Driver) Drop(ctx context.Context) error {
-	//TODO implement me
-	panic("implement me")
+	return nil
 }
 
 func (d *Driver) GetAccount() model.Account {
-	//TODO implement me
-	panic("implement me")
+	return d.Account
 }
 
-func (d *Driver) File(ctx context.Context, path string) (*driver.FileInfo, error) {
-	//TODO implement me
-	panic("implement me")
+func (d *Driver) File(ctx context.Context, path string) (driver.FileInfo, error) {
+	fullPath := filepath.Join(d.RootFolder, path)
+	if !utils.Exists(fullPath) {
+		return nil, driver.ErrorObjectNotFound
+	}
+	f, err := os.Stat(fullPath)
+	if err != nil {
+		return nil, err
+	}
+	return model.File{
+		Name:     f.Name(),
+		Size:     uint64(f.Size()),
+		Modified: f.ModTime(),
+		IsFolder: f.IsDir(),
+	}, nil
 }
 
 func (d *Driver) List(ctx context.Context, path string) ([]driver.FileInfo, error) {
@@ -52,6 +64,11 @@ func (d *Driver) List(ctx context.Context, path string) ([]driver.FileInfo, erro
 }
 
 func (d *Driver) Link(ctx context.Context, args driver.LinkArgs) (*driver.Link, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (d Driver) Other(ctx context.Context, data interface{}) (interface{}, error) {
 	//TODO implement me
 	panic("implement me")
 }
@@ -87,7 +104,3 @@ func (d *Driver) Put(ctx context.Context, stream driver.FileStream, parentPath s
 }
 
 var _ driver.Driver = (*Driver)(nil)
-
-func init() {
-	driver.RegisterDriver(config.Name, New)
-}
