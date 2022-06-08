@@ -82,7 +82,7 @@ func getAdditionalItems(t reflect.Type) []Item {
 		}
 		item := Item{
 			Name:     tag.Get("json"),
-			Type:     strings.ToLower(field.Name),
+			Type:     strings.ToLower(field.Type.Name()),
 			Default:  tag.Get("default"),
 			Values:   tag.Get("values"),
 			Required: tag.Get("required") == "true",
