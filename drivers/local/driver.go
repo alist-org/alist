@@ -37,8 +37,8 @@ func (d *Driver) Drop(ctx context.Context) error {
 	return nil
 }
 
-func (d *Driver) GetAccount() model.Account {
-	return d.Account
+func (d *Driver) GetAddition() driver.Additional {
+	return d.Addition
 }
 
 func (d *Driver) File(ctx context.Context, path string) (driver.FileInfo, error) {

@@ -24,3 +24,7 @@ type Proxy struct {
 	WebdavDirect bool   `json:"webdav_direct"`
 	DownProxyUrl string `json:"down_proxy_url"`
 }
+
+func (a Account) GetAccount() Account {
+	return a
+}

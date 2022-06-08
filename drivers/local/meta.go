@@ -3,7 +3,7 @@ package local
 import "github.com/alist-org/alist/v3/internal/driver"
 
 type Addition struct {
-	RootFolder string `json:"root_folder" type:"string" desc:"root folder path" default:"/"`
+	RootFolder string `json:"root_folder" type:"string" help:"root folder path" default:"/"`
 }
 
 var config = driver.Config{

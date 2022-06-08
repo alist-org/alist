@@ -19,6 +19,7 @@ type Meta interface {
 	Drop(ctx context.Context) error
 	// GetAccount transform additional field to string and assign to account's addition
 	GetAccount() model.Account
+	GetAddition() Additional
 }
 
 type Other interface {
