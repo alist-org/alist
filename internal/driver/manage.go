@@ -3,6 +3,7 @@ package driver
 import (
 	log "github.com/sirupsen/logrus"
 	"reflect"
+	"strings"
 )
 
 type New func() Driver
@@ -73,18 +74,22 @@ func getMainItems(config Config) []Item {
 func getAdditionalItems(t reflect.Type) []Item {
 	var items []Item
 	for i := 0; i < t.NumField(); i++ {
-		tag := t.Field(i).Tag
+		field := t.Field(i)
+		tag := field.Tag
 		ignore, ok := tag.Lookup("ignore")
 		if !ok || ignore == "false" {
 			continue
 		}
 		item := Item{
 			Name:     tag.Get("json"),
-			Type:     tag.Get("type"),
+			Type:     strings.ToLower(field.Name),
 			Default:  tag.Get("default"),
 			Values:   tag.Get("values"),
 			Required: tag.Get("required") == "true",
 			Help:     tag.Get("help"),
+		}
+		if tag.Get("type") != "" {
+			item.Type = tag.Get("type")
 		}
 		// set default type to string
 		if item.Type == "" {
