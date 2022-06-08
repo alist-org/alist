@@ -27,46 +27,46 @@ func registerDriverItems(config Config, addition Additional) {
 func getMainItems(config Config) []Item {
 	items := []Item{{
 		Name:     "virtual_path",
-		Type:     "string",
+		Type:     TypeString,
 		Required: true,
 		Help:     "",
 	}, {
 		Name: "index",
-		Type: "int",
+		Type: TypeNumber,
 		Help: "use to sort",
 	}, {
 		Name: "down_proxy_url",
-		Type: "text",
+		Type: TypeText,
 	}, {
 		Name: "webdav_direct",
-		Type: "bool",
+		Type: TypeBool,
 		Help: "Transfer the WebDAV of this account through the native without redirect",
 	}}
 	if !config.OnlyProxy && !config.OnlyLocal {
 		items = append(items, []Item{{
 			Name: "web_proxy",
-			Type: "bool",
+			Type: TypeBool,
 		}, {
 			Name: "webdav_proxy",
-			Type: "bool",
+			Type: TypeBool,
 		},
 		}...)
 	}
 	if config.LocalSort {
 		items = append(items, []Item{{
 			Name:   "order_by",
-			Type:   "select",
-			Values: "name,size,updated_at",
+			Type:   TypeSelect,
+			Values: "name,size,modified",
 		}, {
 			Name:   "order_direction",
-			Type:   "select",
+			Type:   TypeSelect,
 			Values: "ASC,DESC",
 		}}...)
 	}
 	items = append(items, Item{
 		Name:   "extract_folder",
+		Type:   TypeSelect,
 		Values: "front,back",
-		Type:   "select",
 	})
 	return items
 }

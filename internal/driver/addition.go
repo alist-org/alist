@@ -9,6 +9,7 @@ const (
 	TypeSelect = "select"
 	TypeBool   = "bool"
 	TypeText   = "text"
+	TypeNumber = "number"
 )
 
 type Item struct {
