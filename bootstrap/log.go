@@ -22,7 +22,7 @@ func Log() {
 		FullTimestamp:             true,
 	})
 	logConfig := conf.Conf.Log
-	if !args.Debug && logConfig.Path != "" {
+	if logConfig.Enable {
 		var (
 			writer *rotatelogs.RotateLogs
 			err    error

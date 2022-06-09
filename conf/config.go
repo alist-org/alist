@@ -24,6 +24,7 @@ type CacheConfig struct {
 }
 
 type LogConfig struct {
+	Enable        bool   `json:"enable" env:"log_enable"`
 	Path          string `json:"path" env:"LOG_PATH"`
 	Name          string `json:"name" env:"LOG_NAME"`
 	RotationTime  uint   `json:"rotation_time" env:"LOG_TIME"`
@@ -59,6 +60,7 @@ func DefaultConfig() *Config {
 			CleanupInterval: 120,
 		},
 		Log: LogConfig{
+			Enable:        true,
 			Path:          "log/%Y-%m-%d-%H:%M.log",
 			Name:          "log/log.log",
 			RotationTime:  24,
