@@ -20,7 +20,7 @@ func DeleteAccountById(id uint) error {
 	return errors.WithStack(db.Delete(&model.Account{}, id).Error)
 }
 
-// GetAccounts Get all accounts from database
+// GetAccounts Get all accounts from database order by index
 func GetAccounts() ([]model.Account, error) {
 	var accounts []model.Account
 	if err := db.Order(columnName("index")).Find(&accounts).Error; err != nil {

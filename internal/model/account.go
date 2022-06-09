@@ -1,13 +1,16 @@
 package model
 
+import "time"
+
 type Account struct {
-	ID          uint   `json:"id" gorm:"primaryKey"`
-	VirtualPath string `json:"virtual_path" gorm:"unique" binding:"required"`
-	Index       int    `json:"index"`
-	Driver      string `json:"driver"`
-	Status      string `json:"status"`
-	Addition    string `json:"addition"`
-	Remark      string `json:"remark"`
+	ID          uint      `json:"id" gorm:"primaryKey"`
+	VirtualPath string    `json:"virtual_path" gorm:"unique" binding:"required"`
+	Index       int       `json:"index"`
+	Driver      string    `json:"driver"`
+	Status      string    `json:"status"`
+	Addition    string    `json:"addition"`
+	Remark      string    `json:"remark"`
+	Modified    time.Time `json:"modified"`
 	Sort
 	Proxy
 }

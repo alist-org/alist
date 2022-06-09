@@ -7,6 +7,8 @@ import (
 	"github.com/alist-org/alist/v3/internal/store"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
+	"sort"
+	"strings"
 )
 
 // Although the driver type is stored,
@@ -90,4 +92,43 @@ func SaveDriverAccount(driver driver.Driver) error {
 		return errors.WithMessage(err, "failed update account in database")
 	}
 	return nil
+}
+
+var balance = ".balance"
+
+// GetAccountsByPath get account by longest match path, contains balance account.
+// for example, there is /a/b,/a/c,/a/d/e,/a/d/e.balance
+// GetAccountsByPath(/a/d/e/f) => /a/d/e,/a/d/e.balance
+func GetAccountsByPath(path string) []driver.Driver {
+	accounts := make([]driver.Driver, 0)
+	curSlashCount := 0
+	for _, v := range accountsMap {
+		virtualPath := utils.StandardizationPath(v.GetAccount().VirtualPath)
+		bIndex := strings.LastIndex(virtualPath, balance)
+		if bIndex != -1 {
+			virtualPath = virtualPath[:bIndex]
+		}
+		if virtualPath == "/" {
+			virtualPath = ""
+		}
+		// not this
+		if path != virtualPath && !strings.HasPrefix(path, virtualPath+"/") {
+			continue
+		}
+		slashCount := strings.Count(virtualPath, "/")
+		// not the longest match
+		if slashCount < curSlashCount {
+			continue
+		}
+		if slashCount > curSlashCount {
+			accounts = accounts[:0]
+			curSlashCount = slashCount
+		}
+		accounts = append(accounts, v)
+	}
+	// make sure the order is the same for same input
+	sort.Slice(accounts, func(i, j int) bool {
+		return accounts[i].GetAccount().VirtualPath < accounts[j].GetAccount().VirtualPath
+	})
+	return accounts
 }
