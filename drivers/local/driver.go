@@ -2,10 +2,10 @@ package local
 
 import (
 	"context"
-	"fmt"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/utils"
+	"github.com/pkg/errors"
 	"os"
 	"path/filepath"
 )
@@ -24,13 +24,9 @@ func (d *Driver) Init(ctx context.Context, account model.Account) error {
 	addition := d.Account.Addition
 	err := utils.Json.UnmarshalFromString(addition, d.Addition)
 	if err != nil {
-		return fmt.Errorf("error while unmarshal addition: %w", err)
+		return errors.Wrap(err, "error while unmarshal addition")
 	}
 	return nil
-}
-
-func (d *Driver) Update(ctx context.Context, account model.Account) error {
-	return d.Init(ctx, account)
 }
 
 func (d *Driver) Drop(ctx context.Context) error {
@@ -44,7 +40,7 @@ func (d *Driver) GetAddition() driver.Additional {
 func (d *Driver) File(ctx context.Context, path string) (driver.FileInfo, error) {
 	fullPath := filepath.Join(d.RootFolder, path)
 	if !utils.Exists(fullPath) {
-		return nil, driver.ErrorObjectNotFound
+		return nil, errors.WithStack(driver.ErrorObjectNotFound)
 	}
 	f, err := os.Stat(fullPath)
 	if err != nil {

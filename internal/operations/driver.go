@@ -1,78 +1,88 @@
-package driver
+package operations
 
 import (
+	"github.com/alist-org/alist/v3/internal/driver"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"reflect"
 	"strings"
 )
 
-type New func() Driver
+type New func() driver.Driver
 
-var driversMap = map[string]New{}
-var driverItemsMap = map[string]Items{}
+var driverNewMap = map[string]New{}
+var driverItemsMap = map[string]driver.Items{}
 
-func RegisterDriver(config Config, driver New) {
+func RegisterDriver(config driver.Config, driver New) {
 	log.Infof("register driver: [%s]", config.Name)
 	registerDriverItems(config, driver().GetAddition())
-	driversMap[config.Name] = driver
+	driverNewMap[config.Name] = driver
 }
 
-func registerDriverItems(config Config, addition Additional) {
+func GetDriverNew(name string) (New, error) {
+	n, ok := driverNewMap[name]
+	if !ok {
+		return nil, errors.Errorf("no driver named: %s", name)
+	}
+	return n, nil
+}
+
+func registerDriverItems(config driver.Config, addition driver.Additional) {
 	tAddition := reflect.TypeOf(addition)
 	mainItems := getMainItems(config)
 	additionalItems := getAdditionalItems(tAddition)
-	driverItemsMap[config.Name] = Items{mainItems, additionalItems}
+	driverItemsMap[config.Name] = driver.Items{mainItems, additionalItems}
 }
 
-func getMainItems(config Config) []Item {
-	items := []Item{{
+func getMainItems(config driver.Config) []driver.Item {
+	items := []driver.Item{{
 		Name:     "virtual_path",
-		Type:     TypeString,
+		Type:     driver.TypeString,
 		Required: true,
 		Help:     "",
 	}, {
 		Name: "index",
-		Type: TypeNumber,
+		Type: driver.TypeNumber,
 		Help: "use to sort",
 	}, {
 		Name: "down_proxy_url",
-		Type: TypeText,
+		Type: driver.TypeText,
 	}, {
 		Name: "webdav_direct",
-		Type: TypeBool,
+		Type: driver.TypeBool,
 		Help: "Transfer the WebDAV of this account through the native without redirect",
 	}}
 	if !config.OnlyProxy && !config.OnlyLocal {
-		items = append(items, []Item{{
+		items = append(items, []driver.Item{{
 			Name: "web_proxy",
-			Type: TypeBool,
+			Type: driver.TypeBool,
 		}, {
 			Name: "webdav_proxy",
-			Type: TypeBool,
+			Type: driver.TypeBool,
 		},
 		}...)
 	}
 	if config.LocalSort {
-		items = append(items, []Item{{
+		items = append(items, []driver.Item{{
 			Name:   "order_by",
-			Type:   TypeSelect,
+			Type:   driver.TypeSelect,
 			Values: "name,size,modified",
 		}, {
 			Name:   "order_direction",
-			Type:   TypeSelect,
+			Type:   driver.TypeSelect,
 			Values: "ASC,DESC",
 		}}...)
 	}
-	items = append(items, Item{
+	items = append(items, driver.Item{
 		Name:   "extract_folder",
-		Type:   TypeSelect,
+		Type:   driver.TypeSelect,
 		Values: "front,back",
 	})
 	return items
 }
 
-func getAdditionalItems(t reflect.Type) []Item {
-	var items []Item
+func getAdditionalItems(t reflect.Type) []driver.Item {
+	var items []driver.Item
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
 		tag := field.Tag
@@ -80,7 +90,7 @@ func getAdditionalItems(t reflect.Type) []Item {
 		if !ok || ignore == "false" {
 			continue
 		}
-		item := Item{
+		item := driver.Item{
 			Name:     tag.Get("json"),
 			Type:     strings.ToLower(field.Type.Name()),
 			Default:  tag.Get("default"),

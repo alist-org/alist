@@ -1,6 +1,9 @@
 package local
 
-import "github.com/alist-org/alist/v3/internal/driver"
+import (
+	"github.com/alist-org/alist/v3/internal/driver"
+	"github.com/alist-org/alist/v3/internal/operations"
+)
 
 type Addition struct {
 	RootFolder string `json:"root_folder" help:"root folder path" default:"/"`
@@ -17,5 +20,5 @@ func New() driver.Driver {
 }
 
 func init() {
-	driver.RegisterDriver(config, New)
+	operations.RegisterDriver(config, New)
 }

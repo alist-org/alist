@@ -2,7 +2,7 @@ package model
 
 type Account struct {
 	ID          uint   `json:"id" gorm:"primaryKey"`
-	VirtualPath string `json:"virtual_path"`
+	VirtualPath string `json:"virtual_path" gorm:"unique" binding:"required"`
 	Index       int    `json:"index"`
 	Driver      string `json:"driver"`
 	Status      string `json:"status"`

@@ -14,10 +14,11 @@ type Driver interface {
 
 type Meta interface {
 	Config() Config
+	// Init If already initialized, drop first
+	// need to unmarshal string to addition first
 	Init(ctx context.Context, account model.Account) error
-	Update(ctx context.Context, account model.Account) error
 	Drop(ctx context.Context) error
-	// GetAccount transform additional field to string and assign to account's addition
+	// GetAccount just get raw account
 	GetAccount() model.Account
 	GetAddition() Additional
 }
