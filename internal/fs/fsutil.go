@@ -1,4 +1,4 @@
-package operations
+package fs
 
 import (
 	"github.com/alist-org/alist/v3/internal/driver"
