@@ -3,12 +3,12 @@ package model
 import "time"
 
 type Account struct {
-	ID          uint      `json:"id" gorm:"primaryKey"`
-	VirtualPath string    `json:"virtual_path" gorm:"unique" binding:"required"`
-	Index       int       `json:"index"`
+	ID          uint      `json:"id" gorm:"primaryKey"`                          // unique key
+	VirtualPath string    `json:"virtual_path" gorm:"unique" binding:"required"` // must be standardized
+	Index       int       `json:"index"`                                         // use to sort
 	Driver      string    `json:"driver"`
 	Status      string    `json:"status"`
-	Addition    string    `json:"addition"`
+	Addition    string    `json:"addition"` // Additional information, defined in the corresponding driver
 	Remark      string    `json:"remark"`
 	Modified    time.Time `json:"modified"`
 	Sort

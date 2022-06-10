@@ -7,8 +7,10 @@ import (
 	"github.com/alist-org/alist/v3/internal/store"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 	"sort"
 	"strings"
+	"sync"
 )
 
 // Although the driver type is stored,
@@ -94,8 +96,6 @@ func SaveDriverAccount(driver driver.Driver) error {
 	return nil
 }
 
-var balance = ".balance"
-
 // GetAccountsByPath get account by longest match path, contains balance account.
 // for example, there is /a/b,/a/c,/a/d/e,/a/d/e.balance
 // GetAccountsByPath(/a/d/e/f) => /a/d/e,/a/d/e.balance
@@ -103,11 +103,7 @@ func GetAccountsByPath(path string) []driver.Driver {
 	accounts := make([]driver.Driver, 0)
 	curSlashCount := 0
 	for _, v := range accountsMap {
-		virtualPath := utils.StandardizationPath(v.GetAccount().VirtualPath)
-		bIndex := strings.LastIndex(virtualPath, balance)
-		if bIndex != -1 {
-			virtualPath = virtualPath[:bIndex]
-		}
+		virtualPath := utils.GetActualVirtualPath(v.GetAccount().VirtualPath)
 		if virtualPath == "/" {
 			virtualPath = ""
 		}
@@ -154,7 +150,7 @@ func GetAccountFilesByPath(prefix string) []driver.FileInfo {
 	set := make(map[string]interface{})
 	for _, v := range accounts {
 		// balance account
-		if strings.Contains(v.GetAccount().VirtualPath, balance) {
+		if utils.IsBalance(v.GetAccount().VirtualPath) {
 			continue
 		}
 		full := utils.StandardizationPath(v.GetAccount().VirtualPath)
@@ -177,4 +173,32 @@ func GetAccountFilesByPath(prefix string) []driver.FileInfo {
 		set[name] = nil
 	}
 	return files
+}
+
+var balanceMap sync.Map
+
+// GetBalancedAccount get account by path
+func GetBalancedAccount(path string) driver.Driver {
+	path = utils.StandardizationPath(path)
+	accounts := GetAccountsByPath(path)
+	accountNum := len(accounts)
+	switch accountNum {
+	case 0:
+		return nil
+	case 1:
+		return accounts[0]
+	default:
+		virtualPath := utils.GetActualVirtualPath(accounts[0].GetAccount().VirtualPath)
+		cur, ok := balanceMap.Load(virtualPath)
+		i := 0
+		if ok {
+			i = cur.(int)
+			i = (i + 1) % accountNum
+			balanceMap.Store(virtualPath, i)
+		} else {
+			balanceMap.Store(virtualPath, i)
+		}
+		log.Debugln("use: ", i)
+		return accounts[i]
+	}
 }
