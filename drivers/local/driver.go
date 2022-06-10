@@ -59,7 +59,7 @@ func (d *Driver) List(ctx context.Context, path string) ([]driver.FileInfo, erro
 	panic("implement me")
 }
 
-func (d *Driver) Link(ctx context.Context, args driver.LinkArgs) (*driver.Link, error) {
+func (d *Driver) Link(ctx context.Context, path string, args driver.LinkArgs) (*driver.Link, error) {
 	//TODO implement me
 	panic("implement me")
 }
@@ -94,7 +94,7 @@ func (d *Driver) Remove(ctx context.Context, path string) error {
 	panic("implement me")
 }
 
-func (d *Driver) Put(ctx context.Context, stream driver.FileStream, parentPath string) error {
+func (d *Driver) Put(ctx context.Context, parentPath string, stream driver.FileStream) error {
 	//TODO implement me
 	panic("implement me")
 }

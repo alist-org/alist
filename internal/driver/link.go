@@ -6,7 +6,6 @@ import (
 )
 
 type LinkArgs struct {
-	Path   string
 	IP     string
 	Header http.Header
 }

@@ -35,3 +35,19 @@ func List(ctx context.Context, path string) ([]driver.FileInfo, error) {
 	}
 	return files, nil
 }
+
+func Get(ctx context.Context, path string) (driver.FileInfo, error) {
+	account, actualPath, err := operations.GetAccountAndActualPath(path)
+	if err != nil {
+		return nil, errors.WithMessage(err, "failed get account")
+	}
+	return operations.Get(ctx, account, actualPath)
+}
+
+func Link(ctx context.Context, path string, args driver.LinkArgs) (*driver.Link, error) {
+	account, actualPath, err := operations.GetAccountAndActualPath(path)
+	if err != nil {
+		return nil, errors.WithMessage(err, "failed get account")
+	}
+	return operations.Link(ctx, account, actualPath, args)
+}

@@ -30,14 +30,14 @@ type Other interface {
 type Reader interface {
 	Get(ctx context.Context, path string) (FileInfo, error)
 	List(ctx context.Context, path string) ([]FileInfo, error)
-	Link(ctx context.Context, args LinkArgs) (*Link, error)
+	Link(ctx context.Context, path string, args LinkArgs) (*Link, error)
 }
 
 type Writer interface {
 	MakeDir(ctx context.Context, path string) error
-	Move(ctx context.Context, src, dst string) error
-	Rename(ctx context.Context, src, dst string) error
-	Copy(ctx context.Context, src, dst string) error
+	Move(ctx context.Context, srcPath, dstPath string) error
+	Rename(ctx context.Context, srcPath, dstName string) error
+	Copy(ctx context.Context, srcPath, dstPath string) error
 	Remove(ctx context.Context, path string) error
-	Put(ctx context.Context, stream FileStream, parentPath string) error
+	Put(ctx context.Context, parentPath string, stream FileStream) error
 }
