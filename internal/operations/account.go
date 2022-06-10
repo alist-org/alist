@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"time"
 )
 
 // Although the driver type is stored,
@@ -29,6 +30,7 @@ func GetAccountByVirtualPath(virtualPath string) (driver.Driver, error) {
 // CreateAccount Save the account to database so account can get an id
 // then instantiate corresponding driver and save it in memory
 func CreateAccount(ctx context.Context, account model.Account) error {
+	account.Modified = time.Now()
 	err := store.CreateAccount(&account)
 	if err != nil {
 		return errors.WithMessage(err, "failed create account in database")
@@ -56,6 +58,7 @@ func UpdateAccount(ctx context.Context, account model.Account) error {
 	if err != nil {
 		return errors.WithMessage(err, "failed get old account")
 	}
+	account.Modified = time.Now()
 	err = store.UpdateAccount(&account)
 	if err != nil {
 		return errors.WithMessage(err, "failed update account in database")
