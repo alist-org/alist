@@ -37,7 +37,7 @@ func (d *Driver) GetAddition() driver.Additional {
 	return d.Addition
 }
 
-func (d *Driver) File(ctx context.Context, path string) (driver.FileInfo, error) {
+func (d *Driver) Get(ctx context.Context, path string) (driver.FileInfo, error) {
 	fullPath := filepath.Join(d.RootFolder, path)
 	if !utils.Exists(fullPath) {
 		return nil, errors.WithStack(driver.ErrorObjectNotFound)

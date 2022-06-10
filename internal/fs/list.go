@@ -11,7 +11,6 @@ import (
 // List files
 // TODO: hide
 // TODO: sort
-// TODO: cache, and prevent cache breakdown
 func List(ctx context.Context, path string) ([]driver.FileInfo, error) {
 	account, actualPath, err := operations.GetAccountAndActualPath(path)
 	virtualFiles := operations.GetAccountVirtualFilesByPath(path)
@@ -21,7 +20,7 @@ func List(ctx context.Context, path string) ([]driver.FileInfo, error) {
 		}
 		return nil, errors.WithMessage(err, "failed get account")
 	}
-	files, err := account.List(ctx, actualPath)
+	files, err := operations.List(ctx, account, actualPath)
 	if err != nil {
 		log.Errorf("%+v", err)
 		if len(virtualFiles) != 0 {

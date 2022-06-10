@@ -28,7 +28,7 @@ type Other interface {
 }
 
 type Reader interface {
-	File(ctx context.Context, path string) (FileInfo, error)
+	Get(ctx context.Context, path string) (FileInfo, error)
 	List(ctx context.Context, path string) ([]FileInfo, error)
 	Link(ctx context.Context, args LinkArgs) (*Link, error)
 }

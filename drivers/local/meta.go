@@ -6,7 +6,7 @@ import (
 )
 
 type Addition struct {
-	RootFolder string `json:"root_folder" help:"root folder path" default:"/"`
+	driver.RootFolderPath
 }
 
 var config = driver.Config{

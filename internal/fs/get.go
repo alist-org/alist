@@ -12,5 +12,5 @@ func Get(ctx context.Context, path string) (driver.FileInfo, error) {
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed get account")
 	}
-	return account.File(ctx, actualPath)
+	return operations.Get(ctx, account, actualPath)
 }
