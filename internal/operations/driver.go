@@ -1,11 +1,12 @@
 package operations
 
 import (
+	"reflect"
+	"strings"
+
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-	"reflect"
-	"strings"
 )
 
 type New func() driver.Driver
@@ -31,7 +32,10 @@ func registerDriverItems(config driver.Config, addition driver.Additional) {
 	tAddition := reflect.TypeOf(addition)
 	mainItems := getMainItems(config)
 	additionalItems := getAdditionalItems(tAddition)
-	driverItemsMap[config.Name] = driver.Items{mainItems, additionalItems}
+	driverItemsMap[config.Name] = driver.Items{
+		Main:       mainItems,
+		Additional: additionalItems,
+	}
 }
 
 func getMainItems(config driver.Config) []driver.Item {
