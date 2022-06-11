@@ -11,7 +11,7 @@ import (
 
 func ActualPath(account driver.Additional, rawPath string) string {
 	if i, ok := account.(driver.IRootFolderPath); ok {
-		rawPath = path.Join(i.GetRootFolder(), rawPath)
+		rawPath = path.Join(i.GetRootFolderPath(), rawPath)
 	}
 	return utils.StandardizationPath(rawPath)
 }

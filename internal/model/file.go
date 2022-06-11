@@ -24,3 +24,8 @@ func (f File) ModTime() time.Time {
 func (f File) IsDir() bool {
 	return f.IsFolder
 }
+
+type FileWithId struct {
+	Id string
+	File
+}

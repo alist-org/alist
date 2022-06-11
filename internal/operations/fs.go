@@ -3,6 +3,10 @@ package operations
 import (
 	"context"
 	"github.com/alist-org/alist/v3/internal/driver"
+	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/pkg/utils"
+	"github.com/pkg/errors"
+	stdpath "path"
 )
 
 // In order to facilitate adding some other things before and after file operations
@@ -14,7 +18,36 @@ func List(ctx context.Context, account driver.Driver, path string) ([]driver.Fil
 }
 
 func Get(ctx context.Context, account driver.Driver, path string) (driver.FileInfo, error) {
-	return account.Get(ctx, path)
+	if r, ok := account.GetAddition().(driver.RootFolderId); ok && utils.PathEqual(path, "/") {
+		return model.FileWithId{
+			Id: r.GetRootFolderId(),
+			File: model.File{
+				Name:     "root",
+				Size:     0,
+				Modified: account.GetAccount().Modified,
+				IsFolder: true,
+			},
+		}, nil
+	}
+	if r, ok := account.GetAddition().(driver.IRootFolderPath); ok && utils.PathEqual(path, r.GetRootFolderPath()) {
+		return model.File{
+			Name:     "root",
+			Size:     0,
+			Modified: account.GetAccount().Modified,
+			IsFolder: true,
+		}, nil
+	}
+	dir, name := stdpath.Split(path)
+	files, err := List(ctx, account, dir)
+	if err != nil {
+		return nil, errors.WithMessage(err, "failed get parent list")
+	}
+	for _, f := range files {
+		if f.GetName() == name {
+			return f, nil
+		}
+	}
+	return nil, errors.WithStack(driver.ErrorObjectNotFound)
 }
 
 // Link get link, if is a url. show have an expiry time

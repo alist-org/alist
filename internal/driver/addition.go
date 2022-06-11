@@ -27,13 +27,25 @@ type Items struct {
 }
 
 type IRootFolderPath interface {
-	GetRootFolder() string
+	GetRootFolderPath() string
+}
+
+type IRootFolderId interface {
+	GetRootFolderId() string
 }
 
 type RootFolderPath struct {
 	RootFolder string `json:"root_folder" help:"root folder path" default:"/"`
 }
 
-func (r RootFolderPath) GetRootFolder() string {
+type RootFolderId struct {
+	RootFolder string `json:"root_folder" help:"root folder id"`
+}
+
+func (r RootFolderPath) GetRootFolderPath() string {
+	return r.RootFolder
+}
+
+func (r RootFolderId) GetRootFolderId() string {
 	return r.RootFolder
 }

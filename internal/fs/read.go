@@ -6,6 +6,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/operations"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+	stdpath "path"
 )
 
 // List files
@@ -37,6 +38,12 @@ func List(ctx context.Context, path string) ([]driver.FileInfo, error) {
 }
 
 func Get(ctx context.Context, path string) (driver.FileInfo, error) {
+	virtualFiles := operations.GetAccountVirtualFilesByPath(path)
+	for _, f := range virtualFiles {
+		if f.GetName() == stdpath.Base(path) {
+			return f, nil
+		}
+	}
 	account, actualPath, err := operations.GetAccountAndActualPath(path)
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed get account")

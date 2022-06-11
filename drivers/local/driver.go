@@ -6,8 +6,6 @@ import (
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
-	"os"
-	"path/filepath"
 )
 
 type Driver struct {
@@ -35,23 +33,6 @@ func (d *Driver) Drop(ctx context.Context) error {
 
 func (d *Driver) GetAddition() driver.Additional {
 	return d.Addition
-}
-
-func (d *Driver) Get(ctx context.Context, path string) (driver.FileInfo, error) {
-	fullPath := filepath.Join(d.RootFolder, path)
-	if !utils.Exists(fullPath) {
-		return nil, errors.WithStack(driver.ErrorObjectNotFound)
-	}
-	f, err := os.Stat(fullPath)
-	if err != nil {
-		return nil, err
-	}
-	return model.File{
-		Name:     f.Name(),
-		Size:     uint64(f.Size()),
-		Modified: f.ModTime(),
-		IsFolder: f.IsDir(),
-	}, nil
 }
 
 func (d *Driver) List(ctx context.Context, path string) ([]driver.FileInfo, error) {
