@@ -6,4 +6,5 @@ type Config struct {
 	OnlyLocal     bool
 	OnlyProxy     bool
 	NoNeedSetLink bool
+	NoCache       bool
 }

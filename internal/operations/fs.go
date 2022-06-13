@@ -20,6 +20,9 @@ var filesG singleflight.Group[[]driver.FileInfo]
 
 // List files in storage, not contains virtual file
 func List(ctx context.Context, account driver.Driver, path string) ([]driver.FileInfo, error) {
+	if account.Config().NoCache {
+		return account.List(ctx, path)
+	}
 	key := stdpath.Join(account.GetAccount().VirtualPath, path)
 	if files, ok := filesCache.Get(key); ok {
 		return files, nil
