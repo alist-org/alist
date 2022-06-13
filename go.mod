@@ -13,6 +13,7 @@ require (
 )
 
 require (
+	github.com/Xhofe/go-cache v0.0.0-20220613100912-dbdb5bb9a345 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
