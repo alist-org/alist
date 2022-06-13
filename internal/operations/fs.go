@@ -52,7 +52,11 @@ func Get(ctx context.Context, account driver.Driver, path string) (driver.FileIn
 
 // Link get link, if is a url. show have an expiry time
 func Link(ctx context.Context, account driver.Driver, path string, args driver.LinkArgs) (*driver.Link, error) {
-	return account.Link(ctx, path, args)
+	link, err := account.Link(ctx, path, args)
+	if err != nil {
+		return nil, errors.WithMessage(err, "failed get link")
+	}
+	return link, nil
 }
 
 func MakeDir(ctx context.Context, account driver.Driver, path string) error {

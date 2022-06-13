@@ -3,6 +3,7 @@ package driver
 import (
 	"io"
 	"net/http"
+	"time"
 )
 
 type LinkArgs struct {
@@ -11,9 +12,10 @@ type LinkArgs struct {
 }
 
 type Link struct {
-	URL      string
-	Header   http.Header
-	Data     io.ReadCloser
-	Status   int
-	FilePath string
+	URL        string
+	Header     http.Header    // needed header
+	Data       io.ReadCloser  // return file reader directly
+	Status     int            // status maybe 200 or 206, etc
+	FilePath   string         // local file, return the filepath
+	Expiration *time.Duration // url expiration time
 }
