@@ -5,6 +5,7 @@ import (
 	"github.com/Xhofe/go-cache"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/pkg/singleflight"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
 	stdpath "path"
@@ -52,6 +53,7 @@ func Get(ctx context.Context, account driver.Driver, path string) (driver.FileIn
 }
 
 var linkCache = cache.NewMemCache[*driver.Link]()
+var linkG singleflight.Group[*driver.Link]
 
 // Link get link, if is an url. should have an expiry time
 func Link(ctx context.Context, account driver.Driver, path string, args driver.LinkArgs) (*driver.Link, error) {
@@ -59,14 +61,18 @@ func Link(ctx context.Context, account driver.Driver, path string, args driver.L
 	if link, ok := linkCache.Get(key); ok {
 		return link, nil
 	}
-	link, err := account.Link(ctx, path, args)
-	if err != nil {
-		return nil, errors.WithMessage(err, "failed get link")
+	fn := func() (*driver.Link, error) {
+		link, err := account.Link(ctx, path, args)
+		if err != nil {
+			return nil, errors.WithMessage(err, "failed get link")
+		}
+		if link.Expiration != nil {
+			linkCache.Set(key, link, cache.WithEx[*driver.Link](*link.Expiration))
+		}
+		return link, nil
 	}
-	if link.Expiration != nil {
-		linkCache.Set(key, link, cache.WithEx(*link.Expiration))
-	}
-	return link, nil
+	link, err, _ := linkG.Do(key, fn)
+	return link, err
 }
 
 func MakeDir(ctx context.Context, account driver.Driver, path string) error {
