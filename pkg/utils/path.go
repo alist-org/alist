@@ -11,6 +11,7 @@ func StandardizationPath(path string) string {
 	return path
 }
 
+// PathEqual judge path is equal
 func PathEqual(path1, path2 string) bool {
 	return StandardizationPath(path1) == StandardizationPath(path2)
 }
