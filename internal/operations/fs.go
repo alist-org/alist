@@ -2,21 +2,38 @@ package operations
 
 import (
 	"context"
+	stdpath "path"
+	"time"
+
 	"github.com/Xhofe/go-cache"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/singleflight"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
-	stdpath "path"
 )
 
 // In order to facilitate adding some other things before and after file operations
 
+var filesCache = cache.NewMemCache[[]driver.FileInfo]()
+var filesG singleflight.Group[[]driver.FileInfo]
+
 // List files in storage, not contains virtual file
-// TODO: cache, and prevent cache breakdown
 func List(ctx context.Context, account driver.Driver, path string) ([]driver.FileInfo, error) {
-	return account.List(ctx, path)
+	key := stdpath.Join(account.GetAccount().VirtualPath, path)
+	if files, ok := filesCache.Get(key); ok {
+		return files, nil
+	}
+	files, err, _ := filesG.Do(key, func() ([]driver.FileInfo, error) {
+		files, err := account.List(ctx, path)
+		if err != nil {
+			return nil, errors.WithMessage(err, "failed to list files")
+		}
+		// TODO: get duration from global config or account's config
+		filesCache.Set(key, files, cache.WithEx[[]driver.FileInfo](time.Minute*30))
+		return files, nil
+	})
+	return files, err
 }
 
 func Get(ctx context.Context, account driver.Driver, path string) (driver.FileInfo, error) {
