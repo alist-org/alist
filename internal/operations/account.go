@@ -63,11 +63,11 @@ func UpdateAccount(ctx context.Context, account model.Account) error {
 	if err != nil {
 		return errors.WithMessage(err, "failed update account in database")
 	}
+	accountDriver, err := GetAccountByVirtualPath(oldAccount.VirtualPath)
 	if oldAccount.VirtualPath != account.VirtualPath {
 		// virtual path renamed, need to drop the account
 		accountsMap.Delete(oldAccount.VirtualPath)
 	}
-	accountDriver, err := GetAccountByVirtualPath(oldAccount.VirtualPath)
 	if err != nil {
 		return errors.WithMessage(err, "failed get account driver")
 	}
