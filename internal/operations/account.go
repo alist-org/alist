@@ -148,19 +148,20 @@ func GetAccountVirtualFilesByPath(prefix string) []driver.FileInfo {
 	prefix = utils.StandardizationPath(prefix)
 	set := make(map[string]interface{})
 	for _, v := range accounts {
+		// TODO should save a balanced account
 		// balance account
 		if utils.IsBalance(v.GetAccount().VirtualPath) {
 			continue
 		}
-		full := v.GetAccount().VirtualPath
-		if len(full) <= len(prefix) {
+		virtualPath := v.GetAccount().VirtualPath
+		if len(virtualPath) <= len(prefix) {
 			continue
 		}
 		// not prefixed with `prefix`
-		if !strings.HasPrefix(full, prefix+"/") && prefix != "/" {
+		if !strings.HasPrefix(virtualPath, prefix+"/") && prefix != "/" {
 			continue
 		}
-		name := strings.Split(strings.TrimPrefix(full, prefix), "/")[0]
+		name := strings.Split(strings.TrimPrefix(virtualPath, prefix), "/")[1]
 		if _, ok := set[name]; ok {
 			continue
 		}
