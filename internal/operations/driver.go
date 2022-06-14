@@ -28,6 +28,10 @@ func GetDriverNew(name string) (New, error) {
 	return n, nil
 }
 
+func GetDriverItemsMap() map[string]driver.Items {
+	return driverItemsMap
+}
+
 func registerDriverItems(config driver.Config, addition driver.Additional) {
 	tAddition := reflect.TypeOf(addition)
 	mainItems := getMainItems(config)

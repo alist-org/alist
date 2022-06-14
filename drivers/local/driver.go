@@ -2,6 +2,7 @@ package local
 
 import (
 	"context"
+
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/utils"
@@ -20,7 +21,7 @@ func (d Driver) Config() driver.Config {
 func (d *Driver) Init(ctx context.Context, account model.Account) error {
 	d.Account = account
 	addition := d.Account.Addition
-	err := utils.Json.UnmarshalFromString(addition, d.Addition)
+	err := utils.Json.UnmarshalFromString(addition, &d.Addition)
 	if err != nil {
 		return errors.Wrap(err, "error while unmarshal addition")
 	}
