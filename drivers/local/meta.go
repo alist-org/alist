@@ -13,6 +13,7 @@ var config = driver.Config{
 	Name:      "Local",
 	OnlyLocal: true,
 	LocalSort: true,
+	NoCache:   true,
 }
 
 func New() driver.Driver {
