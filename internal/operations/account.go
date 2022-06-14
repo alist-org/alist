@@ -2,24 +2,25 @@ package operations
 
 import (
 	"context"
+	"sort"
+	"strings"
+	"time"
+
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/store"
+	"github.com/alist-org/alist/v3/pkg/generic_sync"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
-	"sort"
-	"strings"
-	"sync"
-	"time"
 )
 
 // Although the driver type is stored,
 // there is an account in each driver,
 // so it should actually be an account, just wrapped by the driver
-var accountsMap = map[string]driver.Driver{}
+var accountsMap generic_sync.MapOf[string, driver.Driver]
 
 func GetAccountByVirtualPath(virtualPath string) (driver.Driver, error) {
-	accountDriver, ok := accountsMap[virtualPath]
+	accountDriver, ok := accountsMap.Load(virtualPath)
 	if !ok {
 		return nil, errors.Errorf("no virtual path for an account is: %s", virtualPath)
 	}
@@ -45,7 +46,7 @@ func CreateAccount(ctx context.Context, account model.Account) error {
 	if err != nil {
 		return errors.WithMessage(err, "failed init account")
 	}
-	accountsMap[account.VirtualPath] = accountDriver
+	accountsMap.Store(account.VirtualPath, accountDriver)
 	return nil
 }
 
@@ -63,8 +64,8 @@ func UpdateAccount(ctx context.Context, account model.Account) error {
 		return errors.WithMessage(err, "failed update account in database")
 	}
 	if oldAccount.VirtualPath != account.VirtualPath {
-		// virtual path renamed
-		delete(accountsMap, oldAccount.VirtualPath)
+		// virtual path renamed, need to drop the account
+		accountsMap.Delete(oldAccount.VirtualPath)
 	}
 	accountDriver, err := GetAccountByVirtualPath(oldAccount.VirtualPath)
 	if err != nil {
@@ -78,7 +79,7 @@ func UpdateAccount(ctx context.Context, account model.Account) error {
 	if err != nil {
 		return errors.WithMessage(err, "failed init account")
 	}
-	accountsMap[account.VirtualPath] = accountDriver
+	accountsMap.Store(account.VirtualPath, accountDriver)
 	return nil
 }
 
@@ -104,26 +105,27 @@ func SaveDriverAccount(driver driver.Driver) error {
 func GetAccountsByPath(path string) []driver.Driver {
 	accounts := make([]driver.Driver, 0)
 	curSlashCount := 0
-	for _, v := range accountsMap {
-		virtualPath := utils.GetActualVirtualPath(v.GetAccount().VirtualPath)
+	accountsMap.Range(func(key string, value driver.Driver) bool {
+		virtualPath := utils.GetActualVirtualPath(value.GetAccount().VirtualPath)
 		if virtualPath == "/" {
 			virtualPath = ""
 		}
 		// not this
 		if path != virtualPath && !strings.HasPrefix(path, virtualPath+"/") {
-			continue
+			return true
 		}
 		slashCount := strings.Count(virtualPath, "/")
 		// not the longest match
 		if slashCount < curSlashCount {
-			continue
+			return true
 		}
 		if slashCount > curSlashCount {
 			accounts = accounts[:0]
 			curSlashCount = slashCount
 		}
-		accounts = append(accounts, v)
-	}
+		accounts = append(accounts, value)
+		return true
+	})
 	// make sure the order is the same for same input
 	sort.Slice(accounts, func(i, j int) bool {
 		return accounts[i].GetAccount().VirtualPath < accounts[j].GetAccount().VirtualPath
@@ -136,12 +138,7 @@ func GetAccountsByPath(path string) []driver.Driver {
 // GetAccountVirtualFilesByPath(/a) => b,c,d
 func GetAccountVirtualFilesByPath(prefix string) []driver.FileInfo {
 	files := make([]driver.FileInfo, 0)
-	accounts := make([]driver.Driver, len(accountsMap))
-	i := 0
-	for _, v := range accountsMap {
-		accounts[i] = v
-		i += 1
-	}
+	accounts := accountsMap.Values()
 	sort.Slice(accounts, func(i, j int) bool {
 		if accounts[i].GetAccount().Index == accounts[j].GetAccount().Index {
 			return accounts[i].GetAccount().VirtualPath < accounts[j].GetAccount().VirtualPath
@@ -177,7 +174,7 @@ func GetAccountVirtualFilesByPath(prefix string) []driver.FileInfo {
 	return files
 }
 
-var balanceMap sync.Map
+var balanceMap generic_sync.MapOf[string, int]
 
 // GetBalancedAccount get account by path
 func GetBalancedAccount(path string) driver.Driver {
@@ -194,7 +191,7 @@ func GetBalancedAccount(path string) driver.Driver {
 		cur, ok := balanceMap.Load(virtualPath)
 		i := 0
 		if ok {
-			i = cur.(int)
+			i = cur
 			i = (i + 1) % accountNum
 			balanceMap.Store(virtualPath, i)
 		} else {
