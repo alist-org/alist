@@ -15,7 +15,7 @@ import (
 
 // In order to facilitate adding some other things before and after file operations
 
-var filesCache = cache.NewMemCache[[]driver.FileInfo]()
+var filesCache = cache.NewMemCache(cache.WithShards[[]driver.FileInfo](64))
 var filesG singleflight.Group[[]driver.FileInfo]
 
 // List files in storage, not contains virtual file
@@ -72,7 +72,7 @@ func Get(ctx context.Context, account driver.Driver, path string) (driver.FileIn
 	return nil, errors.WithStack(driver.ErrorObjectNotFound)
 }
 
-var linkCache = cache.NewMemCache[*driver.Link]()
+var linkCache = cache.NewMemCache(cache.WithShards[*driver.Link](16))
 var linkG singleflight.Group[*driver.Link]
 
 // Link get link, if is an url. should have an expiry time
