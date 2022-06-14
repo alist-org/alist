@@ -1,13 +1,23 @@
 package bootstrap
 
 import (
+	"log"
+	"time"
+
 	"github.com/alist-org/alist/v3/cmd/args"
 	"github.com/alist-org/alist/v3/conf"
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
 	"github.com/sirupsen/logrus"
-	"log"
-	"time"
 )
+
+func init() {
+	logrus.SetFormatter(&logrus.TextFormatter{
+		ForceColors:               true,
+		EnvironmentOverrideColors: true,
+		TimestampFormat:           "2006-01-02 15:04:05",
+		FullTimestamp:             true,
+	})
+}
 
 func Log() {
 	log.SetOutput(logrus.StandardLogger().Out)
@@ -15,12 +25,6 @@ func Log() {
 		logrus.SetLevel(logrus.DebugLevel)
 		logrus.SetReportCaller(true)
 	}
-	logrus.SetFormatter(&logrus.TextFormatter{
-		ForceColors:               true,
-		EnvironmentOverrideColors: true,
-		TimestampFormat:           "2006-01-02 15:04:05",
-		FullTimestamp:             true,
-	})
 	logConfig := conf.Conf.Log
 	if logConfig.Enable {
 		var (
