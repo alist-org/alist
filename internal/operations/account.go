@@ -102,7 +102,7 @@ func SaveDriverAccount(driver driver.Driver) error {
 // GetAccountsByPath get account by longest match path, contains balance account.
 // for example, there is /a/b,/a/c,/a/d/e,/a/d/e.balance
 // GetAccountsByPath(/a/d/e/f) => /a/d/e,/a/d/e.balance
-func GetAccountsByPath(path string) []driver.Driver {
+func getAccountsByPath(path string) []driver.Driver {
 	accounts := make([]driver.Driver, 0)
 	curSlashCount := 0
 	accountsMap.Range(func(key string, value driver.Driver) bool {
@@ -179,7 +179,7 @@ var balanceMap generic_sync.MapOf[string, int]
 // GetBalancedAccount get account by path
 func GetBalancedAccount(path string) driver.Driver {
 	path = utils.StandardizationPath(path)
-	accounts := GetAccountsByPath(path)
+	accounts := getAccountsByPath(path)
 	accountNum := len(accounts)
 	switch accountNum {
 	case 0:
