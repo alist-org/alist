@@ -44,47 +44,47 @@ func (d *Driver) GetAddition() driver.Additional {
 	return d.Addition
 }
 
-func (d *Driver) List(ctx context.Context, path string) ([]model.FileInfo, error) {
+func (d *Driver) List(ctx context.Context, dir model.Object) ([]model.Object, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (d *Driver) Link(ctx context.Context, path string, args model.LinkArgs) (*model.Link, error) {
+func (d *Driver) Link(ctx context.Context, file model.Object, args model.LinkArgs) (*model.Link, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (d *Driver) MakeDir(ctx context.Context, parentDir model.Object, dirName string) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (d *Driver) Move(ctx context.Context, srcObject, dstDir model.Object) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (d *Driver) Rename(ctx context.Context, srcObject model.Object, newName string) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (d *Driver) Copy(ctx context.Context, srcObject, dstDir model.Object) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (d *Driver) Remove(ctx context.Context, object model.Object) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (d *Driver) Put(ctx context.Context, parentDir model.Object, stream model.FileStreamer) error {
 	//TODO implement me
 	panic("implement me")
 }
 
 func (d Driver) Other(ctx context.Context, data interface{}) (interface{}, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (d *Driver) MakeDir(ctx context.Context, path string) error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (d *Driver) Move(ctx context.Context, src, dst string) error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (d *Driver) Rename(ctx context.Context, src, dst string) error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (d *Driver) Copy(ctx context.Context, src, dst string) error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (d *Driver) Remove(ctx context.Context, path string) error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (d *Driver) Put(ctx context.Context, parentPath string, stream model.FileStreamer) error {
 	//TODO implement me
 	panic("implement me")
 }

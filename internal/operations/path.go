@@ -1,22 +1,24 @@
 package operations
 
 import (
+	stdpath "path"
+	"strings"
+
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-	"path"
-	"strings"
 )
 
 func ActualPath(account driver.Additional, rawPath string) string {
 	if i, ok := account.(driver.IRootFolderPath); ok {
-		rawPath = path.Join(i.GetRootFolderPath(), rawPath)
+		rawPath = stdpath.Join(i.GetRootFolderPath(), rawPath)
 	}
 	return utils.StandardizationPath(rawPath)
 }
 
-// GetAccountAndActualPath Get the corresponding account, and remove the virtual path prefix in path
+// GetAccountAndActualPath Get the corresponding account
+// for path: remove the virtual path prefix and join the actual root folder if exists
 func GetAccountAndActualPath(rawPath string) (driver.Driver, string, error) {
 	rawPath = utils.StandardizationPath(rawPath)
 	account := GetBalancedAccount(rawPath)

@@ -15,7 +15,7 @@ import (
 // List files
 // TODO: hide
 // TODO: sort
-func List(ctx context.Context, path string) ([]model.FileInfo, error) {
+func List(ctx context.Context, path string) ([]model.Object, error) {
 	account, actualPath, err := operations.GetAccountAndActualPath(path)
 	virtualFiles := operations.GetAccountVirtualFilesByPath(path)
 	if err != nil {
@@ -40,7 +40,7 @@ func List(ctx context.Context, path string) ([]model.FileInfo, error) {
 	return files, nil
 }
 
-func Get(ctx context.Context, path string) (model.FileInfo, error) {
+func Get(ctx context.Context, path string) (model.Object, error) {
 	path = utils.StandardizationPath(path)
 	// maybe a virtual file
 	if path != "/" {

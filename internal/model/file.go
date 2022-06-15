@@ -3,6 +3,7 @@ package model
 import "time"
 
 type File struct {
+	ID       string
 	Name     string
 	Size     uint64
 	Modified time.Time
@@ -25,7 +26,6 @@ func (f File) IsDir() bool {
 	return f.IsFolder
 }
 
-type FileWithId struct {
-	Id string
-	File
+func (f File) GetID() string {
+	return f.ID
 }

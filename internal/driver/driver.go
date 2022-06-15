@@ -29,16 +29,22 @@ type Other interface {
 }
 
 type Reader interface {
-	List(ctx context.Context, path string) ([]model.FileInfo, error)
-	Link(ctx context.Context, path string, args model.LinkArgs) (*model.Link, error)
+	List(ctx context.Context, dir model.Object) ([]model.Object, error)
+	Link(ctx context.Context, file model.Object, args model.LinkArgs) (*model.Link, error)
 	//Get(ctx context.Context, path string) (FileInfo, error) // maybe not need
 }
 
 type Writer interface {
-	MakeDir(ctx context.Context, path string) error
-	Move(ctx context.Context, srcPath, dstPath string) error
-	Rename(ctx context.Context, srcPath, dstName string) error
-	Copy(ctx context.Context, srcPath, dstPath string) error
-	Remove(ctx context.Context, path string) error
-	Put(ctx context.Context, parentPath string, stream model.FileStreamer) error
+	// MakeDir make a folder named `dirName` in `parentDir`
+	MakeDir(ctx context.Context, parentDir model.Object, dirName string) error
+	// Move move `srcObject` to `dstDir`
+	Move(ctx context.Context, srcObject, dstDir model.Object) error
+	// Rename rename `srcObject` to `newName`
+	Rename(ctx context.Context, srcObject model.Object, newName string) error
+	// Copy copy `srcObject` to `dstDir`
+	Copy(ctx context.Context, srcObject, dstDir model.Object) error
+	// Remove remove `object`
+	Remove(ctx context.Context, object model.Object) error
+	// Put put `stream` to `parentDir`
+	Put(ctx context.Context, parentDir model.Object, stream model.FileStreamer) error
 }

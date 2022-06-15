@@ -5,16 +5,17 @@ import (
 	"time"
 )
 
-type FileInfo interface {
+type Object interface {
 	GetSize() uint64
 	GetName() string
 	ModTime() time.Time
 	IsDir() bool
+	GetID() string
 }
 
 type FileStreamer interface {
 	io.ReadCloser
-	FileInfo
+	Object
 	GetMimetype() string
 }
 

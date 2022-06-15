@@ -18,11 +18,6 @@ type Scheme struct {
 	KeyFile  string `json:"key_file" env:"KEY_FILE"`
 }
 
-type CacheConfig struct {
-	Expiration      int64 `json:"expiration" env:"CACHE_EXPIRATION"`
-	CleanupInterval int64 `json:"cleanup_interval" env:"CLEANUP_INTERVAL"`
-}
-
 type LogConfig struct {
 	Enable        bool   `json:"enable" env:"log_enable"`
 	Path          string `json:"path" env:"LOG_PATH"`
@@ -32,15 +27,15 @@ type LogConfig struct {
 }
 
 type Config struct {
-	Force    bool        `json:"force"`
-	Address  string      `json:"address" env:"ADDR"`
-	Port     int         `json:"port" env:"PORT"`
-	Assets   string      `json:"assets" env:"ASSETS"`
-	Database Database    `json:"database"`
-	Scheme   Scheme      `json:"scheme"`
-	Cache    CacheConfig `json:"cache"`
-	TempDir  string      `json:"temp_dir" env:"TEMP_DIR"`
-	Log      LogConfig   `json:"log"`
+	Force           bool      `json:"force"`
+	Address         string    `json:"address" env:"ADDR"`
+	Port            int       `json:"port" env:"PORT"`
+	CaCheExpiration int       `json:"cache_expiration" env:"CACHE_EXPIRATION"`
+	Assets          string    `json:"assets" env:"ASSETS"`
+	Database        Database  `json:"database"`
+	Scheme          Scheme    `json:"scheme"`
+	TempDir         string    `json:"temp_dir" env:"TEMP_DIR"`
+	Log             LogConfig `json:"log"`
 }
 
 func DefaultConfig() *Config {
@@ -55,10 +50,7 @@ func DefaultConfig() *Config {
 			TablePrefix: "x_",
 			DBFile:      "data/data.db",
 		},
-		Cache: CacheConfig{
-			Expiration:      60,
-			CleanupInterval: 120,
-		},
+		CaCheExpiration: 30,
 		Log: LogConfig{
 			Enable:        true,
 			Path:          "log/%Y-%m-%d-%H:%M.log",

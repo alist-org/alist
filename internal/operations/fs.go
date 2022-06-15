@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Xhofe/go-cache"
+	"github.com/alist-org/alist/v3/conf"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/singleflight"
@@ -15,50 +16,57 @@ import (
 
 // In order to facilitate adding some other things before and after file operations
 
-var filesCache = cache.NewMemCache(cache.WithShards[[]model.FileInfo](64))
-var filesG singleflight.Group[[]model.FileInfo]
+var filesCache = cache.NewMemCache(cache.WithShards[[]model.Object](64))
+var filesG singleflight.Group[[]model.Object]
 
 // List files in storage, not contains virtual file
-func List(ctx context.Context, account driver.Driver, path string) ([]model.FileInfo, error) {
+func List(ctx context.Context, account driver.Driver, path string) ([]model.Object, error) {
+	dir, err := Get(ctx, account, path)
+	if err != nil {
+		return nil, errors.WithMessage(err, "failed get dir")
+	}
 	if account.Config().NoCache {
-		return account.List(ctx, path)
+		return account.List(ctx, dir)
 	}
 	key := stdpath.Join(account.GetAccount().VirtualPath, path)
 	if files, ok := filesCache.Get(key); ok {
 		return files, nil
 	}
-	files, err, _ := filesG.Do(key, func() ([]model.FileInfo, error) {
-		files, err := account.List(ctx, path)
+	files, err, _ := filesG.Do(key, func() ([]model.Object, error) {
+		files, err := account.List(ctx, dir)
 		if err != nil {
 			return nil, errors.WithMessage(err, "failed to list files")
 		}
-		// TODO: get duration from global config or account's config
-		filesCache.Set(key, files, cache.WithEx[[]model.FileInfo](time.Minute*30))
+		// TODO: maybe can get duration from account's config
+		filesCache.Set(key, files, cache.WithEx[[]model.Object](time.Minute*time.Duration(conf.Conf.CaCheExpiration)))
 		return files, nil
 	})
 	return files, err
 }
 
-func Get(ctx context.Context, account driver.Driver, path string) (model.FileInfo, error) {
-	if r, ok := account.GetAddition().(driver.RootFolderId); ok && utils.PathEqual(path, "/") {
-		return model.FileWithId{
-			Id: r.GetRootFolderId(),
-			File: model.File{
-				Name:     "root",
-				Size:     0,
-				Modified: account.GetAccount().Modified,
-				IsFolder: true,
-			},
-		}, nil
-	}
-	if r, ok := account.GetAddition().(driver.IRootFolderPath); ok && utils.PathEqual(path, r.GetRootFolderPath()) {
+// Get get object from list of files
+// TODO: maybe should set object ID with path here
+func Get(ctx context.Context, account driver.Driver, path string) (model.Object, error) {
+	// is root folder
+	if r, ok := account.GetAddition().(driver.IRootFolderId); ok && utils.PathEqual(path, "/") {
 		return model.File{
+			ID:       r.GetRootFolderId(),
 			Name:     "root",
 			Size:     0,
 			Modified: account.GetAccount().Modified,
 			IsFolder: true,
 		}, nil
 	}
+	if r, ok := account.GetAddition().(driver.IRootFolderPath); ok && utils.PathEqual(path, r.GetRootFolderPath()) {
+		return model.File{
+			ID:       r.GetRootFolderPath(),
+			Name:     "root",
+			Size:     0,
+			Modified: account.GetAccount().Modified,
+			IsFolder: true,
+		}, nil
+	}
+	// not root folder
 	dir, name := stdpath.Split(path)
 	files, err := List(ctx, account, dir)
 	if err != nil {
@@ -82,7 +90,11 @@ func Link(ctx context.Context, account driver.Driver, path string, args model.Li
 		return link, nil
 	}
 	fn := func() (*model.Link, error) {
-		link, err := account.Link(ctx, path, args)
+		file, err := Get(ctx, account, path)
+		if err != nil {
+			return nil, errors.WithMessage(err, "failed to get file")
+		}
+		link, err := account.Link(ctx, file, args)
 		if err != nil {
 			return nil, errors.WithMessage(err, "failed get link")
 		}
@@ -98,54 +110,81 @@ func Link(ctx context.Context, account driver.Driver, path string, args model.Li
 func MakeDir(ctx context.Context, account driver.Driver, path string) error {
 	// check if dir exists
 	f, err := Get(ctx, account, path)
-	if f != nil && f.IsDir() {
-		return nil
-	}
-	if err != nil && !driver.IsErrObjectNotFound(err) {
-		return errors.WithMessage(err, "failed to check if dir exists")
-	}
-	parentPath := stdpath.Dir(path)
-	err = MakeDir(ctx, account, parentPath)
 	if err != nil {
-		return errors.WithMessagef(err, "failed to make parent dir [%s]", parentPath)
-	}
-	return account.MakeDir(ctx, path)
-}
-
-func Move(ctx context.Context, account driver.Driver, srcPath, dstPath string) error {
-	return account.Move(ctx, srcPath, dstPath)
-}
-
-func Rename(ctx context.Context, account driver.Driver, srcPath, dstName string) error {
-	return account.Rename(ctx, srcPath, dstName)
-}
-
-// Copy Just copy file[s] in an account
-func Copy(ctx context.Context, account driver.Driver, srcPath, dstPath string) error {
-	return account.Copy(ctx, srcPath, dstPath)
-}
-
-func Remove(ctx context.Context, account driver.Driver, path string) error {
-	return account.Remove(ctx, path)
-}
-
-func Put(ctx context.Context, account driver.Driver, parentPath string, file model.FileStreamer) error {
-	f, err := Get(ctx, account, parentPath)
-	if err != nil {
-		// if parent dir not exists, create it
 		if driver.IsErrObjectNotFound(err) {
+			parentPath, dirName := stdpath.Split(path)
 			err = MakeDir(ctx, account, parentPath)
 			if err != nil {
 				return errors.WithMessagef(err, "failed to make parent dir [%s]", parentPath)
 			}
+			parentDir, err := Get(ctx, account, parentPath)
+			// this should not happen
+			if err != nil {
+				return errors.WithMessagef(err, "failed to get parent dir [%s]", parentPath)
+			}
+			return account.MakeDir(ctx, parentDir, dirName)
 		} else {
-			return errors.WithMessage(err, "failed to get parent dir")
+			return errors.WithMessage(err, "failed to check if dir exists")
 		}
 	} else {
-		// object exists, check if it is a dir
-		if !f.IsDir() {
-			return errors.Errorf("object [%s] is not a dir", parentPath)
+		// dir exists
+		if f.IsDir() {
+			return nil
+		} else {
+			// dir to make is a file
+			return errors.New("file exists")
 		}
 	}
-	return account.Put(ctx, parentPath, file)
+}
+
+func Move(ctx context.Context, account driver.Driver, srcPath, dstPath string) error {
+	srcObject, err := Get(ctx, account, srcPath)
+	if err != nil {
+		return errors.WithMessage(err, "failed to get src object")
+	}
+	dstDir, err := Get(ctx, account, stdpath.Dir(dstPath))
+	return account.Move(ctx, srcObject, dstDir)
+}
+
+func Rename(ctx context.Context, account driver.Driver, srcPath, dstName string) error {
+	srcObject, err := Get(ctx, account, srcPath)
+	if err != nil {
+		return errors.WithMessage(err, "failed to get src object")
+	}
+	return account.Rename(ctx, srcObject, dstName)
+}
+
+// Copy Just copy file[s] in an account
+func Copy(ctx context.Context, account driver.Driver, srcPath, dstPath string) error {
+	srcObject, err := Get(ctx, account, srcPath)
+	if err != nil {
+		return errors.WithMessage(err, "failed to get src object")
+	}
+	dstDir, err := Get(ctx, account, stdpath.Dir(dstPath))
+	return account.Copy(ctx, srcObject, dstDir)
+}
+
+func Remove(ctx context.Context, account driver.Driver, path string) error {
+	object, err := Get(ctx, account, path)
+	if err != nil {
+		// if object not found, it's ok
+		if driver.IsErrObjectNotFound(err) {
+			return nil
+		}
+		return errors.WithMessage(err, "failed to get object")
+	}
+	return account.Remove(ctx, object)
+}
+
+func Put(ctx context.Context, account driver.Driver, parentPath string, file model.FileStreamer) error {
+	err := MakeDir(ctx, account, parentPath)
+	if err != nil {
+		return errors.WithMessagef(err, "failed to make dir [%s]", parentPath)
+	}
+	parentDir, err := Get(ctx, account, parentPath)
+	// this should not happen
+	if err != nil {
+		return errors.WithMessagef(err, "failed to get dir [%s]", parentPath)
+	}
+	return account.Put(ctx, parentDir, file)
 }
