@@ -1,21 +1,22 @@
 package bootstrap
 
 import (
+	"io/ioutil"
+	"os"
+	"path/filepath"
+
 	"github.com/alist-org/alist/v3/cmd/args"
 	"github.com/alist-org/alist/v3/conf"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/caarlos0/env/v6"
 	log "github.com/sirupsen/logrus"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 )
 
 func InitConfig() {
 	log.Infof("reading config file: %s", args.Config)
 	if !utils.Exists(args.Config) {
 		log.Infof("config file not exists, creating default config file")
-		_, err := utils.CreatNestedFile(args.Config)
+		_, err := utils.CreateNestedFile(args.Config)
 		if err != nil {
 			log.Fatalf("failed to create config file")
 		}

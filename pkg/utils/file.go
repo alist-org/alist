@@ -20,8 +20,8 @@ func Exists(name string) bool {
 	return true
 }
 
-// CreatNestedFile create nested file
-func CreatNestedFile(path string) (*os.File, error) {
+// CreateNestedFile create nested file
+func CreateNestedFile(path string) (*os.File, error) {
 	basePath := filepath.Dir(path)
 	if !Exists(basePath) {
 		err := os.MkdirAll(basePath, 0700)
