@@ -1,28 +1,31 @@
 package model
 
-import (
-	"io"
-	"time"
-)
+import "time"
 
-type Object interface {
-	GetSize() uint64
-	GetName() string
-	ModTime() time.Time
-	IsDir() bool
-	GetID() string
+type Object struct {
+	ID       string
+	Name     string
+	Size     uint64
+	Modified time.Time
+	IsFolder bool
 }
 
-type FileStreamer interface {
-	io.ReadCloser
-	Object
-	GetMimetype() string
+func (f Object) GetName() string {
+	return f.Name
 }
 
-type URL interface {
-	URL() string
+func (f Object) GetSize() uint64 {
+	return f.Size
 }
 
-type Thumbnail interface {
-	Thumbnail() string
+func (f Object) ModTime() time.Time {
+	return f.Modified
+}
+
+func (f Object) IsDir() bool {
+	return f.IsFolder
+}
+
+func (f Object) GetID() string {
+	return f.ID
 }

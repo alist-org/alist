@@ -44,42 +44,42 @@ func (d *Driver) GetAddition() driver.Additional {
 	return d.Addition
 }
 
-func (d *Driver) List(ctx context.Context, dir model.Object) ([]model.Object, error) {
+func (d *Driver) List(ctx context.Context, dir model.Obj) ([]model.Obj, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (d *Driver) Link(ctx context.Context, file model.Object, args model.LinkArgs) (*model.Link, error) {
+func (d *Driver) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (d *Driver) MakeDir(ctx context.Context, parentDir model.Object, dirName string) error {
+func (d *Driver) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (d *Driver) Move(ctx context.Context, srcObject, dstDir model.Object) error {
+func (d *Driver) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (d *Driver) Rename(ctx context.Context, srcObject model.Object, newName string) error {
+func (d *Driver) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (d *Driver) Copy(ctx context.Context, srcObject, dstDir model.Object) error {
+func (d *Driver) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (d *Driver) Remove(ctx context.Context, object model.Object) error {
+func (d *Driver) Remove(ctx context.Context, obj model.Obj) error {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (d *Driver) Put(ctx context.Context, parentDir model.Object, stream model.FileStreamer) error {
+func (d *Driver) Put(ctx context.Context, parentDir model.Obj, stream model.FileStreamer) error {
 	//TODO implement me
 	panic("implement me")
 }

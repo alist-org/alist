@@ -15,7 +15,7 @@ import (
 // List files
 // TODO: hide
 // TODO: sort
-func List(ctx context.Context, path string) ([]model.Object, error) {
+func List(ctx context.Context, path string) ([]model.Obj, error) {
 	account, actualPath, err := operations.GetAccountAndActualPath(path)
 	virtualFiles := operations.GetAccountVirtualFilesByPath(path)
 	if err != nil {
@@ -40,7 +40,7 @@ func List(ctx context.Context, path string) ([]model.Object, error) {
 	return files, nil
 }
 
-func Get(ctx context.Context, path string) (model.Object, error) {
+func Get(ctx context.Context, path string) (model.Obj, error) {
 	path = utils.StandardizationPath(path)
 	// maybe a virtual file
 	if path != "/" {
@@ -55,7 +55,7 @@ func Get(ctx context.Context, path string) (model.Object, error) {
 	if err != nil {
 		// if there are no account prefix with path, maybe root folder
 		if path == "/" {
-			return model.File{
+			return model.Object{
 				Name:     "root",
 				Size:     0,
 				Modified: time.Time{},

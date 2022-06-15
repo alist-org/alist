@@ -12,7 +12,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func containsByName(files []model.Object, file model.Object) bool {
+func containsByName(files []model.Obj, file model.Obj) bool {
 	for _, f := range files {
 		if f.GetName() == file.GetName() {
 			return true
@@ -23,7 +23,7 @@ func containsByName(files []model.Object, file model.Object) bool {
 
 var httpClient = &http.Client{}
 
-func getFileStreamFromLink(file model.Object, link *model.Link) (model.FileStreamer, error) {
+func getFileStreamFromLink(file model.Obj, link *model.Link) (model.FileStreamer, error) {
 	var rc io.ReadCloser
 	mimetype := mime.TypeByExtension(stdpath.Ext(file.GetName()))
 	if link.Data != nil {
@@ -57,7 +57,7 @@ func getFileStreamFromLink(file model.Object, link *model.Link) (model.FileStrea
 		mimetype = "application/octet-stream"
 	}
 	stream := model.FileStream{
-		Object:     file,
+		Obj:        file,
 		ReadCloser: rc,
 		Mimetype:   mimetype,
 	}

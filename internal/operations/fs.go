@@ -16,11 +16,11 @@ import (
 
 // In order to facilitate adding some other things before and after file operations
 
-var filesCache = cache.NewMemCache(cache.WithShards[[]model.Object](64))
-var filesG singleflight.Group[[]model.Object]
+var filesCache = cache.NewMemCache(cache.WithShards[[]model.Obj](64))
+var filesG singleflight.Group[[]model.Obj]
 
 // List files in storage, not contains virtual file
-func List(ctx context.Context, account driver.Driver, path string) ([]model.Object, error) {
+func List(ctx context.Context, account driver.Driver, path string) ([]model.Obj, error) {
 	dir, err := Get(ctx, account, path)
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed get dir")
@@ -32,13 +32,13 @@ func List(ctx context.Context, account driver.Driver, path string) ([]model.Obje
 	if files, ok := filesCache.Get(key); ok {
 		return files, nil
 	}
-	files, err, _ := filesG.Do(key, func() ([]model.Object, error) {
+	files, err, _ := filesG.Do(key, func() ([]model.Obj, error) {
 		files, err := account.List(ctx, dir)
 		if err != nil {
 			return nil, errors.WithMessage(err, "failed to list files")
 		}
 		// TODO: maybe can get duration from account's config
-		filesCache.Set(key, files, cache.WithEx[[]model.Object](time.Minute*time.Duration(conf.Conf.CaCheExpiration)))
+		filesCache.Set(key, files, cache.WithEx[[]model.Obj](time.Minute*time.Duration(conf.Conf.CaCheExpiration)))
 		return files, nil
 	})
 	return files, err
@@ -46,10 +46,10 @@ func List(ctx context.Context, account driver.Driver, path string) ([]model.Obje
 
 // Get get object from list of files
 // TODO: maybe should set object ID with path here
-func Get(ctx context.Context, account driver.Driver, path string) (model.Object, error) {
+func Get(ctx context.Context, account driver.Driver, path string) (model.Obj, error) {
 	// is root folder
 	if r, ok := account.GetAddition().(driver.IRootFolderId); ok && utils.PathEqual(path, "/") {
-		return model.File{
+		return model.Object{
 			ID:       r.GetRootFolderId(),
 			Name:     "root",
 			Size:     0,
@@ -58,7 +58,7 @@ func Get(ctx context.Context, account driver.Driver, path string) (model.Object,
 		}, nil
 	}
 	if r, ok := account.GetAddition().(driver.IRootFolderPath); ok && utils.PathEqual(path, r.GetRootFolderPath()) {
-		return model.File{
+		return model.Object{
 			ID:       r.GetRootFolderPath(),
 			Name:     "root",
 			Size:     0,
@@ -138,34 +138,34 @@ func MakeDir(ctx context.Context, account driver.Driver, path string) error {
 }
 
 func Move(ctx context.Context, account driver.Driver, srcPath, dstPath string) error {
-	srcObject, err := Get(ctx, account, srcPath)
+	srcObj, err := Get(ctx, account, srcPath)
 	if err != nil {
 		return errors.WithMessage(err, "failed to get src object")
 	}
 	dstDir, err := Get(ctx, account, stdpath.Dir(dstPath))
-	return account.Move(ctx, srcObject, dstDir)
+	return account.Move(ctx, srcObj, dstDir)
 }
 
 func Rename(ctx context.Context, account driver.Driver, srcPath, dstName string) error {
-	srcObject, err := Get(ctx, account, srcPath)
+	srcObj, err := Get(ctx, account, srcPath)
 	if err != nil {
 		return errors.WithMessage(err, "failed to get src object")
 	}
-	return account.Rename(ctx, srcObject, dstName)
+	return account.Rename(ctx, srcObj, dstName)
 }
 
 // Copy Just copy file[s] in an account
 func Copy(ctx context.Context, account driver.Driver, srcPath, dstPath string) error {
-	srcObject, err := Get(ctx, account, srcPath)
+	srcObj, err := Get(ctx, account, srcPath)
 	if err != nil {
 		return errors.WithMessage(err, "failed to get src object")
 	}
 	dstDir, err := Get(ctx, account, stdpath.Dir(dstPath))
-	return account.Copy(ctx, srcObject, dstDir)
+	return account.Copy(ctx, srcObj, dstDir)
 }
 
 func Remove(ctx context.Context, account driver.Driver, path string) error {
-	object, err := Get(ctx, account, path)
+	obj, err := Get(ctx, account, path)
 	if err != nil {
 		// if object not found, it's ok
 		if driver.IsErrObjectNotFound(err) {
@@ -173,7 +173,7 @@ func Remove(ctx context.Context, account driver.Driver, path string) error {
 		}
 		return errors.WithMessage(err, "failed to get object")
 	}
-	return account.Remove(ctx, object)
+	return account.Remove(ctx, obj)
 }
 
 func Put(ctx context.Context, account driver.Driver, parentPath string, file model.FileStreamer) error {

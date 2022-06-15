@@ -5,7 +5,7 @@ import (
 )
 
 type FileStream struct {
-	Object
+	Obj
 	io.ReadCloser
 	Mimetype string
 }
