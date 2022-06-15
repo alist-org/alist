@@ -2,20 +2,20 @@ package fs
 
 import (
 	"context"
-	"github.com/alist-org/alist/v3/internal/driver"
+	stdpath "path"
+	"time"
+
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/operations"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-	stdpath "path"
-	"time"
 )
 
 // List files
 // TODO: hide
 // TODO: sort
-func List(ctx context.Context, path string) ([]driver.FileInfo, error) {
+func List(ctx context.Context, path string) ([]model.FileInfo, error) {
 	account, actualPath, err := operations.GetAccountAndActualPath(path)
 	virtualFiles := operations.GetAccountVirtualFilesByPath(path)
 	if err != nil {
@@ -40,7 +40,7 @@ func List(ctx context.Context, path string) ([]driver.FileInfo, error) {
 	return files, nil
 }
 
-func Get(ctx context.Context, path string) (driver.FileInfo, error) {
+func Get(ctx context.Context, path string) (model.FileInfo, error) {
 	path = utils.StandardizationPath(path)
 	// maybe a virtual file
 	if path != "/" {
@@ -67,7 +67,7 @@ func Get(ctx context.Context, path string) (driver.FileInfo, error) {
 	return operations.Get(ctx, account, actualPath)
 }
 
-func Link(ctx context.Context, path string, args driver.LinkArgs) (*driver.Link, error) {
+func Link(ctx context.Context, path string, args model.LinkArgs) (*model.Link, error) {
 	account, actualPath, err := operations.GetAccountAndActualPath(path)
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed get account")

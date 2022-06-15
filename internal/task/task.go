@@ -4,9 +4,9 @@ package task
 import "context"
 
 type Task struct {
-	Name     string
-	Func     func(context.Context) error
-	Status   string
-	Error    error
-	Progress int
+	Name   string
+	Func   func(context.Context) error
+	Status string
+	Error  error
+	Finish bool
 }

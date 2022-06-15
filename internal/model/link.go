@@ -1,4 +1,4 @@
-package driver
+package model
 
 import (
 	"io"
@@ -16,6 +16,6 @@ type Link struct {
 	Header     http.Header    // needed header
 	Data       io.ReadCloser  // return file reader directly
 	Status     int            // status maybe 200 or 206, etc
-	FilePath   string         // local file, return the filepath
+	FilePath   *string        // local file, return the filepath
 	Expiration *time.Duration // url expiration time
 }

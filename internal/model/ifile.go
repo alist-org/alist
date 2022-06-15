@@ -1,4 +1,4 @@
-package driver
+package model
 
 import (
 	"io"
@@ -12,7 +12,7 @@ type FileInfo interface {
 	IsDir() bool
 }
 
-type FileStream interface {
+type FileStreamer interface {
 	io.ReadCloser
 	FileInfo
 	GetMimetype() string

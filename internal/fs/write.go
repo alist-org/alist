@@ -2,7 +2,9 @@ package fs
 
 import (
 	"context"
+
 	"github.com/alist-org/alist/v3/internal/driver"
+	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/operations"
 	"github.com/pkg/errors"
 )
@@ -39,7 +41,7 @@ func Rename(ctx context.Context, account driver.Driver, srcPath, dstName string)
 }
 
 // Copy if in an account, call move method
-// TODO: if not, add copy task
+// if not, add copy task
 func Copy(ctx context.Context, account driver.Driver, srcPath, dstPath string) error {
 	srcAccount, srcActualPath, err := operations.GetAccountAndActualPath(srcPath)
 	if err != nil {
@@ -49,8 +51,15 @@ func Copy(ctx context.Context, account driver.Driver, srcPath, dstPath string) e
 	if err != nil {
 		return errors.WithMessage(err, "failed get dst account")
 	}
+	// copy if in an account, just call driver.Copy
 	if srcAccount.GetAccount() == dstAccount.GetAccount() {
 		return operations.Copy(ctx, account, srcActualPath, dstActualPath)
+	}
+	// not in an account, add copy task
+	srcFile, err := operations.Get(ctx, srcAccount, srcActualPath)
+	if srcFile.IsDir() {
+		// TODO: recursive copy
+		return nil
 	}
 	// TODO: add copy task, maybe like this:
 	// operations.Link(ctx,srcAccount,srcActualPath,args)
@@ -68,7 +77,7 @@ func Remove(ctx context.Context, account driver.Driver, path string) error {
 	return operations.Remove(ctx, account, actualPath)
 }
 
-func Put(ctx context.Context, account driver.Driver, parentPath string, file driver.FileStream) error {
+func Put(ctx context.Context, account driver.Driver, parentPath string, file model.FileStreamer) error {
 	account, actualParentPath, err := operations.GetAccountAndActualPath(parentPath)
 	if err != nil {
 		return errors.WithMessage(err, "failed get account")

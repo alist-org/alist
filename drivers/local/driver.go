@@ -36,12 +36,12 @@ func (d *Driver) GetAddition() driver.Additional {
 	return d.Addition
 }
 
-func (d *Driver) List(ctx context.Context, path string) ([]driver.FileInfo, error) {
+func (d *Driver) List(ctx context.Context, path string) ([]model.FileInfo, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (d *Driver) Link(ctx context.Context, path string, args driver.LinkArgs) (*driver.Link, error) {
+func (d *Driver) Link(ctx context.Context, path string, args model.LinkArgs) (*model.Link, error) {
 	//TODO implement me
 	panic("implement me")
 }
@@ -76,7 +76,7 @@ func (d *Driver) Remove(ctx context.Context, path string) error {
 	panic("implement me")
 }
 
-func (d *Driver) Put(ctx context.Context, parentPath string, stream driver.FileStream) error {
+func (d *Driver) Put(ctx context.Context, parentPath string, stream model.FileStreamer) error {
 	//TODO implement me
 	panic("implement me")
 }

@@ -2,6 +2,7 @@ package driver
 
 import (
 	"context"
+
 	"github.com/alist-org/alist/v3/internal/model"
 )
 
@@ -28,8 +29,8 @@ type Other interface {
 }
 
 type Reader interface {
-	List(ctx context.Context, path string) ([]FileInfo, error)
-	Link(ctx context.Context, path string, args LinkArgs) (*Link, error)
+	List(ctx context.Context, path string) ([]model.FileInfo, error)
+	Link(ctx context.Context, path string, args model.LinkArgs) (*model.Link, error)
 	//Get(ctx context.Context, path string) (FileInfo, error) // maybe not need
 }
 
@@ -39,5 +40,5 @@ type Writer interface {
 	Rename(ctx context.Context, srcPath, dstName string) error
 	Copy(ctx context.Context, srcPath, dstPath string) error
 	Remove(ctx context.Context, path string) error
-	Put(ctx context.Context, parentPath string, stream FileStream) error
+	Put(ctx context.Context, parentPath string, stream model.FileStreamer) error
 }

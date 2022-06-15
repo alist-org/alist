@@ -15,11 +15,11 @@ import (
 
 // In order to facilitate adding some other things before and after file operations
 
-var filesCache = cache.NewMemCache(cache.WithShards[[]driver.FileInfo](64))
-var filesG singleflight.Group[[]driver.FileInfo]
+var filesCache = cache.NewMemCache(cache.WithShards[[]model.FileInfo](64))
+var filesG singleflight.Group[[]model.FileInfo]
 
 // List files in storage, not contains virtual file
-func List(ctx context.Context, account driver.Driver, path string) ([]driver.FileInfo, error) {
+func List(ctx context.Context, account driver.Driver, path string) ([]model.FileInfo, error) {
 	if account.Config().NoCache {
 		return account.List(ctx, path)
 	}
@@ -27,19 +27,19 @@ func List(ctx context.Context, account driver.Driver, path string) ([]driver.Fil
 	if files, ok := filesCache.Get(key); ok {
 		return files, nil
 	}
-	files, err, _ := filesG.Do(key, func() ([]driver.FileInfo, error) {
+	files, err, _ := filesG.Do(key, func() ([]model.FileInfo, error) {
 		files, err := account.List(ctx, path)
 		if err != nil {
 			return nil, errors.WithMessage(err, "failed to list files")
 		}
 		// TODO: get duration from global config or account's config
-		filesCache.Set(key, files, cache.WithEx[[]driver.FileInfo](time.Minute*30))
+		filesCache.Set(key, files, cache.WithEx[[]model.FileInfo](time.Minute*30))
 		return files, nil
 	})
 	return files, err
 }
 
-func Get(ctx context.Context, account driver.Driver, path string) (driver.FileInfo, error) {
+func Get(ctx context.Context, account driver.Driver, path string) (model.FileInfo, error) {
 	if r, ok := account.GetAddition().(driver.RootFolderId); ok && utils.PathEqual(path, "/") {
 		return model.FileWithId{
 			Id: r.GetRootFolderId(),
@@ -72,22 +72,22 @@ func Get(ctx context.Context, account driver.Driver, path string) (driver.FileIn
 	return nil, errors.WithStack(driver.ErrorObjectNotFound)
 }
 
-var linkCache = cache.NewMemCache(cache.WithShards[*driver.Link](16))
-var linkG singleflight.Group[*driver.Link]
+var linkCache = cache.NewMemCache(cache.WithShards[*model.Link](16))
+var linkG singleflight.Group[*model.Link]
 
 // Link get link, if is an url. should have an expiry time
-func Link(ctx context.Context, account driver.Driver, path string, args driver.LinkArgs) (*driver.Link, error) {
+func Link(ctx context.Context, account driver.Driver, path string, args model.LinkArgs) (*model.Link, error) {
 	key := stdpath.Join(account.GetAccount().VirtualPath, path)
 	if link, ok := linkCache.Get(key); ok {
 		return link, nil
 	}
-	fn := func() (*driver.Link, error) {
+	fn := func() (*model.Link, error) {
 		link, err := account.Link(ctx, path, args)
 		if err != nil {
 			return nil, errors.WithMessage(err, "failed get link")
 		}
 		if link.Expiration != nil {
-			linkCache.Set(key, link, cache.WithEx[*driver.Link](*link.Expiration))
+			linkCache.Set(key, link, cache.WithEx[*model.Link](*link.Expiration))
 		}
 		return link, nil
 	}
@@ -116,6 +116,6 @@ func Remove(ctx context.Context, account driver.Driver, path string) error {
 	return account.Remove(ctx, path)
 }
 
-func Put(ctx context.Context, account driver.Driver, parentPath string, file driver.FileStream) error {
+func Put(ctx context.Context, account driver.Driver, parentPath string, file model.FileStreamer) error {
 	return account.Put(ctx, parentPath, file)
 }
