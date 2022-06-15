@@ -96,6 +96,19 @@ func Link(ctx context.Context, account driver.Driver, path string, args model.Li
 }
 
 func MakeDir(ctx context.Context, account driver.Driver, path string) error {
+	// check if dir exists
+	f, err := Get(ctx, account, path)
+	if f != nil && f.IsDir() {
+		return nil
+	}
+	if err != nil && !driver.IsErrObjectNotFound(err) {
+		return errors.WithMessage(err, "failed to check if dir exists")
+	}
+	parentPath := stdpath.Dir(path)
+	err = MakeDir(ctx, account, parentPath)
+	if err != nil {
+		return errors.WithMessagef(err, "failed to make parent dir [%s]", parentPath)
+	}
 	return account.MakeDir(ctx, path)
 }
 
