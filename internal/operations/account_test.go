@@ -56,13 +56,25 @@ func TestGetAccountVirtualFilesByPath(t *testing.T) {
 	}
 }
 
+func TestGetBalancedAccount(t *testing.T) {
+	Setup(t)
+	account := operations.GetBalancedAccount("/a/d/e")
+	if account.GetAccount().VirtualPath != "/a/d/e" {
+		t.Errorf("expected: /a/d/e, got: %+v", account.GetAccount().VirtualPath)
+	}
+	account = operations.GetBalancedAccount("/a/d/e")
+	if account.GetAccount().VirtualPath != "/a/d/e.balance" {
+		t.Errorf("expected: /a/d/e.balance, got: %+v", account.GetAccount().VirtualPath)
+	}
+}
+
 func Setup(t *testing.T) {
 	var accounts = []model.Account{
-		{Driver: "Local", VirtualPath: "/a/b", Index: 0, Addition: "{}"},
-		{Driver: "Local", VirtualPath: "/a/c", Index: 1, Addition: "{}"},
-		{Driver: "Local", VirtualPath: "/a/d", Index: 2, Addition: "{}"},
-		{Driver: "Local", VirtualPath: "/a/d/e", Index: 3, Addition: "{}"},
-		{Driver: "Local", VirtualPath: "/a/d/e.balance", Index: 4, Addition: "{}"},
+		{Driver: "Local", VirtualPath: "/a/b", Index: 0, Addition: `{"root_folder":"."}`},
+		{Driver: "Local", VirtualPath: "/a/c", Index: 1, Addition: `{"root_folder":"."}`},
+		{Driver: "Local", VirtualPath: "/a/d", Index: 2, Addition: `{"root_folder":"."}`},
+		{Driver: "Local", VirtualPath: "/a/d/e", Index: 3, Addition: `{"root_folder":"."}`},
+		{Driver: "Local", VirtualPath: "/a/d/e.balance", Index: 4, Addition: `{"root_folder":"."}`},
 	}
 	for _, account := range accounts {
 		err := operations.CreateAccount(context.Background(), account)
