@@ -5,6 +5,7 @@ import (
 
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/operations"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
 )
@@ -25,7 +26,14 @@ func (d *Driver) Init(ctx context.Context, account model.Account) error {
 	if err != nil {
 		return errors.Wrap(err, "error while unmarshal addition")
 	}
-	return nil
+	if !utils.Exists(d.RootFolder) {
+		err = errors.Errorf("root folder %s not exists", d.RootFolder)
+		d.SetStatus(err.Error())
+	} else {
+		d.SetStatus("OK")
+	}
+	operations.SaveDriverAccount(d)
+	return err
 }
 
 func (d *Driver) Drop(ctx context.Context) error {

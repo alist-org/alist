@@ -31,3 +31,7 @@ type Proxy struct {
 func (a Account) GetAccount() Account {
 	return a
 }
+
+func (a *Account) SetStatus(status string) {
+	a.Status = status
+}
