@@ -1,9 +1,13 @@
 package utils
 
 import (
-	log "github.com/sirupsen/logrus"
+	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	"github.com/alist-org/alist/v3/conf"
+	log "github.com/sirupsen/logrus"
 )
 
 // Exists determine whether the file exists
@@ -27,4 +31,21 @@ func CreatNestedFile(path string) (*os.File, error) {
 		}
 	}
 	return os.Create(path)
+}
+
+// CreateTempFile create temp file from io.ReadCloser, and seek to 0
+func CreateTempFile(r io.ReadCloser) (*os.File, error) {
+	f, err := ioutil.TempFile(conf.Conf.TempDir, "file-*")
+	if err != nil {
+		return nil, err
+	}
+	_, err = io.Copy(f, r)
+	if err != nil {
+		return nil, err
+	}
+	_, err = f.Seek(0, io.SeekStart)
+	if err != nil {
+		return nil, err
+	}
+	return f, nil
 }
