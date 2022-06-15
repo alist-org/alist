@@ -55,18 +55,19 @@ func Copy(ctx context.Context, account driver.Driver, srcPath, dstPath string) e
 	if srcAccount.GetAccount() == dstAccount.GetAccount() {
 		return operations.Copy(ctx, account, srcActualPath, dstActualPath)
 	}
-	// not in an account, add copy task
-	srcFile, err := operations.Get(ctx, srcAccount, srcActualPath)
-	if srcFile.IsDir() {
-		// TODO: recursive copy
-		return nil
-	}
-	// TODO: add copy task, maybe like this:
-	// operations.Link(ctx,srcAccount,srcActualPath,args)
-	// get a Reader from link
-	// boxing the Reader to a driver.FileStream
-	// operations.Put(ctx,dstParentPath, stream)
-	panic("TODO")
+	// not in an account
+	return CopyBetween2Accounts(ctx, srcAccount, dstAccount, srcActualPath, dstActualPath)
+	// srcFile, err := operations.Get(ctx, srcAccount, srcActualPath)
+	// if srcFile.IsDir() {
+	// 	// TODO: recursive copy
+	// 	return nil
+	// }
+	// // TODO: add copy task, maybe like this:
+	// // operations.Link(ctx,srcAccount,srcActualPath,args)
+	// // get a Reader from link
+	// // boxing the Reader to a driver.FileStream
+	// // operations.Put(ctx,dstParentPath, stream)
+	// panic("TODO")
 }
 
 func Remove(ctx context.Context, account driver.Driver, path string) error {
