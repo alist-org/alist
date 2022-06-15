@@ -130,5 +130,22 @@ func Remove(ctx context.Context, account driver.Driver, path string) error {
 }
 
 func Put(ctx context.Context, account driver.Driver, parentPath string, file model.FileStreamer) error {
+	f, err := Get(ctx, account, parentPath)
+	if err != nil {
+		// if parent dir not exists, create it
+		if driver.IsErrObjectNotFound(err) {
+			err = MakeDir(ctx, account, parentPath)
+			if err != nil {
+				return errors.WithMessagef(err, "failed to make parent dir [%s]", parentPath)
+			}
+		} else {
+			return errors.WithMessage(err, "failed to get parent dir")
+		}
+	} else {
+		// object exists, check if it is a dir
+		if !f.IsDir() {
+			return errors.Errorf("object [%s] is not a dir", parentPath)
+		}
+	}
 	return account.Put(ctx, parentPath, file)
 }
