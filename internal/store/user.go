@@ -7,7 +7,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-var userCache = cache.NewMemCache(cache.WithShards[*model.User](4))
+var userCache = cache.NewMemCache(cache.WithShards[*model.User](2))
 var userG singleflight.Group[*model.User]
 
 func ExistAdmin() bool {
@@ -25,7 +25,7 @@ func GetUserByName(name string) (*model.User, error) {
 	}
 	user, err, _ := userG.Do(name, func() (*model.User, error) {
 		user := model.User{Name: name}
-		if err := db.First(&user).Error; err != nil {
+		if err := db.Where(user).First(&user).Error; err != nil {
 			return nil, errors.Wrapf(err, "failed select user")
 		}
 		userCache.Set(name, &user)
@@ -56,13 +56,13 @@ func UpdateUser(u *model.User) error {
 }
 
 func GetUsers(pageIndex, pageSize int) ([]model.User, int64, error) {
-	userDb := db.Model(&model.User{})
+	userDB := db.Model(&model.User{})
 	var count int64
-	if err := userDb.Count(&count).Error; err != nil {
+	if err := userDB.Count(&count).Error; err != nil {
 		return nil, 0, errors.Wrapf(err, "failed get users count")
 	}
 	var users []model.User
-	if err := userDb.Offset((pageIndex - 1) * pageSize).Limit(pageSize).Find(&users).Error; err != nil {
+	if err := userDB.Offset((pageIndex - 1) * pageSize).Limit(pageSize).Find(&users).Error; err != nil {
 		return nil, 0, errors.Wrapf(err, "failed get find users")
 	}
 	return users, count, nil
