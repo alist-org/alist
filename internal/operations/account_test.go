@@ -42,7 +42,7 @@ func TestCreateAccount(t *testing.T) {
 }
 
 func TestGetAccountVirtualFilesByPath(t *testing.T) {
-	Setup(t)
+	setupAccounts(t)
 	virtualFiles := operations.GetAccountVirtualFilesByPath("/a")
 	var names []string
 	for _, virtualFile := range virtualFiles {
@@ -57,7 +57,7 @@ func TestGetAccountVirtualFilesByPath(t *testing.T) {
 }
 
 func TestGetBalancedAccount(t *testing.T) {
-	Setup(t)
+	setupAccounts(t)
 	account := operations.GetBalancedAccount("/a/d/e")
 	if account.GetAccount().VirtualPath != "/a/d/e" {
 		t.Errorf("expected: /a/d/e, got: %+v", account.GetAccount().VirtualPath)
@@ -68,7 +68,7 @@ func TestGetBalancedAccount(t *testing.T) {
 	}
 }
 
-func Setup(t *testing.T) {
+func setupAccounts(t *testing.T) {
 	var accounts = []model.Account{
 		{Driver: "Local", VirtualPath: "/a/b", Index: 0, Addition: `{"root_folder":"."}`},
 		{Driver: "Local", VirtualPath: "/a/c", Index: 1, Addition: `{"root_folder":"."}`},

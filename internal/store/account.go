@@ -5,6 +5,11 @@ import (
 	"github.com/pkg/errors"
 )
 
+// why don't need `cache` for account?
+// because all account store in `operations.accountsMap`
+// the most of the read operation is from `operations.accountsMap`
+// just for persistence in database
+
 // CreateAccount just insert account to database
 func CreateAccount(account *model.Account) error {
 	return errors.WithStack(db.Create(account).Error)
@@ -21,12 +26,17 @@ func DeleteAccountById(id uint) error {
 }
 
 // GetAccounts Get all accounts from database order by index
-func GetAccounts() ([]model.Account, error) {
-	var accounts []model.Account
-	if err := db.Order(columnName("index")).Find(&accounts).Error; err != nil {
-		return nil, errors.WithStack(err)
+func GetAccounts(pageIndex, pageSize int) ([]model.Account, int64, error) {
+	accountDB := db.Model(&model.Account{})
+	var count int64
+	if err := accountDB.Count(&count).Error; err != nil {
+		return nil, 0, errors.Wrapf(err, "failed get accounts count")
 	}
-	return accounts, nil
+	var accounts []model.Account
+	if err := accountDB.Order(columnName("index")).Offset((pageIndex - 1) * pageSize).Limit(pageSize).Find(&accounts).Error; err != nil {
+		return nil, 0, errors.WithStack(err)
+	}
+	return accounts, count, nil
 }
 
 // GetAccountById Get Account by id, used to update account usually
