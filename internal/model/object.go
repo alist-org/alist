@@ -29,3 +29,7 @@ func (f Object) IsDir() bool {
 func (f Object) GetID() string {
 	return f.ID
 }
+
+func (f *Object) SetID(id string) {
+	f.ID = id
+}

@@ -44,8 +44,7 @@ func List(ctx context.Context, account driver.Driver, path string) ([]model.Obj,
 	return files, err
 }
 
-// Get get object from list of files
-// TODO: maybe should set object ID with path here
+// Get object from list of files
 func Get(ctx context.Context, account driver.Driver, path string) (model.Obj, error) {
 	// is root folder
 	if r, ok := account.GetAddition().(driver.IRootFolderId); ok && utils.PathEqual(path, "/") {
@@ -74,6 +73,13 @@ func Get(ctx context.Context, account driver.Driver, path string) (model.Obj, er
 	}
 	for _, f := range files {
 		if f.GetName() == name {
+			// use path as id, why don't set id in List function?
+			// because files maybe cache, set id here can reduce memory usage
+			if f.GetID() == "" {
+				if s, ok := f.(model.SetID); ok {
+					s.SetID(path)
+				}
+			}
 			return f, nil
 		}
 	}

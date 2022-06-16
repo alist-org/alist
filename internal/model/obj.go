@@ -26,3 +26,7 @@ type URL interface {
 type Thumbnail interface {
 	Thumbnail() string
 }
+
+type SetID interface {
+	SetID(id string)
+}
