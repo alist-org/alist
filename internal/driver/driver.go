@@ -29,8 +29,8 @@ type Other interface {
 }
 
 type Reader interface {
-	// List list files in the path
-	// if identify files by path, need to set ID with path,like stdpath.Join(dir.GetID(), obj.GetName())
+	// List files in the path
+	// if identify files by path, need to set ID with path,like path.Join(dir.GetID(), obj.GetName())
 	// if identify files by id, need to set ID with corresponding id
 	List(ctx context.Context, dir model.Obj) ([]model.Obj, error)
 	// Link get url/filepath/reader of file
@@ -41,14 +41,14 @@ type Reader interface {
 type Writer interface {
 	// MakeDir make a folder named `dirName` in `parentDir`
 	MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error
-	// Move move `srcObject` to `dstDir`
+	// Move `srcObject` to `dstDir`
 	Move(ctx context.Context, srcObj, dstDir model.Obj) error
 	// Rename rename `srcObject` to `newName`
 	Rename(ctx context.Context, srcObj model.Obj, newName string) error
-	// Copy copy `srcObject` to `dstDir`
+	// Copy `srcObject` to `dstDir`
 	Copy(ctx context.Context, srcObj, dstDir model.Obj) error
 	// Remove remove `object`
 	Remove(ctx context.Context, obj model.Obj) error
-	// Put put `stream` to `parentDir`
+	// Put upload `stream` to `parentDir`
 	Put(ctx context.Context, parentDir model.Obj, stream model.FileStreamer) error
 }
