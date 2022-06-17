@@ -17,7 +17,7 @@ var (
 type Func func(task *Task) error
 
 type Task struct {
-	ID     int64
+	ID     uint64
 	Name   string
 	Status string
 	Error  error

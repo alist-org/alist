@@ -6,21 +6,21 @@ import (
 	"github.com/alist-org/alist/v3/pkg/generic_sync"
 )
 
-func NewTaskManager() *Manager {
-	return &Manager{
-		tasks: generic_sync.MapOf[int64, *Task]{},
-		curID: 0,
-	}
-}
-
 type Manager struct {
-	curID int64
-	tasks generic_sync.MapOf[int64, *Task]
+	curID uint64
+	tasks generic_sync.MapOf[uint64, *Task]
 }
 
-func (tm *Manager) AddTask(task *Task) {
+func (tm *Manager) Add(name string, f Func) uint64 {
+	task := newTask(name, f)
+	tm.addTask(task)
+	go task.Run()
+	return task.ID
+}
+
+func (tm *Manager) addTask(task *Task) {
 	task.ID = tm.curID
-	atomic.AddInt64(&tm.curID, 1)
+	atomic.AddUint64(&tm.curID, 1)
 	tm.tasks.Store(task.ID, task)
 }
 
@@ -28,11 +28,11 @@ func (tm *Manager) GetAll() []*Task {
 	return tm.tasks.Values()
 }
 
-func (tm *Manager) Get(id int64) (*Task, bool) {
+func (tm *Manager) Get(id uint64) (*Task, bool) {
 	return tm.tasks.Load(id)
 }
 
-func (tm *Manager) Remove(id int64) {
+func (tm *Manager) Remove(id uint64) {
 	tm.tasks.Delete(id)
 }
 
@@ -54,8 +54,9 @@ func (tm *Manager) RemoveError() {
 	}
 }
 
-func (tm *Manager) Add(name string, f Func) {
-	task := newTask(name, f)
-	tm.AddTask(task)
-	go task.Run()
+func NewTaskManager() *Manager {
+	return &Manager{
+		tasks: generic_sync.MapOf[uint64, *Task]{},
+		curID: 0,
+	}
 }
