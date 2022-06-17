@@ -1,6 +1,6 @@
 name: "Feature request"
 description: Feature request
-labels: ["enhancement: pending triage"]
+labels: [enhancement]
 body:
   - type: checkboxes
     attributes:

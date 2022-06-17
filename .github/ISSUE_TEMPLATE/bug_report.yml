@@ -1,6 +1,6 @@
 name: "Bug report"
 description: Bug report
-labels: [pending triage]
+labels: [bug]
 body:
   - type: markdown
     attributes:
