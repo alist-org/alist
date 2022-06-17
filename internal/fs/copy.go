@@ -13,7 +13,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-var copyTaskManager = task.NewTaskManager()
+var CopyTaskManager = task.NewTaskManager()
 
 // Copy if in an account, call move method
 // if not, add copy task
@@ -31,7 +31,7 @@ func Copy(ctx context.Context, account driver.Driver, srcPath, dstPath string) (
 		return false, operations.Copy(ctx, account, srcActualPath, dstActualPath)
 	}
 	// not in an account
-	copyTaskManager.Add(fmt.Sprintf("copy [%s](%s) to [%s](%s)", srcAccount.GetAccount().VirtualPath, srcActualPath, dstAccount.GetAccount().VirtualPath, dstActualPath), func(task *task.Task) error {
+	CopyTaskManager.Add(fmt.Sprintf("copy [%s](%s) to [%s](%s)", srcAccount.GetAccount().VirtualPath, srcActualPath, dstAccount.GetAccount().VirtualPath, dstActualPath), func(task *task.Task) error {
 		return CopyBetween2Accounts(task.Ctx, srcAccount, dstAccount, srcActualPath, dstActualPath, task.SetStatus)
 	})
 	return true, nil
@@ -55,12 +55,12 @@ func CopyBetween2Accounts(ctx context.Context, srcAccount, dstAccount driver.Dri
 			}
 			srcObjPath := stdpath.Join(srcPath, obj.GetName())
 			dstObjPath := stdpath.Join(dstPath, obj.GetName())
-			copyTaskManager.Add(fmt.Sprintf("copy [%s](%s) to [%s](%s)", srcAccount.GetAccount().VirtualPath, srcObjPath, dstAccount.GetAccount().VirtualPath, dstObjPath), func(task *task.Task) error {
+			CopyTaskManager.Add(fmt.Sprintf("copy [%s](%s) to [%s](%s)", srcAccount.GetAccount().VirtualPath, srcObjPath, dstAccount.GetAccount().VirtualPath, dstObjPath), func(task *task.Task) error {
 				return CopyBetween2Accounts(ctx, srcAccount, dstAccount, srcObjPath, dstObjPath, task.SetStatus)
 			})
 		}
 	} else {
-		copyTaskManager.Add(fmt.Sprintf("copy [%s](%s) to [%s](%s)", srcAccount.GetAccount().VirtualPath, srcPath, dstAccount.GetAccount().VirtualPath, dstPath), func(task *task.Task) error {
+		CopyTaskManager.Add(fmt.Sprintf("copy [%s](%s) to [%s](%s)", srcAccount.GetAccount().VirtualPath, srcPath, dstAccount.GetAccount().VirtualPath, dstPath), func(task *task.Task) error {
 			return CopyFileBetween2Accounts(task.Ctx, srcAccount, dstAccount, srcPath, dstPath, func(percentage float64) {
 				task.SetStatus(fmt.Sprintf("uploading: %2.f%", percentage))
 			})

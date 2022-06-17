@@ -10,7 +10,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-var uploadTaskManager = task.NewTaskManager()
+var UploadTaskManager = task.NewTaskManager()
 
 // Put add as a put task
 func Put(ctx context.Context, account driver.Driver, parentPath string, file model.FileStreamer) error {
@@ -18,7 +18,7 @@ func Put(ctx context.Context, account driver.Driver, parentPath string, file mod
 	if err != nil {
 		return errors.WithMessage(err, "failed get account")
 	}
-	uploadTaskManager.Add(fmt.Sprintf("upload %s to [%s](%s)", file.GetName(), account.GetAccount().VirtualPath, actualParentPath), func(task *task.Task) error {
+	UploadTaskManager.Add(fmt.Sprintf("upload %s to [%s](%s)", file.GetName(), account.GetAccount().VirtualPath, actualParentPath), func(task *task.Task) error {
 		return operations.Put(task.Ctx, account, actualParentPath, file, nil)
 	})
 	return nil
