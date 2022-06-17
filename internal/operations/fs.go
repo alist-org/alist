@@ -182,7 +182,7 @@ func Remove(ctx context.Context, account driver.Driver, path string) error {
 	return account.Remove(ctx, obj)
 }
 
-func Put(ctx context.Context, account driver.Driver, parentPath string, file model.FileStreamer) error {
+func Put(ctx context.Context, account driver.Driver, parentPath string, file model.FileStreamer, up driver.UpdateProgress) error {
 	err := MakeDir(ctx, account, parentPath)
 	if err != nil {
 		return errors.WithMessagef(err, "failed to make dir [%s]", parentPath)
@@ -192,5 +192,9 @@ func Put(ctx context.Context, account driver.Driver, parentPath string, file mod
 	if err != nil {
 		return errors.WithMessagef(err, "failed to get dir [%s]", parentPath)
 	}
-	return account.Put(ctx, parentDir, file)
+	// if up is nil, set a default to prevent panic
+	if up == nil {
+		up = func(p float64) {}
+	}
+	return account.Put(ctx, parentDir, file, up)
 }

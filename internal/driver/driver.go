@@ -50,5 +50,7 @@ type Writer interface {
 	// Remove remove `object`
 	Remove(ctx context.Context, obj model.Obj) error
 	// Put upload `stream` to `parentDir`
-	Put(ctx context.Context, parentDir model.Obj, stream model.FileStreamer) error
+	Put(ctx context.Context, parentDir model.Obj, stream model.FileStreamer, up UpdateProgress) error
 }
+
+type UpdateProgress func(percentage float64)

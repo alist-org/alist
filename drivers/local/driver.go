@@ -21,8 +21,7 @@ func (d Driver) Config() driver.Config {
 
 func (d *Driver) Init(ctx context.Context, account model.Account) error {
 	d.Account = account
-	addition := d.Account.Addition
-	err := utils.Json.UnmarshalFromString(addition, &d.Addition)
+	err := utils.Json.UnmarshalFromString(d.Account.Addition, &d.Addition)
 	if err != nil {
 		return errors.Wrap(err, "error while unmarshal addition")
 	}
@@ -32,7 +31,7 @@ func (d *Driver) Init(ctx context.Context, account model.Account) error {
 	} else {
 		d.SetStatus("OK")
 	}
-	operations.SaveDriverAccount(d)
+	operations.MustSaveDriverAccount(d)
 	return err
 }
 
@@ -79,7 +78,7 @@ func (d *Driver) Remove(ctx context.Context, obj model.Obj) error {
 	panic("implement me")
 }
 
-func (d *Driver) Put(ctx context.Context, parentDir model.Obj, stream model.FileStreamer) error {
+func (d *Driver) Put(ctx context.Context, parentDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
 	//TODO implement me
 	panic("implement me")
 }

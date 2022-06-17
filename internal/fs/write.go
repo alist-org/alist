@@ -3,11 +3,10 @@ package fs
 import (
 	"context"
 	"fmt"
-
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/operations"
-	"github.com/alist-org/alist/v3/internal/task"
+	"github.com/alist-org/alist/v3/pkg/task"
 	"github.com/pkg/errors"
 )
 
@@ -49,7 +48,7 @@ func Copy(ctx context.Context, account driver.Driver, srcPath, dstPath string) (
 	if err != nil {
 		return false, errors.WithMessage(err, "failed get src account")
 	}
-	dstAccount, dstActualPath, err := operations.GetAccountAndActualPath(srcPath)
+	dstAccount, dstActualPath, err := operations.GetAccountAndActualPath(dstPath)
 	if err != nil {
 		return false, errors.WithMessage(err, "failed get dst account")
 	}
@@ -60,7 +59,7 @@ func Copy(ctx context.Context, account driver.Driver, srcPath, dstPath string) (
 	// not in an account
 	// TODO add status set callback to put
 	copyTaskManager.Add(fmt.Sprintf("copy %s to %s", srcActualPath, dstActualPath), func(task *task.Task) error {
-		return CopyBetween2Accounts(context.TODO(), srcAccount, dstAccount, srcActualPath, dstActualPath)
+		return CopyBetween2Accounts(task.Ctx, srcAccount, dstAccount, srcActualPath, dstActualPath, task.SetStatus)
 	})
 	return true, nil
 }
@@ -73,10 +72,11 @@ func Remove(ctx context.Context, account driver.Driver, path string) error {
 	return operations.Remove(ctx, account, actualPath)
 }
 
+// Put add as a put task
 func Put(ctx context.Context, account driver.Driver, parentPath string, file model.FileStreamer) error {
 	account, actualParentPath, err := operations.GetAccountAndActualPath(parentPath)
 	if err != nil {
 		return errors.WithMessage(err, "failed get account")
 	}
-	return operations.Put(ctx, account, actualParentPath, file)
+	return operations.Put(ctx, account, actualParentPath, file, nil)
 }

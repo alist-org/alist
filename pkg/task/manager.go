@@ -6,37 +6,37 @@ import (
 	"github.com/alist-org/alist/v3/pkg/generic_sync"
 )
 
-func NewTaskManager() *TaskManager {
-	return &TaskManager{
+func NewTaskManager() *Manager {
+	return &Manager{
 		tasks: generic_sync.MapOf[int64, *Task]{},
 		curID: 0,
 	}
 }
 
-type TaskManager struct {
+type Manager struct {
 	curID int64
 	tasks generic_sync.MapOf[int64, *Task]
 }
 
-func (tm *TaskManager) AddTask(task *Task) {
+func (tm *Manager) AddTask(task *Task) {
 	task.ID = tm.curID
 	atomic.AddInt64(&tm.curID, 1)
 	tm.tasks.Store(task.ID, task)
 }
 
-func (tm *TaskManager) GetAll() []*Task {
+func (tm *Manager) GetAll() []*Task {
 	return tm.tasks.Values()
 }
 
-func (tm *TaskManager) Get(id int64) (*Task, bool) {
+func (tm *Manager) Get(id int64) (*Task, bool) {
 	return tm.tasks.Load(id)
 }
 
-func (tm *TaskManager) Remove(id int64) {
+func (tm *Manager) Remove(id int64) {
 	tm.tasks.Delete(id)
 }
 
-func (tm *TaskManager) RemoveFinished() {
+func (tm *Manager) RemoveFinished() {
 	tasks := tm.GetAll()
 	for _, task := range tasks {
 		if task.Status == FINISHED {
@@ -45,7 +45,7 @@ func (tm *TaskManager) RemoveFinished() {
 	}
 }
 
-func (tm *TaskManager) RemoveError() {
+func (tm *Manager) RemoveError() {
 	tasks := tm.GetAll()
 	for _, task := range tasks {
 		if task.Error != nil {
@@ -54,8 +54,8 @@ func (tm *TaskManager) RemoveError() {
 	}
 }
 
-func (tm *TaskManager) Add(name string, f Func) {
-	task := NewTask(name, f)
+func (tm *Manager) Add(name string, f Func) {
+	task := newTask(name, f)
 	tm.AddTask(task)
 	go task.Run()
 }

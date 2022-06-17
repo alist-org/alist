@@ -2,6 +2,7 @@ package operations
 
 import (
 	"context"
+	log "github.com/sirupsen/logrus"
 	"sort"
 	"strings"
 	"time"
@@ -85,8 +86,15 @@ func UpdateAccount(ctx context.Context, account model.Account) error {
 	return nil
 }
 
-// SaveDriverAccount call from specific driver
-func SaveDriverAccount(driver driver.Driver) error {
+// MustSaveDriverAccount call from specific driver
+func MustSaveDriverAccount(driver driver.Driver) {
+	err := saveDriverAccount(driver)
+	if err != nil {
+		log.Errorf("failed save driver account: %s", err)
+	}
+}
+
+func saveDriverAccount(driver driver.Driver) error {
 	account := driver.GetAccount()
 	addition := driver.GetAddition()
 	bytes, err := utils.Json.Marshal(addition)
