@@ -22,23 +22,23 @@ func CopyBetween2Accounts(ctx context.Context, srcAccount, dstAccount driver.Dri
 		return errors.WithMessagef(err, "failed get src [%s] file", srcPath)
 	}
 	if srcObj.IsDir() {
-		setStatus("src object is dir, listing files")
-		files, err := operations.List(ctx, srcAccount, srcPath)
+		setStatus("src object is dir, listing objs")
+		objs, err := operations.List(ctx, srcAccount, srcPath)
 		if err != nil {
-			return errors.WithMessagef(err, "failed list src [%s] files", srcPath)
+			return errors.WithMessagef(err, "failed list src [%s] objs", srcPath)
 		}
-		for _, file := range files {
+		for _, obj := range objs {
 			if utils.IsCanceled(ctx) {
 				return nil
 			}
-			srcFilePath := stdpath.Join(srcPath, file.GetName())
-			dstFilePath := stdpath.Join(dstPath, file.GetName())
-			copyTaskManager.Add(fmt.Sprintf("copy %s to %s", srcFilePath, dstFilePath), func(task *task.Task) error {
-				return CopyBetween2Accounts(ctx, srcAccount, dstAccount, srcFilePath, dstFilePath, task.SetStatus)
+			srcObjPath := stdpath.Join(srcPath, obj.GetName())
+			dstObjPath := stdpath.Join(dstPath, obj.GetName())
+			copyTaskManager.Add(fmt.Sprintf("copy [%s](%s) to [%s](%s)", srcAccount.GetAccount().VirtualPath, srcObjPath, dstAccount.GetAccount().VirtualPath, dstObjPath), func(task *task.Task) error {
+				return CopyBetween2Accounts(ctx, srcAccount, dstAccount, srcObjPath, dstObjPath, task.SetStatus)
 			})
 		}
 	} else {
-		copyTaskManager.Add(fmt.Sprintf("copy %s to %s", srcPath, dstPath), func(task *task.Task) error {
+		copyTaskManager.Add(fmt.Sprintf("copy [%s](%s) to [%s](%s)", srcAccount.GetAccount().VirtualPath, srcPath, dstAccount.GetAccount().VirtualPath, dstPath), func(task *task.Task) error {
 			return CopyFileBetween2Accounts(task.Ctx, srcAccount, dstAccount, srcPath, dstPath, func(percentage float64) {
 				task.SetStatus(fmt.Sprintf("uploading: %2.f%", percentage))
 			})

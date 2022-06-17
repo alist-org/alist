@@ -57,8 +57,7 @@ func Copy(ctx context.Context, account driver.Driver, srcPath, dstPath string) (
 		return false, operations.Copy(ctx, account, srcActualPath, dstActualPath)
 	}
 	// not in an account
-	// TODO add status set callback to put
-	copyTaskManager.Add(fmt.Sprintf("copy %s to %s", srcActualPath, dstActualPath), func(task *task.Task) error {
+	copyTaskManager.Add(fmt.Sprintf("copy [%s](%s) to [%s](%s)", srcAccount.GetAccount().VirtualPath, srcActualPath, dstAccount.GetAccount().VirtualPath, dstActualPath), func(task *task.Task) error {
 		return CopyBetween2Accounts(task.Ctx, srcAccount, dstAccount, srcActualPath, dstActualPath, task.SetStatus)
 	})
 	return true, nil
