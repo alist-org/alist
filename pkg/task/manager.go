@@ -1,6 +1,7 @@
 package task
 
 import (
+	"github.com/pkg/errors"
 	"sync/atomic"
 
 	"github.com/alist-org/alist/v3/pkg/generic_sync"
@@ -30,6 +31,24 @@ func (tm *Manager) GetAll() []*Task {
 
 func (tm *Manager) Get(id uint64) (*Task, bool) {
 	return tm.tasks.Load(id)
+}
+
+func (tm *Manager) Retry(id uint64) error {
+	t, ok := tm.Get(id)
+	if !ok {
+		return errors.New("task not found")
+	}
+	t.Retry()
+	return nil
+}
+
+func (tm *Manager) Cancel(id uint64) error {
+	t, ok := tm.Get(id)
+	if !ok {
+		return errors.New("task not found")
+	}
+	t.Cancel()
+	return nil
 }
 
 func (tm *Manager) Remove(id uint64) {
