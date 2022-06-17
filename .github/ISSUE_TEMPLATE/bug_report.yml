@@ -23,6 +23,14 @@ body:
       placeholder: v2.0.0
     validations:
       required: true
+  - type: input
+    id: driver
+    attributes:
+      label: Driver used / 使用的存储驱动
+      description: What storage driver are you using?
+      placeholder: "for example: Onedrive"
+    validations:
+      required: true
   - type: textarea
     id: bug-description
     attributes:
