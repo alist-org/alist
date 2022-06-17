@@ -1,0 +1,25 @@
+package fs
+
+import (
+	"context"
+	"fmt"
+	"github.com/alist-org/alist/v3/internal/driver"
+	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/operations"
+	"github.com/alist-org/alist/v3/pkg/task"
+	"github.com/pkg/errors"
+)
+
+var uploadTaskManager = task.NewTaskManager()
+
+// Put add as a put task
+func Put(ctx context.Context, account driver.Driver, parentPath string, file model.FileStreamer) error {
+	account, actualParentPath, err := operations.GetAccountAndActualPath(parentPath)
+	if err != nil {
+		return errors.WithMessage(err, "failed get account")
+	}
+	uploadTaskManager.Add(fmt.Sprintf("upload %s to [%s](%s)", file.GetName(), account.GetAccount().VirtualPath, actualParentPath), func(task *task.Task) error {
+		return operations.Put(task.Ctx, account, actualParentPath, file, nil)
+	})
+	return nil
+}

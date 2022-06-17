@@ -15,6 +15,28 @@ import (
 
 var copyTaskManager = task.NewTaskManager()
 
+// Copy if in an account, call move method
+// if not, add copy task
+func Copy(ctx context.Context, account driver.Driver, srcPath, dstPath string) (bool, error) {
+	srcAccount, srcActualPath, err := operations.GetAccountAndActualPath(srcPath)
+	if err != nil {
+		return false, errors.WithMessage(err, "failed get src account")
+	}
+	dstAccount, dstActualPath, err := operations.GetAccountAndActualPath(dstPath)
+	if err != nil {
+		return false, errors.WithMessage(err, "failed get dst account")
+	}
+	// copy if in an account, just call driver.Copy
+	if srcAccount.GetAccount() == dstAccount.GetAccount() {
+		return false, operations.Copy(ctx, account, srcActualPath, dstActualPath)
+	}
+	// not in an account
+	copyTaskManager.Add(fmt.Sprintf("copy [%s](%s) to [%s](%s)", srcAccount.GetAccount().VirtualPath, srcActualPath, dstAccount.GetAccount().VirtualPath, dstActualPath), func(task *task.Task) error {
+		return CopyBetween2Accounts(task.Ctx, srcAccount, dstAccount, srcActualPath, dstActualPath, task.SetStatus)
+	})
+	return true, nil
+}
+
 func CopyBetween2Accounts(ctx context.Context, srcAccount, dstAccount driver.Driver, srcPath, dstPath string, setStatus func(status string)) error {
 	setStatus("getting src object")
 	srcObj, err := operations.Get(ctx, srcAccount, srcPath)
