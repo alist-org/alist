@@ -7,8 +7,11 @@ import (
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/operations"
+	"github.com/alist-org/alist/v3/internal/task"
 	"github.com/pkg/errors"
 )
+
+var copyTaskManager = task.NewTaskManager()
 
 func CopyBetween2Accounts(ctx context.Context, srcAccount, dstAccount driver.Driver, srcPath, dstPath string) error {
 	srcFile, err := operations.Get(ctx, srcAccount, srcPath)

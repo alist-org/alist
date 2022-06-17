@@ -2,10 +2,12 @@ package fs
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/operations"
+	"github.com/alist-org/alist/v3/internal/task"
 	"github.com/pkg/errors"
 )
 
@@ -42,32 +44,25 @@ func Rename(ctx context.Context, account driver.Driver, srcPath, dstName string)
 
 // Copy if in an account, call move method
 // if not, add copy task
-func Copy(ctx context.Context, account driver.Driver, srcPath, dstPath string) error {
+func Copy(ctx context.Context, account driver.Driver, srcPath, dstPath string) (bool, error) {
 	srcAccount, srcActualPath, err := operations.GetAccountAndActualPath(srcPath)
 	if err != nil {
-		return errors.WithMessage(err, "failed get src account")
+		return false, errors.WithMessage(err, "failed get src account")
 	}
 	dstAccount, dstActualPath, err := operations.GetAccountAndActualPath(srcPath)
 	if err != nil {
-		return errors.WithMessage(err, "failed get dst account")
+		return false, errors.WithMessage(err, "failed get dst account")
 	}
 	// copy if in an account, just call driver.Copy
 	if srcAccount.GetAccount() == dstAccount.GetAccount() {
-		return operations.Copy(ctx, account, srcActualPath, dstActualPath)
+		return false, operations.Copy(ctx, account, srcActualPath, dstActualPath)
 	}
 	// not in an account
-	return CopyBetween2Accounts(ctx, srcAccount, dstAccount, srcActualPath, dstActualPath)
-	// srcFile, err := operations.Get(ctx, srcAccount, srcActualPath)
-	// if srcFile.IsDir() {
-	// 	// TODO: recursive copy
-	// 	return nil
-	// }
-	// // TODO: add copy task, maybe like this:
-	// // operations.Link(ctx,srcAccount,srcActualPath,args)
-	// // get a Reader from link
-	// // boxing the Reader to a driver.FileStream
-	// // operations.Put(ctx,dstParentPath, stream)
-	// panic("TODO")
+	// TODO add status set callback to put
+	copyTaskManager.Add(fmt.Sprintf("copy %s to %s", srcActualPath, dstActualPath), func(task *task.Task) error {
+		return CopyBetween2Accounts(context.TODO(), srcAccount, dstAccount, srcActualPath, dstActualPath)
+	})
+	return true, nil
 }
 
 func Remove(ctx context.Context, account driver.Driver, path string) error {
