@@ -8,7 +8,7 @@ type Account struct {
 	Index       int       `json:"index"`                                         // use to sort
 	Driver      string    `json:"driver"`
 	Status      string    `json:"status"`
-	Addition    string    `json:"addition"` // Additional information, defined in the corresponding driver
+	Addition    string    `json:"addition" gorm:"type:text"` // Additional information, defined in the corresponding driver
 	Remark      string    `json:"remark"`
 	Modified    time.Time `json:"modified"`
 	Sort
