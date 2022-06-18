@@ -17,13 +17,14 @@ var (
 type Func func(task *Task) error
 
 type Task struct {
-	ID     uint64
-	Name   string
-	Status string
-	Error  error
-	Func   Func
-	Ctx    context.Context
-	cancel context.CancelFunc
+	ID       uint64
+	Name     string
+	Status   string
+	Error    error
+	Func     Func
+	Progress int
+	Ctx      context.Context
+	cancel   context.CancelFunc
 }
 
 func newTask(name string, func_ Func) *Task {
@@ -39,6 +40,10 @@ func newTask(name string, func_ Func) *Task {
 
 func (t *Task) SetStatus(status string) {
 	t.Status = status
+}
+
+func (t *Task) SetProgress(percentage int) {
+	t.Progress = percentage
 }
 
 func (t *Task) Run() {

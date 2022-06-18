@@ -8,6 +8,7 @@ import (
 )
 
 type Manager struct {
+	works uint
 	curID uint64
 	tasks generic_sync.MapOf[uint64, *Task]
 }

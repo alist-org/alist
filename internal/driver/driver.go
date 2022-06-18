@@ -53,4 +53,4 @@ type Writer interface {
 	Put(ctx context.Context, parentDir model.Obj, stream model.FileStreamer, up UpdateProgress) error
 }
 
-type UpdateProgress func(percentage float64)
+type UpdateProgress func(percentage int)
