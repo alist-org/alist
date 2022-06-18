@@ -9,7 +9,7 @@ import (
 
 func TestTask_Manager(t *testing.T) {
 	tm := NewTaskManager()
-	id := tm.Add("test", func(task *Task) error {
+	id := tm.Submit("test", func(task *Task) error {
 		time.Sleep(time.Millisecond * 500)
 		return nil
 	})
@@ -29,7 +29,7 @@ func TestTask_Manager(t *testing.T) {
 
 func TestTask_Cancel(t *testing.T) {
 	tm := NewTaskManager()
-	id := tm.Add("test", func(task *Task) error {
+	id := tm.Submit("test", func(task *Task) error {
 		for {
 			if utils.IsCanceled(task.Ctx) {
 				return nil
@@ -53,7 +53,7 @@ func TestTask_Cancel(t *testing.T) {
 func TestTask_Retry(t *testing.T) {
 	tm := NewTaskManager()
 	num := 0
-	id := tm.Add("test", func(task *Task) error {
+	id := tm.Submit("test", func(task *Task) error {
 		num++
 		if num&1 == 1 {
 			return errors.New("test error")
@@ -71,7 +71,7 @@ func TestTask_Retry(t *testing.T) {
 	} else {
 		t.Logf("task error: %s", task.Error)
 	}
-	task.Retry()
+	task.retry()
 	time.Sleep(time.Millisecond)
 	if task.Error != nil {
 		t.Errorf("task error: %+v, but expected nil", task.Error)

@@ -4,6 +4,7 @@ package task
 import (
 	"context"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -12,6 +13,7 @@ var (
 	FINISHED  = "finished"
 	CANCELING = "canceling"
 	CANCELED  = "canceled"
+	ERRORED   = "errored"
 )
 
 type Func func(task *Task) error
@@ -46,18 +48,27 @@ func (t *Task) SetProgress(percentage int) {
 	t.Progress = percentage
 }
 
-func (t *Task) Run() {
+func (t *Task) run() {
 	t.Status = RUNNING
+	defer func() {
+		if err := recover(); err != nil {
+			log.Errorf("error [%+v] while run task [%s]", err, t.Name)
+			t.Error = errors.Errorf("panic: %+v", err)
+			t.Status = ERRORED
+		}
+	}()
 	t.Error = t.Func(t)
 	if errors.Is(t.Ctx.Err(), context.Canceled) {
 		t.Status = CANCELED
+	} else if t.Error != nil {
+		t.Status = ERRORED
 	} else {
 		t.Status = FINISHED
 	}
 }
 
-func (t *Task) Retry() {
-	t.Run()
+func (t *Task) retry() {
+	t.run()
 }
 
 func (t *Task) Cancel() {

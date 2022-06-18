@@ -32,7 +32,7 @@ func Copy(ctx context.Context, account driver.Driver, srcPath, dstPath string) (
 		return false, operations.Copy(ctx, account, srcActualPath, dstActualPath)
 	}
 	// not in an account
-	CopyTaskManager.Add(
+	CopyTaskManager.Submit(
 		fmt.Sprintf("copy [%s](%s) to [%s](%s)", srcAccount.GetAccount().VirtualPath, srcActualPath, dstAccount.GetAccount().VirtualPath, dstActualPath),
 		func(task *task.Task) error {
 			return CopyBetween2Accounts(task, srcAccount, dstAccount, srcActualPath, dstActualPath)
@@ -58,14 +58,14 @@ func CopyBetween2Accounts(t *task.Task, srcAccount, dstAccount driver.Driver, sr
 			}
 			srcObjPath := stdpath.Join(srcPath, obj.GetName())
 			dstObjPath := stdpath.Join(dstPath, obj.GetName())
-			CopyTaskManager.Add(
+			CopyTaskManager.Submit(
 				fmt.Sprintf("copy [%s](%s) to [%s](%s)", srcAccount.GetAccount().VirtualPath, srcObjPath, dstAccount.GetAccount().VirtualPath, dstObjPath),
 				func(t *task.Task) error {
 					return CopyBetween2Accounts(t, srcAccount, dstAccount, srcObjPath, dstObjPath)
 				})
 		}
 	} else {
-		CopyTaskManager.Add(
+		CopyTaskManager.Submit(
 			fmt.Sprintf("copy [%s](%s) to [%s](%s)", srcAccount.GetAccount().VirtualPath, srcPath, dstAccount.GetAccount().VirtualPath, dstPath),
 			func(t *task.Task) error {
 				return CopyFileBetween2Accounts(t, srcAccount, dstAccount, srcPath, dstPath)

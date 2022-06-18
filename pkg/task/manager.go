@@ -1,23 +1,37 @@
 package task
 
 import (
-	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 	"sync/atomic"
 
 	"github.com/alist-org/alist/v3/pkg/generic_sync"
 )
 
 type Manager struct {
-	works uint
-	curID uint64
-	tasks generic_sync.MapOf[uint64, *Task]
+	workerC chan struct{}
+	curID   uint64
+	tasks   generic_sync.MapOf[uint64, *Task]
 }
 
-func (tm *Manager) Add(name string, f Func) uint64 {
+func (tm *Manager) Submit(name string, f Func) uint64 {
 	task := newTask(name, f)
 	tm.addTask(task)
-	go task.Run()
+	tm.do(task.ID)
 	return task.ID
+}
+
+func (tm *Manager) do(tid uint64) {
+	task := tm.MustGet(tid)
+	go func() {
+		log.Debugf("task [%s] waiting for worker", task.Name)
+		select {
+		case <-tm.workerC:
+			log.Debugf("task [%s] starting", task.Name)
+			task.run()
+			log.Debugf("task [%s] ended", task.Name)
+		}
+		tm.workerC <- struct{}{}
+	}()
 }
 
 func (tm *Manager) addTask(task *Task) {
@@ -30,30 +44,35 @@ func (tm *Manager) GetAll() []*Task {
 	return tm.tasks.Values()
 }
 
-func (tm *Manager) Get(id uint64) (*Task, bool) {
-	return tm.tasks.Load(id)
+func (tm *Manager) Get(tid uint64) (*Task, bool) {
+	return tm.tasks.Load(tid)
 }
 
-func (tm *Manager) Retry(id uint64) error {
-	t, ok := tm.Get(id)
+func (tm *Manager) MustGet(tid uint64) *Task {
+	task, _ := tm.Get(tid)
+	return task
+}
+
+func (tm *Manager) Retry(tid uint64) error {
+	t, ok := tm.Get(tid)
 	if !ok {
-		return errors.New("task not found")
+		return ErrTaskNotFound
 	}
-	t.Retry()
+	tm.do(t.ID)
 	return nil
 }
 
-func (tm *Manager) Cancel(id uint64) error {
-	t, ok := tm.Get(id)
+func (tm *Manager) Cancel(tid uint64) error {
+	t, ok := tm.Get(tid)
 	if !ok {
-		return errors.New("task not found")
+		return ErrTaskNotFound
 	}
 	t.Cancel()
 	return nil
 }
 
-func (tm *Manager) Remove(id uint64) {
-	tm.tasks.Delete(id)
+func (tm *Manager) Remove(tid uint64) {
+	tm.tasks.Delete(tid)
 }
 
 func (tm *Manager) RemoveFinished() {

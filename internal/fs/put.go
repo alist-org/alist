@@ -18,7 +18,7 @@ func Put(ctx context.Context, account driver.Driver, parentPath string, file mod
 	if err != nil {
 		return errors.WithMessage(err, "failed get account")
 	}
-	UploadTaskManager.Add(fmt.Sprintf("upload %s to [%s](%s)", file.GetName(), account.GetAccount().VirtualPath, actualParentPath), func(task *task.Task) error {
+	UploadTaskManager.Submit(fmt.Sprintf("upload %s to [%s](%s)", file.GetName(), account.GetAccount().VirtualPath, actualParentPath), func(task *task.Task) error {
 		return operations.Put(task.Ctx, account, actualParentPath, file, nil)
 	})
 	return nil
