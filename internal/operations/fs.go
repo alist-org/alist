@@ -194,7 +194,7 @@ func Put(ctx context.Context, account driver.Driver, parentPath string, file mod
 	}
 	// if up is nil, set a default to prevent panic
 	if up == nil {
-		up = func(p float64) {}
+		up = func(p int) {}
 	}
 	return account.Put(ctx, parentDir, file, up)
 }

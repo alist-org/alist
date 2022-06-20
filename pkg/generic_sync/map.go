@@ -347,6 +347,13 @@ func (m *MapOf[K, V]) Values() []V {
 	return values
 }
 
+func (m *MapOf[K, V]) Clear() {
+	m.Range(func(key K, value V) bool {
+		m.Delete(key)
+		return true
+	})
+}
+
 func (m *MapOf[K, V]) missLocked() {
 	m.misses++
 	if m.misses < len(m.dirty) {

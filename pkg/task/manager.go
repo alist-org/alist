@@ -75,6 +75,12 @@ func (tm *Manager) Remove(tid uint64) {
 	tm.tasks.Delete(tid)
 }
 
+// RemoveAll removes all tasks from the manager, this maybe shouldn't be used
+// because the task maybe still running.
+func (tm *Manager) RemoveAll() {
+	tm.tasks.Clear()
+}
+
 func (tm *Manager) RemoveFinished() {
 	tasks := tm.GetAll()
 	for _, task := range tasks {

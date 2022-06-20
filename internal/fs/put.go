@@ -16,7 +16,7 @@ var UploadTaskManager = task.NewTaskManager()
 func Put(ctx context.Context, account driver.Driver, parentPath string, file model.FileStreamer) error {
 	account, actualParentPath, err := operations.GetAccountAndActualPath(parentPath)
 	if account.Config().NoUpload {
-		return errors.New("upload is not supported")
+		return errors.WithStack(ErrUploadNotSupported)
 	}
 	if err != nil {
 		return errors.WithMessage(err, "failed get account")
