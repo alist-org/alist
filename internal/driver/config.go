@@ -7,4 +7,5 @@ type Config struct {
 	OnlyProxy     bool
 	NoNeedSetLink bool
 	NoCache       bool
+	NoUpload      bool
 }
