@@ -13,6 +13,7 @@ type User struct {
 	BasePath    string `json:"base_path"`            // base path
 	AllowUpload bool   `json:"allow_upload"`         // allow upload
 	Role        int    `json:"role"`                 // user's role
+	//OfflineDownload bool   `json:"offline_download"`     // TODO? allow offline download
 }
 
 func (u User) IsGuest() bool {

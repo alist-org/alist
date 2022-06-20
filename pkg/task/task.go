@@ -17,6 +17,7 @@ var (
 )
 
 type Func func(task *Task) error
+type Callback func(task *Task)
 
 type Task struct {
 	ID       uint64
@@ -24,20 +25,25 @@ type Task struct {
 	Status   string
 	Error    error
 	Func     Func
-	Progress int
 	Ctx      context.Context
+	progress int
+	callback Callback
 	cancel   context.CancelFunc
 }
 
-func newTask(name string, func_ Func) *Task {
+func newTask(name string, func_ Func, callbacks ...Callback) *Task {
 	ctx, cancel := context.WithCancel(context.Background())
-	return &Task{
+	t := &Task{
 		Name:   name,
 		Status: PENDING,
 		Func:   func_,
 		Ctx:    ctx,
 		cancel: cancel,
 	}
+	if len(callbacks) > 0 {
+		t.callback = callbacks[0]
+	}
+	return t
 }
 
 func (t *Task) SetStatus(status string) {
@@ -45,7 +51,7 @@ func (t *Task) SetStatus(status string) {
 }
 
 func (t *Task) SetProgress(percentage int) {
-	t.Progress = percentage
+	t.progress = percentage
 }
 
 func (t *Task) run() {
@@ -64,6 +70,9 @@ func (t *Task) run() {
 		t.Status = ERRORED
 	} else {
 		t.Status = FINISHED
+		if t.callback != nil {
+			t.callback(t)
+		}
 	}
 }
 
@@ -72,6 +81,9 @@ func (t *Task) retry() {
 }
 
 func (t *Task) Cancel() {
+	if t.Status == FINISHED || t.Status == CANCELED {
+		return
+	}
 	if t.cancel != nil {
 		t.cancel()
 	}

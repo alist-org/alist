@@ -14,12 +14,12 @@ type StatusInfo struct {
 	UploadSpeed     string     `json:"uploadSpeed"`     // Upload speed of this download measured in bytes/sec.
 	InfoHash        string     `json:"infoHash"`        // InfoHash. BitTorrent only.
 	NumSeeders      string     `json:"numSeeders"`      // The number of seeders aria2 has connected to. BitTorrent only.
-	Seeder          string     `json:"seeder"`          // true if the local endpoint is a seeder. Otherwise false. BitTorrent only.
+	Seeder          string     `json:"seeder"`          // true if the local endpoint is a seeder. Otherwise, false. BitTorrent only.
 	PieceLength     string     `json:"pieceLength"`     // Piece length in bytes.
 	NumPieces       string     `json:"numPieces"`       // The number of pieces.
 	Connections     string     `json:"connections"`     // The number of peers/servers aria2 has connected to.
 	ErrorCode       string     `json:"errorCode"`       // The code of the last error for this item, if any. The value is a string. The error codes are defined in the EXIT STATUS section. This value is only available for stopped/completed downloads.
-	ErrorMessage    string     `json:"errorMessage"`    // The (hopefully) human readable error message associated to errorCode.
+	ErrorMessage    string     `json:"errorMessage"`    // The (hopefully) human-readable error message associated to errorCode.
 	FollowedBy      []string   `json:"followedBy"`      // List of GIDs which are generated as the result of this download. For example, when aria2 downloads a Metalink file, it generates downloads described in the Metalink (see the --follow-metalink option). This value is useful to track auto-generated downloads. If there are no such downloads, this key will not be included in the response.
 	BelongsTo       string     `json:"belongsTo"`       // GID of a parent download. Some downloads are a part of another download. For example, if a file in a Metalink has BitTorrent resources, the downloads of ".torrent" files are parts of that parent. If this download has no parent, this key will not be included in the response.
 	Dir             string     `json:"dir"`             // Directory to save files.

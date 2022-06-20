@@ -13,8 +13,8 @@ type Manager struct {
 	tasks   generic_sync.MapOf[uint64, *Task]
 }
 
-func (tm *Manager) Submit(name string, f Func) uint64 {
-	task := newTask(name, f)
+func (tm *Manager) Submit(name string, f Func, callbacks ...Callback) uint64 {
+	task := newTask(name, f, callbacks...)
 	tm.addTask(task)
 	tm.do(task.ID)
 	return task.ID
