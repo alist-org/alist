@@ -20,7 +20,7 @@ var filesCache = cache.NewMemCache(cache.WithShards[[]model.Obj](64))
 var filesG singleflight.Group[[]model.Obj]
 
 // List files in storage, not contains virtual file
-func List(ctx context.Context, account driver.Driver, path string) ([]model.Obj, error) {
+func List(ctx context.Context, account driver.Driver, path string, refresh ...bool) ([]model.Obj, error) {
 	dir, err := Get(ctx, account, path)
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed get dir")
@@ -29,8 +29,10 @@ func List(ctx context.Context, account driver.Driver, path string) ([]model.Obj,
 		return account.List(ctx, dir)
 	}
 	key := stdpath.Join(account.GetAccount().VirtualPath, path)
-	if files, ok := filesCache.Get(key); ok {
-		return files, nil
+	if len(refresh) == 0 || !refresh[0] {
+		if files, ok := filesCache.Get(key); ok {
+			return files, nil
+		}
 	}
 	files, err, _ := filesG.Do(key, func() ([]model.Obj, error) {
 		files, err := account.List(ctx, dir)

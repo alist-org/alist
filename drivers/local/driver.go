@@ -78,7 +78,7 @@ func (d *Driver) Remove(ctx context.Context, obj model.Obj) error {
 	panic("implement me")
 }
 
-func (d *Driver) Put(ctx context.Context, parentDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
+func (d *Driver) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
 	//TODO implement me
 	panic("implement me")
 }

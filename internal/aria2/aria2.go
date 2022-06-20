@@ -9,10 +9,11 @@ import (
 )
 
 var Aria2TaskManager = task.NewTaskManager()
+var notify = NewNotify()
 var client rpc.Client
 
 func InitAria2Client(uri string, secret string, timeout int) error {
-	c, err := rpc.New(context.Background(), uri, secret, time.Duration(timeout)*time.Second, &Notify{})
+	c, err := rpc.New(context.Background(), uri, secret, time.Duration(timeout)*time.Second, notify)
 	if err != nil {
 		return errors.Wrap(err, "failed to init aria2 client")
 	}
