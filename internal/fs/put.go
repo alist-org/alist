@@ -16,8 +16,8 @@ var UploadTaskManager = task.NewTaskManager[uint64, struct{}](3, func(tid *uint6
 })
 
 // Put add as a put task
-func Put(ctx context.Context, account driver.Driver, dstDirPath string, file model.FileStreamer) error {
-	account, actualParentPath, err := operations.GetAccountAndActualPath(dstDirPath)
+func Put(ctx context.Context, account driver.Driver, parentPath string, file model.FileStreamer) error {
+	account, actualParentPath, err := operations.GetAccountAndActualPath(parentPath)
 	if account.Config().NoUpload {
 		return errors.WithStack(ErrUploadNotSupported)
 	}

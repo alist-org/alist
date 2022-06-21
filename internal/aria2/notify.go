@@ -6,8 +6,7 @@ import (
 )
 
 const (
-	Ready = iota
-	Downloading
+	Downloading = iota
 	Paused
 	Stopped
 	Completed

@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-var Aria2TaskManager = task.NewTaskManager()
+var Aria2TaskManager = task.NewTaskManager[string, OfflineDownload](3)
 var notify = NewNotify()
 var client rpc.Client
 

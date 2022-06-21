@@ -53,6 +53,9 @@ func (t *Task[K, V]) run() {
 		}
 	}()
 	t.Error = t.Func(t)
+	if t.Error != nil {
+		log.Errorf("error [%+v] while run task [%s]", t.Error, t.Name)
+	}
 	if errors.Is(t.Ctx.Err(), context.Canceled) {
 		t.Status = CANCELED
 	} else if t.Error != nil {
