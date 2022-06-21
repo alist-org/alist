@@ -15,12 +15,12 @@ func MakeDir(ctx context.Context, account driver.Driver, path string) error {
 	return operations.MakeDir(ctx, account, actualPath)
 }
 
-func Move(ctx context.Context, account driver.Driver, srcPath, dstPath string) error {
+func Move(ctx context.Context, account driver.Driver, srcPath, dstDirPath string) error {
 	srcAccount, srcActualPath, err := operations.GetAccountAndActualPath(srcPath)
 	if err != nil {
 		return errors.WithMessage(err, "failed get src account")
 	}
-	dstAccount, dstActualPath, err := operations.GetAccountAndActualPath(dstPath)
+	dstAccount, dstActualPath, err := operations.GetAccountAndActualPath(dstDirPath)
 	if err != nil {
 		return errors.WithMessage(err, "failed get dst account")
 	}

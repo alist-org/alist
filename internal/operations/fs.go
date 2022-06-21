@@ -145,12 +145,12 @@ func MakeDir(ctx context.Context, account driver.Driver, path string) error {
 	}
 }
 
-func Move(ctx context.Context, account driver.Driver, srcPath, dstPath string) error {
+func Move(ctx context.Context, account driver.Driver, srcPath, dstDirPath string) error {
 	srcObj, err := Get(ctx, account, srcPath)
 	if err != nil {
 		return errors.WithMessage(err, "failed to get src object")
 	}
-	dstDir, err := Get(ctx, account, stdpath.Dir(dstPath))
+	dstDir, err := Get(ctx, account, dstDirPath)
 	if err != nil {
 		return errors.WithMessage(err, "failed to get dst dir")
 	}
@@ -166,12 +166,12 @@ func Rename(ctx context.Context, account driver.Driver, srcPath, dstName string)
 }
 
 // Copy Just copy file[s] in an account
-func Copy(ctx context.Context, account driver.Driver, srcPath, dstPath string) error {
+func Copy(ctx context.Context, account driver.Driver, srcPath, dstDirPath string) error {
 	srcObj, err := Get(ctx, account, srcPath)
 	if err != nil {
 		return errors.WithMessage(err, "failed to get src object")
 	}
-	dstDir, err := Get(ctx, account, stdpath.Dir(dstPath))
+	dstDir, err := Get(ctx, account, dstDirPath)
 	return account.Copy(ctx, srcObj, dstDir)
 }
 
