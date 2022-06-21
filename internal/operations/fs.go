@@ -151,6 +151,9 @@ func Move(ctx context.Context, account driver.Driver, srcPath, dstPath string) e
 		return errors.WithMessage(err, "failed to get src object")
 	}
 	dstDir, err := Get(ctx, account, stdpath.Dir(dstPath))
+	if err != nil {
+		return errors.WithMessage(err, "failed to get dst dir")
+	}
 	return account.Move(ctx, srcObj, dstDir)
 }
 

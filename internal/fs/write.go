@@ -20,7 +20,7 @@ func Move(ctx context.Context, account driver.Driver, srcPath, dstPath string) e
 	if err != nil {
 		return errors.WithMessage(err, "failed get src account")
 	}
-	dstAccount, dstActualPath, err := operations.GetAccountAndActualPath(srcPath)
+	dstAccount, dstActualPath, err := operations.GetAccountAndActualPath(dstPath)
 	if err != nil {
 		return errors.WithMessage(err, "failed get dst account")
 	}
