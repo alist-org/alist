@@ -16,45 +16,34 @@ var (
 	ERRORED   = "errored"
 )
 
-type Func func(task *Task) error
-type Callback func(task *Task)
+type Func[K comparable, V any] func(task *Task[K, V]) error
+type Callback[K comparable, V any] func(task *Task[K, V])
 
-type Task struct {
-	ID       uint64
-	Name     string
-	Status   string
-	Error    error
-	Func     Func
+type Task[K comparable, V any] struct {
+	ID     K
+	Name   string
+	Status string
+	Error  error
+
+	Data V
+
+	Func     Func[K, V]
+	callback Callback[K, V]
+
 	Ctx      context.Context
 	progress int
-	callback Callback
 	cancel   context.CancelFunc
 }
 
-func newTask(name string, func_ Func, callbacks ...Callback) *Task {
-	ctx, cancel := context.WithCancel(context.Background())
-	t := &Task{
-		Name:   name,
-		Status: PENDING,
-		Func:   func_,
-		Ctx:    ctx,
-		cancel: cancel,
-	}
-	if len(callbacks) > 0 {
-		t.callback = callbacks[0]
-	}
-	return t
-}
-
-func (t *Task) SetStatus(status string) {
+func (t *Task[K, V]) SetStatus(status string) {
 	t.Status = status
 }
 
-func (t *Task) SetProgress(percentage int) {
+func (t *Task[K, V]) SetProgress(percentage int) {
 	t.progress = percentage
 }
 
-func (t *Task) run() {
+func (t *Task[K, V]) run() {
 	t.Status = RUNNING
 	defer func() {
 		if err := recover(); err != nil {
@@ -76,11 +65,11 @@ func (t *Task) run() {
 	}
 }
 
-func (t *Task) retry() {
+func (t *Task[K, V]) retry() {
 	t.run()
 }
 
-func (t *Task) Cancel() {
+func (t *Task[K, V]) Cancel() {
 	if t.Status == FINISHED || t.Status == CANCELED {
 		return
 	}
@@ -89,4 +78,12 @@ func (t *Task) Cancel() {
 	}
 	// maybe can't cancel
 	t.Status = CANCELING
+}
+
+func WithCancelCtx[K comparable, V any](task *Task[K, V]) *Task[K, V] {
+	ctx, cancel := context.WithCancel(context.Background())
+	task.Ctx = ctx
+	task.cancel = cancel
+	task.Status = PENDING
+	return task
 }

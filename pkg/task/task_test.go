@@ -3,16 +3,22 @@ package task
 import (
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
+	"sync/atomic"
 	"testing"
 	"time"
 )
 
 func TestTask_Manager(t *testing.T) {
-	tm := NewTaskManager()
-	id := tm.Submit("test", func(task *Task) error {
-		time.Sleep(time.Millisecond * 500)
-		return nil
+	tm := NewTaskManager[uint64, struct{}](3, func(id *uint64) {
+		atomic.AddUint64(id, 1)
 	})
+	id := tm.Submit(WithCancelCtx(&Task[uint64, struct{}]{
+		Name: "test",
+		Func: func(task *Task[uint64, struct{}]) error {
+			time.Sleep(time.Millisecond * 500)
+			return nil
+		},
+	}))
 	task, ok := tm.Get(id)
 	if !ok {
 		t.Fatal("task not found")
@@ -28,16 +34,21 @@ func TestTask_Manager(t *testing.T) {
 }
 
 func TestTask_Cancel(t *testing.T) {
-	tm := NewTaskManager()
-	id := tm.Submit("test", func(task *Task) error {
-		for {
-			if utils.IsCanceled(task.Ctx) {
-				return nil
-			} else {
-				t.Logf("task is running")
-			}
-		}
+	tm := NewTaskManager[uint64, struct{}](3, func(id *uint64) {
+		atomic.AddUint64(id, 1)
 	})
+	id := tm.Submit(WithCancelCtx(&Task[uint64, struct{}]{
+		Name: "test",
+		Func: func(task *Task[uint64, struct{}]) error {
+			for {
+				if utils.IsCanceled(task.Ctx) {
+					return nil
+				} else {
+					t.Logf("task is running")
+				}
+			}
+		},
+	}))
 	task, ok := tm.Get(id)
 	if !ok {
 		t.Fatal("task not found")
@@ -51,15 +62,20 @@ func TestTask_Cancel(t *testing.T) {
 }
 
 func TestTask_Retry(t *testing.T) {
-	tm := NewTaskManager()
-	num := 0
-	id := tm.Submit("test", func(task *Task) error {
-		num++
-		if num&1 == 1 {
-			return errors.New("test error")
-		}
-		return nil
+	tm := NewTaskManager[uint64, struct{}](3, func(id *uint64) {
+		atomic.AddUint64(id, 1)
 	})
+	num := 0
+	id := tm.Submit(WithCancelCtx(&Task[uint64, struct{}]{
+		Name: "test",
+		Func: func(task *Task[uint64, struct{}]) error {
+			num++
+			if num&1 == 1 {
+				return errors.New("test error")
+			}
+			return nil
+		},
+	}))
 	task, ok := tm.Get(id)
 	if !ok {
 		t.Fatal("task not found")

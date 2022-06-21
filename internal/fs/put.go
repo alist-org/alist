@@ -8,9 +8,12 @@ import (
 	"github.com/alist-org/alist/v3/internal/operations"
 	"github.com/alist-org/alist/v3/pkg/task"
 	"github.com/pkg/errors"
+	"sync/atomic"
 )
 
-var UploadTaskManager = task.NewTaskManager()
+var UploadTaskManager = task.NewTaskManager[uint64, struct{}](3, func(tid *uint64) {
+	atomic.AddUint64(tid, 1)
+})
 
 // Put add as a put task
 func Put(ctx context.Context, account driver.Driver, dstDir string, file model.FileStreamer) error {
@@ -21,8 +24,11 @@ func Put(ctx context.Context, account driver.Driver, dstDir string, file model.F
 	if err != nil {
 		return errors.WithMessage(err, "failed get account")
 	}
-	UploadTaskManager.Submit(fmt.Sprintf("upload %s to [%s](%s)", file.GetName(), account.GetAccount().VirtualPath, actualParentPath), func(task *task.Task) error {
-		return operations.Put(task.Ctx, account, actualParentPath, file, nil)
-	})
+	UploadTaskManager.Submit(task.WithCancelCtx(&task.Task[uint64, struct{}]{
+		Name: fmt.Sprintf("upload %s to [%s](%s)", file.GetName(), account.GetAccount().VirtualPath, actualParentPath),
+		Func: func(task *task.Task[uint64, struct{}]) error {
+			return operations.Put(task.Ctx, account, actualParentPath, file, nil)
+		},
+	}))
 	return nil
 }
