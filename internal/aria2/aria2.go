@@ -5,6 +5,7 @@ import (
 	"github.com/alist-org/alist/v3/pkg/aria2/rpc"
 	"github.com/alist-org/alist/v3/pkg/task"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 	"time"
 )
 
@@ -18,6 +19,11 @@ func InitAria2Client(uri string, secret string, timeout int) error {
 		return errors.Wrap(err, "failed to init aria2 client")
 	}
 	client = c
+	version, err := client.GetVersion()
+	if err != nil {
+		return errors.Wrapf(err, "failed get aria2 version")
+	}
+	log.Infof("using aria2 version: %s", version.Version)
 	return nil
 }
 
