@@ -5,14 +5,14 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type Manager[K comparable, V any] struct {
+type Manager[K comparable] struct {
 	workerC  chan struct{}
 	curID    K
 	updateID func(*K)
-	tasks    generic_sync.MapOf[K, *Task[K, V]]
+	tasks    generic_sync.MapOf[K, *Task[K]]
 }
 
-func (tm *Manager[K, V]) Submit(task *Task[K, V]) K {
+func (tm *Manager[K]) Submit(task *Task[K]) K {
 	if tm.updateID != nil {
 		task.ID = tm.curID
 		tm.updateID(&task.ID)
@@ -22,7 +22,7 @@ func (tm *Manager[K, V]) Submit(task *Task[K, V]) K {
 	return task.ID
 }
 
-func (tm *Manager[K, V]) do(task *Task[K, V]) {
+func (tm *Manager[K]) do(task *Task[K]) {
 	go func() {
 		log.Debugf("task [%s] waiting for worker", task.Name)
 		select {
@@ -36,20 +36,20 @@ func (tm *Manager[K, V]) do(task *Task[K, V]) {
 	}()
 }
 
-func (tm *Manager[K, V]) GetAll() []*Task[K, V] {
+func (tm *Manager[K]) GetAll() []*Task[K] {
 	return tm.tasks.Values()
 }
 
-func (tm *Manager[K, V]) Get(tid K) (*Task[K, V], bool) {
+func (tm *Manager[K]) Get(tid K) (*Task[K], bool) {
 	return tm.tasks.Load(tid)
 }
 
-func (tm *Manager[K, V]) MustGet(tid K) *Task[K, V] {
+func (tm *Manager[K]) MustGet(tid K) *Task[K] {
 	task, _ := tm.Get(tid)
 	return task
 }
 
-func (tm *Manager[K, V]) Retry(tid K) error {
+func (tm *Manager[K]) Retry(tid K) error {
 	t, ok := tm.Get(tid)
 	if !ok {
 		return ErrTaskNotFound
@@ -58,7 +58,7 @@ func (tm *Manager[K, V]) Retry(tid K) error {
 	return nil
 }
 
-func (tm *Manager[K, V]) Cancel(tid K) error {
+func (tm *Manager[K]) Cancel(tid K) error {
 	t, ok := tm.Get(tid)
 	if !ok {
 		return ErrTaskNotFound
@@ -67,17 +67,17 @@ func (tm *Manager[K, V]) Cancel(tid K) error {
 	return nil
 }
 
-func (tm *Manager[K, V]) Remove(tid K) {
+func (tm *Manager[K]) Remove(tid K) {
 	tm.tasks.Delete(tid)
 }
 
 // RemoveAll removes all tasks from the manager, this maybe shouldn't be used
 // because the task maybe still running.
-func (tm *Manager[K, V]) RemoveAll() {
+func (tm *Manager[K]) RemoveAll() {
 	tm.tasks.Clear()
 }
 
-func (tm *Manager[K, V]) RemoveFinished() {
+func (tm *Manager[K]) RemoveFinished() {
 	tasks := tm.GetAll()
 	for _, task := range tasks {
 		if task.Status == FINISHED {
@@ -86,7 +86,7 @@ func (tm *Manager[K, V]) RemoveFinished() {
 	}
 }
 
-func (tm *Manager[K, V]) RemoveError() {
+func (tm *Manager[K]) RemoveError() {
 	tasks := tm.GetAll()
 	for _, task := range tasks {
 		if task.Error != nil {
@@ -95,9 +95,9 @@ func (tm *Manager[K, V]) RemoveError() {
 	}
 }
 
-func NewTaskManager[K comparable, V any](maxWorker int, updateID ...func(*K)) *Manager[K, V] {
-	tm := &Manager[K, V]{
-		tasks:   generic_sync.MapOf[K, *Task[K, V]]{},
+func NewTaskManager[K comparable](maxWorker int, updateID ...func(*K)) *Manager[K] {
+	tm := &Manager[K]{
+		tasks:   generic_sync.MapOf[K, *Task[K]]{},
 		workerC: make(chan struct{}, maxWorker),
 	}
 	for i := 0; i < maxWorker; i++ {

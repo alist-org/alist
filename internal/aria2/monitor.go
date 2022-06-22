@@ -17,7 +17,7 @@ import (
 )
 
 type Monitor struct {
-	tsk        *task.Task[string, interface{}]
+	tsk        *task.Task[string]
 	tempDir    string
 	retried    int
 	c          chan int
@@ -92,7 +92,7 @@ func (m *Monitor) Update() (bool, error) {
 	}
 }
 
-var transferTaskManager = task.NewTaskManager[uint64, interface{}](3, func(k *uint64) {
+var transferTaskManager = task.NewTaskManager[uint64](3, func(k *uint64) {
 	atomic.AddUint64(k, 1)
 })
 
@@ -118,9 +118,9 @@ func (m *Monitor) Complete() error {
 		}
 	}()
 	for _, file := range files {
-		transferTaskManager.Submit(task.WithCancelCtx[uint64](&task.Task[uint64, interface{}]{
+		transferTaskManager.Submit(task.WithCancelCtx[uint64](&task.Task[uint64]{
 			Name: fmt.Sprintf("transfer %s to %s", file.Path, m.dstDirPath),
-			Func: func(tsk *task.Task[uint64, interface{}]) error {
+			Func: func(tsk *task.Task[uint64]) error {
 				defer wg.Done()
 				size, _ := strconv.ParseUint(file.Length, 10, 64)
 				mimetype := mime.TypeByExtension(path.Ext(file.Path))

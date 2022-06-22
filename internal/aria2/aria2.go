@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-var TaskManager = task.NewTaskManager[string, interface{}](3)
+var TaskManager = task.NewTaskManager[string](3)
 var notify = NewNotify()
 var client rpc.Client
 

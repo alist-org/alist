@@ -9,12 +9,12 @@ import (
 )
 
 func TestTask_Manager(t *testing.T) {
-	tm := NewTaskManager[uint64, struct{}](3, func(id *uint64) {
+	tm := NewTaskManager[uint64](3, func(id *uint64) {
 		atomic.AddUint64(id, 1)
 	})
-	id := tm.Submit(WithCancelCtx(&Task[uint64, struct{}]{
+	id := tm.Submit(WithCancelCtx(&Task[uint64]{
 		Name: "test",
-		Func: func(task *Task[uint64, struct{}]) error {
+		Func: func(task *Task[uint64]) error {
 			time.Sleep(time.Millisecond * 500)
 			return nil
 		},
@@ -34,12 +34,12 @@ func TestTask_Manager(t *testing.T) {
 }
 
 func TestTask_Cancel(t *testing.T) {
-	tm := NewTaskManager[uint64, struct{}](3, func(id *uint64) {
+	tm := NewTaskManager[uint64](3, func(id *uint64) {
 		atomic.AddUint64(id, 1)
 	})
-	id := tm.Submit(WithCancelCtx(&Task[uint64, struct{}]{
+	id := tm.Submit(WithCancelCtx(&Task[uint64]{
 		Name: "test",
-		Func: func(task *Task[uint64, struct{}]) error {
+		Func: func(task *Task[uint64]) error {
 			for {
 				if utils.IsCanceled(task.Ctx) {
 					return nil
@@ -62,13 +62,13 @@ func TestTask_Cancel(t *testing.T) {
 }
 
 func TestTask_Retry(t *testing.T) {
-	tm := NewTaskManager[uint64, struct{}](3, func(id *uint64) {
+	tm := NewTaskManager[uint64](3, func(id *uint64) {
 		atomic.AddUint64(id, 1)
 	})
 	num := 0
-	id := tm.Submit(WithCancelCtx(&Task[uint64, struct{}]{
+	id := tm.Submit(WithCancelCtx(&Task[uint64]{
 		Name: "test",
-		Func: func(task *Task[uint64, struct{}]) error {
+		Func: func(task *Task[uint64]) error {
 			num++
 			if num&1 == 1 {
 				return errors.New("test error")
