@@ -187,15 +187,15 @@ func Remove(ctx context.Context, account driver.Driver, path string) error {
 	return account.Remove(ctx, obj)
 }
 
-func Put(ctx context.Context, account driver.Driver, parentPath string, file model.FileStreamer, up driver.UpdateProgress) error {
-	err := MakeDir(ctx, account, parentPath)
+func Put(ctx context.Context, account driver.Driver, dstDirPath string, file model.FileStreamer, up driver.UpdateProgress) error {
+	err := MakeDir(ctx, account, dstDirPath)
 	if err != nil {
-		return errors.WithMessagef(err, "failed to make dir [%s]", parentPath)
+		return errors.WithMessagef(err, "failed to make dir [%s]", dstDirPath)
 	}
-	parentDir, err := Get(ctx, account, parentPath)
+	parentDir, err := Get(ctx, account, dstDirPath)
 	// this should not happen
 	if err != nil {
-		return errors.WithMessagef(err, "failed to get dir [%s]", parentPath)
+		return errors.WithMessagef(err, "failed to get dir [%s]", dstDirPath)
 	}
 	// if up is nil, set a default to prevent panic
 	if up == nil {

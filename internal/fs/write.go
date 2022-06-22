@@ -20,14 +20,14 @@ func Move(ctx context.Context, account driver.Driver, srcPath, dstDirPath string
 	if err != nil {
 		return errors.WithMessage(err, "failed get src account")
 	}
-	dstAccount, dstActualPath, err := operations.GetAccountAndActualPath(dstDirPath)
+	dstAccount, dstDirActualPath, err := operations.GetAccountAndActualPath(dstDirPath)
 	if err != nil {
 		return errors.WithMessage(err, "failed get dst account")
 	}
 	if srcAccount.GetAccount() != dstAccount.GetAccount() {
 		return errors.WithStack(ErrMoveBetweenTwoAccounts)
 	}
-	return operations.Move(ctx, account, srcActualPath, dstActualPath)
+	return operations.Move(ctx, account, srcActualPath, dstDirActualPath)
 }
 
 func Rename(ctx context.Context, account driver.Driver, srcPath, dstName string) error {
