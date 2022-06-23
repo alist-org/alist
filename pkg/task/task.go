@@ -10,7 +10,7 @@ import (
 var (
 	PENDING   = "pending"
 	RUNNING   = "running"
-	FINISHED  = "finished"
+	Succeeded = "succeeded"
 	CANCELING = "canceling"
 	CANCELED  = "canceled"
 	ERRORED   = "errored"
@@ -65,7 +65,7 @@ func (t *Task[K]) run() {
 	} else if t.Error != nil {
 		t.state = ERRORED
 	} else {
-		t.state = FINISHED
+		t.state = Succeeded
 		if t.callback != nil {
 			t.callback(t)
 		}
@@ -77,7 +77,7 @@ func (t *Task[K]) retry() {
 }
 
 func (t *Task[K]) Cancel() {
-	if t.state == FINISHED || t.state == CANCELED {
+	if t.state == Succeeded || t.state == CANCELED {
 		return
 	}
 	if t.cancel != nil {

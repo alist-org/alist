@@ -28,7 +28,7 @@ func TestTask_Manager(t *testing.T) {
 		t.Errorf("task status not running: %s", task.state)
 	}
 	time.Sleep(time.Second)
-	if task.state != FINISHED {
+	if task.state != Succeeded {
 		t.Errorf("task status not finished: %s", task.state)
 	}
 }

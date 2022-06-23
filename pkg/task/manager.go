@@ -2,6 +2,7 @@ package task
 
 import (
 	"github.com/alist-org/alist/v3/pkg/generic_sync"
+	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
@@ -78,22 +79,24 @@ func (tm *Manager[K]) RemoveAll() {
 	tm.tasks.Clear()
 }
 
-func (tm *Manager[K]) RemoveFinished() {
+func (tm *Manager[K]) RemoveByStates(states ...string) {
 	tasks := tm.GetAll()
 	for _, task := range tasks {
-		if task.state == FINISHED {
+		if utils.SliceContains(states, task.GetState()) {
 			tm.Remove(task.ID)
 		}
 	}
 }
 
-func (tm *Manager[K]) RemoveError() {
-	tasks := tm.GetAll()
-	for _, task := range tasks {
-		if task.Error != nil {
-			tm.Remove(task.ID)
+func (tm *Manager[K]) GetByStates(states ...string) []*Task[K] {
+	var tasks []*Task[K]
+	tm.tasks.Range(func(key K, value *Task[K]) bool {
+		if utils.SliceContains(states, value.GetState()) {
+			tasks = append(tasks, value)
 		}
-	}
+		return true
+	})
+	return tasks
 }
 
 func NewTaskManager[K comparable](maxWorker int, updateID ...func(*K)) *Manager[K] {
