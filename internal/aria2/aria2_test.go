@@ -54,7 +54,7 @@ func TestDown(t *testing.T) {
 	if err != nil {
 		t.Errorf("failed to add uri: %+v", err)
 	}
-	tasks := downTaskManager.GetAll()
+	tasks := DownTaskManager.GetAll()
 	if len(tasks) != 1 {
 		t.Errorf("failed to get tasks: %+v", tasks)
 	}
@@ -70,10 +70,10 @@ func TestDown(t *testing.T) {
 		time.Sleep(time.Second)
 	}
 	for {
-		if len(transferTaskManager.GetAll()) == 0 {
+		if len(TransferTaskManager.GetAll()) == 0 {
 			continue
 		}
-		tsk := transferTaskManager.GetAll()[0]
+		tsk := TransferTaskManager.GetAll()[0]
 		t.Logf("task: %+v", tsk)
 		if tsk.GetState() == task.Succeeded {
 			break

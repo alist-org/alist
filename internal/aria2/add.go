@@ -43,7 +43,7 @@ func AddURI(ctx context.Context, uri string, dstDirPath string) error {
 	if err != nil {
 		return errors.Wrapf(err, "failed to add uri %s", uri)
 	}
-	downTaskManager.Submit(task.WithCancelCtx(&task.Task[string]{
+	DownTaskManager.Submit(task.WithCancelCtx(&task.Task[string]{
 		ID:   gid,
 		Name: fmt.Sprintf("download %s to [%s](%s)", uri, account.GetAccount().VirtualPath, dstDirActualPath),
 		Func: func(tsk *task.Task[string]) error {
