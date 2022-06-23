@@ -3,6 +3,7 @@ package fs
 import (
 	"context"
 	"github.com/alist-org/alist/v3/internal/driver"
+	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/operations"
 	"github.com/pkg/errors"
 )
@@ -25,7 +26,7 @@ func Move(ctx context.Context, account driver.Driver, srcPath, dstDirPath string
 		return errors.WithMessage(err, "failed get dst account")
 	}
 	if srcAccount.GetAccount() != dstAccount.GetAccount() {
-		return errors.WithStack(ErrMoveBetweenTwoAccounts)
+		return errors.WithStack(errs.ErrMoveBetweenTwoAccounts)
 	}
 	return operations.Move(ctx, account, srcActualPath, dstDirActualPath)
 }

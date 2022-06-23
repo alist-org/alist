@@ -4,8 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/alist-org/alist/v3/conf"
-	"github.com/alist-org/alist/v3/internal/driver"
-	"github.com/alist-org/alist/v3/internal/fs"
+	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/operations"
 	"github.com/alist-org/alist/v3/pkg/task"
 	"github.com/google/uuid"
@@ -21,18 +20,18 @@ func AddURI(ctx context.Context, uri string, dstDirPath string) error {
 	}
 	// check is it could upload
 	if account.Config().NoUpload {
-		return errors.WithStack(fs.ErrUploadNotSupported)
+		return errors.WithStack(errs.ErrUploadNotSupported)
 	}
 	// check path is valid
 	obj, err := operations.Get(ctx, account, dstDirActualPath)
 	if err != nil {
-		if !errors.Is(errors.Cause(err), driver.ErrorObjectNotFound) {
+		if !errs.IsErrObjectNotFound(err) {
 			return errors.WithMessage(err, "failed get object")
 		}
 	} else {
 		if !obj.IsDir() {
 			// can't add to a file
-			return errors.WithStack(fs.ErrNotFolder)
+			return errors.WithStack(errs.ErrNotFolder)
 		}
 	}
 	// call aria2 rpc
@@ -44,8 +43,7 @@ func AddURI(ctx context.Context, uri string, dstDirPath string) error {
 	if err != nil {
 		return errors.Wrapf(err, "failed to add uri %s", uri)
 	}
-	// TODO add to task manager
-	TaskManager.Submit(task.WithCancelCtx(&task.Task[string]{
+	downTaskManager.Submit(task.WithCancelCtx(&task.Task[string]{
 		ID:   gid,
 		Name: fmt.Sprintf("download %s to [%s](%s)", uri, account.GetAccount().VirtualPath, dstDirActualPath),
 		Func: func(tsk *task.Task[string]) error {

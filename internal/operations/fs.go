@@ -2,6 +2,7 @@ package operations
 
 import (
 	"context"
+	"github.com/alist-org/alist/v3/internal/errs"
 	stdpath "path"
 	"time"
 
@@ -85,7 +86,7 @@ func Get(ctx context.Context, account driver.Driver, path string) (model.Obj, er
 			return f, nil
 		}
 	}
-	return nil, errors.WithStack(driver.ErrorObjectNotFound)
+	return nil, errors.WithStack(errs.ErrorObjectNotFound)
 }
 
 var linkCache = cache.NewMemCache(cache.WithShards[*model.Link](16))
@@ -101,6 +102,9 @@ func Link(ctx context.Context, account driver.Driver, path string, args model.Li
 		file, err := Get(ctx, account, path)
 		if err != nil {
 			return nil, errors.WithMessage(err, "failed to get file")
+		}
+		if file.IsDir() {
+			return nil, errors.New("file is dir")
 		}
 		link, err := account.Link(ctx, file, args)
 		if err != nil {
@@ -119,7 +123,7 @@ func MakeDir(ctx context.Context, account driver.Driver, path string) error {
 	// check if dir exists
 	f, err := Get(ctx, account, path)
 	if err != nil {
-		if driver.IsErrObjectNotFound(err) {
+		if errs.IsErrObjectNotFound(err) {
 			parentPath, dirName := stdpath.Split(path)
 			err = MakeDir(ctx, account, parentPath)
 			if err != nil {
@@ -179,7 +183,7 @@ func Remove(ctx context.Context, account driver.Driver, path string) error {
 	obj, err := Get(ctx, account, path)
 	if err != nil {
 		// if object not found, it's ok
-		if driver.IsErrObjectNotFound(err) {
+		if errs.IsErrObjectNotFound(err) {
 			return nil
 		}
 		return errors.WithMessage(err, "failed to get object")

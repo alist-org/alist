@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/alist-org/alist/v3/internal/driver"
+	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/operations"
 	"github.com/alist-org/alist/v3/pkg/task"
@@ -19,7 +20,7 @@ var UploadTaskManager = task.NewTaskManager[uint64](3, func(tid *uint64) {
 func Put(ctx context.Context, account driver.Driver, dstDirPath string, file model.FileStreamer) error {
 	account, dstDirActualPath, err := operations.GetAccountAndActualPath(dstDirPath)
 	if account.Config().NoUpload {
-		return errors.WithStack(ErrUploadNotSupported)
+		return errors.WithStack(errs.ErrUploadNotSupported)
 	}
 	if err != nil {
 		return errors.WithMessage(err, "failed get account")
