@@ -15,13 +15,13 @@ func ActualPath(account driver.Additional, rawPath string) string {
 	if i, ok := account.(driver.IRootFolderPath); ok {
 		rawPath = stdpath.Join(i.GetRootFolderPath(), rawPath)
 	}
-	return utils.StandardizationPath(rawPath)
+	return utils.StandardizePath(rawPath)
 }
 
 // GetAccountAndActualPath Get the corresponding account
 // for path: remove the virtual path prefix and join the actual root folder if exists
 func GetAccountAndActualPath(rawPath string) (driver.Driver, string, error) {
-	rawPath = utils.StandardizationPath(rawPath)
+	rawPath = utils.StandardizePath(rawPath)
 	if strings.Contains(rawPath, "..") {
 		return nil, "", errors.WithStack(errs.RelativePath)
 	}

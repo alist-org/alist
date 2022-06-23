@@ -41,7 +41,7 @@ func List(ctx context.Context, path string) ([]model.Obj, error) {
 }
 
 func Get(ctx context.Context, path string) (model.Obj, error) {
-	path = utils.StandardizationPath(path)
+	path = utils.StandardizePath(path)
 	// maybe a virtual file
 	if path != "/" {
 		virtualFiles := operations.GetAccountVirtualFilesByPath(stdpath.Dir(path))

@@ -32,7 +32,7 @@ func GetAccountByVirtualPath(virtualPath string) (driver.Driver, error) {
 // then instantiate corresponding driver and save it in memory
 func CreateAccount(ctx context.Context, account model.Account) error {
 	account.Modified = time.Now()
-	account.VirtualPath = utils.StandardizationPath(account.VirtualPath)
+	account.VirtualPath = utils.StandardizePath(account.VirtualPath)
 	err := store.CreateAccount(&account)
 	if err != nil {
 		return errors.WithMessage(err, "failed create account in database")
@@ -61,7 +61,7 @@ func UpdateAccount(ctx context.Context, account model.Account) error {
 		return errors.WithMessage(err, "failed get old account")
 	}
 	account.Modified = time.Now()
-	account.VirtualPath = utils.StandardizationPath(account.VirtualPath)
+	account.VirtualPath = utils.StandardizePath(account.VirtualPath)
 	err = store.UpdateAccount(&account)
 	if err != nil {
 		return errors.WithMessage(err, "failed update account in database")
@@ -155,7 +155,7 @@ func GetAccountVirtualFilesByPath(prefix string) []model.Obj {
 		}
 		return accounts[i].GetAccount().Index < accounts[j].GetAccount().Index
 	})
-	prefix = utils.StandardizationPath(prefix)
+	prefix = utils.StandardizePath(prefix)
 	set := make(map[string]interface{})
 	for _, v := range accounts {
 		// TODO should save a balanced account
@@ -189,7 +189,7 @@ var balanceMap generic_sync.MapOf[string, int]
 
 // GetBalancedAccount get account by path
 func GetBalancedAccount(path string) driver.Driver {
-	path = utils.StandardizationPath(path)
+	path = utils.StandardizePath(path)
 	accounts := getAccountsByPath(path)
 	accountNum := len(accounts)
 	switch accountNum {

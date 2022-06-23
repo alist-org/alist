@@ -17,7 +17,7 @@ var metaCache = cache.NewMemCache(cache.WithShards[*model.Meta](2))
 var metaG singleflight.Group[*model.Meta]
 
 func GetNearestMeta(path string) (*model.Meta, error) {
-	path = utils.StandardizationPath(path)
+	path = utils.StandardizePath(path)
 	meta, err := GetMetaByPath(path)
 	if err == nil {
 		return meta, nil

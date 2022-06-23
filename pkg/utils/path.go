@@ -1,10 +1,22 @@
 package utils
 
-import "strings"
+import (
+	"path/filepath"
+	"runtime"
+	"strings"
+)
 
-// StandardizationPath convert path like '/' '/root' '/a/b'
-func StandardizationPath(path string) string {
+// StandardizePath convert path like '/' '/root' '/a/b'
+func StandardizePath(path string) string {
 	path = strings.TrimSuffix(path, "/")
+	// windows abs path
+	if filepath.IsAbs(path) && runtime.GOOS == "windows" {
+		return path
+	}
+	// relative path with prefix '..'
+	if strings.HasPrefix(path, "..") {
+		return path
+	}
 	if !strings.HasPrefix(path, "/") {
 		path = "/" + path
 	}
@@ -13,5 +25,5 @@ func StandardizationPath(path string) string {
 
 // PathEqual judge path is equal
 func PathEqual(path1, path2 string) bool {
-	return StandardizationPath(path1) == StandardizationPath(path2)
+	return StandardizePath(path1) == StandardizePath(path2)
 }
