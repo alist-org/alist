@@ -26,6 +26,9 @@ func List(ctx context.Context, account driver.Driver, path string, refresh ...bo
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed get dir")
 	}
+	if !dir.IsDir() {
+		return nil, errors.WithStack(errs.NotFolder)
+	}
 	if account.Config().NoCache {
 		return account.List(ctx, dir)
 	}

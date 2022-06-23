@@ -1,6 +1,7 @@
 package operations
 
 import (
+	"github.com/alist-org/alist/v3/internal/errs"
 	stdpath "path"
 	"strings"
 
@@ -21,6 +22,9 @@ func ActualPath(account driver.Additional, rawPath string) string {
 // for path: remove the virtual path prefix and join the actual root folder if exists
 func GetAccountAndActualPath(rawPath string) (driver.Driver, string, error) {
 	rawPath = utils.StandardizationPath(rawPath)
+	if strings.Contains(rawPath, "..") {
+		return nil, "", errors.WithStack(errs.RelativePath)
+	}
 	account := GetBalancedAccount(rawPath)
 	if account == nil {
 		return nil, "", errors.Errorf("can't find account with rawPath: %s", rawPath)
