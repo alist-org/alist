@@ -5,7 +5,7 @@ import "time"
 type Object struct {
 	ID       string
 	Name     string
-	Size     uint64
+	Size     int64
 	Modified time.Time
 	IsFolder bool
 }
@@ -14,7 +14,7 @@ func (f Object) GetName() string {
 	return f.Name
 }
 
-func (f Object) GetSize() uint64 {
+func (f Object) GetSize() int64 {
 	return f.Size
 }
 

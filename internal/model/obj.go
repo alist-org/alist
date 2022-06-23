@@ -6,7 +6,7 @@ import (
 )
 
 type Obj interface {
-	GetSize() uint64
+	GetSize() int64
 	GetName() string
 	ModTime() time.Time
 	IsDir() bool

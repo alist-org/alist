@@ -122,7 +122,7 @@ func (m *Monitor) Complete() error {
 			Name: fmt.Sprintf("transfer %s to %s", file.Path, m.dstDirPath),
 			Func: func(tsk *task.Task[uint64]) error {
 				defer wg.Done()
-				size, _ := strconv.ParseUint(file.Length, 10, 64)
+				size, _ := strconv.ParseInt(file.Length, 10, 64)
 				mimetype := mime.TypeByExtension(path.Ext(file.Path))
 				if mimetype == "" {
 					mimetype = "application/octet-stream"
