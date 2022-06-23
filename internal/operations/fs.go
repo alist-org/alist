@@ -3,6 +3,7 @@ package operations
 import (
 	"context"
 	"github.com/alist-org/alist/v3/internal/errs"
+	log "github.com/sirupsen/logrus"
 	stdpath "path"
 	"time"
 
@@ -195,6 +196,11 @@ func Remove(ctx context.Context, account driver.Driver, path string) error {
 }
 
 func Put(ctx context.Context, account driver.Driver, dstDirPath string, file model.FileStreamer, up driver.UpdateProgress) error {
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Errorf("failed to close file streamer, %v", err)
+		}
+	}()
 	err := MakeDir(ctx, account, dstDirPath)
 	if err != nil {
 		return errors.WithMessagef(err, "failed to make dir [%s]", dstDirPath)
