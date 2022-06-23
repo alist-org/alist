@@ -20,7 +20,7 @@ func AddURI(ctx context.Context, uri string, dstDirPath string) error {
 	}
 	// check is it could upload
 	if account.Config().NoUpload {
-		return errors.WithStack(errs.ErrUploadNotSupported)
+		return errors.WithStack(errs.UploadNotSupported)
 	}
 	// check path is valid
 	obj, err := operations.Get(ctx, account, dstDirActualPath)

@@ -2,6 +2,7 @@ package store
 
 import (
 	"github.com/Xhofe/go-cache"
+	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/singleflight"
 	"github.com/alist-org/alist/v3/pkg/utils"
@@ -25,7 +26,7 @@ func GetNearestMeta(path string) (*model.Meta, error) {
 		return nil, err
 	}
 	if path == "/" {
-		return nil, errors.WithStack(ErrMetaNotFound)
+		return nil, errors.WithStack(errs.MetaNotFound)
 	}
 	return GetNearestMeta(stdpath.Dir(path))
 }

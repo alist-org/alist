@@ -86,7 +86,7 @@ func Get(ctx context.Context, account driver.Driver, path string) (model.Obj, er
 			return f, nil
 		}
 	}
-	return nil, errors.WithStack(errs.ErrorObjectNotFound)
+	return nil, errors.WithStack(errs.ObjectNotFound)
 }
 
 var linkCache = cache.NewMemCache(cache.WithShards[*model.Link](16))
@@ -104,7 +104,7 @@ func Link(ctx context.Context, account driver.Driver, path string, args model.Li
 			return nil, errors.WithMessage(err, "failed to get file")
 		}
 		if file.IsDir() {
-			return nil, errors.New("file is dir")
+			return nil, errors.WithStack(errs.NotFile)
 		}
 		link, err := account.Link(ctx, file, args)
 		if err != nil {
@@ -123,7 +123,7 @@ func MakeDir(ctx context.Context, account driver.Driver, path string) error {
 	// check if dir exists
 	f, err := Get(ctx, account, path)
 	if err != nil {
-		if errs.IsErrObjectNotFound(err) {
+		if errs.IsObjectNotFound(err) {
 			parentPath, dirName := stdpath.Split(path)
 			err = MakeDir(ctx, account, parentPath)
 			if err != nil {
@@ -183,7 +183,7 @@ func Remove(ctx context.Context, account driver.Driver, path string) error {
 	obj, err := Get(ctx, account, path)
 	if err != nil {
 		// if object not found, it's ok
-		if errs.IsErrObjectNotFound(err) {
+		if errs.IsObjectNotFound(err) {
 			return nil
 		}
 		return errors.WithMessage(err, "failed to get object")

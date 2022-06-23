@@ -26,7 +26,7 @@ func Move(ctx context.Context, account driver.Driver, srcPath, dstDirPath string
 		return errors.WithMessage(err, "failed get dst account")
 	}
 	if srcAccount.GetAccount() != dstAccount.GetAccount() {
-		return errors.WithStack(errs.ErrMoveBetweenTwoAccounts)
+		return errors.WithStack(errs.MoveBetweenTwoAccounts)
 	}
 	return operations.Move(ctx, account, srcActualPath, dstDirActualPath)
 }

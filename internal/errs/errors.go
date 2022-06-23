@@ -6,16 +6,19 @@ import (
 )
 
 var (
-	ErrorObjectNotFound = errors.New("object not found")
-	ErrNotImplement     = errors.New("not implement")
-	ErrNotSupport       = errors.New("not support")
-	ErrRelativePath     = errors.New("access using relative path is not allowed")
+	ObjectNotFound = errors.New("object not found")
+	NotImplement   = errors.New("not implement")
+	NotSupport     = errors.New("not support")
+	RelativePath   = errors.New("access using relative path is not allowed")
 
-	ErrMoveBetweenTwoAccounts = errors.New("can't move files between two account, try to copy")
-	ErrUploadNotSupported     = errors.New("upload not supported")
-	ErrNotFolder              = errors.New("not a folder")
+	MoveBetweenTwoAccounts = errors.New("can't move files between two account, try to copy")
+	UploadNotSupported     = errors.New("upload not supported")
+	NotFolder              = errors.New("not a folder")
+	NotFile                = errors.New("not a file")
+
+	MetaNotFound = errors.New("meta not found")
 )
 
-func IsErrObjectNotFound(err error) bool {
-	return pkgerr.Cause(err) == ErrorObjectNotFound
+func IsObjectNotFound(err error) bool {
+	return pkgerr.Cause(err) == ObjectNotFound
 }
