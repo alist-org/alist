@@ -2,6 +2,7 @@ package task
 
 import (
 	"github.com/alist-org/alist/v3/pkg/generic_sync"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -52,7 +53,7 @@ func (tm *Manager[K]) MustGet(tid K) *Task[K] {
 func (tm *Manager[K]) Retry(tid K) error {
 	t, ok := tm.Get(tid)
 	if !ok {
-		return ErrTaskNotFound
+		return errors.WithStack(ErrTaskNotFound)
 	}
 	tm.do(t)
 	return nil
@@ -61,7 +62,7 @@ func (tm *Manager[K]) Retry(tid K) error {
 func (tm *Manager[K]) Cancel(tid K) error {
 	t, ok := tm.Get(tid)
 	if !ok {
-		return ErrTaskNotFound
+		return errors.WithStack(ErrTaskNotFound)
 	}
 	t.Cancel()
 	return nil
@@ -80,7 +81,7 @@ func (tm *Manager[K]) RemoveAll() {
 func (tm *Manager[K]) RemoveFinished() {
 	tasks := tm.GetAll()
 	for _, task := range tasks {
-		if task.Status == FINISHED {
+		if task.state == FINISHED {
 			tm.Remove(task.ID)
 		}
 	}

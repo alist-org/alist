@@ -61,10 +61,10 @@ func TestDown(t *testing.T) {
 	for {
 		tsk := tasks[0]
 		t.Logf("task: %+v", tsk)
-		if tsk.Status == task.FINISHED {
+		if tsk.GetState() == task.FINISHED {
 			break
 		}
-		if tsk.Status == task.ERRORED {
+		if tsk.GetState() == task.ERRORED {
 			t.Fatalf("failed to download: %+v", tsk)
 		}
 		time.Sleep(time.Second)
@@ -75,10 +75,10 @@ func TestDown(t *testing.T) {
 		}
 		tsk := transferTaskManager.GetAll()[0]
 		t.Logf("task: %+v", tsk)
-		if tsk.Status == task.FINISHED {
+		if tsk.GetState() == task.FINISHED {
 			break
 		}
-		if tsk.Status == task.ERRORED {
+		if tsk.GetState() == task.ERRORED {
 			t.Fatalf("failed to download: %+v", tsk)
 		}
 		time.Sleep(time.Second)
