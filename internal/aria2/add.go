@@ -25,13 +25,13 @@ func AddURI(ctx context.Context, uri string, dstDirPath string) error {
 	// check path is valid
 	obj, err := operations.Get(ctx, account, dstDirActualPath)
 	if err != nil {
-		if !errs.IsErrObjectNotFound(err) {
+		if !errs.IsObjectNotFound(err) {
 			return errors.WithMessage(err, "failed get object")
 		}
 	} else {
 		if !obj.IsDir() {
 			// can't add to a file
-			return errors.WithStack(errs.ErrNotFolder)
+			return errors.WithStack(errs.NotFolder)
 		}
 	}
 	// call aria2 rpc

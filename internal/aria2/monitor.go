@@ -99,6 +99,7 @@ var transferTaskManager = task.NewTaskManager[uint64](3, func(k *uint64) {
 func (m *Monitor) Complete() error {
 	// check dstDir again
 	account, dstDirActualPath, err := operations.GetAccountAndActualPath(m.dstDirPath)
+	println("dstDirActualPath:", dstDirActualPath)
 	if err != nil {
 		return errors.WithMessage(err, "failed get account")
 	}
@@ -119,7 +120,7 @@ func (m *Monitor) Complete() error {
 	}()
 	for _, file := range files {
 		transferTaskManager.Submit(task.WithCancelCtx[uint64](&task.Task[uint64]{
-			Name: fmt.Sprintf("transfer %s to %s", file.Path, m.dstDirPath),
+			Name: fmt.Sprintf("transfer %s to [%s](%s)", file.Path, account.GetAccount().VirtualPath, dstDirActualPath),
 			Func: func(tsk *task.Task[uint64]) error {
 				defer wg.Done()
 				size, _ := strconv.ParseInt(file.Length, 10, 64)
