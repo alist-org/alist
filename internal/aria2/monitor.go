@@ -99,7 +99,6 @@ var TransferTaskManager = task.NewTaskManager[uint64](3, func(k *uint64) {
 func (m *Monitor) Complete() error {
 	// check dstDir again
 	account, dstDirActualPath, err := operations.GetAccountAndActualPath(m.dstDirPath)
-	println("dstDirActualPath:", dstDirActualPath)
 	if err != nil {
 		return errors.WithMessage(err, "failed get account")
 	}

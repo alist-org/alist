@@ -21,7 +21,7 @@ var CopyTaskManager = task.NewTaskManager[uint64](3, func(tid *uint64) {
 
 // Copy if in an account, call move method
 // if not, add copy task
-func Copy(ctx context.Context, account driver.Driver, srcObjPath, dstDirPath string) (bool, error) {
+func _copy(ctx context.Context, srcObjPath, dstDirPath string) (bool, error) {
 	srcAccount, srcObjActualPath, err := operations.GetAccountAndActualPath(srcObjPath)
 	if err != nil {
 		return false, errors.WithMessage(err, "failed get src account")
@@ -32,19 +32,19 @@ func Copy(ctx context.Context, account driver.Driver, srcObjPath, dstDirPath str
 	}
 	// copy if in an account, just call driver.Copy
 	if srcAccount.GetAccount() == dstAccount.GetAccount() {
-		return false, operations.Copy(ctx, account, srcObjActualPath, dstDirActualPath)
+		return false, operations.Copy(ctx, srcAccount, srcObjActualPath, dstDirActualPath)
 	}
 	// not in an account
 	CopyTaskManager.Submit(task.WithCancelCtx(&task.Task[uint64]{
 		Name: fmt.Sprintf("copy [%s](%s) to [%s](%s)", srcAccount.GetAccount().VirtualPath, srcObjActualPath, dstAccount.GetAccount().VirtualPath, dstDirActualPath),
 		Func: func(task *task.Task[uint64]) error {
-			return CopyBetween2Accounts(task, srcAccount, dstAccount, srcObjActualPath, dstDirActualPath)
+			return copyBetween2Accounts(task, srcAccount, dstAccount, srcObjActualPath, dstDirActualPath)
 		},
 	}))
 	return true, nil
 }
 
-func CopyBetween2Accounts(t *task.Task[uint64], srcAccount, dstAccount driver.Driver, srcObjPath, dstDirPath string) error {
+func copyBetween2Accounts(t *task.Task[uint64], srcAccount, dstAccount driver.Driver, srcObjPath, dstDirPath string) error {
 	t.SetStatus("getting src object")
 	srcObj, err := operations.Get(t.Ctx, srcAccount, srcObjPath)
 	if err != nil {
@@ -65,7 +65,7 @@ func CopyBetween2Accounts(t *task.Task[uint64], srcAccount, dstAccount driver.Dr
 			CopyTaskManager.Submit(task.WithCancelCtx(&task.Task[uint64]{
 				Name: fmt.Sprintf("copy [%s](%s) to [%s](%s)", srcAccount.GetAccount().VirtualPath, srcObjPath, dstAccount.GetAccount().VirtualPath, dstObjPath),
 				Func: func(t *task.Task[uint64]) error {
-					return CopyBetween2Accounts(t, srcAccount, dstAccount, srcObjPath, dstObjPath)
+					return copyBetween2Accounts(t, srcAccount, dstAccount, srcObjPath, dstObjPath)
 				},
 			}))
 		}
@@ -73,14 +73,14 @@ func CopyBetween2Accounts(t *task.Task[uint64], srcAccount, dstAccount driver.Dr
 		CopyTaskManager.Submit(task.WithCancelCtx(&task.Task[uint64]{
 			Name: fmt.Sprintf("copy [%s](%s) to [%s](%s)", srcAccount.GetAccount().VirtualPath, srcObjPath, dstAccount.GetAccount().VirtualPath, dstDirPath),
 			Func: func(t *task.Task[uint64]) error {
-				return CopyFileBetween2Accounts(t, srcAccount, dstAccount, srcObjPath, dstDirPath)
+				return copyFileBetween2Accounts(t, srcAccount, dstAccount, srcObjPath, dstDirPath)
 			},
 		}))
 	}
 	return nil
 }
 
-func CopyFileBetween2Accounts(tsk *task.Task[uint64], srcAccount, dstAccount driver.Driver, srcFilePath, dstDirPath string) error {
+func copyFileBetween2Accounts(tsk *task.Task[uint64], srcAccount, dstAccount driver.Driver, srcFilePath, dstDirPath string) error {
 	srcFile, err := operations.Get(tsk.Ctx, srcAccount, srcFilePath)
 	if err != nil {
 		return errors.WithMessagef(err, "failed get src [%s] file", srcFilePath)
