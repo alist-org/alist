@@ -18,7 +18,7 @@ func InitConfig() {
 		log.Infof("config file not exists, creating default config file")
 		_, err := utils.CreateNestedFile(args.Config)
 		if err != nil {
-			log.Fatalf("failed to create config file")
+			log.Fatalf("failed to create config file: %+v", err)
 		}
 		conf.Conf = conf.DefaultConfig()
 		if !utils.WriteToJson(args.Config, conf.Conf) {
@@ -48,7 +48,17 @@ func InitConfig() {
 	if !conf.Conf.Force {
 		confFromEnv()
 	}
-	err := os.RemoveAll(filepath.Join(conf.Conf.TempDir))
+	// convert abs path
+	var absPath string
+	var err error
+	if !filepath.IsAbs(conf.Conf.TempDir) {
+		absPath, err = filepath.Abs(conf.Conf.TempDir)
+		if err != nil {
+			log.Fatalf("get abs path error: %s", err.Error())
+		}
+	}
+	conf.Conf.TempDir = absPath
+	err = os.RemoveAll(filepath.Join(conf.Conf.TempDir))
 	if err != nil {
 		log.Errorln("failed delete temp file:", err)
 	}
