@@ -2,6 +2,12 @@ package local
 
 import (
 	"context"
+	"github.com/alist-org/alist/v3/internal/errs"
+	"io"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
@@ -44,48 +50,110 @@ func (d *Driver) GetAddition() driver.Additional {
 }
 
 func (d *Driver) List(ctx context.Context, dir model.Obj) ([]model.Obj, error) {
-	//TODO implement me
-	panic("implement me")
+	fullPath := dir.GetID()
+	rawFiles, err := ioutil.ReadDir(fullPath)
+	if err != nil {
+		return nil, errors.Wrapf(err, "error while read dir %s", fullPath)
+	}
+	var files []model.Obj
+	for _, f := range rawFiles {
+		if strings.HasPrefix(f.Name(), ".") {
+			continue
+		}
+		file := model.Object{
+			Name:     f.Name(),
+			Modified: f.ModTime(),
+			Size:     f.Size(),
+			IsFolder: f.IsDir(),
+		}
+		files = append(files, &file)
+	}
+	return files, nil
 }
 
 func (d *Driver) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
-	//TODO implement me
-	panic("implement me")
+	fullPath := file.GetID()
+	link := model.Link{
+		FilePath: &fullPath,
+	}
+	return &link, nil
 }
 
 func (d *Driver) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
-	//TODO implement me
-	panic("implement me")
+	fullPath := filepath.Join(parentDir.GetID(), dirName)
+	err := os.MkdirAll(fullPath, 0700)
+	if err != nil {
+		return errors.Wrapf(err, "error while make dir %s", fullPath)
+	}
+	return nil
 }
 
 func (d *Driver) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
-	//TODO implement me
-	panic("implement me")
+	srcPath := srcObj.GetID()
+	dstPath := filepath.Join(dstDir.GetID(), srcObj.GetName())
+	err := os.Rename(srcPath, dstPath)
+	if err != nil {
+		return errors.Wrapf(err, "error while move %s to %s", srcPath, dstPath)
+	}
+	return nil
 }
 
 func (d *Driver) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
-	//TODO implement me
-	panic("implement me")
+	srcPath := srcObj.GetID()
+	dstPath := filepath.Join(filepath.Dir(srcPath), newName)
+	err := os.Rename(srcPath, dstPath)
+	if err != nil {
+		return errors.Wrapf(err, "error while rename %s to %s", srcPath, dstPath)
+	}
+	return nil
 }
 
 func (d *Driver) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
-	//TODO implement me
-	panic("implement me")
+	srcPath := srcObj.GetID()
+	dstPath := filepath.Join(dstDir.GetID(), srcObj.GetName())
+	var err error
+	if srcObj.IsDir() {
+		err = copyDir(srcPath, dstPath)
+	} else {
+		err = copyFile(srcPath, dstPath)
+	}
+	if err != nil {
+		return errors.Wrapf(err, "error while copy %s to %s", srcPath, dstPath)
+	}
+	return nil
 }
 
 func (d *Driver) Remove(ctx context.Context, obj model.Obj) error {
-	//TODO implement me
-	panic("implement me")
+	var err error
+	if obj.IsDir() {
+		err = os.RemoveAll(obj.GetID())
+	} else {
+		err = os.Remove(obj.GetID())
+	}
+	if err != nil {
+		return errors.Wrapf(err, "error while remove %s", obj.GetID())
+	}
+	return nil
 }
 
 func (d *Driver) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
-	//TODO implement me
-	panic("implement me")
+	fullPath := filepath.Join(dstDir.GetID(), stream.GetName())
+	out, err := os.Create(fullPath)
+	if err != nil {
+		return errors.Wrapf(err, "error while create file %s", fullPath)
+	}
+	defer func() {
+		_ = out.Close()
+	}()
+	_, err = io.Copy(out, stream)
+	if err != nil {
+		return errors.Wrapf(err, "error while copy file %s", fullPath)
+	}
+	return nil
 }
 
 func (d Driver) Other(ctx context.Context, data interface{}) (interface{}, error) {
-	//TODO implement me
-	panic("implement me")
+	return nil, errs.NotSupport
 }
 
 var _ driver.Driver = (*Driver)(nil)
