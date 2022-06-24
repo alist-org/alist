@@ -214,5 +214,11 @@ func Put(ctx context.Context, account driver.Driver, dstDirPath string, file mod
 	if up == nil {
 		up = func(p int) {}
 	}
-	return account.Put(ctx, parentDir, file, up)
+	err = account.Put(ctx, parentDir, file, up)
+	if err == nil {
+		// clear cache
+		key := stdpath.Join(account.GetAccount().VirtualPath, dstDirPath)
+		filesCache.Del(key)
+	}
+	return err
 }
