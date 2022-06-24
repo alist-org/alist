@@ -77,8 +77,16 @@ func Remove(ctx context.Context, path string) error {
 	return err
 }
 
-func Put(ctx context.Context, dstDirPath string, file model.FileStreamer) error {
-	err := put(ctx, dstDirPath, file)
+func PutDirectly(ctx context.Context, dstDirPath string, file model.FileStreamer) error {
+	err := putDirectly(ctx, dstDirPath, file)
+	if err != nil {
+		log.Errorf("failed put %s: %+v", dstDirPath, err)
+	}
+	return err
+}
+
+func PutAsTask(dstDirPath string, file model.FileStreamer) error {
+	err := putAsTask(dstDirPath, file)
 	if err != nil {
 		log.Errorf("failed put %s: %+v", dstDirPath, err)
 	}

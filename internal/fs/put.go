@@ -15,8 +15,8 @@ var UploadTaskManager = task.NewTaskManager[uint64](3, func(tid *uint64) {
 	atomic.AddUint64(tid, 1)
 })
 
-// Put add as a put task
-func put(ctx context.Context, dstDirPath string, file model.FileStreamer) error {
+// putAsTask add as a put task and return immediately
+func putAsTask(dstDirPath string, file model.FileStreamer) error {
 	account, dstDirActualPath, err := operations.GetAccountAndActualPath(dstDirPath)
 	if account.Config().NoUpload {
 		return errors.WithStack(errs.UploadNotSupported)
@@ -31,4 +31,16 @@ func put(ctx context.Context, dstDirPath string, file model.FileStreamer) error 
 		},
 	}))
 	return nil
+}
+
+// putDirect put the file and return after finish
+func putDirectly(ctx context.Context, dstDirPath string, file model.FileStreamer) error {
+	account, dstDirActualPath, err := operations.GetAccountAndActualPath(dstDirPath)
+	if account.Config().NoUpload {
+		return errors.WithStack(errs.UploadNotSupported)
+	}
+	if err != nil {
+		return errors.WithMessage(err, "failed get account")
+	}
+	return operations.Put(ctx, account, dstDirActualPath, file, nil)
 }
