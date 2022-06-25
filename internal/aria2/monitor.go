@@ -139,7 +139,7 @@ func (m *Monitor) Complete() error {
 						IsFolder: false,
 					},
 					ReadCloser: f,
-					Mimetype:   "",
+					Mimetype:   mimetype,
 				}
 				return operations.Put(tsk.Ctx, account, dstDirActualPath, stream, tsk.SetProgress)
 			},
