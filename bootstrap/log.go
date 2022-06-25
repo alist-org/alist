@@ -1,11 +1,11 @@
 package bootstrap
 
 import (
+	"github.com/alist-org/alist/v3/internal/conf"
 	"log"
 	"time"
 
 	"github.com/alist-org/alist/v3/cmd/args"
-	"github.com/alist-org/alist/v3/conf"
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
 	"github.com/sirupsen/logrus"
 )

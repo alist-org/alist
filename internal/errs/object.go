@@ -12,5 +12,5 @@ var (
 )
 
 func IsObjectNotFound(err error) bool {
-	return pkgerr.Cause(err) == ObjectNotFound
+	return errors.Is(pkgerr.Cause(err), ObjectNotFound)
 }

@@ -1,12 +1,12 @@
 package utils
 
 import (
+	"github.com/alist-org/alist/v3/internal/conf"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 
-	"github.com/alist-org/alist/v3/conf"
 	log "github.com/sirupsen/logrus"
 )
 

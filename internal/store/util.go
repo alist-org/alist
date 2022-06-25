@@ -2,7 +2,7 @@ package store
 
 import (
 	"fmt"
-	"github.com/alist-org/alist/v3/conf"
+	"github.com/alist-org/alist/v3/internal/conf"
 )
 
 func columnName(name string) string {

@@ -7,13 +7,12 @@ const (
 )
 
 type User struct {
-	ID          uint   `json:"id" gorm:"primaryKey"` // unique key
-	Name        string `json:"name" gorm:"unique"`   // username
-	Password    string `json:"password"`             // password
-	BasePath    string `json:"base_path"`            // base path
-	AllowUpload bool   `json:"allow_upload"`         // allow upload
-	Role        int    `json:"role"`                 // user's role
-	//OfflineDownload bool   `json:"offline_download"`     // TODO? allow offline download
+	ID       uint   `json:"id" gorm:"primaryKey"` // unique key
+	Name     string `json:"name" gorm:"unique"`   // username
+	Password string `json:"password"`             // password
+	BasePath string `json:"base_path"`            // base path
+	ReadOnly bool   `json:"read_only"`            // allow upload
+	Role     int    `json:"role"`                 // user's role
 }
 
 func (u User) IsGuest() bool {

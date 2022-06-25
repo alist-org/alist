@@ -3,11 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/alist-org/alist/v3/internal/conf"
+	"github.com/alist-org/alist/v3/internal/server"
 	"os"
 
 	"github.com/alist-org/alist/v3/bootstrap"
 	"github.com/alist-org/alist/v3/cmd/args"
-	"github.com/alist-org/alist/v3/conf"
 	_ "github.com/alist-org/alist/v3/drivers"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
@@ -38,7 +39,7 @@ func main() {
 	}
 	r := gin.New()
 	r.Use(gin.LoggerWithWriter(log.StandardLogger().Out), gin.RecoveryWithWriter(log.StandardLogger().Out))
-	// TODO: setup router
+	server.Init(r)
 	base := fmt.Sprintf("%s:%d", conf.Conf.Address, conf.Conf.Port)
 	log.Infof("start server @ %s", base)
 	var err error

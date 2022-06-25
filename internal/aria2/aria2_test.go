@@ -2,8 +2,8 @@ package aria2
 
 import (
 	"context"
-	"github.com/alist-org/alist/v3/conf"
 	_ "github.com/alist-org/alist/v3/drivers"
+	conf2 "github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/operations"
 	"github.com/alist-org/alist/v3/internal/store"
@@ -16,12 +16,12 @@ import (
 )
 
 func init() {
-	conf.Conf = conf.DefaultConfig()
+	conf2.Conf = conf2.DefaultConfig()
 	absPath, err := filepath.Abs("../../data/temp")
 	if err != nil {
 		panic(err)
 	}
-	conf.Conf.TempDir = absPath
+	conf2.Conf.TempDir = absPath
 	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect database")

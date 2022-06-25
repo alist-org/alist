@@ -3,7 +3,7 @@ package aria2
 import (
 	"context"
 	"fmt"
-	"github.com/alist-org/alist/v3/conf"
+	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/operations"
 	"github.com/alist-org/alist/v3/pkg/task"
