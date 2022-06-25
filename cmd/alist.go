@@ -20,6 +20,7 @@ func init() {
 	flag.BoolVar(&args.Version, "version", false, "print version info")
 	flag.BoolVar(&args.Password, "password", false, "print current password")
 	flag.BoolVar(&args.NoPrefix, "no-prefix", false, "disable env prefix")
+	flag.BoolVar(&args.Dev, "dev", false, "start with dev mode")
 	flag.Parse()
 }
 
@@ -31,6 +32,7 @@ func Init() {
 	}
 	bootstrap.InitConfig()
 	bootstrap.Log()
+	bootstrap.InitDB()
 }
 func main() {
 	Init()

@@ -6,4 +6,5 @@ var (
 	Version  bool
 	Password bool
 	NoPrefix bool
+	Dev      bool
 )

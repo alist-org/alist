@@ -1,5 +1,9 @@
 package conf
 
+import (
+	"github.com/alist-org/alist/v3/pkg/utils/random"
+)
+
 type Database struct {
 	Type        string `json:"type" env:"DB_TYPE"`
 	Host        string `json:"host" env:"DB_HOST"`
@@ -30,6 +34,7 @@ type Config struct {
 	Force           bool      `json:"force"`
 	Address         string    `json:"address" env:"ADDR"`
 	Port            int       `json:"port" env:"PORT"`
+	JwtSecret       string    `json:"jwt_secret" env:"JWT_SECRET"`
 	CaCheExpiration int       `json:"cache_expiration" env:"CACHE_EXPIRATION"`
 	Assets          string    `json:"assets" env:"ASSETS"`
 	Database        Database  `json:"database"`
@@ -40,10 +45,11 @@ type Config struct {
 
 func DefaultConfig() *Config {
 	return &Config{
-		Address: "0.0.0.0",
-		Port:    5244,
-		Assets:  "https://npm.elemecdn.com/alist-web@$version/dist",
-		TempDir: "data/temp",
+		Address:   "0.0.0.0",
+		Port:      5244,
+		JwtSecret: random.RandomStr(16),
+		Assets:    "https://npm.elemecdn.com/alist-web@$version/dist",
+		TempDir:   "data/temp",
 		Database: Database{
 			Type:        "sqlite3",
 			Port:        0,

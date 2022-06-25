@@ -18,17 +18,17 @@ func ExistGuest() bool {
 	return db.Take(&model.User{Role: model.GUEST}).Error != nil
 }
 
-func GetUserByName(name string) (*model.User, error) {
-	user, ok := userCache.Get(name)
+func GetUserByName(username string) (*model.User, error) {
+	user, ok := userCache.Get(username)
 	if ok {
 		return user, nil
 	}
-	user, err, _ := userG.Do(name, func() (*model.User, error) {
-		user := model.User{Name: name}
+	user, err, _ := userG.Do(username, func() (*model.User, error) {
+		user := model.User{Username: username}
 		if err := db.Where(user).First(&user).Error; err != nil {
-			return nil, errors.Wrapf(err, "failed select user")
+			return nil, errors.Wrapf(err, "failed find user")
 		}
-		userCache.Set(name, &user)
+		userCache.Set(username, &user)
 		return &user, nil
 	})
 	return user, err
@@ -51,7 +51,7 @@ func UpdateUser(u *model.User) error {
 	if err != nil {
 		return err
 	}
-	userCache.Del(old.Name)
+	userCache.Del(old.Username)
 	return errors.WithStack(db.Save(u).Error)
 }
 
@@ -73,6 +73,6 @@ func DeleteUserById(id uint) error {
 	if err != nil {
 		return err
 	}
-	userCache.Del(old.Name)
+	userCache.Del(old.Username)
 	return errors.WithStack(db.Delete(&model.User{}, id).Error)
 }

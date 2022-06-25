@@ -21,7 +21,7 @@ func init() {
 
 func Log() {
 	log.SetOutput(logrus.StandardLogger().Out)
-	if args.Debug {
+	if args.Debug || args.Dev {
 		logrus.SetLevel(logrus.DebugLevel)
 		logrus.SetReportCaller(true)
 	}
