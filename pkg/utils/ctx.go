@@ -1,6 +1,8 @@
 package utils
 
-import "context"
+import (
+	"context"
+)
 
 func IsCanceled(ctx context.Context) bool {
 	select {

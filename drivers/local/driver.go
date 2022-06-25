@@ -3,7 +3,6 @@ package local
 import (
 	"context"
 	"github.com/alist-org/alist/v3/internal/errs"
-	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -144,8 +143,11 @@ func (d *Driver) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 	}
 	defer func() {
 		_ = out.Close()
+		if errors.Is(err, context.Canceled) {
+			_ = os.Remove(fullPath)
+		}
 	}()
-	_, err = io.Copy(out, stream)
+	err = utils.CopyWithCtx(ctx, out, stream)
 	if err != nil {
 		return errors.Wrapf(err, "error while copy file %s", fullPath)
 	}
