@@ -33,10 +33,11 @@ func Init() {
 	bootstrap.InitConfig()
 	bootstrap.Log()
 	bootstrap.InitDB()
+	bootstrap.InitData()
 }
 func main() {
 	Init()
-	if !args.Debug {
+	if !args.Debug && !args.Dev {
 		gin.SetMode(gin.ReleaseMode)
 	}
 	r := gin.New()

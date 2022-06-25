@@ -1,6 +1,9 @@
 package model
 
-import "github.com/pkg/errors"
+import (
+	"github.com/alist-org/alist/v3/internal/errs"
+	"github.com/pkg/errors"
+)
 
 const (
 	GENERAL = iota
@@ -27,10 +30,10 @@ func (u User) IsAdmin() bool {
 
 func (u User) ValidatePassword(password string) error {
 	if password == "" {
-		return errors.New("password is empty")
+		return errors.WithStack(errs.EmptyPassword)
 	}
 	if u.Password != password {
-		return errors.New("password is incorrect")
+		return errors.WithStack(errs.WrongPassword)
 	}
 	return nil
 }

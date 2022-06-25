@@ -36,12 +36,12 @@ func Login(c *gin.Context) {
 	}
 	user, err := db.GetUserByName(req.Username)
 	if err != nil {
-		common.ErrorResp(c, err, 400)
+		common.ErrorResp(c, err, 400, true)
 		return
 	}
 	// validate password
 	if err := user.ValidatePassword(req.Password); err != nil {
-		common.ErrorResp(c, err, 400)
+		common.ErrorResp(c, err, 400, true)
 		loginCache.Set(ip, count+1)
 		return
 	}

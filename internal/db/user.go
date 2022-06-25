@@ -2,6 +2,7 @@ package db
 
 import (
 	"github.com/Xhofe/go-cache"
+	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/singleflight"
 	"github.com/pkg/errors"
@@ -10,15 +11,26 @@ import (
 var userCache = cache.NewMemCache(cache.WithShards[*model.User](2))
 var userG singleflight.Group[*model.User]
 
-func ExistAdmin() bool {
-	return db.Take(&model.User{Role: model.ADMIN}).Error != nil
+func GetAdmin() (*model.User, error) {
+	user := model.User{Role: model.ADMIN}
+	if err := db.Where(user).Take(&user).Error; err != nil {
+		return nil, err
+	}
+	return &user, nil
 }
 
-func ExistGuest() bool {
-	return db.Take(&model.User{Role: model.GUEST}).Error != nil
+func GetGuest() (*model.User, error) {
+	user := model.User{Role: model.GUEST}
+	if err := db.Where(user).Take(&user).Error; err != nil {
+		return nil, err
+	}
+	return &user, nil
 }
 
 func GetUserByName(username string) (*model.User, error) {
+	if username == "" {
+		return nil, errors.WithStack(errs.EmptyUsername)
+	}
 	user, ok := userCache.Get(username)
 	if ok {
 		return user, nil
