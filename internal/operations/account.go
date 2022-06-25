@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/internal/store"
 	"github.com/alist-org/alist/v3/pkg/generic_sync"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
@@ -33,7 +33,7 @@ func GetAccountByVirtualPath(virtualPath string) (driver.Driver, error) {
 func CreateAccount(ctx context.Context, account model.Account) error {
 	account.Modified = time.Now()
 	account.VirtualPath = utils.StandardizePath(account.VirtualPath)
-	err := store.CreateAccount(&account)
+	err := db.CreateAccount(&account)
 	if err != nil {
 		return errors.WithMessage(err, "failed create account in database")
 	}
@@ -56,13 +56,13 @@ func CreateAccount(ctx context.Context, account model.Account) error {
 // get old account first
 // drop the account then reinitialize
 func UpdateAccount(ctx context.Context, account model.Account) error {
-	oldAccount, err := store.GetAccountById(account.ID)
+	oldAccount, err := db.GetAccountById(account.ID)
 	if err != nil {
 		return errors.WithMessage(err, "failed get old account")
 	}
 	account.Modified = time.Now()
 	account.VirtualPath = utils.StandardizePath(account.VirtualPath)
-	err = store.UpdateAccount(&account)
+	err = db.UpdateAccount(&account)
 	if err != nil {
 		return errors.WithMessage(err, "failed update account in database")
 	}
@@ -102,7 +102,7 @@ func saveDriverAccount(driver driver.Driver) error {
 		return errors.Wrap(err, "error while marshal addition")
 	}
 	account.Addition = string(bytes)
-	err = store.UpdateAccount(&account)
+	err = db.UpdateAccount(&account)
 	if err != nil {
 		return errors.WithMessage(err, "failed update account in database")
 	}

@@ -3,7 +3,7 @@ package bootstrap
 import (
 	"github.com/alist-org/alist/v3/cmd/args"
 	"github.com/alist-org/alist/v3/internal/conf"
-	"github.com/alist-org/alist/v3/internal/store"
+	"github.com/alist-org/alist/v3/internal/db"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -30,10 +30,10 @@ func InitDB() {
 		Logger: newLogger,
 	}
 	if args.Dev {
-		db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), gormConfig)
+		dB, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), gormConfig)
 		if err != nil {
 			panic("failed to connect database")
 		}
-		store.Init(db)
+		db.Init(dB)
 	}
 }

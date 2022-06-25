@@ -2,8 +2,8 @@ package controllers
 
 import (
 	"github.com/Xhofe/go-cache"
+	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/server/common"
-	"github.com/alist-org/alist/v3/internal/store"
 	"github.com/gin-gonic/gin"
 	"time"
 )
@@ -34,7 +34,7 @@ func Login(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	user, err := store.GetUserByName(req.Username)
+	user, err := db.GetUserByName(req.Username)
 	if err != nil {
 		common.ErrorResp(c, err, 400)
 		return

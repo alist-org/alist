@@ -1,8 +1,8 @@
 package middlewares
 
 import (
+	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/server/common"
-	"github.com/alist-org/alist/v3/internal/store"
 	"github.com/gin-gonic/gin"
 )
 
@@ -14,7 +14,7 @@ func AuthAdmin(c *gin.Context) {
 		c.Abort()
 		return
 	}
-	user, err := store.GetUserByName(userClaims.Username)
+	user, err := db.GetUserByName(userClaims.Username)
 	if err != nil {
 		common.ErrorResp(c, err, 401)
 		c.Abort()

@@ -6,7 +6,6 @@ import (
 	conf2 "github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/operations"
-	"github.com/alist-org/alist/v3/internal/store"
 	"github.com/alist-org/alist/v3/pkg/task"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -26,7 +25,7 @@ func init() {
 	if err != nil {
 		panic("failed to connect database")
 	}
-	store.Init(db)
+	db.Init(db)
 }
 
 func TestConnect(t *testing.T) {
