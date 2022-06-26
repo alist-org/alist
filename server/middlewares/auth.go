@@ -14,7 +14,7 @@ func Auth(c *gin.Context) {
 	if token == "" {
 		guest, err := db.GetGuest()
 		if err != nil {
-			common2.ErrorResp(c, err, 500, true)
+			common2.ErrorResp(c, err, 500)
 			c.Abort()
 			return
 		}
@@ -24,7 +24,7 @@ func Auth(c *gin.Context) {
 	}
 	userClaims, err := common2.ParseToken(token)
 	if err != nil {
-		common2.ErrorResp(c, err, 401)
+		common2.ErrorResp(c, err, 401, true)
 		c.Abort()
 		return
 	}

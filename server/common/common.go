@@ -5,8 +5,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func ErrorResp(c *gin.Context, err error, code int, l ...bool) {
-	if len(l) != 0 && l[0] {
+// ErrorResp is used to return error response
+// @param nl: if true, don't log error
+func ErrorResp(c *gin.Context, err error, code int, nl ...bool) {
+	if len(nl) == 0 || !nl[0] {
 		log.Errorf("%+v", err)
 	}
 	c.JSON(200, Resp{
@@ -17,8 +19,10 @@ func ErrorResp(c *gin.Context, err error, code int, l ...bool) {
 	c.Abort()
 }
 
-func ErrorStrResp(c *gin.Context, str string, code int) {
-	log.Error(str)
+func ErrorStrResp(c *gin.Context, str string, code int, l ...bool) {
+	if len(l) != 0 && l[0] {
+		log.Error(str)
+	}
 	c.JSON(200, Resp{
 		Code:    code,
 		Message: str,

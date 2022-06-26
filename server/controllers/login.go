@@ -4,7 +4,7 @@ import (
 	"github.com/Xhofe/go-cache"
 	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/model"
-	common2 "github.com/alist-org/alist/v3/server/common"
+	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
 	"time"
 )
@@ -25,34 +25,34 @@ func Login(c *gin.Context) {
 	ip := c.ClientIP()
 	count, ok := loginCache.Get(ip)
 	if ok && count >= defaultTimes {
-		common2.ErrorStrResp(c, "Too many unsuccessful sign-in attempts have been made using an incorrect password. Try again later.", 403)
+		common.ErrorStrResp(c, "Too many unsuccessful sign-in attempts have been made using an incorrect password. Try again later.", 403)
 		loginCache.Expire(ip, defaultDuration)
 		return
 	}
 	// check username
 	var req LoginReq
 	if err := c.ShouldBind(&req); err != nil {
-		common2.ErrorResp(c, err, 400)
+		common.ErrorResp(c, err, 400, true)
 		return
 	}
 	user, err := db.GetUserByName(req.Username)
 	if err != nil {
-		common2.ErrorResp(c, err, 400)
+		common.ErrorResp(c, err, 400, true)
 		return
 	}
 	// validate password
 	if err := user.ValidatePassword(req.Password); err != nil {
-		common2.ErrorResp(c, err, 400)
+		common.ErrorResp(c, err, 400, true)
 		loginCache.Set(ip, count+1)
 		return
 	}
 	// generate token
-	token, err := common2.GenerateToken(user.Username)
+	token, err := common.GenerateToken(user.Username)
 	if err != nil {
-		common2.ErrorResp(c, err, 400)
+		common.ErrorResp(c, err, 400)
 		return
 	}
-	common2.SuccessResp(c, gin.H{"token": token})
+	common.SuccessResp(c, gin.H{"token": token})
 	loginCache.Del(ip)
 }
 
@@ -61,5 +61,5 @@ func Login(c *gin.Context) {
 func CurrentUser(c *gin.Context) {
 	user := c.MustGet("user").(*model.User)
 	user.Password = ""
-	common2.SuccessResp(c, gin.H{"user": user})
+	common.SuccessResp(c, gin.H{"user": user})
 }

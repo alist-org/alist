@@ -3,7 +3,7 @@ package server
 import (
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/server/common"
-	controllers2 "github.com/alist-org/alist/v3/server/controllers"
+	"github.com/alist-org/alist/v3/server/controllers"
 	"github.com/alist-org/alist/v3/server/middlewares"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -14,16 +14,16 @@ func Init(r *gin.Engine) {
 	Cors(r)
 
 	api := r.Group("/api", middlewares.Auth)
-	api.POST("/auth/login", controllers2.Login)
-	api.GET("/auth/current", controllers2.CurrentUser)
+	api.POST("/auth/login", controllers.Login)
+	api.GET("/auth/current", controllers.CurrentUser)
 
 	admin := api.Group("/admin", middlewares.AuthAdmin)
 
 	meta := admin.Group("/meta")
-	meta.GET("/list", controllers2.ListMetas)
-	meta.POST("/create", controllers2.CreateMeta)
-	meta.POST("/update", controllers2.UpdateMeta)
-	meta.POST("/delete", controllers2.DeleteMeta)
+	meta.GET("/list", controllers.ListMetas)
+	meta.POST("/create", controllers.CreateMeta)
+	meta.POST("/update", controllers.UpdateMeta)
+	meta.POST("/delete", controllers.DeleteMeta)
 }
 
 func Cors(r *gin.Engine) {
