@@ -86,6 +86,9 @@ func DeleteUserById(id uint) error {
 	if err != nil {
 		return err
 	}
+	if old.IsAdmin() || old.IsGuest() {
+		return errors.WithStack(errs.DeleteAdminOrGuest)
+	}
 	userCache.Del(old.Username)
 	return errors.WithStack(db.Delete(&model.User{}, id).Error)
 }

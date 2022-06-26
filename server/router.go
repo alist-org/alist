@@ -24,6 +24,12 @@ func Init(r *gin.Engine) {
 	meta.POST("/create", controllers.CreateMeta)
 	meta.POST("/update", controllers.UpdateMeta)
 	meta.POST("/delete", controllers.DeleteMeta)
+
+	user := admin.Group("/user")
+	user.GET("/list", controllers.ListUsers)
+	user.POST("/create", controllers.CreateUser)
+	user.POST("/update", controllers.UpdateUser)
+	user.POST("/delete", controllers.DeleteUser)
 }
 
 func Cors(r *gin.Engine) {

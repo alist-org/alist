@@ -12,13 +12,13 @@ const (
 )
 
 type User struct {
-	ID       uint   `json:"id" gorm:"primaryKey"`   // unique key
-	Username string `json:"username" gorm:"unique"` // username
-	Password string `json:"password"`               // password
-	BasePath string `json:"base_path"`              // base path
-	ReadOnly bool   `json:"read_only"`              // read only
-	Webdav   bool   `json:"webdav"`                 // allow webdav
-	Role     int    `json:"role"`                   // user's role
+	ID       uint   `json:"id" gorm:"primaryKey"`                      // unique key
+	Username string `json:"username" gorm:"unique" binding:"required"` // username
+	Password string `json:"password"`                                  // password
+	BasePath string `json:"base_path"`                                 // base path
+	ReadOnly bool   `json:"read_only"`                                 // read only
+	Webdav   bool   `json:"webdav"`                                    // allow webdav
+	Role     int    `json:"role"`                                      // user's role
 }
 
 func (u User) IsGuest() bool {
