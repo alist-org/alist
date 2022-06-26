@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/alist-org/alist/v3/internal/conf"
-	"github.com/alist-org/alist/v3/internal/server"
+	"github.com/alist-org/alist/v3/server"
 	"os"
 
 	"github.com/alist-org/alist/v3/bootstrap"

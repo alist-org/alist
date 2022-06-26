@@ -3,7 +3,7 @@ package middlewares
 import (
 	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/internal/server/common"
+	common2 "github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
 )
 
@@ -14,7 +14,7 @@ func Auth(c *gin.Context) {
 	if token == "" {
 		guest, err := db.GetGuest()
 		if err != nil {
-			common.ErrorResp(c, err, 500, true)
+			common2.ErrorResp(c, err, 500, true)
 			c.Abort()
 			return
 		}
@@ -22,15 +22,15 @@ func Auth(c *gin.Context) {
 		c.Next()
 		return
 	}
-	userClaims, err := common.ParseToken(token)
+	userClaims, err := common2.ParseToken(token)
 	if err != nil {
-		common.ErrorResp(c, err, 401)
+		common2.ErrorResp(c, err, 401)
 		c.Abort()
 		return
 	}
 	user, err := db.GetUserByName(userClaims.Username)
 	if err != nil {
-		common.ErrorResp(c, err, 401)
+		common2.ErrorResp(c, err, 401)
 		c.Abort()
 		return
 	}
@@ -41,7 +41,7 @@ func Auth(c *gin.Context) {
 func AuthAdmin(c *gin.Context) {
 	user := c.MustGet("user").(*model.User)
 	if !user.IsAdmin() {
-		common.ErrorStrResp(c, "You are not an admin", 403)
+		common2.ErrorStrResp(c, "You are not an admin", 403)
 		c.Abort()
 	} else {
 		c.Next()
