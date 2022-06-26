@@ -11,8 +11,8 @@ type Resp struct {
 	Data    interface{} `json:"data"`
 }
 
-func ErrorResp(c *gin.Context, err error, code int, noLog ...bool) {
-	if len(noLog) != 0 && noLog[0] {
+func ErrorResp(c *gin.Context, err error, code int, l ...bool) {
+	if len(l) != 0 && l[0] {
 		log.Errorf("%+v", err)
 	}
 	c.JSON(200, Resp{

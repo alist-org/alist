@@ -6,8 +6,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func AuthAdmin(c *gin.Context) {
+// Auth is a middleware that checks if the user is logged in.
+// if token is empty, set user to guest
+func Auth(c *gin.Context) {
 	token := c.GetHeader("Authorization")
+	if token == "" {
+		guest, _ := db.GetGuest()
+		c.Set("user", guest)
+		c.Next()
+		return
+	}
 	userClaims, err := common.ParseToken(token)
 	if err != nil {
 		common.ErrorResp(c, err, 401)

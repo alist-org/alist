@@ -3,6 +3,7 @@ package controllers
 import (
 	"github.com/Xhofe/go-cache"
 	"github.com/alist-org/alist/v3/internal/db"
+	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/server/common"
 	"github.com/gin-gonic/gin"
 	"time"
@@ -23,7 +24,7 @@ func Login(c *gin.Context) {
 	// check count of login
 	ip := c.ClientIP()
 	count, ok := loginCache.Get(ip)
-	if ok && count > defaultTimes {
+	if ok && count >= defaultTimes {
 		common.ErrorStrResp(c, "Too many unsuccessful sign-in attempts have been made using an incorrect password. Try again later.", 403)
 		loginCache.Expire(ip, defaultDuration)
 		return
@@ -36,12 +37,12 @@ func Login(c *gin.Context) {
 	}
 	user, err := db.GetUserByName(req.Username)
 	if err != nil {
-		common.ErrorResp(c, err, 400, true)
+		common.ErrorResp(c, err, 400)
 		return
 	}
 	// validate password
 	if err := user.ValidatePassword(req.Password); err != nil {
-		common.ErrorResp(c, err, 400, true)
+		common.ErrorResp(c, err, 400)
 		loginCache.Set(ip, count+1)
 		return
 	}
@@ -53,4 +54,11 @@ func Login(c *gin.Context) {
 	}
 	common.SuccessResp(c, gin.H{"token": token})
 	loginCache.Del(ip)
+}
+
+// CurrentUser get current user by token
+// if token is empty, return guest user
+func CurrentUser(c *gin.Context) {
+	user := c.MustGet("user").(*model.User)
+	common.SuccessResp(c, gin.H{"user": user})
 }

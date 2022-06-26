@@ -16,7 +16,8 @@ type User struct {
 	Username string `json:"username" gorm:"unique"` // username
 	Password string `json:"password"`               // password
 	BasePath string `json:"base_path"`              // base path
-	ReadOnly bool   `json:"read_only"`              // allow upload
+	ReadOnly bool   `json:"read_only"`              // read only
+	Webdav   bool   `json:"webdav"`                 // allow webdav
 	Role     int    `json:"role"`                   // user's role
 }
 
