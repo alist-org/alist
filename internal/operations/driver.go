@@ -33,6 +33,7 @@ func GetDriverItemsMap() map[string]driver.Items {
 }
 
 func registerDriverItems(config driver.Config, addition driver.Additional) {
+	log.Debugf("addition of %s: %+v", config.Name, addition)
 	tAddition := reflect.TypeOf(addition)
 	mainItems := getMainItems(config)
 	additionalItems := getAdditionalItems(tAddition)
@@ -93,9 +94,13 @@ func getAdditionalItems(t reflect.Type) []driver.Item {
 	var items []driver.Item
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
+		if field.Type.Kind() == reflect.Struct {
+			items = append(items, getAdditionalItems(field.Type)...)
+			continue
+		}
 		tag := field.Tag
 		ignore, ok := tag.Lookup("ignore")
-		if !ok || ignore == "false" {
+		if ok && ignore == "true" {
 			continue
 		}
 		item := driver.Item{
