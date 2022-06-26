@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"github.com/alist-org/alist/v3/internal/operations"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
@@ -19,8 +20,8 @@ func GetDriverItems(c *gin.Context) {
 	itemsMap := operations.GetDriverItemsMap()
 	items, ok := itemsMap[driverName]
 	if !ok {
-		common.ErrorStrResp(c, "driver not found", 404)
+		common.ErrorStrResp(c, fmt.Sprintf("driver [%s] not found", driverName), 404)
 		return
 	}
-	common.SuccessResp(nil, items)
+	common.SuccessResp(c, items)
 }
