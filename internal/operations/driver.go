@@ -28,6 +28,14 @@ func GetDriverNew(name string) (New, error) {
 	return n, nil
 }
 
+func GetDriverNames() []string {
+	var driverNames []string
+	for k := range driverItemsMap {
+		driverNames = append(driverNames, k)
+	}
+	return driverNames
+}
+
 func GetDriverItemsMap() map[string]driver.Items {
 	return driverItemsMap
 }

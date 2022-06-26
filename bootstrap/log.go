@@ -17,6 +17,7 @@ func init() {
 		TimestampFormat:           "2006-01-02 15:04:05",
 		FullTimestamp:             true,
 	})
+	logrus.SetLevel(logrus.DebugLevel)
 }
 
 func Log() {
@@ -24,6 +25,9 @@ func Log() {
 	if args.Debug || args.Dev {
 		logrus.SetLevel(logrus.DebugLevel)
 		logrus.SetReportCaller(true)
+	} else {
+		logrus.SetLevel(logrus.InfoLevel)
+		logrus.SetReportCaller(false)
 	}
 	logConfig := conf.Conf.Log
 	if logConfig.Enable {

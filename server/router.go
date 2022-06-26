@@ -36,6 +36,11 @@ func Init(r *gin.Engine) {
 	account.POST("/create", controllers.CreateAccount)
 	account.POST("/update", controllers.UpdateAccount)
 	account.POST("/delete", controllers.DeleteAccount)
+
+	driver := admin.Group("/driver")
+	driver.GET("/list", controllers.ListDriverItems)
+	driver.GET("/names", controllers.ListDriverNames)
+	driver.GET("/items", controllers.GetDriverItems)
 }
 
 func Cors(r *gin.Engine) {

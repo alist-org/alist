@@ -51,6 +51,7 @@ func CreateAccount(ctx context.Context, account model.Account) error {
 	if err != nil {
 		return errors.WithMessage(err, "failed init account but account is already created")
 	}
+	log.Debugf("account %+v is created", accountDriver)
 	accountsMap.Store(account.VirtualPath, accountDriver)
 	return nil
 }
