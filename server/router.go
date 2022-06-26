@@ -30,6 +30,12 @@ func Init(r *gin.Engine) {
 	user.POST("/create", controllers.CreateUser)
 	user.POST("/update", controllers.UpdateUser)
 	user.POST("/delete", controllers.DeleteUser)
+
+	account := admin.Group("/account")
+	account.GET("/list", controllers.ListAccounts)
+	account.POST("/create", controllers.CreateAccount)
+	account.POST("/update", controllers.UpdateAccount)
+	account.POST("/delete", controllers.DeleteAccount)
 }
 
 func Cors(r *gin.Engine) {

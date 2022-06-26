@@ -33,20 +33,23 @@ func GetAccountByVirtualPath(virtualPath string) (driver.Driver, error) {
 func CreateAccount(ctx context.Context, account model.Account) error {
 	account.Modified = time.Now()
 	account.VirtualPath = utils.StandardizePath(account.VirtualPath)
-	err := db.CreateAccount(&account)
-	if err != nil {
-		return errors.WithMessage(err, "failed create account in database")
-	}
-	// already has an id
+	var err error
+	// check driver first
 	driverName := account.Driver
 	driverNew, err := GetDriverNew(driverName)
 	if err != nil {
 		return errors.WithMessage(err, "failed get driver new")
 	}
 	accountDriver := driverNew()
+	// insert account to database
+	err = db.CreateAccount(&account)
+	if err != nil {
+		return errors.WithMessage(err, "failed create account in database")
+	}
+	// already has an id
 	err = accountDriver.Init(ctx, account)
 	if err != nil {
-		return errors.WithMessage(err, "failed init account")
+		return errors.WithMessage(err, "failed init account but account is already created")
 	}
 	accountsMap.Store(account.VirtualPath, accountDriver)
 	return nil
@@ -59,6 +62,9 @@ func UpdateAccount(ctx context.Context, account model.Account) error {
 	oldAccount, err := db.GetAccountById(account.ID)
 	if err != nil {
 		return errors.WithMessage(err, "failed get old account")
+	}
+	if oldAccount.Driver != account.Driver {
+		return errors.Errorf("driver cannot be changed")
 	}
 	account.Modified = time.Now()
 	account.VirtualPath = utils.StandardizePath(account.VirtualPath)
@@ -83,6 +89,28 @@ func UpdateAccount(ctx context.Context, account model.Account) error {
 		return errors.WithMessage(err, "failed init account")
 	}
 	accountsMap.Store(account.VirtualPath, accountDriver)
+	return nil
+}
+
+func DeleteAccountById(ctx context.Context, id uint) error {
+	account, err := db.GetAccountById(id)
+	if err != nil {
+		return errors.WithMessage(err, "failed get account")
+	}
+	accountDriver, err := GetAccountByVirtualPath(account.VirtualPath)
+	if err != nil {
+		return errors.WithMessage(err, "failed get account driver")
+	}
+	// drop the account in the driver
+	if err := accountDriver.Drop(ctx); err != nil {
+		return errors.WithMessage(err, "failed drop account")
+	}
+	// delete the account in the database
+	if err := db.DeleteAccountById(id); err != nil {
+		return errors.WithMessage(err, "failed delete account in database")
+	}
+	// delete the account in the memory
+	accountsMap.Delete(account.VirtualPath)
 	return nil
 }
 
