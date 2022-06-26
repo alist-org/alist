@@ -5,12 +5,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type Resp struct {
-	Code    int         `json:"code"`
-	Message string      `json:"message"`
-	Data    interface{} `json:"data"`
-}
-
 func ErrorResp(c *gin.Context, err error, code int, l ...bool) {
 	if len(l) != 0 && l[0] {
 		log.Errorf("%+v", err)

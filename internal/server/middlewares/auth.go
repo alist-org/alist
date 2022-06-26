@@ -2,6 +2,7 @@ package middlewares
 
 import (
 	"github.com/alist-org/alist/v3/internal/db"
+	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/server/common"
 	"github.com/gin-gonic/gin"
 )
@@ -35,4 +36,14 @@ func Auth(c *gin.Context) {
 	}
 	c.Set("user", user)
 	c.Next()
+}
+
+func AuthAdmin(c *gin.Context) {
+	user := c.MustGet("user").(*model.User)
+	if !user.IsAdmin() {
+		common.ErrorStrResp(c, "You are not an admin", 403)
+		c.Abort()
+	} else {
+		c.Next()
+	}
 }

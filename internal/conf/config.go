@@ -47,7 +47,7 @@ func DefaultConfig() *Config {
 	return &Config{
 		Address:   "0.0.0.0",
 		Port:      5244,
-		JwtSecret: random.RandomStr(16),
+		JwtSecret: random.String(16),
 		Assets:    "https://npm.elemecdn.com/alist-web@$version/dist",
 		TempDir:   "data/temp",
 		Database: Database{

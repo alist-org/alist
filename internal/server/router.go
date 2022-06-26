@@ -14,8 +14,16 @@ func Init(r *gin.Engine) {
 	Cors(r)
 
 	api := r.Group("/api", middlewares.Auth)
-	api.POST("/user/login", controllers.Login)
-	api.GET("/user/current", controllers.CurrentUser)
+	api.POST("/auth/login", controllers.Login)
+	api.GET("/auth/current", controllers.CurrentUser)
+
+	admin := api.Group("/admin", middlewares.AuthAdmin)
+
+	meta := admin.Group("/meta")
+	meta.GET("/list", controllers.ListMetas)
+	meta.POST("/create", controllers.CreateMeta)
+	meta.POST("/update", controllers.UpdateMeta)
+	meta.POST("/delete", controllers.DeleteMeta)
 }
 
 func Cors(r *gin.Engine) {

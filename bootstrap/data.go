@@ -1,6 +1,7 @@
 package bootstrap
 
 import (
+	"github.com/alist-org/alist/v3/cmd/args"
 	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/utils/random"
@@ -15,11 +16,15 @@ func InitData() {
 
 func initUser() {
 	admin, err := db.GetAdmin()
+	adminPassword := random.String(8)
+	if args.Dev {
+		adminPassword = "admin"
+	}
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			admin = &model.User{
 				Username: "admin",
-				Password: random.RandomStr(8),
+				Password: adminPassword,
 				Role:     model.ADMIN,
 				BasePath: "/",
 				Webdav:   true,
