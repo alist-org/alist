@@ -60,5 +60,6 @@ func Login(c *gin.Context) {
 // if token is empty, return guest user
 func CurrentUser(c *gin.Context) {
 	user := c.MustGet("user").(*model.User)
+	user.Password = ""
 	common.SuccessResp(c, gin.H{"user": user})
 }

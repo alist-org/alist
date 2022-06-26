@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	stdpath "path"
+	"time"
 )
 
 var metaCache = cache.NewMemCache(cache.WithShards[*model.Meta](2))
@@ -41,7 +42,7 @@ func GetMetaByPath(path string) (*model.Meta, error) {
 		if err := db.Where(meta).First(&meta).Error; err != nil {
 			return nil, errors.Wrapf(err, "failed select meta")
 		}
-		metaCache.Set(path, &meta)
+		metaCache.Set(path, &meta, cache.WithEx[*model.Meta](time.Hour))
 		return &meta, nil
 	})
 	return meta, err

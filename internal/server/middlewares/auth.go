@@ -11,7 +11,12 @@ import (
 func Auth(c *gin.Context) {
 	token := c.GetHeader("Authorization")
 	if token == "" {
-		guest, _ := db.GetGuest()
+		guest, err := db.GetGuest()
+		if err != nil {
+			common.ErrorResp(c, err, 500, true)
+			c.Abort()
+			return
+		}
 		c.Set("user", guest)
 		c.Next()
 		return

@@ -6,6 +6,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/singleflight"
 	"github.com/pkg/errors"
+	"time"
 )
 
 var userCache = cache.NewMemCache(cache.WithShards[*model.User](2))
@@ -40,7 +41,7 @@ func GetUserByName(username string) (*model.User, error) {
 		if err := db.Where(user).First(&user).Error; err != nil {
 			return nil, errors.Wrapf(err, "failed find user")
 		}
-		userCache.Set(username, &user)
+		userCache.Set(username, &user, cache.WithEx[*model.User](time.Hour))
 		return &user, nil
 	})
 	return user, err
