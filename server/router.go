@@ -49,6 +49,7 @@ func Init(r *gin.Engine) {
 
 	public := api.Group("/public")
 	public.GET("/settings", controllers.PublicSettings)
+	public.GET("/list", controllers.List)
 }
 
 func Cors(r *gin.Engine) {

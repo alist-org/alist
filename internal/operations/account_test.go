@@ -25,9 +25,9 @@ func TestCreateAccount(t *testing.T) {
 		account model.Account
 		iserr   bool
 	}{
-		{account: model.Account{Driver: "Local", VirtualPath: "/local", Addition: "{}"}, iserr: false},
-		{account: model.Account{Driver: "Local", VirtualPath: "/local", Addition: "{}"}, iserr: true},
-		{account: model.Account{Driver: "None", VirtualPath: "/none", Addition: "{}"}, iserr: true},
+		{account: model.Account{Driver: "Local", VirtualPath: "/local", Addition: `{"root_folder":"."}`}, iserr: false},
+		{account: model.Account{Driver: "Local", VirtualPath: "/local", Addition: `{"root_folder":"."}`}, iserr: true},
+		{account: model.Account{Driver: "None", VirtualPath: "/none", Addition: `{"root_folder":"."}`}, iserr: true},
 	}
 	for _, account := range accounts {
 		err := operations.CreateAccount(context.Background(), account.account)

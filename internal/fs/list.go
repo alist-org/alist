@@ -2,7 +2,6 @@ package fs
 
 import (
 	"context"
-	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/operations"
 	"github.com/alist-org/alist/v3/pkg/utils"
@@ -13,7 +12,7 @@ import (
 // List files
 // TODO: sort
 func list(ctx context.Context, path string) ([]model.Obj, error) {
-	meta, _ := db.GetNearestMeta(path)
+	meta := ctx.Value("meta").(*model.Meta)
 	user := ctx.Value("user").(*model.User)
 	account, actualPath, err := operations.GetAccountAndActualPath(path)
 	virtualFiles := operations.GetAccountVirtualFilesByPath(path)

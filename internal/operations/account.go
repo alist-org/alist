@@ -185,6 +185,9 @@ func GetAccountVirtualFilesByPath(prefix string) []model.Obj {
 		return accounts[i].GetAccount().Index < accounts[j].GetAccount().Index
 	})
 	prefix = utils.StandardizePath(prefix)
+	if prefix == "/" {
+		prefix = ""
+	}
 	set := make(map[string]interface{})
 	for _, v := range accounts {
 		// TODO should save a balanced account
@@ -197,7 +200,7 @@ func GetAccountVirtualFilesByPath(prefix string) []model.Obj {
 			continue
 		}
 		// not prefixed with `prefix`
-		if !strings.HasPrefix(virtualPath, prefix+"/") && prefix != "/" {
+		if !strings.HasPrefix(virtualPath, prefix+"/") {
 			continue
 		}
 		name := strings.Split(strings.TrimPrefix(virtualPath, prefix), "/")[1]

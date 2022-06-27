@@ -23,6 +23,7 @@ var filesG singleflight.Group[[]model.Obj]
 
 // List files in storage, not contains virtual file
 func List(ctx context.Context, account driver.Driver, path string, refresh ...bool) ([]model.Obj, error) {
+	log.Debugf("operations.List %s", path)
 	dir, err := Get(ctx, account, path)
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed get dir")
@@ -51,8 +52,20 @@ func List(ctx context.Context, account driver.Driver, path string, refresh ...bo
 	return files, err
 }
 
+func isRoot(path, rootFolderPath string) bool {
+	if utils.PathEqual(path, rootFolderPath) {
+		return true
+	}
+	// relative path
+	if utils.PathEqual(path, "/") && rootFolderPath == "." {
+		return true
+	}
+	return false
+}
+
 // Get object from list of files
 func Get(ctx context.Context, account driver.Driver, path string) (model.Obj, error) {
+	log.Debugf("operations.Get %s", path)
 	// is root folder
 	if r, ok := account.GetAddition().(driver.IRootFolderId); ok && utils.PathEqual(path, "/") {
 		return model.Object{
@@ -63,7 +76,7 @@ func Get(ctx context.Context, account driver.Driver, path string) (model.Obj, er
 			IsFolder: true,
 		}, nil
 	}
-	if r, ok := account.GetAddition().(driver.IRootFolderPath); ok && utils.PathEqual(path, r.GetRootFolderPath()) {
+	if r, ok := account.GetAddition().(driver.IRootFolderPath); ok && isRoot(path, r.GetRootFolderPath()) {
 		return model.Object{
 			ID:       r.GetRootFolderPath(),
 			Name:     "root",
