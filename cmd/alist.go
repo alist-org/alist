@@ -3,11 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
+	bootstrap2 "github.com/alist-org/alist/v3/internal/bootstrap"
+	"github.com/alist-org/alist/v3/internal/bootstrap/data"
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/server"
 	"os"
 
-	"github.com/alist-org/alist/v3/bootstrap"
 	"github.com/alist-org/alist/v3/cmd/args"
 	_ "github.com/alist-org/alist/v3/drivers"
 	"github.com/gin-gonic/gin"
@@ -30,10 +31,10 @@ func Init() {
 			conf.BuiltAt, conf.GoVersion, conf.GitAuthor, conf.GitCommit, conf.Version, conf.WebVersion)
 		os.Exit(0)
 	}
-	bootstrap.InitConfig()
-	bootstrap.Log()
-	bootstrap.InitDB()
-	bootstrap.InitData()
+	bootstrap2.InitConfig()
+	bootstrap2.Log()
+	bootstrap2.InitDB()
+	data.InitData()
 }
 func main() {
 	Init()

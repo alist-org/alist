@@ -27,5 +27,5 @@ bin/*
 public/*.html
 public/assets/
 public/public/
-data/
+/data
 log/

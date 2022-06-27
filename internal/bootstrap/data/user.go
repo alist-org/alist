@@ -1,4 +1,4 @@
-package bootstrap
+package data
 
 import (
 	"github.com/alist-org/alist/v3/cmd/args"
@@ -9,10 +9,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
-
-func InitData() {
-	initUser()
-}
 
 func initUser() {
 	admin, err := db.GetAdmin()
