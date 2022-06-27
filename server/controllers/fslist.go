@@ -24,12 +24,12 @@ type ObjResp struct {
 	Modified time.Time `json:"modified"`
 }
 
-type ListResp struct {
+type FsListResp struct {
 	Content []ObjResp `json:"content"`
 	Total   int64     `json:"total"`
 }
 
-func List(c *gin.Context) {
+func FsList(c *gin.Context) {
 	var req ListReq
 	if err := c.ShouldBind(&req); err != nil {
 		common.ErrorResp(c, err, 400)
@@ -50,7 +50,7 @@ func List(c *gin.Context) {
 		return
 	}
 	total, objs := pagination(objs, &req.PageReq)
-	common.SuccessResp(c, ListResp{
+	common.SuccessResp(c, FsListResp{
 		Content: toObjResp(objs),
 		Total:   int64(total),
 	})
