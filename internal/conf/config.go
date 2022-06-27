@@ -13,7 +13,7 @@ type Database struct {
 	Name        string `json:"name" env:"DB_NAME"`
 	DBFile      string `json:"db_file" env:"DB_FILE"`
 	TablePrefix string `json:"table_prefix" env:"DB_TABLE_PREFIX"`
-	SslMode     string `json:"ssl_mode" env:"DB_SLL_MODE"`
+	SSLMode     string `json:"ssl_mode" env:"DB_SSL_MODE"`
 }
 
 type Scheme struct {
