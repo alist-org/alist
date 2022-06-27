@@ -1,6 +1,7 @@
 package operations
 
 import (
+	"github.com/alist-org/alist/v3/internal/conf"
 	"reflect"
 	"strings"
 
@@ -54,24 +55,24 @@ func registerDriverItems(config driver.Config, addition driver.Additional) {
 func getMainItems(config driver.Config) []driver.Item {
 	items := []driver.Item{{
 		Name:     "virtual_path",
-		Type:     driver.TypeString,
+		Type:     conf.TypeString,
 		Required: true,
 		Help:     "",
 	}, {
 		Name: "index",
-		Type: driver.TypeNumber,
+		Type: conf.TypeNumber,
 		Help: "use to sort",
 	}, {
 		Name: "down_proxy_url",
-		Type: driver.TypeText,
+		Type: conf.TypeText,
 	}}
 	if !config.OnlyProxy && !config.OnlyLocal {
 		items = append(items, []driver.Item{{
 			Name: "web_proxy",
-			Type: driver.TypeBool,
+			Type: conf.TypeBool,
 		}, {
 			Name:     "webdav_policy",
-			Type:     driver.TypeSelect,
+			Type:     conf.TypeSelect,
 			Values:   "302_redirect, use_proxy_url, native_proxy",
 			Default:  "direct",
 			Required: true,
@@ -80,7 +81,7 @@ func getMainItems(config driver.Config) []driver.Item {
 	} else {
 		items = append(items, driver.Item{
 			Name:     "webdav_policy",
-			Type:     driver.TypeSelect,
+			Type:     conf.TypeSelect,
 			Default:  "",
 			Values:   "use_proxy_url, native_proxy",
 			Required: true,
@@ -89,17 +90,17 @@ func getMainItems(config driver.Config) []driver.Item {
 	if config.LocalSort {
 		items = append(items, []driver.Item{{
 			Name:   "order_by",
-			Type:   driver.TypeSelect,
+			Type:   conf.TypeSelect,
 			Values: "name,size,modified",
 		}, {
 			Name:   "order_direction",
-			Type:   driver.TypeSelect,
+			Type:   conf.TypeSelect,
 			Values: "ASC,DESC",
 		}}...)
 	}
 	items = append(items, driver.Item{
 		Name:   "extract_folder",
-		Type:   driver.TypeSelect,
+		Type:   conf.TypeSelect,
 		Values: "front,back",
 	})
 	return items

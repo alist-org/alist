@@ -4,14 +4,6 @@ type Additional interface{}
 
 type Select string
 
-const (
-	TypeString = "string"
-	TypeSelect = "select"
-	TypeBool   = "bool"
-	TypeText   = "text"
-	TypeNumber = "number"
-)
-
 type Item struct {
 	Name     string `json:"name"`
 	Type     string `json:"type"`
