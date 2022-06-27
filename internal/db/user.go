@@ -11,6 +11,7 @@ import (
 
 var userCache = cache.NewMemCache(cache.WithShards[*model.User](2))
 var userG singleflight.Group[*model.User]
+var guest *model.User
 
 func GetAdmin() (*model.User, error) {
 	user := model.User{Role: model.ADMIN}
@@ -21,10 +22,14 @@ func GetAdmin() (*model.User, error) {
 }
 
 func GetGuest() (*model.User, error) {
+	if guest != nil {
+		return guest, nil
+	}
 	user := model.User{Role: model.GUEST}
 	if err := db.Where(user).Take(&user).Error; err != nil {
 		return nil, err
 	}
+	guest = &user
 	return &user, nil
 }
 
@@ -65,6 +70,9 @@ func UpdateUser(u *model.User) error {
 		return err
 	}
 	userCache.Del(old.Username)
+	if u.IsGuest() {
+		guest = nil
+	}
 	return errors.WithStack(db.Save(u).Error)
 }
 
