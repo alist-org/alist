@@ -1,6 +1,7 @@
 package fs
 
 import (
+	"github.com/alist-org/alist/v3/pkg/utils"
 	"io"
 	"mime"
 	"net/http"
@@ -62,4 +63,20 @@ func getFileStreamFromLink(file model.Obj, link *model.Link) (model.FileStreamer
 		Mimetype:   mimetype,
 	}
 	return stream, nil
+}
+
+func canAccess(user *model.User, meta *model.Meta, path string) bool {
+	// if is not guest, can access
+	if user.IsAdmin() || user.IgnorePassword {
+		return true
+	}
+	// if meta is nil or password is empty, can access
+	if meta == nil || meta.Password == "" {
+		return true
+	}
+	// if meta doesn't apply to sub_folder, can access
+	if !utils.PathEqual(meta.Path, path) && !meta.SubFolder {
+		return true
+	}
+	return false
 }
