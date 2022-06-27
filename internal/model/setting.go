@@ -21,5 +21,9 @@ type SettingItem struct {
 	Type   string `json:"type"`                                     // string, number, bool, select
 	Values string `json:"values"`                                   // values for select
 	Group  int    `json:"group"`                                    // use to group setting in frontend
-	Flag   int    `json:"flag"`                                     // 0 = public, 1 = private, 2 = deprecated, etc.
+	Flag   int    `json:"flag"`                                     // 0 = public, 1 = private, 2 = readonly, 3 = deprecated, etc.
+}
+
+func (s SettingItem) IsDeprecated() bool {
+	return s.Flag == DEPRECATED
 }

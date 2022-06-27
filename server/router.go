@@ -41,6 +41,14 @@ func Init(r *gin.Engine) {
 	driver.GET("/list", controllers.ListDriverItems)
 	driver.GET("/names", controllers.ListDriverNames)
 	driver.GET("/items", controllers.GetDriverItems)
+
+	setting := admin.Group("/setting")
+	setting.GET("/list", controllers.ListSettings)
+	setting.POST("/save", controllers.SaveSettings)
+	setting.POST("/delete", controllers.DeleteSetting)
+
+	public := api.Group("/public")
+	public.GET("/settings", controllers.PublicSettings)
 }
 
 func Cors(r *gin.Engine) {
