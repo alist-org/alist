@@ -10,7 +10,6 @@ import (
 )
 
 // List files
-// TODO: sort
 func list(ctx context.Context, path string) ([]model.Obj, error) {
 	meta := ctx.Value("meta").(*model.Meta)
 	user := ctx.Value("user").(*model.User)

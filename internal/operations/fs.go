@@ -87,7 +87,7 @@ func Get(ctx context.Context, account driver.Driver, path string) (model.Obj, er
 	}
 	// not root folder
 	dir, name := stdpath.Split(path)
-	files, err := List(ctx, account, dir)
+	files, err := List(ctx, account, utils.StandardizePath(dir))
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed get parent list")
 	}

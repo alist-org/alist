@@ -7,6 +7,7 @@ import (
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
+	stdpath "path"
 	"time"
 )
 
@@ -36,6 +37,7 @@ func List(c *gin.Context) {
 	}
 	req.Validate()
 	user := c.MustGet("user").(*model.User)
+	req.Path = stdpath.Join(user.BasePath, req.Path)
 	meta, _ := db.GetNearestMeta(req.Path)
 	c.Set("meta", meta)
 	if !canAccess(user, meta, req.Path, req.Password) {

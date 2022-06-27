@@ -34,6 +34,12 @@ func (d *Driver) Init(ctx context.Context, account model.Account) error {
 		err = errors.Errorf("root folder %s not exists", d.RootFolder)
 		d.SetStatus(err.Error())
 	} else {
+		if !filepath.IsAbs(d.RootFolder) {
+			d.RootFolder, err = filepath.Abs(d.RootFolder)
+			if err != nil {
+				return errors.Wrap(err, "error while get abs path")
+			}
+		}
 		d.SetStatus("OK")
 	}
 	operations.MustSaveDriverAccount(d)
