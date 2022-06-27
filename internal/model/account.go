@@ -22,9 +22,8 @@ type Sort struct {
 }
 
 type Proxy struct {
-	WebProxy     string `json:"web_proxy"`
-	WebdavProxy  bool   `json:"webdav_proxy"`
-	WebdavDirect bool   `json:"webdav_direct"`
+	WebProxy     bool   `json:"web_proxy"`
+	WebdavPolicy string `json:"webdav_policy"`
 	DownProxyUrl string `json:"down_proxy_url"`
 }
 
@@ -34,4 +33,16 @@ func (a Account) GetAccount() Account {
 
 func (a *Account) SetStatus(status string) {
 	a.Status = status
+}
+
+func (p Proxy) Webdav302() bool {
+	return p.WebdavPolicy == "302_redirect"
+}
+
+func (p Proxy) WebdavProxy() bool {
+	return p.WebdavPolicy == "use_proxy_url"
+}
+
+func (p Proxy) WebdavNative() bool {
+	return !p.Webdav302() && !p.WebdavProxy()
 }

@@ -64,20 +64,27 @@ func getMainItems(config driver.Config) []driver.Item {
 	}, {
 		Name: "down_proxy_url",
 		Type: driver.TypeText,
-	}, {
-		Name: "webdav_direct",
-		Type: driver.TypeBool,
-		Help: "Transfer the WebDAV of this account through the native without redirect",
 	}}
 	if !config.OnlyProxy && !config.OnlyLocal {
 		items = append(items, []driver.Item{{
 			Name: "web_proxy",
 			Type: driver.TypeBool,
 		}, {
-			Name: "webdav_proxy",
-			Type: driver.TypeBool,
+			Name:     "webdav_policy",
+			Type:     driver.TypeSelect,
+			Values:   "302_redirect, use_proxy_url, native_proxy",
+			Default:  "direct",
+			Required: true,
 		},
 		}...)
+	} else {
+		items = append(items, driver.Item{
+			Name:     "webdav_policy",
+			Type:     driver.TypeSelect,
+			Default:  "",
+			Values:   "use_proxy_url, native_proxy",
+			Required: true,
+		})
 	}
 	if config.LocalSort {
 		items = append(items, []driver.Item{{
