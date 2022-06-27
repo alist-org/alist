@@ -12,6 +12,7 @@ import (
 var initialSettingItems = []model.SettingItem{
 	// site settings
 	{Key: "version", Value: conf.Version, Type: conf.TypeString, Group: model.SITE, Flag: model.READONLY},
+	{Key: "base_url", Value: "", Type: conf.TypeString, Group: model.SITE},
 	{Key: "site_title", Value: "AList", Type: conf.TypeString, Group: model.SITE},
 	{Key: "site_logo", Value: "https://cdn.jsdelivr.net/gh/alist-org/logo@main/logo.svg", Type: conf.TypeString, Group: model.SITE},
 	{Key: "favicon", Value: "https://cdn.jsdelivr.net/gh/alist-org/logo@main/logo.svg", Type: conf.TypeString, Group: model.SITE},

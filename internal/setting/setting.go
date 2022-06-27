@@ -5,8 +5,15 @@ import (
 	"strconv"
 )
 
-func GetByKey(key string) string {
-	return db.GetSettingsMap()[key]
+func GetByKey(key string, defaultValue ...string) string {
+	val, ok := db.GetSettingsMap()[key]
+	if !ok {
+		if len(defaultValue) > 0 {
+			return defaultValue[0]
+		}
+		return ""
+	}
+	return val
 }
 
 func GetIntSetting(key string, defaultVal int) int {

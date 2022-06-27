@@ -7,7 +7,6 @@ import (
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
 	stdpath "path"
-	"time"
 )
 
 type FsGetReq struct {
@@ -16,11 +15,8 @@ type FsGetReq struct {
 }
 
 type FsGetResp struct {
-	Name     string    `json:"name"`
-	Size     int64     `json:"size"`
-	IsDir    bool      `json:"is_dir"`
-	Modified time.Time `json:"modified"`
-	URL      string    `json:"url"`
+	ObjResp
+	RawURL string `json:"raw_url"`
 }
 
 func FsGet(c *gin.Context) {
@@ -43,9 +39,12 @@ func FsGet(c *gin.Context) {
 		return
 	}
 	common.SuccessResp(c, FsGetResp{
-		Name:     data.GetName(),
-		Size:     data.GetSize(),
-		IsDir:    data.IsDir(),
-		Modified: data.ModTime(),
+		ObjResp: ObjResp{
+			Name:     data.GetName(),
+			Size:     data.GetSize(),
+			IsDir:    data.IsDir(),
+			Modified: data.ModTime(),
+		},
+		// TODO: set raw url
 	})
 }

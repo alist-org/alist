@@ -1,9 +1,11 @@
 package controllers
 
 import (
+	"fmt"
 	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/fs"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/setting"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
@@ -22,6 +24,7 @@ type ObjResp struct {
 	Size     int64     `json:"size"`
 	IsDir    bool      `json:"is_dir"`
 	Modified time.Time `json:"modified"`
+	URL      string    `json:"url"`
 }
 
 type FsListResp struct {
@@ -50,8 +53,9 @@ func FsList(c *gin.Context) {
 		return
 	}
 	total, objs := pagination(objs, &req.PageReq)
+	baseURL := setting.GetByKey("base_url", c.Request.Host)
 	common.SuccessResp(c, FsListResp{
-		Content: toObjResp(objs),
+		Content: toObjResp(objs, req.Path, baseURL),
 		Total:   int64(total),
 	})
 }
@@ -87,7 +91,7 @@ func pagination(objs []model.Obj, req *common.PageReq) (int, []model.Obj) {
 	return total, objs[start:end]
 }
 
-func toObjResp(objs []model.Obj) []ObjResp {
+func toObjResp(objs []model.Obj, path string, baseURL string) []ObjResp {
 	var resp []ObjResp
 	for _, obj := range objs {
 		resp = append(resp, ObjResp{
@@ -95,6 +99,8 @@ func toObjResp(objs []model.Obj) []ObjResp {
 			Size:     obj.GetSize(),
 			IsDir:    obj.IsDir(),
 			Modified: obj.ModTime(),
+			// TODO: sign url
+			URL: fmt.Sprintf("%s/d%s", baseURL, stdpath.Join(path, obj.GetName())),
 		})
 	}
 	return resp
