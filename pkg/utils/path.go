@@ -8,7 +8,7 @@ import (
 // StandardizePath convert path like '/' '/root' '/a/b'
 func StandardizePath(path string) string {
 	path = strings.TrimSuffix(path, "/")
-	// windows abs path
+	// abs path
 	if filepath.IsAbs(path) {
 		return path
 	}

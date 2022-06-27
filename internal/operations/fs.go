@@ -6,6 +6,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/errs"
 	log "github.com/sirupsen/logrus"
 	stdpath "path"
+	"strings"
 	"time"
 
 	"github.com/Xhofe/go-cache"
@@ -23,6 +24,7 @@ var filesG singleflight.Group[[]model.Obj]
 
 // List files in storage, not contains virtual file
 func List(ctx context.Context, account driver.Driver, path string, refresh ...bool) ([]model.Obj, error) {
+	path = utils.StandardizePath(path)
 	log.Debugf("operations.List %s", path)
 	dir, err := Get(ctx, account, path)
 	if err != nil {
@@ -56,7 +58,9 @@ func isRoot(path, rootFolderPath string) bool {
 	if utils.PathEqual(path, rootFolderPath) {
 		return true
 	}
-	// relative path
+	rootFolderPath = strings.TrimSuffix(rootFolderPath, "/")
+	rootFolderPath = strings.TrimPrefix(rootFolderPath, "\\")
+	// relative path, this shouldn't happen, because root folder path is absolute
 	if utils.PathEqual(path, "/") && rootFolderPath == "." {
 		return true
 	}
@@ -65,6 +69,7 @@ func isRoot(path, rootFolderPath string) bool {
 
 // Get object from list of files
 func Get(ctx context.Context, account driver.Driver, path string) (model.Obj, error) {
+	path = utils.StandardizePath(path)
 	log.Debugf("operations.Get %s", path)
 	// is root folder
 	if r, ok := account.GetAddition().(driver.IRootFolderId); ok && utils.PathEqual(path, "/") {
@@ -87,7 +92,7 @@ func Get(ctx context.Context, account driver.Driver, path string) (model.Obj, er
 	}
 	// not root folder
 	dir, name := stdpath.Split(path)
-	files, err := List(ctx, account, utils.StandardizePath(dir))
+	files, err := List(ctx, account, dir)
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed get parent list")
 	}
