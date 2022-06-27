@@ -14,7 +14,7 @@ func SaveSettings(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	if err := db.SaveSettings(req); err != nil {
+	if err := db.SaveSettingItems(req); err != nil {
 		common.ErrorResp(c, err, 500)
 	} else {
 		common.SuccessResp(c)
@@ -26,11 +26,11 @@ func ListSettings(c *gin.Context) {
 	var settings []model.SettingItem
 	var err error
 	if groupStr == "" {
-		settings, err = db.GetSettings()
+		settings, err = db.GetSettingItems()
 	} else {
 		group, err := strconv.Atoi(groupStr)
 		if err == nil {
-			settings, err = db.GetSettingsByGroup(group)
+			settings, err = db.GetSettingItemsByGroup(group)
 		}
 	}
 	if err != nil {
@@ -42,7 +42,7 @@ func ListSettings(c *gin.Context) {
 
 func DeleteSetting(c *gin.Context) {
 	key := c.Query("key")
-	if err := db.DeleteSettingByKey(key); err != nil {
+	if err := db.DeleteSettingItemByKey(key); err != nil {
 		common.ErrorResp(c, err, 500)
 		return
 	}

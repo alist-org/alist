@@ -35,7 +35,7 @@ var initialSettingItems = []model.SettingItem{
 
 func initSettings() {
 	// check deprecated
-	settings, err := db.GetSettings()
+	settings, err := db.GetSettingItems()
 	if err != nil {
 		log.Fatalf("failed get settings: %+v", err)
 	}
@@ -45,7 +45,7 @@ func initSettings() {
 		}
 	}
 	if settings != nil && len(settings) > 0 {
-		err = db.SaveSettings(settings)
+		err = db.SaveSettingItems(settings)
 		if err != nil {
 			log.Fatalf("failed save settings: %+v", err)
 		}
@@ -53,12 +53,12 @@ func initSettings() {
 	// insert new items
 	for i, _ := range initialSettingItems {
 		v := initialSettingItems[i]
-		_, err := db.GetSettingByKey(v.Key)
+		_, err := db.GetSettingItemByKey(v.Key)
 		if err == nil {
 			continue
 		}
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			err = db.SaveSetting(v)
+			err = db.SaveSettingItem(v)
 			if err != nil {
 				log.Fatalf("failed create setting: %+v", err)
 			}

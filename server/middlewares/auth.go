@@ -41,7 +41,7 @@ func Auth(c *gin.Context) {
 func AuthAdmin(c *gin.Context) {
 	user := c.MustGet("user").(*model.User)
 	if !user.IsAdmin() {
-		common2.ErrorStrResp(c, "You are not an admin", 403)
+		common2.ErrorStrResp(c, "You are not an admin", 403, true)
 		c.Abort()
 	} else {
 		c.Next()
