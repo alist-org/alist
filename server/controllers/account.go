@@ -1,19 +1,20 @@
 package controllers
 
 import (
+	"strconv"
+
 	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/operations"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
-	"strconv"
 )
 
 func ListAccounts(c *gin.Context) {
 	var req common.PageReq
 	if err := c.ShouldBind(&req); err != nil {
-		common.ErrorResp(c, err, 400, true)
+		common.ErrorResp(c, err, 400)
 		return
 	}
 	log.Debugf("%+v", req)
@@ -31,11 +32,11 @@ func ListAccounts(c *gin.Context) {
 func CreateAccount(c *gin.Context) {
 	var req model.Account
 	if err := c.ShouldBind(&req); err != nil {
-		common.ErrorResp(c, err, 400, true)
+		common.ErrorResp(c, err, 400)
 		return
 	}
 	if err := operations.CreateAccount(c, req); err != nil {
-		common.ErrorResp(c, err, 500)
+		common.ErrorResp(c, err, 500, true)
 	} else {
 		common.SuccessResp(c)
 	}
@@ -44,11 +45,11 @@ func CreateAccount(c *gin.Context) {
 func UpdateAccount(c *gin.Context) {
 	var req model.Account
 	if err := c.ShouldBind(&req); err != nil {
-		common.ErrorResp(c, err, 400, true)
+		common.ErrorResp(c, err, 400)
 		return
 	}
 	if err := operations.UpdateAccount(c, req); err != nil {
-		common.ErrorResp(c, err, 500)
+		common.ErrorResp(c, err, 500, true)
 	} else {
 		common.SuccessResp(c)
 	}
@@ -58,11 +59,11 @@ func DeleteAccount(c *gin.Context) {
 	idStr := c.Query("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		common.ErrorResp(c, err, 400, true)
+		common.ErrorResp(c, err, 400)
 		return
 	}
 	if err := operations.DeleteAccountById(c, uint(id)); err != nil {
-		common.ErrorResp(c, err, 500)
+		common.ErrorResp(c, err, 500, true)
 		return
 	}
 	common.SuccessResp(c)

@@ -1,6 +1,9 @@
 package controllers
 
 import (
+	stdpath "path"
+	"time"
+
 	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/fs"
@@ -11,8 +14,6 @@ import (
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
-	stdpath "path"
-	"time"
 )
 
 type ListReq struct {
@@ -57,7 +58,7 @@ func FsList(c *gin.Context) {
 	}
 	objs, err := fs.List(c, req.Path)
 	if err != nil {
-		common.ErrorResp(c, err, 500, true)
+		common.ErrorResp(c, err, 500)
 		return
 	}
 	total, objs := pagination(objs, &req.PageReq)

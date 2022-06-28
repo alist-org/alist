@@ -15,7 +15,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-var CopyTaskManager = task.NewTaskManager[uint64](3, func(tid *uint64) {
+var CopyTaskManager = task.NewTaskManager(3, func(tid *uint64) {
 	atomic.AddUint64(tid, 1)
 })
 

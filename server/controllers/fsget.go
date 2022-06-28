@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	stdpath "path"
+
 	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/fs"
@@ -8,7 +10,6 @@ import (
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
-	stdpath "path"
 )
 
 type FsGetReq struct {
@@ -32,7 +33,7 @@ func FsGet(c *gin.Context) {
 	meta, err := db.GetNearestMeta(req.Path)
 	if err != nil {
 		if !errors.Is(errors.Cause(err), errs.MetaNotFound) {
-			common.ErrorResp(c, err, 500, true)
+			common.ErrorResp(c, err, 500)
 			return
 		}
 	}
@@ -43,7 +44,7 @@ func FsGet(c *gin.Context) {
 	}
 	obj, err := fs.Get(c, req.Path)
 	if err != nil {
-		common.ErrorResp(c, err, 500, true)
+		common.ErrorResp(c, err, 500)
 		return
 	}
 	common.SuccessResp(c, FsGetResp{

@@ -1,6 +1,9 @@
 package controllers
 
 import (
+	stdpath "path"
+	"strings"
+
 	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
@@ -12,8 +15,6 @@ import (
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
-	stdpath "path"
-	"strings"
 )
 
 func Down(c *gin.Context) {
@@ -31,13 +32,13 @@ func Down(c *gin.Context) {
 		s := c.Param("sign")
 		err = sign.Verify(filename, s)
 		if err != nil {
-			common.ErrorResp(c, err, 401, true)
+			common.ErrorResp(c, err, 401)
 			return
 		}
 	}
 	account, err := fs.GetAccount(rawPath)
 	if err != nil {
-		common.ErrorResp(c, err, 500, true)
+		common.ErrorResp(c, err, 500)
 		return
 	}
 	if needProxy(account, filename) {
@@ -45,12 +46,12 @@ func Down(c *gin.Context) {
 			Header: c.Request.Header,
 		})
 		if err != nil {
-			common.ErrorResp(c, err, 500, true)
+			common.ErrorResp(c, err, 500)
 			return
 		}
 		obj, err := fs.Get(c, rawPath)
 		if err != nil {
-			common.ErrorResp(c, err, 500, true)
+			common.ErrorResp(c, err, 500)
 			return
 		}
 		err = common.Proxy(c.Writer, c.Request, link, obj)
@@ -64,7 +65,7 @@ func Down(c *gin.Context) {
 			Header: c.Request.Header,
 		})
 		if err != nil {
-			common.ErrorResp(c, err, 500, true)
+			common.ErrorResp(c, err, 500)
 			return
 		}
 		c.Redirect(302, link.URL)
