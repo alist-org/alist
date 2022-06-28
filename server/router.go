@@ -13,7 +13,8 @@ func Init(r *gin.Engine) {
 	common.SecretKey = []byte(conf.Conf.JwtSecret)
 	Cors(r)
 
-	r.GET("/d/*path", controllers.Down)
+	r.GET("/d/*path", middlewares.Down, controllers.Down)
+	r.GET("/p/*path", middlewares.Down, controllers.Proxy)
 
 	api := r.Group("/api", middlewares.Auth)
 	api.POST("/auth/login", controllers.Login)

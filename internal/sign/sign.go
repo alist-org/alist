@@ -10,6 +10,15 @@ import (
 var once sync.Once
 var instance sign.Sign
 
+func Sign(data string) string {
+	expire := setting.GetIntSetting("link_expiration", 0)
+	if expire == 0 {
+		return NotExpired(data)
+	} else {
+		return WithDuration(data, time.Duration(expire)*time.Hour)
+	}
+}
+
 func WithDuration(data string, d time.Duration) string {
 	once.Do(Instance)
 	return instance.Sign(data, time.Now().Add(d).Unix())

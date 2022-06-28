@@ -9,7 +9,6 @@ import (
 	"github.com/alist-org/alist/v3/internal/fs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/setting"
-	"github.com/alist-org/alist/v3/internal/sign"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
@@ -108,20 +107,8 @@ func toObjResp(objs []model.Obj, path string, baseURL string) []ObjResp {
 			Size:     obj.GetSize(),
 			IsDir:    obj.IsDir(),
 			Modified: obj.ModTime(),
-			Sign:     Sign(obj),
+			Sign:     common.Sign(obj),
 		})
 	}
 	return resp
-}
-
-func Sign(obj model.Obj) string {
-	if obj.IsDir() {
-		return ""
-	}
-	expire := setting.GetIntSetting("link_expiration", 0)
-	if expire == 0 {
-		return sign.NotExpired(obj.GetName())
-	} else {
-		return sign.WithDuration(obj.GetName(), time.Duration(expire)*time.Hour)
-	}
 }

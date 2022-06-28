@@ -30,13 +30,13 @@ func Get(ctx context.Context, path string) (model.Obj, error) {
 	return res, nil
 }
 
-func Link(ctx context.Context, path string, args model.LinkArgs) (*model.Link, error) {
-	res, err := link(ctx, path, args)
+func Link(ctx context.Context, path string, args model.LinkArgs) (*model.Link, model.Obj, error) {
+	res, file, err := link(ctx, path, args)
 	if err != nil {
 		log.Errorf("failed link %s: %+v", path, err)
-		return nil, err
+		return nil, nil, err
 	}
-	return res, nil
+	return res, file, nil
 }
 
 func MakeDir(ctx context.Context, path string) error {

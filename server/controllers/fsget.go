@@ -53,7 +53,7 @@ func FsGet(c *gin.Context) {
 			Size:     obj.GetSize(),
 			IsDir:    obj.IsDir(),
 			Modified: obj.ModTime(),
-			Sign:     Sign(obj),
+			Sign:     common.Sign(obj),
 		},
 		// TODO: set raw url
 	})

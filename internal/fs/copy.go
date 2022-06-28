@@ -85,7 +85,7 @@ func copyFileBetween2Accounts(tsk *task.Task[uint64], srcAccount, dstAccount dri
 	if err != nil {
 		return errors.WithMessagef(err, "failed get src [%s] file", srcFilePath)
 	}
-	link, err := operations.Link(tsk.Ctx, srcAccount, srcFilePath, model.LinkArgs{})
+	link, _, err := operations.Link(tsk.Ctx, srcAccount, srcFilePath, model.LinkArgs{})
 	if err != nil {
 		return errors.WithMessagef(err, "failed get [%s] link", srcFilePath)
 	}

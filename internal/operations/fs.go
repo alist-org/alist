@@ -115,19 +115,19 @@ var linkCache = cache.NewMemCache(cache.WithShards[*model.Link](16))
 var linkG singleflight.Group[*model.Link]
 
 // Link get link, if is an url. should have an expiry time
-func Link(ctx context.Context, account driver.Driver, path string, args model.LinkArgs) (*model.Link, error) {
+func Link(ctx context.Context, account driver.Driver, path string, args model.LinkArgs) (*model.Link, model.Obj, error) {
+	file, err := Get(ctx, account, path)
+	if err != nil {
+		return nil, nil, errors.WithMessage(err, "failed to get file")
+	}
+	if file.IsDir() {
+		return nil, nil, errors.WithStack(errs.NotFile)
+	}
 	key := stdpath.Join(account.GetAccount().VirtualPath, path)
 	if link, ok := linkCache.Get(key); ok {
-		return link, nil
+		return link, file, nil
 	}
 	fn := func() (*model.Link, error) {
-		file, err := Get(ctx, account, path)
-		if err != nil {
-			return nil, errors.WithMessage(err, "failed to get file")
-		}
-		if file.IsDir() {
-			return nil, errors.WithStack(errs.NotFile)
-		}
 		link, err := account.Link(ctx, file, args)
 		if err != nil {
 			return nil, errors.WithMessage(err, "failed get link")
@@ -138,7 +138,7 @@ func Link(ctx context.Context, account driver.Driver, path string, args model.Li
 		return link, nil
 	}
 	link, err, _ := linkG.Do(key, fn)
-	return link, err
+	return link, file, err
 }
 
 func MakeDir(ctx context.Context, account driver.Driver, path string) error {

@@ -1,66 +1,33 @@
 package controllers
 
 import (
+	"fmt"
+	"github.com/alist-org/alist/v3/internal/sign"
 	stdpath "path"
 	"strings"
 
-	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/driver"
-	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/fs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/setting"
-	"github.com/alist-org/alist/v3/internal/sign"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
-	"github.com/pkg/errors"
 )
 
 func Down(c *gin.Context) {
-	rawPath := parsePath(c.Param("path"))
+	rawPath := c.MustGet("path").(string)
 	filename := stdpath.Base(rawPath)
-	meta, err := db.GetNearestMeta(rawPath)
-	if err != nil {
-		if !errors.Is(errors.Cause(err), errs.MetaNotFound) {
-			common.ErrorResp(c, err, 500, true)
-			return
-		}
-	}
-	// verify sign
-	if needSign(meta, rawPath) {
-		s := c.Param("sign")
-		err = sign.Verify(filename, s)
-		if err != nil {
-			common.ErrorResp(c, err, 401)
-			return
-		}
-	}
 	account, err := fs.GetAccount(rawPath)
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return
 	}
-	if needProxy(account, filename) {
-		link, err := fs.Link(c, rawPath, model.LinkArgs{
-			Header: c.Request.Header,
-		})
-		if err != nil {
-			common.ErrorResp(c, err, 500)
-			return
-		}
-		obj, err := fs.Get(c, rawPath)
-		if err != nil {
-			common.ErrorResp(c, err, 500)
-			return
-		}
-		err = common.Proxy(c.Writer, c.Request, link, obj)
-		if err != nil {
-			common.ErrorResp(c, err, 500, true)
-			return
-		}
+	if shouldProxy(account, filename) {
+		Proxy(c)
+		return
 	} else {
-		link, err := fs.Link(c, rawPath, model.LinkArgs{
+		link, _, err := fs.Link(c, rawPath, model.LinkArgs{
 			IP:     c.ClientIP(),
 			Header: c.Request.Header,
 		})
@@ -72,29 +39,75 @@ func Down(c *gin.Context) {
 	}
 }
 
-// TODO: implement
-// path maybe contains # ? etc.
-func parsePath(path string) string {
-	return utils.StandardizePath(path)
+func Proxy(c *gin.Context) {
+	rawPath := c.MustGet("path").(string)
+	filename := stdpath.Base(rawPath)
+	account, err := fs.GetAccount(rawPath)
+	if err != nil {
+		common.ErrorResp(c, err, 500)
+		return
+	}
+	if canProxy(account, filename) {
+		downProxyUrl := account.GetAccount().DownProxyUrl
+		if downProxyUrl != "" {
+			_, ok := c.GetQuery("d")
+			if ok {
+				URL := fmt.Sprintf("%s%s?sign=%s", strings.Split(downProxyUrl, "\n")[0], rawPath, sign.Sign(filename))
+				c.Redirect(302, URL)
+				return
+			}
+		}
+		link, file, err := fs.Link(c, rawPath, model.LinkArgs{
+			Header: c.Request.Header,
+		})
+		if err != nil {
+			common.ErrorResp(c, err, 500)
+			return
+		}
+		err = common.Proxy(c.Writer, c.Request, link, file)
+		if err != nil {
+			common.ErrorResp(c, err, 500, true)
+			return
+		}
+	} else {
+		common.ErrorStrResp(c, "proxy not allowed", 403)
+		return
+	}
 }
 
-func needSign(meta *model.Meta, path string) bool {
-	if meta == nil || meta.Password == "" {
-		return false
-	}
-	if !meta.SubFolder && path != meta.Path {
-		return false
-	}
-	return true
-}
-
-func needProxy(account driver.Driver, filename string) bool {
-	config := account.Config()
-	if config.MustProxy() {
+// TODO need optimize
+// when should be proxy?
+// 1. config.MustProxy()
+// 2. account.WebProxy
+// 3. proxy_types
+func shouldProxy(account driver.Driver, filename string) bool {
+	if account.Config().MustProxy() || account.GetAccount().WebProxy {
 		return true
 	}
 	proxyTypes := setting.GetByKey("proxy_types")
 	if strings.Contains(proxyTypes, utils.Ext(filename)) {
+		return true
+	}
+	return false
+}
+
+// TODO need optimize
+// when can be proxy?
+// 1. text file
+// 2. config.MustProxy()
+// 3. account.WebProxy
+// 4. proxy_types
+// solution: text_file + shouldProxy()
+func canProxy(account driver.Driver, filename string) bool {
+	if account.Config().MustProxy() || account.GetAccount().WebProxy {
+		return true
+	}
+	proxyTypes := setting.GetByKey("proxy_types")
+	if strings.Contains(proxyTypes, utils.Ext(filename)) {
+		return true
+	}
+	textTypes := setting.GetByKey("text_types")
+	if strings.Contains(textTypes, utils.Ext(filename)) {
 		return true
 	}
 	return false
