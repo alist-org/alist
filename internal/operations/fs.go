@@ -71,6 +71,9 @@ func isRoot(path, rootFolderPath string) bool {
 func Get(ctx context.Context, account driver.Driver, path string) (model.Obj, error) {
 	path = utils.StandardizePath(path)
 	log.Debugf("operations.Get %s", path)
+	if g, ok := account.(driver.Getter); ok {
+		return g.Get(ctx, path)
+	}
 	// is root folder
 	if r, ok := account.GetAddition().(driver.IRootFolderId); ok && utils.PathEqual(path, "/") {
 		return model.Object{

@@ -35,7 +35,10 @@ type Reader interface {
 	List(ctx context.Context, dir model.Obj) ([]model.Obj, error)
 	// Link get url/filepath/reader of file
 	Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error)
-	//Get(ctx context.Context, path string) (FileInfo, error) // maybe not need
+}
+
+type Getter interface {
+	Get(ctx context.Context, path string) (model.Obj, error)
 }
 
 type Writer interface {

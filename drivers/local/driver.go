@@ -76,6 +76,21 @@ func (d *Driver) List(ctx context.Context, dir model.Obj) ([]model.Obj, error) {
 	return files, nil
 }
 
+func (d *Driver) Get(ctx context.Context, path string) (model.Obj, error) {
+	f, err := os.Stat(path)
+	if err != nil {
+		return nil, errors.Wrapf(err, "error while stat %s", path)
+	}
+	file := model.Object{
+		ID:       path,
+		Name:     f.Name(),
+		Modified: f.ModTime(),
+		Size:     f.Size(),
+		IsFolder: f.IsDir(),
+	}
+	return &file, nil
+}
+
 func (d *Driver) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	fullPath := file.GetID()
 	link := model.Link{
