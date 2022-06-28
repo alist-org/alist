@@ -2,7 +2,9 @@ package fs
 
 import (
 	"context"
+	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/operations"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -91,4 +93,12 @@ func PutAsTask(dstDirPath string, file model.FileStreamer) error {
 		log.Errorf("failed put %s: %+v", dstDirPath, err)
 	}
 	return err
+}
+
+func GetAccount(path string) (driver.Driver, error) {
+	accountDriver, _, err := operations.GetAccountAndActualPath(path)
+	if err != nil {
+		return nil, err
+	}
+	return accountDriver, nil
 }

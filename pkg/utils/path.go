@@ -1,6 +1,7 @@
 package utils
 
 import (
+	stdpath "path"
 	"path/filepath"
 	"strings"
 )
@@ -25,4 +26,12 @@ func StandardizePath(path string) string {
 // PathEqual judge path is equal
 func PathEqual(path1, path2 string) bool {
 	return StandardizePath(path1) == StandardizePath(path2)
+}
+
+func Ext(path string) string {
+	ext := stdpath.Ext(path)
+	if strings.HasPrefix(ext, ".") {
+		return ext[1:]
+	}
+	return ext
 }

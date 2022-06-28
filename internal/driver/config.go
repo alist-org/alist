@@ -9,3 +9,7 @@ type Config struct {
 	NoCache       bool
 	NoUpload      bool
 }
+
+func (c Config) MustProxy() bool {
+	return c.OnlyProxy || c.OnlyLocal
+}
