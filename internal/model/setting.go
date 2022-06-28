@@ -5,6 +5,7 @@ const (
 	STYLE
 	PREVIEW
 	GLOBAL
+	SINGLE
 )
 
 const (

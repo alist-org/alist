@@ -43,13 +43,15 @@ func Init(r *gin.Engine) {
 	driver.GET("/items", controllers.GetDriverItems)
 
 	setting := admin.Group("/setting")
+	setting.GET("/get", controllers.GetSetting)
 	setting.GET("/list", controllers.ListSettings)
 	setting.POST("/save", controllers.SaveSettings)
 	setting.POST("/delete", controllers.DeleteSetting)
+	setting.POST("/reset_token", controllers.ResetToken)
 
 	public := api.Group("/public")
 	public.GET("/settings", controllers.PublicSettings)
-	public.GET("/list", controllers.FsList)
+	public.Any("/list", controllers.FsList)
 	public.GET("/get", controllers.FsGet)
 }
 

@@ -3,6 +3,7 @@ package middlewares
 import (
 	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/setting"
 	common2 "github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
 )
@@ -11,6 +12,17 @@ import (
 // if token is empty, set user to guest
 func Auth(c *gin.Context) {
 	token := c.GetHeader("Authorization")
+	if token == setting.GetByKey("token") {
+		admin, err := db.GetAdmin()
+		if err != nil {
+			common2.ErrorResp(c, err, 500)
+			c.Abort()
+			return
+		}
+		c.Set("user", admin)
+		c.Next()
+		return
+	}
 	if token == "" {
 		guest, err := db.GetGuest()
 		if err != nil {

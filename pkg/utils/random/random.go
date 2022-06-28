@@ -17,6 +17,10 @@ func String(n int) string {
 	return string(b)
 }
 
+func Token() string {
+	return String(64)
+}
+
 func init() {
 	s := rand.NewSource(time.Now().UnixNano())
 	Rand = rand.New(s)
