@@ -11,6 +11,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// ActualPath Get the actual path
+// !!! maybe and \ in the path when use windows local
 func ActualPath(account driver.Additional, rawPath string) string {
 	if i, ok := account.(driver.IRootFolderPath); ok {
 		rawPath = stdpath.Join(i.GetRootFolderPath(), rawPath)

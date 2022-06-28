@@ -3,6 +3,7 @@ package utils
 import (
 	stdpath "path"
 	"path/filepath"
+	"runtime"
 	"strings"
 )
 
@@ -10,7 +11,7 @@ import (
 func StandardizePath(path string) string {
 	path = strings.TrimSuffix(path, "/")
 	// abs path
-	if filepath.IsAbs(path) {
+	if filepath.IsAbs(path) && runtime.GOOS == "windows" {
 		return path
 	}
 	// relative path with prefix '..'
