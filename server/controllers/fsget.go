@@ -33,17 +33,18 @@ func FsGet(c *gin.Context) {
 		common.ErrorStrResp(c, "password is incorrect", 401)
 		return
 	}
-	data, err := fs.Get(c, req.Path)
+	obj, err := fs.Get(c, req.Path)
 	if err != nil {
 		common.ErrorResp(c, err, 500, true)
 		return
 	}
 	common.SuccessResp(c, FsGetResp{
 		ObjResp: ObjResp{
-			Name:     data.GetName(),
-			Size:     data.GetSize(),
-			IsDir:    data.IsDir(),
-			Modified: data.ModTime(),
+			Name:     obj.GetName(),
+			Size:     obj.GetSize(),
+			IsDir:    obj.IsDir(),
+			Modified: obj.ModTime(),
+			Sign:     Sign(obj),
 		},
 		// TODO: set raw url
 	})

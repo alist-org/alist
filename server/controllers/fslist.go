@@ -1,11 +1,11 @@
 package controllers
 
 import (
-	"fmt"
 	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/fs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/setting"
+	"github.com/alist-org/alist/v3/internal/sign"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
@@ -24,7 +24,7 @@ type ObjResp struct {
 	Size     int64     `json:"size"`
 	IsDir    bool      `json:"is_dir"`
 	Modified time.Time `json:"modified"`
-	URL      string    `json:"url"`
+	Sign     string    `json:"sign"`
 }
 
 type FsListResp struct {
@@ -99,9 +99,20 @@ func toObjResp(objs []model.Obj, path string, baseURL string) []ObjResp {
 			Size:     obj.GetSize(),
 			IsDir:    obj.IsDir(),
 			Modified: obj.ModTime(),
-			// TODO: sign url
-			URL: fmt.Sprintf("%s/d%s", baseURL, stdpath.Join(path, obj.GetName())),
+			Sign:     Sign(obj),
 		})
 	}
 	return resp
+}
+
+func Sign(obj model.Obj) string {
+	if obj.IsDir() {
+		return ""
+	}
+	expire := setting.GetIntSetting("link_expiration", 0)
+	if expire == 0 {
+		return sign.NotExpired(obj.GetName())
+	} else {
+		return sign.WithDuration(obj.GetName(), time.Duration(expire)*time.Hour)
+	}
 }

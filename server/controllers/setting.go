@@ -4,6 +4,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/sign"
 	"github.com/alist-org/alist/v3/pkg/utils/random"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
@@ -17,6 +18,7 @@ func ResetToken(c *gin.Context) {
 		common.ErrorResp(c, err, 500)
 		return
 	}
+	sign.Instance()
 	common.SuccessResp(c, token)
 }
 

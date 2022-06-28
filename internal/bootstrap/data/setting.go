@@ -88,6 +88,7 @@ func initialSettings() {
 		{Key: "global_readme", Value: "This is global readme", Type: conf.TypeText, Group: model.GLOBAL},
 		{Key: "customize_head", Type: conf.TypeText, Group: model.GLOBAL, Flag: model.PRIVATE},
 		{Key: "customize_body", Type: conf.TypeText, Group: model.GLOBAL, Flag: model.PRIVATE},
+		{Key: "link_expiration", Value: "4", Type: conf.TypeNumber, Group: model.GLOBAL, Flag: model.PRIVATE},
 		// single settings
 		{Key: "token", Value: token, Type: conf.TypeString, Group: model.SINGLE, Flag: model.PRIVATE},
 	}
