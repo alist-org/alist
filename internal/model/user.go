@@ -21,6 +21,7 @@ type User struct {
 	Role           int    `json:"role"`                                      // user's role
 	IgnoreHide     bool   `json:"can_hide"`                                  // can see hide files
 	IgnorePassword bool   `json:"ignore_password"`                           // can access without password
+	Aira2          bool   `json:"aira_2"`                                    // can add aria2 tasks
 }
 
 func (u User) IsGuest() bool {
@@ -39,4 +40,8 @@ func (u User) ValidatePassword(password string) error {
 		return errors.WithStack(errs.WrongPassword)
 	}
 	return nil
+}
+
+func (u User) CanWrite() bool {
+	return u.IsAdmin() || !u.ReadOnly
 }

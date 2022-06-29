@@ -114,7 +114,7 @@ func toObjResp(objs []model.Obj) []ObjResp {
 	return resp
 }
 
-type FsGetReq struct {
+type FsGetOrLinkReq struct {
 	Path     string `json:"path" form:"path"`
 	Password string `json:"password" form:"password"`
 }
@@ -125,7 +125,7 @@ type FsGetResp struct {
 }
 
 func FsGet(c *gin.Context) {
-	var req FsGetReq
+	var req FsGetOrLinkReq
 	if err := c.ShouldBind(&req); err != nil {
 		common.ErrorResp(c, err, 400)
 		return

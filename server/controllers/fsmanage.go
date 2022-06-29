@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"fmt"
+	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/fs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/sign"
@@ -24,11 +25,29 @@ func FsMkdir(c *gin.Context) {
 	}
 	user := c.MustGet("user").(*model.User)
 	req.Path = stdpath.Join(user.BasePath, req.Path)
+	if !user.CanWrite() {
+		meta, err := db.GetNearestMeta(req.Path)
+		if err != nil {
+			common.ErrorResp(c, err, 500)
+			return
+		}
+		if !canMkdirOrPut(meta, req.Path) {
+			common.ErrorStrResp(c, "Permission denied", 403)
+			return
+		}
+	}
 	if err := fs.MakeDir(c, req.Path); err != nil {
 		common.ErrorResp(c, err, 500)
 		return
 	}
 	common.SuccessResp(c)
+}
+
+func canMkdirOrPut(meta *model.Meta, path string) bool {
+	if meta == nil || !meta.Write {
+		return false
+	}
+	return meta.SubFolder || meta.Path == path
 }
 
 type MoveCopyReq struct {
@@ -142,6 +161,18 @@ func FsPut(c *gin.Context) {
 	path := c.GetHeader("File-Path")
 	user := c.MustGet("user").(*model.User)
 	path = stdpath.Join(user.BasePath, path)
+	if !user.CanWrite() {
+		meta, err := db.GetNearestMeta(path)
+		if err != nil {
+			common.ErrorResp(c, err, 500)
+			return
+		}
+		if !canMkdirOrPut(meta, path) {
+			common.ErrorStrResp(c, "Permission denied", 403)
+			return
+		}
+	}
+
 	dir, name := stdpath.Split(path)
 	sizeStr := c.GetHeader("Content-Length")
 	size, err := strconv.ParseInt(sizeStr, 10, 64)
@@ -164,9 +195,9 @@ func FsPut(c *gin.Context) {
 	common.SuccessResp(c)
 }
 
-// Link return real link, just for proxy program
+// Link return real link, just for proxy program, it may contain cookie
 func Link(c *gin.Context) {
-	var req MkdirOrLinkReq
+	var req FsGetOrLinkReq
 	if err := c.ShouldBind(&req); err != nil {
 		common.ErrorResp(c, err, 400)
 		return

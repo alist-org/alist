@@ -57,14 +57,14 @@ func Init(r *gin.Engine) {
 	public.Any("/list", controllers.FsList)
 	public.Any("/get", controllers.FsGet)
 
-	fs := api.Group("/fs", middlewares.AuthWrite)
+	fs := api.Group("/fs")
 	fs.POST("/mkdir", controllers.FsMkdir)
-	fs.POST("/rename", controllers.FsRename)
-	fs.POST("/move", controllers.FsMove)
-	fs.POST("/copy", controllers.FsCopy)
-	fs.POST("/remove", controllers.FsRemove)
+	fs.POST("/rename", middlewares.AuthManage, controllers.FsRename)
+	fs.POST("/move", middlewares.AuthManage, controllers.FsMove)
+	fs.POST("/copy", middlewares.AuthManage, controllers.FsCopy)
+	fs.POST("/remove", middlewares.AuthManage, controllers.FsRemove)
 	fs.POST("/put", controllers.FsPut)
-	fs.POST("/link", controllers.Link)
+	fs.POST("/link", middlewares.AuthAdmin, controllers.Link)
 }
 
 func Cors(r *gin.Engine) {
