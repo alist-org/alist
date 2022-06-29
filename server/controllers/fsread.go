@@ -71,7 +71,7 @@ func FsList(c *gin.Context) {
 
 func canAccess(user *model.User, meta *model.Meta, path string, password string) bool {
 	// if is not guest, can access
-	if user.IsAdmin() || user.IgnorePassword {
+	if user.CanAccessWithoutPassword() {
 		return true
 	}
 	// if meta is nil or password is empty, can access

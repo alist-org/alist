@@ -12,16 +12,24 @@ const (
 )
 
 type User struct {
-	ID             uint   `json:"id" gorm:"primaryKey"`                      // unique key
-	Username       string `json:"username" gorm:"unique" binding:"required"` // username
-	Password       string `json:"password"`                                  // password
-	BasePath       string `json:"base_path"`                                 // base path
-	ReadOnly       bool   `json:"read_only"`                                 // read only
-	Webdav         bool   `json:"webdav"`                                    // allow webdav
-	Role           int    `json:"role"`                                      // user's role
-	IgnoreHide     bool   `json:"can_hide"`                                  // can see hide files
-	IgnorePassword bool   `json:"ignore_password"`                           // can access without password
-	Aira2          bool   `json:"aira_2"`                                    // can add aria2 tasks
+	ID       uint   `json:"id" gorm:"primaryKey"`                      // unique key
+	Username string `json:"username" gorm:"unique" binding:"required"` // username
+	Password string `json:"password"`                                  // password
+	BasePath string `json:"base_path"`                                 // base path
+	Role     int    `json:"role"`                                      // user's role
+	// Determine permissions by bit
+	//  0: can see hidden files
+	//  1: can access without password
+	//  2: can add aria2 tasks
+	//  3: can mkdir
+	//  4: can upload
+	//  5: can rename
+	//  6: can move
+	//  7: can copy
+	//  8: can remove
+	//  9: webdav read
+	// 10: webdav write
+	Permission int32 `json:"permission"`
 }
 
 func (u User) IsGuest() bool {
@@ -42,6 +50,46 @@ func (u User) ValidatePassword(password string) error {
 	return nil
 }
 
-func (u User) CanWrite() bool {
-	return u.IsAdmin() || !u.ReadOnly
+func (u User) CanSeeHides() bool {
+	return u.IsAdmin() || u.Permission&1 == 1
+}
+
+func (u User) CanAccessWithoutPassword() bool {
+	return u.IsAdmin() || (u.Permission>>1)&1 == 1
+}
+
+func (u User) CanAddAria2Tasks() bool {
+	return u.IsAdmin() || (u.Permission>>2)&1 == 1
+}
+
+func (u User) CanMkdir() bool {
+	return u.IsAdmin() || (u.Permission>>3)&1 == 1
+}
+
+func (u User) CanUpload() bool {
+	return u.IsAdmin() || (u.Permission>>4)&1 == 1
+}
+
+func (u User) CanRename() bool {
+	return u.IsAdmin() || (u.Permission>>5)&1 == 1
+}
+
+func (u User) CanMove() bool {
+	return u.IsAdmin() || (u.Permission>>6)&1 == 1
+}
+
+func (u User) CanCopy() bool {
+	return u.IsAdmin() || (u.Permission>>7)&1 == 1
+}
+
+func (u User) CanRemove() bool {
+	return u.IsAdmin() || (u.Permission>>8)&1 == 1
+}
+
+func (u User) CanWebdavRead() bool {
+	return u.IsAdmin() || (u.Permission>>9)&1 == 1
+}
+
+func (u User) CanWebdavWrite() bool {
+	return u.IsAdmin() || (u.Permission>>10)&1 == 1
 }

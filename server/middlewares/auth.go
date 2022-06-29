@@ -60,13 +60,3 @@ func AuthAdmin(c *gin.Context) {
 		c.Next()
 	}
 }
-
-func AuthManage(c *gin.Context) {
-	user := c.MustGet("user").(*model.User)
-	if user.CanWrite() {
-		c.Next()
-		return
-	}
-	common.ErrorStrResp(c, "You have no write access", 403)
-	c.Abort()
-}

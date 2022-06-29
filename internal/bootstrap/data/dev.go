@@ -20,14 +20,11 @@ func initDevData() {
 		log.Fatalf("failed to create account: %+v", err)
 	}
 	err = db.CreateUser(&model.User{
-		Username:       "Noah",
-		Password:       "hsu",
-		BasePath:       "/data",
-		ReadOnly:       false,
-		Webdav:         false,
-		Role:           0,
-		IgnoreHide:     false,
-		IgnorePassword: false,
+		Username:   "Noah",
+		Password:   "hsu",
+		BasePath:   "/data",
+		Role:       0,
+		Permission: 512,
 	})
 	if err != nil {
 		log.Fatalf("failed to create user: %+v", err)

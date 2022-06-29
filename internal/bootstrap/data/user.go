@@ -23,7 +23,6 @@ func initUser() {
 				Password: adminPassword,
 				Role:     model.ADMIN,
 				BasePath: "/",
-				Webdav:   true,
 			}
 			if err := db.CreateUser(admin); err != nil {
 				panic(err)
@@ -36,12 +35,11 @@ func initUser() {
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			guest = &model.User{
-				Username: "guest",
-				Password: "guest",
-				ReadOnly: true,
-				Webdav:   true,
-				Role:     model.GUEST,
-				BasePath: "/",
+				Username:   "guest",
+				Password:   "guest",
+				Role:       model.GUEST,
+				BasePath:   "/",
+				Permission: 512,
 			}
 			if err := db.CreateUser(guest); err != nil {
 				panic(err)

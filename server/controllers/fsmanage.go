@@ -3,6 +3,7 @@ package controllers
 import (
 	"fmt"
 	"github.com/alist-org/alist/v3/internal/db"
+	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/fs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/sign"
@@ -25,14 +26,14 @@ func FsMkdir(c *gin.Context) {
 	}
 	user := c.MustGet("user").(*model.User)
 	req.Path = stdpath.Join(user.BasePath, req.Path)
-	if !user.CanWrite() {
+	if !user.CanMkdir() {
 		meta, err := db.GetNearestMeta(req.Path)
 		if err != nil {
 			common.ErrorResp(c, err, 500)
 			return
 		}
 		if !canMkdirOrPut(meta, req.Path) {
-			common.ErrorStrResp(c, "Permission denied", 403)
+			common.ErrorResp(c, errs.PermissionDenied, 403)
 			return
 		}
 	}
@@ -67,6 +68,10 @@ func FsMove(c *gin.Context) {
 		return
 	}
 	user := c.MustGet("user").(*model.User)
+	if !user.CanMove() {
+		common.ErrorResp(c, errs.PermissionDenied, 403)
+		return
+	}
 	req.SrcDir = stdpath.Join(user.BasePath, req.SrcDir)
 	req.DstDir = stdpath.Join(user.BasePath, req.DstDir)
 	for _, name := range req.Names {
@@ -90,6 +95,10 @@ func FsCopy(c *gin.Context) {
 		return
 	}
 	user := c.MustGet("user").(*model.User)
+	if !user.CanCopy() {
+		common.ErrorResp(c, errs.PermissionDenied, 403)
+		return
+	}
 	req.SrcDir = stdpath.Join(user.BasePath, req.SrcDir)
 	req.DstDir = stdpath.Join(user.BasePath, req.DstDir)
 	var addedTask []string
@@ -122,6 +131,10 @@ func FsRename(c *gin.Context) {
 		return
 	}
 	user := c.MustGet("user").(*model.User)
+	if !user.CanRename() {
+		common.ErrorResp(c, errs.PermissionDenied, 403)
+		return
+	}
 	req.Path = stdpath.Join(user.BasePath, req.Path)
 	if err := fs.Rename(c, req.Path, req.Name); err != nil {
 		common.ErrorResp(c, err, 500)
@@ -146,6 +159,10 @@ func FsRemove(c *gin.Context) {
 		return
 	}
 	user := c.MustGet("user").(*model.User)
+	if !user.CanRemove() {
+		common.ErrorResp(c, errs.PermissionDenied, 403)
+		return
+	}
 	req.Path = stdpath.Join(user.BasePath, req.Path)
 	for _, name := range req.Names {
 		err := fs.Remove(c, stdpath.Join(req.Path, name))
@@ -161,14 +178,14 @@ func FsPut(c *gin.Context) {
 	path := c.GetHeader("File-Path")
 	user := c.MustGet("user").(*model.User)
 	path = stdpath.Join(user.BasePath, path)
-	if !user.CanWrite() {
+	if !user.CanUpload() {
 		meta, err := db.GetNearestMeta(path)
 		if err != nil {
 			common.ErrorResp(c, err, 500)
 			return
 		}
 		if !canMkdirOrPut(meta, path) {
-			common.ErrorStrResp(c, "Permission denied", 403)
+			common.ErrorResp(c, errs.PermissionDenied, 403)
 			return
 		}
 	}

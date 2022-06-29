@@ -51,20 +51,24 @@ func Init(r *gin.Engine) {
 	setting.POST("/save", controllers.SaveSettings)
 	setting.POST("/delete", controllers.DeleteSetting)
 	setting.POST("/reset_token", controllers.ResetToken)
+	setting.POST("/set_aria2", controllers.SetAria2)
 
+	// guest can
 	public := api.Group("/public")
 	public.GET("/settings", controllers.PublicSettings)
 	public.Any("/list", controllers.FsList)
 	public.Any("/get", controllers.FsGet)
 
+	// gust can't
 	fs := api.Group("/fs")
 	fs.POST("/mkdir", controllers.FsMkdir)
-	fs.POST("/rename", middlewares.AuthManage, controllers.FsRename)
-	fs.POST("/move", middlewares.AuthManage, controllers.FsMove)
-	fs.POST("/copy", middlewares.AuthManage, controllers.FsCopy)
-	fs.POST("/remove", middlewares.AuthManage, controllers.FsRemove)
+	fs.POST("/rename", controllers.FsRename)
+	fs.POST("/move", controllers.FsMove)
+	fs.POST("/copy", controllers.FsCopy)
+	fs.POST("/remove", controllers.FsRemove)
 	fs.POST("/put", controllers.FsPut)
 	fs.POST("/link", middlewares.AuthAdmin, controllers.Link)
+	fs.POST("/add_aria2", controllers.AddAria2)
 }
 
 func Cors(r *gin.Engine) {

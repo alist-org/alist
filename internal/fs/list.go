@@ -66,7 +66,7 @@ func whetherHide(user *model.User, meta *model.Meta, path string) bool {
 	if user.IsGuest() {
 		return true
 	}
-	return !user.IgnoreHide
+	return !user.CanSeeHides()
 }
 
 func hide(objs []model.Obj, meta *model.Meta) {

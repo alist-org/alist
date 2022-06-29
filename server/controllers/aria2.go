@@ -44,7 +44,7 @@ type AddAria2Req struct {
 
 func AddAria2(c *gin.Context) {
 	user := c.MustGet("user").(*model.User)
-	if !user.IsAdmin() && !user.Aira2 {
+	if !user.CanAddAria2Tasks() {
 		common.ErrorStrResp(c, "permission denied", 403)
 		return
 	}
