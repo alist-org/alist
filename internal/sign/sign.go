@@ -1,6 +1,7 @@
 package sign
 
 import (
+	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/setting"
 	"github.com/alist-org/alist/v3/pkg/sign"
 	"sync"
@@ -11,7 +12,7 @@ var once sync.Once
 var instance sign.Sign
 
 func Sign(data string) string {
-	expire := setting.GetIntSetting("link_expiration", 0)
+	expire := setting.GetIntSetting(conf.LinkExpiration, 0)
 	if expire == 0 {
 		return NotExpired(data)
 	} else {
@@ -35,5 +36,5 @@ func Verify(data string, sign string) error {
 }
 
 func Instance() {
-	instance = sign.NewHMACSign([]byte(setting.GetByKey("token")))
+	instance = sign.NewHMACSign([]byte(setting.GetByKey(conf.Token)))
 }

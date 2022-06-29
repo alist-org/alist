@@ -8,7 +8,6 @@ import (
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/fs"
 	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/internal/setting"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
@@ -61,9 +60,8 @@ func FsList(c *gin.Context) {
 		return
 	}
 	total, objs := pagination(objs, &req.PageReq)
-	baseURL := setting.GetByKey("base_url", c.Request.Host)
 	common.SuccessResp(c, FsListResp{
-		Content: toObjResp(objs, req.Path, baseURL),
+		Content: toObjResp(objs),
 		Total:   int64(total),
 	})
 }
@@ -99,7 +97,7 @@ func pagination(objs []model.Obj, req *common.PageReq) (int, []model.Obj) {
 	return total, objs[start:end]
 }
 
-func toObjResp(objs []model.Obj, path string, baseURL string) []ObjResp {
+func toObjResp(objs []model.Obj) []ObjResp {
 	var resp []ObjResp
 	for _, obj := range objs {
 		resp = append(resp, ObjResp{
@@ -111,4 +109,51 @@ func toObjResp(objs []model.Obj, path string, baseURL string) []ObjResp {
 		})
 	}
 	return resp
+}
+
+type FsGetReq struct {
+	Path     string `json:"path" form:"path"`
+	Password string `json:"password" form:"password"`
+}
+
+type FsGetResp struct {
+	ObjResp
+	RawURL string `json:"raw_url"`
+}
+
+func FsGet(c *gin.Context) {
+	var req FsGetReq
+	if err := c.ShouldBind(&req); err != nil {
+		common.ErrorResp(c, err, 400)
+		return
+	}
+	user := c.MustGet("user").(*model.User)
+	req.Path = stdpath.Join(user.BasePath, req.Path)
+	meta, err := db.GetNearestMeta(req.Path)
+	if err != nil {
+		if !errors.Is(errors.Cause(err), errs.MetaNotFound) {
+			common.ErrorResp(c, err, 500)
+			return
+		}
+	}
+	c.Set("meta", meta)
+	if !canAccess(user, meta, req.Path, req.Password) {
+		common.ErrorStrResp(c, "password is incorrect", 401)
+		return
+	}
+	obj, err := fs.Get(c, req.Path)
+	if err != nil {
+		common.ErrorResp(c, err, 500)
+		return
+	}
+	common.SuccessResp(c, FsGetResp{
+		ObjResp: ObjResp{
+			Name:     obj.GetName(),
+			Size:     obj.GetSize(),
+			IsDir:    obj.IsDir(),
+			Modified: obj.ModTime(),
+			Sign:     common.Sign(obj),
+		},
+		// TODO: set raw url
+	})
 }

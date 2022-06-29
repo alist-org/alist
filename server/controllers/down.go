@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"fmt"
+	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/sign"
 	stdpath "path"
 	"strings"
@@ -84,7 +85,7 @@ func shouldProxy(account driver.Driver, filename string) bool {
 	if account.Config().MustProxy() || account.GetAccount().WebProxy {
 		return true
 	}
-	proxyTypes := setting.GetByKey("proxy_types")
+	proxyTypes := setting.GetByKey(conf.ProxyTypes)
 	if strings.Contains(proxyTypes, utils.Ext(filename)) {
 		return true
 	}
@@ -102,11 +103,11 @@ func canProxy(account driver.Driver, filename string) bool {
 	if account.Config().MustProxy() || account.GetAccount().WebProxy {
 		return true
 	}
-	proxyTypes := setting.GetByKey("proxy_types")
+	proxyTypes := setting.GetByKey(conf.ProxyTypes)
 	if strings.Contains(proxyTypes, utils.Ext(filename)) {
 		return true
 	}
-	textTypes := setting.GetByKey("text_types")
+	textTypes := setting.GetByKey(conf.TextTypes)
 	if strings.Contains(textTypes, utils.Ext(filename)) {
 		return true
 	}

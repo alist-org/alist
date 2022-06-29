@@ -67,29 +67,29 @@ func initialSettings() {
 	}
 	initialSettingItems = []model.SettingItem{
 		// site settings
-		{Key: "version", Value: conf.Version, Type: conf.TypeString, Group: model.SITE, Flag: model.READONLY},
-		{Key: "base_url", Value: "", Type: conf.TypeString, Group: model.SITE},
-		{Key: "site_title", Value: "AList", Type: conf.TypeString, Group: model.SITE},
-		{Key: "site_logo", Value: "https://cdn.jsdelivr.net/gh/alist-org/logo@main/logo.svg", Type: conf.TypeString, Group: model.SITE},
-		{Key: "favicon", Value: "https://cdn.jsdelivr.net/gh/alist-org/logo@main/logo.svg", Type: conf.TypeString, Group: model.SITE},
-		{Key: "announcement", Value: "https://github.com/alist-org/alist", Type: conf.TypeString, Group: model.SITE},
+		{Key: conf.VERSION, Value: conf.Version, Type: conf.TypeString, Group: model.SITE, Flag: model.READONLY},
+		{Key: conf.BaseUrl, Value: "", Type: conf.TypeString, Group: model.SITE},
+		{Key: conf.SiteTitle, Value: "AList", Type: conf.TypeString, Group: model.SITE},
+		{Key: conf.SiteLogo, Value: "https://cdn.jsdelivr.net/gh/alist-org/logo@main/logo.svg", Type: conf.TypeString, Group: model.SITE},
+		{Key: conf.Favicon, Value: "https://cdn.jsdelivr.net/gh/alist-org/logo@main/logo.svg", Type: conf.TypeString, Group: model.SITE},
+		{Key: conf.Announcement, Value: "https://github.com/alist-org/alist", Type: conf.TypeString, Group: model.SITE},
 		// style settings
-		{Key: "icon_color", Value: "#1890ff", Type: conf.TypeString, Group: model.STYLE},
+		{Key: conf.IconColor, Value: "#1890ff", Type: conf.TypeString, Group: model.STYLE},
 		// preview settings
-		{Key: "text_types", Value: "txt,htm,html,xml,java,properties,sql,js,md,json,conf,ini,vue,php,py,bat,gitignore,yml,go,sh,c,cpp,h,hpp,tsx,vtt,srt,ass,rs,lrc", Type: conf.TypeText, Group: model.PREVIEW, Flag: model.PRIVATE},
-		{Key: "audio_types", Value: "mp3,flac,ogg,m4a,wav,opus", Type: conf.TypeText, Group: model.PREVIEW, Flag: model.PRIVATE},
-		{Key: "video_types", Value: "mp4,mkv,avi,mov,rmvb,webm,flv", Type: conf.TypeText, Group: model.PREVIEW, Flag: model.PRIVATE},
-		{Key: "proxy_types", Value: "m3u8", Type: conf.TypeText, Group: model.PREVIEW, Flag: model.PRIVATE},
-		{Key: "pdf_viewer_url", Value: "https://alist-org.github.io/pdf.js/web/viewer.html?file=$url", Type: conf.TypeString, Group: model.PREVIEW},
-		{Key: "audio_autoplay", Value: "true", Type: conf.TypeBool, Group: model.PREVIEW},
-		{Key: "video_autoplay", Value: "true", Type: conf.TypeBool, Group: model.PREVIEW},
+		{Key: conf.TextTypes, Value: "txt,htm,html,xml,java,properties,sql,js,md,json,conf,ini,vue,php,py,bat,gitignore,yml,go,sh,c,cpp,h,hpp,tsx,vtt,srt,ass,rs,lrc", Type: conf.TypeText, Group: model.PREVIEW, Flag: model.PRIVATE},
+		{Key: conf.AudioTypes, Value: "mp3,flac,ogg,m4a,wav,opus", Type: conf.TypeText, Group: model.PREVIEW, Flag: model.PRIVATE},
+		{Key: conf.VideoTypes, Value: "mp4,mkv,avi,mov,rmvb,webm,flv", Type: conf.TypeText, Group: model.PREVIEW, Flag: model.PRIVATE},
+		{Key: conf.ProxyTypes, Value: "m3u8", Type: conf.TypeText, Group: model.PREVIEW, Flag: model.PRIVATE},
+		{Key: conf.PdfViewerUrl, Value: "https://alist-org.github.io/pdf.js/web/viewer.html?file=$url", Type: conf.TypeString, Group: model.PREVIEW},
+		{Key: conf.AudioAutoplay, Value: "true", Type: conf.TypeBool, Group: model.PREVIEW},
+		{Key: conf.VideoAutoplay, Value: "true", Type: conf.TypeBool, Group: model.PREVIEW},
 		// global settings
-		{Key: "hide_files", Value: "/\\/README.md/i", Type: conf.TypeText, Group: model.GLOBAL},
-		{Key: "global_readme", Value: "This is global readme", Type: conf.TypeText, Group: model.GLOBAL},
-		{Key: "customize_head", Type: conf.TypeText, Group: model.GLOBAL, Flag: model.PRIVATE},
-		{Key: "customize_body", Type: conf.TypeText, Group: model.GLOBAL, Flag: model.PRIVATE},
-		{Key: "link_expiration", Value: "0", Type: conf.TypeNumber, Group: model.GLOBAL, Flag: model.PRIVATE},
+		{Key: conf.HideFiles, Value: "/\\/README.md/i", Type: conf.TypeText, Group: model.GLOBAL},
+		{Key: conf.GlobalReadme, Value: "This is global readme", Type: conf.TypeText, Group: model.GLOBAL},
+		{Key: conf.CustomizeHead, Type: conf.TypeText, Group: model.GLOBAL, Flag: model.PRIVATE},
+		{Key: conf.CustomizeBody, Type: conf.TypeText, Group: model.GLOBAL, Flag: model.PRIVATE},
+		{Key: conf.LinkExpiration, Value: "0", Type: conf.TypeNumber, Group: model.GLOBAL, Flag: model.PRIVATE},
 		// single settings
-		{Key: "token", Value: token, Type: conf.TypeString, Group: model.SINGLE, Flag: model.PRIVATE},
+		{Key: conf.Token, Value: token, Type: conf.TypeString, Group: model.SINGLE, Flag: model.PRIVATE},
 	}
 }

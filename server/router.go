@@ -56,11 +56,20 @@ func Init(r *gin.Engine) {
 	public.GET("/settings", controllers.PublicSettings)
 	public.Any("/list", controllers.FsList)
 	public.Any("/get", controllers.FsGet)
+
+	fs := api.Group("/fs", middlewares.AuthWrite)
+	fs.POST("/mkdir", controllers.FsMkdir)
+	fs.POST("/rename", controllers.FsRename)
+	fs.POST("/move", controllers.FsMove)
+	fs.POST("/copy", controllers.FsCopy)
+	fs.POST("/remove", controllers.FsRemove)
+	fs.POST("/put", controllers.FsPut)
+	fs.POST("/link", controllers.Link)
 }
 
 func Cors(r *gin.Engine) {
 	config := cors.DefaultConfig()
 	config.AllowAllOrigins = true
-	config.AllowHeaders = append(config.AllowHeaders, "Authorization", "range")
+	config.AllowHeaders = append(config.AllowHeaders, "Authorization", "range", "File-Path")
 	r.Use(cors.New(config))
 }

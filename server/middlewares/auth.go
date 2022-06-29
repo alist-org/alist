@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/setting"
@@ -12,7 +13,7 @@ import (
 // if token is empty, set user to guest
 func Auth(c *gin.Context) {
 	token := c.GetHeader("Authorization")
-	if token == setting.GetByKey("token") {
+	if token == setting.GetByKey(conf.Token) {
 		admin, err := db.GetAdmin()
 		if err != nil {
 			common.ErrorResp(c, err, 500)
@@ -54,6 +55,16 @@ func AuthAdmin(c *gin.Context) {
 	user := c.MustGet("user").(*model.User)
 	if !user.IsAdmin() {
 		common.ErrorStrResp(c, "You are not an admin", 403)
+		c.Abort()
+	} else {
+		c.Next()
+	}
+}
+
+func AuthWrite(c *gin.Context) {
+	user := c.MustGet("user").(*model.User)
+	if !user.IsAdmin() && user.ReadOnly {
+		common.ErrorStrResp(c, "You have no write access", 403)
 		c.Abort()
 	} else {
 		c.Next()

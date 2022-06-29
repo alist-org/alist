@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/alist-org/alist/v3/internal/fs"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/sign"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
 	stdpath "path"
@@ -11,12 +12,12 @@ import (
 	"time"
 )
 
-type MkdirReq struct {
-	Path string `json:"path"`
+type MkdirOrLinkReq struct {
+	Path string `json:"path" form:"path"`
 }
 
 func FsMkdir(c *gin.Context) {
-	var req MkdirReq
+	var req MkdirOrLinkReq
 	if err := c.ShouldBind(&req); err != nil {
 		common.ErrorResp(c, err, 400)
 		return
@@ -161,4 +162,33 @@ func FsPut(c *gin.Context) {
 		return
 	}
 	common.SuccessResp(c)
+}
+
+// Link return real link, just for proxy program
+func Link(c *gin.Context) {
+	var req MkdirOrLinkReq
+	if err := c.ShouldBind(&req); err != nil {
+		common.ErrorResp(c, err, 400)
+		return
+	}
+	user := c.MustGet("user").(*model.User)
+	rawPath := stdpath.Join(user.BasePath, req.Path)
+	account, err := fs.GetAccount(rawPath)
+	if err != nil {
+		common.ErrorResp(c, err, 500)
+		return
+	}
+	if account.Config().OnlyLocal {
+		common.SuccessResp(c, model.Link{
+			URL: fmt.Sprintf("%s/p%s?d&sign=%s", common.GetBaseUrl(c.Request), req.Path, sign.Sign(stdpath.Base(rawPath))),
+		})
+		return
+	}
+	link, _, err := fs.Link(c, rawPath, model.LinkArgs{IP: c.ClientIP()})
+	if err != nil {
+		common.ErrorResp(c, err, 500)
+		return
+	}
+	common.SuccessResp(c, link)
+	return
 }
