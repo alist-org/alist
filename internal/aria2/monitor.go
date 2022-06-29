@@ -59,8 +59,9 @@ outer:
 	if err != nil {
 		return err
 	}
-	m.tsk.SetStatus("aria2 download completed, waiting for transfer")
+	m.tsk.SetStatus("aria2 download completed, transferring")
 	<-m.finish
+	m.tsk.SetStatus("completed")
 	return nil
 }
 
@@ -88,7 +89,8 @@ func (m *Monitor) Update() (bool, error) {
 	if err != nil {
 		downloaded = 0
 	}
-	m.tsk.SetProgress(int(float64(downloaded) / float64(total)))
+	progress := float64(downloaded) / float64(total) * 100
+	m.tsk.SetProgress(int(progress))
 	switch info.Status {
 	case "complete":
 		err := m.Complete()

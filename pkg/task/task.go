@@ -43,8 +43,23 @@ func (t *Task[K]) SetProgress(percentage int) {
 	t.progress = percentage
 }
 
-func (t *Task[K]) GetState() string {
+func (t Task[K]) GetProgress() int {
+	return t.progress
+}
+
+func (t Task[K]) GetState() string {
 	return t.state
+}
+
+func (t Task[K]) GetStatus() string {
+	return t.status
+}
+
+func (t Task[K]) GetErrMsg() string {
+	if t.Error == nil {
+		return ""
+	}
+	return t.Error.Error()
 }
 
 func (t *Task[K]) run() {
