@@ -32,6 +32,9 @@ func (tm *Manager[K]) do(task *Task[K]) {
 			log.Debugf("task [%s] starting", task.Name)
 			task.run()
 			log.Debugf("task [%s] ended", task.Name)
+		case <-task.Ctx.Done():
+			log.Debugf("task [%s] canceled", task.Name)
+			return
 		}
 		// return worker
 		tm.workerC <- struct{}{}
