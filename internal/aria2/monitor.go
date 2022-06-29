@@ -22,6 +22,7 @@ type Monitor struct {
 	retried    int
 	c          chan int
 	dstDirPath string
+	finish     chan struct{}
 }
 
 func (m *Monitor) Loop() error {
@@ -31,24 +32,36 @@ func (m *Monitor) Loop() error {
 		//_ = os.RemoveAll(m.tempDir)
 	}()
 	m.c = make(chan int)
+	m.finish = make(chan struct{})
 	notify.Signals.Store(m.tsk.ID, m.c)
+	var (
+		err error
+		ok  bool
+	)
+outer:
 	for {
 		select {
 		case <-m.tsk.Ctx.Done():
 			_, err := client.Remove(m.tsk.ID)
 			return err
 		case <-m.c:
-			ok, err := m.Update()
+			ok, err = m.Update()
 			if ok {
-				return err
+				break outer
 			}
 		case <-time.After(time.Second * 5):
-			ok, err := m.Update()
+			ok, err = m.Update()
 			if ok {
-				return err
+				break outer
 			}
 		}
 	}
+	if err != nil {
+		return err
+	}
+	m.tsk.SetStatus("aria2 download completed, waiting for transfer")
+	<-m.finish
+	return nil
 }
 
 func (m *Monitor) Update() (bool, error) {
@@ -113,6 +126,7 @@ func (m *Monitor) Complete() error {
 	go func() {
 		wg.Wait()
 		err := os.RemoveAll(m.tempDir)
+		m.finish <- struct{}{}
 		if err != nil {
 			log.Errorf("failed to remove aria2 temp dir: %+v", err.Error())
 		}
