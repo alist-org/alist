@@ -35,6 +35,7 @@ func Init() {
 	bootstrap2.Log()
 	bootstrap2.InitDB()
 	data.InitData()
+	bootstrap2.InitAria2()
 }
 func main() {
 	Init()
