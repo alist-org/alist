@@ -6,6 +6,7 @@ const (
 	PREVIEW
 	GLOBAL
 	SINGLE
+	ARIA2
 )
 
 const (

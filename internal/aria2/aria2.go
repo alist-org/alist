@@ -2,6 +2,8 @@ package aria2
 
 import (
 	"context"
+	"github.com/alist-org/alist/v3/internal/conf"
+	"github.com/alist-org/alist/v3/internal/setting"
 	"github.com/alist-org/alist/v3/pkg/aria2/rpc"
 	"github.com/alist-org/alist/v3/pkg/task"
 	"github.com/pkg/errors"
@@ -12,6 +14,12 @@ import (
 var DownTaskManager = task.NewTaskManager[string](3)
 var notify = NewNotify()
 var client rpc.Client
+
+func InitClient(timeout int) error {
+	uri := setting.GetByKey(conf.Aria2Uri)
+	secret := setting.GetByKey(conf.Aria2Secret)
+	return InitAria2Client(uri, secret, timeout)
+}
 
 func InitAria2Client(uri string, secret string, timeout int) error {
 	c, err := rpc.New(context.Background(), uri, secret, time.Duration(timeout)*time.Second, notify)
