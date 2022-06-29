@@ -53,6 +53,20 @@ func Init(r *gin.Engine) {
 	setting.POST("/reset_token", controllers.ResetToken)
 	setting.POST("/set_aria2", controllers.SetAria2)
 
+	task := admin.Group("/task")
+	task.GET("/down/undone", controllers.UndoneDownTask)
+	task.GET("/down/done", controllers.DoneDownTask)
+	task.POST("/down/cancel", controllers.CancelDownTask)
+	task.POST("/transfer/undone", controllers.UndoneTransferTask)
+	task.POST("/transfer/done", controllers.DoneTransferTask)
+	task.POST("/transfer/cancel", controllers.CancelTransferTask)
+	task.POST("/upload/undone", controllers.UndoneUploadTask)
+	task.POST("/upload/done", controllers.DoneUploadTask)
+	task.POST("/upload/cancel", controllers.CancelUploadTask)
+	task.POST("/copy/undone", controllers.UndoneCopyTask)
+	task.POST("/copy/done", controllers.DoneCopyTask)
+	task.POST("/copy/cancel", controllers.CancelCopyTask)
+
 	// guest can
 	public := api.Group("/public")
 	public.GET("/settings", controllers.PublicSettings)

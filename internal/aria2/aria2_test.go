@@ -60,7 +60,7 @@ func TestDown(t *testing.T) {
 	for {
 		tsk := tasks[0]
 		t.Logf("task: %+v", tsk)
-		if tsk.GetState() == task.Succeeded {
+		if tsk.GetState() == task.SUCCEEDED {
 			break
 		}
 		if tsk.GetState() == task.ERRORED {
@@ -74,7 +74,7 @@ func TestDown(t *testing.T) {
 		}
 		tsk := TransferTaskManager.GetAll()[0]
 		t.Logf("task: %+v", tsk)
-		if tsk.GetState() == task.Succeeded {
+		if tsk.GetState() == task.SUCCEEDED {
 			break
 		}
 		if tsk.GetState() == task.ERRORED {

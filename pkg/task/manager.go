@@ -99,6 +99,14 @@ func (tm *Manager[K]) GetByStates(states ...string) []*Task[K] {
 	return tasks
 }
 
+func (tm *Manager[K]) ListUndone() []*Task[K] {
+	return tm.GetByStates(PENDING, RUNNING, CANCELING)
+}
+
+func (tm *Manager[K]) ListDone() []*Task[K] {
+	return tm.GetByStates(SUCCEEDED, CANCELED, ERRORED)
+}
+
 func NewTaskManager[K comparable](maxWorker int, updateID ...func(*K)) *Manager[K] {
 	tm := &Manager[K]{
 		tasks:   generic_sync.MapOf[K, *Task[K]]{},
