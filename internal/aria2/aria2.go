@@ -26,11 +26,11 @@ func InitAria2Client(uri string, secret string, timeout int) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to init aria2 client")
 	}
-	client = c
-	version, err := client.GetVersion()
+	version, err := c.GetVersion()
 	if err != nil {
 		return errors.Wrapf(err, "failed get aria2 version")
 	}
+	client = c
 	log.Infof("using aria2 version: %s", version.Version)
 	return nil
 }

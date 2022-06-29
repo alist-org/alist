@@ -11,8 +11,8 @@ import (
 )
 
 type SetAria2Req struct {
-	Uri    string `json:"uri"`
-	Secret string `json:"secret"`
+	Uri    string `json:"uri" form:"uri"`
+	Secret string `json:"secret" form:"secret"`
 }
 
 func SetAria2(c *gin.Context) {
