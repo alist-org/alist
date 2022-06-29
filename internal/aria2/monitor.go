@@ -49,7 +49,7 @@ outer:
 			if ok {
 				break outer
 			}
-		case <-time.After(time.Second * 5):
+		case <-time.After(time.Second * 2):
 			ok, err = m.Update()
 			if ok {
 				break outer
