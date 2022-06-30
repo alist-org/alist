@@ -10,8 +10,12 @@ import (
 
 func GetBaseUrl(r *http.Request) string {
 	baseUrl := setting.GetByKey(conf.BaseUrl)
+	protocol := "http"
+	if r.TLS != nil {
+		protocol = "https"
+	}
 	if baseUrl == "" {
-		baseUrl = fmt.Sprintf("//%s", r.Host)
+		baseUrl = fmt.Sprintf("%s//%s", protocol, r.Host)
 	}
 	strings.TrimSuffix(baseUrl, "/")
 	return baseUrl
