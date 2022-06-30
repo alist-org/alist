@@ -59,7 +59,7 @@ func whetherHide(user *model.User, meta *model.Meta, path string) bool {
 		return false
 	}
 	// if meta doesn't apply to sub_folder, don't hide
-	if !utils.PathEqual(meta.Path, path) && !meta.SubFolder {
+	if !utils.PathEqual(meta.Path, path) && !meta.HSub {
 		return false
 	}
 	// if is guest, hide

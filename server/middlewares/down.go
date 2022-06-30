@@ -47,7 +47,7 @@ func needSign(meta *model.Meta, path string) bool {
 	if meta == nil || meta.Password == "" {
 		return false
 	}
-	if !meta.SubFolder && path != meta.Path {
+	if !meta.PSub && path != meta.Path {
 		return false
 	}
 	return true

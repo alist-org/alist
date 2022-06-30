@@ -34,6 +34,7 @@ type ObjResp struct {
 type FsListResp struct {
 	Content []ObjResp `json:"content"`
 	Total   int64     `json:"total"`
+	Readme  string    `json:"readme"`
 }
 
 func FsList(c *gin.Context) {
@@ -66,7 +67,15 @@ func FsList(c *gin.Context) {
 	common.SuccessResp(c, FsListResp{
 		Content: toObjResp(objs),
 		Total:   int64(total),
+		Readme:  getReadme(meta, req.Path),
 	})
+}
+
+func getReadme(meta *model.Meta, path string) string {
+	if meta != nil && (utils.PathEqual(meta.Path, path) || meta.RSub) {
+		return meta.Readme
+	}
+	return ""
 }
 
 func canAccess(user *model.User, meta *model.Meta, path string, password string) bool {
@@ -79,7 +88,7 @@ func canAccess(user *model.User, meta *model.Meta, path string, password string)
 		return true
 	}
 	// if meta doesn't apply to sub_folder, can access
-	if !utils.PathEqual(meta.Path, path) && !meta.SubFolder {
+	if !utils.PathEqual(meta.Path, path) && !meta.PSub {
 		return true
 	}
 	// validate password

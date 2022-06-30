@@ -48,7 +48,7 @@ func canMkdirOrPut(meta *model.Meta, path string) bool {
 	if meta == nil || !meta.Write {
 		return false
 	}
-	return meta.SubFolder || meta.Path == path
+	return meta.WSub || meta.Path == path
 }
 
 type MoveCopyReq struct {
