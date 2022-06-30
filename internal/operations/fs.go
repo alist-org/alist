@@ -22,6 +22,11 @@ import (
 var filesCache = cache.NewMemCache(cache.WithShards[[]model.Obj](64))
 var filesG singleflight.Group[[]model.Obj]
 
+func ClearCache(account driver.Driver, path string) {
+	key := stdpath.Join(account.GetAccount().VirtualPath, path)
+	filesCache.Del(key)
+}
+
 // List files in storage, not contains virtual file
 func List(ctx context.Context, account driver.Driver, path string, refresh ...bool) ([]model.Obj, error) {
 	path = utils.StandardizePath(path)

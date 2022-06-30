@@ -41,6 +41,7 @@ func FsMkdir(c *gin.Context) {
 		common.ErrorResp(c, err, 500)
 		return
 	}
+	fs.ClearCache(stdpath.Dir(req.Path))
 	common.SuccessResp(c)
 }
 
@@ -81,6 +82,8 @@ func FsMove(c *gin.Context) {
 			return
 		}
 	}
+	fs.ClearCache(req.SrcDir)
+	fs.ClearCache(req.DstDir)
 	common.SuccessResp(c)
 }
 
@@ -112,6 +115,9 @@ func FsCopy(c *gin.Context) {
 			return
 		}
 	}
+	if len(req.Names) != len(addedTask) {
+		fs.ClearCache(req.DstDir)
+	}
 	if len(addedTask) > 0 {
 		common.SuccessResp(c, fmt.Sprintf("Added %d tasks", len(addedTask)))
 	} else {
@@ -140,11 +146,12 @@ func FsRename(c *gin.Context) {
 		common.ErrorResp(c, err, 500)
 		return
 	}
+	fs.ClearCache(stdpath.Dir(req.Path))
 	common.SuccessResp(c)
 }
 
 type RemoveReq struct {
-	Path  string   `json:"path"`
+	Dir   string   `json:"dir"`
 	Names []string `json:"names"`
 }
 
@@ -163,14 +170,15 @@ func FsRemove(c *gin.Context) {
 		common.ErrorResp(c, errs.PermissionDenied, 403)
 		return
 	}
-	req.Path = stdpath.Join(user.BasePath, req.Path)
+	req.Dir = stdpath.Join(user.BasePath, req.Dir)
 	for _, name := range req.Names {
-		err := fs.Remove(c, stdpath.Join(req.Path, name))
+		err := fs.Remove(c, stdpath.Join(req.Dir, name))
 		if err != nil {
 			common.ErrorResp(c, err, 500)
 			return
 		}
 	}
+	fs.ClearCache(req.Dir)
 	common.SuccessResp(c)
 }
 

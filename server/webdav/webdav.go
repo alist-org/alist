@@ -267,6 +267,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) (status i
 	if err := fs.Remove(ctx, reqPath); err != nil {
 		return http.StatusMethodNotAllowed, err
 	}
+	fs.ClearCache(path.Dir(reqPath))
 	return http.StatusNoContent, nil
 }
 
@@ -311,6 +312,7 @@ func (h *Handler) handlePut(w http.ResponseWriter, r *http.Request) (status int,
 		return http.StatusInternalServerError, err
 	}
 	w.Header().Set("ETag", etag)
+	fs.ClearCache(path.Dir(reqPath))
 	return http.StatusCreated, nil
 }
 
@@ -338,6 +340,7 @@ func (h *Handler) handleMkcol(w http.ResponseWriter, r *http.Request) (status in
 		}
 		return http.StatusMethodNotAllowed, err
 	}
+	fs.ClearCache(path.Dir(reqPath))
 	return http.StatusCreated, nil
 }
 

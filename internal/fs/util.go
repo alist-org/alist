@@ -1,6 +1,7 @@
 package fs
 
 import (
+	"github.com/alist-org/alist/v3/internal/operations"
 	"io"
 	"mime"
 	"net/http"
@@ -11,6 +12,14 @@ import (
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/pkg/errors"
 )
+
+func ClearCache(path string) {
+	account, actualPath, err := operations.GetAccountAndActualPath(path)
+	if err != nil {
+		return
+	}
+	operations.ClearCache(account, actualPath)
+}
 
 func containsByName(files []model.Obj, file model.Obj) bool {
 	for _, f := range files {
