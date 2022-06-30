@@ -1,7 +1,10 @@
 package controllers
 
 import (
+	"fmt"
+	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/model"
@@ -35,6 +38,11 @@ func CreateMeta(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
+	r, err := validHide(req.Hide)
+	if err != nil {
+		common.ErrorStrResp(c, fmt.Sprintf("%s is illegal: %s", r, err.Error()), 400)
+		return
+	}
 	req.Path = utils.StandardizePath(req.Path)
 	if err := db.CreateMeta(&req); err != nil {
 		common.ErrorResp(c, err, 500, true)
@@ -49,12 +57,28 @@ func UpdateMeta(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
+	r, err := validHide(req.Hide)
+	if err != nil {
+		common.ErrorStrResp(c, fmt.Sprintf("%s is illegal: %s", r, err.Error()), 400)
+		return
+	}
 	req.Path = utils.StandardizePath(req.Path)
 	if err := db.UpdateMeta(&req); err != nil {
 		common.ErrorResp(c, err, 500, true)
 	} else {
 		common.SuccessResp(c)
 	}
+}
+
+func validHide(hide string) (string, error) {
+	rs := strings.Split(hide, "\n")
+	for _, r := range rs {
+		_, err := regexp.Compile(r)
+		if err != nil {
+			return r, err
+		}
+	}
+	return "", nil
 }
 
 func DeleteMeta(c *gin.Context) {

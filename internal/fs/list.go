@@ -7,6 +7,8 @@ import (
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+	"regexp"
+	"strings"
 )
 
 // List files
@@ -35,7 +37,7 @@ func list(ctx context.Context, path string) ([]model.Obj, error) {
 		}
 	}
 	if whetherHide(user, meta, path) {
-		hide(objs, meta)
+		objs = hide(objs, meta)
 	}
 	// sort objs
 	if account.Config().LocalSort {
@@ -47,7 +49,7 @@ func list(ctx context.Context, path string) ([]model.Obj, error) {
 
 func whetherHide(user *model.User, meta *model.Meta, path string) bool {
 	// if is admin, don't hide
-	if user.IsAdmin() {
+	if user.CanSeeHides() {
 		return false
 	}
 	// if meta is nil, don't hide
@@ -63,12 +65,28 @@ func whetherHide(user *model.User, meta *model.Meta, path string) bool {
 		return false
 	}
 	// if is guest, hide
-	if user.IsGuest() {
-		return true
-	}
-	return !user.CanSeeHides()
+	return true
 }
 
-func hide(objs []model.Obj, meta *model.Meta) {
-	// TODO: hide
+func hide(objs []model.Obj, meta *model.Meta) []model.Obj {
+	var res []model.Obj
+	deleted := make([]bool, len(objs))
+	rs := strings.Split(meta.Hide, "\n")
+	for _, r := range rs {
+		re, _ := regexp.Compile(r)
+		for i, obj := range objs {
+			if deleted[i] {
+				continue
+			}
+			if re.MatchString(obj.GetName()) {
+				deleted[i] = true
+			}
+		}
+	}
+	for i, obj := range objs {
+		if !deleted[i] {
+			res = append(res, obj)
+		}
+	}
+	return res
 }
