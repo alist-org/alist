@@ -26,13 +26,13 @@ func FsMkdir(c *gin.Context) {
 	}
 	user := c.MustGet("user").(*model.User)
 	req.Path = stdpath.Join(user.BasePath, req.Path)
-	if !user.CanMkdir() {
+	if !user.CanWrite() {
 		meta, err := db.GetNearestMeta(req.Path)
 		if err != nil {
 			common.ErrorResp(c, err, 500)
 			return
 		}
-		if !canMkdirOrPut(meta, req.Path) {
+		if !canWrite(meta, req.Path) {
 			common.ErrorResp(c, errs.PermissionDenied, 403)
 			return
 		}
@@ -44,7 +44,7 @@ func FsMkdir(c *gin.Context) {
 	common.SuccessResp(c)
 }
 
-func canMkdirOrPut(meta *model.Meta, path string) bool {
+func canWrite(meta *model.Meta, path string) bool {
 	if meta == nil || !meta.Write {
 		return false
 	}
@@ -178,13 +178,13 @@ func FsPut(c *gin.Context) {
 	path := c.GetHeader("File-Path")
 	user := c.MustGet("user").(*model.User)
 	path = stdpath.Join(user.BasePath, path)
-	if !user.CanUpload() {
+	if !user.CanWrite() {
 		meta, err := db.GetNearestMeta(path)
 		if err != nil {
 			common.ErrorResp(c, err, 500)
 			return
 		}
-		if !canMkdirOrPut(meta, path) {
+		if !canWrite(meta, path) {
 			common.ErrorResp(c, errs.PermissionDenied, 403)
 			return
 		}

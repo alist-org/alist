@@ -35,6 +35,7 @@ type FsListResp struct {
 	Content []ObjResp `json:"content"`
 	Total   int64     `json:"total"`
 	Readme  string    `json:"readme"`
+	Write   bool      `json:"write"`
 }
 
 func FsList(c *gin.Context) {
@@ -68,6 +69,7 @@ func FsList(c *gin.Context) {
 		Content: toObjResp(objs),
 		Total:   int64(total),
 		Readme:  getReadme(meta, req.Path),
+		Write:   user.CanWrite() || canWrite(meta, req.Path),
 	})
 }
 

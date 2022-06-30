@@ -21,14 +21,13 @@ type User struct {
 	//  0: can see hidden files
 	//  1: can access without password
 	//  2: can add aria2 tasks
-	//  3: can mkdir
-	//  4: can upload
-	//  5: can rename
-	//  6: can move
-	//  7: can copy
-	//  8: can remove
-	//  9: webdav read
-	// 10: webdav write
+	//  3: can mkdir and upload
+	//  4: can rename
+	//  5: can move
+	//  6: can copy
+	//  7: can remove
+	//  8: webdav read
+	//  9: webdav write
 	Permission int32 `json:"permission"`
 }
 
@@ -62,34 +61,30 @@ func (u User) CanAddAria2Tasks() bool {
 	return u.IsAdmin() || (u.Permission>>2)&1 == 1
 }
 
-func (u User) CanMkdir() bool {
+func (u User) CanWrite() bool {
 	return u.IsAdmin() || (u.Permission>>3)&1 == 1
 }
 
-func (u User) CanUpload() bool {
+func (u User) CanRename() bool {
 	return u.IsAdmin() || (u.Permission>>4)&1 == 1
 }
 
-func (u User) CanRename() bool {
+func (u User) CanMove() bool {
 	return u.IsAdmin() || (u.Permission>>5)&1 == 1
 }
 
-func (u User) CanMove() bool {
+func (u User) CanCopy() bool {
 	return u.IsAdmin() || (u.Permission>>6)&1 == 1
 }
 
-func (u User) CanCopy() bool {
+func (u User) CanRemove() bool {
 	return u.IsAdmin() || (u.Permission>>7)&1 == 1
 }
 
-func (u User) CanRemove() bool {
+func (u User) CanWebdavRead() bool {
 	return u.IsAdmin() || (u.Permission>>8)&1 == 1
 }
 
-func (u User) CanWebdavRead() bool {
-	return u.IsAdmin() || (u.Permission>>9)&1 == 1
-}
-
 func (u User) CanWebdavWrite() bool {
-	return u.IsAdmin() || (u.Permission>>10)&1 == 1
+	return u.IsAdmin() || (u.Permission>>9)&1 == 1
 }
