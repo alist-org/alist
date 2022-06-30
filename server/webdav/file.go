@@ -27,12 +27,26 @@ func slashClean(name string) string {
 //
 // See section 9.9.4 for when various HTTP status codes apply.
 func moveFiles(ctx context.Context, src, dst string, overwrite bool) (status int, err error) {
-	err = fs.Move(ctx, src, dst)
+	srcDir := path.Dir(src)
+	dstDir := path.Dir(dst)
+	srcName := path.Base(src)
+	dstName := path.Base(dst)
+	if srcDir == dstDir {
+		err = fs.Rename(ctx, src, dstName)
+	} else {
+		err = fs.Move(ctx, src, dstDir)
+		if err != nil {
+			return http.StatusInternalServerError, err
+		}
+		if srcName != dstName {
+			err = fs.Rename(ctx, path.Join(dstDir, srcName), dstName)
+		}
+	}
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}
-	fs.ClearCache(path.Dir(src))
-	fs.ClearCache(path.Dir(dst))
+	fs.ClearCache(srcDir)
+	fs.ClearCache(dstDir)
 	// TODO if there are no files copy, should return 204
 	return http.StatusCreated, nil
 }
