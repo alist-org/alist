@@ -65,7 +65,7 @@ func getFileStreamFromLink(file model.Obj, link *model.Link) (model.FileStreamer
 	if mimetype == "" {
 		mimetype = "application/octet-stream"
 	}
-	stream := model.FileStream{
+	stream := &model.FileStream{
 		Obj:        file,
 		ReadCloser: rc,
 		Mimetype:   mimetype,

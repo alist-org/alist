@@ -19,6 +19,9 @@ type FileStreamer interface {
 	io.ReadCloser
 	Obj
 	GetMimetype() string
+	SetReadCloser(io.ReadCloser)
+	NeedStore() bool
+	GetReadCloser() io.ReadCloser
 }
 
 type URL interface {

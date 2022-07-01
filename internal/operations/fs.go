@@ -5,6 +5,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/errs"
 	log "github.com/sirupsen/logrus"
+	"os"
 	stdpath "path"
 	"strings"
 	"time"
@@ -223,6 +224,14 @@ func Remove(ctx context.Context, account driver.Driver, path string) error {
 
 func Put(ctx context.Context, account driver.Driver, dstDirPath string, file model.FileStreamer, up driver.UpdateProgress) error {
 	defer func() {
+		if f, ok := file.GetReadCloser().(*os.File); ok {
+			err := os.RemoveAll(f.Name())
+			if err != nil {
+				log.Errorf("failed to remove file [%s]", f.Name())
+			}
+		}
+	}()
+	defer func() {
 		if err := file.Close(); err != nil {
 			log.Errorf("failed to close file streamer, %v", err)
 		}
@@ -241,6 +250,7 @@ func Put(ctx context.Context, account driver.Driver, dstDirPath string, file mod
 		up = func(p int) {}
 	}
 	err = account.Put(ctx, parentDir, file, up)
+	log.Debugf("put file [%s] done", file.GetName())
 	if err == nil {
 		// clear cache
 		key := stdpath.Join(account.GetAccount().VirtualPath, dstDirPath)

@@ -9,6 +9,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/sign"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 	stdpath "path"
 	"strconv"
 	"time"
@@ -205,14 +206,17 @@ func FsPut(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	if err := fs.PutAsTask(dir, model.FileStream{
+	log.Debugf("c.Request.Close, %v", c.Request.Close)
+	c.Request.Close = false
+	if err := fs.PutAsTask(dir, &model.FileStream{
 		Obj: model.Object{
 			Name:     name,
 			Size:     size,
 			Modified: time.Now(),
 		},
-		ReadCloser: c.Request.Body,
-		Mimetype:   c.GetHeader("Content-Type"),
+		ReadCloser:   c.Request.Body,
+		Mimetype:     c.GetHeader("Content-Type"),
+		WebPutAsTask: true,
 	}); err != nil {
 		common.ErrorResp(c, err, 500)
 		return

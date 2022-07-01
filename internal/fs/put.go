@@ -7,6 +7,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/operations"
 	"github.com/alist-org/alist/v3/pkg/task"
+	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
 	"sync/atomic"
 )
@@ -23,6 +24,13 @@ func putAsTask(dstDirPath string, file model.FileStreamer) error {
 	}
 	if err != nil {
 		return errors.WithMessage(err, "failed get account")
+	}
+	if file.NeedStore() {
+		tempFile, err := utils.CreateTempFile(file)
+		if err != nil {
+			return errors.Wrapf(err, "failed to create temp file")
+		}
+		file.SetReadCloser(tempFile)
 	}
 	UploadTaskManager.Submit(task.WithCancelCtx(&task.Task[uint64]{
 		Name: fmt.Sprintf("upload %s to [%s](%s)", file.GetName(), account.GetAccount().VirtualPath, dstDirActualPath),

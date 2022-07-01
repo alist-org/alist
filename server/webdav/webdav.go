@@ -291,7 +291,7 @@ func (h *Handler) handlePut(w http.ResponseWriter, r *http.Request) (status int,
 		Size:     r.ContentLength,
 		Modified: time.Now(),
 	}
-	stream := model.FileStream{
+	stream := &model.FileStream{
 		Obj:        obj,
 		ReadCloser: r.Body,
 		Mimetype:   r.Header.Get("Content-Type"),
