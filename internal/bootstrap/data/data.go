@@ -7,5 +7,6 @@ func InitData() {
 	initSettings()
 	if args.Dev {
 		initDevData()
+		initDevDo()
 	}
 }

@@ -1,8 +1,12 @@
 package message
 
 type Messenger interface {
-	Send(string, interface{}) error
-	WaitSend(string, interface{}) error
-	Receive(string) (string, error)
-	WaitReceive(string) (string, error)
+	Send(interface{}) error
+	Receive() (string, error)
+	WaitSend(interface{}, int) error
+	WaitReceive(int) (string, error)
+}
+
+func GetMessenger() Messenger {
+	return PostInstance
 }

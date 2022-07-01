@@ -2,6 +2,7 @@ package server
 
 import (
 	"github.com/alist-org/alist/v3/internal/conf"
+	"github.com/alist-org/alist/v3/internal/message"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/alist-org/alist/v3/server/controllers"
 	"github.com/alist-org/alist/v3/server/middlewares"
@@ -67,6 +68,10 @@ func Init(r *gin.Engine) {
 	task.GET("/copy/undone", controllers.UndoneCopyTask)
 	task.GET("/copy/done", controllers.DoneCopyTask)
 	task.POST("/copy/cancel", controllers.CancelCopyTask)
+
+	ms := admin.Group("/message")
+	ms.GET("/get", message.PostInstance.GetHandle)
+	ms.POST("/send", message.PostInstance.SendHandle)
 
 	// guest can
 	public := api.Group("/public")
