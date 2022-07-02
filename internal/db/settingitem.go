@@ -11,7 +11,7 @@ var settingsMap map[string]string
 var publicSettingsMap map[string]string
 
 func GetPublicSettingsMap() map[string]string {
-	if settingsMap == nil {
+	if settingsMap == nil || publicSettingsMap == nil {
 		publicSettingsMap = make(map[string]string)
 		settingItems, err := GetPublicSettingItems()
 		if err != nil {
