@@ -68,7 +68,8 @@ func initialSettings() {
 	initialSettingItems = []model.SettingItem{
 		// site settings
 		{Key: conf.VERSION, Value: conf.Version, Type: conf.TypeString, Group: model.SITE, Flag: model.READONLY},
-		{Key: conf.BaseUrl, Value: "", Type: conf.TypeString, Group: model.SITE},
+		{Key: conf.ApiUrl, Value: "", Type: conf.TypeString, Group: model.SITE},
+		{Key: conf.BasePath, Value: "", Type: conf.TypeString, Group: model.SITE},
 		{Key: conf.SiteTitle, Value: "AList", Type: conf.TypeString, Group: model.SITE},
 		{Key: conf.SiteLogo, Value: "https://cdn.jsdelivr.net/gh/alist-org/logo@main/logo.svg", Type: conf.TypeString, Group: model.SITE},
 		{Key: conf.Favicon, Value: "https://cdn.jsdelivr.net/gh/alist-org/logo@main/logo.svg", Type: conf.TypeString, Group: model.SITE},

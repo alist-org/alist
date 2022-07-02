@@ -9,7 +9,7 @@ import (
 )
 
 func GetBaseUrl(r *http.Request) string {
-	baseUrl := setting.GetByKey(conf.BaseUrl)
+	baseUrl := setting.GetByKey(conf.ApiUrl)
 	protocol := "http"
 	if r.TLS != nil {
 		protocol = "https"

@@ -10,7 +10,8 @@ const (
 
 const (
 	VERSION      = "version"
-	BaseUrl      = "base_url"
+	ApiUrl       = "api_url"
+	BasePath     = "base_path"
 	SiteTitle    = "site_title"
 	SiteLogo     = "site_logo"
 	Favicon      = "favicon"
