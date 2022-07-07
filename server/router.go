@@ -18,8 +18,9 @@ func Init(r *gin.Engine) {
 	r.GET("/d/*path", middlewares.Down, controllers.Down)
 	r.GET("/p/*path", middlewares.Down, controllers.Proxy)
 
+	r.POST("/api/auth/login", controllers.Login)
+
 	api := r.Group("/api", middlewares.Auth)
-	api.POST("/auth/login", controllers.Login)
 	api.GET("/auth/current", controllers.CurrentUser)
 
 	admin := api.Group("/admin", middlewares.AuthAdmin)
