@@ -26,7 +26,7 @@ func Login(c *gin.Context) {
 	ip := c.ClientIP()
 	count, ok := loginCache.Get(ip)
 	if ok && count >= defaultTimes {
-		common.ErrorStrResp(c, "Too many unsuccessful sign-in attempts have been made using an incorrect password. Try again later.", 403)
+		common.ErrorStrResp(c, "Too many unsuccessful sign-in attempts have been made using an incorrect username or password. Try again later.", 403)
 		loginCache.Expire(ip, defaultDuration)
 		return
 	}
@@ -39,6 +39,7 @@ func Login(c *gin.Context) {
 	user, err := db.GetUserByName(req.Username)
 	if err != nil {
 		common.ErrorResp(c, err, 400)
+		loginCache.Set(ip, count+1)
 		return
 	}
 	// validate password
