@@ -161,25 +161,27 @@ func FsGet(c *gin.Context) {
 		return
 	}
 	var rawURL string
-	// obj have raw url
-	if u, ok := obj.(model.URL); ok {
-		rawURL = u.URL()
-	} else {
-		account, _ := fs.GetAccount(req.Path)
-		if account.Config().MustProxy() || account.GetAccount().WebProxy {
-			if account.GetAccount().DownProxyUrl != "" {
-				rawURL = fmt.Sprintf("%s%s?sign=%s", strings.Split(account.GetAccount().DownProxyUrl, "\n")[0], req.Path, sign.Sign(obj.GetName()))
-			} else {
-				rawURL = fmt.Sprintf("%s/p%s?sign=%s", common.GetBaseUrl(c.Request), req.Path, sign.Sign(obj.GetName()))
-			}
+	// file have raw url
+	if !obj.IsDir() {
+		if u, ok := obj.(model.URL); ok {
+			rawURL = u.URL()
 		} else {
-			// if account is not proxy, use raw url by fs.Link
-			link, _, err := fs.Link(c, req.Path, model.LinkArgs{})
-			if err != nil {
-				common.ErrorResp(c, err, 500)
-				return
+			account, _ := fs.GetAccount(req.Path)
+			if account.Config().MustProxy() || account.GetAccount().WebProxy {
+				if account.GetAccount().DownProxyUrl != "" {
+					rawURL = fmt.Sprintf("%s%s?sign=%s", strings.Split(account.GetAccount().DownProxyUrl, "\n")[0], req.Path, sign.Sign(obj.GetName()))
+				} else {
+					rawURL = fmt.Sprintf("%s/p%s?sign=%s", common.GetBaseUrl(c.Request), req.Path, sign.Sign(obj.GetName()))
+				}
+			} else {
+				// if account is not proxy, use raw url by fs.Link
+				link, _, err := fs.Link(c, req.Path, model.LinkArgs{})
+				if err != nil {
+					common.ErrorResp(c, err, 500)
+					return
+				}
+				rawURL = link.URL
 			}
-			rawURL = link.URL
 		}
 	}
 	common.SuccessResp(c, FsGetResp{
