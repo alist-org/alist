@@ -13,17 +13,17 @@ import (
 )
 
 func AddURI(ctx context.Context, uri string, dstDirPath string) error {
-	// check account
-	account, dstDirActualPath, err := operations.GetAccountAndActualPath(dstDirPath)
+	// check storage
+	storage, dstDirActualPath, err := operations.GetStorageAndActualPath(dstDirPath)
 	if err != nil {
-		return errors.WithMessage(err, "failed get account")
+		return errors.WithMessage(err, "failed get storage")
 	}
 	// check is it could upload
-	if account.Config().NoUpload {
+	if storage.Config().NoUpload {
 		return errors.WithStack(errs.UploadNotSupported)
 	}
 	// check path is valid
-	obj, err := operations.Get(ctx, account, dstDirActualPath)
+	obj, err := operations.Get(ctx, storage, dstDirActualPath)
 	if err != nil {
 		if !errs.IsObjectNotFound(err) {
 			return errors.WithMessage(err, "failed get object")
@@ -45,7 +45,7 @@ func AddURI(ctx context.Context, uri string, dstDirPath string) error {
 	}
 	DownTaskManager.Submit(task.WithCancelCtx(&task.Task[string]{
 		ID:   gid,
-		Name: fmt.Sprintf("download %s to [%s](%s)", uri, account.GetAccount().VirtualPath, dstDirActualPath),
+		Name: fmt.Sprintf("download %s to [%s](%s)", uri, storage.GetStorage().VirtualPath, dstDirActualPath),
 		Func: func(tsk *task.Task[string]) error {
 			m := &Monitor{
 				tsk:        tsk,

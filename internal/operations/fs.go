@@ -23,37 +23,37 @@ import (
 var filesCache = cache.NewMemCache(cache.WithShards[[]model.Obj](64))
 var filesG singleflight.Group[[]model.Obj]
 
-func ClearCache(account driver.Driver, path string) {
-	key := stdpath.Join(account.GetAccount().VirtualPath, path)
+func ClearCache(storage driver.Driver, path string) {
+	key := stdpath.Join(storage.GetStorage().VirtualPath, path)
 	filesCache.Del(key)
 }
 
 // List files in storage, not contains virtual file
-func List(ctx context.Context, account driver.Driver, path string, refresh ...bool) ([]model.Obj, error) {
+func List(ctx context.Context, storage driver.Driver, path string, refresh ...bool) ([]model.Obj, error) {
 	path = utils.StandardizePath(path)
 	log.Debugf("operations.List %s", path)
-	dir, err := Get(ctx, account, path)
+	dir, err := Get(ctx, storage, path)
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed get dir")
 	}
 	if !dir.IsDir() {
 		return nil, errors.WithStack(errs.NotFolder)
 	}
-	if account.Config().NoCache {
-		return account.List(ctx, dir)
+	if storage.Config().NoCache {
+		return storage.List(ctx, dir)
 	}
-	key := stdpath.Join(account.GetAccount().VirtualPath, path)
+	key := stdpath.Join(storage.GetStorage().VirtualPath, path)
 	if len(refresh) == 0 || !refresh[0] {
 		if files, ok := filesCache.Get(key); ok {
 			return files, nil
 		}
 	}
 	files, err, _ := filesG.Do(key, func() ([]model.Obj, error) {
-		files, err := account.List(ctx, dir)
+		files, err := storage.List(ctx, dir)
 		if err != nil {
 			return nil, errors.WithMessage(err, "failed to list files")
 		}
-		// TODO: maybe can get duration from account's config
+		// TODO: maybe can get duration from storage's config
 		filesCache.Set(key, files, cache.WithEx[[]model.Obj](time.Minute*time.Duration(conf.Conf.CaCheExpiration)))
 		return files, nil
 	})
@@ -74,34 +74,34 @@ func isRoot(path, rootFolderPath string) bool {
 }
 
 // Get object from list of files
-func Get(ctx context.Context, account driver.Driver, path string) (model.Obj, error) {
+func Get(ctx context.Context, storage driver.Driver, path string) (model.Obj, error) {
 	path = utils.StandardizePath(path)
 	log.Debugf("operations.Get %s", path)
-	if g, ok := account.(driver.Getter); ok {
+	if g, ok := storage.(driver.Getter); ok {
 		return g.Get(ctx, path)
 	}
 	// is root folder
-	if r, ok := account.GetAddition().(driver.IRootFolderId); ok && utils.PathEqual(path, "/") {
+	if r, ok := storage.GetAddition().(driver.IRootFolderId); ok && utils.PathEqual(path, "/") {
 		return model.Object{
 			ID:       r.GetRootFolderId(),
 			Name:     "root",
 			Size:     0,
-			Modified: account.GetAccount().Modified,
+			Modified: storage.GetStorage().Modified,
 			IsFolder: true,
 		}, nil
 	}
-	if r, ok := account.GetAddition().(driver.IRootFolderPath); ok && isRoot(path, r.GetRootFolderPath()) {
+	if r, ok := storage.GetAddition().(driver.IRootFolderPath); ok && isRoot(path, r.GetRootFolderPath()) {
 		return model.Object{
 			ID:       r.GetRootFolderPath(),
 			Name:     "root",
 			Size:     0,
-			Modified: account.GetAccount().Modified,
+			Modified: storage.GetStorage().Modified,
 			IsFolder: true,
 		}, nil
 	}
 	// not root folder
 	dir, name := stdpath.Split(path)
-	files, err := List(ctx, account, dir)
+	files, err := List(ctx, storage, dir)
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed get parent list")
 	}
@@ -124,20 +124,20 @@ var linkCache = cache.NewMemCache(cache.WithShards[*model.Link](16))
 var linkG singleflight.Group[*model.Link]
 
 // Link get link, if is an url. should have an expiry time
-func Link(ctx context.Context, account driver.Driver, path string, args model.LinkArgs) (*model.Link, model.Obj, error) {
-	file, err := Get(ctx, account, path)
+func Link(ctx context.Context, storage driver.Driver, path string, args model.LinkArgs) (*model.Link, model.Obj, error) {
+	file, err := Get(ctx, storage, path)
 	if err != nil {
 		return nil, nil, errors.WithMessage(err, "failed to get file")
 	}
 	if file.IsDir() {
 		return nil, nil, errors.WithStack(errs.NotFile)
 	}
-	key := stdpath.Join(account.GetAccount().VirtualPath, path)
+	key := stdpath.Join(storage.GetStorage().VirtualPath, path)
 	if link, ok := linkCache.Get(key); ok {
 		return link, file, nil
 	}
 	fn := func() (*model.Link, error) {
-		link, err := account.Link(ctx, file, args)
+		link, err := storage.Link(ctx, file, args)
 		if err != nil {
 			return nil, errors.WithMessage(err, "failed get link")
 		}
@@ -150,22 +150,22 @@ func Link(ctx context.Context, account driver.Driver, path string, args model.Li
 	return link, file, err
 }
 
-func MakeDir(ctx context.Context, account driver.Driver, path string) error {
+func MakeDir(ctx context.Context, storage driver.Driver, path string) error {
 	// check if dir exists
-	f, err := Get(ctx, account, path)
+	f, err := Get(ctx, storage, path)
 	if err != nil {
 		if errs.IsObjectNotFound(err) {
 			parentPath, dirName := stdpath.Split(path)
-			err = MakeDir(ctx, account, parentPath)
+			err = MakeDir(ctx, storage, parentPath)
 			if err != nil {
 				return errors.WithMessagef(err, "failed to make parent dir [%s]", parentPath)
 			}
-			parentDir, err := Get(ctx, account, parentPath)
+			parentDir, err := Get(ctx, storage, parentPath)
 			// this should not happen
 			if err != nil {
 				return errors.WithMessagef(err, "failed to get parent dir [%s]", parentPath)
 			}
-			return account.MakeDir(ctx, parentDir, dirName)
+			return storage.MakeDir(ctx, parentDir, dirName)
 		} else {
 			return errors.WithMessage(err, "failed to check if dir exists")
 		}
@@ -180,38 +180,38 @@ func MakeDir(ctx context.Context, account driver.Driver, path string) error {
 	}
 }
 
-func Move(ctx context.Context, account driver.Driver, srcPath, dstDirPath string) error {
-	srcObj, err := Get(ctx, account, srcPath)
+func Move(ctx context.Context, storage driver.Driver, srcPath, dstDirPath string) error {
+	srcObj, err := Get(ctx, storage, srcPath)
 	if err != nil {
 		return errors.WithMessage(err, "failed to get src object")
 	}
-	dstDir, err := Get(ctx, account, dstDirPath)
+	dstDir, err := Get(ctx, storage, dstDirPath)
 	if err != nil {
 		return errors.WithMessage(err, "failed to get dst dir")
 	}
-	return account.Move(ctx, srcObj, dstDir)
+	return storage.Move(ctx, srcObj, dstDir)
 }
 
-func Rename(ctx context.Context, account driver.Driver, srcPath, dstName string) error {
-	srcObj, err := Get(ctx, account, srcPath)
+func Rename(ctx context.Context, storage driver.Driver, srcPath, dstName string) error {
+	srcObj, err := Get(ctx, storage, srcPath)
 	if err != nil {
 		return errors.WithMessage(err, "failed to get src object")
 	}
-	return account.Rename(ctx, srcObj, dstName)
+	return storage.Rename(ctx, srcObj, dstName)
 }
 
-// Copy Just copy file[s] in an account
-func Copy(ctx context.Context, account driver.Driver, srcPath, dstDirPath string) error {
-	srcObj, err := Get(ctx, account, srcPath)
+// Copy Just copy file[s] in a storage
+func Copy(ctx context.Context, storage driver.Driver, srcPath, dstDirPath string) error {
+	srcObj, err := Get(ctx, storage, srcPath)
 	if err != nil {
 		return errors.WithMessage(err, "failed to get src object")
 	}
-	dstDir, err := Get(ctx, account, dstDirPath)
-	return account.Copy(ctx, srcObj, dstDir)
+	dstDir, err := Get(ctx, storage, dstDirPath)
+	return storage.Copy(ctx, srcObj, dstDir)
 }
 
-func Remove(ctx context.Context, account driver.Driver, path string) error {
-	obj, err := Get(ctx, account, path)
+func Remove(ctx context.Context, storage driver.Driver, path string) error {
+	obj, err := Get(ctx, storage, path)
 	if err != nil {
 		// if object not found, it's ok
 		if errs.IsObjectNotFound(err) {
@@ -219,10 +219,10 @@ func Remove(ctx context.Context, account driver.Driver, path string) error {
 		}
 		return errors.WithMessage(err, "failed to get object")
 	}
-	return account.Remove(ctx, obj)
+	return storage.Remove(ctx, obj)
 }
 
-func Put(ctx context.Context, account driver.Driver, dstDirPath string, file model.FileStreamer, up driver.UpdateProgress) error {
+func Put(ctx context.Context, storage driver.Driver, dstDirPath string, file model.FileStreamer, up driver.UpdateProgress) error {
 	defer func() {
 		if f, ok := file.GetReadCloser().(*os.File); ok {
 			err := os.RemoveAll(f.Name())
@@ -236,11 +236,11 @@ func Put(ctx context.Context, account driver.Driver, dstDirPath string, file mod
 			log.Errorf("failed to close file streamer, %v", err)
 		}
 	}()
-	err := MakeDir(ctx, account, dstDirPath)
+	err := MakeDir(ctx, storage, dstDirPath)
 	if err != nil {
 		return errors.WithMessagef(err, "failed to make dir [%s]", dstDirPath)
 	}
-	parentDir, err := Get(ctx, account, dstDirPath)
+	parentDir, err := Get(ctx, storage, dstDirPath)
 	// this should not happen
 	if err != nil {
 		return errors.WithMessagef(err, "failed to get dir [%s]", dstDirPath)
@@ -249,11 +249,11 @@ func Put(ctx context.Context, account driver.Driver, dstDirPath string, file mod
 	if up == nil {
 		up = func(p int) {}
 	}
-	err = account.Put(ctx, parentDir, file, up)
+	err = storage.Put(ctx, parentDir, file, up)
 	log.Debugf("put file [%s] done", file.GetName())
 	if err == nil {
 		// clear cache
-		key := stdpath.Join(account.GetAccount().VirtualPath, dstDirPath)
+		key := stdpath.Join(storage.GetStorage().VirtualPath, dstDirPath)
 		filesCache.Del(key)
 	}
 	return err

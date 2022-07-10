@@ -11,58 +11,58 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func ListAccounts(c *gin.Context) {
+func ListStorages(c *gin.Context) {
 	var req common.PageReq
 	if err := c.ShouldBind(&req); err != nil {
 		common.ErrorResp(c, err, 400)
 		return
 	}
 	log.Debugf("%+v", req)
-	accounts, total, err := db.GetAccounts(req.PageIndex, req.PageSize)
+	storages, total, err := db.GetStorages(req.PageIndex, req.PageSize)
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return
 	}
 	common.SuccessResp(c, common.PageResp{
-		Content: accounts,
+		Content: storages,
 		Total:   total,
 	})
 }
 
-func CreateAccount(c *gin.Context) {
-	var req model.Account
+func CreateStorage(c *gin.Context) {
+	var req model.Storage
 	if err := c.ShouldBind(&req); err != nil {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	if err := operations.CreateAccount(c, req); err != nil {
+	if err := operations.CreateStorage(c, req); err != nil {
 		common.ErrorResp(c, err, 500, true)
 	} else {
 		common.SuccessResp(c)
 	}
 }
 
-func UpdateAccount(c *gin.Context) {
-	var req model.Account
+func UpdateStorage(c *gin.Context) {
+	var req model.Storage
 	if err := c.ShouldBind(&req); err != nil {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	if err := operations.UpdateAccount(c, req); err != nil {
+	if err := operations.UpdateStorage(c, req); err != nil {
 		common.ErrorResp(c, err, 500, true)
 	} else {
 		common.SuccessResp(c)
 	}
 }
 
-func DeleteAccount(c *gin.Context) {
+func DeleteStorage(c *gin.Context) {
 	idStr := c.Query("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	if err := operations.DeleteAccountById(c, uint(id)); err != nil {
+	if err := operations.DeleteStorageById(c, uint(id)); err != nil {
 		common.ErrorResp(c, err, 500, true)
 		return
 	}

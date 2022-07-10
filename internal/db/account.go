@@ -5,46 +5,46 @@ import (
 	"github.com/pkg/errors"
 )
 
-// why don't need `cache` for account?
-// because all account store in `operations.accountsMap`
-// the most of the read operation is from `operations.accountsMap`
+// why don't need `cache` for storage?
+// because all storage store in `operations.storagesMap`
+// the most of the read operation is from `operations.storagesMap`
 // just for persistence in database
 
-// CreateAccount just insert account to database
-func CreateAccount(account *model.Account) error {
-	return errors.WithStack(db.Create(account).Error)
+// CreateStorage just insert storage to database
+func CreateStorage(storage *model.Storage) error {
+	return errors.WithStack(db.Create(storage).Error)
 }
 
-// UpdateAccount just update account in database
-func UpdateAccount(account *model.Account) error {
-	return errors.WithStack(db.Save(account).Error)
+// UpdateStorage just update storage in database
+func UpdateStorage(storage *model.Storage) error {
+	return errors.WithStack(db.Save(storage).Error)
 }
 
-// DeleteAccountById just delete account from database by id
-func DeleteAccountById(id uint) error {
-	return errors.WithStack(db.Delete(&model.Account{}, id).Error)
+// DeleteStorageById just delete storage from database by id
+func DeleteStorageById(id uint) error {
+	return errors.WithStack(db.Delete(&model.Storage{}, id).Error)
 }
 
-// GetAccounts Get all accounts from database order by index
-func GetAccounts(pageIndex, pageSize int) ([]model.Account, int64, error) {
-	accountDB := db.Model(&model.Account{})
+// GetStorages Get all storages from database order by index
+func GetStorages(pageIndex, pageSize int) ([]model.Storage, int64, error) {
+	storageDB := db.Model(&model.Storage{})
 	var count int64
-	if err := accountDB.Count(&count).Error; err != nil {
-		return nil, 0, errors.Wrapf(err, "failed get accounts count")
+	if err := storageDB.Count(&count).Error; err != nil {
+		return nil, 0, errors.Wrapf(err, "failed get storages count")
 	}
-	var accounts []model.Account
-	if err := accountDB.Order(columnName("index")).Offset((pageIndex - 1) * pageSize).Limit(pageSize).Find(&accounts).Error; err != nil {
+	var storages []model.Storage
+	if err := storageDB.Order(columnName("index")).Offset((pageIndex - 1) * pageSize).Limit(pageSize).Find(&storages).Error; err != nil {
 		return nil, 0, errors.WithStack(err)
 	}
-	return accounts, count, nil
+	return storages, count, nil
 }
 
-// GetAccountById Get Account by id, used to update account usually
-func GetAccountById(id uint) (*model.Account, error) {
-	var account model.Account
-	account.ID = id
-	if err := db.First(&account).Error; err != nil {
+// GetStorageById Get Storage by id, used to update storage usually
+func GetStorageById(id uint) (*model.Storage, error) {
+	var storage model.Storage
+	storage.ID = id
+	if err := db.First(&storage).Error; err != nil {
 		return nil, errors.WithStack(err)
 	}
-	return &account, nil
+	return &storage, nil
 }

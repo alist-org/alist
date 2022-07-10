@@ -237,12 +237,12 @@ func Link(c *gin.Context) {
 	}
 	user := c.MustGet("user").(*model.User)
 	rawPath := stdpath.Join(user.BasePath, req.Path)
-	account, err := fs.GetAccount(rawPath)
+	storage, err := fs.GetStorage(rawPath)
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return
 	}
-	if account.Config().OnlyLocal {
+	if storage.Config().OnlyLocal {
 		common.SuccessResp(c, model.Link{
 			URL: fmt.Sprintf("%s/p%s?d&sign=%s", common.GetBaseUrl(c.Request), req.Path, sign.Sign(stdpath.Base(rawPath))),
 		})

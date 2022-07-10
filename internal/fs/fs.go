@@ -95,10 +95,10 @@ func PutAsTask(dstDirPath string, file model.FileStreamer) error {
 	return err
 }
 
-func GetAccount(path string) (driver.Driver, error) {
-	accountDriver, _, err := operations.GetAccountAndActualPath(path)
+func GetStorage(path string) (driver.Driver, error) {
+	storageDriver, _, err := operations.GetStorageAndActualPath(path)
 	if err != nil {
 		return nil, err
 	}
-	return accountDriver, nil
+	return storageDriver, nil
 }

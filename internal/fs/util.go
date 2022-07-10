@@ -14,11 +14,11 @@ import (
 )
 
 func ClearCache(path string) {
-	account, actualPath, err := operations.GetAccountAndActualPath(path)
+	storage, actualPath, err := operations.GetStorageAndActualPath(path)
 	if err != nil {
 		return
 	}
-	operations.ClearCache(account, actualPath)
+	operations.ClearCache(storage, actualPath)
 }
 
 func containsByName(files []model.Obj, file model.Obj) bool {

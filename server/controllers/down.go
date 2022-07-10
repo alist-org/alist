@@ -19,12 +19,12 @@ import (
 func Down(c *gin.Context) {
 	rawPath := c.MustGet("path").(string)
 	filename := stdpath.Base(rawPath)
-	account, err := fs.GetAccount(rawPath)
+	storage, err := fs.GetStorage(rawPath)
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return
 	}
-	if shouldProxy(account, filename) {
+	if shouldProxy(storage, filename) {
 		Proxy(c)
 		return
 	} else {
@@ -43,13 +43,13 @@ func Down(c *gin.Context) {
 func Proxy(c *gin.Context) {
 	rawPath := c.MustGet("path").(string)
 	filename := stdpath.Base(rawPath)
-	account, err := fs.GetAccount(rawPath)
+	storage, err := fs.GetStorage(rawPath)
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return
 	}
-	if canProxy(account, filename) {
-		downProxyUrl := account.GetAccount().DownProxyUrl
+	if canProxy(storage, filename) {
+		downProxyUrl := storage.GetStorage().DownProxyUrl
 		if downProxyUrl != "" {
 			_, ok := c.GetQuery("d")
 			if ok {
@@ -79,10 +79,10 @@ func Proxy(c *gin.Context) {
 // TODO need optimize
 // when should be proxy?
 // 1. config.MustProxy()
-// 2. account.WebProxy
+// 2. storage.WebProxy
 // 3. proxy_types
-func shouldProxy(account driver.Driver, filename string) bool {
-	if account.Config().MustProxy() || account.GetAccount().WebProxy {
+func shouldProxy(storage driver.Driver, filename string) bool {
+	if storage.Config().MustProxy() || storage.GetStorage().WebProxy {
 		return true
 	}
 	proxyTypes := setting.GetByKey(conf.ProxyTypes)
@@ -96,11 +96,11 @@ func shouldProxy(account driver.Driver, filename string) bool {
 // when can be proxy?
 // 1. text file
 // 2. config.MustProxy()
-// 3. account.WebProxy
+// 3. storage.WebProxy
 // 4. proxy_types
 // solution: text_file + shouldProxy()
-func canProxy(account driver.Driver, filename string) bool {
-	if account.Config().MustProxy() || account.GetAccount().WebProxy {
+func canProxy(storage driver.Driver, filename string) bool {
+	if storage.Config().MustProxy() || storage.GetStorage().WebProxy {
 		return true
 	}
 	proxyTypes := setting.GetByKey(conf.ProxyTypes)

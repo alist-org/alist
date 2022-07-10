@@ -37,11 +37,11 @@ func Init(r *gin.Engine) {
 	user.POST("/update", controllers.UpdateUser)
 	user.POST("/delete", controllers.DeleteUser)
 
-	account := admin.Group("/account")
-	account.GET("/list", controllers.ListAccounts)
-	account.POST("/create", controllers.CreateAccount)
-	account.POST("/update", controllers.UpdateAccount)
-	account.POST("/delete", controllers.DeleteAccount)
+	storage := admin.Group("/storage")
+	storage.GET("/list", controllers.ListStorages)
+	storage.POST("/create", controllers.CreateStorage)
+	storage.POST("/update", controllers.UpdateStorage)
+	storage.POST("/delete", controllers.DeleteStorage)
 
 	driver := admin.Group("/driver")
 	driver.GET("/list", controllers.ListDriverItems)

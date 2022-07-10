@@ -13,27 +13,27 @@ import (
 
 // ActualPath Get the actual path
 // !!! maybe and \ in the path when use windows local
-func ActualPath(account driver.Additional, rawPath string) string {
-	if i, ok := account.(driver.IRootFolderPath); ok {
+func ActualPath(storage driver.Additional, rawPath string) string {
+	if i, ok := storage.(driver.IRootFolderPath); ok {
 		rawPath = stdpath.Join(i.GetRootFolderPath(), rawPath)
 	}
 	return utils.StandardizePath(rawPath)
 }
 
-// GetAccountAndActualPath Get the corresponding account
+// GetStorageAndActualPath Get the corresponding storage and actual path
 // for path: remove the virtual path prefix and join the actual root folder if exists
-func GetAccountAndActualPath(rawPath string) (driver.Driver, string, error) {
+func GetStorageAndActualPath(rawPath string) (driver.Driver, string, error) {
 	rawPath = utils.StandardizePath(rawPath)
 	if strings.Contains(rawPath, "..") {
 		return nil, "", errors.WithStack(errs.RelativePath)
 	}
-	account := GetBalancedAccount(rawPath)
-	if account == nil {
-		return nil, "", errors.Errorf("can't find account with rawPath: %s", rawPath)
+	storage := GetBalancedStorage(rawPath)
+	if storage == nil {
+		return nil, "", errors.Errorf("can't find storage with rawPath: %s", rawPath)
 	}
-	log.Debugln("use account: ", account.GetAccount().VirtualPath)
-	virtualPath := utils.GetActualVirtualPath(account.GetAccount().VirtualPath)
+	log.Debugln("use storage: ", storage.GetStorage().VirtualPath)
+	virtualPath := utils.GetActualVirtualPath(storage.GetStorage().VirtualPath)
 	actualPath := strings.TrimPrefix(rawPath, virtualPath)
-	actualPath = ActualPath(account.GetAddition(), actualPath)
-	return account, actualPath, nil
+	actualPath = ActualPath(storage.GetAddition(), actualPath)
+	return storage, actualPath, nil
 }

@@ -37,7 +37,7 @@ func TestConnect(t *testing.T) {
 
 func TestDown(t *testing.T) {
 	TestConnect(t)
-	err := operations.CreateAccount(context.Background(), model.Account{
+	err := operations.CreateStorage(context.Background(), model.Storage{
 		ID:          0,
 		VirtualPath: "/",
 		Index:       0,
@@ -47,7 +47,7 @@ func TestDown(t *testing.T) {
 		Remark:      "",
 	})
 	if err != nil {
-		t.Fatalf("failed to create account: %+v", err)
+		t.Fatalf("failed to create storage: %+v", err)
 	}
 	err = AddURI(context.Background(), "https://nodejs.org/dist/index.json", "/test")
 	if err != nil {

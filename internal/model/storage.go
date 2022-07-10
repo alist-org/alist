@@ -2,7 +2,7 @@ package model
 
 import "time"
 
-type Account struct {
+type Storage struct {
 	ID          uint      `json:"id" gorm:"primaryKey"`                          // unique key
 	VirtualPath string    `json:"virtual_path" gorm:"unique" binding:"required"` // must be standardized
 	Index       int       `json:"index"`                                         // use to sort
@@ -27,11 +27,11 @@ type Proxy struct {
 	DownProxyUrl string `json:"down_proxy_url"`
 }
 
-func (a Account) GetAccount() Account {
+func (a Storage) GetStorage() Storage {
 	return a
 }
 
-func (a *Account) SetStatus(status string) {
+func (a *Storage) SetStatus(status string) {
 	a.Status = status
 }
 

@@ -15,15 +15,15 @@ import (
 func list(ctx context.Context, path string) ([]model.Obj, error) {
 	meta := ctx.Value("meta").(*model.Meta)
 	user := ctx.Value("user").(*model.User)
-	account, actualPath, err := operations.GetAccountAndActualPath(path)
-	virtualFiles := operations.GetAccountVirtualFilesByPath(path)
+	storage, actualPath, err := operations.GetStorageAndActualPath(path)
+	virtualFiles := operations.GetStorageVirtualFilesByPath(path)
 	if err != nil {
 		if len(virtualFiles) != 0 {
 			return virtualFiles, nil
 		}
-		return nil, errors.WithMessage(err, "failed get account")
+		return nil, errors.WithMessage(err, "failed get storage")
 	}
-	objs, err := operations.List(ctx, account, actualPath)
+	objs, err := operations.List(ctx, storage, actualPath)
 	if err != nil {
 		log.Errorf("%+v", err)
 		if len(virtualFiles) != 0 {
@@ -31,19 +31,19 @@ func list(ctx context.Context, path string) ([]model.Obj, error) {
 		}
 		return nil, errors.WithMessage(err, "failed get objs")
 	}
-	for _, accountFile := range virtualFiles {
-		if !containsByName(objs, accountFile) {
-			objs = append(objs, accountFile)
+	for _, storageFile := range virtualFiles {
+		if !containsByName(objs, storageFile) {
+			objs = append(objs, storageFile)
 		}
 	}
 	if whetherHide(user, meta, path) {
 		objs = hide(objs, meta)
 	}
 	// sort objs
-	if account.Config().LocalSort {
-		model.SortFiles(objs, account.GetAccount().OrderBy, account.GetAccount().OrderDirection)
+	if storage.Config().LocalSort {
+		model.SortFiles(objs, storage.GetStorage().OrderBy, storage.GetStorage().OrderDirection)
 	}
-	model.ExtractFolder(objs, account.GetAccount().ExtractFolder)
+	model.ExtractFolder(objs, storage.GetStorage().ExtractFolder)
 	return objs, nil
 }
 

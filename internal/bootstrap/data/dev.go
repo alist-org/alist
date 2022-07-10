@@ -11,7 +11,7 @@ import (
 )
 
 func initDevData() {
-	err := operations.CreateAccount(context.Background(), model.Account{
+	err := operations.CreateStorage(context.Background(), model.Storage{
 		VirtualPath: "/",
 		Index:       0,
 		Driver:      "Local",
@@ -19,7 +19,7 @@ func initDevData() {
 		Addition:    `{"root_folder":"."}`,
 	})
 	if err != nil {
-		log.Fatalf("failed to create account: %+v", err)
+		log.Fatalf("failed to create storage: %+v", err)
 	}
 	err = db.CreateUser(&model.User{
 		Username:   "Noah",

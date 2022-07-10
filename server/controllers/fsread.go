@@ -218,16 +218,16 @@ func FsGet(c *gin.Context) {
 		if u, ok := obj.(model.URL); ok {
 			rawURL = u.URL()
 		} else {
-			account, _ := fs.GetAccount(req.Path)
-			if account.Config().MustProxy() || account.GetAccount().WebProxy {
-				if account.GetAccount().DownProxyUrl != "" {
-					rawURL = fmt.Sprintf("%s%s?sign=%s", strings.Split(account.GetAccount().DownProxyUrl, "\n")[0], req.Path, sign.Sign(obj.GetName()))
+			storage, _ := fs.GetStorage(req.Path)
+			if storage.Config().MustProxy() || storage.GetStorage().WebProxy {
+				if storage.GetStorage().DownProxyUrl != "" {
+					rawURL = fmt.Sprintf("%s%s?sign=%s", strings.Split(storage.GetStorage().DownProxyUrl, "\n")[0], req.Path, sign.Sign(obj.GetName()))
 				} else {
 					rawURL = fmt.Sprintf("%s/p%s?sign=%s", common.GetBaseUrl(c.Request), req.Path, sign.Sign(obj.GetName()))
 				}
 			} else {
-				// if account is not proxy, use raw url by fs.Link
-				link, _, err := fs.Link(c, req.Path, model.LinkArgs{})
+				// if storage is not proxy, use raw url by fs.Link
+				link, _, err := fs.Link(c, req.Path, model.LinkArgs{IP: c.ClientIP()})
 				if err != nil {
 					common.ErrorResp(c, err, 500)
 					return

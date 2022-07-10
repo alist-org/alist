@@ -16,7 +16,7 @@ import (
 )
 
 type Driver struct {
-	model.Account
+	model.Storage
 	Addition
 }
 
@@ -24,9 +24,9 @@ func (d Driver) Config() driver.Config {
 	return config
 }
 
-func (d *Driver) Init(ctx context.Context, account model.Account) error {
-	d.Account = account
-	err := utils.Json.UnmarshalFromString(d.Account.Addition, &d.Addition)
+func (d *Driver) Init(ctx context.Context, storage model.Storage) error {
+	d.Storage = storage
+	err := utils.Json.UnmarshalFromString(d.Storage.Addition, &d.Addition)
 	if err != nil {
 		return errors.Wrap(err, "error while unmarshal addition")
 	}
@@ -42,7 +42,7 @@ func (d *Driver) Init(ctx context.Context, account model.Account) error {
 		}
 		d.SetStatus("OK")
 	}
-	operations.MustSaveDriverAccount(d)
+	operations.MustSaveDriverStorage(d)
 	return err
 }
 

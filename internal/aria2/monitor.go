@@ -113,9 +113,9 @@ var TransferTaskManager = task.NewTaskManager[uint64](3, func(k *uint64) {
 
 func (m *Monitor) Complete() error {
 	// check dstDir again
-	account, dstDirActualPath, err := operations.GetAccountAndActualPath(m.dstDirPath)
+	storage, dstDirActualPath, err := operations.GetStorageAndActualPath(m.dstDirPath)
 	if err != nil {
-		return errors.WithMessage(err, "failed get account")
+		return errors.WithMessage(err, "failed get storage")
 	}
 	// get files
 	files, err := client.GetFiles(m.tsk.ID)
@@ -135,7 +135,7 @@ func (m *Monitor) Complete() error {
 	}()
 	for _, file := range files {
 		TransferTaskManager.Submit(task.WithCancelCtx[uint64](&task.Task[uint64]{
-			Name: fmt.Sprintf("transfer %s to [%s](%s)", file.Path, account.GetAccount().VirtualPath, dstDirActualPath),
+			Name: fmt.Sprintf("transfer %s to [%s](%s)", file.Path, storage.GetStorage().VirtualPath, dstDirActualPath),
 			Func: func(tsk *task.Task[uint64]) error {
 				defer wg.Done()
 				size, _ := strconv.ParseInt(file.Length, 10, 64)
@@ -157,7 +157,7 @@ func (m *Monitor) Complete() error {
 					ReadCloser: f,
 					Mimetype:   mimetype,
 				}
-				return operations.Put(tsk.Ctx, account, dstDirActualPath, stream, tsk.SetProgress)
+				return operations.Put(tsk.Ctx, storage, dstDirActualPath, stream, tsk.SetProgress)
 			},
 		}))
 	}

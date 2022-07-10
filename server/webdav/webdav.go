@@ -216,8 +216,8 @@ func (h *Handler) handleGetHeadPost(w http.ResponseWriter, r *http.Request) (sta
 	}
 	w.Header().Set("ETag", etag)
 	// Let ServeContent determine the Content-Type header.
-	account, _ := fs.GetAccount(reqPath)
-	if account.GetAccount().WebdavNative() {
+	storage, _ := fs.GetStorage(reqPath)
+	if storage.GetStorage().WebdavNative() {
 		link, _, err := fs.Link(ctx, reqPath, model.LinkArgs{Header: r.Header})
 		if err != nil {
 			return http.StatusInternalServerError, err
@@ -226,7 +226,7 @@ func (h *Handler) handleGetHeadPost(w http.ResponseWriter, r *http.Request) (sta
 		if err != nil {
 			return http.StatusInternalServerError, err
 		}
-	} else if account.Config().MustProxy() || account.GetAccount().WebdavProxy() {
+	} else if storage.Config().MustProxy() || storage.GetStorage().WebdavProxy() {
 		u := fmt.Sprintf("%s/p%s?sign=%s", common.GetBaseUrl(r), reqPath, sign.Sign(path.Base(reqPath)))
 		http.Redirect(w, r, u, 302)
 	} else {
