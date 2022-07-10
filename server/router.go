@@ -76,7 +76,8 @@ func Init(r *gin.Engine) {
 
 	// guest can
 	public := api.Group("/public")
-	public.GET("/settings", controllers.PublicSettings)
+	r.Any("/api/public/settings", controllers.PublicSettings)
+	//public.GET("/settings", controllers.PublicSettings)
 	public.Any("/list", controllers.FsList)
 	public.Any("/get", controllers.FsGet)
 	public.Any("/dirs", controllers.FsDirs)
