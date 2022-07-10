@@ -23,6 +23,11 @@ type ListReq struct {
 	Password string `json:"password" form:"password"`
 }
 
+type DirReq struct {
+	Path     string `json:"path" form:"path"`
+	Password string `json:"password" form:"password"`
+}
+
 type ObjResp struct {
 	Name     string    `json:"name"`
 	Size     int64     `json:"size"`
@@ -56,7 +61,7 @@ func FsList(c *gin.Context) {
 	}
 	c.Set("meta", meta)
 	if !canAccess(user, meta, req.Path, req.Password) {
-		common.ErrorStrResp(c, "password is incorrect", 401)
+		common.ErrorStrResp(c, "password is incorrect", 403)
 		return
 	}
 	objs, err := fs.List(c, req.Path)
@@ -71,6 +76,53 @@ func FsList(c *gin.Context) {
 		Readme:  getReadme(meta, req.Path),
 		Write:   user.CanWrite() || canWrite(meta, req.Path),
 	})
+}
+
+func FsDirs(c *gin.Context) {
+	var req DirReq
+	if err := c.ShouldBind(&req); err != nil {
+		common.ErrorResp(c, err, 400)
+		return
+	}
+	user := c.MustGet("user").(*model.User)
+	req.Path = stdpath.Join(user.BasePath, req.Path)
+	meta, err := db.GetNearestMeta(req.Path)
+	if err != nil {
+		if !errors.Is(errors.Cause(err), errs.MetaNotFound) {
+			common.ErrorResp(c, err, 500, true)
+			return
+		}
+	}
+	c.Set("meta", meta)
+	if !canAccess(user, meta, req.Path, req.Password) {
+		common.ErrorStrResp(c, "password is incorrect", 403)
+		return
+	}
+	objs, err := fs.List(c, req.Path)
+	if err != nil {
+		common.ErrorResp(c, err, 500)
+		return
+	}
+	dirs := filterDirs(objs)
+	common.SuccessResp(c, dirs)
+}
+
+type DirResp struct {
+	Name     string    `json:"name"`
+	Modified time.Time `json:"modified"`
+}
+
+func filterDirs(objs []model.Obj) []DirResp {
+	var dirs []DirResp
+	for _, obj := range objs {
+		if obj.IsDir() {
+			dirs = append(dirs, DirResp{
+				Name:     obj.GetName(),
+				Modified: obj.ModTime(),
+			})
+		}
+	}
+	return dirs
 }
 
 func getReadme(meta *model.Meta, path string) string {
@@ -152,7 +204,7 @@ func FsGet(c *gin.Context) {
 	}
 	c.Set("meta", meta)
 	if !canAccess(user, meta, req.Path, req.Password) {
-		common.ErrorStrResp(c, "password is incorrect", 401)
+		common.ErrorStrResp(c, "password is incorrect", 403)
 		return
 	}
 	obj, err := fs.Get(c, req.Path)

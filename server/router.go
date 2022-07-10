@@ -79,6 +79,7 @@ func Init(r *gin.Engine) {
 	public.GET("/settings", controllers.PublicSettings)
 	public.Any("/list", controllers.FsList)
 	public.Any("/get", controllers.FsGet)
+	public.Any("/dirs", controllers.FsDirs)
 
 	// gust can't
 	fs := api.Group("/fs")
