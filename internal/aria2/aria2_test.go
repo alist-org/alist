@@ -4,6 +4,7 @@ import (
 	"context"
 	_ "github.com/alist-org/alist/v3/drivers"
 	conf2 "github.com/alist-org/alist/v3/internal/conf"
+	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/operations"
 	"github.com/alist-org/alist/v3/pkg/task"
@@ -21,11 +22,11 @@ func init() {
 		panic(err)
 	}
 	conf2.Conf.TempDir = absPath
-	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{})
+	dB, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect database")
 	}
-	db.Init(db)
+	db.Init(dB)
 }
 
 func TestConnect(t *testing.T) {
