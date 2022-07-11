@@ -56,7 +56,7 @@ func GetSettingItemByKey(key string) (*model.SettingItem, error) {
 
 func GetPublicSettingItems() ([]model.SettingItem, error) {
 	var settingItems []model.SettingItem
-	if err := db.Where(fmt.Sprintf("%s in ?", columnName("flag")), []int{0, 2}).Find(&settingItems).Error; err != nil {
+	if err := db.Where(fmt.Sprintf("%s in ?", columnName("flag")), []int{model.PUBLIC, model.READONLY}).Find(&settingItems).Error; err != nil {
 		return nil, err
 	}
 	return settingItems, nil
