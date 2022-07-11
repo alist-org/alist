@@ -96,4 +96,7 @@ func initialSettings() {
 		// single settings
 		{Key: conf.Token, Value: token, Type: conf.TypeString, Group: model.SINGLE, Flag: model.PRIVATE},
 	}
+	if args.Dev {
+		initialSettingItems = append(initialSettingItems, model.SettingItem{Key: "test_deprecated", Value: "test_value", Type: conf.TypeString, Flag: model.DEPRECATED})
+	}
 }
