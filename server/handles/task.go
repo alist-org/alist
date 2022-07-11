@@ -1,4 +1,4 @@
-package controllers
+package handles
 
 import (
 	"github.com/alist-org/alist/v3/internal/aria2"
