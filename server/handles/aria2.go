@@ -29,12 +29,12 @@ func SetAria2(c *gin.Context) {
 		common.ErrorResp(c, err, 500)
 		return
 	}
-	err := aria2.InitClient(2)
+	version, err := aria2.InitClient(2)
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return
 	}
-	common.SuccessResp(c)
+	common.SuccessResp(c, version)
 }
 
 type AddAria2Req struct {

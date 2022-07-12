@@ -15,24 +15,24 @@ var DownTaskManager = task.NewTaskManager[string](3)
 var notify = NewNotify()
 var client rpc.Client
 
-func InitClient(timeout int) error {
+func InitClient(timeout int) (string, error) {
 	uri := setting.GetByKey(conf.Aria2Uri)
 	secret := setting.GetByKey(conf.Aria2Secret)
 	return InitAria2Client(uri, secret, timeout)
 }
 
-func InitAria2Client(uri string, secret string, timeout int) error {
+func InitAria2Client(uri string, secret string, timeout int) (string, error) {
 	c, err := rpc.New(context.Background(), uri, secret, time.Duration(timeout)*time.Second, notify)
 	if err != nil {
-		return errors.Wrap(err, "failed to init aria2 client")
+		return "", errors.Wrap(err, "failed to init aria2 client")
 	}
 	version, err := c.GetVersion()
 	if err != nil {
-		return errors.Wrapf(err, "failed get aria2 version")
+		return "", errors.Wrapf(err, "failed get aria2 version")
 	}
 	client = c
 	log.Infof("using aria2 version: %s", version.Version)
-	return nil
+	return version.Version, nil
 }
 
 func IsAria2Ready() bool {

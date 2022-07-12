@@ -7,7 +7,7 @@ import (
 
 func InitAria2() {
 	go func() {
-		err := aria2.InitClient(2)
+		_, err := aria2.InitClient(2)
 		log.Errorf("failed to init aria2 client: %+v", err)
 	}()
 }
