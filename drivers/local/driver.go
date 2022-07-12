@@ -20,7 +20,7 @@ type Driver struct {
 	Addition
 }
 
-func (d Driver) Config() driver.Config {
+func (d *Driver) Config() driver.Config {
 	return config
 }
 
@@ -175,7 +175,7 @@ func (d *Driver) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 	return nil
 }
 
-func (d Driver) Other(ctx context.Context, data interface{}) (interface{}, error) {
+func (d *Driver) Other(ctx context.Context, data interface{}) (interface{}, error) {
 	return nil, errs.NotSupport
 }
 

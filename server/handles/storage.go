@@ -17,6 +17,7 @@ func ListStorages(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
+	req.Validate()
 	log.Debugf("%+v", req)
 	storages, total, err := db.GetStorages(req.PageIndex, req.PageSize)
 	if err != nil {

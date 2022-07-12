@@ -54,7 +54,7 @@ func registerDriverItems(config driver.Config, addition driver.Additional) {
 
 func getMainItems(config driver.Config) []driver.Item {
 	items := []driver.Item{{
-		Name:     "virtual_path",
+		Name:     "mount_path",
 		Type:     conf.TypeString,
 		Required: true,
 		Help:     "",
@@ -62,6 +62,9 @@ func getMainItems(config driver.Config) []driver.Item {
 		Name: "index",
 		Type: conf.TypeNumber,
 		Help: "use to sort",
+	}, {
+		Name: "remark",
+		Type: conf.TypeText,
 	}, {
 		Name: "down_proxy_url",
 		Type: conf.TypeText,

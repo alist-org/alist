@@ -27,8 +27,8 @@ type Proxy struct {
 	DownProxyUrl string `json:"down_proxy_url"`
 }
 
-func (a Storage) GetStorage() Storage {
-	return a
+func (a *Storage) GetStorage() Storage {
+	return *a
 }
 
 func (a *Storage) SetStatus(status string) {
