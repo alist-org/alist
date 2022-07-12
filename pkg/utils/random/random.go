@@ -1,6 +1,7 @@
 package random
 
 import (
+	"github.com/google/uuid"
 	"math/rand"
 	"time"
 )
@@ -18,7 +19,7 @@ func String(n int) string {
 }
 
 func Token() string {
-	return String(64)
+	return uuid.NewString() + String(64)
 }
 
 func init() {
