@@ -31,8 +31,8 @@ func GetStorageAndActualPath(rawPath string) (driver.Driver, string, error) {
 	if storage == nil {
 		return nil, "", errors.Errorf("can't find storage with rawPath: %s", rawPath)
 	}
-	log.Debugln("use storage: ", storage.GetStorage().VirtualPath)
-	virtualPath := utils.GetActualVirtualPath(storage.GetStorage().VirtualPath)
+	log.Debugln("use storage: ", storage.GetStorage().MountPath)
+	virtualPath := utils.GetActualVirtualPath(storage.GetStorage().MountPath)
 	actualPath := strings.TrimPrefix(rawPath, virtualPath)
 	actualPath = ActualPath(storage.GetAddition(), actualPath)
 	return storage, actualPath, nil

@@ -24,7 +24,7 @@ var filesCache = cache.NewMemCache(cache.WithShards[[]model.Obj](64))
 var filesG singleflight.Group[[]model.Obj]
 
 func ClearCache(storage driver.Driver, path string) {
-	key := stdpath.Join(storage.GetStorage().VirtualPath, path)
+	key := stdpath.Join(storage.GetStorage().MountPath, path)
 	filesCache.Del(key)
 }
 
@@ -42,7 +42,7 @@ func List(ctx context.Context, storage driver.Driver, path string, refresh ...bo
 	if storage.Config().NoCache {
 		return storage.List(ctx, dir)
 	}
-	key := stdpath.Join(storage.GetStorage().VirtualPath, path)
+	key := stdpath.Join(storage.GetStorage().MountPath, path)
 	if len(refresh) == 0 || !refresh[0] {
 		if files, ok := filesCache.Get(key); ok {
 			return files, nil
@@ -132,7 +132,7 @@ func Link(ctx context.Context, storage driver.Driver, path string, args model.Li
 	if file.IsDir() {
 		return nil, nil, errors.WithStack(errs.NotFile)
 	}
-	key := stdpath.Join(storage.GetStorage().VirtualPath, path)
+	key := stdpath.Join(storage.GetStorage().MountPath, path)
 	if link, ok := linkCache.Get(key); ok {
 		return link, file, nil
 	}
@@ -253,7 +253,7 @@ func Put(ctx context.Context, storage driver.Driver, dstDirPath string, file mod
 	log.Debugf("put file [%s] done", file.GetName())
 	if err == nil {
 		// clear cache
-		key := stdpath.Join(storage.GetStorage().VirtualPath, dstDirPath)
+		key := stdpath.Join(storage.GetStorage().MountPath, dstDirPath)
 		filesCache.Del(key)
 	}
 	return err

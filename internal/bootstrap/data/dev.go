@@ -12,11 +12,11 @@ import (
 
 func initDevData() {
 	err := operations.CreateStorage(context.Background(), model.Storage{
-		VirtualPath: "/",
-		Index:       0,
-		Driver:      "Local",
-		Status:      "",
-		Addition:    `{"root_folder":"."}`,
+		MountPath: "/",
+		Index:     0,
+		Driver:    "Local",
+		Status:    "",
+		Addition:  `{"root_folder":"."}`,
 	})
 	if err != nil {
 		log.Fatalf("failed to create storage: %+v", err)

@@ -32,7 +32,7 @@ func GetStorageByVirtualPath(virtualPath string) (driver.Driver, error) {
 // then instantiate corresponding driver and save it in memory
 func CreateStorage(ctx context.Context, storage model.Storage) error {
 	storage.Modified = time.Now()
-	storage.VirtualPath = utils.StandardizePath(storage.VirtualPath)
+	storage.MountPath = utils.StandardizePath(storage.MountPath)
 	var err error
 	// check driver first
 	driverName := storage.Driver
@@ -52,7 +52,7 @@ func CreateStorage(ctx context.Context, storage model.Storage) error {
 		return errors.WithMessage(err, "failed init storage but storage is already created")
 	}
 	log.Debugf("storage %+v is created", storageDriver)
-	storagesMap.Store(storage.VirtualPath, storageDriver)
+	storagesMap.Store(storage.MountPath, storageDriver)
 	return nil
 }
 
@@ -68,15 +68,15 @@ func UpdateStorage(ctx context.Context, storage model.Storage) error {
 		return errors.Errorf("driver cannot be changed")
 	}
 	storage.Modified = time.Now()
-	storage.VirtualPath = utils.StandardizePath(storage.VirtualPath)
+	storage.MountPath = utils.StandardizePath(storage.MountPath)
 	err = db.UpdateStorage(&storage)
 	if err != nil {
 		return errors.WithMessage(err, "failed update storage in database")
 	}
-	storageDriver, err := GetStorageByVirtualPath(oldStorage.VirtualPath)
-	if oldStorage.VirtualPath != storage.VirtualPath {
+	storageDriver, err := GetStorageByVirtualPath(oldStorage.MountPath)
+	if oldStorage.MountPath != storage.MountPath {
 		// virtual path renamed, need to drop the storage
-		storagesMap.Delete(oldStorage.VirtualPath)
+		storagesMap.Delete(oldStorage.MountPath)
 	}
 	if err != nil {
 		return errors.WithMessage(err, "failed get storage driver")
@@ -89,7 +89,7 @@ func UpdateStorage(ctx context.Context, storage model.Storage) error {
 	if err != nil {
 		return errors.WithMessage(err, "failed init storage")
 	}
-	storagesMap.Store(storage.VirtualPath, storageDriver)
+	storagesMap.Store(storage.MountPath, storageDriver)
 	return nil
 }
 
@@ -98,7 +98,7 @@ func DeleteStorageById(ctx context.Context, id uint) error {
 	if err != nil {
 		return errors.WithMessage(err, "failed get storage")
 	}
-	storageDriver, err := GetStorageByVirtualPath(storage.VirtualPath)
+	storageDriver, err := GetStorageByVirtualPath(storage.MountPath)
 	if err != nil {
 		return errors.WithMessage(err, "failed get storage driver")
 	}
@@ -111,7 +111,7 @@ func DeleteStorageById(ctx context.Context, id uint) error {
 		return errors.WithMessage(err, "failed delete storage in database")
 	}
 	// delete the storage in the memory
-	storagesMap.Delete(storage.VirtualPath)
+	storagesMap.Delete(storage.MountPath)
 	return nil
 }
 
@@ -145,7 +145,7 @@ func getStoragesByPath(path string) []driver.Driver {
 	storages := make([]driver.Driver, 0)
 	curSlashCount := 0
 	storagesMap.Range(func(key string, value driver.Driver) bool {
-		virtualPath := utils.GetActualVirtualPath(value.GetStorage().VirtualPath)
+		virtualPath := utils.GetActualVirtualPath(value.GetStorage().MountPath)
 		if virtualPath == "/" {
 			virtualPath = ""
 		}
@@ -167,7 +167,7 @@ func getStoragesByPath(path string) []driver.Driver {
 	})
 	// make sure the order is the same for same input
 	sort.Slice(storages, func(i, j int) bool {
-		return storages[i].GetStorage().VirtualPath < storages[j].GetStorage().VirtualPath
+		return storages[i].GetStorage().MountPath < storages[j].GetStorage().MountPath
 	})
 	return storages
 }
@@ -180,7 +180,7 @@ func GetStorageVirtualFilesByPath(prefix string) []model.Obj {
 	storages := storagesMap.Values()
 	sort.Slice(storages, func(i, j int) bool {
 		if storages[i].GetStorage().Index == storages[j].GetStorage().Index {
-			return storages[i].GetStorage().VirtualPath < storages[j].GetStorage().VirtualPath
+			return storages[i].GetStorage().MountPath < storages[j].GetStorage().MountPath
 		}
 		return storages[i].GetStorage().Index < storages[j].GetStorage().Index
 	})
@@ -192,10 +192,10 @@ func GetStorageVirtualFilesByPath(prefix string) []model.Obj {
 	for _, v := range storages {
 		// TODO should save a balanced storage
 		// balance storage
-		if utils.IsBalance(v.GetStorage().VirtualPath) {
+		if utils.IsBalance(v.GetStorage().MountPath) {
 			continue
 		}
-		virtualPath := v.GetStorage().VirtualPath
+		virtualPath := v.GetStorage().MountPath
 		if len(virtualPath) <= len(prefix) {
 			continue
 		}
@@ -230,7 +230,7 @@ func GetBalancedStorage(path string) driver.Driver {
 	case 1:
 		return storages[0]
 	default:
-		virtualPath := utils.GetActualVirtualPath(storages[0].GetStorage().VirtualPath)
+		virtualPath := utils.GetActualVirtualPath(storages[0].GetStorage().MountPath)
 		cur, ok := balanceMap.Load(virtualPath)
 		i := 0
 		if ok {

@@ -36,7 +36,7 @@ func _copy(ctx context.Context, srcObjPath, dstDirPath string) (bool, error) {
 	}
 	// not in the same storage
 	CopyTaskManager.Submit(task.WithCancelCtx(&task.Task[uint64]{
-		Name: fmt.Sprintf("copy [%s](%s) to [%s](%s)", srcStorage.GetStorage().VirtualPath, srcObjActualPath, dstStorage.GetStorage().VirtualPath, dstDirActualPath),
+		Name: fmt.Sprintf("copy [%s](%s) to [%s](%s)", srcStorage.GetStorage().MountPath, srcObjActualPath, dstStorage.GetStorage().MountPath, dstDirActualPath),
 		Func: func(task *task.Task[uint64]) error {
 			return copyBetween2Storages(task, srcStorage, dstStorage, srcObjActualPath, dstDirActualPath)
 		},
@@ -63,7 +63,7 @@ func copyBetween2Storages(t *task.Task[uint64], srcStorage, dstStorage driver.Dr
 			srcObjPath := stdpath.Join(srcObjPath, obj.GetName())
 			dstObjPath := stdpath.Join(dstDirPath, obj.GetName())
 			CopyTaskManager.Submit(task.WithCancelCtx(&task.Task[uint64]{
-				Name: fmt.Sprintf("copy [%s](%s) to [%s](%s)", srcStorage.GetStorage().VirtualPath, srcObjPath, dstStorage.GetStorage().VirtualPath, dstObjPath),
+				Name: fmt.Sprintf("copy [%s](%s) to [%s](%s)", srcStorage.GetStorage().MountPath, srcObjPath, dstStorage.GetStorage().MountPath, dstObjPath),
 				Func: func(t *task.Task[uint64]) error {
 					return copyBetween2Storages(t, srcStorage, dstStorage, srcObjPath, dstObjPath)
 				},
@@ -71,7 +71,7 @@ func copyBetween2Storages(t *task.Task[uint64], srcStorage, dstStorage driver.Dr
 		}
 	} else {
 		CopyTaskManager.Submit(task.WithCancelCtx(&task.Task[uint64]{
-			Name: fmt.Sprintf("copy [%s](%s) to [%s](%s)", srcStorage.GetStorage().VirtualPath, srcObjPath, dstStorage.GetStorage().VirtualPath, dstDirPath),
+			Name: fmt.Sprintf("copy [%s](%s) to [%s](%s)", srcStorage.GetStorage().MountPath, srcObjPath, dstStorage.GetStorage().MountPath, dstDirPath),
 			Func: func(t *task.Task[uint64]) error {
 				return copyFileBetween2Storages(t, srcStorage, dstStorage, srcObjPath, dstDirPath)
 			},

@@ -3,14 +3,14 @@ package model
 import "time"
 
 type Storage struct {
-	ID          uint      `json:"id" gorm:"primaryKey"`                          // unique key
-	VirtualPath string    `json:"virtual_path" gorm:"unique" binding:"required"` // must be standardized
-	Index       int       `json:"index"`                                         // use to sort
-	Driver      string    `json:"driver"`
-	Status      string    `json:"status"`
-	Addition    string    `json:"addition" gorm:"type:text"` // Additional information, defined in the corresponding driver
-	Remark      string    `json:"remark"`
-	Modified    time.Time `json:"modified"`
+	ID        uint      `json:"id" gorm:"primaryKey"`                        // unique key
+	MountPath string    `json:"mount_path" gorm:"unique" binding:"required"` // must be standardized
+	Index     int       `json:"index"`                                       // use to sort
+	Driver    string    `json:"driver"`                                      // driver used
+	Status    string    `json:"status"`
+	Addition  string    `json:"addition" gorm:"type:text"` // Additional information, defined in the corresponding driver
+	Remark    string    `json:"remark"`
+	Modified  time.Time `json:"modified"`
 	Sort
 	Proxy
 }

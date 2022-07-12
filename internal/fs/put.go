@@ -33,7 +33,7 @@ func putAsTask(dstDirPath string, file model.FileStreamer) error {
 		file.SetReadCloser(tempFile)
 	}
 	UploadTaskManager.Submit(task.WithCancelCtx(&task.Task[uint64]{
-		Name: fmt.Sprintf("upload %s to [%s](%s)", file.GetName(), storage.GetStorage().VirtualPath, dstDirActualPath),
+		Name: fmt.Sprintf("upload %s to [%s](%s)", file.GetName(), storage.GetStorage().MountPath, dstDirActualPath),
 		Func: func(task *task.Task[uint64]) error {
 			return operations.Put(task.Ctx, storage, dstDirActualPath, file, nil)
 		},

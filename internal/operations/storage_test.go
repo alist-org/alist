@@ -25,9 +25,9 @@ func TestCreateStorage(t *testing.T) {
 		storage model.Storage
 		isErr   bool
 	}{
-		{storage: model.Storage{Driver: "Local", VirtualPath: "/local", Addition: `{"root_folder":"."}`}, isErr: false},
-		{storage: model.Storage{Driver: "Local", VirtualPath: "/local", Addition: `{"root_folder":"."}`}, isErr: true},
-		{storage: model.Storage{Driver: "None", VirtualPath: "/none", Addition: `{"root_folder":"."}`}, isErr: true},
+		{storage: model.Storage{Driver: "Local", MountPath: "/local", Addition: `{"root_folder":"."}`}, isErr: false},
+		{storage: model.Storage{Driver: "Local", MountPath: "/local", Addition: `{"root_folder":"."}`}, isErr: true},
+		{storage: model.Storage{Driver: "None", MountPath: "/none", Addition: `{"root_folder":"."}`}, isErr: true},
 	}
 	for _, storage := range storages {
 		err := operations.CreateStorage(context.Background(), storage.storage)
@@ -59,22 +59,22 @@ func TestGetStorageVirtualFilesByPath(t *testing.T) {
 func TestGetBalancedStorage(t *testing.T) {
 	setupStorages(t)
 	storage := operations.GetBalancedStorage("/a/d/e")
-	if storage.GetStorage().VirtualPath != "/a/d/e" {
-		t.Errorf("expected: /a/d/e, got: %+v", storage.GetStorage().VirtualPath)
+	if storage.GetStorage().MountPath != "/a/d/e" {
+		t.Errorf("expected: /a/d/e, got: %+v", storage.GetStorage().MountPath)
 	}
 	storage = operations.GetBalancedStorage("/a/d/e")
-	if storage.GetStorage().VirtualPath != "/a/d/e.balance" {
-		t.Errorf("expected: /a/d/e.balance, got: %+v", storage.GetStorage().VirtualPath)
+	if storage.GetStorage().MountPath != "/a/d/e.balance" {
+		t.Errorf("expected: /a/d/e.balance, got: %+v", storage.GetStorage().MountPath)
 	}
 }
 
 func setupStorages(t *testing.T) {
 	var storages = []model.Storage{
-		{Driver: "Local", VirtualPath: "/a/b", Index: 0, Addition: `{"root_folder":"."}`},
-		{Driver: "Local", VirtualPath: "/a/c", Index: 1, Addition: `{"root_folder":"."}`},
-		{Driver: "Local", VirtualPath: "/a/d", Index: 2, Addition: `{"root_folder":"."}`},
-		{Driver: "Local", VirtualPath: "/a/d/e", Index: 3, Addition: `{"root_folder":"."}`},
-		{Driver: "Local", VirtualPath: "/a/d/e.balance", Index: 4, Addition: `{"root_folder":"."}`},
+		{Driver: "Local", MountPath: "/a/b", Index: 0, Addition: `{"root_folder":"."}`},
+		{Driver: "Local", MountPath: "/a/c", Index: 1, Addition: `{"root_folder":"."}`},
+		{Driver: "Local", MountPath: "/a/d", Index: 2, Addition: `{"root_folder":"."}`},
+		{Driver: "Local", MountPath: "/a/d/e", Index: 3, Addition: `{"root_folder":"."}`},
+		{Driver: "Local", MountPath: "/a/d/e.balance", Index: 4, Addition: `{"root_folder":"."}`},
 	}
 	for _, storage := range storages {
 		err := operations.CreateStorage(context.Background(), storage)

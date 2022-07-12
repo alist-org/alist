@@ -45,7 +45,7 @@ func AddURI(ctx context.Context, uri string, dstDirPath string) error {
 	}
 	DownTaskManager.Submit(task.WithCancelCtx(&task.Task[string]{
 		ID:   gid,
-		Name: fmt.Sprintf("download %s to [%s](%s)", uri, storage.GetStorage().VirtualPath, dstDirActualPath),
+		Name: fmt.Sprintf("download %s to [%s](%s)", uri, storage.GetStorage().MountPath, dstDirActualPath),
 		Func: func(tsk *task.Task[string]) error {
 			m := &Monitor{
 				tsk:        tsk,

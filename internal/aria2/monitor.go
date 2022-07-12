@@ -135,7 +135,7 @@ func (m *Monitor) Complete() error {
 	}()
 	for _, file := range files {
 		TransferTaskManager.Submit(task.WithCancelCtx[uint64](&task.Task[uint64]{
-			Name: fmt.Sprintf("transfer %s to [%s](%s)", file.Path, storage.GetStorage().VirtualPath, dstDirActualPath),
+			Name: fmt.Sprintf("transfer %s to [%s](%s)", file.Path, storage.GetStorage().MountPath, dstDirActualPath),
 			Func: func(tsk *task.Task[uint64]) error {
 				defer wg.Done()
 				size, _ := strconv.ParseInt(file.Length, 10, 64)

@@ -39,13 +39,13 @@ func TestConnect(t *testing.T) {
 func TestDown(t *testing.T) {
 	TestConnect(t)
 	err := operations.CreateStorage(context.Background(), model.Storage{
-		ID:          0,
-		VirtualPath: "/",
-		Index:       0,
-		Driver:      "Local",
-		Status:      "",
-		Addition:    `{"root_folder":"../../data"}`,
-		Remark:      "",
+		ID:        0,
+		MountPath: "/",
+		Index:     0,
+		Driver:    "Local",
+		Status:    "",
+		Addition:  `{"root_folder":"../../data"}`,
+		Remark:    "",
 	})
 	if err != nil {
 		t.Fatalf("failed to create storage: %+v", err)
