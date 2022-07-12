@@ -9,6 +9,7 @@ import (
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
 	"strconv"
+	"strings"
 )
 
 func ResetToken(c *gin.Context) {
@@ -24,12 +25,22 @@ func ResetToken(c *gin.Context) {
 
 func GetSetting(c *gin.Context) {
 	key := c.Query("key")
-	item, err := db.GetSettingItemByKey(key)
-	if err != nil {
-		common.ErrorResp(c, err, 400)
-		return
+	keys := c.Query("keys")
+	if key != "" {
+		item, err := db.GetSettingItemByKey(key)
+		if err != nil {
+			common.ErrorResp(c, err, 400)
+			return
+		}
+		common.SuccessResp(c, item)
+	} else {
+		items, err := db.GetSettingItemInKeys(strings.Split(keys, ","))
+		if err != nil {
+			common.ErrorResp(c, err, 400)
+			return
+		}
+		common.SuccessResp(c, items)
 	}
-	common.SuccessResp(c, item)
 }
 
 func SaveSettings(c *gin.Context) {
@@ -47,15 +58,28 @@ func SaveSettings(c *gin.Context) {
 
 func ListSettings(c *gin.Context) {
 	groupStr := c.Query("group")
+	groupsStr := c.Query("groups")
 	var settings []model.SettingItem
 	var err error
-	if groupStr == "" {
+	if groupsStr == "" && groupStr == "" {
 		settings, err = db.GetSettingItems()
 	} else {
-		group, err := strconv.Atoi(groupStr)
-		if err == nil {
-			settings, err = db.GetSettingItemsByGroup(group)
+		var groupStrings []string
+		if groupsStr != "" {
+			groupStrings = strings.Split(groupsStr, ",")
+		} else {
+			groupStrings = append(groupStrings, groupStr)
 		}
+		var groups []int
+		for _, str := range groupStrings {
+			group, err := strconv.Atoi(str)
+			if err != nil {
+				common.ErrorResp(c, err, 400)
+				return
+			}
+			groups = append(groups, group)
+		}
+		settings, err = db.GetSettingItemsInGroups(groups)
 	}
 	if err != nil {
 		common.ErrorResp(c, err, 400)

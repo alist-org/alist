@@ -13,7 +13,7 @@ const (
 	ApiUrl       = "api_url"
 	BasePath     = "base_path"
 	SiteTitle    = "site_title"
-	SiteLogo     = "site_logo"
+	Logo         = "logo"
 	Favicon      = "favicon"
 	Announcement = "announcement"
 	IconColor    = "icon_color"
