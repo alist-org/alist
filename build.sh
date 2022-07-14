@@ -2,8 +2,8 @@
 
 # 构建前端,在当前目录产生一个dist文件夹
 BUILD_WEB() {
-  git clone https://github.com/alist-org/alist-web.git
-  cd alist-web
+  git clone https://github.com/alist-org/web-v2.git
+  cd web-v2
   yarn
   yarn build
   sed -i -e "s/\/CDN_URL\//\//g" dist/index.html
@@ -11,11 +11,11 @@ BUILD_WEB() {
   rm -f dist/index.html-e
   mv dist ..
   cd .. || exit
-  rm -rf alist-web
+  rm -rf web-v2
 }
 
 CDN_WEB() {
-  curl -L https://github.com/alist-org/alist-web/releases/latest/download/dist.tar.gz -o dist.tar.gz
+  curl -L https://github.com/alist-org/web-v2/releases/latest/download/dist.tar.gz -o dist.tar.gz
   tar -zxvf dist.tar.gz
   rm -f dist.tar.gz
 }
@@ -28,7 +28,7 @@ BUILD_DOCKER() {
   gitAuthor=$(git show -s --format='format:%aN <%ae>' HEAD)
   gitCommit=$(git log --pretty=format:"%h" -1)
   gitTag=$(git describe --long --tags --dirty --always)
-  webTag=$(wget -qO- -t1 -T2 "https://api.github.com/repos/alist-org/alist-web/releases/latest" | grep "tag_name" | head -n 1 | awk -F ":" '{print $2}' | sed 's/\"//g;s/,//g;s/ //g')
+  webTag=$(wget -qO- -t1 -T2 "https://api.github.com/repos/alist-org/web-v2/releases/latest" | grep "tag_name" | head -n 1 | awk -F ":" '{print $2}' | sed 's/\"//g;s/,//g;s/ //g')
   ldflags="\
 -w -s \
 -X 'github.com/Xhofe/alist/conf.BuiltAt=$builtAt' \
@@ -49,7 +49,7 @@ BUILD() {
   gitAuthor=$(git show -s --format='format:%aN <%ae>' HEAD)
   gitCommit=$(git log --pretty=format:"%h" -1)
   gitTag=$(git describe --long --tags --dirty --always)
-  webTag=$(wget -qO- -t1 -T2 "https://api.github.com/repos/alist-org/alist-web/releases/latest" | grep "tag_name" | head -n 1 | awk -F ":" '{print $2}' | sed 's/\"//g;s/,//g;s/ //g')
+  webTag=$(wget -qO- -t1 -T2 "https://api.github.com/repos/alist-org/web-v2/releases/latest" | grep "tag_name" | head -n 1 | awk -F ":" '{print $2}' | sed 's/\"//g;s/,//g;s/ //g')
   echo "build version: $gitTag"
 
   ldflags="\
@@ -95,7 +95,7 @@ BUILD_MUSL() {
   gitAuthor=$(git show -s --format='format:%aN <%ae>' HEAD)
   gitCommit=$(git log --pretty=format:"%h" -1)
   gitTag=$(git describe --long --tags --dirty --always)
-  webTag=$(wget -qO- -t1 -T2 "https://api.github.com/repos/alist-org/alist-web/releases/latest" | grep "tag_name" | head -n 1 | awk -F ":" '{print $2}' | sed 's/\"//g;s/,//g;s/ //g')
+  webTag=$(wget -qO- -t1 -T2 "https://api.github.com/repos/alist-org/web-v2/releases/latest" | grep "tag_name" | head -n 1 | awk -F ":" '{print $2}' | sed 's/\"//g;s/,//g;s/ //g')
   ldflags="\
 -w -s --extldflags '-static -fpic' \
 -X 'github.com/Xhofe/alist/conf.BuiltAt=$builtAt' \
