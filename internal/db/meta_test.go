@@ -1,6 +1,7 @@
 package db
 
 import (
+	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/pkg/errors"
 	"gorm.io/driver/sqlite"
@@ -51,7 +52,7 @@ func TestGetNearestMeta1(t *testing.T) {
 
 func TestGetNearestMeta2(t *testing.T) {
 	meta, err := GetNearestMeta("/c/d/e")
-	if errors.Cause(err) != ErrMetaNotFound {
+	if errors.Cause(err) != errs.MetaNotFound {
 		t.Errorf("unexpected error: %+v", err)
 		t.Errorf("unexpected meta: %+v", meta)
 	}

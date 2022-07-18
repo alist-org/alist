@@ -2,6 +2,10 @@ package aria2
 
 import (
 	"context"
+	"path/filepath"
+	"testing"
+	"time"
+
 	_ "github.com/alist-org/alist/v3/drivers"
 	conf2 "github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/db"
@@ -10,9 +14,6 @@ import (
 	"github.com/alist-org/alist/v3/pkg/task"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	"path/filepath"
-	"testing"
-	"time"
 )
 
 func init() {
@@ -30,7 +31,7 @@ func init() {
 }
 
 func TestConnect(t *testing.T) {
-	err := InitAria2Client("http://localhost:16800/jsonrpc", "secret", 3)
+	_, err := InitAria2Client("http://localhost:16800/jsonrpc", "secret", 3)
 	if err != nil {
 		t.Errorf("failed to init aria2: %+v", err)
 	}
