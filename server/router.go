@@ -39,6 +39,7 @@ func Init(r *gin.Engine) {
 
 	storage := admin.Group("/storage")
 	storage.GET("/list", handles.ListStorages)
+	storage.GET("/get", handles.GetStorage)
 	storage.POST("/create", handles.CreateStorage)
 	storage.POST("/update", handles.UpdateStorage)
 	storage.POST("/delete", handles.DeleteStorage)
