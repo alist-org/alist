@@ -211,6 +211,7 @@ func GetStorageVirtualFilesByPath(prefix string) []model.Obj {
 			Name:     name,
 			Size:     0,
 			Modified: v.GetStorage().Modified,
+			IsFolder: true,
 		})
 		set[name] = nil
 	}
