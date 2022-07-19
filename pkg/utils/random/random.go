@@ -22,6 +22,10 @@ func Token() string {
 	return uuid.NewString() + String(64)
 }
 
+func RangeInt64(left, right int64) int64 {
+	return rand.Int63n(left+right) - left
+}
+
 func init() {
 	s := rand.NewSource(time.Now().UnixNano())
 	Rand = rand.New(s)
