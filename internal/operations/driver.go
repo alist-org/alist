@@ -45,7 +45,7 @@ func registerDriverItems(config driver.Config, addition driver.Additional) {
 	log.Debugf("addition of %s: %+v", config.Name, addition)
 	tAddition := reflect.TypeOf(addition)
 	mainItems := getMainItems(config)
-	additionalItems := getAdditionalItems(tAddition)
+	additionalItems := getAdditionalItems(tAddition, config.DefaultRoot)
 	driverItemsMap[config.Name] = driver.Items{
 		Main:       mainItems,
 		Additional: additionalItems,
@@ -109,12 +109,12 @@ func getMainItems(config driver.Config) []driver.Item {
 	return items
 }
 
-func getAdditionalItems(t reflect.Type) []driver.Item {
+func getAdditionalItems(t reflect.Type, defaultRoot string) []driver.Item {
 	var items []driver.Item
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
 		if field.Type.Kind() == reflect.Struct {
-			items = append(items, getAdditionalItems(field.Type)...)
+			items = append(items, getAdditionalItems(field.Type, defaultRoot)...)
 			continue
 		}
 		tag := field.Tag
@@ -132,6 +132,9 @@ func getAdditionalItems(t reflect.Type) []driver.Item {
 		}
 		if tag.Get("type") != "" {
 			item.Type = tag.Get("type")
+		}
+		if item.Name == "root_folder" && item.Default == "" {
+			item.Default = defaultRoot
 		}
 		// set default type to string
 		if item.Type == "" {

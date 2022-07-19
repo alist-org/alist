@@ -10,10 +10,11 @@ type Addition struct {
 }
 
 var config = driver.Config{
-	Name:      "Local",
-	OnlyLocal: true,
-	LocalSort: true,
-	NoCache:   true,
+	Name:        "Local",
+	OnlyLocal:   true,
+	LocalSort:   true,
+	NoCache:     true,
+	DefaultRoot: "/",
 }
 
 func New() driver.Driver {
