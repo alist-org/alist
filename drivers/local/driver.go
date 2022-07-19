@@ -15,16 +15,16 @@ import (
 	"github.com/pkg/errors"
 )
 
-type Driver struct {
+type Local struct {
 	model.Storage
 	Addition
 }
 
-func (d *Driver) Config() driver.Config {
+func (d *Local) Config() driver.Config {
 	return config
 }
 
-func (d *Driver) Init(ctx context.Context, storage model.Storage) error {
+func (d *Local) Init(ctx context.Context, storage model.Storage) error {
 	d.Storage = storage
 	err := utils.Json.UnmarshalFromString(d.Storage.Addition, &d.Addition)
 	if err != nil {
@@ -46,15 +46,15 @@ func (d *Driver) Init(ctx context.Context, storage model.Storage) error {
 	return err
 }
 
-func (d *Driver) Drop(ctx context.Context) error {
+func (d *Local) Drop(ctx context.Context) error {
 	return nil
 }
 
-func (d *Driver) GetAddition() driver.Additional {
+func (d *Local) GetAddition() driver.Additional {
 	return d.Addition
 }
 
-func (d *Driver) List(ctx context.Context, dir model.Obj) ([]model.Obj, error) {
+func (d *Local) List(ctx context.Context, dir model.Obj) ([]model.Obj, error) {
 	fullPath := dir.GetID()
 	rawFiles, err := ioutil.ReadDir(fullPath)
 	if err != nil {
@@ -76,7 +76,7 @@ func (d *Driver) List(ctx context.Context, dir model.Obj) ([]model.Obj, error) {
 	return files, nil
 }
 
-func (d *Driver) Get(ctx context.Context, path string) (model.Obj, error) {
+func (d *Local) Get(ctx context.Context, path string) (model.Obj, error) {
 	f, err := os.Stat(path)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error while stat %s", path)
@@ -91,7 +91,7 @@ func (d *Driver) Get(ctx context.Context, path string) (model.Obj, error) {
 	return &file, nil
 }
 
-func (d *Driver) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
+func (d *Local) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	fullPath := file.GetID()
 	link := model.Link{
 		FilePath: &fullPath,
@@ -99,7 +99,7 @@ func (d *Driver) Link(ctx context.Context, file model.Obj, args model.LinkArgs) 
 	return &link, nil
 }
 
-func (d *Driver) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
+func (d *Local) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
 	fullPath := filepath.Join(parentDir.GetID(), dirName)
 	err := os.MkdirAll(fullPath, 0700)
 	if err != nil {
@@ -108,7 +108,7 @@ func (d *Driver) MakeDir(ctx context.Context, parentDir model.Obj, dirName strin
 	return nil
 }
 
-func (d *Driver) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
+func (d *Local) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 	srcPath := srcObj.GetID()
 	dstPath := filepath.Join(dstDir.GetID(), srcObj.GetName())
 	err := os.Rename(srcPath, dstPath)
@@ -118,7 +118,7 @@ func (d *Driver) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 	return nil
 }
 
-func (d *Driver) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
+func (d *Local) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
 	srcPath := srcObj.GetID()
 	dstPath := filepath.Join(filepath.Dir(srcPath), newName)
 	err := os.Rename(srcPath, dstPath)
@@ -128,7 +128,7 @@ func (d *Driver) Rename(ctx context.Context, srcObj model.Obj, newName string) e
 	return nil
 }
 
-func (d *Driver) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
+func (d *Local) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 	srcPath := srcObj.GetID()
 	dstPath := filepath.Join(dstDir.GetID(), srcObj.GetName())
 	var err error
@@ -143,7 +143,7 @@ func (d *Driver) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 	return nil
 }
 
-func (d *Driver) Remove(ctx context.Context, obj model.Obj) error {
+func (d *Local) Remove(ctx context.Context, obj model.Obj) error {
 	var err error
 	if obj.IsDir() {
 		err = os.RemoveAll(obj.GetID())
@@ -156,7 +156,7 @@ func (d *Driver) Remove(ctx context.Context, obj model.Obj) error {
 	return nil
 }
 
-func (d *Driver) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
+func (d *Local) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
 	fullPath := filepath.Join(dstDir.GetID(), stream.GetName())
 	out, err := os.Create(fullPath)
 	if err != nil {
@@ -175,8 +175,8 @@ func (d *Driver) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 	return nil
 }
 
-func (d *Driver) Other(ctx context.Context, data interface{}) (interface{}, error) {
+func (d *Local) Other(ctx context.Context, data interface{}) (interface{}, error) {
 	return nil, errs.NotSupport
 }
 
-var _ driver.Driver = (*Driver)(nil)
+var _ driver.Driver = (*Local)(nil)

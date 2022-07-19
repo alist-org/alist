@@ -18,7 +18,7 @@ var config = driver.Config{
 }
 
 func New() driver.Driver {
-	return &Driver{}
+	return &Local{}
 }
 
 func init() {
