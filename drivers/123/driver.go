@@ -176,7 +176,7 @@ func (driver Pan123) Link(args base.Args, account *model.Account) (*base.Link, e
 		return nil, err
 	}
 	u_ := fmt.Sprintf("https://%s%s", u.Host, u.Path)
-	res, err := base.NoRedirectClient.R().SetQueryParamsFromValues(u.Query()).Get(u_)
+	res, err := base.NoRedirectClient.R().SetQueryParamsFromValues(u.Query()).Head(u_)
 	if err != nil {
 		return nil, err
 	}
@@ -184,6 +184,7 @@ func (driver Pan123) Link(args base.Args, account *model.Account) (*base.Link, e
 	link := base.Link{
 		Url: resp.Data.DownloadUrl,
 	}
+	log.Debugln("res code: ", res.StatusCode())
 	if res.StatusCode() == 302 {
 		link.Url = res.Header().Get("location")
 	}
