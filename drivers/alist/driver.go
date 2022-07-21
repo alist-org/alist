@@ -113,7 +113,7 @@ func (driver Alist) Link(args base.Args, account *model.Account) (*base.Link, er
 		flag = "p"
 	}
 	link := base.Link{}
-	link.Url = fmt.Sprintf("%s/%s%s?sign=%s", account.SiteUrl, flag, path, utils.SignWithToken(name, conf.Token))
+	link.Url = fmt.Sprintf("%s/%s%s?sign=%s", account.SiteUrl, flag, utils.Join(utils.ParsePath(account.RootFolder), path), utils.SignWithToken(name, conf.Token))
 	return &link, nil
 }
 
