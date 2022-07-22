@@ -24,26 +24,26 @@ type CacheConfig struct {
 }
 
 type Config struct {
-	Force    bool        `json:"force"`
-	Address  string      `json:"address" env:"ADDR"`
-	Port     int         `json:"port" env:"PORT"`
-	Assets   string      `json:"assets" env:"ASSETS"`
-	LocalAssets string   `json:"localassets" env:"LOCALASSETS"`
-	SubFolder string     `json:"subfolder" env:"SUBFOLDER"`
-	Database Database    `json:"database"`
-	Scheme   Scheme      `json:"scheme"`
-	Cache    CacheConfig `json:"cache"`
-	TempDir  string      `json:"temp_dir" env:"TEMP_DIR"`
+	Force       bool        `json:"force"`
+	Address     string      `json:"address" env:"ADDR"`
+	Port        int         `json:"port" env:"PORT"`
+	Assets      string      `json:"assets" env:"ASSETS"`
+	LocalAssets string      `json:"localassets" env:"LOCALASSETS"`
+	SubFolder   string      `json:"subfolder" env:"SUBFOLDER"`
+	Database    Database    `json:"database"`
+	Scheme      Scheme      `json:"scheme"`
+	Cache       CacheConfig `json:"cache"`
+	TempDir     string      `json:"temp_dir" env:"TEMP_DIR"`
 }
 
 func DefaultConfig() *Config {
 	return &Config{
-		Address: "0.0.0.0",
-		Port:    5244,
-		Assets:  "https://npm.elemecdn.com/alist-web@$version/dist",
-		SubFolder: "",
+		Address:     "0.0.0.0",
+		Port:        5244,
+		Assets:      "/",
+		SubFolder:   "",
 		LocalAssets: "",
-		TempDir: "data/temp",
+		TempDir:     "data/temp",
 		Database: Database{
 			Type:        "sqlite3",
 			Port:        0,
