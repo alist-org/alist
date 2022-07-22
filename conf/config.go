@@ -28,8 +28,8 @@ type Config struct {
 	Address     string      `json:"address" env:"ADDR"`
 	Port        int         `json:"port" env:"PORT"`
 	Assets      string      `json:"assets" env:"ASSETS"`
-	LocalAssets string      `json:"localassets" env:"LOCALASSETS"`
-	SubFolder   string      `json:"subfolder" env:"SUBFOLDER"`
+	LocalAssets string      `json:"local_assets" env:"LOCAL_ASSETS"`
+	SubFolder   string      `json:"sub_folder" env:"SUB_FOLDER"`
 	Database    Database    `json:"database"`
 	Scheme      Scheme      `json:"scheme"`
 	Cache       CacheConfig `json:"cache"`
