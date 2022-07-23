@@ -7,6 +7,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/setting"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 )
 
 // Auth is a middleware that checks if the user is logged in.
@@ -21,6 +22,7 @@ func Auth(c *gin.Context) {
 			return
 		}
 		c.Set("user", admin)
+		log.Debugf("use admin token: %+v", admin)
 		c.Next()
 		return
 	}
@@ -32,6 +34,7 @@ func Auth(c *gin.Context) {
 			return
 		}
 		c.Set("user", guest)
+		log.Debugf("use empty token: %+v", guest)
 		c.Next()
 		return
 	}
@@ -48,6 +51,7 @@ func Auth(c *gin.Context) {
 		return
 	}
 	c.Set("user", user)
+	log.Debugf("use login token: %+v", user)
 	c.Next()
 }
 
