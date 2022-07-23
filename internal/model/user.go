@@ -85,6 +85,6 @@ func (u User) CanWebdavRead() bool {
 	return u.IsAdmin() || (u.Permission>>8)&1 == 1
 }
 
-func (u User) CanWebdavWrite() bool {
+func (u User) CanWebdavManage() bool {
 	return u.IsAdmin() || (u.Permission>>9)&1 == 1
 }
