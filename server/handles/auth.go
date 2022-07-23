@@ -17,8 +17,8 @@ var (
 )
 
 type LoginReq struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+	Username string `json:"username" binding:"required"`
+	Password string `json:"password" binding:"required"`
 }
 
 func Login(c *gin.Context) {
@@ -65,4 +65,20 @@ func CurrentUser(c *gin.Context) {
 	userResp := *user
 	userResp.Password = ""
 	common.SuccessResp(c, userResp)
+}
+
+func UpdateCurrent(c *gin.Context) {
+	var req LoginReq
+	if err := c.ShouldBind(&req); err != nil {
+		common.ErrorResp(c, err, 400)
+		return
+	}
+	user := c.MustGet("user").(*model.User)
+	user.Username = req.Username
+	user.Password = req.Password
+	if err := db.UpdateUser(user); err != nil {
+		common.ErrorResp(c, err, 500)
+	} else {
+		common.SuccessResp(c)
+	}
 }

@@ -18,38 +18,47 @@ func Init(r *gin.Engine) {
 	r.GET("/d/*path", middlewares.Down, handles.Down)
 	r.GET("/p/*path", middlewares.Down, handles.Proxy)
 
-	r.POST("/api/auth/login", handles.Login)
+	api := r.Group("/api")
+	auth := api.Group("", middlewares.Auth)
 
-	api := r.Group("/api", middlewares.Auth)
-	api.GET("/auth/current", handles.CurrentUser)
+	api.POST("/auth/login", handles.Login)
+	auth.GET("/profile", handles.CurrentUser)
+	auth.POST("/profile/update", handles.UpdateCurrent)
 
-	admin := api.Group("/admin", middlewares.AuthAdmin)
+	// no need auth
+	public := api.Group("/public")
+	public.Any("/settings", handles.PublicSettings)
 
-	meta := admin.Group("/meta")
+	fs(auth.Group("/fs"))
+	admin(auth.Group("/admin", middlewares.AuthAdmin))
+}
+
+func admin(g *gin.RouterGroup) {
+	meta := g.Group("/meta")
 	meta.GET("/list", handles.ListMetas)
 	meta.POST("/create", handles.CreateMeta)
 	meta.POST("/update", handles.UpdateMeta)
 	meta.POST("/delete", handles.DeleteMeta)
 
-	user := admin.Group("/user")
+	user := g.Group("/user")
 	user.GET("/list", handles.ListUsers)
 	user.POST("/create", handles.CreateUser)
 	user.POST("/update", handles.UpdateUser)
 	user.POST("/delete", handles.DeleteUser)
 
-	storage := admin.Group("/storage")
+	storage := g.Group("/storage")
 	storage.GET("/list", handles.ListStorages)
 	storage.GET("/get", handles.GetStorage)
 	storage.POST("/create", handles.CreateStorage)
 	storage.POST("/update", handles.UpdateStorage)
 	storage.POST("/delete", handles.DeleteStorage)
 
-	driver := admin.Group("/driver")
+	driver := g.Group("/driver")
 	driver.GET("/list", handles.ListDriverItems)
 	driver.GET("/names", handles.ListDriverNames)
 	driver.GET("/items", handles.GetDriverItems)
 
-	setting := admin.Group("/setting")
+	setting := g.Group("/setting")
 	setting.GET("/get", handles.GetSetting)
 	setting.GET("/list", handles.ListSettings)
 	setting.POST("/save", handles.SaveSettings)
@@ -57,7 +66,7 @@ func Init(r *gin.Engine) {
 	setting.POST("/reset_token", handles.ResetToken)
 	setting.POST("/set_aria2", handles.SetAria2)
 
-	task := admin.Group("/task")
+	task := g.Group("/task")
 	task.GET("/down/undone", handles.UndoneDownTask)
 	task.GET("/down/done", handles.DoneDownTask)
 	task.POST("/down/cancel", handles.CancelDownTask)
@@ -71,28 +80,23 @@ func Init(r *gin.Engine) {
 	task.GET("/copy/done", handles.DoneCopyTask)
 	task.POST("/copy/cancel", handles.CancelCopyTask)
 
-	ms := admin.Group("/message")
+	ms := g.Group("/message")
 	ms.GET("/get", message.PostInstance.GetHandle)
 	ms.POST("/send", message.PostInstance.SendHandle)
+}
 
-	// guest can
-	public := api.Group("/public")
-	r.Any("/api/public/settings", handles.PublicSettings)
-	//public.GET("/settings", controllers.PublicSettings)
-	public.Any("/list", handles.FsList)
-	public.Any("/get", handles.FsGet)
-	public.Any("/dirs", handles.FsDirs)
-
-	// gust can't
-	fs := api.Group("/fs")
-	fs.POST("/mkdir", handles.FsMkdir)
-	fs.POST("/rename", handles.FsRename)
-	fs.POST("/move", handles.FsMove)
-	fs.POST("/copy", handles.FsCopy)
-	fs.POST("/remove", handles.FsRemove)
-	fs.POST("/put", handles.FsPut)
-	fs.POST("/link", middlewares.AuthAdmin, handles.Link)
-	fs.POST("/add_aria2", handles.AddAria2)
+func fs(g *gin.RouterGroup) {
+	g.Any("/list", handles.FsList)
+	g.Any("/get", handles.FsGet)
+	g.Any("/dirs", handles.FsDirs)
+	g.POST("/mkdir", handles.FsMkdir)
+	g.POST("/rename", handles.FsRename)
+	g.POST("/move", handles.FsMove)
+	g.POST("/copy", handles.FsCopy)
+	g.POST("/remove", handles.FsRemove)
+	g.POST("/put", handles.FsPut)
+	g.POST("/link", middlewares.AuthAdmin, handles.Link)
+	g.POST("/add_aria2", handles.AddAria2)
 }
 
 func Cors(r *gin.Engine) {

@@ -32,7 +32,7 @@ func initSettings() {
 		}
 	}
 	// insert new items
-	for i, _ := range initialSettingItems {
+	for i := range initialSettingItems {
 		v := initialSettingItems[i]
 		_, err := db.GetSettingItemByKey(v.Key)
 		if err == nil {
