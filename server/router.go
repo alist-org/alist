@@ -22,8 +22,8 @@ func Init(r *gin.Engine) {
 	auth := api.Group("", middlewares.Auth)
 
 	api.POST("/auth/login", handles.Login)
-	auth.GET("/profile", handles.CurrentUser)
-	auth.POST("/profile/update", handles.UpdateCurrent)
+	auth.GET("/me", handles.CurrentUser)
+	auth.POST("/me/update", handles.UpdateCurrent)
 
 	// no need auth
 	public := api.Group("/public")

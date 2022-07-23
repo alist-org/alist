@@ -18,7 +18,7 @@ var (
 
 type LoginReq struct {
 	Username string `json:"username" binding:"required"`
-	Password string `json:"password" binding:"required"`
+	Password string `json:"password"`
 }
 
 func Login(c *gin.Context) {
@@ -75,7 +75,9 @@ func UpdateCurrent(c *gin.Context) {
 	}
 	user := c.MustGet("user").(*model.User)
 	user.Username = req.Username
-	user.Password = req.Password
+	if req.Password != "" {
+		user.Password = req.Password
+	}
 	if err := db.UpdateUser(user); err != nil {
 		common.ErrorResp(c, err, 500)
 	} else {
