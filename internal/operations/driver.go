@@ -77,7 +77,7 @@ func getMainItems(config driver.Config) []driver.Item {
 			Name:     "webdav_policy",
 			Type:     conf.TypeSelect,
 			Values:   "302_redirect, use_proxy_url, native_proxy",
-			Default:  "direct",
+			Default:  "302_redirect",
 			Required: true,
 		},
 		}...)
@@ -85,7 +85,7 @@ func getMainItems(config driver.Config) []driver.Item {
 		items = append(items, driver.Item{
 			Name:     "webdav_policy",
 			Type:     conf.TypeSelect,
-			Default:  "",
+			Default:  "native_proxy",
 			Values:   "use_proxy_url, native_proxy",
 			Required: true,
 		})
