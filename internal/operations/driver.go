@@ -98,7 +98,7 @@ func getMainItems(config driver.Config) []driver.Item {
 		}, {
 			Name:   "order_direction",
 			Type:   conf.TypeSelect,
-			Values: "ASC,DESC",
+			Values: "asc,desc",
 		}}...)
 	}
 	items = append(items, driver.Item{

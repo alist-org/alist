@@ -45,20 +45,20 @@ func SortFiles(objs []Obj, orderBy, orderDirection string) {
 		case "name":
 			{
 				c := strings.Compare(objs[i].GetName(), objs[j].GetName())
-				if orderDirection == "DESC" {
+				if orderDirection == "desc" {
 					return c >= 0
 				}
 				return c <= 0
 			}
 		case "size":
 			{
-				if orderDirection == "DESC" {
+				if orderDirection == "desc" {
 					return objs[i].GetSize() >= objs[j].GetSize()
 				}
 				return objs[i].GetSize() <= objs[j].GetSize()
 			}
 		case "updated_at":
-			if orderDirection == "DESC" {
+			if orderDirection == "desc" {
 				return objs[i].ModTime().After(objs[j].ModTime())
 			}
 			return objs[i].ModTime().Before(objs[j].ModTime())
