@@ -20,3 +20,15 @@ func SliceContains[T comparable](arr []T, v T) bool {
 	}
 	return false
 }
+
+func SliceConvert[S any, D any](srcS []S, convert func(src S) (D, error)) ([]D, error) {
+	var res []D
+	for i, _ := range srcS {
+		dst, err := convert(srcS[i])
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, dst)
+	}
+	return res, nil
+}
