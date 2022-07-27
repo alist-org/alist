@@ -21,8 +21,8 @@ var CopyTaskManager = task.NewTaskManager(3, func(tid *uint64) {
 
 // Copy if in the same storage, call move method
 // if not, add copy task
-func _copy(ctx context.Context, srcObjPath, dstDirPath string) (bool, error) {
-	srcStorage, srcObjActualPath, err := operations.GetStorageAndActualPath(srcObjPath)
+func _copy(ctx context.Context, srcPath, dstDirPath string) (bool, error) {
+	srcStorage, srcActualPath, err := operations.GetStorageAndActualPath(srcPath)
 	if err != nil {
 		return false, errors.WithMessage(err, "failed get src storage")
 	}
@@ -32,35 +32,35 @@ func _copy(ctx context.Context, srcObjPath, dstDirPath string) (bool, error) {
 	}
 	// copy if in the same storage, just call driver.Copy
 	if srcStorage.GetStorage() == dstStorage.GetStorage() {
-		return false, operations.Copy(ctx, srcStorage, srcObjActualPath, dstDirActualPath)
+		return false, operations.Copy(ctx, srcStorage, srcActualPath, dstDirActualPath)
 	}
 	// not in the same storage
 	CopyTaskManager.Submit(task.WithCancelCtx(&task.Task[uint64]{
-		Name: fmt.Sprintf("copy [%s](%s) to [%s](%s)", srcStorage.GetStorage().MountPath, srcObjActualPath, dstStorage.GetStorage().MountPath, dstDirActualPath),
+		Name: fmt.Sprintf("copy [%s](%s) to [%s](%s)", srcStorage.GetStorage().MountPath, srcActualPath, dstStorage.GetStorage().MountPath, dstDirActualPath),
 		Func: func(task *task.Task[uint64]) error {
-			return copyBetween2Storages(task, srcStorage, dstStorage, srcObjActualPath, dstDirActualPath)
+			return copyBetween2Storages(task, srcStorage, dstStorage, srcActualPath, dstDirActualPath)
 		},
 	}))
 	return true, nil
 }
 
-func copyBetween2Storages(t *task.Task[uint64], srcStorage, dstStorage driver.Driver, srcObjPath, dstDirPath string) error {
+func copyBetween2Storages(t *task.Task[uint64], srcStorage, dstStorage driver.Driver, srcPath, dstDirPath string) error {
 	t.SetStatus("getting src object")
-	srcObj, err := operations.Get(t.Ctx, srcStorage, srcObjPath)
+	srcObj, err := operations.Get(t.Ctx, srcStorage, srcPath)
 	if err != nil {
-		return errors.WithMessagef(err, "failed get src [%s] file", srcObjPath)
+		return errors.WithMessagef(err, "failed get src [%s] file", srcPath)
 	}
 	if srcObj.IsDir() {
 		t.SetStatus("src object is dir, listing objs")
-		objs, err := operations.List(t.Ctx, srcStorage, srcObjPath)
+		objs, err := operations.List(t.Ctx, srcStorage, srcPath)
 		if err != nil {
-			return errors.WithMessagef(err, "failed list src [%s] objs", srcObjPath)
+			return errors.WithMessagef(err, "failed list src [%s] objs", srcPath)
 		}
 		for _, obj := range objs {
 			if utils.IsCanceled(t.Ctx) {
 				return nil
 			}
-			srcObjPath := stdpath.Join(srcObjPath, obj.GetName())
+			srcObjPath := stdpath.Join(srcPath, obj.GetName())
 			dstObjPath := stdpath.Join(dstDirPath, obj.GetName())
 			CopyTaskManager.Submit(task.WithCancelCtx(&task.Task[uint64]{
 				Name: fmt.Sprintf("copy [%s](%s) to [%s](%s)", srcStorage.GetStorage().MountPath, srcObjPath, dstStorage.GetStorage().MountPath, dstObjPath),
@@ -71,9 +71,9 @@ func copyBetween2Storages(t *task.Task[uint64], srcStorage, dstStorage driver.Dr
 		}
 	} else {
 		CopyTaskManager.Submit(task.WithCancelCtx(&task.Task[uint64]{
-			Name: fmt.Sprintf("copy [%s](%s) to [%s](%s)", srcStorage.GetStorage().MountPath, srcObjPath, dstStorage.GetStorage().MountPath, dstDirPath),
+			Name: fmt.Sprintf("copy [%s](%s) to [%s](%s)", srcStorage.GetStorage().MountPath, srcPath, dstStorage.GetStorage().MountPath, dstDirPath),
 			Func: func(t *task.Task[uint64]) error {
-				return copyFileBetween2Storages(t, srcStorage, dstStorage, srcObjPath, dstDirPath)
+				return copyFileBetween2Storages(t, srcStorage, dstStorage, srcPath, dstDirPath)
 			},
 		}))
 	}
