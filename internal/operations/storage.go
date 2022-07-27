@@ -185,8 +185,8 @@ func GetStorageVirtualFilesByPath(prefix string) []model.Obj {
 		return storages[i].GetStorage().Index < storages[j].GetStorage().Index
 	})
 	prefix = utils.StandardizePath(prefix)
-	if prefix == "/" {
-		prefix = ""
+	if prefix != "/" {
+		prefix += "/"
 	}
 	set := make(map[string]interface{})
 	for _, v := range storages {
@@ -200,10 +200,10 @@ func GetStorageVirtualFilesByPath(prefix string) []model.Obj {
 			continue
 		}
 		// not prefixed with `prefix`
-		if !strings.HasPrefix(virtualPath, prefix+"/") {
+		if !strings.HasPrefix(virtualPath, prefix) {
 			continue
 		}
-		name := strings.Split(strings.TrimPrefix(virtualPath, prefix), "/")[1]
+		name := strings.Split(strings.TrimPrefix(virtualPath, prefix), "/")[0]
 		if _, ok := set[name]; ok {
 			continue
 		}
