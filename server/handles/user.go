@@ -81,3 +81,18 @@ func DeleteUser(c *gin.Context) {
 	}
 	common.SuccessResp(c)
 }
+
+func GetUser(c *gin.Context) {
+	idStr := c.Query("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.ErrorResp(c, err, 400)
+		return
+	}
+	user, err := db.GetUserById(uint(id))
+	if err != nil {
+		common.ErrorResp(c, err, 500, true)
+		return
+	}
+	common.SuccessResp(c, user)
+}

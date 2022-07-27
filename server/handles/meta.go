@@ -95,3 +95,18 @@ func DeleteMeta(c *gin.Context) {
 	}
 	common.SuccessResp(c)
 }
+
+func GetMeta(c *gin.Context) {
+	idStr := c.Query("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.ErrorResp(c, err, 400)
+		return
+	}
+	meta, err := db.GetMetaById(uint(id))
+	if err != nil {
+		common.ErrorResp(c, err, 500, true)
+		return
+	}
+	common.SuccessResp(c, meta)
+}

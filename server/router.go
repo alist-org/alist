@@ -36,12 +36,14 @@ func Init(r *gin.Engine) {
 func admin(g *gin.RouterGroup) {
 	meta := g.Group("/meta")
 	meta.GET("/list", handles.ListMetas)
+	meta.GET("/get", handles.GetMeta)
 	meta.POST("/create", handles.CreateMeta)
 	meta.POST("/update", handles.UpdateMeta)
 	meta.POST("/delete", handles.DeleteMeta)
 
 	user := g.Group("/user")
 	user.GET("/list", handles.ListUsers)
+	user.GET("/get", handles.GetUser)
 	user.POST("/create", handles.CreateUser)
 	user.POST("/update", handles.UpdateUser)
 	user.POST("/delete", handles.DeleteUser)
