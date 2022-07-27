@@ -14,7 +14,7 @@ type Item struct {
 }
 
 type Items struct {
-	Main       []Item `json:"main"`
+	Common     []Item `json:"common"`
 	Additional []Item `json:"additional"`
 }
 

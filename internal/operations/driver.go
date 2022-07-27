@@ -47,7 +47,7 @@ func registerDriverItems(config driver.Config, addition driver.Additional) {
 	mainItems := getMainItems(config)
 	additionalItems := getAdditionalItems(tAddition, config.DefaultRoot)
 	driverItemsMap[config.Name] = driver.Items{
-		Main:       mainItems,
+		Common:     mainItems,
 		Additional: additionalItems,
 	}
 }
