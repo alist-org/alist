@@ -1,12 +1,13 @@
 package handles
 
 import (
+	"strconv"
+
 	"github.com/alist-org/alist/v3/internal/aria2"
 	"github.com/alist-org/alist/v3/internal/fs"
 	"github.com/alist-org/alist/v3/pkg/task"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
-	"strconv"
 )
 
 type TaskInfo struct {
@@ -25,7 +26,7 @@ func getTaskInfoUint(task *task.Task[uint64]) TaskInfo {
 		State:    task.GetState(),
 		Status:   task.GetStatus(),
 		Progress: task.GetProgress(),
-		Error:    task.Error.Error(),
+		Error:    task.GetErrMsg(),
 	}
 }
 

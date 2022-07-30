@@ -1,15 +1,16 @@
 package task
 
 import (
-	"github.com/alist-org/alist/v3/pkg/utils"
-	"github.com/pkg/errors"
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/alist-org/alist/v3/pkg/utils"
+	"github.com/pkg/errors"
 )
 
 func TestTask_Manager(t *testing.T) {
-	tm := NewTaskManager[uint64](3, func(id *uint64) {
+	tm := NewTaskManager(3, func(id *uint64) {
 		atomic.AddUint64(id, 1)
 	})
 	id := tm.Submit(WithCancelCtx(&Task[uint64]{
@@ -34,7 +35,7 @@ func TestTask_Manager(t *testing.T) {
 }
 
 func TestTask_Cancel(t *testing.T) {
-	tm := NewTaskManager[uint64](3, func(id *uint64) {
+	tm := NewTaskManager(3, func(id *uint64) {
 		atomic.AddUint64(id, 1)
 	})
 	id := tm.Submit(WithCancelCtx(&Task[uint64]{
@@ -62,7 +63,7 @@ func TestTask_Cancel(t *testing.T) {
 }
 
 func TestTask_Retry(t *testing.T) {
-	tm := NewTaskManager[uint64](3, func(id *uint64) {
+	tm := NewTaskManager(3, func(id *uint64) {
 		atomic.AddUint64(id, 1)
 	})
 	num := 0
