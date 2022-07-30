@@ -2,20 +2,20 @@ package operations
 
 import (
 	"context"
-	"github.com/alist-org/alist/v3/internal/conf"
-	"github.com/alist-org/alist/v3/internal/errs"
-	log "github.com/sirupsen/logrus"
 	"os"
 	stdpath "path"
 	"strings"
 	"time"
 
 	"github.com/Xhofe/go-cache"
+	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/driver"
+	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/singleflight"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 )
 
 // In order to facilitate adding some other things before and after file operations
@@ -236,7 +236,19 @@ func Put(ctx context.Context, storage driver.Driver, dstDirPath string, file mod
 			log.Errorf("failed to close file streamer, %v", err)
 		}
 	}()
-	err := MakeDir(ctx, storage, dstDirPath)
+	// if file exist and size = 0, delete it
+	dstPath := stdpath.Join(dstDirPath, file.GetName())
+	fi, err := Get(ctx, storage, dstPath)
+	if err == nil {
+		if fi.GetSize() == 0 {
+			err = Remove(ctx, storage, dstPath)
+			if err != nil {
+				return errors.WithMessagef(err, "failed remove file that exist and have size 0")
+			}
+		}
+	}
+
+	err = MakeDir(ctx, storage, dstDirPath)
 	if err != nil {
 		return errors.WithMessagef(err, "failed to make dir [%s]", dstDirPath)
 	}
