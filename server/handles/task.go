@@ -74,6 +74,20 @@ func CancelDownTask(c *gin.Context) {
 	}
 }
 
+func RemoveDownTask(c *gin.Context) {
+	tid := c.Query("tid")
+	if err := aria2.DownTaskManager.Remove(tid); err != nil {
+		common.ErrorResp(c, err, 500)
+	} else {
+		common.SuccessResp(c)
+	}
+}
+
+func ClearDoneDownTasks(c *gin.Context) {
+	aria2.DownTaskManager.ClearDone()
+	common.SuccessResp(c)
+}
+
 func UndoneTransferTask(c *gin.Context) {
 	common.SuccessResp(c, getTaskInfosUint(aria2.TransferTaskManager.ListUndone()))
 }
@@ -94,6 +108,25 @@ func CancelTransferTask(c *gin.Context) {
 	} else {
 		common.SuccessResp(c)
 	}
+}
+
+func RemoveTransferTask(c *gin.Context) {
+	id := c.Query("tid")
+	tid, err := strconv.ParseUint(id, 10, 64)
+	if err != nil {
+		common.ErrorResp(c, err, 400)
+		return
+	}
+	if err := aria2.TransferTaskManager.Remove(tid); err != nil {
+		common.ErrorResp(c, err, 500)
+	} else {
+		common.SuccessResp(c)
+	}
+}
+
+func ClearDoneTransferTasks(c *gin.Context) {
+	aria2.TransferTaskManager.ClearDone()
+	common.SuccessResp(c)
 }
 
 func UndoneUploadTask(c *gin.Context) {
@@ -118,6 +151,25 @@ func CancelUploadTask(c *gin.Context) {
 	}
 }
 
+func RemoveUploadTask(c *gin.Context) {
+	id := c.Query("tid")
+	tid, err := strconv.ParseUint(id, 10, 64)
+	if err != nil {
+		common.ErrorResp(c, err, 400)
+		return
+	}
+	if err := fs.UploadTaskManager.Remove(tid); err != nil {
+		common.ErrorResp(c, err, 500)
+	} else {
+		common.SuccessResp(c)
+	}
+}
+
+func ClearDoneUploadTasks(c *gin.Context) {
+	fs.UploadTaskManager.ClearDone()
+	common.SuccessResp(c)
+}
+
 func UndoneCopyTask(c *gin.Context) {
 	common.SuccessResp(c, getTaskInfosUint(fs.CopyTaskManager.ListUndone()))
 }
@@ -138,4 +190,23 @@ func CancelCopyTask(c *gin.Context) {
 	} else {
 		common.SuccessResp(c)
 	}
+}
+
+func RemoveCopyTask(c *gin.Context) {
+	id := c.Query("tid")
+	tid, err := strconv.ParseUint(id, 10, 64)
+	if err != nil {
+		common.ErrorResp(c, err, 400)
+		return
+	}
+	if err := fs.CopyTaskManager.Remove(tid); err != nil {
+		common.ErrorResp(c, err, 500)
+	} else {
+		common.SuccessResp(c)
+	}
+}
+
+func ClearDoneCopyTasks(c *gin.Context) {
+	fs.CopyTaskManager.ClearDone()
+	common.SuccessResp(c)
 }

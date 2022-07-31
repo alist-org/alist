@@ -72,8 +72,16 @@ func (tm *Manager[K]) Cancel(tid K) error {
 	return nil
 }
 
-func (tm *Manager[K]) Remove(tid K) {
+func (tm *Manager[K]) Remove(tid K) error {
+	t, ok := tm.Get(tid)
+	if !ok {
+		return errors.WithStack(ErrTaskNotFound)
+	}
+	if !t.Done() {
+		return errors.WithStack(ErrTaskRunning)
+	}
 	tm.tasks.Delete(tid)
+	return nil
 }
 
 // RemoveAll removes all tasks from the manager, this maybe shouldn't be used
@@ -108,6 +116,10 @@ func (tm *Manager[K]) ListUndone() []*Task[K] {
 
 func (tm *Manager[K]) ListDone() []*Task[K] {
 	return tm.GetByStates(SUCCEEDED, CANCELED, ERRORED)
+}
+
+func (tm *Manager[K]) ClearDone() {
+	tm.RemoveByStates(SUCCEEDED, CANCELED, ERRORED)
 }
 
 func NewTaskManager[K comparable](maxWorker int, updateID ...func(*K)) *Manager[K] {

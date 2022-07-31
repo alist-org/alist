@@ -3,6 +3,7 @@ package task
 
 import (
 	"context"
+
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
@@ -89,6 +90,10 @@ func (t *Task[K]) run() {
 
 func (t *Task[K]) retry() {
 	t.run()
+}
+
+func (t *Task[K]) Done() bool {
+	return t.state == SUCCEEDED || t.state == CANCELED || t.state == ERRORED
 }
 
 func (t *Task[K]) Cancel() {
