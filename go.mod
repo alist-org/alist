@@ -3,7 +3,7 @@ module github.com/alist-org/alist/v3
 go 1.18
 
 require (
-	github.com/Xhofe/go-cache v0.0.0-20220613125742-9554c28ee448
+	github.com/Xhofe/go-cache v0.0.0-20220723083548-714439c8af9a
 	github.com/caarlos0/env/v6 v6.9.3
 	github.com/gin-contrib/cors v1.3.1
 	github.com/gin-gonic/gin v1.8.0

@@ -3,6 +3,8 @@ github.com/Masterminds/semver/v3 v3.1.1 h1:hLg3sBzpNErnxhQtUy/mmLR2I9foDujNK030I
 github.com/Masterminds/semver/v3 v3.1.1/go.mod h1:VPu/7SZ7ePZ3QOrcuXROw5FAcLl4a0cBrbBpGY/8hQs=
 github.com/Xhofe/go-cache v0.0.0-20220613125742-9554c28ee448 h1:0TL8OCXaQD1YhG0D3YAfDcm/n4QRo4rCGiU0Pa5nQC4=
 github.com/Xhofe/go-cache v0.0.0-20220613125742-9554c28ee448/go.mod h1:sSBbaOg90XwWKtpT56kVujF0bIeVITnPlssLclogS04=
+github.com/Xhofe/go-cache v0.0.0-20220723083548-714439c8af9a h1:RenIAa2q4H8UcS/cqmwdT1WCWIAH5aumP8m8RpbqVsE=
+github.com/Xhofe/go-cache v0.0.0-20220723083548-714439c8af9a/go.mod h1:sSBbaOg90XwWKtpT56kVujF0bIeVITnPlssLclogS04=
 github.com/caarlos0/env/v6 v6.9.3 h1:Tyg69hoVXDnpO5Qvpsu8EoquarbPyQb+YwExWHP8wWU=
 github.com/caarlos0/env/v6 v6.9.3/go.mod h1:hvp/ryKXKipEkcuYjs9mI4bBCg+UI0Yhgm5Zu0ddvwc=
 github.com/cockroachdb/apd v1.1.0 h1:3LFP3629v+1aKXU5Q37mxmRxX/pIu1nijXydLShEq5I=
