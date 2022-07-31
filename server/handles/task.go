@@ -74,7 +74,7 @@ func CancelDownTask(c *gin.Context) {
 	}
 }
 
-func RemoveDownTask(c *gin.Context) {
+func DeleteDownTask(c *gin.Context) {
 	tid := c.Query("tid")
 	if err := aria2.DownTaskManager.Remove(tid); err != nil {
 		common.ErrorResp(c, err, 500)
@@ -110,7 +110,7 @@ func CancelTransferTask(c *gin.Context) {
 	}
 }
 
-func RemoveTransferTask(c *gin.Context) {
+func DeleteTransferTask(c *gin.Context) {
 	id := c.Query("tid")
 	tid, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {
@@ -151,7 +151,7 @@ func CancelUploadTask(c *gin.Context) {
 	}
 }
 
-func RemoveUploadTask(c *gin.Context) {
+func DeleteUploadTask(c *gin.Context) {
 	id := c.Query("tid")
 	tid, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {
@@ -192,7 +192,7 @@ func CancelCopyTask(c *gin.Context) {
 	}
 }
 
-func RemoveCopyTask(c *gin.Context) {
+func DeleteCopyTask(c *gin.Context) {
 	id := c.Query("tid")
 	tid, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {

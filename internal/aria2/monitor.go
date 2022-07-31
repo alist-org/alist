@@ -2,11 +2,6 @@ package aria2
 
 import (
 	"fmt"
-	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/internal/operations"
-	"github.com/alist-org/alist/v3/pkg/task"
-	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
 	"mime"
 	"os"
 	"path"
@@ -14,6 +9,12 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/operations"
+	"github.com/alist-org/alist/v3/pkg/task"
+	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 )
 
 type Monitor struct {
@@ -107,7 +108,7 @@ func (m *Monitor) Update() (bool, error) {
 	}
 }
 
-var TransferTaskManager = task.NewTaskManager[uint64](3, func(k *uint64) {
+var TransferTaskManager = task.NewTaskManager(3, func(k *uint64) {
 	atomic.AddUint64(k, 1)
 })
 
@@ -134,7 +135,7 @@ func (m *Monitor) Complete() error {
 		}
 	}()
 	for _, file := range files {
-		TransferTaskManager.Submit(task.WithCancelCtx[uint64](&task.Task[uint64]{
+		TransferTaskManager.Submit(task.WithCancelCtx(&task.Task[uint64]{
 			Name: fmt.Sprintf("transfer %s to [%s](%s)", file.Path, storage.GetStorage().MountPath, dstDirActualPath),
 			Func: func(tsk *task.Task[uint64]) error {
 				defer wg.Done()
