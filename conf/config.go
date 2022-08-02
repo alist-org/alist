@@ -33,7 +33,17 @@ type Config struct {
 	Database    Database    `json:"database"`
 	Scheme      Scheme      `json:"scheme"`
 	Cache       CacheConfig `json:"cache"`
+	Auth        AuthConfig  `json:"auth"`
 	TempDir     string      `json:"temp_dir" env:"TEMP_DIR"`
+}
+
+type AuthConfig struct {
+	OrganizationName string `json:"organization_name" env:"ORGANIZATION_NAME"`
+	ApplicationName  string `json:"application_name" env:"APPLICATION_NAME"`
+	Endpoint         string `json:"endpoint" env:"ENDPOINT"`
+	ClientId         string `json:"client_id" env:"CLIENT_ID"`
+	ClientSecret     string `json:"client_secret" env:"CLIENT_SECRET"`
+	JwtPublicKeyPemFile  string `json:"jwt_public_key_pem_file" env:"JWT_PUBLIC_KEY_PEM_FILE"`
 }
 
 func DefaultConfig() *Config {
@@ -53,6 +63,9 @@ func DefaultConfig() *Config {
 		Cache: CacheConfig{
 			Expiration:      60,
 			CleanupInterval: 120,
+		},
+		Auth: AuthConfig{
+			JwtPublicKeyPemFile: "token_jwt_key.pem",
 		},
 	}
 }

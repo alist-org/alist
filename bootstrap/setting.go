@@ -27,14 +27,6 @@ func InitSettings() {
 			Group:       model.FRONT,
 		},
 		{
-			Key:         "password",
-			Value:       utils.RandomStr(8),
-			Description: "password",
-			Type:        "string",
-			Access:      model.PRIVATE,
-			Group:       model.BACK,
-		},
-		{
 			Key:         "logo",
 			Value:       "https://cdn.jsdelivr.net/gh/alist-org/logo@main/can_circle.svg",
 			Description: "logo",
@@ -297,9 +289,6 @@ func InitSettings() {
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
 				err = model.SaveSetting(v)
-				if v.Key == "password" {
-					log.Infof("Initial password: %s", conf.C.Sprintf(v.Value))
-				}
 				if err != nil {
 					log.Fatalf("failed write setting: %s", err.Error())
 				}
@@ -313,9 +302,6 @@ func InitSettings() {
 			err = model.SaveSetting(v)
 			if err != nil {
 				log.Fatalf("failed write setting: %s", err.Error())
-			}
-			if v.Key == "password" {
-				log.Infof("Your password: %s", conf.C.Sprintf(v.Value))
 			}
 		}
 	}

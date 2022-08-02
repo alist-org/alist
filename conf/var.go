@@ -23,7 +23,6 @@ var (
 	Conf       *Config
 	Debug      bool
 	Version    bool
-	Password   bool
 	Docker     bool
 
 	DB    *gorm.DB

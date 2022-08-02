@@ -5,6 +5,7 @@ go 1.18
 require (
 	github.com/aws/aws-sdk-go v1.27.0
 	github.com/caarlos0/env/v6 v6.9.1
+	github.com/casdoor/casdoor-go-sdk v0.7.0
 	github.com/eko/gocache/v2 v2.1.0
 	github.com/gin-contrib/cors v1.3.1
 	github.com/gin-gonic/gin v1.7.4
@@ -24,7 +25,12 @@ require (
 	gorm.io/gorm v1.23.1
 )
 
-require github.com/kr/fs v0.1.0 // indirect
+require (
+	github.com/golang-jwt/jwt/v4 v4.1.0 // indirect
+	github.com/kr/fs v0.1.0 // indirect
+	golang.org/x/oauth2 v0.0.0-20210514164344-f6687ab2804c // indirect
+	google.golang.org/appengine v1.6.6 // indirect
+)
 
 require (
 	github.com/fatih/color v1.13.0

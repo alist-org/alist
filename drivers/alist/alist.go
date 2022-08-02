@@ -29,7 +29,7 @@ func (driver *Alist) Login(account *model.Account) error {
 	var resp BaseResp
 	_, err := base.RestyClient.R().SetResult(&resp).
 		SetHeader("Authorization", account.AccessToken).
-		Get(account.SiteUrl + "/api/admin/login")
+		Get(account.SiteUrl + "/api/admin/verify")
 	if err != nil {
 		return err
 	}

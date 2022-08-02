@@ -5,7 +5,6 @@ import (
 	"github.com/Xhofe/alist/bootstrap"
 	"github.com/Xhofe/alist/conf"
 	_ "github.com/Xhofe/alist/drivers"
-	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/server"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
@@ -13,17 +12,9 @@ import (
 
 func Init() bool {
 	bootstrap.InitConf()
+	bootstrap.InitAuth()
 	bootstrap.InitCron()
 	bootstrap.InitModel()
-	if conf.Password {
-		pass, err := model.GetSettingByKey("password")
-		if err != nil {
-			log.Errorf(err.Error())
-			return false
-		}
-		fmt.Printf("your password: %s\n", pass.Value)
-		return false
-	}
 	server.InitIndex()
 	bootstrap.InitSettings()
 	bootstrap.InitAccounts()
