@@ -2,7 +2,6 @@ package handles
 
 import (
 	"fmt"
-	"github.com/alist-org/alist/v3/internal/sign"
 	stdpath "path"
 	"strings"
 	"time"
@@ -11,6 +10,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/fs"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/sign"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
@@ -29,11 +29,12 @@ type DirReq struct {
 }
 
 type ObjResp struct {
-	Name     string    `json:"name"`
-	Size     int64     `json:"size"`
-	IsDir    bool      `json:"is_dir"`
-	Modified time.Time `json:"modified"`
-	Sign     string    `json:"sign"`
+	Name      string    `json:"name"`
+	Size      int64     `json:"size"`
+	IsDir     bool      `json:"is_dir"`
+	Modified  time.Time `json:"modified"`
+	Sign      string    `json:"sign"`
+	Thumbnail string    `json:"thumbnail"`
 }
 
 type FsListResp struct {
@@ -166,12 +167,17 @@ func pagination(objs []model.Obj, req *common.PageReq) (int, []model.Obj) {
 func toObjResp(objs []model.Obj) []ObjResp {
 	var resp []ObjResp
 	for _, obj := range objs {
+		thumbnail := ""
+		if t, ok := obj.(model.Thumbnail); ok {
+			thumbnail = t.Thumbnail()
+		}
 		resp = append(resp, ObjResp{
-			Name:     obj.GetName(),
-			Size:     obj.GetSize(),
-			IsDir:    obj.IsDir(),
-			Modified: obj.ModTime(),
-			Sign:     common.Sign(obj),
+			Name:      obj.GetName(),
+			Size:      obj.GetSize(),
+			IsDir:     obj.IsDir(),
+			Modified:  obj.ModTime(),
+			Sign:      common.Sign(obj),
+			Thumbnail: thumbnail,
 		})
 	}
 	return resp
