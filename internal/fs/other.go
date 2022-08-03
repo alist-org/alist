@@ -2,7 +2,9 @@ package fs
 
 import (
 	"context"
+
 	"github.com/alist-org/alist/v3/internal/errs"
+	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/operations"
 	"github.com/pkg/errors"
 )
@@ -44,4 +46,13 @@ func remove(ctx context.Context, path string) error {
 		return errors.WithMessage(err, "failed get storage")
 	}
 	return operations.Remove(ctx, storage, actualPath)
+}
+
+func other(ctx context.Context, args model.FsOtherArgs) (interface{}, error) {
+	storage, actualPath, err := operations.GetStorageAndActualPath(args.Path)
+	if err != nil {
+		return nil, errors.WithMessage(err, "failed get storage")
+	}
+	args.Path = actualPath
+	return operations.Other(ctx, storage, args)
 }

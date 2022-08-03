@@ -19,3 +19,15 @@ type Link struct {
 	FilePath   *string        // local file, return the filepath
 	Expiration *time.Duration // url expiration time
 }
+
+type OtherArgs struct {
+	Obj    Obj
+	Method string
+	Data   interface{}
+}
+
+type FsOtherArgs struct {
+	Path   string      `json:"path" form:"path"`
+	Method string      `json:"method" form:"method"`
+	Data   interface{} `json:"data" form:"data"`
+}

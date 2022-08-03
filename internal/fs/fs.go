@@ -2,6 +2,7 @@ package fs
 
 import (
 	"context"
+
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/operations"
@@ -101,4 +102,12 @@ func GetStorage(path string) (driver.Driver, error) {
 		return nil, err
 	}
 	return storageDriver, nil
+}
+
+func Other(ctx context.Context, args model.FsOtherArgs) (interface{}, error) {
+	res, err := other(ctx, args)
+	if err != nil {
+		log.Errorf("failed remove %s: %+v", args.Path, err)
+	}
+	return res, err
 }

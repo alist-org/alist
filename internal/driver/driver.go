@@ -25,7 +25,7 @@ type Meta interface {
 }
 
 type Other interface {
-	Other(ctx context.Context, data interface{}) (interface{}, error)
+	Other(ctx context.Context, args model.OtherArgs) (interface{}, error)
 }
 
 type Reader interface {

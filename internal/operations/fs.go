@@ -150,6 +150,19 @@ func Link(ctx context.Context, storage driver.Driver, path string, args model.Li
 	return link, file, err
 }
 
+// other api
+func Other(ctx context.Context, storage driver.Driver, args model.FsOtherArgs) (interface{}, error) {
+	obj, err := Get(ctx, storage, args.Path)
+	if err != nil {
+		return nil, errors.WithMessagef(err, "failed to get obj")
+	}
+	return storage.Other(ctx, model.OtherArgs{
+		Obj:    obj,
+		Method: args.Method,
+		Data:   args.Data,
+	})
+}
+
 func MakeDir(ctx context.Context, storage driver.Driver, path string) error {
 	// check if dir exists
 	f, err := Get(ctx, storage, path)

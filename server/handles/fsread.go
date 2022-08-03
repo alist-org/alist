@@ -253,3 +253,36 @@ func FsGet(c *gin.Context) {
 		RawURL: rawURL,
 	})
 }
+
+type FsOtherReq struct {
+	model.FsOtherArgs
+	Password string `json:"password" form:"password"`
+}
+
+func FsOther(c *gin.Context) {
+	var req FsOtherReq
+	if err := c.ShouldBind(&req); err != nil {
+		common.ErrorResp(c, err, 400)
+		return
+	}
+	user := c.MustGet("user").(*model.User)
+	req.Path = stdpath.Join(user.BasePath, req.Path)
+	meta, err := db.GetNearestMeta(req.Path)
+	if err != nil {
+		if !errors.Is(errors.Cause(err), errs.MetaNotFound) {
+			common.ErrorResp(c, err, 500)
+			return
+		}
+	}
+	c.Set("meta", meta)
+	if !canAccess(user, meta, req.Path, req.Password) {
+		common.ErrorStrResp(c, "password is incorrect", 403)
+		return
+	}
+	res, err := fs.Other(c, req.FsOtherArgs)
+	if err != nil {
+		common.ErrorResp(c, err, 500)
+		return
+	}
+	common.SuccessResp(c, res)
+}

@@ -2,11 +2,12 @@ package local
 
 import (
 	"context"
-	"github.com/alist-org/alist/v3/internal/errs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/alist-org/alist/v3/internal/errs"
 
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
@@ -175,7 +176,7 @@ func (d *Local) Put(ctx context.Context, dstDir model.Obj, stream model.FileStre
 	return nil
 }
 
-func (d *Local) Other(ctx context.Context, data interface{}) (interface{}, error) {
+func (d *Local) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
 	return nil, errs.NotSupport
 }
 
