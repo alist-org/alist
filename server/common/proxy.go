@@ -2,9 +2,6 @@ package common
 
 import (
 	"fmt"
-	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -12,6 +9,10 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 )
 
 var HttpClient = &http.Client{}

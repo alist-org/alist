@@ -3,13 +3,14 @@ package aria2
 import (
 	"context"
 	"fmt"
+	"path/filepath"
+
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/operations"
 	"github.com/alist-org/alist/v3/pkg/task"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
-	"path/filepath"
 )
 
 func AddURI(ctx context.Context, uri string, dstDirPath string) error {

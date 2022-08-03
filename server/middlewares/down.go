@@ -1,6 +1,8 @@
 package middlewares
 
 import (
+	stdpath "path"
+
 	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
@@ -9,7 +11,6 @@ import (
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
-	stdpath "path"
 )
 
 func Down(c *gin.Context) {

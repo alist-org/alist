@@ -2,6 +2,7 @@ package db
 
 import (
 	"fmt"
+
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"

@@ -2,6 +2,10 @@ package handles
 
 import (
 	"fmt"
+	stdpath "path"
+	"strconv"
+	"time"
+
 	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/fs"
@@ -9,9 +13,6 @@ import (
 	"github.com/alist-org/alist/v3/internal/sign"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
-	stdpath "path"
-	"strconv"
-	"time"
 )
 
 type MkdirOrLinkReq struct {

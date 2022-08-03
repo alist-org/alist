@@ -1,12 +1,13 @@
 package db
 
 import (
+	"testing"
+
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/pkg/errors"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	"testing"
 )
 
 func init() {

@@ -2,6 +2,7 @@ package errs
 
 import (
 	"errors"
+
 	pkgerr "github.com/pkg/errors"
 )
 

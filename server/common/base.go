@@ -2,10 +2,11 @@ package common
 
 import (
 	"fmt"
-	"github.com/alist-org/alist/v3/internal/conf"
-	"github.com/alist-org/alist/v3/internal/setting"
 	"net/http"
 	"strings"
+
+	"github.com/alist-org/alist/v3/internal/conf"
+	"github.com/alist-org/alist/v3/internal/setting"
 )
 
 func GetBaseUrl(r *http.Request) string {

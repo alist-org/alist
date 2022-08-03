@@ -1,11 +1,12 @@
 package sign
 
 import (
+	"sync"
+	"time"
+
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/setting"
 	"github.com/alist-org/alist/v3/pkg/sign"
-	"sync"
-	"time"
 )
 
 var once sync.Once

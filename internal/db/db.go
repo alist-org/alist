@@ -1,9 +1,10 @@
 package db
 
 import (
+	"log"
+
 	"github.com/alist-org/alist/v3/internal/model"
 	"gorm.io/gorm"
-	"log"
 )
 
 var db gorm.DB

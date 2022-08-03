@@ -10,11 +10,12 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
-	"github.com/alist-org/alist/v3/internal/model"
 	"mime"
 	"net/http"
 	"path"
 	"strconv"
+
+	"github.com/alist-org/alist/v3/internal/model"
 )
 
 // Proppatch describes a property update instruction as defined in RFC 4918.

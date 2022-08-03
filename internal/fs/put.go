@@ -3,16 +3,17 @@ package fs
 import (
 	"context"
 	"fmt"
+	"sync/atomic"
+
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/operations"
 	"github.com/alist-org/alist/v3/pkg/task"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
-	"sync/atomic"
 )
 
-var UploadTaskManager = task.NewTaskManager[uint64](3, func(tid *uint64) {
+var UploadTaskManager = task.NewTaskManager(3, func(tid *uint64) {
 	atomic.AddUint64(tid, 1)
 })
 

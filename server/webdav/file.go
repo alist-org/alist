@@ -6,12 +6,13 @@ package webdav
 
 import (
 	"context"
-	"github.com/alist-org/alist/v3/internal/db"
-	"github.com/alist-org/alist/v3/internal/fs"
-	"github.com/alist-org/alist/v3/internal/model"
 	"net/http"
 	"path"
 	"path/filepath"
+
+	"github.com/alist-org/alist/v3/internal/db"
+	"github.com/alist-org/alist/v3/internal/fs"
+	"github.com/alist-org/alist/v3/internal/model"
 )
 
 // slashClean is equivalent to but slightly more efficient than

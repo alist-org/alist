@@ -2,13 +2,14 @@ package fs
 
 import (
 	"context"
+	"regexp"
+	"strings"
+
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/operations"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-	"regexp"
-	"strings"
 )
 
 // List files

@@ -1,6 +1,9 @@
 package db
 
 import (
+	stdpath "path"
+	"time"
+
 	"github.com/Xhofe/go-cache"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
@@ -8,8 +11,6 @@ import (
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
-	stdpath "path"
-	"time"
 )
 
 var metaCache = cache.NewMemCache(cache.WithShards[*model.Meta](2))

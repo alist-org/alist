@@ -1,12 +1,12 @@
 package bootstrap
 
 import (
-	conf2 "github.com/alist-org/alist/v3/internal/conf"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 
 	"github.com/alist-org/alist/v3/cmd/args"
+	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/caarlos0/env/v6"
 	log "github.com/sirupsen/logrus"
@@ -20,8 +20,8 @@ func InitConfig() {
 		if err != nil {
 			log.Fatalf("failed to create config file: %+v", err)
 		}
-		conf2.Conf = conf2.DefaultConfig()
-		if !utils.WriteToJson(args.Config, conf2.Conf) {
+		conf.Conf = conf.DefaultConfig()
+		if !utils.WriteToJson(args.Config, conf.Conf) {
 			log.Fatalf("failed to create default config file")
 		}
 	} else {
@@ -29,14 +29,14 @@ func InitConfig() {
 		if err != nil {
 			log.Fatalf("reading config file error:%s", err.Error())
 		}
-		conf2.Conf = conf2.DefaultConfig()
-		err = utils.Json.Unmarshal(configBytes, conf2.Conf)
+		conf.Conf = conf.DefaultConfig()
+		err = utils.Json.Unmarshal(configBytes, conf.Conf)
 		if err != nil {
 			log.Fatalf("load config error: %s", err.Error())
 		}
-		log.Debugf("config:%+v", conf2.Conf)
+		log.Debugf("config:%+v", conf.Conf)
 		// update config.json struct
-		confBody, err := utils.Json.MarshalIndent(conf2.Conf, "", "  ")
+		confBody, err := utils.Json.MarshalIndent(conf.Conf, "", "  ")
 		if err != nil {
 			log.Fatalf("marshal config error:%s", err.Error())
 		}
@@ -45,28 +45,28 @@ func InitConfig() {
 			log.Fatalf("update config struct error: %s", err.Error())
 		}
 	}
-	if !conf2.Conf.Force {
+	if !conf.Conf.Force {
 		confFromEnv()
 	}
 	// convert abs path
 	var absPath string
 	var err error
-	if !filepath.IsAbs(conf2.Conf.TempDir) {
-		absPath, err = filepath.Abs(conf2.Conf.TempDir)
+	if !filepath.IsAbs(conf.Conf.TempDir) {
+		absPath, err = filepath.Abs(conf.Conf.TempDir)
 		if err != nil {
 			log.Fatalf("get abs path error: %s", err.Error())
 		}
 	}
-	conf2.Conf.TempDir = absPath
-	err = os.RemoveAll(filepath.Join(conf2.Conf.TempDir))
+	conf.Conf.TempDir = absPath
+	err = os.RemoveAll(filepath.Join(conf.Conf.TempDir))
 	if err != nil {
 		log.Errorln("failed delete temp file:", err)
 	}
-	err = os.MkdirAll(conf2.Conf.TempDir, 0700)
+	err = os.MkdirAll(conf.Conf.TempDir, 0700)
 	if err != nil {
 		log.Fatalf("create temp dir error: %s", err.Error())
 	}
-	log.Debugf("config: %+v", conf2.Conf)
+	log.Debugf("config: %+v", conf.Conf)
 }
 
 func confFromEnv() {
@@ -75,7 +75,7 @@ func confFromEnv() {
 		prefix = ""
 	}
 	log.Infof("load config from env with prefix: %s", prefix)
-	if err := env.Parse(conf2.Conf, env.Options{
+	if err := env.Parse(conf.Conf, env.Options{
 		Prefix: prefix,
 	}); err != nil {
 		log.Fatalf("load config from env error: %s", err.Error())

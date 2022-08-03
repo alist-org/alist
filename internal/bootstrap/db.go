@@ -2,6 +2,10 @@ package bootstrap
 
 import (
 	"fmt"
+	stdlog "log"
+	"strings"
+	"time"
+
 	"github.com/alist-org/alist/v3/cmd/args"
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/db"
@@ -12,9 +16,6 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
-	stdlog "log"
-	"strings"
-	"time"
 )
 
 func InitDB() {

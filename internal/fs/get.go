@@ -2,12 +2,13 @@ package fs
 
 import (
 	"context"
+	stdpath "path"
+	"time"
+
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/operations"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
-	stdpath "path"
-	"time"
 )
 
 func get(ctx context.Context, path string) (model.Obj, error) {

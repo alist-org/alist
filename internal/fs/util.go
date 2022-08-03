@@ -1,7 +1,6 @@
 package fs
 
 import (
-	"github.com/alist-org/alist/v3/internal/operations"
 	"io"
 	"mime"
 	"net/http"
@@ -10,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/operations"
 	"github.com/pkg/errors"
 )
 

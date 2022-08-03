@@ -2,6 +2,7 @@ package db
 
 import (
 	"fmt"
+
 	"github.com/alist-org/alist/v3/internal/conf"
 )
 

@@ -2,13 +2,14 @@ package aria2
 
 import (
 	"context"
+	"time"
+
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/setting"
 	"github.com/alist-org/alist/v3/pkg/aria2/rpc"
 	"github.com/alist-org/alist/v3/pkg/task"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-	"time"
 )
 
 var DownTaskManager = task.NewTaskManager[string](3)

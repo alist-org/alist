@@ -6,12 +6,11 @@ import (
 	stdpath "path"
 	"sync/atomic"
 
-	"github.com/alist-org/alist/v3/pkg/task"
-	"github.com/alist-org/alist/v3/pkg/utils"
-
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/operations"
+	"github.com/alist-org/alist/v3/pkg/task"
+	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
 )
 

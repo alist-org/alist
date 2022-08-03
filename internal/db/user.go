@@ -1,12 +1,13 @@
 package db
 
 import (
+	"time"
+
 	"github.com/Xhofe/go-cache"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/singleflight"
 	"github.com/pkg/errors"
-	"time"
 )
 
 var userCache = cache.NewMemCache(cache.WithShards[*model.User](2))

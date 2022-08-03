@@ -1,8 +1,9 @@
 package setting
 
 import (
-	"github.com/alist-org/alist/v3/internal/db"
 	"strconv"
+
+	"github.com/alist-org/alist/v3/internal/db"
 )
 
 func GetByKey(key string, defaultValue ...string) string {
