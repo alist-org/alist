@@ -61,6 +61,9 @@ func UpdateUser(c *gin.Context) {
 		common.ErrorStrResp(c, "role can not be changed", 400)
 		return
 	}
+	if req.Password == "" {
+		req.Password = user.Password
+	}
 	if err := db.UpdateUser(&req); err != nil {
 		common.ErrorResp(c, err, 500)
 	} else {

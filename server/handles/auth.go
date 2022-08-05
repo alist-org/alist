@@ -1,6 +1,9 @@
 package handles
 
 import (
+	"bytes"
+	"encoding/base64"
+	"image/png"
 	"time"
 
 	"github.com/Xhofe/go-cache"
@@ -8,6 +11,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
+	"github.com/pquerna/otp/totp"
 )
 
 var loginCache = cache.NewMemCache[int]()
@@ -19,6 +23,7 @@ var (
 type LoginReq struct {
 	Username string `json:"username" binding:"required"`
 	Password string `json:"password"`
+	OTPCode  string `json:"otp_code"`
 }
 
 func Login(c *gin.Context) {
@@ -26,7 +31,7 @@ func Login(c *gin.Context) {
 	ip := c.ClientIP()
 	count, ok := loginCache.Get(ip)
 	if ok && count >= defaultTimes {
-		common.ErrorStrResp(c, "Too many unsuccessful sign-in attempts have been made using an incorrect username or password, Try again later.", 403)
+		common.ErrorStrResp(c, "Too many unsuccessful sign-in attempts have been made using an incorrect username or password, Try again later.", 429)
 		loginCache.Expire(ip, defaultDuration)
 		return
 	}
@@ -47,6 +52,14 @@ func Login(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		loginCache.Set(ip, count+1)
 		return
+	}
+	// check 2FA
+	if user.OtpSecret != "" {
+		if !totp.Validate(req.OTPCode, user.OtpSecret) {
+			common.ErrorStrResp(c, "Invalid 2FA code", 402)
+			loginCache.Set(ip, count+1)
+			return
+		}
 	}
 	// generate token
 	token, err := common.GenerateToken(user.Username)
@@ -78,6 +91,63 @@ func UpdateCurrent(c *gin.Context) {
 	if req.Password != "" {
 		user.Password = req.Password
 	}
+	if err := db.UpdateUser(user); err != nil {
+		common.ErrorResp(c, err, 500)
+	} else {
+		common.SuccessResp(c)
+	}
+}
+
+func Generate2FA(c *gin.Context) {
+	user := c.MustGet("user").(*model.User)
+	if user.IsGuest() {
+		common.ErrorStrResp(c, "Guest user can not generate 2FA code", 403)
+		return
+	}
+	key, err := totp.Generate(totp.GenerateOpts{
+		Issuer:      "Alist",
+		AccountName: user.Username,
+	})
+	if err != nil {
+		common.ErrorResp(c, err, 500)
+		return
+	}
+	img, err := key.Image(400, 400)
+	if err != nil {
+		common.ErrorResp(c, err, 500)
+		return
+	}
+	// to base64
+	var buf bytes.Buffer
+	png.Encode(&buf, img)
+	base64 := base64.StdEncoding.EncodeToString(buf.Bytes())
+	common.SuccessResp(c, gin.H{
+		"qr":     "data:image/png;base64," + base64,
+		"secret": key.Secret(),
+	})
+}
+
+type Verify2FAReq struct {
+	Code   string `json:"code" binding:"required"`
+	Secret string `json:"secret" binding:"required"`
+}
+
+func Verify2FA(c *gin.Context) {
+	var req Verify2FAReq
+	if err := c.ShouldBind(&req); err != nil {
+		common.ErrorResp(c, err, 400)
+		return
+	}
+	user := c.MustGet("user").(*model.User)
+	if user.IsGuest() {
+		common.ErrorStrResp(c, "Guest user can not generate 2FA code", 403)
+		return
+	}
+	if !totp.Validate(req.Code, req.Secret) {
+		common.ErrorStrResp(c, "Invalid 2FA code", 400)
+		return
+	}
+	user.OtpSecret = req.Secret
 	if err := db.UpdateUser(user); err != nil {
 		common.ErrorResp(c, err, 500)
 	} else {

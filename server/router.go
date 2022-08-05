@@ -25,6 +25,8 @@ func Init(r *gin.Engine) {
 	api.POST("/auth/login", handles.Login)
 	auth.GET("/me", handles.CurrentUser)
 	auth.POST("/me/update", handles.UpdateCurrent)
+	auth.POST("/auth/2fa/generate", handles.Generate2FA)
+	auth.POST("/auth/2fa/verify", handles.Verify2FA)
 
 	// no need auth
 	public := api.Group("/public")

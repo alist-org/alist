@@ -13,6 +13,7 @@ require (
 	github.com/json-iterator/go v1.1.12
 	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible
 	github.com/pkg/errors v0.9.1
+	github.com/pquerna/otp v1.3.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/winfsp/cgofuse v1.5.0
 	gorm.io/driver/mysql v1.3.4
@@ -22,6 +23,7 @@ require (
 )
 
 require (
+	github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
