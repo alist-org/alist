@@ -12,11 +12,11 @@ import (
 
 func Init() bool {
 	bootstrap.InitConf()
-	bootstrap.InitAuth()
 	bootstrap.InitCron()
 	bootstrap.InitModel()
 	server.InitIndex()
 	bootstrap.InitSettings()
+	bootstrap.InitAuth()
 	bootstrap.InitAccounts()
 	bootstrap.InitCache()
 	return true

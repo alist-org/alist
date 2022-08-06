@@ -27,6 +27,14 @@ func InitSettings() {
 			Group:       model.FRONT,
 		},
 		{
+			Key:         "password",
+			Value:       utils.RandomStr(8),
+			Description: "password",
+			Type:        "string",
+			Access:      model.PRIVATE,
+			Group:       model.BACK,
+		},
+		{
 			Key:         "logo",
 			Value:       "https://cdn.jsdelivr.net/gh/alist-org/logo@main/can_circle.svg",
 			Description: "logo",
@@ -281,6 +289,62 @@ func InitSettings() {
 			Access:      model.PRIVATE,
 			Group:       model.BACK,
 		},
+		{
+			Key:         "Enable Casdoor",
+			Value:       "false",
+			Description: "Enable Casdoor login",
+			Type:        "bool",
+			Access:      model.PRIVATE,
+			Group:       model.BACK,
+		},
+		{
+			Key:         "Casdoor Organization name",
+			Value:       "",
+			Description: "Casdoor Organization name",
+			Type:        "string",
+			Access:      model.PRIVATE,
+			Group:       model.BACK,
+		},
+		{
+			Key:         "Casdoor Application name",
+			Value:       "",
+			Description: "Casdoor Application name",
+			Type:        "string",
+			Access:      model.PRIVATE,
+			Group:       model.BACK,
+		},
+		{
+			Key:         "Casdoor Endpoint",
+			Value:       "",
+			Description: "Casdoor Endpoint, e.g. 'http://localhost:8000'",
+			Type:        "string",
+			Access:      model.PRIVATE,
+			Group:       model.BACK,
+		},
+		{
+			Key:         "Casdoor Client id",
+			Value:       "",
+			Description: "Casdoor Client id",
+			Type:        "string",
+			Access:      model.PRIVATE,
+			Group:       model.BACK,
+		},
+		{
+			Key:         "Casdoor Client secret",
+			Value:       "",
+			Description: "Casdoor Client secret",
+			Type:        "string",
+			Access:      model.PRIVATE,
+			Group:       model.BACK,
+		},
+		{
+			Key:         "Casdoor Jwt Public Key",
+			Value:       "",
+			Description: "Casdoor Jwt Public Key",
+			Type:        "string",
+			Access:      model.PRIVATE,
+			Group:       model.BACK,
+		},
 	}
 	for i, _ := range settings {
 		v := settings[i]
@@ -289,6 +353,9 @@ func InitSettings() {
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
 				err = model.SaveSetting(v)
+				if v.Key == "password" {
+					log.Infof("Initial password: %s", conf.C.Sprintf(v.Value))
+				}
 				if err != nil {
 					log.Fatalf("failed write setting: %s", err.Error())
 				}
@@ -302,6 +369,9 @@ func InitSettings() {
 			err = model.SaveSetting(v)
 			if err != nil {
 				log.Fatalf("failed write setting: %s", err.Error())
+			}
+			if v.Key == "password" {
+				log.Infof("Your password: %s", conf.C.Sprintf(v.Value))
 			}
 		}
 	}

@@ -15,21 +15,19 @@ type OAuthReq struct {
 	State string `json:"state"`
 }
 
-type OAuthResp struct {
-	Token       string `json:"token"`
-	AccessToken string `json:"access_token"`
-}
-
 func Verify(c *gin.Context) {
-	accessToken := c.GetHeader("Authorization")
-	if !utils.VerifyAccessToken(accessToken) {
+	token := c.GetHeader("Authorization")
+	if token != conf.Token {
 		common.ErrorStrResp(c, "Invalid token", 401)
 		return
 	}
 	common.SuccessResp(c)
 }
-
 func GetRedirectUrl(c *gin.Context) {
+	if !conf.GetBool("Enable Casdoor") {
+		common.ErrorStrResp(c, "Casdoor is not enabled", 1001)
+		return
+	}
 	redirectUri := generateRedirectUri(c.Request)
 	common.SuccessResp(c, utils.GetSignInUrl(redirectUri))
 }
@@ -67,8 +65,5 @@ func OAuth(c *gin.Context) {
 		return
 	}
 
-	common.SuccessResp(c, OAuthResp{
-		AccessToken: token.AccessToken,
-		Token:       conf.Token,
-	})
+	common.SuccessResp(c, conf.Token)
 }

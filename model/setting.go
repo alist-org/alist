@@ -124,8 +124,14 @@ func LoadSettings() {
 		conf.IndexHtml = strings.Replace(conf.IndexHtml, "<!-- customize body -->", customizeBody.Value, 1)
 	}
 	// token
-	auth := conf.Conf.Auth
-	conf.Token = utils.GetMD5Encode(fmt.Sprintf("%s/%s/%s/%s", auth.OrganizationName, auth.ApplicationName, auth.ClientId, auth.ClientSecret))
+	adminPassword, err := GetSettingByKey("password")
+	if err == nil {
+		if adminPassword.Value != "" {
+			conf.Token = utils.GetMD5Encode(fmt.Sprintf("https://github.com/Xhofe/alist-%s", adminPassword.Value))
+		} else {
+			conf.Token = ""
+		}
+	}
 	// load settings
 	for _, key := range conf.LoadSettings {
 		vm, err := GetSettingByKey(key)
