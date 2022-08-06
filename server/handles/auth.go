@@ -23,7 +23,7 @@ var (
 type LoginReq struct {
 	Username string `json:"username" binding:"required"`
 	Password string `json:"password"`
-	OTPCode  string `json:"otp_code"`
+	OtpCode  string `json:"otp_code"`
 }
 
 func Login(c *gin.Context) {
@@ -55,7 +55,7 @@ func Login(c *gin.Context) {
 	}
 	// check 2FA
 	if user.OtpSecret != "" {
-		if !totp.Validate(req.OTPCode, user.OtpSecret) {
+		if !totp.Validate(req.OtpCode, user.OtpSecret) {
 			common.ErrorStrResp(c, "Invalid 2FA code", 402)
 			loginCache.Set(ip, count+1)
 			return
@@ -71,12 +71,22 @@ func Login(c *gin.Context) {
 	loginCache.Del(ip)
 }
 
+type UserResp struct {
+	model.User
+	Otp bool `json:"otp"`
+}
+
 // CurrentUser get current user by token
 // if token is empty, return guest user
 func CurrentUser(c *gin.Context) {
 	user := c.MustGet("user").(*model.User)
-	userResp := *user
+	userResp := UserResp{
+		User: *user,
+	}
 	userResp.Password = ""
+	if userResp.OtpSecret != "" {
+		userResp.Otp = true
+	}
 	common.SuccessResp(c, userResp)
 }
 
