@@ -4,13 +4,8 @@ import (
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
-	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 )
-
-func Login(c *gin.Context) {
-	SuccessResp(c)
-}
 
 func CheckParent(path string, password string) bool {
 	meta, err := model.GetMetaByPath(path)
