@@ -1,7 +1,7 @@
 package common
 
 import (
-	"github.com/alist-org/alist/v3/cmd/args"
+	"github.com/alist-org/alist/v3/cmd/flags"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 )
@@ -10,7 +10,7 @@ import (
 // @param l: if true, log error
 func ErrorResp(c *gin.Context, err error, code int, l ...bool) {
 	if len(l) > 0 && l[0] {
-		if args.Debug || args.Dev {
+		if flags.Debug || flags.Dev {
 			log.Errorf("%+v", err)
 		} else {
 			log.Errorf("%v", err)

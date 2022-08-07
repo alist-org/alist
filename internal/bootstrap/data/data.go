@@ -1,11 +1,11 @@
 package data
 
-import "github.com/alist-org/alist/v3/cmd/args"
+import "github.com/alist-org/alist/v3/cmd/flags"
 
 func InitData() {
 	initUser()
 	initSettings()
-	if args.Dev {
+	if flags.Dev {
 		initDevData()
 		initDevDo()
 	}

@@ -3,7 +3,7 @@ package data
 import (
 	"context"
 
-	"github.com/alist-org/alist/v3/cmd/args"
+	"github.com/alist-org/alist/v3/cmd/flags"
 	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/message"
 	"github.com/alist-org/alist/v3/internal/model"
@@ -35,7 +35,7 @@ func initDevData() {
 }
 
 func initDevDo() {
-	if args.Dev {
+	if flags.Dev {
 		go func() {
 			err := message.GetMessenger().WaitSend(map[string]string{
 				"type": "dev",

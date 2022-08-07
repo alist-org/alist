@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/alist-org/alist/v3/cmd/args"
+	"github.com/alist-org/alist/v3/cmd/flags"
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/db"
 	log "github.com/sirupsen/logrus"
@@ -36,7 +36,7 @@ func InitDB() {
 	}
 	var dB *gorm.DB
 	var err error
-	if args.Dev {
+	if flags.Dev {
 		dB, err = gorm.Open(sqlite.Open("file::memory:?cache=shared"), gormConfig)
 	} else {
 		database := conf.Conf.Database

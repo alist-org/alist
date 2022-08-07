@@ -1,7 +1,7 @@
 package data
 
 import (
-	"github.com/alist-org/alist/v3/cmd/args"
+	"github.com/alist-org/alist/v3/cmd/flags"
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/model"
@@ -60,7 +60,7 @@ func isActive(key string) bool {
 
 func initialSettings() {
 	var token string
-	if args.Dev {
+	if flags.Dev {
 		token = "dev_token"
 	} else {
 		token = random.Token()
@@ -96,7 +96,7 @@ func initialSettings() {
 		// single settings
 		{Key: conf.Token, Value: token, Type: conf.TypeString, Group: model.SINGLE, Flag: model.PRIVATE},
 	}
-	if args.Dev {
+	if flags.Dev {
 		initialSettingItems = append(initialSettingItems, model.SettingItem{Key: "test_deprecated", Value: "test_value", Type: conf.TypeString, Flag: model.DEPRECATED})
 	}
 }

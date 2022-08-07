@@ -4,7 +4,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/alist-org/alist/v3/cmd/args"
+	"github.com/alist-org/alist/v3/cmd/flags"
 	"github.com/alist-org/alist/v3/internal/conf"
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
 	"github.com/sirupsen/logrus"
@@ -22,7 +22,7 @@ func init() {
 
 func Log() {
 	log.SetOutput(logrus.StandardLogger().Out)
-	if args.Debug || args.Dev {
+	if flags.Debug || flags.Dev {
 		logrus.SetLevel(logrus.DebugLevel)
 		logrus.SetReportCaller(true)
 	} else {

@@ -1,7 +1,7 @@
 package server
 
 import (
-	"github.com/alist-org/alist/v3/cmd/args"
+	"github.com/alist-org/alist/v3/cmd/flags"
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/message"
 	"github.com/alist-org/alist/v3/server/common"
@@ -34,7 +34,7 @@ func Init(r *gin.Engine) {
 
 	fs(auth.Group("/fs"))
 	admin(auth.Group("/admin", middlewares.AuthAdmin))
-	if args.Dev {
+	if flags.Dev {
 		dev(r.Group("/dev"))
 	}
 }

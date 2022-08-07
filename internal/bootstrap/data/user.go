@@ -1,7 +1,7 @@
 package data
 
 import (
-	"github.com/alist-org/alist/v3/cmd/args"
+	"github.com/alist-org/alist/v3/cmd/flags"
 	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/utils/random"
@@ -13,7 +13,7 @@ import (
 func initUser() {
 	admin, err := db.GetAdmin()
 	adminPassword := random.String(8)
-	if args.Dev {
+	if flags.Dev {
 		adminPassword = "admin"
 	}
 	if err != nil {
@@ -26,6 +26,8 @@ func initUser() {
 			}
 			if err := db.CreateUser(admin); err != nil {
 				panic(err)
+			} else {
+				log.Infof("Successfully created the administrator user and the initial password is: %s", admin.Password)
 			}
 		} else {
 			panic(err)
@@ -48,5 +50,4 @@ func initUser() {
 			panic(err)
 		}
 	}
-	log.Infof("admin password: %+v", admin.Password)
 }
