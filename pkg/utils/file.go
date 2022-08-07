@@ -1,12 +1,12 @@
 package utils
 
 import (
-	"github.com/alist-org/alist/v3/internal/conf"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 
+	"github.com/alist-org/alist/v3/internal/conf"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -48,4 +48,25 @@ func CreateTempFile(r io.ReadCloser) (*os.File, error) {
 		return nil, err
 	}
 	return f, nil
+}
+
+// GetFileType get file type
+func GetFileType(filename string) int {
+	ext := Ext(filename)
+	if SliceContains(conf.TypesMap[conf.OfficeTypes], ext) {
+		return conf.OFFICE
+	}
+	if SliceContains(conf.TypesMap[conf.AudioTypes], ext) {
+		return conf.AUDIO
+	}
+	if SliceContains(conf.TypesMap[conf.VideoTypes], ext) {
+		return conf.VIDEO
+	}
+	if SliceContains(conf.TypesMap[conf.ImageTypes], ext) {
+		return conf.IMAGE
+	}
+	if SliceContains(conf.TypesMap[conf.TextTypes], ext) {
+		return conf.TEXT
+	}
+	return conf.UNKNOWN
 }

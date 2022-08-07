@@ -9,7 +9,6 @@ import (
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/fs"
 	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/internal/setting"
 	"github.com/alist-org/alist/v3/internal/sign"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/server/common"
@@ -85,8 +84,7 @@ func shouldProxy(storage driver.Driver, filename string) bool {
 	if storage.Config().MustProxy() || storage.GetStorage().WebProxy {
 		return true
 	}
-	proxyTypes := setting.GetByKey(conf.ProxyTypes)
-	if strings.Contains(proxyTypes, utils.Ext(filename)) {
+	if utils.SliceContains(conf.TypesMap[conf.ProxyTypes], utils.Ext(filename)) {
 		return true
 	}
 	return false
@@ -103,12 +101,10 @@ func canProxy(storage driver.Driver, filename string) bool {
 	if storage.Config().MustProxy() || storage.GetStorage().WebProxy {
 		return true
 	}
-	proxyTypes := setting.GetByKey(conf.ProxyTypes)
-	if strings.Contains(proxyTypes, utils.Ext(filename)) {
+	if utils.SliceContains(conf.TypesMap[conf.ProxyTypes], utils.Ext(filename)) {
 		return true
 	}
-	textTypes := setting.GetByKey(conf.TextTypes)
-	if strings.Contains(textTypes, utils.Ext(filename)) {
+	if utils.SliceContains(conf.TypesMap[conf.TextTypes], utils.Ext(filename)) {
 		return true
 	}
 	return false

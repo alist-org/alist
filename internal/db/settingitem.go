@@ -2,7 +2,9 @@ package db
 
 import (
 	"fmt"
+	"strings"
 
+	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -11,8 +13,23 @@ import (
 var settingsMap map[string]string
 var publicSettingsMap map[string]string
 
+func ResetTypeMap() {
+	settingsMap := GetSettingsMap()
+	conf.TypesMap[conf.AudioTypes] = strings.Split(settingsMap[conf.AudioTypes], ",")
+	conf.TypesMap[conf.VideoTypes] = strings.Split(settingsMap[conf.VideoTypes], ",")
+	conf.TypesMap[conf.ImageTypes] = strings.Split(settingsMap[conf.ImageTypes], ",")
+	conf.TypesMap[conf.TextTypes] = strings.Split(settingsMap[conf.TextTypes], ",")
+	conf.TypesMap[conf.OfficeTypes] = strings.Split(settingsMap[conf.OfficeTypes], ",")
+}
+
+func settingsUpdate() {
+	settingsMap = nil
+	publicSettingsMap = nil
+	ResetTypeMap()
+}
+
 func GetPublicSettingsMap() map[string]string {
-	if settingsMap == nil || publicSettingsMap == nil {
+	if publicSettingsMap == nil {
 		publicSettingsMap = make(map[string]string)
 		settingItems, err := GetPublicSettingItems()
 		if err != nil {
@@ -88,12 +105,12 @@ func GetSettingItemsInGroups(groups []int) ([]model.SettingItem, error) {
 }
 
 func SaveSettingItems(items []model.SettingItem) error {
-	settingsMap = nil
+	settingsUpdate()
 	return errors.WithStack(db.Save(items).Error)
 }
 
 func SaveSettingItem(item model.SettingItem) error {
-	settingsMap = nil
+	settingsUpdate()
 	return errors.WithStack(db.Save(item).Error)
 }
 
@@ -108,6 +125,6 @@ func DeleteSettingItemByKey(key string) error {
 	if !old.IsDeprecated() {
 		return errors.Errorf("setting [%s] is not deprecated", key)
 	}
-	settingsMap = nil
+	settingsUpdate()
 	return errors.WithStack(db.Delete(&settingItem).Error)
 }

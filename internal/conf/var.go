@@ -12,3 +12,5 @@ var (
 var (
 	Conf *Config
 )
+
+var TypesMap = make(map[string][]string)

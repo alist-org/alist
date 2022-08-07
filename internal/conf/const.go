@@ -21,6 +21,8 @@ const (
 	TextTypes     = "text_types"
 	AudioTypes    = "audio_types"
 	VideoTypes    = "video_types"
+	ImageTypes    = "image_types"
+	OfficeTypes   = "office_types"
 	ProxyTypes    = "proxy_types"
 	PdfViewerUrl  = "pdf_viewer_url"
 	AudioAutoplay = "audio_autoplay"
@@ -36,4 +38,14 @@ const (
 	Aria2Secret = "aria2_secret"
 
 	Token = "token"
+)
+
+const (
+	UNKNOWN = iota
+	FOLDER
+	OFFICE
+	VIDEO
+	AUDIO
+	TEXT
+	IMAGE
 )

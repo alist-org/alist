@@ -1,5 +1,6 @@
 package utils
 
+// SliceEqual check if two slices are equal
 func SliceEqual[T comparable](a, b []T) bool {
 	if len(a) != len(b) {
 		return false
@@ -12,6 +13,7 @@ func SliceEqual[T comparable](a, b []T) bool {
 	return true
 }
 
+// SliceContains check if slice contains element
 func SliceContains[T comparable](arr []T, v T) bool {
 	for _, vv := range arr {
 		if vv == v {
@@ -21,9 +23,10 @@ func SliceContains[T comparable](arr []T, v T) bool {
 	return false
 }
 
+// SliceConvert convert slice to another type slice
 func SliceConvert[S any, D any](srcS []S, convert func(src S) (D, error)) ([]D, error) {
 	var res []D
-	for i, _ := range srcS {
+	for i := range srcS {
 		dst, err := convert(srcS[i])
 		if err != nil {
 			return nil, err

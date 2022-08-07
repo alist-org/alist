@@ -21,7 +21,7 @@ func InitConfig() {
 			log.Fatalf("failed to create config file: %+v", err)
 		}
 		conf.Conf = conf.DefaultConfig()
-		if !utils.WriteToJson(flags.Config, conf.Conf) {
+		if !utils.WriteJsonToFile(flags.Config, conf.Conf) {
 			log.Fatalf("failed to create default config file")
 		}
 	} else {

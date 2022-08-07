@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/fs"
@@ -35,6 +36,7 @@ type ObjResp struct {
 	Modified  time.Time `json:"modified"`
 	Sign      string    `json:"sign"`
 	Thumbnail string    `json:"thumbnail"`
+	Type      int       `json:"type"`
 }
 
 type FsListResp struct {
@@ -171,6 +173,10 @@ func toObjResp(objs []model.Obj) []ObjResp {
 		if t, ok := obj.(model.Thumbnail); ok {
 			thumbnail = t.Thumbnail()
 		}
+		tp := conf.FOLDER
+		if !obj.IsDir() {
+			tp = utils.GetFileType(obj.GetName())
+		}
 		resp = append(resp, ObjResp{
 			Name:      obj.GetName(),
 			Size:      obj.GetSize(),
@@ -178,6 +184,7 @@ func toObjResp(objs []model.Obj) []ObjResp {
 			Modified:  obj.ModTime(),
 			Sign:      common.Sign(obj),
 			Thumbnail: thumbnail,
+			Type:      tp,
 		})
 	}
 	return resp
@@ -256,6 +263,7 @@ func FsGet(c *gin.Context) {
 			IsDir:    obj.IsDir(),
 			Modified: obj.ModTime(),
 			Sign:     common.Sign(obj),
+			Type:     utils.GetFileType(obj.GetName()),
 		},
 		RawURL:  rawURL,
 		Readme:  getReadme(meta, req.Path),
