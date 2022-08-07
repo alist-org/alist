@@ -19,7 +19,7 @@ jobs:
             Hello @${{ github.event.issue.user.login }}, this issue will not be worked on and will be closed.
             你好 @${{ github.event.issue.user.login }}，这不会被处理，将被关闭。
       - name: Close issue
-        uses: actions-cool/issues-helper@v2
+        uses: Xhofe/issues-helper@main
         with:
           actions: 'close-issue'
           token: ${{ secrets.GITHUB_TOKEN }}
