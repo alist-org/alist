@@ -85,6 +85,19 @@ func UpdateUser(u *model.User) error {
 	return errors.WithStack(db.Save(u).Error)
 }
 
+func Cancel2FAByUser(u *model.User) error {
+	u.OtpSecret = ""
+	return errors.WithStack(UpdateUser(u))
+}
+
+func Cancel2FAById(id uint) error {
+	user, err := GetUserById(id)
+	if err != nil {
+		return err
+	}
+	return Cancel2FAByUser(user)
+}
+
 func GetUsers(pageIndex, pageSize int) ([]model.User, int64, error) {
 	userDB := db.Model(&model.User{})
 	var count int64

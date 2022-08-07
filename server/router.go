@@ -52,6 +52,7 @@ func admin(g *gin.RouterGroup) {
 	user.GET("/get", handles.GetUser)
 	user.POST("/create", handles.CreateUser)
 	user.POST("/update", handles.UpdateUser)
+	user.POST("/cancel_2fa", handles.Cancel2FAById)
 	user.POST("/delete", handles.DeleteUser)
 
 	storage := g.Group("/storage")

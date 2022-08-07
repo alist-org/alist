@@ -64,6 +64,9 @@ func UpdateUser(c *gin.Context) {
 	if req.Password == "" {
 		req.Password = user.Password
 	}
+	if req.OtpSecret == "" {
+		req.OtpSecret = user.OtpSecret
+	}
 	if err := db.UpdateUser(&req); err != nil {
 		common.ErrorResp(c, err, 500)
 	} else {
@@ -98,4 +101,18 @@ func GetUser(c *gin.Context) {
 		return
 	}
 	common.SuccessResp(c, user)
+}
+
+func Cancel2FAById(c *gin.Context) {
+	idStr := c.Query("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.ErrorResp(c, err, 400)
+		return
+	}
+	if err := db.Cancel2FAById(uint(id)); err != nil {
+		common.ErrorResp(c, err, 500)
+		return
+	}
+	common.SuccessResp(c)
 }
