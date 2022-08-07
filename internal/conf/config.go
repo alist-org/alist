@@ -31,16 +31,16 @@ type LogConfig struct {
 }
 
 type Config struct {
-	Force           bool      `json:"force"`
-	Address         string    `json:"address" env:"ADDR"`
-	Port            int       `json:"port" env:"PORT"`
-	JwtSecret       string    `json:"jwt_secret" env:"JWT_SECRET"`
-	CaCheExpiration int       `json:"cache_expiration" env:"CACHE_EXPIRATION"`
-	Assets          string    `json:"assets" env:"ASSETS"`
-	Database        Database  `json:"database"`
-	Scheme          Scheme    `json:"scheme"`
-	TempDir         string    `json:"temp_dir" env:"TEMP_DIR"`
-	Log             LogConfig `json:"log"`
+	Force     bool   `json:"force"`
+	Address   string `json:"address" env:"ADDR"`
+	Port      int    `json:"port" env:"PORT"`
+	JwtSecret string `json:"jwt_secret" env:"JWT_SECRET"`
+	// CaCheExpiration int       `json:"cache_expiration" env:"CACHE_EXPIRATION"`
+	Assets   string    `json:"assets" env:"ASSETS"`
+	Database Database  `json:"database"`
+	Scheme   Scheme    `json:"scheme"`
+	TempDir  string    `json:"temp_dir" env:"TEMP_DIR"`
+	Log      LogConfig `json:"log"`
 }
 
 func DefaultConfig() *Config {
@@ -56,7 +56,7 @@ func DefaultConfig() *Config {
 			TablePrefix: "x_",
 			DBFile:      "data/data.db",
 		},
-		CaCheExpiration: 30,
+		// CaCheExpiration: 30,
 		Log: LogConfig{
 			Enable:        true,
 			Path:          "log/%Y-%m-%d-%H:%M.log",

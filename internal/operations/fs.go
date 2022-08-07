@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/Xhofe/go-cache"
-	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
@@ -53,8 +52,7 @@ func List(ctx context.Context, storage driver.Driver, path string, refresh ...bo
 		if err != nil {
 			return nil, errors.WithMessage(err, "failed to list files")
 		}
-		// TODO: maybe can get duration from storage's config
-		filesCache.Set(key, files, cache.WithEx[[]model.Obj](time.Minute*time.Duration(conf.Conf.CaCheExpiration)))
+		filesCache.Set(key, files, cache.WithEx[[]model.Obj](time.Minute*time.Duration(storage.GetStorage().CacheExpiration)))
 		return files, nil
 	})
 	return files, err

@@ -69,6 +69,15 @@ func getMainItems(config driver.Config) []driver.Item {
 		Name: "down_proxy_url",
 		Type: conf.TypeText,
 	}}
+	if !config.NoCache {
+		items = append(items, driver.Item{
+			Name:     "cache_expiration",
+			Type:     conf.TypeNumber,
+			Default:  "30",
+			Required: true,
+			Help:     "The cache expiration time for this storage",
+		})
+	}
 	if !config.OnlyProxy && !config.OnlyLocal {
 		items = append(items, []driver.Item{{
 			Name: "web_proxy",
