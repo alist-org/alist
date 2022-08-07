@@ -1,13 +1,13 @@
 package operations
 
 import (
-	"github.com/alist-org/alist/v3/internal/conf"
 	"reflect"
 	"strings"
 
+	"github.com/alist-org/alist/v3/internal/conf"
+
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
 )
 
 type New func() driver.Driver
@@ -16,7 +16,7 @@ var driverNewMap = map[string]New{}
 var driverItemsMap = map[string]driver.Items{}
 
 func RegisterDriver(config driver.Config, driver New) {
-	log.Infof("register driver: [%s]", config.Name)
+	// log.Infof("register driver: [%s]", config.Name)
 	registerDriverItems(config, driver().GetAddition())
 	driverNewMap[config.Name] = driver
 }
@@ -42,7 +42,7 @@ func GetDriverItemsMap() map[string]driver.Items {
 }
 
 func registerDriverItems(config driver.Config, addition driver.Additional) {
-	log.Debugf("addition of %s: %+v", config.Name, addition)
+	// log.Debugf("addition of %s: %+v", config.Name, addition)
 	tAddition := reflect.TypeOf(addition)
 	mainItems := getMainItems(config)
 	additionalItems := getAdditionalItems(tAddition, config.DefaultRoot)

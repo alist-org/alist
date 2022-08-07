@@ -2,12 +2,13 @@ package cmd
 
 import (
 	"fmt"
+
 	"github.com/alist-org/alist/v3/cmd/flags"
+	_ "github.com/alist-org/alist/v3/drivers"
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/server"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
-
 	"github.com/spf13/cobra"
 )
 
