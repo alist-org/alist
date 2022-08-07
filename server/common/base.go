@@ -16,7 +16,7 @@ func GetBaseUrl(r *http.Request) string {
 		protocol = "https"
 	}
 	if baseUrl == "" {
-		baseUrl = fmt.Sprintf("%s//%s", protocol, r.Host)
+		baseUrl = fmt.Sprintf("%s://%s", protocol, r.Host)
 	}
 	strings.TrimSuffix(baseUrl, "/")
 	return baseUrl

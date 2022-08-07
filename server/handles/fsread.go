@@ -197,9 +197,10 @@ type FsGetOrLinkReq struct {
 
 type FsGetResp struct {
 	ObjResp
-	RawURL  string   `json:"raw_url"`
-	Readme  string   `json:"readme"`
-	Related []string `json:"related"`
+	RawURL   string   `json:"raw_url"`
+	Readme   string   `json:"readme"`
+	Provider string   `json:"provider"`
+	Related  []string `json:"related"`
 }
 
 func FsGet(c *gin.Context) {
@@ -228,12 +229,21 @@ func FsGet(c *gin.Context) {
 		return
 	}
 	var rawURL string
+
+	storage, err := fs.GetStorage(req.Path)
+	provider := "unknown"
+	if err == nil {
+		provider = storage.Config().Name
+	}
 	// file have raw url
 	if !obj.IsDir() {
 		if u, ok := obj.(model.URL); ok {
 			rawURL = u.URL()
 		} else {
-			storage, _ := fs.GetStorage(req.Path)
+			if err != nil {
+				common.ErrorResp(c, err, 500)
+				return
+			}
 			if storage.Config().MustProxy() || storage.GetStorage().WebProxy {
 				if storage.GetStorage().DownProxyUrl != "" {
 					rawURL = fmt.Sprintf("%s%s?sign=%s", strings.Split(storage.GetStorage().DownProxyUrl, "\n")[0], req.Path, sign.Sign(obj.GetName()))
@@ -265,9 +275,10 @@ func FsGet(c *gin.Context) {
 			Sign:     common.Sign(obj),
 			Type:     utils.GetFileType(obj.GetName()),
 		},
-		RawURL:  rawURL,
-		Readme:  getReadme(meta, req.Path),
-		Related: related,
+		RawURL:   rawURL,
+		Readme:   getReadme(meta, req.Path),
+		Provider: provider,
+		Related:  related,
 	})
 }
 
