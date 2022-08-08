@@ -1,5 +1,7 @@
 package conf
 
+import "regexp"
+
 var (
 	BuiltAt    string
 	GoVersion  string
@@ -14,3 +16,4 @@ var (
 )
 
 var TypesMap = make(map[string][]string)
+var PrivacyReg []*regexp.Regexp

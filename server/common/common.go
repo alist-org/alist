@@ -1,10 +1,22 @@
 package common
 
 import (
+	"strings"
+
 	"github.com/alist-org/alist/v3/cmd/flags"
+	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 )
+
+func hidePrivacy(msg string) string {
+	for _, r := range conf.PrivacyReg {
+		msg = r.ReplaceAllStringFunc(msg, func(s string) string {
+			return strings.Repeat("*", len(s))
+		})
+	}
+	return msg
+}
 
 // ErrorResp is used to return error response
 // @param l: if true, log error
@@ -18,7 +30,7 @@ func ErrorResp(c *gin.Context, err error, code int, l ...bool) {
 	}
 	c.JSON(200, Resp{
 		Code:    code,
-		Message: err.Error(),
+		Message: hidePrivacy(err.Error()),
 		Data:    nil,
 	})
 	c.Abort()
@@ -30,7 +42,7 @@ func ErrorStrResp(c *gin.Context, str string, code int, l ...bool) {
 	}
 	c.JSON(200, Resp{
 		Code:    code,
-		Message: str,
+		Message: hidePrivacy(str),
 		Data:    nil,
 	})
 	c.Abort()

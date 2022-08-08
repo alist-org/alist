@@ -27,7 +27,7 @@ func initUser() {
 			if err := db.CreateUser(admin); err != nil {
 				panic(err)
 			} else {
-				log.Infof("Successfully created the administrator user and the initial password is: %s", admin.Password)
+				log.Infof("Successfully created the admin user and the initial password is: %s", admin.Password)
 			}
 		} else {
 			panic(err)

@@ -2,9 +2,7 @@ package db
 
 import (
 	"fmt"
-	"strings"
 
-	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -13,19 +11,9 @@ import (
 var settingsMap map[string]string
 var publicSettingsMap map[string]string
 
-func ResetTypeMap() {
-	settingsMap := GetSettingsMap()
-	conf.TypesMap[conf.AudioTypes] = strings.Split(settingsMap[conf.AudioTypes], ",")
-	conf.TypesMap[conf.VideoTypes] = strings.Split(settingsMap[conf.VideoTypes], ",")
-	conf.TypesMap[conf.ImageTypes] = strings.Split(settingsMap[conf.ImageTypes], ",")
-	conf.TypesMap[conf.TextTypes] = strings.Split(settingsMap[conf.TextTypes], ",")
-	conf.TypesMap[conf.OfficeTypes] = strings.Split(settingsMap[conf.OfficeTypes], ",")
-}
-
 func settingsUpdate() {
 	settingsMap = nil
 	publicSettingsMap = nil
-	ResetTypeMap()
 }
 
 func GetPublicSettingsMap() map[string]string {
@@ -105,13 +93,38 @@ func GetSettingItemsInGroups(groups []int) ([]model.SettingItem, error) {
 }
 
 func SaveSettingItems(items []model.SettingItem) error {
-	settingsUpdate()
-	return errors.WithStack(db.Save(items).Error)
+	others := make([]model.SettingItem, 0)
+	for i := range items {
+		if ok, err := HandleSettingItem(&items[i]); ok {
+			if err != nil {
+				return err
+			} else {
+				err = db.Save(items[i]).Error
+				if err != nil {
+					return errors.WithStack(err)
+				}
+			}
+		} else {
+			others = append(others, items[i])
+		}
+	}
+	err := db.Save(others).Error
+	if err == nil {
+		settingsUpdate()
+	}
+	return err
 }
 
 func SaveSettingItem(item model.SettingItem) error {
-	settingsUpdate()
-	return errors.WithStack(db.Save(item).Error)
+	_, err := HandleSettingItem(&item)
+	if err != nil {
+		return err
+	}
+	err = db.Save(item).Error
+	if err == nil {
+		settingsUpdate()
+	}
+	return errors.WithStack(err)
 }
 
 func DeleteSettingItemByKey(key string) error {
