@@ -83,7 +83,13 @@ func initialSettings() {
 		{Key: conf.ImageTypes, Value: "jpg,tiff,jpeg,png,gif,bmp,svg,ico,swf,webp", Type: conf.TypeText, Group: model.PREVIEW, Flag: model.PRIVATE},
 		{Key: conf.OfficeTypes, Value: "doc,docx,xls,xlsx,ppt,pptx,pdf", Type: conf.TypeText, Group: model.PREVIEW, Flag: model.PRIVATE},
 		{Key: conf.ProxyTypes, Value: "m3u8", Type: conf.TypeText, Group: model.PREVIEW, Flag: model.PRIVATE},
-		{Key: conf.PdfViewerUrl, Value: "https://alist-org.github.io/pdf.js/web/viewer.html?file=$url", Type: conf.TypeString, Group: model.PREVIEW},
+		{Key: conf.OfficeViewers, Value: `{
+	"Microsoft":"https://view.officeapps.live.com/op/view.aspx?src=$url",
+	"Google":"https://docs.google.com/gview?url=$url&embedded=true",
+}`, Type: conf.TypeText, Group: model.PREVIEW},
+		{Key: conf.PdfViewers, Value: `{
+	"pdf.js":"https://alist-org.github.io/pdf.js/web/viewer.html?file=$url"
+}`, Type: conf.TypeText, Group: model.PREVIEW},
 		{Key: conf.AudioAutoplay, Value: "true", Type: conf.TypeBool, Group: model.PREVIEW},
 		{Key: conf.VideoAutoplay, Value: "true", Type: conf.TypeBool, Group: model.PREVIEW},
 		// global settings

@@ -26,7 +26,8 @@ const (
 	ImageTypes    = "image_types"
 	OfficeTypes   = "office_types"
 	ProxyTypes    = "proxy_types"
-	PdfViewerUrl  = "pdf_viewer_url"
+	OfficeViewers = "office_viewers"
+	PdfViewers    = "pdf_viewers"
 	AudioAutoplay = "audio_autoplay"
 	VideoAutoplay = "video_autoplay"
 
