@@ -197,10 +197,10 @@ type FsGetOrLinkReq struct {
 
 type FsGetResp struct {
 	ObjResp
-	RawURL   string   `json:"raw_url"`
-	Readme   string   `json:"readme"`
-	Provider string   `json:"provider"`
-	Related  []string `json:"related"`
+	RawURL   string    `json:"raw_url"`
+	Readme   string    `json:"readme"`
+	Provider string    `json:"provider"`
+	Related  []ObjResp `json:"related"`
 }
 
 func FsGet(c *gin.Context) {
@@ -261,7 +261,7 @@ func FsGet(c *gin.Context) {
 			}
 		}
 	}
-	var related []string
+	var related []model.Obj
 	sameLevelFiles, err := fs.List(c, stdpath.Dir(req.Path))
 	if err == nil {
 		related = filterRelated(sameLevelFiles, obj)
@@ -278,19 +278,19 @@ func FsGet(c *gin.Context) {
 		RawURL:   rawURL,
 		Readme:   getReadme(meta, req.Path),
 		Provider: provider,
-		Related:  related,
+		Related:  toObjResp(related),
 	})
 }
 
-func filterRelated(objs []model.Obj, obj model.Obj) []string {
-	var related []string
+func filterRelated(objs []model.Obj, obj model.Obj) []model.Obj {
+	var related []model.Obj
 	nameWithoutExt := strings.TrimSuffix(obj.GetName(), stdpath.Ext(obj.GetName()))
 	for _, o := range objs {
 		if o.GetName() == obj.GetName() {
 			continue
 		}
 		if strings.HasPrefix(o.GetName(), nameWithoutExt) {
-			related = append(related, o.GetName())
+			related = append(related, o)
 		}
 	}
 	return related
