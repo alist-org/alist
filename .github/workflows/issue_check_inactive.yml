@@ -1,0 +1,16 @@
+name: Check inactive
+
+on:
+  schedule:
+    - cron: "0 0 1 * *"
+
+jobs:
+  check-inactive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: check-inactive
+        uses: actions-cool/issues-helper@v3
+        with:
+          actions: 'check-inactive'
+          token: ${{ secrets.GITHUB_TOKEN }}
+          inactive-day: 30
