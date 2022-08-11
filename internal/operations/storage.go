@@ -56,6 +56,76 @@ func CreateStorage(ctx context.Context, storage model.Storage) error {
 	return nil
 }
 
+// LoadStorage load exist storage in db to memory
+func LoadStorage(ctx context.Context, storage model.Storage) error {
+	storage.MountPath = utils.StandardizePath(storage.MountPath)
+	// check driver first
+	driverName := storage.Driver
+	driverNew, err := GetDriverNew(driverName)
+	if err != nil {
+		return errors.WithMessage(err, "failed get driver new")
+	}
+	storageDriver := driverNew()
+	err = storageDriver.Init(ctx, storage)
+	if err != nil {
+		return errors.WithMessage(err, "failed init storage but storage is already created")
+	}
+	log.Debugf("storage %+v is created", storageDriver)
+	storagesMap.Store(storage.MountPath, storageDriver)
+	return nil
+}
+
+func EnableStorage(ctx context.Context, id uint) error {
+	storage, err := db.GetStorageById(id)
+	if err != nil {
+		return errors.WithMessage(err, "failed get storage")
+	}
+	if !storage.Disabled {
+		return errors.Errorf("this storage have enabled")
+	}
+	err = LoadStorage(ctx, *storage)
+	if err != nil {
+		return errors.WithMessage(err, "failed load storage")
+	}
+	// reget storage from db, because it maybe hava updated
+	storage, err = db.GetStorageById(id)
+	if err != nil {
+		return errors.WithMessage(err, "failed reget storage again")
+	}
+	storage.Disabled = false
+	err = db.UpdateStorage(storage)
+	if err != nil {
+		return errors.WithMessage(err, "failed update storage in db, but have load in memory. you can try restart")
+	}
+	return nil
+}
+
+func DisableStorage(ctx context.Context, id uint) error {
+	storage, err := db.GetStorageById(id)
+	if err != nil {
+		return errors.WithMessage(err, "failed get storage")
+	}
+	if storage.Disabled {
+		return errors.Errorf("this storage have disabled")
+	}
+	storageDriver, err := GetStorageByVirtualPath(storage.MountPath)
+	if err != nil {
+		return errors.WithMessage(err, "failed get storage driver")
+	}
+	// drop the storage in the driver
+	if err := storageDriver.Drop(ctx); err != nil {
+		return errors.WithMessage(err, "failed drop storage")
+	}
+	// delete the storage in the memory
+	storagesMap.Delete(storage.MountPath)
+	storage.Disabled = true
+	err = db.UpdateStorage(storage)
+	if err != nil {
+		return errors.WithMessage(err, "failed update storage in db, but have drop in memory. you can try restart")
+	}
+	return nil
+}
+
 // UpdateStorage update storage
 // get old storage first
 // drop the storage then reinitialize

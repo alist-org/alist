@@ -12,6 +12,7 @@ type Storage struct {
 	Addition        string    `json:"addition" gorm:"type:text"` // Additional information, defined in the corresponding driver
 	Remark          string    `json:"remark"`
 	Modified        time.Time `json:"modified"`
+	Disabled        bool      `json:"disabled"` // if disabled
 	Sort
 	Proxy
 }
