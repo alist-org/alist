@@ -10,5 +10,4 @@ func Init() {
 	bootstrap.Log()
 	bootstrap.InitDB()
 	data.InitData()
-	bootstrap.InitAria2()
 }

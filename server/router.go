@@ -14,6 +14,7 @@ import (
 func Init(r *gin.Engine) {
 	common.SecretKey = []byte(conf.Conf.JwtSecret)
 	Cors(r)
+	r.Use(middlewares.StoragesLoaded)
 	WebDav(r)
 
 	r.GET("/d/*path", middlewares.Down, handles.Down)

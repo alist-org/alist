@@ -5,6 +5,7 @@ import (
 
 	"github.com/alist-org/alist/v3/cmd/flags"
 	_ "github.com/alist-org/alist/v3/drivers"
+	"github.com/alist-org/alist/v3/internal/bootstrap"
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/server"
 	"github.com/gin-gonic/gin"
@@ -20,6 +21,8 @@ var serverCmd = &cobra.Command{
 the address is defined in config file`,
 	Run: func(cmd *cobra.Command, args []string) {
 		Init()
+		bootstrap.InitAria2()
+		bootstrap.LoadStorages()
 		if !flags.Debug && !flags.Dev {
 			gin.SetMode(gin.ReleaseMode)
 		}

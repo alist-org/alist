@@ -1,6 +1,8 @@
 package db
 
 import (
+	"fmt"
+
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/pkg/errors"
 )
@@ -47,4 +49,12 @@ func GetStorageById(id uint) (*model.Storage, error) {
 		return nil, errors.WithStack(err)
 	}
 	return &storage, nil
+}
+
+func GetEnabledStorages() ([]model.Storage, error) {
+	var storages []model.Storage
+	if err := db.Where(fmt.Sprintf("%s = ?", columnName("disabled")), false).Find(&storages).Error; err != nil {
+		return nil, errors.WithStack(err)
+	}
+	return storages, nil
 }

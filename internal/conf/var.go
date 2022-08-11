@@ -17,3 +17,8 @@ var (
 
 var TypesMap = make(map[string][]string)
 var PrivacyReg []*regexp.Regexp
+
+var (
+	// StoragesLoaded loaded success if empty
+	StoragesLoaded = false
+)
