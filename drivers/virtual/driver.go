@@ -43,7 +43,7 @@ func (d *Virtual) GetAddition() driver.Additional {
 	return d.Addition
 }
 
-func (d *Virtual) List(ctx context.Context, dir model.Obj) ([]model.Obj, error) {
+func (d *Virtual) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
 	var res []model.Obj
 	for i := 0; i < d.NumFile; i++ {
 		res = append(res, model.Object{

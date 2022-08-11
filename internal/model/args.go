@@ -6,9 +6,14 @@ import (
 	"time"
 )
 
+type ListArgs struct {
+	ReqPath string
+}
+
 type LinkArgs struct {
 	IP     string
 	Header http.Header
+	Type   string
 }
 
 type Link struct {

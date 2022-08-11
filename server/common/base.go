@@ -9,15 +9,17 @@ import (
 	"github.com/alist-org/alist/v3/internal/setting"
 )
 
-func GetBaseUrl(r *http.Request) string {
-	baseUrl := setting.GetByKey(conf.ApiUrl)
+func GetApiUrl(r *http.Request) string {
+	api := setting.GetByKey(conf.ApiUrl)
 	protocol := "http"
-	if r.TLS != nil {
-		protocol = "https"
+	if r != nil {
+		if r.TLS != nil {
+			protocol = "https"
+		}
+		if api == "" {
+			api = fmt.Sprintf("%s://%s", protocol, r.Host)
+		}
 	}
-	if baseUrl == "" {
-		baseUrl = fmt.Sprintf("%s://%s", protocol, r.Host)
-	}
-	strings.TrimSuffix(baseUrl, "/")
-	return baseUrl
+	strings.TrimSuffix(api, "/")
+	return api
 }

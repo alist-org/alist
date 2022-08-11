@@ -28,7 +28,7 @@ func ClearCache(storage driver.Driver, path string) {
 }
 
 // List files in storage, not contains virtual file
-func List(ctx context.Context, storage driver.Driver, path string, refresh ...bool) ([]model.Obj, error) {
+func List(ctx context.Context, storage driver.Driver, path string, args model.ListArgs, refresh ...bool) ([]model.Obj, error) {
 	path = utils.StandardizePath(path)
 	log.Debugf("operations.List %s", path)
 	dir, err := Get(ctx, storage, path)
@@ -39,7 +39,7 @@ func List(ctx context.Context, storage driver.Driver, path string, refresh ...bo
 		return nil, errors.WithStack(errs.NotFolder)
 	}
 	if storage.Config().NoCache {
-		return storage.List(ctx, dir)
+		return storage.List(ctx, dir, args)
 	}
 	key := stdpath.Join(storage.GetStorage().MountPath, path)
 	if len(refresh) == 0 || !refresh[0] {
@@ -48,7 +48,7 @@ func List(ctx context.Context, storage driver.Driver, path string, refresh ...bo
 		}
 	}
 	files, err, _ := filesG.Do(key, func() ([]model.Obj, error) {
-		files, err := storage.List(ctx, dir)
+		files, err := storage.List(ctx, dir, args)
 		if err != nil {
 			return nil, errors.WithMessage(err, "failed to list files")
 		}
@@ -99,7 +99,7 @@ func Get(ctx context.Context, storage driver.Driver, path string) (model.Obj, er
 	}
 	// not root folder
 	dir, name := stdpath.Split(path)
-	files, err := List(ctx, storage, dir)
+	files, err := List(ctx, storage, dir, model.ListArgs{})
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed get parent list")
 	}
@@ -148,7 +148,7 @@ func Link(ctx context.Context, storage driver.Driver, path string, args model.Li
 	return link, file, err
 }
 
-// other api
+// Other api
 func Other(ctx context.Context, storage driver.Driver, args model.FsOtherArgs) (interface{}, error) {
 	obj, err := Get(ctx, storage, args.Path)
 	if err != nil {

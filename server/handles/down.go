@@ -30,6 +30,7 @@ func Down(c *gin.Context) {
 		link, _, err := fs.Link(c, rawPath, model.LinkArgs{
 			IP:     c.ClientIP(),
 			Header: c.Request.Header,
+			Type:   c.Query("type"),
 		})
 		if err != nil {
 			common.ErrorResp(c, err, 500)
@@ -52,13 +53,17 @@ func Proxy(c *gin.Context) {
 		if downProxyUrl != "" {
 			_, ok := c.GetQuery("d")
 			if ok {
-				URL := fmt.Sprintf("%s%s?sign=%s", strings.Split(downProxyUrl, "\n")[0], rawPath, sign.Sign(filename))
+				URL := fmt.Sprintf("%s%s?sign=%s",
+					strings.Split(downProxyUrl, "\n")[0],
+					utils.EncodePath(rawPath),
+					sign.Sign(filename))
 				c.Redirect(302, URL)
 				return
 			}
 		}
 		link, file, err := fs.Link(c, rawPath, model.LinkArgs{
 			Header: c.Request.Header,
+			Type:   c.Query("type"),
 		})
 		if err != nil {
 			common.ErrorResp(c, err, 500)

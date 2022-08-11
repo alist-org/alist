@@ -51,7 +51,7 @@ func copyBetween2Storages(t *task.Task[uint64], srcStorage, dstStorage driver.Dr
 	}
 	if srcObj.IsDir() {
 		t.SetStatus("src object is dir, listing objs")
-		objs, err := operations.List(t.Ctx, srcStorage, srcObjPath)
+		objs, err := operations.List(t.Ctx, srcStorage, srcObjPath, model.ListArgs{})
 		if err != nil {
 			return errors.WithMessagef(err, "failed list src [%s] objs", srcObjPath)
 		}

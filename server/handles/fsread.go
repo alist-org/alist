@@ -30,13 +30,13 @@ type DirReq struct {
 }
 
 type ObjResp struct {
-	Name      string    `json:"name"`
-	Size      int64     `json:"size"`
-	IsDir     bool      `json:"is_dir"`
-	Modified  time.Time `json:"modified"`
-	Sign      string    `json:"sign"`
-	Thumbnail string    `json:"thumbnail"`
-	Type      int       `json:"type"`
+	Name     string    `json:"name"`
+	Size     int64     `json:"size"`
+	IsDir    bool      `json:"is_dir"`
+	Modified time.Time `json:"modified"`
+	Sign     string    `json:"sign"`
+	Thumb    string    `json:"thumb"`
+	Type     int       `json:"type"`
 }
 
 type FsListResp struct {
@@ -169,22 +169,22 @@ func pagination(objs []model.Obj, req *common.PageReq) (int, []model.Obj) {
 func toObjResp(objs []model.Obj) []ObjResp {
 	var resp []ObjResp
 	for _, obj := range objs {
-		thumbnail := ""
-		if t, ok := obj.(model.Thumbnail); ok {
-			thumbnail = t.Thumbnail()
+		thumb := ""
+		if t, ok := obj.(model.Thumb); ok {
+			thumb = t.Thumb()
 		}
 		tp := conf.FOLDER
 		if !obj.IsDir() {
 			tp = utils.GetFileType(obj.GetName())
 		}
 		resp = append(resp, ObjResp{
-			Name:      obj.GetName(),
-			Size:      obj.GetSize(),
-			IsDir:     obj.IsDir(),
-			Modified:  obj.ModTime(),
-			Sign:      common.Sign(obj),
-			Thumbnail: thumbnail,
-			Type:      tp,
+			Name:     obj.GetName(),
+			Size:     obj.GetSize(),
+			IsDir:    obj.IsDir(),
+			Modified: obj.ModTime(),
+			Sign:     common.Sign(obj),
+			Thumb:    thumb,
+			Type:     tp,
 		})
 	}
 	return resp
@@ -248,7 +248,10 @@ func FsGet(c *gin.Context) {
 				if storage.GetStorage().DownProxyUrl != "" {
 					rawURL = fmt.Sprintf("%s%s?sign=%s", strings.Split(storage.GetStorage().DownProxyUrl, "\n")[0], req.Path, sign.Sign(obj.GetName()))
 				} else {
-					rawURL = fmt.Sprintf("%s/p%s?sign=%s", common.GetBaseUrl(c.Request), req.Path, sign.Sign(obj.GetName()))
+					rawURL = fmt.Sprintf("%s/p%s?sign=%s",
+						common.GetApiUrl(c.Request),
+						utils.EncodePath(req.Path),
+						sign.Sign(obj.GetName()))
 				}
 			} else {
 				// if storage is not proxy, use raw url by fs.Link

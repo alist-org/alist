@@ -28,8 +28,8 @@ type URL interface {
 	URL() string
 }
 
-type Thumbnail interface {
-	Thumbnail() string
+type Thumb interface {
+	Thumb() string
 }
 
 type SetID interface {

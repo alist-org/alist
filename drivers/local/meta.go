@@ -7,6 +7,7 @@ import (
 
 type Addition struct {
 	driver.RootFolderPath
+	Thumbnail bool `json:"thumbnail" required:"true" help:"enable thumbnail"`
 }
 
 var config = driver.Config{

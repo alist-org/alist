@@ -10,26 +10,39 @@ type Object struct {
 	IsFolder bool
 }
 
-func (f Object) GetName() string {
-	return f.Name
+func (o Object) GetName() string {
+	return o.Name
 }
 
-func (f Object) GetSize() int64 {
-	return f.Size
+func (o Object) GetSize() int64 {
+	return o.Size
 }
 
-func (f Object) ModTime() time.Time {
-	return f.Modified
+func (o Object) ModTime() time.Time {
+	return o.Modified
 }
 
-func (f Object) IsDir() bool {
-	return f.IsFolder
+func (o Object) IsDir() bool {
+	return o.IsFolder
 }
 
-func (f Object) GetID() string {
-	return f.ID
+func (o Object) GetID() string {
+	return o.ID
 }
 
-func (f *Object) SetID(id string) {
-	f.ID = id
+func (o *Object) SetID(id string) {
+	o.ID = id
+}
+
+type Thumbnail struct {
+	Thumbnail string
+}
+
+func (t Thumbnail) Thumb() string {
+	return t.Thumbnail
+}
+
+type ObjectThumbnail struct {
+	Object
+	Thumbnail
 }

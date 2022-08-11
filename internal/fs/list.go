@@ -24,7 +24,9 @@ func list(ctx context.Context, path string) ([]model.Obj, error) {
 		}
 		return nil, errors.WithMessage(err, "failed get storage")
 	}
-	objs, err := operations.List(ctx, storage, actualPath)
+	objs, err := operations.List(ctx, storage, actualPath, model.ListArgs{
+		ReqPath: path,
+	})
 	if err != nil {
 		log.Errorf("%+v", err)
 		if len(virtualFiles) != 0 {

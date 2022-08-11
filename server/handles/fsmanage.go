@@ -11,6 +11,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/fs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/sign"
+	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
 )
@@ -245,7 +246,10 @@ func Link(c *gin.Context) {
 	}
 	if storage.Config().OnlyLocal {
 		common.SuccessResp(c, model.Link{
-			URL: fmt.Sprintf("%s/p%s?d&sign=%s", common.GetBaseUrl(c.Request), req.Path, sign.Sign(stdpath.Base(rawPath))),
+			URL: fmt.Sprintf("%s/p%s?d&sign=%s",
+				common.GetApiUrl(c.Request),
+				utils.EncodePath(req.Path),
+				sign.Sign(stdpath.Base(rawPath))),
 		})
 		return
 	}

@@ -1,17 +1,25 @@
 package local
 
 import (
+	"bytes"
 	"context"
+	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
+	stdpath "path"
 	"path/filepath"
+	"strconv"
 	"strings"
 
+	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/operations"
 	"github.com/alist-org/alist/v3/pkg/utils"
+	"github.com/alist-org/alist/v3/server/common"
+	"github.com/disintegration/imaging"
 	"github.com/pkg/errors"
 )
 
@@ -54,7 +62,7 @@ func (d *Local) GetAddition() driver.Additional {
 	return d.Addition
 }
 
-func (d *Local) List(ctx context.Context, dir model.Obj) ([]model.Obj, error) {
+func (d *Local) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
 	fullPath := dir.GetID()
 	rawFiles, err := ioutil.ReadDir(fullPath)
 	if err != nil {
@@ -65,11 +73,22 @@ func (d *Local) List(ctx context.Context, dir model.Obj) ([]model.Obj, error) {
 		if strings.HasPrefix(f.Name(), ".") {
 			continue
 		}
-		file := model.Object{
-			Name:     f.Name(),
-			Modified: f.ModTime(),
-			Size:     f.Size(),
-			IsFolder: f.IsDir(),
+		thumb := ""
+		if d.Thumbnail && utils.GetFileType(f.Name()) == conf.IMAGE {
+			thumb = common.GetApiUrl(nil) + stdpath.Join("/d", args.ReqPath, f.Name())
+			thumb = utils.EncodePath(thumb, true)
+			thumb += "?type=thumb"
+		}
+		file := model.ObjectThumbnail{
+			Object: model.Object{
+				Name:     f.Name(),
+				Modified: f.ModTime(),
+				Size:     f.Size(),
+				IsFolder: f.IsDir(),
+			},
+			Thumbnail: model.Thumbnail{
+				Thumbnail: thumb,
+			},
 		}
 		files = append(files, &file)
 	}
@@ -93,8 +112,30 @@ func (d *Local) Get(ctx context.Context, path string) (model.Obj, error) {
 
 func (d *Local) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	fullPath := file.GetID()
-	link := model.Link{
-		FilePath: &fullPath,
+	var link model.Link
+	if args.Type == "thumb" && utils.Ext(file.GetName()) != "svg" {
+		imgData, err := ioutil.ReadFile(fullPath)
+		if err != nil {
+			return nil, err
+		}
+		srcBuf := bytes.NewBuffer(imgData)
+		image, err := imaging.Decode(srcBuf)
+		if err != nil {
+			return nil, err
+		}
+		thumbImg := imaging.Resize(image, 144, 0, imaging.Lanczos)
+		var buf bytes.Buffer
+		err = imaging.Encode(&buf, thumbImg, imaging.PNG)
+		if err != nil {
+			return nil, err
+		}
+		size := buf.Len()
+		link.Data = io.NopCloser(&buf)
+		link.Header = http.Header{
+			"Content-Length": []string{strconv.Itoa(size)},
+		}
+	} else {
+		link.FilePath = &fullPath
 	}
 	return &link, nil
 }

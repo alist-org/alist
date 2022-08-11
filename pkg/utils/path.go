@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"net/url"
 	stdpath "path"
 	"path/filepath"
 	"runtime"
@@ -35,4 +36,27 @@ func Ext(path string) string {
 		return ext[1:]
 	}
 	return ext
+}
+
+func EncodePath(path string, all ...bool) string {
+	seg := strings.Split(path, "/")
+	toReplace := []struct {
+		Src string
+		Dst string
+	}{
+		{Src: "%", Dst: "%25"},
+		{"%", "%25"},
+		{"?", "%3F"},
+		{"#", "%23"},
+	}
+	for i := range seg {
+		if len(all) > 0 && all[0] {
+			seg[i] = url.PathEscape(seg[i])
+		} else {
+			for j := range toReplace {
+				seg[i] = strings.ReplaceAll(seg[i], toReplace[j].Src, toReplace[j].Dst)
+			}
+		}
+	}
+	return strings.Join(seg, "/")
 }
