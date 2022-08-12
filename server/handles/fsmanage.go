@@ -248,7 +248,7 @@ func Link(c *gin.Context) {
 		common.SuccessResp(c, model.Link{
 			URL: fmt.Sprintf("%s/p%s?d&sign=%s",
 				common.GetApiUrl(c.Request),
-				utils.EncodePath(req.Path),
+				utils.EncodePath(req.Path, true),
 				sign.Sign(stdpath.Base(rawPath))),
 		})
 		return

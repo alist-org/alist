@@ -250,7 +250,7 @@ func FsGet(c *gin.Context) {
 				} else {
 					rawURL = fmt.Sprintf("%s/p%s?sign=%s",
 						common.GetApiUrl(c.Request),
-						utils.EncodePath(req.Path),
+						utils.EncodePath(req.Path, true),
 						sign.Sign(obj.GetName()))
 				}
 			} else {

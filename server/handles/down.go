@@ -55,7 +55,7 @@ func Proxy(c *gin.Context) {
 			if ok {
 				URL := fmt.Sprintf("%s%s?sign=%s",
 					strings.Split(downProxyUrl, "\n")[0],
-					utils.EncodePath(rawPath),
+					utils.EncodePath(rawPath, true),
 					sign.Sign(filename))
 				c.Redirect(302, URL)
 				return

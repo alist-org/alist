@@ -230,7 +230,7 @@ func (h *Handler) handleGetHeadPost(w http.ResponseWriter, r *http.Request) (sta
 	} else if storage.Config().MustProxy() || storage.GetStorage().WebdavProxy() {
 		u := fmt.Sprintf("%s/p%s?sign=%s",
 			common.GetApiUrl(r),
-			utils.EncodePath(reqPath),
+			utils.EncodePath(reqPath, true),
 			sign.Sign(path.Base(reqPath)))
 		http.Redirect(w, r, u, 302)
 	} else {
