@@ -16,7 +16,7 @@ jobs:
           fetch-depth: 0
       - run: npx changelogithub # or changelogithub@0.12 if ensure the stable result
         env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          GITHUB_TOKEN: ${{secrets.MY_TOKEN}}
   release:
     needs: changelog
     strategy:
