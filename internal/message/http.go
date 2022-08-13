@@ -8,16 +8,16 @@ import (
 	"github.com/pkg/errors"
 )
 
-type Post struct {
-	Received chan string      // received messages from web
-	ToSend   chan interface{} // messages to send to web
+type Http struct {
+	Received chan string  // received messages from web
+	ToSend   chan Message // messages to send to web
 }
 
 type Req struct {
 	Message string `json:"message" form:"message"`
 }
 
-func (p *Post) GetHandle(c *gin.Context) {
+func (p *Http) GetHandle(c *gin.Context) {
 	select {
 	case message := <-p.ToSend:
 		common.SuccessResp(c, message)
@@ -26,7 +26,7 @@ func (p *Post) GetHandle(c *gin.Context) {
 	}
 }
 
-func (p *Post) SendHandle(c *gin.Context) {
+func (p *Http) SendHandle(c *gin.Context) {
 	var req Req
 	if err := c.ShouldBind(&req); err != nil {
 		common.ErrorResp(c, err, 400)
@@ -36,20 +36,20 @@ func (p *Post) SendHandle(c *gin.Context) {
 	case p.Received <- req.Message:
 		common.SuccessResp(c)
 	default:
-		common.ErrorStrResp(c, "send failed", 500)
+		common.ErrorStrResp(c, "nowhere needed", 500)
 	}
 }
 
-func (p *Post) Send(data interface{}) error {
+func (p *Http) Send(message Message) error {
 	select {
-	case p.ToSend <- data:
+	case p.ToSend <- message:
 		return nil
 	default:
 		return errors.New("send failed")
 	}
 }
 
-func (p *Post) Receive() (string, error) {
+func (p *Http) Receive() (string, error) {
 	select {
 	case message := <-p.Received:
 		return message, nil
@@ -58,16 +58,16 @@ func (p *Post) Receive() (string, error) {
 	}
 }
 
-func (p *Post) WaitSend(data interface{}, d int) error {
+func (p *Http) WaitSend(message Message, d int) error {
 	select {
-	case p.ToSend <- data:
+	case p.ToSend <- message:
 		return nil
 	case <-time.After(time.Duration(d) * time.Second):
 		return errors.New("send timeout")
 	}
 }
 
-func (p *Post) WaitReceive(d int) (string, error) {
+func (p *Http) WaitReceive(d int) (string, error) {
 	select {
 	case message := <-p.Received:
 		return message, nil
@@ -76,7 +76,7 @@ func (p *Post) WaitReceive(d int) (string, error) {
 	}
 }
 
-var PostInstance = &Post{
+var HttpInstance = &Http{
 	Received: make(chan string),
-	ToSend:   make(chan interface{}),
+	ToSend:   make(chan Message),
 }

@@ -101,8 +101,8 @@ func admin(g *gin.RouterGroup) {
 	task.POST("/copy/clear_done", handles.ClearDoneCopyTasks)
 
 	ms := g.Group("/message")
-	ms.GET("/get", message.PostInstance.GetHandle)
-	ms.POST("/send", message.PostInstance.SendHandle)
+	ms.POST("/get", message.HttpInstance.GetHandle)
+	ms.POST("/send", message.HttpInstance.SendHandle)
 }
 
 func fs(g *gin.RouterGroup) {

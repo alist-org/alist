@@ -37,9 +37,9 @@ func initDevData() {
 func initDevDo() {
 	if flags.Dev {
 		go func() {
-			err := message.GetMessenger().WaitSend(map[string]string{
-				"type": "dev",
-				"msg":  "dev mode",
+			err := message.GetMessenger().WaitSend(message.Message{
+				Type:    "string",
+				Content: "dev mode",
 			}, 10)
 			if err != nil {
 				log.Debugf("%+v", err)

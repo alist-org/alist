@@ -1,12 +1,17 @@
 package message
 
+type Message struct {
+	Type    string      `json:"type"`
+	Content interface{} `json:"content"`
+}
+
 type Messenger interface {
-	Send(interface{}) error
+	Send(Message) error
 	Receive() (string, error)
-	WaitSend(interface{}, int) error
+	WaitSend(Message, int) error
 	WaitReceive(int) (string, error)
 }
 
 func GetMessenger() Messenger {
-	return PostInstance
+	return HttpInstance
 }
