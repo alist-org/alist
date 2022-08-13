@@ -8,7 +8,9 @@ import (
 	_ "github.com/Xhofe/alist/drivers/alidrive"
 	_ "github.com/Xhofe/alist/drivers/alist"
 	_ "github.com/Xhofe/alist/drivers/baidu"
+	_ "github.com/Xhofe/alist/drivers/baiduphoto"
 	"github.com/Xhofe/alist/drivers/base"
+	_ "github.com/Xhofe/alist/drivers/chaoxing"
 	_ "github.com/Xhofe/alist/drivers/ftp"
 	_ "github.com/Xhofe/alist/drivers/google"
 	_ "github.com/Xhofe/alist/drivers/lanzou"
@@ -25,7 +27,6 @@ import (
 	_ "github.com/Xhofe/alist/drivers/webdav"
 	_ "github.com/Xhofe/alist/drivers/xunlei"
 	_ "github.com/Xhofe/alist/drivers/yandex"
-	_ "github.com/Xhofe/alist/drivers/baiduphoto"
 	log "github.com/sirupsen/logrus"
 	"strings"
 )
