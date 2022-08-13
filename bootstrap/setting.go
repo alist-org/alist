@@ -1,12 +1,13 @@
 package bootstrap
 
 import (
+	"strings"
+
 	"github.com/Xhofe/alist/conf"
 	"github.com/Xhofe/alist/model"
 	"github.com/Xhofe/alist/utils"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
-	"strings"
 )
 
 func InitSettings() {
@@ -235,7 +236,7 @@ func InitSettings() {
 		},
 		{
 			Key:         "Visitor WebDAV password",
-			Value:       "guest",
+			Value:       utils.RandomStr(8),
 			Description: "Visitor WebDAV password",
 			Type:        "string",
 			Access:      model.PRIVATE,
