@@ -14,10 +14,11 @@ const (
 	ApiUrl       = "api_url"
 	BasePath     = "base_path"
 	SiteTitle    = "site_title"
-	Logo         = "logo"
-	Favicon      = "favicon"
 	Announcement = "announcement"
-	IconColor    = "icon_color"
+
+	Logo      = "logo"
+	Favicon   = "favicon"
+	MainColor = "main_color"
 
 	// preview
 	TextTypes     = "text_types"
