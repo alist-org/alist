@@ -153,7 +153,7 @@ func canAccess(user *model.User, meta *model.Meta, path string, password string)
 }
 
 func pagination(objs []model.Obj, req *common.PageReq) (int, []model.Obj) {
-	pageIndex, pageSize := req.PageIndex, req.PageSize
+	pageIndex, pageSize := req.Page, req.PerPage
 	total := len(objs)
 	start := (pageIndex - 1) * pageSize
 	if start > total {
@@ -190,7 +190,7 @@ func toObjResp(objs []model.Obj) []ObjResp {
 	return resp
 }
 
-type FsGetOrLinkReq struct {
+type FsGetReq struct {
 	Path     string `json:"path" form:"path"`
 	Password string `json:"password" form:"password"`
 }
@@ -204,7 +204,7 @@ type FsGetResp struct {
 }
 
 func FsGet(c *gin.Context) {
-	var req FsGetOrLinkReq
+	var req FsGetReq
 	if err := c.ShouldBind(&req); err != nil {
 		common.ErrorResp(c, err, 400)
 		return

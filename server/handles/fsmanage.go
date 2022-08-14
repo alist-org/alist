@@ -230,9 +230,9 @@ func FsPut(c *gin.Context) {
 	common.SuccessResp(c)
 }
 
-// Link return real link, just for proxy program, it may contain cookie
+// Link return real link, just for proxy program, it may contain cookie, so just allowed for admin
 func Link(c *gin.Context) {
-	var req FsGetOrLinkReq
+	var req MkdirOrLinkReq
 	if err := c.ShouldBind(&req); err != nil {
 		common.ErrorResp(c, err, 400)
 		return

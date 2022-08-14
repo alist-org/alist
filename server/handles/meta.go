@@ -22,7 +22,7 @@ func ListMetas(c *gin.Context) {
 	}
 	req.Validate()
 	log.Debugf("%+v", req)
-	metas, total, err := db.GetMetas(req.PageIndex, req.PageSize)
+	metas, total, err := db.GetMetas(req.Page, req.PerPage)
 	if err != nil {
 		common.ErrorResp(c, err, 500, true)
 		return

@@ -18,7 +18,7 @@ func ListUsers(c *gin.Context) {
 	}
 	req.Validate()
 	log.Debugf("%+v", req)
-	users, total, err := db.GetUsers(req.PageIndex, req.PageSize)
+	users, total, err := db.GetUsers(req.Page, req.PerPage)
 	if err != nil {
 		common.ErrorResp(c, err, 500, true)
 		return
