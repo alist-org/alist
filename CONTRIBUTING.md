@@ -14,19 +14,19 @@ Prerequisites:
 Clone `alist` and `alist-web` anywhere:
 
 ```shell
-$ git clone https://github.com/Xhofe/alist.git
-$ git clone https://github.com/Xhofe/alist-web.git
+$ git clone https://github.com/alist-org/alist.git
+$ git clone --recurse-submodules https://github.com/alist-org/alist-web.git
 ```
 You should switch to the `main` branch for development.
 
 ## Preview your change
 ### backend
 ```shell
-$ go run cmd/alist.go
+$ go run main.go
 ```
 ### frontend
 ```shell
-$ yarn dev
+$ pnpm dev
 ```
 
 ## Create a commit
@@ -73,7 +73,6 @@ Must be one of the following:
 * **chore**: Changes to the build process or auxiliary tools and libraries such as documentation
   generation
 * **release**: Release a new version
-* **workflow**: Workflow related file modification
 
 ### Scope
 The scope could be anything specifying place of the commit change. For example `$location`,

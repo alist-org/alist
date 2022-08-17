@@ -1,13 +1,26 @@
 <div align="center">
   <a href="https://alist.nn.ci"><img height="100px" alt="logo" src="https://cdn.jsdelivr.net/gh/alist-org/logo@main/logo.svg"/></a>
-  <p><em>🗂️A file list program that supports multiple storage, powered by Gin and React.</em></p>
-  <a href="https://github.com/Xhofe/alist/releases"><img src="https://img.shields.io/github/release/Xhofe/alist?style=flat-square" alt="latest version" /></a>
-  <a href="https://github.com/Xhofe/alist/discussions"><img src="https://img.shields.io/github/discussions/Xhofe/alist?color=%23ED8936&style=flat-square" alt="discussions" /></a>
-  <a href="https://github.com/Xhofe/alist/actions?query=workflow%3ABuild"><img src="https://img.shields.io/github/workflow/status/Xhofe/alist/build?style=flat-square" alt="Build status" /></a>
-  <a href="https://github.com/Xhofe/alist/releases"><img src="https://img.shields.io/github/downloads/Xhofe/alist/total?style=flat-square&color=%239F7AEA" alt="Downloads" /></a>
-  <a href="https://github.com/Xhofe/alist/blob/v2/LICENSE"><img src="https://img.shields.io/github/license/Xhofe/alist?style=flat-square" alt="License" /></a>
+  <p><em>🗂️A file list program that supports multiple storage, powered by Gin and Solidjs.</em></p>
+  <a href="https://github.com/Xhofe/alist/releases">
+    <img src="https://img.shields.io/github/release/Xhofe/alist" alt="latest version" />
+  </a>
+  <a href="https://github.com/Xhofe/alist/discussions">
+    <img src="https://img.shields.io/github/discussions/Xhofe/alist?color=%23ED8936" alt="discussions" />
+  </a>
+  <a href="https://github.com/Xhofe/alist/actions?query=workflow%3ABuild">
+    <img src="https://img.shields.io/github/workflow/status/Xhofe/alist/build" alt="Build status" />
+  </a>
+  <a href="https://github.com/Xhofe/alist/releases">
+    <img src="https://img.shields.io/github/downloads/Xhofe/alist/total?color=%239F7AEA" alt="Downloads" />
+  </a>
+  <a href="https://github.com/Xhofe/alist/blob/v2/LICENSE">
+    <img src="https://img.shields.io/github/license/Xhofe/alist" alt="License" />
+  </a>
+  <a title="Crowdin" target="_blank" href="https://crwd.in/alist">
+    <img src="https://badges.crowdin.net/alist/localized.svg">
+  </a>
   <a href="https://pay.xhofe.top">
-    <img src="https://img.shields.io/badge/%24-donate-ff69b4.svg?style=flat-square" alt="donate" />
+    <img src="https://img.shields.io/badge/%24-sponsor-ff69b4.svg" alt="sponsor" />
   </a>
 </div>
 
@@ -16,6 +29,7 @@
 [Contributors](./CONTRIBUTORS.md) | [Contributing](./CONTRIBUTING.md)
 
 > ### New version is under development. Checkout [v2](https://github.com/alist-org/alist/tree/v2) branch for latest version.
+> Click [here](https://crwd.in/alist) to help translate.
 
 ## Discussion
 
