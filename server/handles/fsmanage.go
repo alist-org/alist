@@ -14,6 +14,7 @@ import (
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
 )
 
 type MkdirOrLinkReq struct {
@@ -31,8 +32,10 @@ func FsMkdir(c *gin.Context) {
 	if !user.CanWrite() {
 		meta, err := db.GetNearestMeta(req.Path)
 		if err != nil {
-			common.ErrorResp(c, err, 500)
-			return
+			if !errors.Is(errors.Cause(err), errs.MetaNotFound) {
+				common.ErrorResp(c, err, 500, true)
+				return
+			}
 		}
 		if !canWrite(meta, req.Path) {
 			common.ErrorResp(c, errs.PermissionDenied, 403)
@@ -192,8 +195,10 @@ func FsPut(c *gin.Context) {
 	if !user.CanWrite() {
 		meta, err := db.GetNearestMeta(path)
 		if err != nil {
-			common.ErrorResp(c, err, 500)
-			return
+			if !errors.Is(errors.Cause(err), errs.MetaNotFound) {
+				common.ErrorResp(c, err, 500, true)
+				return
+			}
 		}
 		if !canWrite(meta, path) {
 			common.ErrorResp(c, errs.PermissionDenied, 403)

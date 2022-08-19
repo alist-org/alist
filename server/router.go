@@ -114,7 +114,7 @@ func fs(g *gin.RouterGroup) {
 	g.POST("/move", handles.FsMove)
 	g.POST("/copy", handles.FsCopy)
 	g.POST("/remove", handles.FsRemove)
-	g.POST("/put", handles.FsPut)
+	g.PUT("/put", handles.FsPut)
 	g.POST("/link", middlewares.AuthAdmin, handles.Link)
 	g.POST("/add_aria2", handles.AddAria2)
 }

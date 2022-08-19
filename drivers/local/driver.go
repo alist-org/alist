@@ -98,6 +98,9 @@ func (d *Local) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([
 func (d *Local) Get(ctx context.Context, path string) (model.Obj, error) {
 	f, err := os.Stat(path)
 	if err != nil {
+		if strings.Contains(err.Error(), "cannot find the file") {
+			return nil, errors.WithStack(errs.ObjectNotFound)
+		}
 		return nil, errors.Wrapf(err, "error while stat %s", path)
 	}
 	file := model.Object{
