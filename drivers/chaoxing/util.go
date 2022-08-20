@@ -24,6 +24,10 @@ var form_login_fmt = "fid=-1&uname=%s&password=%s&t=true&forbidotherlogin=0&vali
 var api_list_root = "https://pan-yz.chaoxing.com/opt/listres?page=1&size=%d&enc=%s"
 var api_list_file = "https://pan-yz.chaoxing.com/opt/listres?puid=%s&shareid=%s&parentId=%s&page=1&size=%d&enc=%s"
 var api_list_shared_root = "https://pan-yz.chaoxing.com/opt/listres?puid=0&shareid=-1&parentId=0&page=1&size=%d&enc=%s"
+var api_new_folder = "https://pan-yz.chaoxing.com/opt/newfolder?parentId=%s&name=%s&puid=%s"
+var api_move_file = "https://pan-yz.chaoxing.com/opt/moveres?folderid=%s_%s&resids=%s"
+var api_rename = "https://pan-yz.chaoxing.com/opt/rename?resid=%s&name=%s&puid=%s"
+var api_delete_file = "https://pan-yz.chaoxing.com/opt/delres?resids=%s&resourcetype=0&puids=%s"
 
 var reg_enc_fmt = regexp.MustCompile("enc[ ]*=\"(.*)\"")
 
@@ -90,14 +94,22 @@ func (driver ChaoxingDrive) GetEnc(account *model.Account) error {
 	return nil
 }
 
+func parseFileId(fileId string)(string,string,string){
+	//按规则解析 id 号
+	fileIdInfo := strings.Split(fileId, "_")
+	if len(fileIdInfo) == 3 {
+		fileId = fileIdInfo[0]
+		filePuid := fileIdInfo[1]
+		fileShareid := fileIdInfo[2]
+		return fileId,filePuid,fileShareid
+	}
+	return fileId,"",""
+}
+
 func (driver ChaoxingDrive) ListFile(folder_id string, account *model.Account) ([]model.File, error) {
 	var url string
-	//按规则解析 id 号
-	folder_id_info := strings.Split(folder_id, "_")
-	if len(folder_id_info) == 3 {
-		folder_id = folder_id_info[0]
-		folder_puid := folder_id_info[1]
-		folder_shareid := folder_id_info[2]
+	folder_id, folder_puid, folder_shareid := parseFileId(folder_id)
+	if folder_puid != "" {
 		if folder_id == "0" {
 			//访问“共享给我的文件夹”
 			url = fmt.Sprintf(api_list_shared_root, account.Limit, account.AccessSecret)
@@ -105,7 +117,7 @@ func (driver ChaoxingDrive) ListFile(folder_id string, account *model.Account) (
 			//访问其他目录
 			url = fmt.Sprintf(api_list_file, folder_puid, folder_shareid, folder_id, account.Limit, account.AccessSecret)
 		}
-	} else {
+	}else {
 		//id无法解析为三段，应当是访问根目录（此时为 ""）
 		url = fmt.Sprintf(api_list_root, account.Limit, account.AccessSecret)
 	}
@@ -148,4 +160,38 @@ func (driver ChaoxingDrive) ListFile(folder_id string, account *model.Account) (
 		files = append(files, f)
 	}
 	return files, nil
+}
+
+func (driver ChaoxingDrive) Mkdir(parentFolderId string,newFolderName string, account *model.Account) error {
+	// file.Id = "581429863022592000_142134055_922191"
+	fileId, puid, _ := parseFileId(parentFolderId)
+	// https://pan-yz.chaoxing.com/opt/newfolder?parentId=205255741446029312&name=test&puid=54351295
+	url := fmt.Sprintf(api_new_folder, fileId, newFolderName, puid)
+	_, err := chaoxingClient.R().SetHeader("Cookie", account.AccessToken).Post(url)
+	return err
+}
+
+func (driver ChaoxingDrive) Mv(srcFileId string, dstFolderId string, account *model.Account) error {
+	// https://pan-yz.chaoxing.com/opt/moveres?folderid=502966447562248192_142134055&resids=534433141663821824
+	srcFid, _, _ := parseFileId(srcFileId)
+	dstFid, dstPuid, _ := parseFileId(dstFolderId)
+	url := fmt.Sprintf(api_move_file,dstFid,dstPuid,srcFid)
+	_, err  := chaoxingClient.R().SetHeader("Cookie", account.AccessToken).Post(url)
+	return err
+}
+
+func (driver ChaoxingDrive) Ren(srcFileId string, fileName string, account *model.Account) error {
+	// https://pan-yz.chaoxing.com/opt/rename?resid=762263362701209600&name=test.pdf&puid=54351295
+	srcFid, srcPuid, _ := parseFileId(srcFileId)
+	url := fmt.Sprintf(api_rename,srcFid,fileName,srcPuid)
+	_, err  := chaoxingClient.R().SetHeader("Cookie", account.AccessToken).Post(url)
+	return err
+}
+
+func (driver ChaoxingDrive) Rm(srcFileId string, account *model.Account) error {
+	// https://pan-yz.chaoxing.com/opt/delres?resids=762268051373813760&resourcetype=0&puids=54351295
+	srcFid, srcPuid, _ := parseFileId(srcFileId)
+	url := fmt.Sprintf(api_delete_file,srcFid,srcPuid)
+	_, err  := chaoxingClient.R().SetHeader("Cookie", account.AccessToken).Post(url)
+	return err
 }

@@ -34,18 +34,21 @@ func (driver ChaoxingDrive) Items() []base.Item {
 		{
 			Name:     "username",
 			Label:    "手机号/超星号",
+			Description: "填写您登录时所用的账号",
 			Type:     base.TypeString,
 			Required: true,
 		},
 		{
 			Name:     "password",
-			Label:    "enc (加密后的密码)",
+			Label:    "加密后的密码",
+			Description: "请在超星网盘页面用控制台执行<br/> encryptByDES(\"你的登录密码\",\"u2oh6Vu^HWe40fj\") <br/>获取",
 			Type:     base.TypeString,
 			Required: true,
 		},
 		{
 			Name:     "root_folder",
 			Label:    "根目录id",
+			Description:    "请自行研究，目前不保证本设置有效，建议留空",
 			Type:     base.TypeString,
 			Default:  "",
 			Required: false,
@@ -53,6 +56,7 @@ func (driver ChaoxingDrive) Items() []base.Item {
 		{
 			Name:     "limit",
 			Label:    "目录文件上限",
+			Description:    "请注意，超出上限的部分不会被加载",
 			Type:     base.TypeNumber,
 			Default:  "50",
 			Required: false,
@@ -219,23 +223,42 @@ func (driver ChaoxingDrive) Path(path string, account *model.Account) (*model.Fi
 //	return nil, base.ErrNotImplement
 //}
 
-func (driver ChaoxingDrive) MakeDir(path string, account *model.Account) error {
-	// 三个参数缺一不可，均不能写死
-	// https://pan-yz.chaoxing.com/opt/newfolder?parentId=205255741446029312&name=test&puid=54351295
+func (driver ChaoxingDrive) splitPath(path string) (string,string){
+	// path 展示在前端的路径，假定不以斜杠结尾。 用最后一个 '/' 可以将它分成两部分，根据前半部分查出父文件夹的id（应该已经包含puid），根据后半部分确定要创建的文件夹的名字
+	// 规范路径
+	path = utils.ParsePath(path)
+	// 对路径进行切割
+	sp := strings.LastIndex(path, "/")
+	// 父文件夹路径
+	parentDir := path[:sp]
+	// 子文件夹路径
+	childDir := path[sp+1:]
+	return parentDir,childDir
+}
 
-	return base.ErrNotImplement
+func (driver ChaoxingDrive) MakeDir(path string, account *model.Account) error {
+	parentDir, childDir := driver.splitPath(path)
+	// 取得父目录的id（能来到这里说明前面 列出文件 的步骤没问题，此时必然可以再次列出文件，且系统中必然有缓存，因此不用考虑报错）
+	pDir, _ := driver.File(parentDir, account)
+	return driver.Mkdir(pDir.Id, childDir, account)
 }
 
 func (driver ChaoxingDrive) Move(src string, dst string, account *model.Account) error {
 	// 注意 folderid 是由 {id}_{puid} 组成的(截取前两段即可)
-	// https://pan-yz.chaoxing.com/opt/moveres?folderid=762268051373813760_54351295&resids=762263362701209600,
-	return base.ErrNotImplement
+	// https://pan-yz.chaoxing.com/opt/moveres?folderid=762268051373813760_54351295&resids=762263362701209600
+	dstDir, _ := driver.splitPath(dst)
+	srcFile, _ := driver.File(src, account)
+	dstFolder, _ := driver.File(dstDir, account)
+	return driver.Mv(srcFile.Id,dstFolder.Id,account)
 }
 
 func (driver ChaoxingDrive) Rename(src string, dst string, account *model.Account) error {
 	// resid 就是 fileid
 	// https://pan-yz.chaoxing.com/opt/rename?resid=762263362701209600&name=test.pdf&puid=54351295
-	return base.ErrNotImplement
+	fmt.Printf(src,dst)
+	srcFile, _ := driver.File(src, account)
+	_, name := driver.splitPath(dst)
+	return driver.Ren(srcFile.Id,name,account)
 }
 
 // 超星网盘不支持复制
@@ -250,7 +273,9 @@ func (driver ChaoxingDrive) Delete(path string, account *model.Account) error {
 	// https://pan-yz.chaoxing.com/opt/delres?resids=762268051373813760&resourcetype=0&puids=54351295
 	// 删除多个文件
 	// https://pan-yz.chaoxing.com/opt/delres?resids=762269933587513344,762269920078848000,&resourcetype=0,0,&puids=54351295,54351295,
-	return base.ErrNotImplement
+	fmt.Printf(path)
+	file, _ := driver.File(path, account)
+	return driver.Rm(file.Id,account)
 }
 
 //func (driver ChaoxingDrive) Upload(file *model.FileStream, account *model.Account) error {
