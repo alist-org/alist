@@ -342,7 +342,7 @@ func InitSettings() {
 			Key:         "Casdoor Jwt Public Key",
 			Value:       "",
 			Description: "Casdoor Jwt Public Key",
-			Type:        "string",
+			Type:        "text",
 			Access:      model.PRIVATE,
 			Group:       model.BACK,
 		},
