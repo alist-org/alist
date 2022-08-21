@@ -88,7 +88,7 @@ var (
 		"enable search",
 		"Enable Casdoor", "Casdoor Organization name", "Casdoor Application name",
 		"Casdoor Endpoint", "Casdoor Client id", "Casdoor Client secret",
-		"Casdoor Jwt Public Key",
+		"Casdoor Certificate",
 	}
 )
 

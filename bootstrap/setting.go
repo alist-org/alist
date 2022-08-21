@@ -339,9 +339,9 @@ func InitSettings() {
 			Group:       model.BACK,
 		},
 		{
-			Key:         "Casdoor Jwt Public Key",
+			Key:         "Casdoor Certificate",
 			Value:       "",
-			Description: "Casdoor Jwt Public Key",
+			Description: "Casdoor Certificate",
 			Type:        "text",
 			Access:      model.PRIVATE,
 			Group:       model.BACK,

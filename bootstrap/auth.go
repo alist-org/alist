@@ -13,7 +13,7 @@ type AuthConfig struct {
 	Endpoint         string `json:"endpoint"`
 	ClientId         string `json:"client_id"`
 	ClientSecret     string `json:"client_secret"`
-	JwtPublicKey     string `json:"jwt_public_key"`
+	Certificate      string `json:"certificate"`
 }
 
 // InitAuth init auth
@@ -27,7 +27,7 @@ func InitAuth() {
 	if !CheckAuthConfig(auth) {
 		panic("invalid auth config")
 	}
-	casdoorsdk.InitConfig(strings.TrimRight(auth.Endpoint, "/"), auth.ClientId, auth.ClientSecret, auth.JwtPublicKey, auth.OrganizationName, auth.ApplicationName)
+	casdoorsdk.InitConfig(strings.TrimRight(auth.Endpoint, "/"), auth.ClientId, auth.ClientSecret, auth.Certificate, auth.OrganizationName, auth.ApplicationName)
 }
 
 func readAuthConfig() AuthConfig {
@@ -37,7 +37,7 @@ func readAuthConfig() AuthConfig {
 		Endpoint:         conf.GetStr("Casdoor Endpoint"),
 		ClientId:         conf.GetStr("Casdoor Client id"),
 		ClientSecret:     conf.GetStr("Casdoor Client secret"),
-		JwtPublicKey:     conf.GetStr("Casdoor Jwt Public Key"),
+		Certificate:      conf.GetStr("Casdoor Certificate"),
 	}
 }
 
@@ -47,5 +47,5 @@ func CheckAuthConfig(authConfig AuthConfig) bool {
 		authConfig.ClientSecret != "" &&
 		authConfig.OrganizationName != "" &&
 		authConfig.ApplicationName != "" &&
-		authConfig.JwtPublicKey != ""
+		authConfig.Certificate != ""
 }
