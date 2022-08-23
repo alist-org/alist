@@ -21,11 +21,11 @@ const (
 	MainColor = "main_color"
 
 	// preview
-	TextTypes     = "text_types"
-	AudioTypes    = "audio_types"
-	VideoTypes    = "video_types"
-	ImageTypes    = "image_types"
-	OfficeTypes   = "office_types"
+	TextTypes  = "text_types"
+	AudioTypes = "audio_types"
+	VideoTypes = "video_types"
+	ImageTypes = "image_types"
+	//OfficeTypes   = "office_types"
 	ProxyTypes    = "proxy_types"
 	OfficeViewers = "office_viewers"
 	PdfViewers    = "pdf_viewers"
@@ -51,7 +51,7 @@ const (
 const (
 	UNKNOWN = iota
 	FOLDER
-	OFFICE
+	//OFFICE
 	VIDEO
 	AUDIO
 	TEXT

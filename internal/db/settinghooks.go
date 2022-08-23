@@ -38,12 +38,12 @@ var SettingItemHooks = map[string]SettingItemHook{
 			return nil
 		},
 	},
-	conf.OfficeTypes: {
-		Hook: func(item *model.SettingItem) error {
-			conf.TypesMap[conf.OfficeTypes] = strings.Split(item.Value, ",")
-			return nil
-		},
-	},
+	//conf.OfficeTypes: {
+	//	Hook: func(item *model.SettingItem) error {
+	//		conf.TypesMap[conf.OfficeTypes] = strings.Split(item.Value, ",")
+	//		return nil
+	//	},
+	//},
 	conf.ProxyTypes: {
 		func(item *model.SettingItem) error {
 			conf.TypesMap[conf.ProxyTypes] = strings.Split(item.Value, ",")

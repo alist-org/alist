@@ -53,9 +53,9 @@ func CreateTempFile(r io.ReadCloser) (*os.File, error) {
 // GetFileType get file type
 func GetFileType(filename string) int {
 	ext := Ext(filename)
-	if SliceContains(conf.TypesMap[conf.OfficeTypes], ext) {
-		return conf.OFFICE
-	}
+	//if SliceContains(conf.TypesMap[conf.OfficeTypes], ext) {
+	//	return conf.OFFICE
+	//}
 	if SliceContains(conf.TypesMap[conf.AudioTypes], ext) {
 		return conf.AUDIO
 	}
