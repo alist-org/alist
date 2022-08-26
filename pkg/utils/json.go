@@ -11,7 +11,7 @@ var Json = json.ConfigCompatibleWithStandardLibrary
 
 // WriteJsonToFile write struct to json file
 func WriteJsonToFile(dst string, data interface{}) bool {
-	str, err := Json.MarshalIndent(data, "", "  ")
+	str, err := json.MarshalIndent(data, "", "  ")
 	if err != nil {
 		log.Errorf("failed convert Conf to []byte:%s", err.Error())
 		return false

@@ -1,0 +1,59 @@
+name: auto_lang
+
+on:
+  push:
+    branches: [ '**' ]
+
+jobs:
+  auto_lang:
+    strategy:
+      matrix:
+        platform: [ ubuntu-latest ]
+        go-version: [ 1.19 ]
+    name: auto generate lang.json
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Setup go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: Checkout alist
+        uses: actions/checkout@v2
+        with:
+          path: alist
+
+      - name: Checkout alist-web
+        uses: actions/checkout@v3
+        with:
+          repository: 'alist-org/alist-web'
+          ref: 'auto_lang'
+          persist-credentials: false
+          fetch-depth: 0
+          path: alist-web
+
+      - name: Generate lang
+        run: |
+          cd alist
+          go run ./main.go lang
+          cd ..
+      - name: Copy lang file
+        run: |
+          cp -f ./alist/drivers.json ./alist-web/src/lang/en/
+
+      - name: Commit git
+        run: |
+          cd alist-web
+          git add .
+          git config --local user.email "i@nn.ci"
+          git config --local user.name "Noah Hsu"
+          git commit --allow-empty -m "chore: update drivers translate file" -a
+          cd ..
+
+      - name: Upload lang files
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.MY_TOKEN }}
+          branch: auto_lang
+          directory: alist-web
+          repository: alist-org/alist-web
