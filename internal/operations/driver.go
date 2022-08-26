@@ -85,7 +85,7 @@ func getMainItems(config driver.Config) []driver.Item {
 		}, {
 			Name:     "webdav_policy",
 			Type:     conf.TypeSelect,
-			Values:   "302_redirect, use_proxy_url, native_proxy",
+			Options:  "302_redirect, use_proxy_url, native_proxy",
 			Default:  "302_redirect",
 			Required: true,
 		},
@@ -95,25 +95,25 @@ func getMainItems(config driver.Config) []driver.Item {
 			Name:     "webdav_policy",
 			Type:     conf.TypeSelect,
 			Default:  "native_proxy",
-			Values:   "use_proxy_url, native_proxy",
+			Options:  "use_proxy_url, native_proxy",
 			Required: true,
 		})
 	}
 	if config.LocalSort {
 		items = append(items, []driver.Item{{
-			Name:   "order_by",
-			Type:   conf.TypeSelect,
-			Values: "name,size,modified",
+			Name:    "order_by",
+			Type:    conf.TypeSelect,
+			Options: "name,size,modified",
 		}, {
-			Name:   "order_direction",
-			Type:   conf.TypeSelect,
-			Values: "asc,desc",
+			Name:    "order_direction",
+			Type:    conf.TypeSelect,
+			Options: "asc,desc",
 		}}...)
 	}
 	items = append(items, driver.Item{
-		Name:   "extract_folder",
-		Type:   conf.TypeSelect,
-		Values: "front,back",
+		Name:    "extract_folder",
+		Type:    conf.TypeSelect,
+		Options: "front,back",
 	})
 	return items
 }
@@ -135,7 +135,7 @@ func getAdditionalItems(t reflect.Type, defaultRoot string) []driver.Item {
 			Name:     tag.Get("json"),
 			Type:     strings.ToLower(field.Type.Name()),
 			Default:  tag.Get("default"),
-			Values:   tag.Get("values"),
+			Options:  tag.Get("options"),
 			Required: tag.Get("required") == "true",
 			Help:     tag.Get("help"),
 		}

@@ -7,10 +7,11 @@ import (
 
 type Addition struct {
 	driver.RootFolderPath
-	NumFile     int   `json:"num_file" type:"number" default:"30" required:"true"`
-	NumFolder   int   `json:"num_folder" type:"number" default:"30" required:"true"`
-	MaxFileSize int64 `json:"max_file_size" type:"number" default:"1073741824" required:"true"`
-	MinFileSize int64 `json:"min_file_size"  type:"number" default:"1048576" required:"true"`
+	NumFile     int    `json:"num_file" type:"number" default:"30" required:"true"`
+	NumFolder   int    `json:"num_folder" type:"number" default:"30" required:"true"`
+	MaxFileSize int64  `json:"max_file_size" type:"number" default:"1073741824" required:"true"`
+	MinFileSize int64  `json:"min_file_size"  type:"number" default:"1048576" required:"true"`
+	TestSelect  string `json:"test_select" type:"select" options:"a,b,c"`
 }
 
 var config = driver.Config{

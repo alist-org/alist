@@ -8,7 +8,7 @@ type Item struct {
 	Name     string `json:"name"`
 	Type     string `json:"type"`
 	Default  string `json:"default"`
-	Values   string `json:"values"`
+	Options  string `json:"options"`
 	Required bool   `json:"required"`
 	Help     string `json:"help"`
 }
