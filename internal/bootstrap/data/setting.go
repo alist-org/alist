@@ -14,7 +14,7 @@ import (
 var initialSettingItems []model.SettingItem
 
 func initSettings() {
-	initialSettings()
+	InitialSettings()
 	// check deprecated
 	settings, err := db.GetSettingItems()
 	if err != nil {
@@ -58,7 +58,7 @@ func isActive(key string) bool {
 	return false
 }
 
-func initialSettings() {
+func InitialSettings() []model.SettingItem {
 	var token string
 	if flags.Dev {
 		token = "dev_token"
@@ -105,6 +105,7 @@ func initialSettings() {
 		{Key: conf.VideoAutoplay, Value: "true", Type: conf.TypeBool, Group: model.PREVIEW},
 		// global settings
 		{Key: conf.HideFiles, Value: "/\\/README.md/i", Type: conf.TypeText, Group: model.GLOBAL},
+		{Key: "package_download", Value: "true", Type: conf.TypeBool, Group: model.GLOBAL},
 		{Key: conf.GlobalReadme, Value: "This is global readme", Type: conf.TypeText, Group: model.GLOBAL},
 		{Key: conf.CustomizeHead, Type: conf.TypeText, Group: model.GLOBAL, Flag: model.PRIVATE},
 		{Key: conf.CustomizeBody, Type: conf.TypeText, Group: model.GLOBAL, Flag: model.PRIVATE},
@@ -119,6 +120,11 @@ func initialSettings() {
 		{Key: conf.Token, Value: token, Type: conf.TypeString, Group: model.SINGLE, Flag: model.PRIVATE},
 	}
 	if flags.Dev {
-		initialSettingItems = append(initialSettingItems, model.SettingItem{Key: "test_deprecated", Value: "test_value", Type: conf.TypeString, Flag: model.DEPRECATED})
+		initialSettingItems = append(initialSettingItems, []model.SettingItem{
+			{Key: "test_deprecated", Value: "test_value", Type: conf.TypeString, Flag: model.DEPRECATED},
+			{Key: "test_options", Value: "a", Type: conf.TypeSelect, Options: "a,b,c"},
+			{Key: "test_help", Type: conf.TypeString, Help: "this is a help message"},
+		}...)
 	}
+	return initialSettingItems
 }

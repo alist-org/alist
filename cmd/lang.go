@@ -6,6 +6,9 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/alist-org/alist/v3/internal/bootstrap/data"
+	log "github.com/sirupsen/logrus"
+	"os"
 	"strings"
 
 	_ "github.com/alist-org/alist/v3/drivers"
@@ -56,7 +59,27 @@ func generateDriversJson() {
 		}
 		drivers[k] = items
 	}
-	utils.WriteJsonToFile("drivers.json", drivers)
+	utils.WriteJsonToFile("lang/drivers.json", drivers)
+}
+
+func generateSettingsJson() {
+	settings := data.InitialSettings()
+	settingsLang := make(KV[any])
+	for _, setting := range settings {
+		settingsLang[setting.Key] = convert(setting.Key)
+		if setting.Help != "" {
+			settingsLang[fmt.Sprintf("%s-tips", setting.Key)] = setting.Help
+		}
+		if setting.Type == conf.TypeSelect && len(setting.Options) > 0 {
+			options := make(KV[string])
+			_options := strings.Split(setting.Options, ",")
+			for _, o := range _options {
+				options[o] = convert(o)
+			}
+			settingsLang[fmt.Sprintf("%ss", setting.Key)] = options
+		}
+	}
+	utils.WriteJsonToFile("lang/settings.json", settingsLang)
 }
 
 // langCmd represents the lang command
@@ -64,7 +87,12 @@ var langCmd = &cobra.Command{
 	Use:   "lang",
 	Short: "Generate language json file",
 	Run: func(cmd *cobra.Command, args []string) {
+		err := os.MkdirAll("lang", 0777)
+		if err != nil {
+			log.Fatal("failed create folder: %s", err.Error())
+		}
 		generateDriversJson()
+		generateSettingsJson()
 	},
 }
 
