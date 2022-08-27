@@ -27,7 +27,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: 'alist-org/alist-web'
-          ref: 'auto_lang'
+          ref: main
           persist-credentials: false
           fetch-depth: 0
           path: alist-web
@@ -47,13 +47,13 @@ jobs:
           git add .
           git config --local user.email "i@nn.ci"
           git config --local user.name "Noah Hsu"
-          git commit --allow-empty -m "chore: update drivers translate file" -a
+          git commit -m "chore: update i18n file" -a
           cd ..
 
-      - name: Upload lang files
+      - name: Push lang files
         uses: ad-m/github-push-action@master
         with:
           github_token: ${{ secrets.MY_TOKEN }}
-          branch: auto_lang
+          branch: main
           directory: alist-web
           repository: alist-org/alist-web
