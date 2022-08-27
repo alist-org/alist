@@ -1,8 +1,8 @@
 package common
 
 type PageReq struct {
-	Page    int `json:"page_index" form:"page"`
-	PerPage int `json:"page_size" form:"per_page"`
+	Page    int `json:"page" form:"page"`
+	PerPage int `json:"per_page" form:"per_page"`
 }
 
 const MaxUint = ^uint(0)
