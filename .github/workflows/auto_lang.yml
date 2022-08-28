@@ -2,7 +2,11 @@ name: auto_lang
 
 on:
   push:
-    branches: [ '**' ]
+    branches:
+      - 'main'
+    paths:
+      - 'drivers/**'
+      - 'internal/bootstrap/data/setting.go'
 
 jobs:
   auto_lang:
