@@ -17,6 +17,8 @@ func Init(r *gin.Engine) {
 	r.Use(middlewares.StoragesLoaded)
 	WebDav(r)
 
+	r.GET("/favicon.ico", handles.Favicon)
+	r.GET("/i/:link/:name", handles.Plist)
 	r.GET("/d/*path", middlewares.Down, handles.Down)
 	r.GET("/p/*path", middlewares.Down, handles.Proxy)
 
