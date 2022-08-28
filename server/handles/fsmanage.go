@@ -2,6 +2,7 @@ package handles
 
 import (
 	"fmt"
+	"net/url"
 	stdpath "path"
 	"strconv"
 	"time"
@@ -189,6 +190,11 @@ func FsRemove(c *gin.Context) {
 
 func FsPut(c *gin.Context) {
 	path := c.GetHeader("File-Path")
+	path, err := url.PathUnescape(path)
+	if err != nil {
+		common.ErrorResp(c, err, 400)
+		return
+	}
 	asTask := c.GetHeader("As-Task") == "true"
 	user := c.MustGet("user").(*model.User)
 	path = stdpath.Join(user.BasePath, path)
