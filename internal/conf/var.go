@@ -22,3 +22,8 @@ var (
 	// StoragesLoaded loaded success if empty
 	StoragesLoaded = false
 )
+var (
+	RawIndexHtml string
+	ManageHtml   string
+	IndexHtml    string
+)

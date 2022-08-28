@@ -36,7 +36,7 @@ type Config struct {
 	Port      int    `json:"port" env:"PORT"`
 	JwtSecret string `json:"jwt_secret" env:"JWT_SECRET"`
 	// CaCheExpiration int       `json:"cache_expiration" env:"CACHE_EXPIRATION"`
-	Assets   string    `json:"assets" env:"ASSETS"`
+	Cdn      string    `json:"cdn" env:"CDN"`
 	Database Database  `json:"database"`
 	Scheme   Scheme    `json:"scheme"`
 	TempDir  string    `json:"temp_dir" env:"TEMP_DIR"`
@@ -48,7 +48,7 @@ func DefaultConfig() *Config {
 		Address:   "0.0.0.0",
 		Port:      5244,
 		JwtSecret: random.String(16),
-		Assets:    "https://npm.elemecdn.com/alist-web@$version/dist",
+		Cdn:       "",
 		TempDir:   "data/temp",
 		Database: Database{
 			Type:        "sqlite3",

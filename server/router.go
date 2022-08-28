@@ -7,6 +7,7 @@ import (
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/alist-org/alist/v3/server/handles"
 	"github.com/alist-org/alist/v3/server/middlewares"
+	"github.com/alist-org/alist/v3/server/static"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -35,11 +36,12 @@ func Init(r *gin.Engine) {
 	public := api.Group("/public")
 	public.Any("/settings", handles.PublicSettings)
 
-	fs(auth.Group("/fs"))
+	_fs(auth.Group("/fs"))
 	admin(auth.Group("/admin", middlewares.AuthAdmin))
 	if flags.Dev {
 		dev(r.Group("/dev"))
 	}
+	static.Static(r)
 }
 
 func admin(g *gin.RouterGroup) {
@@ -107,7 +109,7 @@ func admin(g *gin.RouterGroup) {
 	ms.POST("/send", message.HttpInstance.SendHandle)
 }
 
-func fs(g *gin.RouterGroup) {
+func _fs(g *gin.RouterGroup) {
 	g.Any("/list", handles.FsList)
 	g.Any("/get", handles.FsGet)
 	g.Any("/dirs", handles.FsDirs)

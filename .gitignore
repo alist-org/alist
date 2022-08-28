@@ -21,12 +21,8 @@ dist/
 # Dependency directories (remove the comment below to include it)
 # vendor/
 bin/*
-/alist
-/alist.exe
 *.json
-public/*.html
-public/assets/
-public/public/
-/data
+data/
 log/
 lang/
+public/dist/
