@@ -1,7 +1,13 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/alist-org/alist/v3/cmd/flags"
 	_ "github.com/alist-org/alist/v3/drivers"
@@ -31,15 +37,40 @@ the address is defined in config file`,
 		server.Init(r)
 		base := fmt.Sprintf("%s:%d", conf.Conf.Address, conf.Conf.Port)
 		log.Infof("start server @ %s", base)
-		var err error
-		if conf.Conf.Scheme.Https {
-			err = r.RunTLS(base, conf.Conf.Scheme.CertFile, conf.Conf.Scheme.KeyFile)
-		} else {
-			err = r.Run(base)
+		srv := &http.Server{Addr: base, Handler: r}
+		go func() {
+			var err error
+			if conf.Conf.Scheme.Https {
+				//err = r.RunTLS(base, conf.Conf.Scheme.CertFile, conf.Conf.Scheme.KeyFile)
+				err = srv.ListenAndServeTLS(conf.Conf.Scheme.CertFile, conf.Conf.Scheme.KeyFile)
+			} else {
+				err = srv.ListenAndServe()
+			}
+			if err != nil && err != http.ErrServerClosed {
+				log.Errorf("failed to start: %s", err.Error())
+			}
+		}()
+		// Wait for interrupt signal to gracefully shutdown the server with
+		// a timeout of 5 seconds.
+		quit := make(chan os.Signal)
+		// kill (no param) default send syscanll.SIGTERM
+		// kill -2 is syscall.SIGINT
+		// kill -9 is syscall. SIGKILL but can"t be catch, so don't need add it
+		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+		<-quit
+		log.Println("Shutdown Server ...")
+
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
+		if err := srv.Shutdown(ctx); err != nil {
+			log.Fatal("Server Shutdown:", err)
 		}
-		if err != nil {
-			log.Errorf("failed to start: %s", err.Error())
+		// catching ctx.Done(). timeout of 3 seconds.
+		select {
+		case <-ctx.Done():
+			log.Println("timeout of 3 seconds.")
 		}
+		log.Println("Server exiting")
 	},
 }
 
