@@ -13,7 +13,7 @@ import (
 )
 
 // List files
-func list(ctx context.Context, path string) ([]model.Obj, error) {
+func list(ctx context.Context, path string, refresh ...bool) ([]model.Obj, error) {
 	meta := ctx.Value("meta").(*model.Meta)
 	user := ctx.Value("user").(*model.User)
 	storage, actualPath, err := operations.GetStorageAndActualPath(path)
@@ -26,7 +26,7 @@ func list(ctx context.Context, path string) ([]model.Obj, error) {
 	}
 	objs, err := operations.List(ctx, storage, actualPath, model.ListArgs{
 		ReqPath: path,
-	})
+	}, refresh...)
 	if err != nil {
 		log.Errorf("%+v", err)
 		if len(virtualFiles) != 0 {

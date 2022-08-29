@@ -22,6 +22,7 @@ type ListReq struct {
 	common.PageReq
 	Path     string `json:"path" form:"path"`
 	Password string `json:"password" form:"password"`
+	Refresh  bool   `json:"refresh"`
 }
 
 type DirReq struct {
@@ -67,7 +68,11 @@ func FsList(c *gin.Context) {
 		common.ErrorStrResp(c, "password is incorrect", 403)
 		return
 	}
-	objs, err := fs.List(c, req.Path)
+	if !user.CanWrite() && !canWrite(meta, req.Path) && req.Refresh {
+		common.ErrorStrResp(c, "Refresh without permission", 403)
+		return
+	}
+	objs, err := fs.List(c, req.Path, req.Refresh)
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return

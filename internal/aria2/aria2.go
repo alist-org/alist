@@ -17,6 +17,7 @@ var notify = NewNotify()
 var client rpc.Client
 
 func InitClient(timeout int) (string, error) {
+	client = nil
 	uri := setting.GetByKey(conf.Aria2Uri)
 	secret := setting.GetByKey(conf.Aria2Secret)
 	return InitAria2Client(uri, secret, timeout)

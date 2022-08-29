@@ -13,8 +13,8 @@ import (
 // So, the purpose of this package is to convert virtual path to actual path
 // then pass the actual path to the operations package
 
-func List(ctx context.Context, path string) ([]model.Obj, error) {
-	res, err := list(ctx, path)
+func List(ctx context.Context, path string, refresh ...bool) ([]model.Obj, error) {
+	res, err := list(ctx, path, refresh...)
 	if err != nil {
 		log.Errorf("failed list %s: %+v", path, err)
 		return nil, err
