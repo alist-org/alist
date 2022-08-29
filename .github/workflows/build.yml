@@ -1,0 +1,40 @@
+name: build
+
+on:
+  push:
+    branches: [ '**' ]
+  pull_request:
+    branches: [ '**' ]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        platform: [ubuntu-latest]
+        go-version: [1.18]
+    name: Build
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          docker pull techknowlogick/xgo:latest
+          go install src.techknowlogick.com/xgo@latest
+          sudo apt install upx
+
+      - name: Build
+        run: |
+          bash build.sh dev
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: alist
+          path: dist
