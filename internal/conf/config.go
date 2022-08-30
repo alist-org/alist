@@ -23,11 +23,12 @@ type Scheme struct {
 }
 
 type LogConfig struct {
-	Enable        bool   `json:"enable" env:"log_enable"`
-	Path          string `json:"path" env:"LOG_PATH"`
-	Name          string `json:"name" env:"LOG_NAME"`
-	RotationTime  uint   `json:"rotation_time" env:"LOG_TIME"`
-	RotationCount uint   `json:"rotation_count" env:"LOG_COUNT"`
+	Enable     bool   `json:"enable" env:"log_enable"`
+	Name       string `json:"name" env:"LOG_NAME"`
+	MaxSize    int    `json:"max_size" env:"MAX_SIZE"`
+	MaxBackups int    `json:"max_backups" env:"MAX_BACKUPS"`
+	MaxAge     int    `json:"max_age" env:"MAX_AGE"`
+	Compress   bool   `json:"compress" env:"COMPRESS"`
 }
 
 type Config struct {
@@ -58,11 +59,11 @@ func DefaultConfig() *Config {
 		},
 		// CaCheExpiration: 30,
 		Log: LogConfig{
-			Enable:        true,
-			Path:          "log/%Y-%m-%d-%H:%M.log",
-			Name:          "log/log.log",
-			RotationTime:  24,
-			RotationCount: 5,
+			Enable:     true,
+			Name:       "log/log.log",
+			MaxSize:    10,
+			MaxBackups: 5,
+			MaxAge:     28,
 		},
 	}
 }

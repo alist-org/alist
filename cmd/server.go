@@ -13,6 +13,7 @@ import (
 	_ "github.com/alist-org/alist/v3/drivers"
 	"github.com/alist-org/alist/v3/internal/bootstrap"
 	"github.com/alist-org/alist/v3/internal/conf"
+	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/server"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
@@ -36,7 +37,7 @@ the address is defined in config file`,
 		r.Use(gin.LoggerWithWriter(log.StandardLogger().Out), gin.RecoveryWithWriter(log.StandardLogger().Out))
 		server.Init(r)
 		base := fmt.Sprintf("%s:%d", conf.Conf.Address, conf.Conf.Port)
-		log.Infof("start server @ %s", base)
+		utils.Log.Infof("start server @ %s", base)
 		srv := &http.Server{Addr: base, Handler: r}
 		go func() {
 			var err error
@@ -47,7 +48,7 @@ the address is defined in config file`,
 				err = srv.ListenAndServe()
 			}
 			if err != nil && err != http.ErrServerClosed {
-				log.Errorf("failed to start: %s", err.Error())
+				utils.Log.Errorf("failed to start: %s", err.Error())
 			}
 		}()
 		// Wait for interrupt signal to gracefully shutdown the server with
@@ -58,19 +59,19 @@ the address is defined in config file`,
 		// kill -9 is syscall. SIGKILL but can"t be catch, so don't need add it
 		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 		<-quit
-		log.Println("Shutdown Server ...")
+		utils.Log.Println("Shutdown Server ...")
 
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cancel()
 		if err := srv.Shutdown(ctx); err != nil {
-			log.Fatal("Server Shutdown:", err)
+			utils.Log.Fatal("Server Shutdown:", err)
 		}
 		// catching ctx.Done(). timeout of 3 seconds.
 		select {
 		case <-ctx.Done():
-			log.Println("timeout of 3 seconds.")
+			utils.Log.Println("timeout of 3 seconds.")
 		}
-		log.Println("Server exiting")
+		utils.Log.Println("Server exiting")
 	},
 }
 

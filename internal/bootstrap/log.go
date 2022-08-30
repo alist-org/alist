@@ -2,57 +2,49 @@ package bootstrap
 
 import (
 	"log"
-	"time"
 
 	"github.com/alist-org/alist/v3/cmd/flags"
 	"github.com/alist-org/alist/v3/internal/conf"
-	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
+	"github.com/alist-org/alist/v3/pkg/utils"
+	"github.com/natefinch/lumberjack"
 	"github.com/sirupsen/logrus"
 )
 
 func init() {
-	logrus.SetFormatter(&logrus.TextFormatter{
+	formatter := logrus.TextFormatter{
 		ForceColors:               true,
 		EnvironmentOverrideColors: true,
 		TimestampFormat:           "2006-01-02 15:04:05",
 		FullTimestamp:             true,
-	})
+	}
+	logrus.SetFormatter(&formatter)
+	utils.Log.SetFormatter(&formatter)
 	// logrus.SetLevel(logrus.DebugLevel)
+}
+
+func setLog(l *logrus.Logger) {
+	if flags.Debug || flags.Dev {
+		l.SetLevel(logrus.DebugLevel)
+		l.SetReportCaller(true)
+	} else {
+		l.SetLevel(logrus.InfoLevel)
+		l.SetReportCaller(false)
+	}
 }
 
 func Log() {
 	log.SetOutput(logrus.StandardLogger().Out)
-	if flags.Debug || flags.Dev {
-		logrus.SetLevel(logrus.DebugLevel)
-		logrus.SetReportCaller(true)
-	} else {
-		logrus.SetLevel(logrus.InfoLevel)
-		logrus.SetReportCaller(false)
-	}
+	setLog(logrus.StandardLogger())
+	setLog(utils.Log)
 	logConfig := conf.Conf.Log
 	if logConfig.Enable {
-		var (
-			writer *rotatelogs.RotateLogs
-			err    error
-		)
-		if logConfig.Name != "" {
-			writer, err = rotatelogs.New(
-				logConfig.Path,
-				rotatelogs.WithLinkName(logConfig.Name),
-				rotatelogs.WithRotationCount(logConfig.RotationCount),
-				rotatelogs.WithRotationTime(time.Duration(logConfig.RotationTime)*time.Hour),
-			)
-		} else {
-			writer, err = rotatelogs.New(
-				logConfig.Path,
-				rotatelogs.WithRotationCount(logConfig.RotationCount),
-				rotatelogs.WithRotationTime(time.Duration(logConfig.RotationTime)*time.Hour),
-			)
-		}
-		if err != nil {
-			logrus.Fatalf("failed to create rotate logrus: %s", err)
-		}
-		logrus.SetOutput(writer)
+		logrus.SetOutput(&lumberjack.Logger{
+			Filename:   logConfig.Name,
+			MaxSize:    logConfig.MaxSize, // megabytes
+			MaxBackups: logConfig.MaxBackups,
+			MaxAge:     logConfig.MaxAge,   //days
+			Compress:   logConfig.Compress, // disabled by default
+		})
 	}
-	logrus.Infof("init logrus...")
+	utils.Log.Infof("init logrus...")
 }
