@@ -1,12 +1,11 @@
 /*
 Copyright © 2022 NAME HERE <EMAIL ADDRESS>
-
 */
 package cmd
 
 import (
 	"github.com/alist-org/alist/v3/internal/db"
-	log "github.com/sirupsen/logrus"
+	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -18,11 +17,11 @@ var cancel2FACmd = &cobra.Command{
 		Init()
 		admin, err := db.GetAdmin()
 		if err != nil {
-			log.Errorf("failed to get admin user: %+v", err)
+			utils.Log.Errorf("failed to get admin user: %+v", err)
 		} else {
 			err := db.Cancel2FAByUser(admin)
 			if err != nil {
-				log.Errorf("failed to cancel 2FA: %+v", err)
+				utils.Log.Errorf("failed to cancel 2FA: %+v", err)
 			}
 		}
 	},

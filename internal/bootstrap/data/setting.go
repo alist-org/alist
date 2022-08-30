@@ -71,7 +71,7 @@ func InitialSettings() []model.SettingItem {
 		{Key: conf.ApiUrl, Value: "", Type: conf.TypeString, Group: model.SITE},
 		{Key: conf.BasePath, Value: "", Type: conf.TypeString, Group: model.SITE},
 		{Key: conf.SiteTitle, Value: "AList", Type: conf.TypeString, Group: model.SITE},
-		{Key: conf.Announcement, Value: "https://github.com/alist-org/alist", Type: conf.TypeString, Group: model.SITE},
+		{Key: conf.Announcement, Value: "### repo\nhttps://github.com/alist-org/alist", Type: conf.TypeText, Group: model.SITE},
 		{Key: "pagination_type", Value: "all", Type: conf.TypeSelect, Options: "all,pagination,load_more,auto_load_more", Group: model.SITE},
 		{Key: "default_page_size", Value: "30", Type: conf.TypeNumber, Group: model.SITE},
 		// style settings

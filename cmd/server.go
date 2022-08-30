@@ -48,7 +48,7 @@ the address is defined in config file`,
 				err = srv.ListenAndServe()
 			}
 			if err != nil && err != http.ErrServerClosed {
-				utils.Log.Errorf("failed to start: %s", err.Error())
+				utils.Log.Fatalf("failed to start: %s", err.Error())
 			}
 		}()
 		// Wait for interrupt signal to gracefully shutdown the server with

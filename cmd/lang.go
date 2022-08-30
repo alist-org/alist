@@ -9,10 +9,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/alist-org/alist/v3/internal/bootstrap/data"
-	log "github.com/sirupsen/logrus"
-
 	_ "github.com/alist-org/alist/v3/drivers"
+	"github.com/alist-org/alist/v3/internal/bootstrap/data"
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/operations"
 	"github.com/alist-org/alist/v3/pkg/utils"
@@ -90,7 +88,7 @@ var langCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		err := os.MkdirAll("lang", 0777)
 		if err != nil {
-			log.Fatal("failed create folder: %s", err.Error())
+			utils.Log.Fatal("failed create folder: %s", err.Error())
 		}
 		generateDriversJson()
 		generateSettingsJson()

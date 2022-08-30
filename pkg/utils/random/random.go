@@ -1,9 +1,10 @@
 package random
 
 import (
-	"github.com/google/uuid"
 	"math/rand"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 var Rand *rand.Rand
@@ -19,7 +20,7 @@ func String(n int) string {
 }
 
 func Token() string {
-	return uuid.NewString() + String(64)
+	return "alist-" + uuid.NewString() + String(64)
 }
 
 func RangeInt64(left, right int64) int64 {

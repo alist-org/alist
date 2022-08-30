@@ -4,9 +4,9 @@ import (
 	"github.com/alist-org/alist/v3/cmd/flags"
 	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/pkg/utils/random"
 	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -27,7 +27,7 @@ func initUser() {
 			if err := db.CreateUser(admin); err != nil {
 				panic(err)
 			} else {
-				log.Infof("Successfully created the admin user and the initial password is: %s", admin.Password)
+				utils.Log.Infof("Successfully created the admin user and the initial password is: %s", admin.Password)
 			}
 		} else {
 			panic(err)

@@ -1,12 +1,11 @@
 /*
 Copyright © 2022 NAME HERE <EMAIL ADDRESS>
-
 */
 package cmd
 
 import (
 	"github.com/alist-org/alist/v3/internal/db"
-	log "github.com/sirupsen/logrus"
+	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -18,9 +17,9 @@ var passwordCmd = &cobra.Command{
 		Init()
 		admin, err := db.GetAdmin()
 		if err != nil {
-			log.Errorf("failed get admin user: %+v", err)
+			utils.Log.Errorf("failed get admin user: %+v", err)
 		} else {
-			log.Infof("admin user's password is: %s", admin.Password)
+			utils.Log.Infof("admin user's password is: %s", admin.Password)
 		}
 	},
 }
