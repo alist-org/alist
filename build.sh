@@ -27,7 +27,8 @@ ldflags="\
 FetchWebBuild() {
   curl -L https://codeload.github.com/alist-org/web-dist/tar.gz/refs/heads/main -o web-dist-main.tar.gz
   tar -zxvf web-dist-main.tar.gz
-  mv web-dist-main/dist public
+  rm -rf public/dist
+  mv -f web-dist-main/dist public
   rm -rf web-dist-main web-dist-main.tar.gz
 }
 

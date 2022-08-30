@@ -1,7 +1,7 @@
 .idea/
 .DS_Store
 output/
-dist/
+/dist/
 
 # Binaries for programs and plugins
 *.exe
@@ -25,4 +25,5 @@ bin/*
 data/
 log/
 lang/
-public/dist/
+public/dist/*
+!public/dist/README.md
