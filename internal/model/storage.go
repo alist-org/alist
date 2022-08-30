@@ -29,12 +29,12 @@ type Proxy struct {
 	DownProxyUrl string `json:"down_proxy_url"`
 }
 
-func (a *Storage) GetStorage() Storage {
-	return *a
+func (s *Storage) GetStorage() *Storage {
+	return s
 }
 
-func (a *Storage) SetStatus(status string) {
-	a.Status = status
+func (s *Storage) SetStatus(status string) {
+	s.Status = status
 }
 
 func (p Proxy) Webdav302() bool {

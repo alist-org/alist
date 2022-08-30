@@ -35,10 +35,6 @@ func (d *Virtual) Drop(ctx context.Context) error {
 	return nil
 }
 
-func (d *Virtual) GetStorage() model.Storage {
-	return d.Storage
-}
-
 func (d *Virtual) GetAddition() driver.Additional {
 	return d.Addition
 }

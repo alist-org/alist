@@ -15,13 +15,14 @@ type Driver interface {
 
 type Meta interface {
 	Config() Config
+	// GetStorage just get raw storage, no need to implement, because model.Storage have implemented
+	GetStorage() *model.Storage
+	// GetAddition Additional can't be modified externally, so needn't return pointer
+	GetAddition() Additional
 	// Init If already initialized, drop first
 	// need to unmarshal string to addition first
 	Init(ctx context.Context, storage model.Storage) error
 	Drop(ctx context.Context) error
-	// GetStorage just get raw storage
-	GetStorage() model.Storage
-	GetAddition() Additional
 }
 
 type Other interface {

@@ -40,7 +40,6 @@ func (d *Local) Init(ctx context.Context, storage model.Storage) error {
 	}
 	if !utils.Exists(d.RootFolder) {
 		err = errors.Errorf("root folder %s not exists", d.RootFolder)
-		d.SetStatus(err.Error())
 	} else {
 		if !filepath.IsAbs(d.RootFolder) {
 			d.RootFolder, err = filepath.Abs(d.RootFolder)
@@ -48,7 +47,6 @@ func (d *Local) Init(ctx context.Context, storage model.Storage) error {
 				return errors.Wrap(err, "error while get abs path")
 			}
 		}
-		d.SetStatus("OK")
 	}
 	operations.MustSaveDriverStorage(d)
 	return err

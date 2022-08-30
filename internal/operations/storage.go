@@ -2,6 +2,7 @@ package operations
 
 import (
 	"context"
+	"fmt"
 	"sort"
 	"strings"
 	"time"
@@ -49,7 +50,12 @@ func CreateStorage(ctx context.Context, storage model.Storage) error {
 	// already has an id
 	err = storageDriver.Init(ctx, storage)
 	if err != nil {
+		storageDriver.GetStorage().SetStatus(fmt.Sprintf("%+v", err.Error()))
+		MustSaveDriverStorage(storageDriver)
 		return errors.WithMessage(err, "failed init storage but storage is already created")
+	} else {
+		storageDriver.GetStorage().SetStatus("work")
+		MustSaveDriverStorage(storageDriver)
 	}
 	log.Debugf("storage %+v is created", storageDriver)
 	storagesMap.Store(storage.MountPath, storageDriver)
@@ -204,7 +210,7 @@ func saveDriverStorage(driver driver.Driver) error {
 		return errors.Wrap(err, "error while marshal addition")
 	}
 	storage.Addition = string(bytes)
-	err = db.UpdateStorage(&storage)
+	err = db.UpdateStorage(storage)
 	if err != nil {
 		return errors.WithMessage(err, "failed update storage in database")
 	}

@@ -128,12 +128,13 @@ func getAdditionalItems(t reflect.Type, defaultRoot string) []driver.Item {
 			continue
 		}
 		tag := field.Tag
-		ignore, ok := tag.Lookup("ignore")
-		if ok && ignore == "true" {
+		ignore, ok1 := tag.Lookup("ignore")
+		name, ok2 := tag.Lookup("json")
+		if (ok1 && ignore == "true") || !ok2 {
 			continue
 		}
 		item := driver.Item{
-			Name:     tag.Get("json"),
+			Name:     name,
 			Type:     strings.ToLower(field.Type.Name()),
 			Default:  tag.Get("default"),
 			Options:  tag.Get("options"),

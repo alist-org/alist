@@ -1,0 +1,48 @@
+package onedrive
+
+import (
+	"time"
+
+	"github.com/alist-org/alist/v3/internal/model"
+)
+
+type File struct {
+	Id                   string    `json:"id"`
+	Name                 string    `json:"name"`
+	Size                 int64     `json:"size"`
+	LastModifiedDateTime time.Time `json:"lastModifiedDateTime"`
+	Url                  string    `json:"@microsoft.graph.downloadUrl"`
+	File                 *struct {
+		MimeType string `json:"mimeType"`
+	} `json:"file"`
+	Thumbnails []struct {
+		Medium struct {
+			Url string `json:"url"`
+		} `json:"medium"`
+	} `json:"thumbnails"`
+	ParentReference struct {
+		DriveId string `json:"driveId"`
+	} `json:"parentReference"`
+}
+
+func fileToObj(f File) *model.ObjectThumbnail {
+	thumb := ""
+	if len(f.Thumbnails) > 0 {
+		thumb = f.Thumbnails[0].Medium.Url
+	}
+	return &model.ObjectThumbnail{
+		Object: model.Object{
+			//ID:       f.Id,
+			Name:     f.Name,
+			Size:     f.Size,
+			Modified: f.LastModifiedDateTime,
+			IsFolder: f.File == nil,
+		},
+		Thumbnail: model.Thumbnail{Thumbnail: thumb},
+	}
+}
+
+type Files struct {
+	Value    []File `json:"value"`
+	NextLink string `json:"@odata.nextLink"`
+}
