@@ -70,9 +70,9 @@ func admin(g *gin.RouterGroup) {
 	storage.POST("/disable", handles.DisableStorage)
 
 	driver := g.Group("/driver")
-	driver.GET("/list", handles.ListDriverItems)
+	driver.GET("/list", handles.ListDriverInfo)
 	driver.GET("/names", handles.ListDriverNames)
-	driver.GET("/items", handles.GetDriverItems)
+	driver.GET("/info", handles.GetDriverInfo)
 
 	setting := g.Group("/setting")
 	setting.GET("/get", handles.GetSetting)

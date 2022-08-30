@@ -8,10 +8,10 @@ import (
 )
 
 func TestDriverItemsMap(t *testing.T) {
-	itemsMap := operations.GetDriverItemsMap()
+	itemsMap := operations.GetDriverInfoMap()
 	if len(itemsMap) != 0 {
-		t.Logf("driverItemsMap: %v", itemsMap)
+		t.Logf("driverInfoMap: %v", itemsMap)
 	} else {
-		t.Errorf("expected driverItemsMap not empty, but got empty")
+		t.Errorf("expected driverInfoMap not empty, but got empty")
 	}
 }

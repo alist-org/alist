@@ -13,9 +13,10 @@ type Item struct {
 	Help     string `json:"help"`
 }
 
-type Items struct {
+type Info struct {
 	Common     []Item `json:"common"`
 	Additional []Item `json:"additional"`
+	Config     Config `json:"config"`
 }
 
 type IRootFolderPath interface {

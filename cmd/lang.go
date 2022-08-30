@@ -6,10 +6,11 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/alist-org/alist/v3/internal/bootstrap/data"
-	log "github.com/sirupsen/logrus"
 	"os"
 	"strings"
+
+	"github.com/alist-org/alist/v3/internal/bootstrap/data"
+	log "github.com/sirupsen/logrus"
 
 	_ "github.com/alist-org/alist/v3/drivers"
 	"github.com/alist-org/alist/v3/internal/conf"
@@ -38,7 +39,7 @@ func convert(s string) string {
 func generateDriversJson() {
 	drivers := make(Drivers)
 	drivers["drivers"] = make(KV[interface{}])
-	driverItemsMap := operations.GetDriverItemsMap()
+	driverItemsMap := operations.GetDriverInfoMap()
 	for k, v := range driverItemsMap {
 		drivers["drivers"][k] = k
 		items := make(KV[interface{}])

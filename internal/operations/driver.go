@@ -13,7 +13,7 @@ import (
 type New func() driver.Driver
 
 var driverNewMap = map[string]New{}
-var driverItemsMap = map[string]driver.Items{}
+var driverInfoMap = map[string]driver.Info{}
 
 func RegisterDriver(config driver.Config, driver New) {
 	// log.Infof("register driver: [%s]", config.Name)
@@ -31,14 +31,14 @@ func GetDriverNew(name string) (New, error) {
 
 func GetDriverNames() []string {
 	var driverNames []string
-	for k := range driverItemsMap {
+	for k := range driverInfoMap {
 		driverNames = append(driverNames, k)
 	}
 	return driverNames
 }
 
-func GetDriverItemsMap() map[string]driver.Items {
-	return driverItemsMap
+func GetDriverInfoMap() map[string]driver.Info {
+	return driverInfoMap
 }
 
 func registerDriverItems(config driver.Config, addition driver.Additional) {
@@ -46,9 +46,10 @@ func registerDriverItems(config driver.Config, addition driver.Additional) {
 	tAddition := reflect.TypeOf(addition)
 	mainItems := getMainItems(config)
 	additionalItems := getAdditionalItems(tAddition, config.DefaultRoot)
-	driverItemsMap[config.Name] = driver.Items{
+	driverInfoMap[config.Name] = driver.Info{
 		Common:     mainItems,
 		Additional: additionalItems,
+		Config:     config,
 	}
 }
 

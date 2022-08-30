@@ -8,18 +8,18 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func ListDriverItems(c *gin.Context) {
-	common.SuccessResp(c, operations.GetDriverItemsMap())
+func ListDriverInfo(c *gin.Context) {
+	common.SuccessResp(c, operations.GetDriverInfoMap())
 }
 
 func ListDriverNames(c *gin.Context) {
 	common.SuccessResp(c, operations.GetDriverNames())
 }
 
-func GetDriverItems(c *gin.Context) {
+func GetDriverInfo(c *gin.Context) {
 	driverName := c.Query("driver")
-	itemsMap := operations.GetDriverItemsMap()
-	items, ok := itemsMap[driverName]
+	infoMap := operations.GetDriverInfoMap()
+	items, ok := infoMap[driverName]
 	if !ok {
 		common.ErrorStrResp(c, fmt.Sprintf("driver [%s] not found", driverName), 404)
 		return
