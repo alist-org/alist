@@ -7,6 +7,7 @@ on:
     paths:
       - 'drivers/**'
       - 'internal/bootstrap/data/setting.go'
+  workflow_dispatch:
 
 jobs:
   auto_lang:

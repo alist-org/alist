@@ -37,9 +37,9 @@ func convert(s string) string {
 func generateDriversJson() {
 	drivers := make(Drivers)
 	drivers["drivers"] = make(KV[interface{}])
-	driverItemsMap := operations.GetDriverInfoMap()
-	for k, v := range driverItemsMap {
-		drivers["drivers"][k] = k
+	driverInfoMap := operations.GetDriverInfoMap()
+	for k, v := range driverInfoMap {
+		drivers["drivers"][k] = convert(k)
 		items := make(KV[interface{}])
 		for i := range v.Additional {
 			item := v.Additional[i]

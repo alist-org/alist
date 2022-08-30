@@ -28,11 +28,11 @@ type IRootFolderId interface {
 }
 
 type RootFolderPath struct {
-	RootFolder string `json:"root_folder" required:"true" help:"root folder path"`
+	RootFolder string `json:"root_folder" required:"true" help:"Root folder path"`
 }
 
 type RootFolderId struct {
-	RootFolder string `json:"root_folder" required:"true" help:"root folder id"`
+	RootFolder string `json:"root_folder" required:"true" help:"Root folder id"`
 }
 
 func (r RootFolderPath) GetRootFolderPath() string {
