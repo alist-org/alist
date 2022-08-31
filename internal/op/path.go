@@ -21,7 +21,7 @@ func ActualPath(storage driver.Additional, rawPath string) string {
 }
 
 // GetStorageAndActualPath Get the corresponding storage and actual path
-// for path: remove the virtual path prefix and join the actual root folder if exists
+// for path: remove the mount path prefix and join the actual root folder if exists
 func GetStorageAndActualPath(rawPath string) (driver.Driver, string, error) {
 	rawPath = utils.StandardizePath(rawPath)
 	if strings.Contains(rawPath, "..") {

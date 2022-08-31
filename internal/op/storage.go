@@ -24,7 +24,7 @@ var storagesMap generic_sync.MapOf[string, driver.Driver]
 func GetStorageByVirtualPath(virtualPath string) (driver.Driver, error) {
 	storageDriver, ok := storagesMap.Load(virtualPath)
 	if !ok {
-		return nil, errors.Errorf("no virtual path for an storage is: %s", virtualPath)
+		return nil, errors.Errorf("no mount path for an storage is: %s", virtualPath)
 	}
 	return storageDriver, nil
 }
@@ -154,7 +154,7 @@ func UpdateStorage(ctx context.Context, storage model.Storage) error {
 	}
 	storageDriver, err := GetStorageByVirtualPath(oldStorage.MountPath)
 	if oldStorage.MountPath != storage.MountPath {
-		// virtual path renamed, need to drop the storage
+		// mount path renamed, need to drop the storage
 		storagesMap.Delete(oldStorage.MountPath)
 	}
 	if err != nil {
