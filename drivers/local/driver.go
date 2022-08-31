@@ -18,7 +18,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/internal/operations"
+	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/disintegration/imaging"
@@ -49,7 +49,7 @@ func (d *Local) Init(ctx context.Context, storage model.Storage) error {
 			}
 		}
 	}
-	operations.MustSaveDriverStorage(d)
+	op.MustSaveDriverStorage(d)
 	return err
 }
 

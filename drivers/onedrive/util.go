@@ -14,7 +14,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/internal/operations"
+	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/go-resty/resty/v2"
 	jsoniter "github.com/json-iterator/go"
@@ -92,7 +92,7 @@ func (d *Onedrive) _refreshToken() error {
 		return errs.EmptyToken
 	}
 	d.RefreshToken, d.AccessToken = resp.RefreshToken, resp.AccessToken
-	operations.MustSaveDriverStorage(d)
+	op.MustSaveDriverStorage(d)
 	return nil
 }
 

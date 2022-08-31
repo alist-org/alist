@@ -8,7 +8,7 @@ import (
 
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/internal/operations"
+	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/pkg/task"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
@@ -21,17 +21,17 @@ var CopyTaskManager = task.NewTaskManager(3, func(tid *uint64) {
 // Copy if in the same storage, call move method
 // if not, add copy task
 func _copy(ctx context.Context, srcObjPath, dstDirPath string) (bool, error) {
-	srcStorage, srcObjActualPath, err := operations.GetStorageAndActualPath(srcObjPath)
+	srcStorage, srcObjActualPath, err := op.GetStorageAndActualPath(srcObjPath)
 	if err != nil {
 		return false, errors.WithMessage(err, "failed get src storage")
 	}
-	dstStorage, dstDirActualPath, err := operations.GetStorageAndActualPath(dstDirPath)
+	dstStorage, dstDirActualPath, err := op.GetStorageAndActualPath(dstDirPath)
 	if err != nil {
 		return false, errors.WithMessage(err, "failed get dst storage")
 	}
 	// copy if in the same storage, just call driver.Copy
 	if srcStorage.GetStorage() == dstStorage.GetStorage() {
-		return false, operations.Copy(ctx, srcStorage, srcObjActualPath, dstDirActualPath)
+		return false, op.Copy(ctx, srcStorage, srcObjActualPath, dstDirActualPath)
 	}
 	// not in the same storage
 	CopyTaskManager.Submit(task.WithCancelCtx(&task.Task[uint64]{
@@ -45,13 +45,13 @@ func _copy(ctx context.Context, srcObjPath, dstDirPath string) (bool, error) {
 
 func copyBetween2Storages(t *task.Task[uint64], srcStorage, dstStorage driver.Driver, srcObjPath, dstDirPath string) error {
 	t.SetStatus("getting src object")
-	srcObj, err := operations.Get(t.Ctx, srcStorage, srcObjPath)
+	srcObj, err := op.Get(t.Ctx, srcStorage, srcObjPath)
 	if err != nil {
 		return errors.WithMessagef(err, "failed get src [%s] file", srcObjPath)
 	}
 	if srcObj.IsDir() {
 		t.SetStatus("src object is dir, listing objs")
-		objs, err := operations.List(t.Ctx, srcStorage, srcObjPath, model.ListArgs{})
+		objs, err := op.List(t.Ctx, srcStorage, srcObjPath, model.ListArgs{})
 		if err != nil {
 			return errors.WithMessagef(err, "failed list src [%s] objs", srcObjPath)
 		}
@@ -80,11 +80,11 @@ func copyBetween2Storages(t *task.Task[uint64], srcStorage, dstStorage driver.Dr
 }
 
 func copyFileBetween2Storages(tsk *task.Task[uint64], srcStorage, dstStorage driver.Driver, srcFilePath, dstDirPath string) error {
-	srcFile, err := operations.Get(tsk.Ctx, srcStorage, srcFilePath)
+	srcFile, err := op.Get(tsk.Ctx, srcStorage, srcFilePath)
 	if err != nil {
 		return errors.WithMessagef(err, "failed get src [%s] file", srcFilePath)
 	}
-	link, _, err := operations.Link(tsk.Ctx, srcStorage, srcFilePath, model.LinkArgs{})
+	link, _, err := op.Link(tsk.Ctx, srcStorage, srcFilePath, model.LinkArgs{})
 	if err != nil {
 		return errors.WithMessagef(err, "failed get [%s] link", srcFilePath)
 	}
@@ -92,5 +92,5 @@ func copyFileBetween2Storages(tsk *task.Task[uint64], srcStorage, dstStorage dri
 	if err != nil {
 		return errors.WithMessagef(err, "failed get [%s] stream", srcFilePath)
 	}
-	return operations.Put(tsk.Ctx, dstStorage, dstDirPath, stream, tsk.SetProgress)
+	return op.Put(tsk.Ctx, dstStorage, dstDirPath, stream, tsk.SetProgress)
 }

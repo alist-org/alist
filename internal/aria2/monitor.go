@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/internal/operations"
+	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/pkg/task"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -114,7 +114,7 @@ var TransferTaskManager = task.NewTaskManager(3, func(k *uint64) {
 
 func (m *Monitor) Complete() error {
 	// check dstDir again
-	storage, dstDirActualPath, err := operations.GetStorageAndActualPath(m.dstDirPath)
+	storage, dstDirActualPath, err := op.GetStorageAndActualPath(m.dstDirPath)
 	if err != nil {
 		return errors.WithMessage(err, "failed get storage")
 	}
@@ -158,7 +158,7 @@ func (m *Monitor) Complete() error {
 					ReadCloser: f,
 					Mimetype:   mimetype,
 				}
-				return operations.Put(tsk.Ctx, storage, dstDirActualPath, stream, tsk.SetProgress)
+				return op.Put(tsk.Ctx, storage, dstDirActualPath, stream, tsk.SetProgress)
 			},
 		}))
 	}

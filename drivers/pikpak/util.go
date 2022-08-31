@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/alist-org/alist/v3/drivers/base"
-	"github.com/alist-org/alist/v3/internal/operations"
+	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/go-resty/resty/v2"
 	jsoniter "github.com/json-iterator/go"
 )
@@ -46,7 +46,7 @@ func (d *PikPak) refreshToken() error {
 	}).Post(url)
 	if err != nil {
 		d.Status = err.Error()
-		operations.MustSaveDriverStorage(d)
+		op.MustSaveDriverStorage(d)
 		return err
 	}
 	if e.ErrorCode != 0 {
@@ -55,14 +55,14 @@ func (d *PikPak) refreshToken() error {
 			return d.login()
 		}
 		d.Status = e.Error
-		operations.MustSaveDriverStorage(d)
+		op.MustSaveDriverStorage(d)
 		return errors.New(e.Error)
 	}
 	data := res.Body()
 	d.Status = "work"
 	d.RefreshToken = jsoniter.Get(data, "refresh_token").ToString()
 	d.AccessToken = jsoniter.Get(data, "access_token").ToString()
-	operations.MustSaveDriverStorage(d)
+	op.MustSaveDriverStorage(d)
 	return nil
 }
 

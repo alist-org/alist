@@ -7,12 +7,12 @@ import (
 	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/message"
 	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/internal/operations"
+	"github.com/alist-org/alist/v3/internal/op"
 	log "github.com/sirupsen/logrus"
 )
 
 func initDevData() {
-	err := operations.CreateStorage(context.Background(), model.Storage{
+	err := op.CreateStorage(context.Background(), model.Storage{
 		MountPath: "/",
 		Index:     0,
 		Driver:    "local",

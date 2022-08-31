@@ -1,4 +1,4 @@
-package operations
+package op
 
 import (
 	"context"
@@ -17,7 +17,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// In order to facilitate adding some other things before and after file operations
+// In order to facilitate adding some other things before and after file op
 
 var listCache = cache.NewMemCache(cache.WithShards[[]model.Obj](64))
 var listG singleflight.Group[[]model.Obj]
@@ -30,7 +30,7 @@ func ClearCache(storage driver.Driver, path string) {
 // List files in storage, not contains virtual file
 func List(ctx context.Context, storage driver.Driver, path string, args model.ListArgs, refresh ...bool) ([]model.Obj, error) {
 	path = utils.StandardizePath(path)
-	log.Debugf("operations.List %s", path)
+	log.Debugf("op.List %s", path)
 	dir, err := Get(ctx, storage, path)
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed get dir")
@@ -75,7 +75,7 @@ func isRoot(path, rootFolderPath string) bool {
 // Get object from list of files
 func Get(ctx context.Context, storage driver.Driver, path string) (model.Obj, error) {
 	path = utils.StandardizePath(path)
-	log.Debugf("operations.Get %s", path)
+	log.Debugf("op.Get %s", path)
 	if g, ok := storage.(driver.Getter); ok {
 		obj, err := g.Get(ctx, path)
 		if err == nil {

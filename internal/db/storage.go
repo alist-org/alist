@@ -8,8 +8,8 @@ import (
 )
 
 // why don't need `cache` for storage?
-// because all storage store in `operations.storagesMap`
-// the most of the read operation is from `operations.storagesMap`
+// because all storage store in `op.storagesMap`
+// the most of the read operation is from `op.storagesMap`
 // just for persistence in database
 
 // CreateStorage just insert storage to database

@@ -10,7 +10,7 @@ import (
 	conf2 "github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/internal/operations"
+	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/pkg/task"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -39,7 +39,7 @@ func TestConnect(t *testing.T) {
 
 func TestDown(t *testing.T) {
 	TestConnect(t)
-	err := operations.CreateStorage(context.Background(), model.Storage{
+	err := op.CreateStorage(context.Background(), model.Storage{
 		ID:        0,
 		MountPath: "/",
 		Index:     0,

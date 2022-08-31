@@ -12,7 +12,7 @@ import (
 	_ "github.com/alist-org/alist/v3/drivers"
 	"github.com/alist-org/alist/v3/internal/bootstrap/data"
 	"github.com/alist-org/alist/v3/internal/conf"
-	"github.com/alist-org/alist/v3/internal/operations"
+	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/spf13/cobra"
 )
@@ -37,7 +37,7 @@ func convert(s string) string {
 func generateDriversJson() {
 	drivers := make(Drivers)
 	drivers["drivers"] = make(KV[interface{}])
-	driverInfoMap := operations.GetDriverInfoMap()
+	driverInfoMap := op.GetDriverInfoMap()
 	for k, v := range driverInfoMap {
 		drivers["drivers"][k] = convert(k)
 		items := make(KV[interface{}])

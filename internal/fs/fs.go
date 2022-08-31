@@ -5,13 +5,13 @@ import (
 
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/internal/operations"
+	"github.com/alist-org/alist/v3/internal/op"
 	log "github.com/sirupsen/logrus"
 )
 
 // the param named path of functions in this package is a virtual path
 // So, the purpose of this package is to convert virtual path to actual path
-// then pass the actual path to the operations package
+// then pass the actual path to the op package
 
 func List(ctx context.Context, path string, refresh ...bool) ([]model.Obj, error) {
 	res, err := list(ctx, path, refresh...)
@@ -97,7 +97,7 @@ func PutAsTask(dstDirPath string, file model.FileStreamer) error {
 }
 
 func GetStorage(path string) (driver.Driver, error) {
-	storageDriver, _, err := operations.GetStorageAndActualPath(path)
+	storageDriver, _, err := op.GetStorageAndActualPath(path)
 	if err != nil {
 		return nil, err
 	}

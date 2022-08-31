@@ -2,7 +2,7 @@ package local
 
 import (
 	"github.com/alist-org/alist/v3/internal/driver"
-	"github.com/alist-org/alist/v3/internal/operations"
+	"github.com/alist-org/alist/v3/internal/op"
 )
 
 type Addition struct {
@@ -23,5 +23,5 @@ func New() driver.Driver {
 }
 
 func init() {
-	operations.RegisterDriver(config, New)
+	op.RegisterDriver(config, New)
 }

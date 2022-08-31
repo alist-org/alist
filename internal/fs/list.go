@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/internal/operations"
+	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -16,15 +16,15 @@ import (
 func list(ctx context.Context, path string, refresh ...bool) ([]model.Obj, error) {
 	meta := ctx.Value("meta").(*model.Meta)
 	user := ctx.Value("user").(*model.User)
-	storage, actualPath, err := operations.GetStorageAndActualPath(path)
-	virtualFiles := operations.GetStorageVirtualFilesByPath(path)
+	storage, actualPath, err := op.GetStorageAndActualPath(path)
+	virtualFiles := op.GetStorageVirtualFilesByPath(path)
 	if err != nil {
 		if len(virtualFiles) != 0 {
 			return virtualFiles, nil
 		}
 		return nil, errors.WithMessage(err, "failed get storage")
 	}
-	objs, err := operations.List(ctx, storage, actualPath, model.ListArgs{
+	objs, err := op.List(ctx, storage, actualPath, model.ListArgs{
 		ReqPath: path,
 	}, refresh...)
 	if err != nil {

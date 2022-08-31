@@ -1,4 +1,4 @@
-package operations_test
+package op_test
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 
 	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/internal/operations"
+	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -30,7 +30,7 @@ func TestCreateStorage(t *testing.T) {
 		{storage: model.Storage{Driver: "None", MountPath: "/none", Addition: `{"root_folder":"."}`}, isErr: true},
 	}
 	for _, storage := range storages {
-		err := operations.CreateStorage(context.Background(), storage.storage)
+		err := op.CreateStorage(context.Background(), storage.storage)
 		if err != nil {
 			if !storage.isErr {
 				t.Errorf("failed to create storage: %+v", err)
@@ -43,7 +43,7 @@ func TestCreateStorage(t *testing.T) {
 
 func TestGetStorageVirtualFilesByPath(t *testing.T) {
 	setupStorages(t)
-	virtualFiles := operations.GetStorageVirtualFilesByPath("/a")
+	virtualFiles := op.GetStorageVirtualFilesByPath("/a")
 	var names []string
 	for _, virtualFile := range virtualFiles {
 		names = append(names, virtualFile.GetName())
@@ -58,11 +58,11 @@ func TestGetStorageVirtualFilesByPath(t *testing.T) {
 
 func TestGetBalancedStorage(t *testing.T) {
 	setupStorages(t)
-	storage := operations.GetBalancedStorage("/a/d/e")
+	storage := op.GetBalancedStorage("/a/d/e")
 	if storage.GetStorage().MountPath != "/a/d/e" {
 		t.Errorf("expected: /a/d/e, got: %+v", storage.GetStorage().MountPath)
 	}
-	storage = operations.GetBalancedStorage("/a/d/e")
+	storage = op.GetBalancedStorage("/a/d/e")
 	if storage.GetStorage().MountPath != "/a/d/e.balance" {
 		t.Errorf("expected: /a/d/e.balance, got: %+v", storage.GetStorage().MountPath)
 	}
@@ -77,7 +77,7 @@ func setupStorages(t *testing.T) {
 		{Driver: "local", MountPath: "/a/d/e.balance", Index: 4, Addition: `{"root_folder":"."}`},
 	}
 	for _, storage := range storages {
-		err := operations.CreateStorage(context.Background(), storage)
+		err := op.CreateStorage(context.Background(), storage)
 		if err != nil {
 			t.Fatalf("failed to create storage: %+v", err)
 		}

@@ -29,7 +29,7 @@ func (d *Template) Init(ctx context.Context, storage model.Storage) error {
 		return err
 	}
 	// TODO login / refresh token
-	//operations.MustSaveDriverStorage(d)
+	//op.MustSaveDriverStorage(d)
 	return err
 }
 

@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/alist-org/alist/v3/drivers/base"
-	"github.com/alist-org/alist/v3/internal/operations"
+	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/go-resty/resty/v2"
 )
@@ -30,7 +30,7 @@ func (d *AliDrive) refreshToken() error {
 		return fmt.Errorf("failed to refresh token: %s", e.Message)
 	}
 	d.RefreshToken, d.AccessToken = resp.RefreshToken, resp.AccessToken
-	operations.MustSaveDriverStorage(d)
+	op.MustSaveDriverStorage(d)
 	return nil
 }
 

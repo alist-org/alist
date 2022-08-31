@@ -9,16 +9,16 @@ import (
 	"strings"
 
 	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/internal/operations"
+	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/pkg/errors"
 )
 
 func ClearCache(path string) {
-	storage, actualPath, err := operations.GetStorageAndActualPath(path)
+	storage, actualPath, err := op.GetStorageAndActualPath(path)
 	if err != nil {
 		return
 	}
-	operations.ClearCache(storage, actualPath)
+	op.ClearCache(storage, actualPath)
 }
 
 func containsByName(files []model.Obj, file model.Obj) bool {

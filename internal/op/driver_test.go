@@ -1,14 +1,14 @@
-package operations_test
+package op_test
 
 import (
 	"testing"
 
 	_ "github.com/alist-org/alist/v3/drivers"
-	"github.com/alist-org/alist/v3/internal/operations"
+	"github.com/alist-org/alist/v3/internal/op"
 )
 
 func TestDriverItemsMap(t *testing.T) {
-	itemsMap := operations.GetDriverInfoMap()
+	itemsMap := op.GetDriverInfoMap()
 	if len(itemsMap) != 0 {
 		t.Logf("driverInfoMap: %v", itemsMap)
 	} else {

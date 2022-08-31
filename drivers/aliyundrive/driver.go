@@ -48,7 +48,7 @@ func (d *AliDrive) Init(ctx context.Context, storage model.Storage) error {
 		return err
 	}
 	// TODO login / refresh token
-	//operations.MustSaveDriverStorage(d)
+	//op.MustSaveDriverStorage(d)
 	err = d.refreshToken()
 	if err != nil {
 		return err

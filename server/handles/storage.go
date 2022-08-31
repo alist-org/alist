@@ -5,7 +5,7 @@ import (
 
 	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/internal/operations"
+	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
@@ -36,7 +36,7 @@ func CreateStorage(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	if err := operations.CreateStorage(c, req); err != nil {
+	if err := op.CreateStorage(c, req); err != nil {
 		common.ErrorResp(c, err, 500, true)
 	} else {
 		common.SuccessResp(c)
@@ -49,7 +49,7 @@ func UpdateStorage(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	if err := operations.UpdateStorage(c, req); err != nil {
+	if err := op.UpdateStorage(c, req); err != nil {
 		common.ErrorResp(c, err, 500, true)
 	} else {
 		common.SuccessResp(c)
@@ -63,7 +63,7 @@ func DeleteStorage(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	if err := operations.DeleteStorageById(c, uint(id)); err != nil {
+	if err := op.DeleteStorageById(c, uint(id)); err != nil {
 		common.ErrorResp(c, err, 500, true)
 		return
 	}
@@ -77,7 +77,7 @@ func DisableStorage(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	if err := operations.DisableStorage(c, uint(id)); err != nil {
+	if err := op.DisableStorage(c, uint(id)); err != nil {
 		common.ErrorResp(c, err, 500, true)
 		return
 	}
@@ -91,7 +91,7 @@ func EnableStorage(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	if err := operations.EnableStorage(c, uint(id)); err != nil {
+	if err := op.EnableStorage(c, uint(id)); err != nil {
 		common.ErrorResp(c, err, 500, true)
 		return
 	}
