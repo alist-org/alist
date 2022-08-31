@@ -90,11 +90,11 @@ func InitialSettings() []model.SettingItem {
 		{Key: "external_previews", Value: `{}`, Type: conf.TypeText, Group: model.PREVIEW},
 		{Key: "iframe_previews", Value: `{
 	"doc,docx,xls,xlsx,ppt,pptx": {
-		"Microsoft":"https://view.officeapps.live.com/op/view.aspx?src=$url",
-		"Google":"https://docs.google.com/gview?url=$url&embedded=true"
+		"Microsoft":"https://view.officeapps.live.com/op/view.aspx?src=$e_url",
+		"Google":"https://docs.google.com/gview?url=$e_url&embedded=true"
 	},
 	"pdf": {
-		"PDF.js":"https://alist-org.github.io/pdf.js/web/viewer.html?file=$url"
+		"PDF.js":"https://alist-org.github.io/pdf.js/web/viewer.html?file=$e_url"
 	}
 }`, Type: conf.TypeText, Group: model.PREVIEW},
 		//		{Key: conf.OfficeViewers, Value: `{
