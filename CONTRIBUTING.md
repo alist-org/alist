@@ -29,6 +29,9 @@ $ go run main.go
 $ pnpm dev
 ```
 
+## Add a new driver
+Copy `drivers/template` folder and rename it, and follow the comments in it.
+
 ## Create a commit
 
 Commit messages should be well formatted, and to make that "standardized".
