@@ -52,7 +52,7 @@ func CreateStorage(ctx context.Context, storage model.Storage) error {
 	if err != nil {
 		storageDriver.GetStorage().SetStatus(fmt.Sprintf("%+v", err.Error()))
 		MustSaveDriverStorage(storageDriver)
-		return errors.WithMessage(err, "failed init storage but storage is already created")
+		return errors.Wrapf(err, "failed init storage but storage is already created")
 	} else {
 		storageDriver.GetStorage().SetStatus("work")
 		MustSaveDriverStorage(storageDriver)
@@ -74,7 +74,7 @@ func LoadStorage(ctx context.Context, storage model.Storage) error {
 	storageDriver := driverNew()
 	err = storageDriver.Init(ctx, storage)
 	if err != nil {
-		return errors.WithMessage(err, "failed init storage but storage is already created")
+		return errors.Wrapf(err, "failed init storage but storage is already created")
 	}
 	log.Debugf("storage %+v is created", storageDriver)
 	storagesMap.Store(storage.MountPath, storageDriver)
@@ -120,7 +120,7 @@ func DisableStorage(ctx context.Context, id uint) error {
 	}
 	// drop the storage in the driver
 	if err := storageDriver.Drop(ctx); err != nil {
-		return errors.WithMessage(err, "failed drop storage")
+		return errors.Wrapf(err, "failed drop storage")
 	}
 	// delete the storage in the memory
 	storagesMap.Delete(storage.MountPath)
@@ -162,11 +162,11 @@ func UpdateStorage(ctx context.Context, storage model.Storage) error {
 	}
 	err = storageDriver.Drop(ctx)
 	if err != nil {
-		return errors.WithMessage(err, "failed drop storage")
+		return errors.Wrapf(err, "failed drop storage")
 	}
 	err = storageDriver.Init(ctx, storage)
 	if err != nil {
-		return errors.WithMessage(err, "failed init storage")
+		return errors.Wrapf(err, "failed init storage")
 	}
 	storagesMap.Store(storage.MountPath, storageDriver)
 	return nil
@@ -183,7 +183,7 @@ func DeleteStorageById(ctx context.Context, id uint) error {
 	}
 	// drop the storage in the driver
 	if err := storageDriver.Drop(ctx); err != nil {
-		return errors.WithMessage(err, "failed drop storage")
+		return errors.Wrapf(err, "failed drop storage")
 	}
 	// delete the storage in the database
 	if err := db.DeleteStorageById(id); err != nil {

@@ -3,6 +3,8 @@ package local
 import (
 	"bytes"
 	"context"
+	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -20,7 +22,6 @@ import (
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/disintegration/imaging"
-	"github.com/pkg/errors"
 )
 
 type Local struct {
@@ -36,15 +37,15 @@ func (d *Local) Init(ctx context.Context, storage model.Storage) error {
 	d.Storage = storage
 	err := utils.Json.UnmarshalFromString(d.Storage.Addition, &d.Addition)
 	if err != nil {
-		return errors.Wrap(err, "error while unmarshal addition")
+		return err
 	}
 	if !utils.Exists(d.RootFolder) {
-		err = errors.Errorf("root folder %s not exists", d.RootFolder)
+		err = fmt.Errorf("root folder %s not exists", d.RootFolder)
 	} else {
 		if !filepath.IsAbs(d.RootFolder) {
 			d.RootFolder, err = filepath.Abs(d.RootFolder)
 			if err != nil {
-				return errors.Wrap(err, "error while get abs path")
+				return err
 			}
 		}
 	}
@@ -64,7 +65,7 @@ func (d *Local) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([
 	fullPath := dir.GetID()
 	rawFiles, err := ioutil.ReadDir(fullPath)
 	if err != nil {
-		return nil, errors.Wrapf(err, "error while read dir %s", fullPath)
+		return nil, err
 	}
 	var files []model.Obj
 	for _, f := range rawFiles {
@@ -97,9 +98,9 @@ func (d *Local) Get(ctx context.Context, path string) (model.Obj, error) {
 	f, err := os.Stat(path)
 	if err != nil {
 		if strings.Contains(err.Error(), "cannot find the file") {
-			return nil, errors.WithStack(errs.ObjectNotFound)
+			return nil, errs.ObjectNotFound
 		}
-		return nil, errors.Wrapf(err, "error while stat %s", path)
+		return nil, err
 	}
 	file := model.Object{
 		ID:       path,
@@ -145,7 +146,7 @@ func (d *Local) MakeDir(ctx context.Context, parentDir model.Obj, dirName string
 	fullPath := filepath.Join(parentDir.GetID(), dirName)
 	err := os.MkdirAll(fullPath, 0700)
 	if err != nil {
-		return errors.Wrapf(err, "error while make dir %s", fullPath)
+		return err
 	}
 	return nil
 }
@@ -155,7 +156,7 @@ func (d *Local) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 	dstPath := filepath.Join(dstDir.GetID(), srcObj.GetName())
 	err := os.Rename(srcPath, dstPath)
 	if err != nil {
-		return errors.Wrapf(err, "error while move %s to %s", srcPath, dstPath)
+		return err
 	}
 	return nil
 }
@@ -165,7 +166,7 @@ func (d *Local) Rename(ctx context.Context, srcObj model.Obj, newName string) er
 	dstPath := filepath.Join(filepath.Dir(srcPath), newName)
 	err := os.Rename(srcPath, dstPath)
 	if err != nil {
-		return errors.Wrapf(err, "error while rename %s to %s", srcPath, dstPath)
+		return err
 	}
 	return nil
 }
@@ -180,7 +181,7 @@ func (d *Local) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 		err = copyFile(srcPath, dstPath)
 	}
 	if err != nil {
-		return errors.Wrapf(err, "error while copy %s to %s", srcPath, dstPath)
+		return err
 	}
 	return nil
 }
@@ -193,7 +194,7 @@ func (d *Local) Remove(ctx context.Context, obj model.Obj) error {
 		err = os.Remove(obj.GetID())
 	}
 	if err != nil {
-		return errors.Wrapf(err, "error while remove %s", obj.GetID())
+		return err
 	}
 	return nil
 }
@@ -202,7 +203,7 @@ func (d *Local) Put(ctx context.Context, dstDir model.Obj, stream model.FileStre
 	fullPath := filepath.Join(dstDir.GetID(), stream.GetName())
 	out, err := os.Create(fullPath)
 	if err != nil {
-		return errors.Wrapf(err, "error while create file %s", fullPath)
+		return err
 	}
 	defer func() {
 		_ = out.Close()
@@ -212,7 +213,7 @@ func (d *Local) Put(ctx context.Context, dstDir model.Obj, stream model.FileStre
 	}()
 	err = utils.CopyWithCtx(ctx, out, stream)
 	if err != nil {
-		return errors.Wrapf(err, "error while copy file %s", fullPath)
+		return err
 	}
 	return nil
 }

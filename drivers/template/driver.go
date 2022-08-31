@@ -7,7 +7,6 @@ import (
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/utils"
-	"github.com/pkg/errors"
 )
 
 type Template struct {
@@ -27,7 +26,7 @@ func (d *Template) Init(ctx context.Context, storage model.Storage) error {
 	d.Storage = storage
 	err := utils.Json.UnmarshalFromString(d.Storage.Addition, &d.Addition)
 	if err != nil {
-		return errors.Wrap(err, "error while unmarshal addition")
+		return err
 	}
 	// TODO login / refresh token
 	//operations.MustSaveDriverStorage(d)

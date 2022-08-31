@@ -1,6 +1,7 @@
 package local
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -8,7 +9,6 @@ import (
 	"github.com/alist-org/alist/v3/internal/operations"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/go-resty/resty/v2"
-	"github.com/pkg/errors"
 )
 
 // do others that not defined in Driver interface
@@ -51,7 +51,7 @@ func (d *AliDrive) request(url, method string, callback func(*resty.Request), re
 	req.SetError(&e)
 	res, err := req.Execute(method, url)
 	if err != nil {
-		return nil, errors.WithStack(err), e
+		return nil, err, e
 	}
 	if e.Code != "" {
 		if e.Code == "AccessTokenInvalid" {

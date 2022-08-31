@@ -3,6 +3,7 @@ package onedrive
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -17,7 +18,6 @@ import (
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/go-resty/resty/v2"
 	jsoniter "github.com/json-iterator/go"
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -109,7 +109,7 @@ func (d *Onedrive) Request(url string, method string, callback func(*resty.Reque
 	req.SetError(&e)
 	res, err := req.Execute(method, url)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, err
 	}
 	if e.Error.Code != "" {
 		if e.Error.Code == "InvalidAuthenticationToken" {

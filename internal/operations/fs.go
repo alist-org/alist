@@ -19,12 +19,12 @@ import (
 
 // In order to facilitate adding some other things before and after file operations
 
-var filesCache = cache.NewMemCache(cache.WithShards[[]model.Obj](64))
-var filesG singleflight.Group[[]model.Obj]
+var listCache = cache.NewMemCache(cache.WithShards[[]model.Obj](64))
+var listG singleflight.Group[[]model.Obj]
 
 func ClearCache(storage driver.Driver, path string) {
 	key := stdpath.Join(storage.GetStorage().MountPath, path)
-	filesCache.Del(key)
+	listCache.Del(key)
 }
 
 // List files in storage, not contains virtual file
@@ -39,23 +39,24 @@ func List(ctx context.Context, storage driver.Driver, path string, args model.Li
 		return nil, errors.WithStack(errs.NotFolder)
 	}
 	if storage.Config().NoCache {
-		return storage.List(ctx, dir, args)
+		objs, err := storage.List(ctx, dir, args)
+		return objs, errors.WithStack(err)
 	}
 	key := stdpath.Join(storage.GetStorage().MountPath, path)
 	if len(refresh) == 0 || !refresh[0] {
-		if files, ok := filesCache.Get(key); ok {
+		if files, ok := listCache.Get(key); ok {
 			return files, nil
 		}
 	}
-	files, err, _ := filesG.Do(key, func() ([]model.Obj, error) {
+	objs, err, _ := listG.Do(key, func() ([]model.Obj, error) {
 		files, err := storage.List(ctx, dir, args)
 		if err != nil {
-			return nil, errors.WithMessage(err, "failed to list files")
+			return nil, errors.Wrapf(err, "failed to list objs")
 		}
-		filesCache.Set(key, files, cache.WithEx[[]model.Obj](time.Minute*time.Duration(storage.GetStorage().CacheExpiration)))
+		listCache.Set(key, files, cache.WithEx[[]model.Obj](time.Minute*time.Duration(storage.GetStorage().CacheExpiration)))
 		return files, nil
 	})
-	return files, err
+	return objs, err
 }
 
 func isRoot(path, rootFolderPath string) bool {
@@ -140,7 +141,7 @@ func Link(ctx context.Context, storage driver.Driver, path string, args model.Li
 	fn := func() (*model.Link, error) {
 		link, err := storage.Link(ctx, file, args)
 		if err != nil {
-			return nil, errors.WithMessage(err, "failed get link")
+			return nil, errors.Wrapf(err, "failed get link")
 		}
 		if link.Expiration != nil {
 			linkCache.Set(key, link, cache.WithEx[*model.Link](*link.Expiration))
@@ -179,7 +180,7 @@ func MakeDir(ctx context.Context, storage driver.Driver, path string) error {
 			if err != nil {
 				return errors.WithMessagef(err, "failed to get parent dir [%s]", parentPath)
 			}
-			return storage.MakeDir(ctx, parentDir, dirName)
+			return errors.WithStack(storage.MakeDir(ctx, parentDir, dirName))
 		} else {
 			return errors.WithMessage(err, "failed to check if dir exists")
 		}
@@ -203,7 +204,7 @@ func Move(ctx context.Context, storage driver.Driver, srcPath, dstDirPath string
 	if err != nil {
 		return errors.WithMessage(err, "failed to get dst dir")
 	}
-	return storage.Move(ctx, srcObj, dstDir)
+	return errors.WithStack(storage.Move(ctx, srcObj, dstDir))
 }
 
 func Rename(ctx context.Context, storage driver.Driver, srcPath, dstName string) error {
@@ -211,7 +212,7 @@ func Rename(ctx context.Context, storage driver.Driver, srcPath, dstName string)
 	if err != nil {
 		return errors.WithMessage(err, "failed to get src object")
 	}
-	return storage.Rename(ctx, srcObj, dstName)
+	return errors.WithStack(storage.Rename(ctx, srcObj, dstName))
 }
 
 // Copy Just copy file[s] in a storage
@@ -221,7 +222,7 @@ func Copy(ctx context.Context, storage driver.Driver, srcPath, dstDirPath string
 		return errors.WithMessage(err, "failed to get src object")
 	}
 	dstDir, err := Get(ctx, storage, dstDirPath)
-	return storage.Copy(ctx, srcObj, dstDir)
+	return errors.WithStack(storage.Copy(ctx, srcObj, dstDir))
 }
 
 func Remove(ctx context.Context, storage driver.Driver, path string) error {
@@ -233,7 +234,7 @@ func Remove(ctx context.Context, storage driver.Driver, path string) error {
 		}
 		return errors.WithMessage(err, "failed to get object")
 	}
-	return storage.Remove(ctx, obj)
+	return errors.WithStack(storage.Remove(ctx, obj))
 }
 
 func Put(ctx context.Context, storage driver.Driver, dstDirPath string, file model.FileStreamer, up driver.UpdateProgress) error {
@@ -282,7 +283,7 @@ func Put(ctx context.Context, storage driver.Driver, dstDirPath string, file mod
 		up(100)
 		// clear cache
 		key := stdpath.Join(storage.GetStorage().MountPath, dstDirPath)
-		filesCache.Del(key)
+		listCache.Del(key)
 	}
-	return err
+	return errors.WithStack(err)
 }

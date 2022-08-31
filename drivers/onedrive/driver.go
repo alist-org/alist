@@ -11,7 +11,6 @@ import (
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/go-resty/resty/v2"
-	"github.com/pkg/errors"
 )
 
 type Onedrive struct {
@@ -32,7 +31,7 @@ func (d *Onedrive) Init(ctx context.Context, storage model.Storage) error {
 	d.Storage = storage
 	err := utils.Json.UnmarshalFromString(d.Storage.Addition, &d.Addition)
 	if err != nil {
-		return errors.Wrap(err, "error while unmarshal addition")
+		return err
 	}
 	return d.refreshToken()
 }

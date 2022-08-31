@@ -10,7 +10,6 @@ import (
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/pkg/utils/random"
-	"github.com/pkg/errors"
 )
 
 type Virtual struct {
@@ -26,7 +25,7 @@ func (d *Virtual) Init(ctx context.Context, storage model.Storage) error {
 	d.Storage = storage
 	err := utils.Json.UnmarshalFromString(storage.Addition, &d.Addition)
 	if err != nil {
-		return errors.Wrap(err, "error while unmarshal addition")
+		return err
 	}
 	return nil
 }

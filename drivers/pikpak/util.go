@@ -1,13 +1,13 @@
 package local
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/operations"
 	"github.com/go-resty/resty/v2"
 	jsoniter "github.com/json-iterator/go"
-	"github.com/pkg/errors"
 )
 
 // do others that not defined in Driver interface

@@ -22,7 +22,6 @@ import (
 	"github.com/alist-org/alist/v3/pkg/cron"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/go-resty/resty/v2"
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -46,7 +45,7 @@ func (d *AliDrive) Init(ctx context.Context, storage model.Storage) error {
 	d.Storage = storage
 	err := utils.Json.UnmarshalFromString(d.Storage.Addition, &d.Addition)
 	if err != nil {
-		return errors.Wrap(err, "error while unmarshal addition")
+		return err
 	}
 	// TODO login / refresh token
 	//operations.MustSaveDriverStorage(d)
