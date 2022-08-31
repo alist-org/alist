@@ -16,8 +16,8 @@ type Manager[K comparable] struct {
 
 func (tm *Manager[K]) Submit(task *Task[K]) K {
 	if tm.updateID != nil {
+		tm.updateID(&tm.curID)
 		task.ID = tm.curID
-		tm.updateID(&task.ID)
 	}
 	tm.tasks.Store(task.ID, task)
 	tm.do(task)
