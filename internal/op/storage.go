@@ -49,6 +49,7 @@ func CreateStorage(ctx context.Context, storage model.Storage) error {
 	}
 	// already has an id
 	err = storageDriver.Init(ctx, storage)
+	storagesMap.Store(storage.MountPath, storageDriver)
 	if err != nil {
 		storageDriver.GetStorage().SetStatus(fmt.Sprintf("%+v", err.Error()))
 		MustSaveDriverStorage(storageDriver)
@@ -58,7 +59,6 @@ func CreateStorage(ctx context.Context, storage model.Storage) error {
 		MustSaveDriverStorage(storageDriver)
 	}
 	log.Debugf("storage %+v is created", storageDriver)
-	storagesMap.Store(storage.MountPath, storageDriver)
 	return nil
 }
 
@@ -73,11 +73,11 @@ func LoadStorage(ctx context.Context, storage model.Storage) error {
 	}
 	storageDriver := driverNew()
 	err = storageDriver.Init(ctx, storage)
+	storagesMap.Store(storage.MountPath, storageDriver)
 	if err != nil {
 		return errors.Wrapf(err, "failed init storage but storage is already created")
 	}
 	log.Debugf("storage %+v is created", storageDriver)
-	storagesMap.Store(storage.MountPath, storageDriver)
 	return nil
 }
 
@@ -93,10 +93,10 @@ func EnableStorage(ctx context.Context, id uint) error {
 	if err != nil {
 		return errors.WithMessage(err, "failed load storage")
 	}
-	// reget storage from db, because it maybe hava updated
+	// re-get storage from db, because it maybe hava updated
 	storage, err = db.GetStorageById(id)
 	if err != nil {
-		return errors.WithMessage(err, "failed reget storage again")
+		return errors.WithMessage(err, "failed re-get storage again")
 	}
 	storage.Disabled = false
 	err = db.UpdateStorage(storage)
