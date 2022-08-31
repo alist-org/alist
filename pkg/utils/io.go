@@ -14,11 +14,13 @@ func (rf readerFunc) Read(p []byte) (n int, err error) { return rf(p) }
 // CopyWithCtx slightly modified function signature:
 // - context has been added in order to propagate cancelation
 // - I do not return the number of bytes written, has it is not useful in my use case
-func CopyWithCtx(ctx context.Context, out io.Writer, in io.Reader) error {
+func CopyWithCtx(ctx context.Context, out io.Writer, in io.Reader, size int64, progress func(percentage int)) error {
 	// Copy will call the Reader and Writer interface multiple time, in order
 	// to copy by chunk (avoiding loading the whole file in memory).
 	// I insert the ability to cancel before read time as it is the earliest
 	// possible in the call process.
+	var finish int64 = 0
+	s := size / 100
 	_, err := io.Copy(out, readerFunc(func(p []byte) (int, error) {
 		// golang non-blocking channel: https://gobyexample.com/non-blocking-channel-operations
 		select {
@@ -28,7 +30,12 @@ func CopyWithCtx(ctx context.Context, out io.Writer, in io.Reader) error {
 			return 0, ctx.Err()
 		default:
 			// otherwise just run default io.Reader implementation
-			return in.Read(p)
+			n, err := in.Read(p)
+			if err == nil || err == io.EOF {
+				finish += int64(n)
+				progress(int(finish / s))
+			}
+			return n, err
 		}
 	}))
 	return err

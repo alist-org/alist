@@ -211,7 +211,7 @@ func (d *Local) Put(ctx context.Context, dstDir model.Obj, stream model.FileStre
 			_ = os.Remove(fullPath)
 		}
 	}()
-	err = utils.CopyWithCtx(ctx, out, stream)
+	err = utils.CopyWithCtx(ctx, out, stream, stream.GetSize(), up)
 	if err != nil {
 		return err
 	}
