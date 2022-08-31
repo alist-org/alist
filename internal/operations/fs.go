@@ -76,7 +76,10 @@ func Get(ctx context.Context, storage driver.Driver, path string) (model.Obj, er
 	path = utils.StandardizePath(path)
 	log.Debugf("operations.Get %s", path)
 	if g, ok := storage.(driver.Getter); ok {
-		return g.Get(ctx, path)
+		obj, err := g.Get(ctx, path)
+		if err == nil {
+			return obj, nil
+		}
 	}
 	// is root folder
 	if r, ok := storage.GetAddition().(driver.IRootFolderId); ok && utils.PathEqual(path, "/") {
@@ -275,6 +278,8 @@ func Put(ctx context.Context, storage driver.Driver, dstDirPath string, file mod
 	err = storage.Put(ctx, parentDir, file, up)
 	log.Debugf("put file [%s] done", file.GetName())
 	if err == nil {
+		// set as complete
+		up(100)
 		// clear cache
 		key := stdpath.Join(storage.GetStorage().MountPath, dstDirPath)
 		filesCache.Del(key)

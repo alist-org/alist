@@ -6,6 +6,23 @@ import (
 	"github.com/alist-org/alist/v3/internal/model"
 )
 
+type Host struct {
+	Oauth string
+	Api   string
+}
+
+type TokenErr struct {
+	Error            string `json:"error"`
+	ErrorDescription string `json:"error_description"`
+}
+
+type RespErr struct {
+	Error struct {
+		Code    string `json:"code"`
+		Message string `json:"message"`
+	} `json:"error"`
+}
+
 type File struct {
 	Id                   string    `json:"id"`
 	Name                 string    `json:"name"`

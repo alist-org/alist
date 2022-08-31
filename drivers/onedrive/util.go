@@ -21,11 +21,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type Host struct {
-	Oauth string
-	Api   string
-}
-
 var onedriveHostMap = map[string]Host{
 	"global": {
 		Oauth: "https://login.microsoftonline.com",
@@ -76,11 +71,6 @@ func (d *Onedrive) refreshToken() error {
 	return err
 }
 
-type TokenErr struct {
-	Error            string `json:"error"`
-	ErrorDescription string `json:"error_description"`
-}
-
 func (d *Onedrive) _refreshToken() error {
 	url := d.GetMetaUrl(true, "") + "/common/oauth2/v2.0/token"
 	var resp base.TokenResp
@@ -104,13 +94,6 @@ func (d *Onedrive) _refreshToken() error {
 	d.RefreshToken, d.AccessToken = resp.RefreshToken, resp.AccessToken
 	operations.MustSaveDriverStorage(d)
 	return nil
-}
-
-type RespErr struct {
-	Error struct {
-		Code    string `json:"code"`
-		Message string `json:"message"`
-	} `json:"error"`
 }
 
 func (d *Onedrive) Request(url string, method string, callback func(*resty.Request), resp interface{}) ([]byte, error) {
