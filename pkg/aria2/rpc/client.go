@@ -269,8 +269,9 @@ func (c *client) TellStatus(gid string, keys ...string) (info StatusInfo, err er
 // `aria2.getUris([secret, ]gid)`
 // This method returns the URIs used in the download denoted by gid (string).
 // The response is an array of structs and it contains following keys. Values are string.
-// 	uri        URI
-// 	status    'used' if the URI is in use. 'waiting' if the URI is still waiting in the queue.
+//
+//	uri        URI
+//	status    'used' if the URI is in use. 'waiting' if the URI is still waiting in the queue.
 func (c *client) GetURIs(gid string) (infos []URIInfo, err error) {
 	params := make([]interface{}, 0, 2)
 	if c.token != "" {
@@ -457,12 +458,14 @@ func (c *client) GetOption(gid string) (m Option, err error) {
 // `aria2.changeOption([secret, ]gid, options)`
 // This method changes options of the download denoted by gid (string) dynamically. options is a struct.
 // The following options are available for active downloads:
-// 	bt-max-peers
-// 	bt-request-peer-speed-limit
-// 	bt-remove-unselected-file
-// 	force-save
-// 	max-download-limit
-// 	max-upload-limit
+//
+//	bt-max-peers
+//	bt-request-peer-speed-limit
+//	bt-remove-unselected-file
+//	force-save
+//	max-download-limit
+//	max-upload-limit
+//
 // For waiting or paused downloads, in addition to the above options, options listed in Input File subsection are available, except for following options: dry-run, metalink-base-uri, parameterized-uri, pause, piece-length and rpc-save-upload-metadata option.
 // This method returns OK for success.
 func (c *client) ChangeOption(gid string, option Option) (ok string, err error) {
@@ -497,17 +500,19 @@ func (c *client) GetGlobalOption() (m Option, err error) {
 // This method changes global options dynamically.
 // options is a struct.
 // The following options are available:
-// 	bt-max-open-files
-// 	download-result
-// 	log
-// 	log-level
-// 	max-concurrent-downloads
-// 	max-download-result
-// 	max-overall-download-limit
-// 	max-overall-upload-limit
-// 	save-cookies
-// 	save-session
-// 	server-stat-of
+//
+//	bt-max-open-files
+//	download-result
+//	log
+//	log-level
+//	max-concurrent-downloads
+//	max-download-result
+//	max-overall-download-limit
+//	max-overall-upload-limit
+//	save-cookies
+//	save-session
+//	server-stat-of
+//
 // In addition, options listed in the Input File subsection are available, except for following options: checksum, index-out, out, pause and select-file.
 // With the log option, you can dynamically start logging or change log file.
 // To stop logging, specify an empty string("") as the parameter value.
@@ -526,13 +531,14 @@ func (c *client) ChangeGlobalOption(options Option) (ok string, err error) {
 // `aria2.getGlobalStat([secret])`
 // This method returns global statistics such as the overall download and upload speeds.
 // The response is a struct and contains the following keys. Values are strings.
-// 	downloadSpeed      Overall download speed (byte/sec).
-// 	uploadSpeed        Overall upload speed(byte/sec).
-// 	numActive          The number of active downloads.
-// 	numWaiting         The number of waiting downloads.
-// 	numStopped         The number of stopped downloads in the current session.
-//                     This value is capped by the --max-download-result option.
-// 	numStoppedTotal    The number of stopped downloads in the current session and not capped by the --max-download-result option.
+//
+//		downloadSpeed      Overall download speed (byte/sec).
+//		uploadSpeed        Overall upload speed(byte/sec).
+//		numActive          The number of active downloads.
+//		numWaiting         The number of waiting downloads.
+//		numStopped         The number of stopped downloads in the current session.
+//	                    This value is capped by the --max-download-result option.
+//		numStoppedTotal    The number of stopped downloads in the current session and not capped by the --max-download-result option.
 func (c *client) GetGlobalStat() (info GlobalStatInfo, err error) {
 	params := []string{}
 	if c.token != "" {
@@ -570,8 +576,9 @@ func (c *client) RemoveDownloadResult(gid string) (ok string, err error) {
 // `aria2.getVersion([secret])`
 // This method returns the version of aria2 and the list of enabled features.
 // The response is a struct and contains following keys.
-// 	version            Version number of aria2 as a string.
-// 	enabledFeatures    List of enabled features. Each feature is given as a string.
+//
+//	version            Version number of aria2 as a string.
+//	enabledFeatures    List of enabled features. Each feature is given as a string.
 func (c *client) GetVersion() (info VersionInfo, err error) {
 	params := []string{}
 	if c.token != "" {
@@ -584,7 +591,8 @@ func (c *client) GetVersion() (info VersionInfo, err error) {
 // `aria2.getSessionInfo([secret])`
 // This method returns session information.
 // The response is a struct and contains following key.
-// 	sessionId    Session ID, which is generated each time when aria2 is invoked.
+//
+//	sessionId    Session ID, which is generated each time when aria2 is invoked.
 func (c *client) GetSessionInfo() (info SessionInfo, err error) {
 	params := []string{}
 	if c.token != "" {
@@ -650,7 +658,7 @@ func (c *client) Multicall(methods []Method) (r []interface{}, err error) {
 // `system.listMethods()`
 // This method returns the all available RPC methods in an array of string.
 // Unlike other methods, this method does not require secret token.
-// This is safe because this method jsut returns the available method names.
+// This is safe because this method just returns the available method names.
 func (c *client) ListMethods() (methods []string, err error) {
 	err = c.Call(aria2ListMethods, []string{}, &methods)
 	return
