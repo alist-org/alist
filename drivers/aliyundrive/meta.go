@@ -1,4 +1,4 @@
-package local
+package aliyundrive
 
 import (
 	"github.com/alist-org/alist/v3/internal/driver"
@@ -14,7 +14,7 @@ type Addition struct {
 }
 
 var config = driver.Config{
-	Name:        "aliyundrive",
+	Name:        "Aliyundrive",
 	DefaultRoot: "root",
 }
 

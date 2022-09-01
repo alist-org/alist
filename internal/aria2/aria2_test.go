@@ -43,7 +43,7 @@ func TestDown(t *testing.T) {
 		ID:        0,
 		MountPath: "/",
 		Index:     0,
-		Driver:    "local",
+		Driver:    "Local",
 		Status:    "",
 		Addition:  `{"root_folder":"../../data"}`,
 		Remark:    "",

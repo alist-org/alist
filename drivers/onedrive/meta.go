@@ -17,7 +17,7 @@ type Addition struct {
 }
 
 var config = driver.Config{
-	Name:        "onedrive",
+	Name:        "Onedrive",
 	LocalSort:   true,
 	DefaultRoot: "/",
 }

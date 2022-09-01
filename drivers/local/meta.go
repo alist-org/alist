@@ -11,7 +11,7 @@ type Addition struct {
 }
 
 var config = driver.Config{
-	Name:        "local",
+	Name:        "Local",
 	OnlyLocal:   true,
 	LocalSort:   true,
 	NoCache:     true,

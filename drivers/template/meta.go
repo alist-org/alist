@@ -1,4 +1,4 @@
-package local
+package template
 
 import (
 	"github.com/alist-org/alist/v3/internal/driver"
@@ -14,7 +14,7 @@ type Addition struct {
 }
 
 var config = driver.Config{
-	Name:        "template",
+	Name:        "Template",
 	LocalSort:   false,
 	OnlyLocal:   false,
 	OnlyProxy:   false,

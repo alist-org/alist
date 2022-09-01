@@ -1,1 +1,1 @@
-package local
+package template

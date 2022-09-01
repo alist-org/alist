@@ -1,4 +1,4 @@
-package local
+package pikpak
 
 import (
 	"github.com/alist-org/alist/v3/internal/driver"

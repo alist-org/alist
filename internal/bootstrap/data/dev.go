@@ -15,7 +15,7 @@ func initDevData() {
 	err := op.CreateStorage(context.Background(), model.Storage{
 		MountPath: "/",
 		Index:     0,
-		Driver:    "local",
+		Driver:    "Local",
 		Status:    "",
 		Addition:  `{"root_folder":"."}`,
 	})

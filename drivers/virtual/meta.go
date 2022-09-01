@@ -14,7 +14,7 @@ type Addition struct {
 }
 
 var config = driver.Config{
-	Name:      "virtual",
+	Name:      "Virtual",
 	OnlyLocal: true,
 	LocalSort: true,
 	NeedMs:    true,

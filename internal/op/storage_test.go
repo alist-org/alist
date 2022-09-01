@@ -25,8 +25,8 @@ func TestCreateStorage(t *testing.T) {
 		storage model.Storage
 		isErr   bool
 	}{
-		{storage: model.Storage{Driver: "local", MountPath: "/local", Addition: `{"root_folder":"."}`}, isErr: false},
-		{storage: model.Storage{Driver: "local", MountPath: "/local", Addition: `{"root_folder":"."}`}, isErr: true},
+		{storage: model.Storage{Driver: "Local", MountPath: "/local", Addition: `{"root_folder":"."}`}, isErr: false},
+		{storage: model.Storage{Driver: "Local", MountPath: "/local", Addition: `{"root_folder":"."}`}, isErr: true},
 		{storage: model.Storage{Driver: "None", MountPath: "/none", Addition: `{"root_folder":"."}`}, isErr: true},
 	}
 	for _, storage := range storages {
@@ -70,11 +70,11 @@ func TestGetBalancedStorage(t *testing.T) {
 
 func setupStorages(t *testing.T) {
 	var storages = []model.Storage{
-		{Driver: "local", MountPath: "/a/b", Index: 0, Addition: `{"root_folder":"."}`},
-		{Driver: "local", MountPath: "/a/c", Index: 1, Addition: `{"root_folder":"."}`},
-		{Driver: "local", MountPath: "/a/d", Index: 2, Addition: `{"root_folder":"."}`},
-		{Driver: "local", MountPath: "/a/d/e", Index: 3, Addition: `{"root_folder":"."}`},
-		{Driver: "local", MountPath: "/a/d/e.balance", Index: 4, Addition: `{"root_folder":"."}`},
+		{Driver: "Local", MountPath: "/a/b", Index: 0, Addition: `{"root_folder":"."}`},
+		{Driver: "Local", MountPath: "/a/c", Index: 1, Addition: `{"root_folder":"."}`},
+		{Driver: "Local", MountPath: "/a/d", Index: 2, Addition: `{"root_folder":"."}`},
+		{Driver: "Local", MountPath: "/a/d/e", Index: 3, Addition: `{"root_folder":"."}`},
+		{Driver: "Local", MountPath: "/a/d/e.balance", Index: 4, Addition: `{"root_folder":"."}`},
 	}
 	for _, storage := range storages {
 		err := op.CreateStorage(context.Background(), storage)
