@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
+	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
@@ -134,7 +135,7 @@ func (d *Teambition) upload(file model.FileStreamer, token string) (*FileUpload,
 	return &newFile, nil
 }
 
-func (d *Teambition) chunkUpload(file model.FileStreamer, token string) (*FileUpload, error) {
+func (d *Teambition) chunkUpload(file model.FileStreamer, token string, up driver.UpdateProgress) (*FileUpload, error) {
 	prefix := "tcs"
 	referer := "https://www.teambition.com/"
 	if d.isInternational() {
@@ -176,6 +177,7 @@ func (d *Teambition) chunkUpload(file model.FileStreamer, token string) (*FileUp
 		if err != nil {
 			return nil, err
 		}
+		up(i * 100 / newChunk.Chunks)
 	}
 	_, err = base.RestyClient.R().SetHeader("Authorization", token).Post(
 		fmt.Sprintf("https://%s.teambition.net/upload/chunk/%s",

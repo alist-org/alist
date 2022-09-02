@@ -148,7 +148,7 @@ func (d *Teambition) Put(ctx context.Context, dstDir model.Obj, stream model.Fil
 	} else {
 		// chunk upload
 		//err = base.ErrNotImplement
-		newFile, err = d.chunkUpload(stream, token)
+		newFile, err = d.chunkUpload(stream, token, up)
 	}
 	if err != nil {
 		return err
