@@ -220,7 +220,7 @@ func FsPut(c *gin.Context) {
 		return
 	}
 	stream := &model.FileStream{
-		Obj: model.Object{
+		Obj: &model.Object{
 			Name:     name,
 			Size:     size,
 			Modified: time.Now(),

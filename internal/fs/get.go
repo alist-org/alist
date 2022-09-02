@@ -26,7 +26,7 @@ func get(ctx context.Context, path string) (model.Obj, error) {
 	if err != nil {
 		// if there are no storage prefix with path, maybe root folder
 		if path == "/" {
-			return model.Object{
+			return &model.Object{
 				Name:     "root",
 				Size:     0,
 				Modified: time.Time{},

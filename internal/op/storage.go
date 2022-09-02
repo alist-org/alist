@@ -286,7 +286,7 @@ func GetStorageVirtualFilesByPath(prefix string) []model.Obj {
 		if _, ok := set[name]; ok {
 			continue
 		}
-		files = append(files, model.Object{
+		files = append(files, &model.Object{
 			Name:     name,
 			Size:     0,
 			Modified: v.GetStorage().Modified,

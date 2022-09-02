@@ -31,8 +31,8 @@ type File struct {
 	Url           string     `json:"url"`
 }
 
-func fileToObj(f File) model.ObjectThumbnail {
-	return model.ObjectThumbnail{
+func fileToObj(f File) *model.ObjThumb {
+	return &model.ObjThumb{
 		Object: model.Object{
 			ID:       f.FileId,
 			Name:     f.Name,

@@ -31,7 +31,7 @@ type RootFolderPath struct {
 	RootFolder string `json:"root_folder" required:"true" help:"Root folder path"`
 }
 
-type RootFolderId struct {
+type RootFolderID struct {
 	RootFolder string `json:"root_folder" required:"true" help:"Root folder id"`
 }
 
@@ -39,6 +39,6 @@ func (r RootFolderPath) GetRootFolderPath() string {
 	return r.RootFolder
 }
 
-func (r RootFolderId) GetRootFolderId() string {
+func (r RootFolderID) GetRootFolderId() string {
 	return r.RootFolder
 }

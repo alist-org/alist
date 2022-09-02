@@ -6,7 +6,7 @@ import (
 )
 
 type Addition struct {
-	driver.RootFolderId
+	driver.RootFolderID
 	Username string `json:"username" required:"true"`
 	Password string `json:"password" required:"true"`
 }

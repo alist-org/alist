@@ -8,7 +8,7 @@ import (
 type Addition struct {
 	// Usually one of two
 	driver.RootFolderPath
-	driver.RootFolderId
+	driver.RootFolderID
 	// define other
 	Field string `json:"field" type:"select" required:"true" options:"a,b,c" default:"a"`
 }

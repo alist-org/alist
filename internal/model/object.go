@@ -10,23 +10,23 @@ type Object struct {
 	IsFolder bool
 }
 
-func (o Object) GetName() string {
+func (o *Object) GetName() string {
 	return o.Name
 }
 
-func (o Object) GetSize() int64 {
+func (o *Object) GetSize() int64 {
 	return o.Size
 }
 
-func (o Object) ModTime() time.Time {
+func (o *Object) ModTime() time.Time {
 	return o.Modified
 }
 
-func (o Object) IsDir() bool {
+func (o *Object) IsDir() bool {
 	return o.IsFolder
 }
 
-func (o Object) GetID() string {
+func (o *Object) GetID() string {
 	return o.ID
 }
 
@@ -38,11 +38,30 @@ type Thumbnail struct {
 	Thumbnail string
 }
 
+type Url struct {
+	Url string
+}
+
+func (w Url) URL() string {
+	return w.Url
+}
+
 func (t Thumbnail) Thumb() string {
 	return t.Thumbnail
 }
 
-type ObjectThumbnail struct {
+type ObjThumb struct {
 	Object
 	Thumbnail
+}
+
+type ObjectURL struct {
+	Object
+	Url
+}
+
+type ObjThumbURL struct {
+	Object
+	Thumbnail
+	Url
 }

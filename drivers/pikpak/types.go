@@ -28,9 +28,9 @@ type File struct {
 	Medias         []Media   `json:"medias"`
 }
 
-func fileToObj(f File) model.ObjectThumbnail {
+func fileToObj(f File) *model.ObjThumb {
 	size, _ := strconv.ParseInt(f.Size, 10, 64)
-	return model.ObjectThumbnail{
+	return &model.ObjThumb{
 		Object: model.Object{
 			ID:       f.Id,
 			Name:     f.Name,

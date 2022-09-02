@@ -84,7 +84,7 @@ func Get(ctx context.Context, storage driver.Driver, path string) (model.Obj, er
 	}
 	// is root folder
 	if r, ok := storage.GetAddition().(driver.IRootFolderId); ok && utils.PathEqual(path, "/") {
-		return model.Object{
+		return &model.Object{
 			ID:       r.GetRootFolderId(),
 			Name:     "root",
 			Size:     0,
@@ -93,7 +93,7 @@ func Get(ctx context.Context, storage driver.Driver, path string) (model.Obj, er
 		}, nil
 	}
 	if r, ok := storage.GetAddition().(driver.IRootFolderPath); ok && isRoot(path, r.GetRootFolderPath()) {
-		return model.Object{
+		return &model.Object{
 			ID:       r.GetRootFolderPath(),
 			Name:     "root",
 			Size:     0,

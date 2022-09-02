@@ -78,7 +78,7 @@ func (d *Local) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([
 			thumb = utils.EncodePath(thumb, true)
 			thumb += "?type=thumb"
 		}
-		file := model.ObjectThumbnail{
+		file := model.ObjThumb{
 			Object: model.Object{
 				Name:     f.Name(),
 				Modified: f.ModTime(),

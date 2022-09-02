@@ -296,7 +296,7 @@ func (h *Handler) handlePut(w http.ResponseWriter, r *http.Request) (status int,
 		Modified: time.Now(),
 	}
 	stream := &model.FileStream{
-		Obj:        obj,
+		Obj:        &obj,
 		ReadCloser: r.Body,
 		Mimetype:   r.Header.Get("Content-Type"),
 	}
@@ -306,10 +306,9 @@ func (h *Handler) handlePut(w http.ResponseWriter, r *http.Request) (status int,
 	if err != nil {
 		return http.StatusMethodNotAllowed, err
 	}
-	// TODO clear cache
 	fi, err := fs.Get(ctx, reqPath)
 	if err != nil {
-		fi = obj
+		fi = &obj
 	}
 	etag, err := findETag(ctx, h.LockSystem, reqPath, fi)
 	if err != nil {

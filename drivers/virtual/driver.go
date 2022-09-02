@@ -41,7 +41,7 @@ func (d *Virtual) GetAddition() driver.Additional {
 func (d *Virtual) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
 	var res []model.Obj
 	for i := 0; i < d.NumFile; i++ {
-		res = append(res, model.Object{
+		res = append(res, &model.Object{
 			Name:     random.String(10),
 			Size:     random.RangeInt64(d.MinFileSize, d.MaxFileSize),
 			IsFolder: false,
@@ -49,7 +49,7 @@ func (d *Virtual) List(ctx context.Context, dir model.Obj, args model.ListArgs) 
 		})
 	}
 	for i := 0; i < d.NumFolder; i++ {
-		res = append(res, model.Object{
+		res = append(res, &model.Object{
 			Name:     random.String(10),
 			Size:     0,
 			IsFolder: true,

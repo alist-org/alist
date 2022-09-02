@@ -149,7 +149,7 @@ func (m *Monitor) Complete() error {
 					return errors.Wrapf(err, "failed to open file %s", file.Path)
 				}
 				stream := &model.FileStream{
-					Obj: model.Object{
+					Obj: &model.Object{
 						Name:     path.Base(file.Path),
 						Size:     size,
 						Modified: time.Now(),
