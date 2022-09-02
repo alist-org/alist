@@ -13,6 +13,7 @@ type Obj interface {
 	ModTime() time.Time
 	IsDir() bool
 	GetID() string
+	GetPath() string
 }
 
 type FileStreamer interface {
@@ -32,8 +33,8 @@ type Thumb interface {
 	Thumb() string
 }
 
-type SetID interface {
-	SetID(id string)
+type SetPath interface {
+	SetPath(path string)
 }
 
 func SortFiles(objs []Obj, orderBy, orderDirection string) {

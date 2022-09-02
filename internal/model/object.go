@@ -4,6 +4,7 @@ import "time"
 
 type Object struct {
 	ID       string
+	Path     string
 	Name     string
 	Size     int64
 	Modified time.Time
@@ -30,8 +31,12 @@ func (o *Object) GetID() string {
 	return o.ID
 }
 
-func (o *Object) SetID(id string) {
-	o.ID = id
+func (o *Object) GetPath() string {
+	return o.Path
+}
+
+func (o *Object) SetPath(id string) {
+	o.Path = id
 }
 
 type Thumbnail struct {

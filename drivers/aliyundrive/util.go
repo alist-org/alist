@@ -34,7 +34,7 @@ func (d *AliDrive) refreshToken() error {
 	return nil
 }
 
-func (d *AliDrive) request(url, method string, callback func(*resty.Request), resp interface{}) ([]byte, error, RespErr) {
+func (d *AliDrive) request(url, method string, callback base.ReqCallback, resp interface{}) ([]byte, error, RespErr) {
 	req := base.RestyClient.R()
 	req.SetHeader("Authorization", "Bearer\t"+d.AccessToken)
 	req.SetHeader("content-type", "application/json")

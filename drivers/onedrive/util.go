@@ -77,7 +77,7 @@ func (d *Onedrive) _refreshToken() error {
 	var e TokenErr
 	_, err := base.RestyClient.R().SetResult(&resp).SetError(&e).SetFormData(map[string]string{
 		"grant_type":    "refresh_token",
-		"client_id":     d.ClientId,
+		"client_id":     d.ClientID,
 		"client_secret": d.ClientSecret,
 		"redirect_uri":  d.RedirectUri,
 		"refresh_token": d.RefreshToken,
@@ -96,7 +96,7 @@ func (d *Onedrive) _refreshToken() error {
 	return nil
 }
 
-func (d *Onedrive) Request(url string, method string, callback func(*resty.Request), resp interface{}) ([]byte, error) {
+func (d *Onedrive) Request(url string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
 	req := base.RestyClient.R()
 	req.SetHeader("Authorization", "Bearer "+d.AccessToken)
 	if callback != nil {
@@ -147,7 +147,7 @@ func (d *Onedrive) GetFile(path string) (*File, error) {
 }
 
 func (d *Onedrive) upSmall(dstDir model.Obj, stream model.FileStreamer) error {
-	url := d.GetMetaUrl(false, stdpath.Join(dstDir.GetID(), stream.GetName())) + "/content"
+	url := d.GetMetaUrl(false, stdpath.Join(dstDir.GetPath(), stream.GetName())) + "/content"
 	data, err := io.ReadAll(stream)
 	if err != nil {
 		return err
@@ -159,7 +159,7 @@ func (d *Onedrive) upSmall(dstDir model.Obj, stream model.FileStreamer) error {
 }
 
 func (d *Onedrive) upBig(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
-	url := d.GetMetaUrl(false, stdpath.Join(dstDir.GetID(), stream.GetName())) + "/createUploadSession"
+	url := d.GetMetaUrl(false, stdpath.Join(dstDir.GetPath(), stream.GetName())) + "/createUploadSession"
 	res, err := d.Request(url, http.MethodPost, nil, nil)
 	if err != nil {
 		return err

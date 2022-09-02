@@ -30,6 +30,10 @@ type File struct {
 	DownloadUrl string    `json:"DownloadUrl"`
 }
 
+func (f File) GetPath() string {
+	return ""
+}
+
 func (f File) GetSize() int64 {
 	return f.Size
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/go-resty/resty/v2"
 )
@@ -41,7 +42,7 @@ func (d *Onedrive) Drop(ctx context.Context) error {
 }
 
 func (d *Onedrive) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
-	files, err := d.GetFiles(dir.GetID())
+	files, err := d.GetFiles(dir.GetPath())
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +54,7 @@ func (d *Onedrive) List(ctx context.Context, dir model.Obj, args model.ListArgs)
 }
 
 func (d *Onedrive) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
-	f, err := d.GetFile(file.GetID())
+	f, err := d.GetFile(file.GetPath())
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +67,7 @@ func (d *Onedrive) Link(ctx context.Context, file model.Obj, args model.LinkArgs
 }
 
 func (d *Onedrive) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
-	url := d.GetMetaUrl(false, parentDir.GetID()) + "/children"
+	url := d.GetMetaUrl(false, parentDir.GetPath()) + "/children"
 	data := base.Json{
 		"name":                              dirName,
 		"folder":                            base.Json{},
@@ -79,35 +80,31 @@ func (d *Onedrive) MakeDir(ctx context.Context, parentDir model.Obj, dirName str
 }
 
 func (d *Onedrive) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
-	dst, err := d.GetFile(dstDir.GetID())
-	if err != nil {
-		return err
-	}
 	data := base.Json{
 		"parentReference": base.Json{
-			"id": dst.Id,
+			"id": dstDir.GetID(),
 		},
 		"name": srcObj.GetName(),
 	}
-	url := d.GetMetaUrl(false, srcObj.GetID())
-	_, err = d.Request(url, http.MethodPatch, func(req *resty.Request) {
+	url := d.GetMetaUrl(false, srcObj.GetPath())
+	_, err := d.Request(url, http.MethodPatch, func(req *resty.Request) {
 		req.SetBody(data)
 	}, nil)
 	return err
 }
 
 func (d *Onedrive) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
-	dstDir, err := d.GetFile(stdpath.Dir(srcObj.GetID()))
+	dstDir, err := op.Get(ctx, d, stdpath.Dir(srcObj.GetPath()))
 	if err != nil {
 		return err
 	}
 	data := base.Json{
 		"parentReference": base.Json{
-			"id": dstDir.Id,
+			"id": dstDir.GetID(),
 		},
 		"name": newName,
 	}
-	url := d.GetMetaUrl(false, srcObj.GetID())
+	url := d.GetMetaUrl(false, srcObj.GetPath())
 	_, err = d.Request(url, http.MethodPatch, func(req *resty.Request) {
 		req.SetBody(data)
 	}, nil)
@@ -115,7 +112,7 @@ func (d *Onedrive) Rename(ctx context.Context, srcObj model.Obj, newName string)
 }
 
 func (d *Onedrive) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
-	dst, err := d.GetFile(dstDir.GetID())
+	dst, err := d.GetFile(dstDir.GetPath())
 	if err != nil {
 		return err
 	}
@@ -126,7 +123,7 @@ func (d *Onedrive) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 		},
 		"name": srcObj.GetName(),
 	}
-	url := d.GetMetaUrl(false, srcObj.GetID()) + "/copy"
+	url := d.GetMetaUrl(false, srcObj.GetPath()) + "/copy"
 	_, err = d.Request(url, http.MethodPost, func(req *resty.Request) {
 		req.SetBody(data)
 	}, nil)
@@ -134,7 +131,7 @@ func (d *Onedrive) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 }
 
 func (d *Onedrive) Remove(ctx context.Context, obj model.Obj) error {
-	url := d.GetMetaUrl(false, obj.GetID())
+	url := d.GetMetaUrl(false, obj.GetPath())
 	_, err := d.Request(url, http.MethodDelete, nil, nil)
 	return err
 }

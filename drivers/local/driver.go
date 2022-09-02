@@ -62,7 +62,7 @@ func (d *Local) GetAddition() driver.Additional {
 }
 
 func (d *Local) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
-	fullPath := dir.GetID()
+	fullPath := dir.GetPath()
 	rawFiles, err := ioutil.ReadDir(fullPath)
 	if err != nil {
 		return nil, err
@@ -103,7 +103,7 @@ func (d *Local) Get(ctx context.Context, path string) (model.Obj, error) {
 		return nil, err
 	}
 	file := model.Object{
-		ID:       path,
+		Path:     path,
 		Name:     f.Name(),
 		Modified: f.ModTime(),
 		Size:     f.Size(),
@@ -113,7 +113,7 @@ func (d *Local) Get(ctx context.Context, path string) (model.Obj, error) {
 }
 
 func (d *Local) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
-	fullPath := file.GetID()
+	fullPath := file.GetPath()
 	var link model.Link
 	if args.Type == "thumb" && utils.Ext(file.GetName()) != "svg" {
 		imgData, err := ioutil.ReadFile(fullPath)
@@ -143,7 +143,7 @@ func (d *Local) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 }
 
 func (d *Local) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
-	fullPath := filepath.Join(parentDir.GetID(), dirName)
+	fullPath := filepath.Join(parentDir.GetPath(), dirName)
 	err := os.MkdirAll(fullPath, 0700)
 	if err != nil {
 		return err
@@ -152,8 +152,8 @@ func (d *Local) MakeDir(ctx context.Context, parentDir model.Obj, dirName string
 }
 
 func (d *Local) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
-	srcPath := srcObj.GetID()
-	dstPath := filepath.Join(dstDir.GetID(), srcObj.GetName())
+	srcPath := srcObj.GetPath()
+	dstPath := filepath.Join(dstDir.GetPath(), srcObj.GetName())
 	err := os.Rename(srcPath, dstPath)
 	if err != nil {
 		return err
@@ -162,7 +162,7 @@ func (d *Local) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 }
 
 func (d *Local) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
-	srcPath := srcObj.GetID()
+	srcPath := srcObj.GetPath()
 	dstPath := filepath.Join(filepath.Dir(srcPath), newName)
 	err := os.Rename(srcPath, dstPath)
 	if err != nil {
@@ -172,8 +172,8 @@ func (d *Local) Rename(ctx context.Context, srcObj model.Obj, newName string) er
 }
 
 func (d *Local) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
-	srcPath := srcObj.GetID()
-	dstPath := filepath.Join(dstDir.GetID(), srcObj.GetName())
+	srcPath := srcObj.GetPath()
+	dstPath := filepath.Join(dstDir.GetPath(), srcObj.GetName())
 	var err error
 	if srcObj.IsDir() {
 		err = copyDir(srcPath, dstPath)
@@ -189,9 +189,9 @@ func (d *Local) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 func (d *Local) Remove(ctx context.Context, obj model.Obj) error {
 	var err error
 	if obj.IsDir() {
-		err = os.RemoveAll(obj.GetID())
+		err = os.RemoveAll(obj.GetPath())
 	} else {
-		err = os.Remove(obj.GetID())
+		err = os.Remove(obj.GetPath())
 	}
 	if err != nil {
 		return err
@@ -200,7 +200,7 @@ func (d *Local) Remove(ctx context.Context, obj model.Obj) error {
 }
 
 func (d *Local) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
-	fullPath := filepath.Join(dstDir.GetID(), stream.GetName())
+	fullPath := filepath.Join(dstDir.GetPath(), stream.GetName())
 	out, err := os.Create(fullPath)
 	if err != nil {
 		return err

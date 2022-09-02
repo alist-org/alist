@@ -35,6 +35,7 @@ func List(ctx context.Context, storage driver.Driver, path string, args model.Li
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed get dir")
 	}
+	log.Debugf("list dir: %+v", dir)
 	if !dir.IsDir() {
 		return nil, errors.WithStack(errs.NotFolder)
 	}
@@ -94,7 +95,7 @@ func Get(ctx context.Context, storage driver.Driver, path string) (model.Obj, er
 	}
 	if r, ok := storage.GetAddition().(driver.IRootFolderPath); ok && isRoot(path, r.GetRootFolderPath()) {
 		return &model.Object{
-			ID:       r.GetRootFolderPath(),
+			Path:     r.GetRootFolderPath(),
 			Name:     "root",
 			Size:     0,
 			Modified: storage.GetStorage().Modified,
@@ -108,12 +109,13 @@ func Get(ctx context.Context, storage driver.Driver, path string) (model.Obj, er
 		return nil, errors.WithMessage(err, "failed get parent list")
 	}
 	for _, f := range files {
+		// TODO maybe copy obj here
 		if f.GetName() == name {
 			// use path as id, why don't set id in List function?
 			// because files maybe cache, set id here can reduce memory usage
-			if f.GetID() == "" {
-				if s, ok := f.(model.SetID); ok {
-					s.SetID(path)
+			if f.GetPath() == "" {
+				if s, ok := f.(model.SetPath); ok {
+					s.SetPath(path)
 				}
 			}
 			return f, nil

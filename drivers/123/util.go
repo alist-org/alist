@@ -32,7 +32,7 @@ func (d *Pan123) login() error {
 	return err
 }
 
-func (d *Pan123) request(url string, method string, callback func(*resty.Request), resp interface{}) ([]byte, error) {
+func (d *Pan123) request(url string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
 	req := base.RestyClient.R()
 	req.SetHeader("Authorization", "Bearer "+d.AccessToken)
 	if callback != nil {

@@ -49,7 +49,7 @@ func fileToObj(f File) *model.ObjThumbURL {
 	}
 	return &model.ObjThumbURL{
 		Object: model.Object{
-			//ID:       f.Id,
+			ID:       f.Id,
 			Name:     f.Name,
 			Size:     f.Size,
 			Modified: f.LastModifiedDateTime,

@@ -22,7 +22,7 @@ func (d *Teambition) isInternational() bool {
 	return d.Region == "international"
 }
 
-func (d *Teambition) request(pathname string, method string, callback func(req *resty.Request), resp interface{}) ([]byte, error) {
+func (d *Teambition) request(pathname string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
 	url := "https://www.teambition.com" + pathname
 	if d.isInternational() {
 		url = "https://us.teambition.com" + pathname

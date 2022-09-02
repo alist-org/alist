@@ -21,7 +21,7 @@ import (
 
 // do others that not defined in Driver interface
 
-func (d *Quark) request(pathname string, method string, callback func(req *resty.Request), resp interface{}) ([]byte, error) {
+func (d *Quark) request(pathname string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
 	u := "https://drive.quark.cn/1/clouddrive" + pathname
 	req := base.RestyClient.R()
 	req.SetHeaders(map[string]string{
