@@ -11,11 +11,11 @@ type FileStream struct {
 	WebPutAsTask bool
 }
 
-func (f FileStream) GetMimetype() string {
+func (f *FileStream) GetMimetype() string {
 	return f.Mimetype
 }
 
-func (f FileStream) NeedStore() bool {
+func (f *FileStream) NeedStore() bool {
 	return f.WebPutAsTask
 }
 
