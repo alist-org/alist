@@ -9,6 +9,7 @@ import (
 	_ "github.com/alist-org/alist/v3/drivers/onedrive"
 	_ "github.com/alist-org/alist/v3/drivers/pikpak"
 	_ "github.com/alist-org/alist/v3/drivers/quark"
+	_ "github.com/alist-org/alist/v3/drivers/s3"
 	_ "github.com/alist-org/alist/v3/drivers/teambition"
 	_ "github.com/alist-org/alist/v3/drivers/virtual"
 )
