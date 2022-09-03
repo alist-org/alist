@@ -31,7 +31,7 @@ func CopyWithCtx(ctx context.Context, out io.Writer, in io.Reader, size int64, p
 		default:
 			// otherwise just run default io.Reader implementation
 			n, err := in.Read(p)
-			if err == nil || err == io.EOF {
+			if s > 0 && (err == nil || err == io.EOF) {
 				finish += int64(n)
 				progress(int(finish / s))
 			}
