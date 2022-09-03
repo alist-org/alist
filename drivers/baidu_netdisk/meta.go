@@ -17,13 +17,7 @@ type Addition struct {
 
 var config = driver.Config{
 	Name:        "BaiduNetdisk",
-	LocalSort:   false,
-	OnlyLocal:   false,
-	OnlyProxy:   false,
-	NoCache:     false,
-	NoUpload:    false,
-	NeedMs:      false,
-	DefaultRoot: "root, / or other",
+	DefaultRoot: "/",
 }
 
 func New() driver.Driver {
