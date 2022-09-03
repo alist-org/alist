@@ -29,6 +29,9 @@ func ClearCache(storage driver.Driver, path string) {
 
 // List files in storage, not contains virtual file
 func List(ctx context.Context, storage driver.Driver, path string, args model.ListArgs, refresh ...bool) ([]model.Obj, error) {
+	if storage.Config().CheckStatus && storage.GetStorage().Status != "ok" {
+		return nil, errors.Errorf("storage not init: %s", storage.GetStorage().Status)
+	}
 	path = utils.StandardizePath(path)
 	log.Debugf("op.List %s", path)
 	dir, err := Get(ctx, storage, path)
@@ -129,6 +132,9 @@ var linkG singleflight.Group[*model.Link]
 
 // Link get link, if is an url. should have an expiry time
 func Link(ctx context.Context, storage driver.Driver, path string, args model.LinkArgs) (*model.Link, model.Obj, error) {
+	if storage.Config().CheckStatus && storage.GetStorage().Status != "ok" {
+		return nil, nil, errors.Errorf("storage not init: %s", storage.GetStorage().Status)
+	}
 	file, err := Get(ctx, storage, path)
 	if err != nil {
 		return nil, nil, errors.WithMessage(err, "failed to get file")
@@ -168,6 +174,9 @@ func Other(ctx context.Context, storage driver.Driver, args model.FsOtherArgs) (
 }
 
 func MakeDir(ctx context.Context, storage driver.Driver, path string) error {
+	if storage.Config().CheckStatus && storage.GetStorage().Status != "ok" {
+		return errors.Errorf("storage not init: %s", storage.GetStorage().Status)
+	}
 	// check if dir exists
 	f, err := Get(ctx, storage, path)
 	if err != nil {
@@ -198,6 +207,9 @@ func MakeDir(ctx context.Context, storage driver.Driver, path string) error {
 }
 
 func Move(ctx context.Context, storage driver.Driver, srcPath, dstDirPath string) error {
+	if storage.Config().CheckStatus && storage.GetStorage().Status != "ok" {
+		return errors.Errorf("storage not init: %s", storage.GetStorage().Status)
+	}
 	srcObj, err := Get(ctx, storage, srcPath)
 	if err != nil {
 		return errors.WithMessage(err, "failed to get src object")
@@ -210,6 +222,9 @@ func Move(ctx context.Context, storage driver.Driver, srcPath, dstDirPath string
 }
 
 func Rename(ctx context.Context, storage driver.Driver, srcPath, dstName string) error {
+	if storage.Config().CheckStatus && storage.GetStorage().Status != "ok" {
+		return errors.Errorf("storage not init: %s", storage.GetStorage().Status)
+	}
 	srcObj, err := Get(ctx, storage, srcPath)
 	if err != nil {
 		return errors.WithMessage(err, "failed to get src object")
@@ -219,6 +234,9 @@ func Rename(ctx context.Context, storage driver.Driver, srcPath, dstName string)
 
 // Copy Just copy file[s] in a storage
 func Copy(ctx context.Context, storage driver.Driver, srcPath, dstDirPath string) error {
+	if storage.Config().CheckStatus && storage.GetStorage().Status != "ok" {
+		return errors.Errorf("storage not init: %s", storage.GetStorage().Status)
+	}
 	srcObj, err := Get(ctx, storage, srcPath)
 	if err != nil {
 		return errors.WithMessage(err, "failed to get src object")
@@ -228,6 +246,9 @@ func Copy(ctx context.Context, storage driver.Driver, srcPath, dstDirPath string
 }
 
 func Remove(ctx context.Context, storage driver.Driver, path string) error {
+	if storage.Config().CheckStatus && storage.GetStorage().Status != "ok" {
+		return errors.Errorf("storage not init: %s", storage.GetStorage().Status)
+	}
 	obj, err := Get(ctx, storage, path)
 	if err != nil {
 		// if object not found, it's ok
@@ -240,6 +261,9 @@ func Remove(ctx context.Context, storage driver.Driver, path string) error {
 }
 
 func Put(ctx context.Context, storage driver.Driver, dstDirPath string, file model.FileStreamer, up driver.UpdateProgress) error {
+	if storage.Config().CheckStatus && storage.GetStorage().Status != "ok" {
+		return errors.Errorf("storage not init: %s", storage.GetStorage().Status)
+	}
 	defer func() {
 		if f, ok := file.GetReadCloser().(*os.File); ok {
 			err := os.RemoveAll(f.Name())

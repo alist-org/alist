@@ -55,7 +55,7 @@ func CreateStorage(ctx context.Context, storage model.Storage) error {
 		MustSaveDriverStorage(storageDriver)
 		return errors.Wrapf(err, "failed init storage but storage is already created")
 	} else {
-		storageDriver.GetStorage().SetStatus("work")
+		storageDriver.GetStorage().SetStatus(WORK)
 		MustSaveDriverStorage(storageDriver)
 	}
 	log.Debugf("storage %+v is created", storageDriver)
@@ -75,7 +75,12 @@ func LoadStorage(ctx context.Context, storage model.Storage) error {
 	err = storageDriver.Init(ctx, storage)
 	storagesMap.Store(storage.MountPath, storageDriver)
 	if err != nil {
-		return errors.Wrapf(err, "failed init storage but storage is already created")
+		storageDriver.GetStorage().SetStatus(fmt.Sprintf("%+v", err.Error()))
+		MustSaveDriverStorage(storageDriver)
+		return errors.Wrapf(err, "failed init storage")
+	} else {
+		storageDriver.GetStorage().SetStatus(WORK)
+		MustSaveDriverStorage(storageDriver)
 	}
 	log.Debugf("storage %+v is created", storageDriver)
 	return nil
@@ -165,10 +170,15 @@ func UpdateStorage(ctx context.Context, storage model.Storage) error {
 		return errors.Wrapf(err, "failed drop storage")
 	}
 	err = storageDriver.Init(ctx, storage)
-	if err != nil {
-		return errors.Wrapf(err, "failed init storage")
-	}
 	storagesMap.Store(storage.MountPath, storageDriver)
+	if err != nil {
+		storageDriver.GetStorage().SetStatus(fmt.Sprintf("%+v", err.Error()))
+		MustSaveDriverStorage(storageDriver)
+		return errors.Wrapf(err, "failed init storage")
+	} else {
+		storageDriver.GetStorage().SetStatus(WORK)
+		MustSaveDriverStorage(storageDriver)
+	}
 	return nil
 }
 
