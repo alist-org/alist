@@ -27,7 +27,7 @@ func Down(c *gin.Context) {
 	c.Set("meta", meta)
 	// verify sign
 	if needSign(meta, rawPath) {
-		s := c.Param("sign")
+		s := c.Query("sign")
 		err = sign.Verify(filename, s)
 		if err != nil {
 			common.ErrorResp(c, err, 401)
