@@ -15,6 +15,7 @@ import (
 	_ "github.com/alist-org/alist/v3/drivers/teambition"
 	_ "github.com/alist-org/alist/v3/drivers/uss"
 	_ "github.com/alist-org/alist/v3/drivers/virtual"
+	_ "github.com/alist-org/alist/v3/drivers/webdav"
 )
 
 // All do nothing,just for import
