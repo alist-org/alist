@@ -6,7 +6,7 @@ import (
 )
 
 type Addition struct {
-	driver.RootFolderPath
+	driver.RootPath
 	Bucket           string `json:"bucket" required:"true"`
 	Endpoint         string `json:"endpoint" required:"true"`
 	OperatorName     string `json:"operator_name" required:"true"`

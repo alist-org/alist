@@ -14,8 +14,8 @@ import (
 // ActualPath Get the actual path
 // !!! maybe and \ in the path when use windows local
 func ActualPath(storage driver.Additional, rawPath string) string {
-	if i, ok := storage.(driver.IRootFolderPath); ok {
-		rawPath = stdpath.Join(i.GetRootFolderPath(), rawPath)
+	if i, ok := storage.(driver.IRootPath); ok {
+		rawPath = stdpath.Join(i.GetRootPath(), rawPath)
 	}
 	return utils.StandardizePath(rawPath)
 }

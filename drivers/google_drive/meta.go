@@ -6,7 +6,7 @@ import (
 )
 
 type Addition struct {
-	driver.RootFolderID
+	driver.RootID
 	RefreshToken   string `json:"refresh_token" required:"true"`
 	OrderBy        string `json:"order_by" type:"string" help:"such as: folder,name,modifiedTime"`
 	OrderDirection string `json:"order_direction" type:"select" options:"asc,desc"`

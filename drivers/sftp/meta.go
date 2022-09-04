@@ -10,7 +10,7 @@ type Addition struct {
 	Username   string `json:"username" required:"true"`
 	PrivateKey string `json:"private_key" type:"text"`
 	Password   string `json:"password"`
-	driver.RootFolderPath
+	driver.RootPath
 }
 
 var config = driver.Config{

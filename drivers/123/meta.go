@@ -10,7 +10,7 @@ type Addition struct {
 	Password       string `json:"password" required:"true"`
 	OrderBy        string `json:"order_by" type:"select" options:"name,fileId,updateAt,createAt" default:"name"`
 	OrderDirection string `json:"order_direction" type:"select" options:"asc,desc" default:"asc"`
-	driver.RootFolderID
+	driver.RootID
 	// define other
 	StreamUpload bool `json:"stream_upload"`
 	//Field string `json:"field" type:"select" required:"true" options:"a,b,c" default:"a"`

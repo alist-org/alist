@@ -19,26 +19,30 @@ type Info struct {
 	Config     Config `json:"config"`
 }
 
-type IRootFolderPath interface {
-	GetRootFolderPath() string
+type IRootPath interface {
+	GetRootPath() string
 }
 
-type IRootFolderId interface {
-	GetRootFolderId() string
+type IRootId interface {
+	GetRootId() string
 }
 
-type RootFolderPath struct {
-	RootFolder string `json:"root_folder" required:"true" help:"Root folder path"`
+type RootPath struct {
+	RootFolderPath string `json:"root_folder_path" required:"true"`
 }
 
-type RootFolderID struct {
-	RootFolder string `json:"root_folder" required:"true" help:"Root folder id"`
+type RootID struct {
+	RootFolderID string `json:"root_folder_id" required:"true"`
 }
 
-func (r RootFolderPath) GetRootFolderPath() string {
-	return r.RootFolder
+func (r RootPath) GetRootPath() string {
+	return r.RootFolderPath
 }
 
-func (r RootFolderID) GetRootFolderId() string {
-	return r.RootFolder
+func (r *RootPath) SetRootPath(path string) {
+	r.RootFolderPath = path
+}
+
+func (r RootID) GetRootId() string {
+	return r.RootFolderID
 }

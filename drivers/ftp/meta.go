@@ -9,7 +9,7 @@ type Addition struct {
 	Address  string `json:"address" required:"true"`
 	Username string `json:"username" required:"true"`
 	Password string `json:"password" required:"true"`
-	driver.RootFolderPath
+	driver.RootPath
 }
 
 var config = driver.Config{

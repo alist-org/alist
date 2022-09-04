@@ -18,7 +18,6 @@ import (
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/disintegration/imaging"
@@ -39,17 +38,17 @@ func (d *Local) Init(ctx context.Context, storage model.Storage) error {
 	if err != nil {
 		return err
 	}
-	if !utils.Exists(d.RootFolder) {
-		err = fmt.Errorf("root folder %s not exists", d.RootFolder)
+	if !utils.Exists(d.GetRootPath()) {
+		err = fmt.Errorf("root folder %s not exists", d.GetRootPath())
 	} else {
-		if !filepath.IsAbs(d.RootFolder) {
-			d.RootFolder, err = filepath.Abs(d.RootFolder)
+		if !filepath.IsAbs(d.GetRootPath()) {
+			abs, err := filepath.Abs(d.GetRootPath())
 			if err != nil {
 				return err
 			}
+			d.SetRootPath(abs)
 		}
 	}
-	op.MustSaveDriverStorage(d)
 	return err
 }
 
