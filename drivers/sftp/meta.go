@@ -1,4 +1,4 @@
-package ftp
+package sftp
 
 import (
 	"github.com/alist-org/alist/v3/internal/driver"
@@ -6,21 +6,23 @@ import (
 )
 
 type Addition struct {
-	Address  string `json:"address" required:"true"`
-	Username string `json:"username" required:"true"`
-	Password string `json:"password" required:"true"`
+	Address    string `json:"address" required:"true"`
+	Username   string `json:"username" required:"true"`
+	PrivateKey string `json:"private_key" type:"text"`
+	Password   string `json:"password"`
 	driver.RootFolderPath
 }
 
 var config = driver.Config{
-	Name:        "FTP",
+	Name:        "SFTP",
 	LocalSort:   true,
 	OnlyLocal:   true,
 	DefaultRoot: "/",
+	CheckStatus: true,
 }
 
 func New() driver.Driver {
-	return &FTP{}
+	return &SFTP{}
 }
 
 func init() {
