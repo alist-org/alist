@@ -124,7 +124,7 @@ func (d *Onedrive) Request(url string, method string, callback base.ReqCallback,
 	return res.Body(), nil
 }
 
-func (d *Onedrive) GetFiles(path string) ([]File, error) {
+func (d *Onedrive) getFiles(path string) ([]File, error) {
 	var res []File
 	nextLink := d.GetMetaUrl(false, path) + "/children?$expand=thumbnails"
 	for nextLink != "" {

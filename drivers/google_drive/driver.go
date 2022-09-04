@@ -45,11 +45,9 @@ func (d *GoogleDrive) List(ctx context.Context, dir model.Obj, args model.ListAr
 	if err != nil {
 		return nil, err
 	}
-	objs := make([]model.Obj, len(files))
-	for i := 0; i < len(files); i++ {
-		objs[i] = fileToObj(files[i])
-	}
-	return objs, nil
+	return utils.SliceConvert(files, func(src File) (model.Obj, error) {
+		return fileToObj(src), nil
+	})
 }
 
 //func (d *GoogleDrive) Get(ctx context.Context, path string) (model.Obj, error) {

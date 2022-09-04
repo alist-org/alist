@@ -42,15 +42,13 @@ func (d *Onedrive) Drop(ctx context.Context) error {
 }
 
 func (d *Onedrive) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
-	files, err := d.GetFiles(dir.GetPath())
+	files, err := d.getFiles(dir.GetPath())
 	if err != nil {
 		return nil, err
 	}
-	objs := make([]model.Obj, len(files))
-	for i := 0; i < len(files); i++ {
-		objs[i] = fileToObj(files[i])
-	}
-	return objs, nil
+	return utils.SliceConvert(files, func(src File) (model.Obj, error) {
+		return fileToObj(src), nil
+	})
 }
 
 func (d *Onedrive) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {

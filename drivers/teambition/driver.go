@@ -45,7 +45,7 @@ func (d *Teambition) List(ctx context.Context, dir model.Obj, args model.ListArg
 }
 
 //func (d *Teambition) Get(ctx context.Context, path string) (model.Obj, error) {
-//	// TODO this is optional
+//	//  this is optional
 //	return nil, errs.NotImplement
 //}
 
