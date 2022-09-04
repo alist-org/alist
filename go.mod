@@ -59,6 +59,7 @@ require (
 	github.com/pkg/sftp v1.13.5 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/ugorji/go/codec v1.2.7 // indirect
+	github.com/upyun/go-sdk/v3 v3.0.3 // indirect
 	golang.org/x/crypto v0.0.0-20220829220503-c86fa9a7ed90 // indirect
 	golang.org/x/image v0.0.0-20220722155232-062f8c9fd539 // indirect
 	golang.org/x/net v0.0.0-20220826154423-83b083e8dc8b // indirect

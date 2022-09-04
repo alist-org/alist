@@ -20,8 +20,9 @@ type Addition struct {
 }
 
 var config = driver.Config{
-	Name:      "S3",
-	LocalSort: true,
+	Name:        "S3",
+	LocalSort:   true,
+	CheckStatus: true,
 }
 
 func New() driver.Driver {

@@ -13,6 +13,7 @@ import (
 	_ "github.com/alist-org/alist/v3/drivers/s3"
 	_ "github.com/alist-org/alist/v3/drivers/sftp"
 	_ "github.com/alist-org/alist/v3/drivers/teambition"
+	_ "github.com/alist-org/alist/v3/drivers/uss"
 	_ "github.com/alist-org/alist/v3/drivers/virtual"
 )
 
