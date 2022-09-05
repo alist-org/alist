@@ -6,7 +6,9 @@ package cmd
 
 import (
 	"fmt"
+	"io"
 	"os"
+	"reflect"
 	"strings"
 
 	_ "github.com/alist-org/alist/v3/drivers"
@@ -14,6 +16,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/pkg/utils"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -32,6 +35,43 @@ func convert(s string) string {
 	ss := strings.Split(s, "_")
 	ans := strings.Join(ss, " ")
 	return firstUpper(ans)
+}
+
+func writeFile(name string, data interface{}) {
+	f, err := os.Open(fmt.Sprintf("../alist-web/src/lang/en/%s.json", name))
+	if err != nil {
+		log.Errorf("failed to open %s.json: %+v", name, err)
+		return
+	}
+	content, err := io.ReadAll(f)
+	if err != nil {
+		log.Errorf("failed to read %s.json: %+v", name, err)
+		return
+	}
+	oldData := make(map[string]interface{})
+	newData := make(map[string]interface{})
+	err = utils.Json.Unmarshal(content, &oldData)
+	if err != nil {
+		log.Errorf("failed to unmarshal %s.json: %+v", name, err)
+		return
+	}
+	content, err = utils.Json.Marshal(data)
+	if err != nil {
+		log.Errorf("failed to marshal json: %+v", err)
+		return
+	}
+	err = utils.Json.Unmarshal(content, &newData)
+	if err != nil {
+		log.Errorf("failed to unmarshal json: %+v", err)
+		return
+	}
+	if reflect.DeepEqual(oldData, newData) {
+		log.Infof("%s.json no changed, skip", name)
+	} else {
+		log.Infof("%s.json changed, update file", name)
+		//log.Infof("old: %+v\nnew:%+v", oldData, data)
+		utils.WriteJsonToFile(fmt.Sprintf("lang/%s.json", name), data)
+	}
 }
 
 func generateDriversJson() {
@@ -58,7 +98,7 @@ func generateDriversJson() {
 		}
 		drivers[k] = items
 	}
-	utils.WriteJsonToFile("lang/drivers.json", drivers)
+	writeFile("drivers", drivers)
 }
 
 func generateSettingsJson() {
@@ -78,7 +118,8 @@ func generateSettingsJson() {
 			settingsLang[fmt.Sprintf("%ss", setting.Key)] = options
 		}
 	}
-	utils.WriteJsonToFile("lang/settings.json", settingsLang)
+	writeFile("settings", settingsLang)
+	//utils.WriteJsonToFile("lang/settings.json", settingsLang)
 }
 
 // langCmd represents the lang command
