@@ -24,10 +24,8 @@ var config = driver.Config{
 	DefaultRoot: "root, / or other",
 }
 
-func New() driver.Driver {
-	return &Template{}
-}
-
 func init() {
-	op.RegisterDriver(config, New)
+	op.RegisterDriver(config, func() driver.Driver {
+		return &Template{}
+	})
 }

@@ -2,6 +2,7 @@ package drivers
 
 import (
 	_ "github.com/alist-org/alist/v3/drivers/123"
+	_ "github.com/alist-org/alist/v3/drivers/139"
 	_ "github.com/alist-org/alist/v3/drivers/aliyundrive"
 	_ "github.com/alist-org/alist/v3/drivers/baidu_netdisk"
 	_ "github.com/alist-org/alist/v3/drivers/ftp"
