@@ -156,7 +156,9 @@ func (d *BaiduNetdisk) linkCrack(file model.Obj, args model.LinkArgs) (*model.Li
 		"web":    "5",
 		"origin": "dlna",
 	}
-	_, err := d.get("https://pan.baidu.com/api/filemetas", param, &resp)
+	_, err := d.request("https://pan.baidu.com/api/filemetas", http.MethodGet, func(req *resty.Request) {
+		req.SetQueryParams(param)
+	}, &resp)
 	if err != nil {
 		return nil, err
 	}
