@@ -44,7 +44,7 @@ jobs:
           cd ..
       - name: Copy lang file
         run: |
-          cp -f ./alist/lang/*.json ./alist-web/src/lang/en/
+          cp -f ./alist/lang/*.json ./alist-web/src/lang/en/ 2>/dev/null || :
 
       - name: Commit git
         run: |
