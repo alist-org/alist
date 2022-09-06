@@ -10,7 +10,7 @@ import (
 )
 
 func GetApiUrl(r *http.Request) string {
-	api := setting.GetByKey(conf.ApiUrl)
+	api := setting.GetStr(conf.ApiUrl)
 	protocol := "http"
 	if r != nil {
 		if r.TLS != nil {

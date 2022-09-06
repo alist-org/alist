@@ -6,7 +6,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/db"
 )
 
-func GetByKey(key string, defaultValue ...string) string {
+func GetStr(key string, defaultValue ...string) string {
 	val, ok := db.GetSettingsMap()[key]
 	if !ok {
 		if len(defaultValue) > 0 {
@@ -17,14 +17,14 @@ func GetByKey(key string, defaultValue ...string) string {
 	return val
 }
 
-func GetIntSetting(key string, defaultVal int) int {
-	i, err := strconv.Atoi(GetByKey(key))
+func GetInt(key string, defaultVal int) int {
+	i, err := strconv.Atoi(GetStr(key))
 	if err != nil {
 		return defaultVal
 	}
 	return i
 }
 
-func IsTrue(key string) bool {
-	return GetByKey(key) == "true" || GetByKey(key) == "1"
+func GetBool(key string) bool {
+	return GetStr(key) == "true" || GetStr(key) == "1"
 }

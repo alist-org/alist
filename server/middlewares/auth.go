@@ -14,7 +14,7 @@ import (
 // if token is empty, set user to guest
 func Auth(c *gin.Context) {
 	token := c.GetHeader("Authorization")
-	if token == setting.GetByKey(conf.Token) {
+	if token == setting.GetStr(conf.Token) {
 		admin, err := db.GetAdmin()
 		if err != nil {
 			common.ErrorResp(c, err, 500)

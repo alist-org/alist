@@ -39,6 +39,7 @@ const (
 	CustomizeBody  = "customize_body"
 	LinkExpiration = "link_expiration"
 	PrivacyRegs    = "privacy_regs"
+	OcrApi         = "ocr_api"
 
 	// aria2
 	Aria2Uri    = "aria2_uri"

@@ -130,9 +130,9 @@ func Generate2FA(c *gin.Context) {
 	// to base64
 	var buf bytes.Buffer
 	png.Encode(&buf, img)
-	base64 := base64.StdEncoding.EncodeToString(buf.Bytes())
+	b64 := base64.StdEncoding.EncodeToString(buf.Bytes())
 	common.SuccessResp(c, gin.H{
-		"qr":     "data:image/png;base64," + base64,
+		"qr":     "data:image/png;base64," + b64,
 		"secret": key.Secret(),
 	})
 }

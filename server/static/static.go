@@ -26,12 +26,12 @@ func InitIndex() {
 
 func UpdateIndex() {
 	cdn := strings.TrimSuffix(conf.Conf.Cdn, "/")
-	basePath := setting.GetByKey(conf.BasePath)
-	apiUrl := setting.GetByKey(conf.ApiUrl)
-	favicon := setting.GetByKey(conf.Favicon)
-	title := setting.GetByKey(conf.SiteTitle)
-	customizeHead := setting.GetByKey(conf.CustomizeHead)
-	customizeBody := setting.GetByKey(conf.CustomizeBody)
+	basePath := setting.GetStr(conf.BasePath)
+	apiUrl := setting.GetStr(conf.ApiUrl)
+	favicon := setting.GetStr(conf.Favicon)
+	title := setting.GetStr(conf.SiteTitle)
+	customizeHead := setting.GetStr(conf.CustomizeHead)
+	customizeBody := setting.GetStr(conf.CustomizeBody)
 	conf.ManageHtml = conf.RawIndexHtml
 	replaceMap1 := map[string]string{
 		"https://jsd.nn.ci/gh/alist-org/logo@main/logo.svg": favicon,

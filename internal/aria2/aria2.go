@@ -18,8 +18,8 @@ var client rpc.Client
 
 func InitClient(timeout int) (string, error) {
 	client = nil
-	uri := setting.GetByKey(conf.Aria2Uri)
-	secret := setting.GetByKey(conf.Aria2Secret)
+	uri := setting.GetStr(conf.Aria2Uri)
+	secret := setting.GetStr(conf.Aria2Secret)
 	return InitAria2Client(uri, secret, timeout)
 }
 

@@ -2,17 +2,18 @@ package handles
 
 import (
 	"fmt"
+	"net/url"
+	"strings"
+
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/setting"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
-	"net/url"
-	"strings"
 )
 
 func Favicon(c *gin.Context) {
-	c.Redirect(302, setting.GetByKey(conf.Favicon))
+	c.Redirect(302, setting.GetStr(conf.Favicon))
 }
 
 func Plist(c *gin.Context) {

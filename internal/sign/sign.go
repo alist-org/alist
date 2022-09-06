@@ -13,7 +13,7 @@ var once sync.Once
 var instance sign.Sign
 
 func Sign(data string) string {
-	expire := setting.GetIntSetting(conf.LinkExpiration, 0)
+	expire := setting.GetInt(conf.LinkExpiration, 0)
 	if expire == 0 {
 		return NotExpired(data)
 	} else {
@@ -37,5 +37,5 @@ func Verify(data string, sign string) error {
 }
 
 func Instance() {
-	instance = sign.NewHMACSign([]byte(setting.GetByKey(conf.Token)))
+	instance = sign.NewHMACSign([]byte(setting.GetStr(conf.Token)))
 }

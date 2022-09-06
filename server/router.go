@@ -16,7 +16,7 @@ func Init(r *gin.Engine) {
 	common.SecretKey = []byte(conf.Conf.JwtSecret)
 	Cors(r)
 	r.Use(middlewares.StoragesLoaded)
-	WebDav(r)
+	WebDav(r.Group("/dav"))
 
 	r.GET("/favicon.ico", handles.Favicon)
 	r.GET("/i/:link/:name", handles.Plist)

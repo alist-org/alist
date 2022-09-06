@@ -24,8 +24,7 @@ func init() {
 	}
 }
 
-func WebDav(r *gin.Engine) {
-	dav := r.Group("/dav")
+func WebDav(dav *gin.RouterGroup) {
 	dav.Use(WebDAVAuth)
 	dav.Any("/*path", ServeWebDAV)
 	dav.Any("", ServeWebDAV)

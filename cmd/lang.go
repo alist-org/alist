@@ -43,6 +43,7 @@ func writeFile(name string, data interface{}) {
 		log.Errorf("failed to open %s.json: %+v", name, err)
 		return
 	}
+	defer f.Close()
 	content, err := io.ReadAll(f)
 	if err != nil {
 		log.Errorf("failed to read %s.json: %+v", name, err)
