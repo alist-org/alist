@@ -93,6 +93,7 @@ func (d *Quark) upPre(file model.FileStreamer, parentId string) (UpPreResp, erro
 		"l_updated_at":    now.UnixMilli(),
 		"pdir_fid":        parentId,
 		"size":            file.GetSize(),
+		"same_path_reuse": true,
 	}
 	var resp UpPreResp
 	_, err := d.request("/file/upload/pre", http.MethodPost, func(req *resty.Request) {
