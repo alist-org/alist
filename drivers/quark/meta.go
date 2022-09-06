@@ -13,7 +13,8 @@ type Addition struct {
 }
 
 var config = driver.Config{
-	Name: "Quark",
+	Name:      "Quark",
+	OnlyProxy: true,
 }
 
 func New() driver.Driver {

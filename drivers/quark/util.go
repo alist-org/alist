@@ -93,6 +93,7 @@ func (d *Quark) upPre(file model.FileStreamer, parentId string) (UpPreResp, erro
 		"l_updated_at":    now.UnixMilli(),
 		"pdir_fid":        parentId,
 		"size":            file.GetSize(),
+		//"same_path_reuse": true,
 	}
 	var resp UpPreResp
 	_, err := d.request("/file/upload/pre", http.MethodPost, func(req *resty.Request) {
@@ -208,7 +209,7 @@ x-oss-user-agent:aliyun-sdk-js/6.6.1 Chrome 98.0.4758.80 on Windows 10 64-bit
 	var resp UpAuthResp
 	_, err = d.request("/file/upload/auth", http.MethodPost, func(req *resty.Request) {
 		req.SetBody(data)
-	}, nil)
+	}, &resp)
 	if err != nil {
 		return err
 	}
