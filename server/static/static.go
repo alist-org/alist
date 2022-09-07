@@ -26,6 +26,7 @@ func InitIndex() {
 
 func UpdateIndex() {
 	cdn := strings.TrimSuffix(conf.Conf.Cdn, "/")
+	cdn = strings.ReplaceAll(cdn, "$version", conf.WebVersion)
 	basePath := setting.GetStr(conf.BasePath)
 	apiUrl := setting.GetStr(conf.ApiUrl)
 	favicon := setting.GetStr(conf.Favicon)
