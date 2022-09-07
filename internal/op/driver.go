@@ -60,14 +60,11 @@ func getMainItems(config driver.Config) []driver.Item {
 		Required: true,
 		Help:     "",
 	}, {
-		Name: "index",
+		Name: "order",
 		Type: conf.TypeNumber,
 		Help: "use to sort",
 	}, {
 		Name: "remark",
-		Type: conf.TypeText,
-	}, {
-		Name: "down_proxy_url",
 		Type: conf.TypeText,
 	}}
 	if !config.NoCache {
@@ -100,6 +97,10 @@ func getMainItems(config driver.Config) []driver.Item {
 			Required: true,
 		})
 	}
+	items = append(items, driver.Item{
+		Name: "down_proxy_url",
+		Type: conf.TypeText,
+	})
 	if config.LocalSort {
 		items = append(items, []driver.Item{{
 			Name:    "order_by",

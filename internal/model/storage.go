@@ -5,7 +5,7 @@ import "time"
 type Storage struct {
 	ID              uint      `json:"id" gorm:"primaryKey"`                        // unique key
 	MountPath       string    `json:"mount_path" gorm:"unique" binding:"required"` // must be standardized
-	Index           int       `json:"index"`                                       // use to sort
+	Order           int       `json:"order"`                                       // use to sort
 	Driver          string    `json:"driver"`                                      // driver used
 	CacheExpiration int       `json:"cache_expiration"`                            // cache expire time
 	Status          string    `json:"status"`

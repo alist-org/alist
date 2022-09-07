@@ -42,7 +42,7 @@ func TestDown(t *testing.T) {
 	err := op.CreateStorage(context.Background(), model.Storage{
 		ID:        0,
 		MountPath: "/",
-		Index:     0,
+		Order:     0,
 		Driver:    "Local",
 		Status:    "",
 		Addition:  `{"root_folder":"../../data"}`,

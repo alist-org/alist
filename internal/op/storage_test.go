@@ -70,11 +70,11 @@ func TestGetBalancedStorage(t *testing.T) {
 
 func setupStorages(t *testing.T) {
 	var storages = []model.Storage{
-		{Driver: "Local", MountPath: "/a/b", Index: 0, Addition: `{"root_folder":"."}`},
-		{Driver: "Local", MountPath: "/a/c", Index: 1, Addition: `{"root_folder":"."}`},
-		{Driver: "Local", MountPath: "/a/d", Index: 2, Addition: `{"root_folder":"."}`},
-		{Driver: "Local", MountPath: "/a/d/e", Index: 3, Addition: `{"root_folder":"."}`},
-		{Driver: "Local", MountPath: "/a/d/e.balance", Index: 4, Addition: `{"root_folder":"."}`},
+		{Driver: "Local", MountPath: "/a/b", Order: 0, Addition: `{"root_folder":"."}`},
+		{Driver: "Local", MountPath: "/a/c", Order: 1, Addition: `{"root_folder":"."}`},
+		{Driver: "Local", MountPath: "/a/d", Order: 2, Addition: `{"root_folder":"."}`},
+		{Driver: "Local", MountPath: "/a/d/e", Order: 3, Addition: `{"root_folder":"."}`},
+		{Driver: "Local", MountPath: "/a/d/e.balance", Order: 4, Addition: `{"root_folder":"."}`},
 	}
 	for _, storage := range storages {
 		err := op.CreateStorage(context.Background(), storage)

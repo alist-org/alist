@@ -268,10 +268,10 @@ func GetStorageVirtualFilesByPath(prefix string) []model.Obj {
 	files := make([]model.Obj, 0)
 	storages := storagesMap.Values()
 	sort.Slice(storages, func(i, j int) bool {
-		if storages[i].GetStorage().Index == storages[j].GetStorage().Index {
+		if storages[i].GetStorage().Order == storages[j].GetStorage().Order {
 			return storages[i].GetStorage().MountPath < storages[j].GetStorage().MountPath
 		}
-		return storages[i].GetStorage().Index < storages[j].GetStorage().Index
+		return storages[i].GetStorage().Order < storages[j].GetStorage().Order
 	})
 	prefix = utils.StandardizePath(prefix)
 	if prefix != "/" {
