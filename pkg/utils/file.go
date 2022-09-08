@@ -2,7 +2,6 @@ package utils
 
 import (
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -35,7 +34,7 @@ func CreateNestedFile(path string) (*os.File, error) {
 
 // CreateTempFile create temp file from io.ReadCloser, and seek to 0
 func CreateTempFile(r io.ReadCloser) (*os.File, error) {
-	f, err := ioutil.TempFile(conf.Conf.TempDir, "file-*")
+	f, err := os.CreateTemp(conf.Conf.TempDir, "file-*")
 	if err != nil {
 		return nil, err
 	}
