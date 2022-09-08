@@ -1,0 +1,52 @@
+name: release
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  changelog:
+    name: Create Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - run: npx changelogithub # or changelogithub@0.12 if ensure the stable result
+        env:
+          GITHUB_TOKEN: ${{secrets.MY_TOKEN}}
+  release:
+    needs: changelog
+    strategy:
+      matrix:
+        platform: [ubuntu-latest]
+        go-version: [1.18]
+    name: Release
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: |
+          docker pull techknowlogick/xgo:latest
+          go install src.techknowlogick.com/xgo@latest
+          sudo apt install upx
+
+      - name: Build
+        run: |
+          bash build.sh release
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: alist/build/compress/*

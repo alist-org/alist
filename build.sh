@@ -32,6 +32,13 @@ FetchWebDev() {
   rm -rf web-dist-main web-dist-main.tar.gz
 }
 
+FetchWebRelease() {
+  curl -L https://github.com/alist-org/web-v2/releases/latest/download/dist.tar.gz -o dist.tar.gz
+  tar -zxvf dist.tar.gz
+  mv -f dist public
+  rm -rf dist.tar.gz
+}
+
 BuildDev() {
   rm -rf .git/
   xgo -targets=linux/amd64,windows/amd64,darwin/amd64 -out "$appName" -ldflags="$ldflags" -tags=jsoniter .
@@ -42,11 +49,63 @@ BuildDev() {
   upx -9 ./alist-windows*
   find . -type f -print0 | xargs -0 md5sum >md5.txt
   cat md5.txt
-  cd .. || exit
 }
 
 BuildDocker() {
   go build -o ./bin/alist -ldflags="$ldflags" -tags=jsoniter .
+}
+
+BuildRelease() {
+  rm -rf .git/
+  xgo -out "$appName" -ldflags="$ldflags" -tags=jsoniter .
+  # why? Because some target platforms seem to have issues with upx compression
+  upx -9 ./alist-linux-amd64
+  upx -9 ./alist-windows*
+  mkdir -p "build"
+  mv alist-* build
+  BASE="https://musl.nn.ci/"
+  FILES=(x86_64-linux-musl-cross aarch64-linux-musl-cross arm-linux-musleabihf-cross mips-linux-musl-cross mips64-linux-musl-cross mips64el-linux-musl-cross mipsel-linux-musl-cross powerpc64le-linux-musl-cross s390x-linux-musl-cross)
+  for i in "${FILES[@]}"; do
+    url="${BASE}${i}.tgz"
+    curl -L -o "${i}.tgz" "${url}"
+    sudo tar xf "${i}.tgz" --strip-components 1 -C /usr/local
+  done
+  OS_ARCHES=(linux-musl-amd64 linux-musl-arm64 linux-musl-arm linux-musl-mips linux-musl-mips64 linux-musl-mips64le linux-musl-mipsle linux-musl-ppc64le linux-musl-s390x)
+  CGO_ARGS=(x86_64-linux-musl-gcc aarch64-linux-musl-gcc arm-linux-musleabihf-gcc mips-linux-musl-gcc mips64-linux-musl-gcc mips64el-linux-musl-gcc mipsel-linux-musl-gcc powerpc64le-linux-musl-gcc s390x-linux-musl-gcc)
+  for i in "${!OS_ARCHES[@]}"; do
+    os_arch=${OS_ARCHES[$i]}
+    cgo_cc=${CGO_ARGS[$i]}
+    echo building for ${os_arch}
+    export GOOS=${os_arch%%-*}
+    export GOARCH=${os_arch##*-}
+    export CC=${cgo_cc}
+    export CGO_ENABLED=1
+    go build -o ./build/$appName-$os_arch -ldflags="$ldflags" -tags=jsoniter .
+  done
+}
+
+MakeRelease() {
+  cd build
+  mkdir compress
+  for i in $(find . -type f -name "$appName-linux-*"); do
+    cp "$i" alist
+    tar -czvf compress/"$i".tar.gz alist
+    rm -f alist
+  done
+  for i in $(find . -type f -name "$appName-darwin-*"); do
+    cp "$i" alist
+    tar -czvf compress/"$i".tar.gz "$i"
+    rm -f alist
+  done
+  for i in $(find . -type f -name "$appName-windows-*"); do
+    cp "$i" alist.exe
+    zip compress/$(echo $i | sed 's/\.[^.]*$//').zip "$i"
+    rm -f alist.exe
+  done
+  cd compress
+  find . -type f -print0 | xargs -0 md5sum >md5.txt
+  cat md5.txt
+  cd ../..
 }
 
 if [ "$1" = "dev" ]; then
@@ -57,7 +116,13 @@ if [ "$1" = "dev" ]; then
     BuildDev
   fi
 elif [ "$1" = "release" ]; then
-  echo -e "To be implement"
+  FetchWebRelease
+  if [ "$2" = "docker" ]; then
+    BuildDocker
+  else
+    BuildRelease
+    MakeRelease
+  fi
 else
   echo -e "Parameter error"
 fi
