@@ -8,7 +8,7 @@ import (
 )
 
 var NoRedirectClient *resty.Client
-var RestyClient = resty.New()
+var RestyClient = NewRestyClient()
 var HttpClient = &http.Client{}
 var UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36"
 var DefaultTimeout = time.Second * 10
@@ -20,7 +20,11 @@ func init() {
 		}),
 	)
 	NoRedirectClient.SetHeader("user-agent", UserAgent)
-	RestyClient.SetHeader("user-agent", UserAgent)
-	RestyClient.SetRetryCount(3)
-	RestyClient.SetTimeout(DefaultTimeout)
+}
+
+func NewRestyClient() *resty.Client {
+	return resty.New().
+		SetHeader("user-agent", UserAgent).
+		SetRetryCount(3).
+		SetTimeout(DefaultTimeout)
 }
