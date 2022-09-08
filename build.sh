@@ -4,12 +4,12 @@ goVersion=$(go version | sed 's/go version //')
 gitAuthor=$(git show -s --format='format:%aN <%ae>' HEAD)
 gitCommit=$(git log --pretty=format:"%h" -1)
 
-if [ "$1" = "release" ]; then
-  version=$(git describe --long --tags --dirty --always)
-  webVersion=$(wget -qO- -t1 -T2 "https://api.github.com/repos/alist-org/alist-web/releases/latest" | grep "tag_name" | head -n 1 | awk -F ":" '{print $2}' | sed 's/\"//g;s/,//g;s/ //g')
-else
+if [ "$1" = "dev" ]; then
   version="dev"
   webVersion="dev"
+else
+  version=$(git describe --long --tags --dirty --always)
+  webVersion=$(wget -qO- -t1 -T2 "https://api.github.com/repos/alist-org/alist-web/releases/latest" | grep "tag_name" | head -n 1 | awk -F ":" '{print $2}' | sed 's/\"//g;s/,//g;s/ //g')
 fi
 
 echo "build version: $gitTag"
@@ -24,7 +24,7 @@ ldflags="\
 -X 'github.com/alist-org/alist/v3/internal/conf.WebVersion=$webVersion' \
 "
 
-FetchWebBuild() {
+FetchWebDev() {
   curl -L https://codeload.github.com/alist-org/web-dist/tar.gz/refs/heads/main -o web-dist-main.tar.gz
   tar -zxvf web-dist-main.tar.gz
   rm -rf public/dist
@@ -45,9 +45,17 @@ BuildDev() {
   cd .. || exit
 }
 
+BuildDocker() {
+  go build -o ./bin/alist -ldflags="$ldflags" -tags=jsoniter .
+}
+
 if [ "$1" = "dev" ]; then
-  FetchWebBuild
-  BuildDev
+  FetchWebDev
+  if [ "$2" = "docker" ]; then
+    BuildDocker
+  else
+    BuildDev
+  fi
 elif [ "$1" = "release" ]; then
   echo -e "To be implement"
 else
