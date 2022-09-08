@@ -33,13 +33,15 @@ func UpdateIndex() {
 	title := setting.GetStr(conf.SiteTitle)
 	customizeHead := setting.GetStr(conf.CustomizeHead)
 	customizeBody := setting.GetStr(conf.CustomizeBody)
+	mainColor := setting.GetStr(conf.MainColor)
 	conf.ManageHtml = conf.RawIndexHtml
 	replaceMap1 := map[string]string{
 		"https://jsd.nn.ci/gh/alist-org/logo@main/logo.svg": favicon,
-		"Loading...":           title,
-		"cdn: undefined":       fmt.Sprintf("cdn: '%s'", cdn),
-		"base_path: undefined": fmt.Sprintf("base_path: '%s'", basePath),
-		"api: undefined":       fmt.Sprintf("api: '%s'", apiUrl),
+		"Loading...":            title,
+		"cdn: undefined":        fmt.Sprintf("cdn: '%s'", cdn),
+		"base_path: undefined":  fmt.Sprintf("base_path: '%s'", basePath),
+		"api: undefined":        fmt.Sprintf("api: '%s'", apiUrl),
+		"main_color: undefined": fmt.Sprintf("main_color: '%s'", mainColor),
 	}
 	for k, v := range replaceMap1 {
 		conf.ManageHtml = strings.Replace(conf.ManageHtml, k, v, 1)
