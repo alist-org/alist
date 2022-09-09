@@ -35,6 +35,7 @@ FetchWebDev() {
 FetchWebRelease() {
   curl -L https://github.com/alist-org/alist-web/releases/latest/download/dist.tar.gz -o dist.tar.gz
   tar -zxvf dist.tar.gz
+  rm -rf public/dist
   mv -f dist public
   rm -rf dist.tar.gz
 }
@@ -57,12 +58,8 @@ BuildDocker() {
 
 BuildRelease() {
   rm -rf .git/
-  xgo -out "$appName" -ldflags="$ldflags" -tags=jsoniter .
-  # why? Because some target platforms seem to have issues with upx compression
-  upx -9 ./alist-linux-amd64
-  upx -9 ./alist-windows*
   mkdir -p "build"
-  mv alist-* build
+  muslflags="--extldflags '-static -fpic' $ldflags"
   BASE="https://musl.nn.ci/"
   FILES=(x86_64-linux-musl-cross aarch64-linux-musl-cross arm-linux-musleabihf-cross mips-linux-musl-cross mips64-linux-musl-cross mips64el-linux-musl-cross mipsel-linux-musl-cross powerpc64le-linux-musl-cross s390x-linux-musl-cross)
   for i in "${FILES[@]}"; do
@@ -80,8 +77,13 @@ BuildRelease() {
     export GOARCH=${os_arch##*-}
     export CC=${cgo_cc}
     export CGO_ENABLED=1
-    go build -o ./build/$appName-$os_arch -ldflags="$ldflags" -tags=jsoniter .
+    go build -o ./build/$appName-$os_arch -ldflags="$muslflags" -tags=jsoniter .
   done
+  xgo -out "$appName" -ldflags="$ldflags" -tags=jsoniter .
+  # why? Because some target platforms seem to have issues with upx compression
+  upx -9 ./alist-linux-amd64
+  upx -9 ./alist-windows*
+  mv alist-* build
 }
 
 MakeRelease() {
