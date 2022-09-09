@@ -94,7 +94,7 @@ func InitialSettings() []model.SettingItem {
 		"Google":"https://docs.google.com/gview?url=$e_url&embedded=true"
 	},
 	"pdf": {
-		"PDF.js":"https://alist-org.github.io/pdf.js/web/viewer.html?file=$e_url"
+		"PDF.js":"https://alist.nn.ci/pdf.js/web/viewer.html?file=$e_url"
 	}
 }`, Type: conf.TypeText, Group: model.PREVIEW},
 		//		{Key: conf.OfficeViewers, Value: `{

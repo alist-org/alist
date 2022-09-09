@@ -33,7 +33,7 @@ FetchWebDev() {
 }
 
 FetchWebRelease() {
-  curl -L https://github.com/alist-org/web-v2/releases/latest/download/dist.tar.gz -o dist.tar.gz
+  curl -L https://github.com/alist-org/alist-web/releases/latest/download/dist.tar.gz -o dist.tar.gz
   tar -zxvf dist.tar.gz
   mv -f dist public
   rm -rf dist.tar.gz
