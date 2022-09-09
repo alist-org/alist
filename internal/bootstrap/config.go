@@ -48,16 +48,14 @@ func InitConfig() {
 		confFromEnv()
 	}
 	// convert abs path
-	var absPath string
-	var err error
 	if !filepath.IsAbs(conf.Conf.TempDir) {
-		absPath, err = filepath.Abs(conf.Conf.TempDir)
+		absPath, err := filepath.Abs(conf.Conf.TempDir)
 		if err != nil {
 			log.Fatalf("get abs path error: %+v", err)
 		}
+		conf.Conf.TempDir = absPath
 	}
-	conf.Conf.TempDir = absPath
-	err = os.RemoveAll(filepath.Join(conf.Conf.TempDir))
+	err := os.RemoveAll(filepath.Join(conf.Conf.TempDir))
 	if err != nil {
 		log.Errorln("failed delete temp file:", err)
 	}
