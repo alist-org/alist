@@ -35,7 +35,7 @@ func GetStorages(pageIndex, pageSize int) ([]model.Storage, int64, error) {
 		return nil, 0, errors.Wrapf(err, "failed get storages count")
 	}
 	var storages []model.Storage
-	if err := storageDB.Order(columnName("index")).Offset((pageIndex - 1) * pageSize).Limit(pageSize).Find(&storages).Error; err != nil {
+	if err := storageDB.Order(columnName("order")).Offset((pageIndex - 1) * pageSize).Limit(pageSize).Find(&storages).Error; err != nil {
 		return nil, 0, errors.WithStack(err)
 	}
 	return storages, count, nil
