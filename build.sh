@@ -96,12 +96,12 @@ MakeRelease() {
   done
   for i in $(find . -type f -name "$appName-darwin-*"); do
     cp "$i" alist
-    tar -czvf compress/"$i".tar.gz "$i"
+    tar -czvf compress/"$i".tar.gz alist
     rm -f alist
   done
   for i in $(find . -type f -name "$appName-windows-*"); do
     cp "$i" alist.exe
-    zip compress/$(echo $i | sed 's/\.[^.]*$//').zip "$i"
+    zip compress/$(echo $i | sed 's/\.[^.]*$//').zip alist.exe
     rm -f alist.exe
   done
   cd compress
