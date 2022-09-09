@@ -52,7 +52,7 @@ func Proxy(c *gin.Context) {
 		downProxyUrl := storage.GetStorage().DownProxyUrl
 		if downProxyUrl != "" {
 			_, ok := c.GetQuery("d")
-			if ok {
+			if !ok {
 				URL := fmt.Sprintf("%s%s?sign=%s",
 					strings.Split(downProxyUrl, "\n")[0],
 					utils.EncodePath(rawPath, true),
@@ -103,7 +103,7 @@ func shouldProxy(storage driver.Driver, filename string) bool {
 // 4. proxy_types
 // solution: text_file + shouldProxy()
 func canProxy(storage driver.Driver, filename string) bool {
-	if storage.Config().MustProxy() || storage.GetStorage().WebProxy {
+	if storage.Config().MustProxy() || storage.GetStorage().WebProxy || storage.GetStorage().WebdavProxy() {
 		return true
 	}
 	if utils.SliceContains(conf.TypesMap[conf.ProxyTypes], utils.Ext(filename)) {
