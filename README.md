@@ -29,10 +29,53 @@
 
 ---
 
-[Contributors](./CONTRIBUTORS.md) | [Contributing](./CONTRIBUTING.md)
+English | [中文](./README_cn.md) | [Contributors](./CONTRIBUTORS.md) | [Contributing](./CONTRIBUTING.md)
 
-> ### New version is under development. Checkout [v2](https://github.com/alist-org/alist/tree/v2) branch for latest version.
-> Click [here](https://crwd.in/alist) to help translate.
+## Features
+
+- [x] Multiple storage
+    - [x] Local storage
+    - [x] [Aliyundrive](https://www.aliyundrive.com/)
+    - [x] OneDrive / Sharepoint ([global](https://www.office.com/), [cn](https://portal.partner.microsoftonline.cn),de,us)
+    - [x] [189cloud](https://cloud.189.cn) (Personal, Family)
+    - [x] [GoogleDrive](https://drive.google.com/)
+    - [x] [123pan](https://www.123pan.com/)
+    - [x] FTP / SFTP
+    - [x] [PikPak](https://www.mypikpak.com/)
+    - [x] [S3](https://aws.amazon.com/s3/)
+    - [x] [UPYUN Storage Service](https://www.upyun.com/products/file-storage)
+    - [x] WebDav(Support OneDrive/SharePoint without API)
+    - [x] Teambition([China](https://www.teambition.com/ ),[International](https://us.teambition.com/ ))
+    - [x] [Mediatrack](https://www.mediatrack.cn/)
+    - [x] [139yun](https://yun.139.com/) (Personal, Family)
+    - [x] [YandexDisk](https://disk.yandex.com/)
+    - [x] [BaiduNetdisk](http://pan.baidu.com/)
+    - [x] [Quark](https://pan.quark.cn)
+- [x] Easy to deploy and out-of-the-box
+- [x] File preview (PDF, markdown, code, plain text, ...)
+- [x] Image preview in gallery mode
+- [x] Video and audio preview, support lyrics and subtitles
+- [x] Office documents preview (docx, pptx, xlsx, ...)
+- [x] `README.md` preview rendering
+- [x] File permalink copy and direct file download
+- [x] Dark mode
+- [x] I18n
+- [x] Protected routes (password protection and authentication)
+- [x] WebDav (see https://alist.nn.ci/guide/webdav.html for details)
+- [x] [Docker Deploy](https://hub.docker.com/r/xhofe/alist)
+- [x] Cloudflare workers proxy
+- [x] File/Folder package download
+- [x] Web upload(Can allow visitors to upload), delete, mkdir, rename, move and copy
+- [x] Offline download
+- [x] Copy files between two storage
+
+## Document
+
+<https://alist.nn.ci/>
+
+## Demo
+
+<https://pan.nn.ci>
 
 ## Discussion
 
