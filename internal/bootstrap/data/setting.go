@@ -35,15 +35,12 @@ func initSettings() {
 	for i := range initialSettingItems {
 		v := initialSettingItems[i]
 		_, err := db.GetSettingItemByKey(v.Key)
-		if err == nil {
-			continue
-		}
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, gorm.ErrRecordNotFound) || v.Key == conf.VERSION {
 			err = db.SaveSettingItem(v)
 			if err != nil {
 				log.Fatalf("failed create setting: %+v", err)
 			}
-		} else {
+		} else if err != nil {
 			log.Fatalf("failed get setting: %+v", err)
 		}
 	}
