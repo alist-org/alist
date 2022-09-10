@@ -10,7 +10,6 @@ import (
 	"os"
 
 	"github.com/alist-org/alist/v3/drivers/base"
-	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
@@ -135,28 +134,14 @@ func (d *Quark) Remove(ctx context.Context, obj model.Obj) error {
 }
 
 func (d *Quark) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
-	var tempFile *os.File
-	var err error
-	if f, ok := stream.GetReadCloser().(*os.File); ok {
-		tempFile = f
-	} else {
-		tempFile, err = os.CreateTemp(conf.Conf.TempDir, "file-*")
-		if err != nil {
-			return err
-		}
-		defer func() {
-			_ = tempFile.Close()
-			_ = os.Remove(tempFile.Name())
-		}()
-		_, err = io.Copy(tempFile, stream)
-		if err != nil {
-			return err
-		}
-		_, err = tempFile.Seek(0, io.SeekStart)
-		if err != nil {
-			return err
-		}
+	tempFile, err := utils.CreateTempFile(stream.GetReadCloser())
+	if err != nil {
+		return err
 	}
+	defer func() {
+		_ = tempFile.Close()
+		_ = os.Remove(tempFile.Name())
+	}()
 	m := md5.New()
 	_, err = io.Copy(m, tempFile)
 	if err != nil {

@@ -12,7 +12,6 @@ import (
 	"strconv"
 
 	"github.com/alist-org/alist/v3/drivers/base"
-	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
@@ -177,7 +176,7 @@ func (d *MediaTrack) Put(ctx context.Context, dstDir model.Obj, stream model.Fil
 	if err != nil {
 		return err
 	}
-	tempFile, err := os.CreateTemp(conf.Conf.TempDir, "file-*")
+	tempFile, err := utils.CreateTempFile(stream.GetReadCloser())
 	if err != nil {
 		return err
 	}
@@ -185,14 +184,6 @@ func (d *MediaTrack) Put(ctx context.Context, dstDir model.Obj, stream model.Fil
 		_ = tempFile.Close()
 		_ = os.Remove(tempFile.Name())
 	}()
-	_, err = io.Copy(tempFile, stream)
-	if err != nil {
-		return err
-	}
-	_, err = tempFile.Seek(0, io.SeekStart)
-	if err != nil {
-		return err
-	}
 	uploader := s3manager.NewUploader(s)
 	input := &s3manager.UploadInput{
 		Bucket: &resp.Data.Bucket,

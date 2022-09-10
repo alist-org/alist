@@ -34,16 +34,21 @@ func CreateNestedFile(path string) (*os.File, error) {
 
 // CreateTempFile create temp file from io.ReadCloser, and seek to 0
 func CreateTempFile(r io.ReadCloser) (*os.File, error) {
+	if f, ok := r.(*os.File); ok {
+		return f, nil
+	}
 	f, err := os.CreateTemp(conf.Conf.TempDir, "file-*")
 	if err != nil {
 		return nil, err
 	}
 	_, err = io.Copy(f, r)
 	if err != nil {
+		_ = os.Remove(f.Name())
 		return nil, err
 	}
 	_, err = f.Seek(0, io.SeekStart)
 	if err != nil {
+		_ = os.Remove(f.Name())
 		return nil, err
 	}
 	return f, nil

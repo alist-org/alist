@@ -506,14 +506,15 @@ func (y *Yun189PC) CommonUpload(ctx context.Context, dstDir model.Obj, file mode
 // 快传
 func (y *Yun189PC) FastUpload(ctx context.Context, dstDir model.Obj, file model.FileStreamer, up driver.UpdateProgress) (err error) {
 	// 需要获取完整文件md5,必须支持 io.Seek
-	if _, ok := file.GetReadCloser().(*os.File); !ok {
-		r, err := utils.CreateTempFile(file)
-		if err != nil {
-			return err
-		}
-		file.Close()
-		file.SetReadCloser(r)
+	tempFile, err := utils.CreateTempFile(file.GetReadCloser())
+	if err != nil {
+		return err
 	}
+	defer func() {
+		_ = tempFile.Close()
+		_ = os.Remove(tempFile.Name())
+	}()
+	file.SetReadCloser(tempFile)
 
 	const DEFAULT int64 = 10485760
 	count := int(math.Ceil(float64(file.GetSize()) / float64(DEFAULT)))

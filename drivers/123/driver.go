@@ -13,7 +13,6 @@ import (
 	"os"
 
 	"github.com/alist-org/alist/v3/drivers/base"
-	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
@@ -193,7 +192,7 @@ func (d *Pan123) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 		uploadFile = io.MultiReader(buf, stream)
 	} else {
 		// 计算完整文件MD5
-		tempFile, err := os.CreateTemp(conf.Conf.TempDir, "file-*")
+		tempFile, err := utils.CreateTempFile(stream.GetReadCloser())
 		if err != nil {
 			return err
 		}
@@ -201,11 +200,9 @@ func (d *Pan123) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 			_ = tempFile.Close()
 			_ = os.Remove(tempFile.Name())
 		}()
-
-		if _, err = io.Copy(io.MultiWriter(tempFile, h), stream); err != nil {
+		if _, err = io.Copy(h, tempFile); err != nil {
 			return err
 		}
-
 		_, err = tempFile.Seek(0, io.SeekStart)
 		if err != nil {
 			return err
