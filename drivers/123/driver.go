@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 
 	"github.com/alist-org/alist/v3/drivers/base"
@@ -22,6 +23,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/go-resty/resty/v2"
+	log "github.com/sirupsen/logrus"
 )
 
 type Pan123 struct {
@@ -68,9 +70,47 @@ func (d *Pan123) List(ctx context.Context, dir model.Obj, args model.ListArgs) (
 
 func (d *Pan123) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	if f, ok := file.(File); ok {
-		return &model.Link{
-			URL: f.DownloadUrl,
-		}, nil
+		var resp DownResp
+		var headers map[string]string
+		if !utils.IsLocalIPAddr(args.IP) {
+			headers = map[string]string{
+				//"X-Real-IP":       "1.1.1.1",
+				"X-Forwarded-For": args.IP,
+			}
+		}
+		data := base.Json{
+			"driveId":   0,
+			"etag":      f.Etag,
+			"fileId":    f.FileId,
+			"fileName":  f.FileName,
+			"s3keyFlag": f.S3KeyFlag,
+			"size":      f.Size,
+			"type":      f.Type,
+		}
+		_, err := d.request("https://www.123pan.com/api/file/download_info", http.MethodPost, func(req *resty.Request) {
+			req.SetBody(data).SetHeaders(headers)
+		}, &resp)
+		if err != nil {
+			return nil, err
+		}
+		u, err := url.Parse(resp.Data.DownloadUrl)
+		if err != nil {
+			return nil, err
+		}
+		u_ := fmt.Sprintf("https://%s%s", u.Host, u.Path)
+		res, err := base.NoRedirectClient.R().SetQueryParamsFromValues(u.Query()).Head(u_)
+		if err != nil {
+			return nil, err
+		}
+		log.Debug(res.String())
+		link := model.Link{
+			URL: resp.Data.DownloadUrl,
+		}
+		log.Debugln("res code: ", res.StatusCode())
+		if res.StatusCode() == 302 {
+			link.URL = res.Header().Get("location")
+		}
+		return &link, nil
 	} else {
 		return nil, fmt.Errorf("can't convert obj")
 	}
