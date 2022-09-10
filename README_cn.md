@@ -29,7 +29,7 @@
 
 ---
 
-[English](./README.md) | 中文 | [Contributors](./CONTRIBUTORS.md) | [Contributing](./CONTRIBUTING.md)
+[English](./README.md) | 中文 | [Contributors](./CONTRIBUTORS.md) | [Contributing](./CONTRIBUTING.md) | [CODE_OF_CONDUCT](./CODE_OF_CONDUCT.md)
 
 ## Features
 
