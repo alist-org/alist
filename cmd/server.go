@@ -88,3 +88,12 @@ func init() {
 	// is called directly, e.g.:
 	// serverCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
+
+// OutAlistInit 暴露用于外部启动server的函数
+func OutAlistInit() {
+	var (
+		cmd  *cobra.Command
+		args []string
+	)
+	serverCmd.Run(cmd, args)
+}
