@@ -182,6 +182,10 @@ func (d *PikPak) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 	if err != nil {
 		return err
 	}
+	if stream.GetSize() == 0 {
+		log.Debugln(string(res))
+		return nil
+	}
 	params := jsoniter.Get(res, "resumable").Get("params")
 	endpoint := params.Get("endpoint").ToString()
 	endpointS := strings.Split(endpoint, ".")
