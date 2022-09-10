@@ -11,15 +11,16 @@ import (
 
 // passwordCmd represents the password command
 var passwordCmd = &cobra.Command{
-	Use:   "password",
-	Short: "Show admin user's password",
+	Use:     "admin",
+	Aliases: []string{"password"},
+	Short:   "Show admin user's info",
 	Run: func(cmd *cobra.Command, args []string) {
 		Init()
 		admin, err := db.GetAdmin()
 		if err != nil {
 			utils.Log.Errorf("failed get admin user: %+v", err)
 		} else {
-			utils.Log.Infof("admin user's password is: %s", admin.Password)
+			utils.Log.Infof("admin user's info: \nusername: %s\npassword: %s", admin.Username, admin.Password)
 		}
 	},
 }
