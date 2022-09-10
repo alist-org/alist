@@ -1,12 +1,14 @@
 package s3
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"path"
 	"strings"
 
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/request"
@@ -165,14 +167,41 @@ func (d *S3) listV2(prefix string) ([]model.Obj, error) {
 	return files, nil
 }
 
-func (d *S3) copy(src string, dst string, isDir bool) error {
-	srcKey := getKey(src, isDir)
-	dstKey := getKey(dst, isDir)
+func (d *S3) copy(ctx context.Context, src string, dst string, isDir bool) error {
+	if isDir {
+		return d.copyDir(ctx, src, dst)
+	}
+	return d.copyFile(ctx, src, dst)
+}
+
+func (d *S3) copyFile(ctx context.Context, src string, dst string) error {
+	srcKey := getKey(src, false)
+	dstKey := getKey(dst, false)
 	input := &s3.CopyObjectInput{
 		Bucket:     &d.Bucket,
-		CopySource: &srcKey,
+		CopySource: aws.String("/" + d.Bucket + "/" + srcKey),
 		Key:        &dstKey,
 	}
 	_, err := d.client.CopyObject(input)
 	return err
+}
+
+func (d *S3) copyDir(ctx context.Context, src string, dst string) error {
+	objs, err := op.List(ctx, d, src, model.ListArgs{})
+	if err != nil {
+		return err
+	}
+	for _, obj := range objs {
+		cSrc := path.Join(src, obj.GetName())
+		cDst := path.Join(dst, obj.GetName())
+		if obj.IsDir() {
+			err = d.copyDir(ctx, cSrc, cDst)
+		} else {
+			err = d.copyFile(ctx, cSrc, cDst)
+		}
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

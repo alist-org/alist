@@ -119,7 +119,7 @@ func (d *S3) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 }
 
 func (d *S3) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
-	err := d.copy(srcObj.GetPath(), stdpath.Join(stdpath.Dir(srcObj.GetPath()), newName), srcObj.IsDir())
+	err := d.copy(ctx, srcObj.GetPath(), stdpath.Join(stdpath.Dir(srcObj.GetPath()), newName), srcObj.IsDir())
 	if err != nil {
 		return err
 	}
@@ -127,7 +127,7 @@ func (d *S3) Rename(ctx context.Context, srcObj model.Obj, newName string) error
 }
 
 func (d *S3) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
-	return d.copy(srcObj.GetPath(), stdpath.Join(dstDir.GetPath(), srcObj.GetName()), srcObj.IsDir())
+	return d.copy(ctx, srcObj.GetPath(), stdpath.Join(dstDir.GetPath(), srcObj.GetName()), srcObj.IsDir())
 }
 
 func (d *S3) Remove(ctx context.Context, obj model.Obj) error {
