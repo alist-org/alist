@@ -597,7 +597,7 @@ func (h *Handler) handlePropfind(w http.ResponseWriter, r *http.Request) (status
 		if err != nil {
 			return err
 		}
-		href := path.Join(h.Prefix, reqPath)
+		href := path.Join(h.Prefix, strings.TrimPrefix(reqPath, user.BasePath))
 		if href != "/" && info.IsDir() {
 			href += "/"
 		}
