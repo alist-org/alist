@@ -142,7 +142,7 @@ func Link(ctx context.Context, storage driver.Driver, path string, args model.Li
 	if file.IsDir() {
 		return nil, nil, errors.WithStack(errs.NotFile)
 	}
-	key := stdpath.Join(storage.GetStorage().MountPath, path)
+	key := stdpath.Join(storage.GetStorage().MountPath, path) + ":" + args.IP
 	if link, ok := linkCache.Get(key); ok {
 		return link, file, nil
 	}
