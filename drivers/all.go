@@ -20,6 +20,7 @@ import (
 	_ "github.com/alist-org/alist/v3/drivers/uss"
 	_ "github.com/alist-org/alist/v3/drivers/virtual"
 	_ "github.com/alist-org/alist/v3/drivers/webdav"
+	_ "github.com/alist-org/alist/v3/drivers/xunlei"
 	_ "github.com/alist-org/alist/v3/drivers/yandex_disk"
 )
 
