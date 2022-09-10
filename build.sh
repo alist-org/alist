@@ -25,11 +25,11 @@ ldflags="\
 "
 
 FetchWebDev() {
-  curl -L https://codeload.github.com/alist-org/web-dist/tar.gz/refs/heads/main -o web-dist-main.tar.gz
-  tar -zxvf web-dist-main.tar.gz
+  curl -L https://codeload.github.com/alist-org/web-dist/tar.gz/refs/heads/dev -o web-dist-dev.tar.gz
+  tar -zxvf web-dist-dev.tar.gz
   rm -rf public/dist
-  mv -f web-dist-main/dist public
-  rm -rf web-dist-main web-dist-main.tar.gz
+  mv -f web-dist-dev/dist public
+  rm -rf web-dist-dev web-dist-dev.tar.gz
 }
 
 FetchWebRelease() {
