@@ -42,10 +42,10 @@ func (d *Template) List(ctx context.Context, dir model.Obj, args model.ListArgs)
 	return nil, errs.NotImplement
 }
 
-func (d *Template) Get(ctx context.Context, path string) (model.Obj, error) {
-	// this is optional
-	return nil, errs.NotImplement
-}
+//func (d *Template) Get(ctx context.Context, path string) (model.Obj, error) {
+//	// this is optional
+//	return nil, errs.NotImplement
+//}
 
 func (d *Template) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	// TODO return link of file
@@ -82,8 +82,8 @@ func (d *Template) Put(ctx context.Context, dstDir model.Obj, stream model.FileS
 	return errs.NotImplement
 }
 
-func (d *Template) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
-	return nil, errs.NotSupport
-}
+//func (d *Template) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
+//	return nil, errs.NotSupport
+//}
 
 var _ driver.Driver = (*Template)(nil)

@@ -257,8 +257,4 @@ func (d *Pan123) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 	return err
 }
 
-func (d *Pan123) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
-	return nil, errs.NotSupport
-}
-
 var _ driver.Driver = (*Pan123)(nil)

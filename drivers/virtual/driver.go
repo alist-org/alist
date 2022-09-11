@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/alist-org/alist/v3/internal/driver"
-	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/pkg/utils/random"
@@ -87,10 +86,6 @@ func (d *Virtual) Remove(ctx context.Context, obj model.Obj) error {
 
 func (d *Virtual) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
 	return nil
-}
-
-func (d *Virtual) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
-	return nil, errs.NotSupport
 }
 
 var _ driver.Driver = (*Virtual)(nil)

@@ -127,8 +127,4 @@ func (d *FTP) Put(ctx context.Context, dstDir model.Obj, stream model.FileStream
 	return d.conn.Stor(stdpath.Join(dstDir.GetPath(), stream.GetName()), stream)
 }
 
-func (d *FTP) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
-	return nil, errs.NotSupport
-}
-
 var _ driver.Driver = (*FTP)(nil)

@@ -166,11 +166,15 @@ func Other(ctx context.Context, storage driver.Driver, args model.FsOtherArgs) (
 	if err != nil {
 		return nil, errors.WithMessagef(err, "failed to get obj")
 	}
-	return storage.Other(ctx, model.OtherArgs{
-		Obj:    obj,
-		Method: args.Method,
-		Data:   args.Data,
-	})
+	if o, ok := storage.(driver.Other); ok {
+		return o.Other(ctx, model.OtherArgs{
+			Obj:    obj,
+			Method: args.Method,
+			Data:   args.Data,
+		})
+	} else {
+		return nil, errs.NotImplement
+	}
 }
 
 func MakeDir(ctx context.Context, storage driver.Driver, path string) error {

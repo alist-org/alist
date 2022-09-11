@@ -215,8 +215,4 @@ func (d *Quark) Put(ctx context.Context, dstDir model.Obj, stream model.FileStre
 	return d.upFinish(pre)
 }
 
-func (d *Quark) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
-	return nil, errs.NotSupport
-}
-
 var _ driver.Driver = (*Quark)(nil)

@@ -357,10 +357,6 @@ func (xc *XunLeiCommon) Put(ctx context.Context, dstDir model.Obj, stream model.
 	return nil
 }
 
-func (xc *XunLeiCommon) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
-	return nil, errs.NotSupport
-}
-
 func (xc *XunLeiCommon) getFiles(ctx context.Context, folderId string) ([]model.Obj, error) {
 	files := make([]model.Obj, 0)
 	var pageToken string

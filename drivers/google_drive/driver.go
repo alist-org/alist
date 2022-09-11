@@ -141,8 +141,4 @@ func (d *GoogleDrive) Put(ctx context.Context, dstDir model.Obj, stream model.Fi
 	return err
 }
 
-func (d *GoogleDrive) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
-	return nil, errs.NotSupport
-}
-
 var _ driver.Driver = (*GoogleDrive)(nil)

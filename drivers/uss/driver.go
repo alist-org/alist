@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/alist-org/alist/v3/internal/driver"
-	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/upyun/go-sdk/v3/upyun"
@@ -138,10 +137,6 @@ func (d *USS) Put(ctx context.Context, dstDir model.Obj, stream model.FileStream
 		Path:   getKey(path.Join(dstDir.GetPath(), stream.GetName()), false),
 		Reader: stream,
 	})
-}
-
-func (d *USS) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
-	return nil, errs.NotSupport
 }
 
 var _ driver.Driver = (*USS)(nil)

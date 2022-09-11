@@ -319,8 +319,4 @@ func (d *Yun139) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 	return nil
 }
 
-func (d *Yun139) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
-	return nil, errs.NotSupport
-}
-
 var _ driver.Driver = (*Yun139)(nil)

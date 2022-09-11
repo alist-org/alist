@@ -15,7 +15,6 @@ import (
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
-	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	log "github.com/sirupsen/logrus"
@@ -229,10 +228,6 @@ func (d *BaiduNetdisk) Put(ctx context.Context, dstDir model.Obj, stream model.F
 	}
 	_, err = d.create(path, stream.GetSize(), 0, precreateResp.Uploadid, block_list_str)
 	return err
-}
-
-func (d *BaiduNetdisk) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
-	return nil, errs.NotSupport
 }
 
 var _ driver.Driver = (*BaiduNetdisk)(nil)

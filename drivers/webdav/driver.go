@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/alist-org/alist/v3/internal/driver"
-	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/cron"
 	"github.com/alist-org/alist/v3/pkg/gowebdav"
@@ -121,10 +120,6 @@ func (d *WebDav) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 	}
 	err := d.client.WriteStream(path.Join(dstDir.GetPath(), stream.GetName()), stream, 0644, callback)
 	return err
-}
-
-func (d *WebDav) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
-	return nil, errs.NotSupport
 }
 
 var _ driver.Driver = (*WebDav)(nil)

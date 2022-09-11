@@ -10,7 +10,7 @@ type Driver interface {
 	Meta
 	Reader
 	Writer
-	Other
+	//Other
 }
 
 type Meta interface {

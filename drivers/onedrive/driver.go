@@ -144,8 +144,4 @@ func (d *Onedrive) Put(ctx context.Context, dstDir model.Obj, stream model.FileS
 	return err
 }
 
-func (d *Onedrive) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
-	return nil, errs.NotSupport
-}
-
 var _ driver.Driver = (*Onedrive)(nil)

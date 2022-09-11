@@ -10,7 +10,6 @@ import (
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
-	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/go-resty/resty/v2"
@@ -277,8 +276,4 @@ func (y *Yun189PC) Put(ctx context.Context, dstDir model.Obj, stream model.FileS
 		return y.FastUpload(ctx, dstDir, stream, up)
 	}
 	return y.CommonUpload(ctx, dstDir, stream, up)
-}
-
-func (y *Yun189PC) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
-	return nil, errs.NotSupport
 }

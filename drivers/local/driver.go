@@ -217,8 +217,4 @@ func (d *Local) Put(ctx context.Context, dstDir model.Obj, stream model.FileStre
 	return nil
 }
 
-func (d *Local) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
-	return nil, errs.NotSupport
-}
-
 var _ driver.Driver = (*Local)(nil)

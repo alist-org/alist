@@ -99,8 +99,4 @@ func (d *SFTP) Put(ctx context.Context, dstDir model.Obj, stream model.FileStrea
 	return err
 }
 
-func (d *SFTP) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
-	return nil, errs.NotSupport
-}
-
 var _ driver.Driver = (*SFTP)(nil)
