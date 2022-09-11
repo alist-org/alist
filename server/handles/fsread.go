@@ -79,7 +79,7 @@ func FsList(c *gin.Context) {
 	}
 	total, objs := pagination(objs, &req.PageReq)
 	common.SuccessResp(c, FsListResp{
-		Content: toObjResp(objs),
+		Content: toObjResp(objs, isEncrypt(meta, req.Path)),
 		Total:   int64(total),
 		Readme:  getReadme(meta, req.Path),
 		Write:   user.CanWrite() || canWrite(meta, req.Path),
@@ -157,6 +157,16 @@ func canAccess(user *model.User, meta *model.Meta, path string, password string)
 	return meta.Password == password
 }
 
+func isEncrypt(meta *model.Meta, path string) bool {
+	if meta == nil || meta.Password == "" {
+		return false
+	}
+	if !utils.PathEqual(meta.Path, path) && !meta.PSub {
+		return false
+	}
+	return true
+}
+
 func pagination(objs []model.Obj, req *common.PageReq) (int, []model.Obj) {
 	pageIndex, pageSize := req.Page, req.PerPage
 	total := len(objs)
@@ -171,7 +181,7 @@ func pagination(objs []model.Obj, req *common.PageReq) (int, []model.Obj) {
 	return total, objs[start:end]
 }
 
-func toObjResp(objs []model.Obj) []ObjResp {
+func toObjResp(objs []model.Obj, encrypt bool) []ObjResp {
 	var resp []ObjResp
 	for _, obj := range objs {
 		thumb := ""
@@ -187,7 +197,7 @@ func toObjResp(objs []model.Obj) []ObjResp {
 			Size:     obj.GetSize(),
 			IsDir:    obj.IsDir(),
 			Modified: obj.ModTime(),
-			Sign:     common.Sign(obj),
+			Sign:     common.Sign(obj, encrypt),
 			Thumb:    thumb,
 			Type:     tp,
 		})
@@ -270,23 +280,25 @@ func FsGet(c *gin.Context) {
 		}
 	}
 	var related []model.Obj
-	sameLevelFiles, err := fs.List(c, stdpath.Dir(req.Path))
+	parentPath := stdpath.Dir(req.Path)
+	sameLevelFiles, err := fs.List(c, parentPath)
 	if err == nil {
 		related = filterRelated(sameLevelFiles, obj)
 	}
+	parentMeta, _ := db.GetNearestMeta(parentPath)
 	common.SuccessResp(c, FsGetResp{
 		ObjResp: ObjResp{
 			Name:     obj.GetName(),
 			Size:     obj.GetSize(),
 			IsDir:    obj.IsDir(),
 			Modified: obj.ModTime(),
-			Sign:     common.Sign(obj),
+			Sign:     common.Sign(obj, isEncrypt(meta, req.Path)),
 			Type:     utils.GetFileType(obj.GetName()),
 		},
 		RawURL:   rawURL,
 		Readme:   getReadme(meta, req.Path),
 		Provider: provider,
-		Related:  toObjResp(related),
+		Related:  toObjResp(related, isEncrypt(parentMeta, parentPath)),
 	})
 }
 
