@@ -62,13 +62,13 @@ func (x *XunLei) Init(ctx context.Context, storage model.Storage) (err error) {
 					"j",
 					"4scKJNdd7F27Hv7tbt",
 				},
-				DeviceID:      "9aa5c268e7bcfc197a9ad88e2fb330e5",
-				ClientID:      "Xp6vsxz_7IYVw2BB",
-				ClientSecret:  "Xp6vsy4tN9toTVdMSpomVdXpRmES",
-				ClientVersion: "7.51.0.8196",
-				PackageName:   "com.xunlei.downloadprovider",
-				UserAgent:     "ANDROID-com.xunlei.downloadprovider/7.51.0.8196 netWorkType/5G appid/40 deviceName/Xiaomi_M2004j7ac deviceModel/M2004J7AC OSVersion/12 protocolVersion/301 platformVersion/10 sdkVersion/220200 Oauth2Client/0.9 (Linux 4_14_186-perf-gddfs8vbb238b) (JAVA 0)",
-				DownUserAgent: "Dalvik/2.1.0 (Linux; U; Android 12; M2004J7AC Build/SP1A.210812.016)",
+				DeviceID:          "9aa5c268e7bcfc197a9ad88e2fb330e5",
+				ClientID:          "Xp6vsxz_7IYVw2BB",
+				ClientSecret:      "Xp6vsy4tN9toTVdMSpomVdXpRmES",
+				ClientVersion:     "7.51.0.8196",
+				PackageName:       "com.xunlei.downloadprovider",
+				UserAgent:         "ANDROID-com.xunlei.downloadprovider/7.51.0.8196 netWorkType/5G appid/40 deviceName/Xiaomi_M2004j7ac deviceModel/M2004J7AC OSVersion/12 protocolVersion/301 platformVersion/10 sdkVersion/220200 Oauth2Client/0.9 (Linux 4_14_186-perf-gddfs8vbb238b) (JAVA 0)",
+				DownloadUserAgent: "Dalvik/2.1.0 (Linux; U; Android 12; M2004J7AC Build/SP1A.210812.016)",
 			},
 			refreshTokenFunc: func() error {
 				// 通过RefreshToken刷新
@@ -142,13 +142,13 @@ func (x *XunLeiExpert) Init(ctx context.Context, storage model.Storage) (err err
 			Common: &Common{
 				client: base.NewRestyClient(),
 
-				DeviceID:      x.DeviceID,
-				ClientID:      x.ClientID,
-				ClientSecret:  x.ClientSecret,
-				ClientVersion: x.ClientVersion,
-				PackageName:   x.PackageName,
-				UserAgent:     x.UserAgent,
-				DownUserAgent: x.DownUserAgent,
+				DeviceID:          x.DeviceID,
+				ClientID:          x.ClientID,
+				ClientSecret:      x.ClientSecret,
+				ClientVersion:     x.ClientVersion,
+				PackageName:       x.PackageName,
+				UserAgent:         x.UserAgent,
+				DownloadUserAgent: x.DownloadUserAgent,
 			},
 		}
 
@@ -158,7 +158,7 @@ func (x *XunLeiExpert) Init(ctx context.Context, storage model.Storage) (err err
 		}
 
 		// 签名方法
-		if x.SignType == "capcha_sign" {
+		if x.SignType == "captcha_sign" {
 			x.Common.Timestamp = x.Timestamp
 			x.Common.CaptchaSign = x.CaptchaSign
 		} else {
@@ -210,6 +210,8 @@ func (x *XunLeiExpert) Init(ctx context.Context, storage model.Storage) (err err
 			x.SetCaptchaToken(x.CaptchaToken)
 			x.CaptchaToken = ""
 		}
+		x.XunLeiCommon.UserAgent = x.UserAgent
+		x.XunLeiCommon.DownloadUserAgent = x.DownloadUserAgent
 	}
 	return nil
 }
@@ -249,7 +251,7 @@ func (xc *XunLeiCommon) Link(ctx context.Context, file model.Obj, args model.Lin
 	link := &model.Link{
 		URL: lFile.WebContentLink,
 		Header: http.Header{
-			"User-Agent": {xc.DownUserAgent},
+			"User-Agent": {xc.DownloadUserAgent},
 		},
 	}
 

@@ -45,13 +45,13 @@ type Common struct {
 	Timestamp, CaptchaSign string
 
 	// 必要值,签名相关
-	DeviceID      string
-	ClientID      string
-	ClientSecret  string
-	ClientVersion string
-	PackageName   string
-	UserAgent     string
-	DownUserAgent string
+	DeviceID          string
+	ClientID          string
+	ClientSecret      string
+	ClientVersion     string
+	PackageName       string
+	UserAgent         string
+	DownloadUserAgent string
 }
 
 func (c *Common) SetCaptchaToken(captchaToken string) {
