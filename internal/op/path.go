@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/alist-org/alist/v3/internal/driver"
-	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -24,9 +23,10 @@ func ActualPath(storage driver.Additional, rawPath string) string {
 // for path: remove the mount path prefix and join the actual root folder if exists
 func GetStorageAndActualPath(rawPath string) (driver.Driver, string, error) {
 	rawPath = utils.StandardizePath(rawPath)
-	if strings.Contains(rawPath, "..") {
-		return nil, "", errors.WithStack(errs.RelativePath)
-	}
+	// why can remove this check? because reqPath has joined the base_path of user, no relative path
+	//if strings.Contains(rawPath, "..") {
+	//	return nil, "", errors.WithStack(errs.RelativePath)
+	//}
 	storage := GetBalancedStorage(rawPath)
 	if storage == nil {
 		return nil, "", errors.Errorf("can't find storage with rawPath: %s", rawPath)
