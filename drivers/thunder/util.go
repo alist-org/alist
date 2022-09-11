@@ -1,4 +1,4 @@
-package xunlei
+package thunder
 
 import (
 	"fmt"

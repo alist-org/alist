@@ -1,4 +1,4 @@
-package xunlei
+package thunder
 
 import (
 	"context"
@@ -22,7 +22,7 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
-type XunLei struct {
+type Thunder struct {
 	*XunLeiCommon
 	model.Storage
 	Addition
@@ -30,15 +30,15 @@ type XunLei struct {
 	identity string
 }
 
-func (x *XunLei) Config() driver.Config {
+func (x *Thunder) Config() driver.Config {
 	return config
 }
 
-func (x *XunLei) GetAddition() driver.Additional {
+func (x *Thunder) GetAddition() driver.Additional {
 	return x.Addition
 }
 
-func (x *XunLei) Init(ctx context.Context, storage model.Storage) (err error) {
+func (x *Thunder) Init(ctx context.Context, storage model.Storage) (err error) {
 	x.Storage = storage
 	if err = utils.Json.UnmarshalFromString(x.Storage.Addition, &x.Addition); err != nil {
 		return err
@@ -108,11 +108,11 @@ func (x *XunLei) Init(ctx context.Context, storage model.Storage) (err error) {
 	return nil
 }
 
-func (x *XunLei) Drop(ctx context.Context) error {
+func (x *Thunder) Drop(ctx context.Context) error {
 	return nil
 }
 
-type XunLeiExpert struct {
+type ThunderExpert struct {
 	*XunLeiCommon
 	model.Storage
 	ExpertAddition
@@ -120,15 +120,15 @@ type XunLeiExpert struct {
 	identity string
 }
 
-func (x *XunLeiExpert) Config() driver.Config {
+func (x *ThunderExpert) Config() driver.Config {
 	return configExpert
 }
 
-func (x *XunLeiExpert) GetAddition() driver.Additional {
+func (x *ThunderExpert) GetAddition() driver.Additional {
 	return x.ExpertAddition
 }
 
-func (x *XunLeiExpert) Init(ctx context.Context, storage model.Storage) (err error) {
+func (x *ThunderExpert) Init(ctx context.Context, storage model.Storage) (err error) {
 	x.Storage = storage
 	if err = utils.Json.UnmarshalFromString(x.Storage.Addition, &x.ExpertAddition); err != nil {
 		return err
@@ -216,11 +216,11 @@ func (x *XunLeiExpert) Init(ctx context.Context, storage model.Storage) (err err
 	return nil
 }
 
-func (x *XunLeiExpert) Drop(ctx context.Context) error {
+func (x *ThunderExpert) Drop(ctx context.Context) error {
 	return nil
 }
 
-func (x *XunLeiExpert) SetTokenResp(token *TokenResp) {
+func (x *ThunderExpert) SetTokenResp(token *TokenResp) {
 	x.XunLeiCommon.SetTokenResp(token)
 	if token != nil {
 		x.ExpertAddition.RefreshToken = token.RefreshToken

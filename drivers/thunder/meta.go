@@ -1,4 +1,4 @@
-package xunlei
+package thunder
 
 import (
 	"crypto/md5"
@@ -79,21 +79,21 @@ func (i *Addition) GetIdentity() string {
 }
 
 var config = driver.Config{
-	Name:      "XunLei",
+	Name:      "Thunder",
 	LocalSort: true,
 	OnlyProxy: true,
 }
 
 var configExpert = driver.Config{
-	Name:      "XunLeiExpert",
+	Name:      "ThunderExpert",
 	LocalSort: true,
 }
 
 func init() {
 	op.RegisterDriver(config, func() driver.Driver {
-		return &XunLei{}
+		return &Thunder{}
 	})
 	op.RegisterDriver(configExpert, func() driver.Driver {
-		return &XunLeiExpert{}
+		return &ThunderExpert{}
 	})
 }
