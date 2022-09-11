@@ -112,6 +112,7 @@ func admin(g *gin.RouterGroup) {
 func _fs(g *gin.RouterGroup) {
 	g.Any("/list", handles.FsList)
 	g.Any("/get", handles.FsGet)
+	g.Any("/other", handles.FsOther)
 	g.Any("/dirs", handles.FsDirs)
 	g.POST("/mkdir", handles.FsMkdir)
 	g.POST("/rename", handles.FsRename)

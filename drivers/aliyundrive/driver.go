@@ -286,7 +286,29 @@ func (d *AliDrive) Put(ctx context.Context, dstDir model.Obj, stream model.FileS
 }
 
 func (d *AliDrive) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
-	return nil, errs.NotSupport
+	var resp base.Json
+	var url string
+	data := base.Json{
+		"drive_id": d.DriveId,
+		"file_id":  args.Obj.GetID(),
+	}
+	switch args.Method {
+	case "doc_preview":
+		url = "https://api.aliyundrive.com/v2/file/get_office_preview_url"
+		data["access_token"] = d.AccessToken
+	case "video_preview":
+		url = "https://api.aliyundrive.com/v2/file/get_video_preview_play_info"
+		data["category"] = "live_transcoding"
+	default:
+		return nil, errs.NotSupport
+	}
+	_, err, _ := d.request(url, http.MethodPost, func(req *resty.Request) {
+		req.SetBody(data)
+	}, &resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
 }
 
 var _ driver.Driver = (*AliDrive)(nil)
