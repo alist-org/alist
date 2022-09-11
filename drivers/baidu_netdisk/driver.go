@@ -202,7 +202,7 @@ func (d *BaiduNetdisk) Put(ctx context.Context, dstDir model.Obj, stream model.F
 		"uploadid":     precreateResp.Uploadid,
 	}
 	left = stream.GetSize()
-	for _, partseq := range precreateResp.BlockList {
+	for i, partseq := range precreateResp.BlockList {
 		byteSize := Default
 		var byteData []byte
 		if left < Default {
@@ -223,6 +223,9 @@ func (d *BaiduNetdisk) Put(ctx context.Context, dstDir model.Obj, stream model.F
 			return err
 		}
 		log.Debugln(res.String())
+		if len(precreateResp.BlockList) > 0 {
+			up(i * 100 / len(precreateResp.BlockList))
+		}
 	}
 	_, err = d.create(path, stream.GetSize(), 0, precreateResp.Uploadid, block_list_str)
 	return err
