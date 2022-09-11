@@ -264,7 +264,9 @@ func (d *AliDrive) Put(ctx context.Context, dstDir model.Obj, stream model.FileS
 			return err
 		}
 		res.Body.Close()
-		up(i * 100 / count)
+		if count > 0 {
+			up(i * 100 / count)
+		}
 	}
 	var resp2 base.Json
 	_, err, e = d.request("https://api.aliyundrive.com/v2/file/complete", http.MethodPost, func(req *resty.Request) {
