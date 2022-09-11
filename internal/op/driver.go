@@ -145,8 +145,11 @@ func getAdditionalItems(t reflect.Type, defaultRoot string) []driver.Item {
 		if tag.Get("type") != "" {
 			item.Type = tag.Get("type")
 		}
-		if (item.Name == "root_folder_id" || item.Name == "root_folder_path") && item.Default == "" {
-			item.Default = defaultRoot
+		if item.Name == "root_folder_id" || item.Name == "root_folder_path" {
+			if item.Default == "" {
+				item.Default = defaultRoot
+			}
+			item.Required = item.Default != ""
 		}
 		// set default type to string
 		if item.Type == "" {
