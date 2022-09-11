@@ -140,13 +140,7 @@ func (y *Yun189PC) getFiles(ctx context.Context, fileId string) ([]model.Obj, er
 	fullUrl += "/listFiles.action"
 
 	res := make([]model.Obj, 0, 130)
-	for pageNum := 1; pageNum < 100; pageNum++ {
-		select {
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		default:
-		}
-
+	for pageNum := 1; ; pageNum++ {
 		var resp Cloud189FilesResp
 		_, err := y.get(fullUrl, func(r *resty.Request) {
 			r.SetContext(ctx)

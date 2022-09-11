@@ -78,8 +78,7 @@ func timestamp() int64 {
 }
 
 func MustParseTime(str string) *time.Time {
-	loc, _ := time.LoadLocation("Asia/Shanghai")
-	lastOpTime, _ := time.ParseInLocation("2006-01-02 15:04:05", str, loc)
+	lastOpTime, _ := time.ParseInLocation("2006-01-02 15:04:05 -07", str+" +08", time.Local)
 	return &lastOpTime
 }
 
