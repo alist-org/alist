@@ -2,6 +2,7 @@ package middlewares
 
 import (
 	stdpath "path"
+	"strings"
 
 	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/errs"
@@ -28,7 +29,7 @@ func Down(c *gin.Context) {
 	// verify sign
 	if needSign(meta, rawPath) {
 		s := c.Query("sign")
-		err = sign.Verify(filename, s)
+		err = sign.Verify(filename, strings.TrimSuffix(s, "/"))
 		if err != nil {
 			common.ErrorResp(c, err, 401)
 			c.Abort()
