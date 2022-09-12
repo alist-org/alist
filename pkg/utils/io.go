@@ -40,3 +40,32 @@ func CopyWithCtx(ctx context.Context, out io.Writer, in io.Reader, size int64, p
 	}))
 	return err
 }
+
+type limitWriter struct {
+	w     io.Writer
+	count int64
+	limit int64
+}
+
+func (l limitWriter) Write(p []byte) (n int, err error) {
+	wn := int(l.limit - l.count)
+	if wn > len(p) {
+		wn = len(p)
+	}
+	if wn > 0 {
+		if n, err = l.w.Write(p[:wn]); err != nil {
+			return
+		}
+		if n < wn {
+			err = io.ErrShortWrite
+		}
+	}
+	if err == nil {
+		n = len(p)
+	}
+	return
+}
+
+func LimitWriter(w io.Writer, size int64) io.Writer {
+	return &limitWriter{w: w, limit: size}
+}

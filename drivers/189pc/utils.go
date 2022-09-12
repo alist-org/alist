@@ -533,7 +533,9 @@ func (y *Yun189PC) FastUpload(ctx context.Context, dstDir model.Obj, file model.
 		silceMd5Hexs = append(silceMd5Hexs, strings.ToUpper(hex.EncodeToString(md5Byte)))
 		silceMd5Base64s = append(silceMd5Base64s, fmt.Sprint(i, "-", base64.StdEncoding.EncodeToString(md5Byte)))
 	}
-	file.GetReadCloser().(*os.File).Seek(0, io.SeekStart)
+	if _, err = tempFile.Seek(0, io.SeekStart); err != nil {
+		return err
+	}
 
 	fileMd5Hex := strings.ToUpper(hex.EncodeToString(fileMd5.Sum(nil)))
 	sliceMd5Hex := fileMd5Hex
