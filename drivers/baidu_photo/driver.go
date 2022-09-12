@@ -177,7 +177,6 @@ func (d *BaiduPhoto) Put(ctx context.Context, dstDir model.Obj, stream model.Fil
 		_ = tempFile.Close()
 		_ = os.Remove(tempFile.Name())
 	}()
-	stream.SetReadCloser(tempFile)
 
 	// 计算需要的数据
 	const DEFAULT = 1 << 22
@@ -195,7 +194,7 @@ func (d *BaiduPhoto) Put(ctx context.Context, dstDir model.Obj, stream model.Fil
 			return ctx.Err()
 		default:
 		}
-		_, err := io.CopyN(io.MultiWriter(fileMd5, sliceMd5, slicemd52Write), stream, DEFAULT)
+		_, err := io.CopyN(io.MultiWriter(fileMd5, sliceMd5, slicemd52Write), tempFile, DEFAULT)
 		if err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
 			return err
 		}

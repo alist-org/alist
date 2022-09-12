@@ -508,7 +508,6 @@ func (y *Yun189PC) FastUpload(ctx context.Context, dstDir model.Obj, file model.
 		_ = tempFile.Close()
 		_ = os.Remove(tempFile.Name())
 	}()
-	file.SetReadCloser(tempFile)
 
 	const DEFAULT int64 = 10485760
 	count := int(math.Ceil(float64(file.GetSize()) / float64(DEFAULT)))
@@ -526,7 +525,7 @@ func (y *Yun189PC) FastUpload(ctx context.Context, dstDir model.Obj, file model.
 		}
 
 		silceMd5.Reset()
-		if _, err := io.CopyN(io.MultiWriter(fileMd5, silceMd5), file, DEFAULT); err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
+		if _, err := io.CopyN(io.MultiWriter(fileMd5, silceMd5), tempFile, DEFAULT); err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
 			return err
 		}
 		md5Byte := silceMd5.Sum(nil)
@@ -596,7 +595,7 @@ func (y *Yun189PC) FastUpload(ctx context.Context, dstDir model.Obj, file model.
 				SetContext(ctx).
 				SetQueryParams(clientSuffix()).
 				SetHeaders(ParseHttpHeader(uploadData.RequestHeader)).
-				SetBody(io.LimitReader(file, DEFAULT)).
+				SetBody(io.LimitReader(tempFile, DEFAULT)).
 				Put(uploadData.RequestURL)
 			if err != nil {
 				return err
