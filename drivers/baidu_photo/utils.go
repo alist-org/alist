@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/errs"
@@ -329,13 +328,13 @@ func (d *BaiduPhoto) linkAlbum(ctx context.Context, file model.Obj, args model.L
 		return nil, err
 	}
 
-	exp := 8 * time.Hour
+	//exp := 8 * time.Hour
 	link := &model.Link{
 		URL: res.Header().Get("location"),
 		Header: http.Header{
 			"User-Agent": []string{headers["User-Agent"]},
 		},
-		Expiration: &exp,
+		//Expiration: &exp,
 	}
 	return link, nil
 }
@@ -365,13 +364,13 @@ func (d *BaiduPhoto) linkFile(ctx context.Context, file model.Obj, args model.Li
 		return nil, err
 	}
 
-	exp := 8 * time.Hour
+	//exp := 8 * time.Hour
 	link := &model.Link{
 		URL: downloadUrl.Dlink,
 		Header: http.Header{
 			"User-Agent": []string{headers["User-Agent"]},
 		},
-		Expiration: &exp,
+		//Expiration: &exp,
 	}
 	return link, nil
 }

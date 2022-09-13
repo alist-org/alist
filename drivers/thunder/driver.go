@@ -4,10 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"regexp"
-	"strconv"
 	"strings"
-	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
@@ -255,14 +252,16 @@ func (xc *XunLeiCommon) Link(ctx context.Context, file model.Obj, args model.Lin
 		},
 	}
 
-	strs := regexp.MustCompile(`e=([0-9]*)`).FindStringSubmatch(lFile.WebContentLink)
-	if len(strs) == 2 {
-		timestamp, err := strconv.ParseInt(strs[1], 10, 64)
-		if err == nil {
-			expired := time.Duration(timestamp-time.Now().Unix()) * time.Second
-			link.Expiration = &expired
+	/*
+		strs := regexp.MustCompile(`e=([0-9]*)`).FindStringSubmatch(lFile.WebContentLink)
+		if len(strs) == 2 {
+			timestamp, err := strconv.ParseInt(strs[1], 10, 64)
+			if err == nil {
+				expired := time.Duration(timestamp-time.Now().Unix()) * time.Second
+				link.Expiration = &expired
+			}
 		}
-	}
+	*/
 	return link, nil
 }
 
