@@ -181,6 +181,7 @@ func MakeDir(ctx context.Context, storage driver.Driver, path string) error {
 	if storage.Config().CheckStatus && storage.GetStorage().Status != WORK {
 		return errors.Errorf("storage not init: %s", storage.GetStorage().Status)
 	}
+	path = utils.StandardizePath(path)
 	// check if dir exists
 	f, err := Get(ctx, storage, path)
 	if err != nil {
@@ -195,7 +196,11 @@ func MakeDir(ctx context.Context, storage driver.Driver, path string) error {
 			if err != nil {
 				return errors.WithMessagef(err, "failed to get parent dir [%s]", parentPath)
 			}
-			return errors.WithStack(storage.MakeDir(ctx, parentDir, dirName))
+			err = storage.MakeDir(ctx, parentDir, dirName)
+			if err == nil {
+				ClearCache(storage, parentPath)
+			}
+			return errors.WithStack(err)
 		} else {
 			return errors.WithMessage(err, "failed to check if dir exists")
 		}

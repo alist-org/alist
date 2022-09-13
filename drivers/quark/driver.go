@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
@@ -90,6 +91,9 @@ func (d *Quark) MakeDir(ctx context.Context, parentDir model.Obj, dirName string
 	_, err := d.request("/file", http.MethodPost, func(req *resty.Request) {
 		req.SetBody(data)
 	}, nil)
+	if err == nil {
+		time.Sleep(time.Second)
+	}
 	return err
 }
 
