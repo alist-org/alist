@@ -250,24 +250,24 @@ func FsGet(c *gin.Context) {
 	if err == nil {
 		provider = storage.Config().Name
 	}
-	// file have raw url
 	if !obj.IsDir() {
-		if u, ok := obj.(model.URL); ok {
-			rawURL = u.URL()
-		} else {
-			if err != nil {
-				common.ErrorResp(c, err, 500)
-				return
+		if err != nil {
+			common.ErrorResp(c, err, 500)
+			return
+		}
+		if storage.Config().MustProxy() || storage.GetStorage().WebProxy {
+			if storage.GetStorage().DownProxyUrl != "" {
+				rawURL = fmt.Sprintf("%s%s?sign=%s", strings.Split(storage.GetStorage().DownProxyUrl, "\n")[0], req.Path, sign.Sign(obj.GetName()))
+			} else {
+				rawURL = fmt.Sprintf("%s/p%s?sign=%s",
+					common.GetApiUrl(c.Request),
+					utils.EncodePath(req.Path, true),
+					sign.Sign(obj.GetName()))
 			}
-			if storage.Config().MustProxy() || storage.GetStorage().WebProxy {
-				if storage.GetStorage().DownProxyUrl != "" {
-					rawURL = fmt.Sprintf("%s%s?sign=%s", strings.Split(storage.GetStorage().DownProxyUrl, "\n")[0], req.Path, sign.Sign(obj.GetName()))
-				} else {
-					rawURL = fmt.Sprintf("%s/p%s?sign=%s",
-						common.GetApiUrl(c.Request),
-						utils.EncodePath(req.Path, true),
-						sign.Sign(obj.GetName()))
-				}
+		} else {
+			// file have raw url
+			if u, ok := obj.(model.URL); ok {
+				rawURL = u.URL()
 			} else {
 				// if storage is not proxy, use raw url by fs.Link
 				link, _, err := fs.Link(c, req.Path, model.LinkArgs{IP: c.ClientIP(), Header: c.Request.Header})
