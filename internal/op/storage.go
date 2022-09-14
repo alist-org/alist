@@ -94,19 +94,14 @@ func EnableStorage(ctx context.Context, id uint) error {
 	if !storage.Disabled {
 		return errors.Errorf("this storage have enabled")
 	}
-	err = LoadStorage(ctx, *storage)
-	if err != nil {
-		return errors.WithMessage(err, "failed load storage")
-	}
-	// re-get storage from db, because it maybe hava updated
-	storage, err = db.GetStorageById(id)
-	if err != nil {
-		return errors.WithMessage(err, "failed re-get storage again")
-	}
 	storage.Disabled = false
 	err = db.UpdateStorage(storage)
 	if err != nil {
-		return errors.WithMessage(err, "failed update storage in db, but have load in memory. you can try restart")
+		return errors.WithMessage(err, "failed update storage in db")
+	}
+	err = LoadStorage(ctx, *storage)
+	if err != nil {
+		return errors.WithMessage(err, "failed load storage")
 	}
 	return nil
 }
@@ -128,12 +123,12 @@ func DisableStorage(ctx context.Context, id uint) error {
 		return errors.Wrapf(err, "failed drop storage")
 	}
 	// delete the storage in the memory
-	storagesMap.Delete(storage.MountPath)
 	storage.Disabled = true
 	err = db.UpdateStorage(storage)
 	if err != nil {
-		return errors.WithMessage(err, "failed update storage in db, but have drop in memory. you can try restart")
+		return errors.WithMessage(err, "failed update storage in db")
 	}
+	storagesMap.Delete(storage.MountPath)
 	return nil
 }
 

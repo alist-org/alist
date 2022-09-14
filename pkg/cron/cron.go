@@ -30,6 +30,10 @@ func (c *Cron) Do(f func()) {
 }
 
 func (c *Cron) Stop() {
-	c.ch <- struct{}{}
-	close(c.ch)
+	select {
+	case _, _ = <-c.ch:
+	default:
+		c.ch <- struct{}{}
+		close(c.ch)
+	}
 }
