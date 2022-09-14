@@ -26,8 +26,9 @@ type ListReq struct {
 }
 
 type DirReq struct {
-	Path     string `json:"path" form:"path"`
-	Password string `json:"password" form:"password"`
+	Path      string `json:"path" form:"path"`
+	Password  string `json:"password" form:"password"`
+	ForceRoot bool   `json:"force_root" form:"force_root"`
 }
 
 type ObjResp struct {
@@ -93,7 +94,14 @@ func FsDirs(c *gin.Context) {
 		return
 	}
 	user := c.MustGet("user").(*model.User)
-	req.Path = stdpath.Join(user.BasePath, req.Path)
+	if req.ForceRoot {
+		if !user.IsAdmin() {
+			common.ErrorStrResp(c, "Permission denied", 403)
+			return
+		}
+	} else {
+		req.Path = stdpath.Join(user.BasePath, req.Path)
+	}
 	meta, err := db.GetNearestMeta(req.Path)
 	if err != nil {
 		if !errors.Is(errors.Cause(err), errs.MetaNotFound) {
