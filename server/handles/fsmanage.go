@@ -184,7 +184,7 @@ func FsRemove(c *gin.Context) {
 			return
 		}
 	}
-	fs.ClearCache(req.Dir)
+	//fs.ClearCache(req.Dir)
 	common.SuccessResp(c)
 }
 

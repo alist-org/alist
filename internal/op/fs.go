@@ -27,6 +27,10 @@ func ClearCache(storage driver.Driver, path string) {
 	listCache.Del(key)
 }
 
+func Key(storage driver.Driver, path string) string {
+	return stdpath.Join(storage.GetStorage().MountPath, utils.StandardizePath(path))
+}
+
 // List files in storage, not contains virtual file
 func List(ctx context.Context, storage driver.Driver, path string, args model.ListArgs, refresh ...bool) ([]model.Obj, error) {
 	if storage.Config().CheckStatus && storage.GetStorage().Status != WORK {
@@ -46,7 +50,7 @@ func List(ctx context.Context, storage driver.Driver, path string, args model.Li
 		objs, err := storage.List(ctx, dir, args)
 		return objs, errors.WithStack(err)
 	}
-	key := stdpath.Join(storage.GetStorage().MountPath, path)
+	key := Key(storage, path)
 	if len(refresh) == 0 || !refresh[0] {
 		if files, ok := listCache.Get(key); ok {
 			return files, nil
@@ -266,7 +270,28 @@ func Remove(ctx context.Context, storage driver.Driver, path string) error {
 		}
 		return errors.WithMessage(err, "failed to get object")
 	}
-	return errors.WithStack(storage.Remove(ctx, obj))
+	err = storage.Remove(ctx, obj)
+	if err == nil {
+		key := Key(storage, stdpath.Dir(path))
+		if objs, ok := listCache.Get(key); ok {
+			j := -1
+			for i, m := range objs {
+				if m.GetName() == obj.GetName() {
+					j = i
+					break
+				}
+			}
+			if j >= 0 && j < len(objs) {
+				objs = append(objs[:j], objs[j+1:]...)
+				listCache.Set(key, objs)
+			} else {
+				log.Debugf("not found obj")
+			}
+		} else {
+			log.Debugf("not found parent cache")
+		}
+	}
+	return errors.WithStack(err)
 }
 
 func Put(ctx context.Context, storage driver.Driver, dstDirPath string, file model.FileStreamer, up driver.UpdateProgress) error {
@@ -317,8 +342,8 @@ func Put(ctx context.Context, storage driver.Driver, dstDirPath string, file mod
 		// set as complete
 		up(100)
 		// clear cache
-		key := stdpath.Join(storage.GetStorage().MountPath, dstDirPath)
-		listCache.Del(key)
+		//key := stdpath.Join(storage.GetStorage().MountPath, dstDirPath)
+		//listCache.Del(key)
 	}
 	return errors.WithStack(err)
 }
