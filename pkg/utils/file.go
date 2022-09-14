@@ -4,6 +4,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/alist-org/alist/v3/internal/conf"
 	log "github.com/sirupsen/logrus"
@@ -56,7 +57,7 @@ func CreateTempFile(r io.ReadCloser) (*os.File, error) {
 
 // GetFileType get file type
 func GetFileType(filename string) int {
-	ext := Ext(filename)
+	ext := strings.ToLower(Ext(filename))
 	//if SliceContains(conf.TypesMap[conf.OfficeTypes], ext) {
 	//	return conf.OFFICE
 	//}
