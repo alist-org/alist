@@ -53,6 +53,9 @@ func InitDB() {
 				dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local&tls=%s",
 					database.User, database.Password, database.Host, database.Port, database.Name, database.SSLMode)
 				dB, err = gorm.Open(mysql.Open(dsn), gormConfig)
+				if err == nil {
+					dB = dB.Set("gorm:table_options", "ENGINE=InnoDB CHARSET=utf8mb4")
+				}
 			}
 		case "postgres":
 			{
