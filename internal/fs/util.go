@@ -1,6 +1,7 @@
 package fs
 
 import (
+	"fmt"
 	"io"
 	"mime"
 	"net/http"
@@ -8,8 +9,11 @@ import (
 	stdpath "path"
 	"strings"
 
+	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/op"
+	"github.com/alist-org/alist/v3/pkg/utils"
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 )
 
@@ -38,7 +42,13 @@ func getFileStreamFromLink(file model.Obj, link *model.Link) (model.FileStreamer
 	if link.Data != nil {
 		rc = link.Data
 	} else if link.FilePath != nil {
-		f, err := os.Open(*link.FilePath)
+		// copy a new temp, because will be deleted after upload
+		newFilePath := stdpath.Join(conf.Conf.TempDir, fmt.Sprintf("%s-%s", uuid.NewString(), file.GetName()))
+		err := utils.CopyFile(*link.FilePath, newFilePath)
+		if err != nil {
+			return nil, err
+		}
+		f, err := os.Open(newFilePath)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to open file %s", *link.FilePath)
 		}

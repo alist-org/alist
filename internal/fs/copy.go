@@ -12,6 +12,7 @@ import (
 	"github.com/alist-org/alist/v3/pkg/task"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 )
 
 var CopyTaskManager = task.NewTaskManager(3, func(tid *uint64) {
@@ -60,7 +61,7 @@ func copyBetween2Storages(t *task.Task[uint64], srcStorage, dstStorage driver.Dr
 				return nil
 			}
 			srcObjPath := stdpath.Join(srcObjPath, obj.GetName())
-			dstObjPath := stdpath.Join(dstDirPath, obj.GetName())
+			dstObjPath := stdpath.Join(dstDirPath, srcObj.GetName())
 			CopyTaskManager.Submit(task.WithCancelCtx(&task.Task[uint64]{
 				Name: fmt.Sprintf("copy [%s](%s) to [%s](%s)", srcStorage.GetStorage().MountPath, srcObjPath, dstStorage.GetStorage().MountPath, dstObjPath),
 				Func: func(t *task.Task[uint64]) error {
@@ -72,7 +73,9 @@ func copyBetween2Storages(t *task.Task[uint64], srcStorage, dstStorage driver.Dr
 		CopyTaskManager.Submit(task.WithCancelCtx(&task.Task[uint64]{
 			Name: fmt.Sprintf("copy [%s](%s) to [%s](%s)", srcStorage.GetStorage().MountPath, srcObjPath, dstStorage.GetStorage().MountPath, dstDirPath),
 			Func: func(t *task.Task[uint64]) error {
-				return copyFileBetween2Storages(t, srcStorage, dstStorage, srcObjPath, dstDirPath)
+				err := copyFileBetween2Storages(t, srcStorage, dstStorage, srcObjPath, dstDirPath)
+				log.Debugf("copy file between storages: %+v", err)
+				return err
 			},
 		}))
 	}

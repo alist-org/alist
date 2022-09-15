@@ -338,12 +338,10 @@ func Put(ctx context.Context, storage driver.Driver, dstDirPath string, file mod
 	}
 	err = storage.Put(ctx, parentDir, file, up)
 	log.Debugf("put file [%s] done", file.GetName())
-	if err == nil {
-		// set as complete
-		up(100)
-		// clear cache
-		//key := stdpath.Join(storage.GetStorage().MountPath, dstDirPath)
-		//listCache.Del(key)
-	}
+	//if err == nil {
+	//	//clear cache
+	//	key := stdpath.Join(storage.GetStorage().MountPath, dstDirPath)
+	//	listCache.Del(key)
+	//}
 	return errors.WithStack(err)
 }

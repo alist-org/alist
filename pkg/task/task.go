@@ -82,6 +82,7 @@ func (t *Task[K]) run() {
 		t.state = ERRORED
 	} else {
 		t.state = SUCCEEDED
+		t.SetProgress(100)
 		if t.callback != nil {
 			t.callback(t)
 		}

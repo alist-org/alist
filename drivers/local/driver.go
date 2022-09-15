@@ -175,9 +175,9 @@ func (d *Local) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 	dstPath := filepath.Join(dstDir.GetPath(), srcObj.GetName())
 	var err error
 	if srcObj.IsDir() {
-		err = copyDir(srcPath, dstPath)
+		err = utils.CopyDir(srcPath, dstPath)
 	} else {
-		err = copyFile(srcPath, dstPath)
+		err = utils.CopyFile(srcPath, dstPath)
 	}
 	if err != nil {
 		return err
