@@ -100,7 +100,7 @@ type (
 )
 
 func (a *Album) GetSize() int64  { return 0 }
-func (a *Album) GetName() string { return fmt.Sprint(a.Title, " -> ", a.AlbumID) }
+func (a *Album) GetName() string { return fmt.Sprint(a.Title) }
 func (a *Album) ModTime() time.Time {
 	if a.parseTime == nil {
 		a.parseTime = toTime(a.Mtime)

@@ -65,10 +65,16 @@ func (d *BaiduPhoto) List(ctx context.Context, dir model.Obj, args model.ListArg
 			}
 		}
 
-		objs = make([]model.Obj, 0, len(files)+len(albums))
-		for i := 0; i < len(albums); i++ {
-			objs = append(objs, &albums[i])
-		}
+		alubmName := make(map[string]int)
+		objs, _ = utils.SliceConvert(albums, func(album Album) (model.Obj, error) {
+			i := alubmName[album.GetName()]
+			if i != 0 {
+				alubmName[album.GetName()]++
+				album.Title = fmt.Sprintf("%s(%d)", album.Title, i)
+			}
+			alubmName[album.GetName()]++
+			return &album, nil
+		})
 		for i := 0; i < len(files); i++ {
 			objs = append(objs, &files[i])
 		}
