@@ -146,6 +146,7 @@ func (x *ThunderExpert) Init(ctx context.Context, storage model.Storage) (err er
 				PackageName:       x.PackageName,
 				UserAgent:         x.UserAgent,
 				DownloadUserAgent: x.DownloadUserAgent,
+				UseVideoUrl:       x.UseVideoUrl,
 			},
 		}
 
@@ -209,6 +210,7 @@ func (x *ThunderExpert) Init(ctx context.Context, storage model.Storage) (err er
 		}
 		x.XunLeiCommon.UserAgent = x.UserAgent
 		x.XunLeiCommon.DownloadUserAgent = x.DownloadUserAgent
+		x.XunLeiCommon.UseVideoUrl = x.UseVideoUrl
 	}
 	return nil
 }
@@ -250,6 +252,15 @@ func (xc *XunLeiCommon) Link(ctx context.Context, file model.Obj, args model.Lin
 		Header: http.Header{
 			"User-Agent": {xc.DownloadUserAgent},
 		},
+	}
+
+	if xc.UseVideoUrl {
+		for _, media := range lFile.Medias {
+			if media.Link.URL != "" {
+				link.URL = media.Link.URL
+				break
+			}
+		}
 	}
 
 	/*

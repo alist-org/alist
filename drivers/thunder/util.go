@@ -52,6 +52,7 @@ type Common struct {
 	PackageName       string
 	UserAgent         string
 	DownloadUserAgent string
+	UseVideoUrl       bool
 }
 
 func (c *Common) SetCaptchaToken(captchaToken string) {

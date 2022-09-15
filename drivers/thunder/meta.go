@@ -41,6 +41,9 @@ type ExpertAddition struct {
 	//不影响登录,影响下载速度
 	UserAgent         string `json:"user_agent"  required:"true" default:"ANDROID-com.xunlei.downloadprovider/7.51.0.8196 netWorkType/4G appid/40 deviceName/Xiaomi_M2004j7ac deviceModel/M2004J7AC OSVersion/12 protocolVersion/301 platformVersion/10 sdkVersion/220200 Oauth2Client/0.9 (Linux 4_14_186-perf-gdcf98eab238b) (JAVA 0)"`
 	DownloadUserAgent string `json:"download_user_agent"  required:"true" default:"Dalvik/2.1.0 (Linux; U; Android 12; M2004J7AC Build/SP1A.210812.016)"`
+
+	//优先使用视频链接代替下载链接
+	UseVideoUrl bool `json:"use_video_url"`
 }
 
 // 登录特征,用于判断是否重新登录
