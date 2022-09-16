@@ -52,12 +52,11 @@ func getKey(path string, dir bool) string {
 	return path
 }
 
-var defaultPlaceholderName = ".placeholder"
-
+// var defaultPlaceholderName = ".placeholder"
 func getPlaceholderName(placeholder string) string {
-	if placeholder == "" {
-		return defaultPlaceholderName
-	}
+	//if placeholder == "" {
+	//	return defaultPlaceholderName
+	//}
 	return placeholder
 }
 
@@ -204,4 +203,34 @@ func (d *S3) copyDir(ctx context.Context, src string, dst string) error {
 		}
 	}
 	return nil
+}
+
+func (d *S3) removeDir(ctx context.Context, src string) error {
+	objs, err := op.List(ctx, d, src, model.ListArgs{})
+	if err != nil {
+		return err
+	}
+	for _, obj := range objs {
+		cSrc := path.Join(src, obj.GetName())
+		if obj.IsDir() {
+			err = d.removeDir(ctx, cSrc)
+		} else {
+			err = d.removeFile(cSrc)
+		}
+		if err != nil {
+			return err
+		}
+	}
+	_ = d.removeFile(path.Join(src, getPlaceholderName(d.Placeholder)))
+	return nil
+}
+
+func (d *S3) removeFile(src string) error {
+	key := getKey(src, true)
+	input := &s3.DeleteObjectInput{
+		Bucket: &d.Bucket,
+		Key:    &key,
+	}
+	_, err := d.client.DeleteObject(input)
+	return err
 }

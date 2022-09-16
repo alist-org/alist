@@ -130,13 +130,10 @@ func (d *S3) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 }
 
 func (d *S3) Remove(ctx context.Context, obj model.Obj) error {
-	key := getKey(obj.GetPath(), obj.IsDir())
-	input := &s3.DeleteObjectInput{
-		Bucket: &d.Bucket,
-		Key:    &key,
+	if obj.IsDir() {
+		return d.removeDir(ctx, obj.GetPath())
 	}
-	_, err := d.client.DeleteObject(input)
-	return err
+	return d.removeFile(obj.GetPath())
 }
 
 func (d *S3) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
