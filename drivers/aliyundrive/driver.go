@@ -234,7 +234,10 @@ func (d *AliDrive) Put(ctx context.Context, dstDir model.Obj, stream model.FileS
 		buf := make([]byte, 8)
 		r, _ := new(big.Int).SetString(utils.GetMD5Encode(d.AccessToken)[:16], 16)
 		i := new(big.Int).SetInt64(file.GetSize())
-		o := r.Mod(r, i)
+		o := new(big.Int).SetInt64(0)
+		if file.GetSize() > 0 {
+			o = r.Mod(r, i)
+		}
 		n, _ := io.NewSectionReader(tempFile, o.Int64(), 8).Read(buf[:8])
 		reqBody["proof_code"] = base64.StdEncoding.EncodeToString(buf[:n])
 
