@@ -16,37 +16,43 @@ import (
 func list(ctx context.Context, path string, refresh ...bool) ([]model.Obj, error) {
 	meta := ctx.Value("meta").(*model.Meta)
 	user := ctx.Value("user").(*model.User)
+	var objs []model.Obj
 	storage, actualPath, err := op.GetStorageAndActualPath(path)
 	virtualFiles := op.GetStorageVirtualFilesByPath(path)
 	if err != nil {
-		if len(virtualFiles) != 0 {
-			return virtualFiles, nil
+		if len(virtualFiles) == 0 {
+			return nil, errors.WithMessage(err, "failed get storage")
 		}
-		return nil, errors.WithMessage(err, "failed get storage")
-	}
-	objs, err := op.List(ctx, storage, actualPath, model.ListArgs{
-		ReqPath: path,
-	}, refresh...)
-	if err != nil {
-		log.Errorf("%+v", err)
-		if len(virtualFiles) != 0 {
-			return virtualFiles, nil
+	} else {
+		objs, err = op.List(ctx, storage, actualPath, model.ListArgs{
+			ReqPath: path,
+		}, refresh...)
+		if err != nil {
+			log.Errorf("%+v", err)
+			if len(virtualFiles) == 0 {
+				return nil, errors.WithMessage(err, "failed get objs")
+			}
 		}
-		return nil, errors.WithMessage(err, "failed get objs")
 	}
-	for _, storageFile := range virtualFiles {
-		if !containsByName(objs, storageFile) {
-			objs = append(objs, storageFile)
+	if objs == nil {
+		objs = virtualFiles
+	} else {
+		for _, storageFile := range virtualFiles {
+			if !containsByName(objs, storageFile) {
+				objs = append(objs, storageFile)
+			}
 		}
 	}
 	if whetherHide(user, meta, path) {
 		objs = hide(objs, meta)
 	}
 	// sort objs
-	if storage.Config().LocalSort {
-		model.SortFiles(objs, storage.GetStorage().OrderBy, storage.GetStorage().OrderDirection)
+	if storage != nil {
+		if storage.Config().LocalSort {
+			model.SortFiles(objs, storage.GetStorage().OrderBy, storage.GetStorage().OrderDirection)
+		}
+		model.ExtractFolder(objs, storage.GetStorage().ExtractFolder)
 	}
-	model.ExtractFolder(objs, storage.GetStorage().ExtractFolder)
 	return objs, nil
 }
 
