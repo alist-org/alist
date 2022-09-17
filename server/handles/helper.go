@@ -10,7 +10,6 @@ import (
 	"github.com/alist-org/alist/v3/internal/setting"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
-	log "github.com/sirupsen/logrus"
 )
 
 func Favicon(c *gin.Context) {
@@ -38,10 +37,18 @@ func Plist(c *gin.Context) {
 		common.ErrorResp(c, err, 500)
 		return
 	}
-	name := c.Param("name")
-	log.Debug("name", name)
+	fullName := c.Param("name")
 	Url := uUrl.String()
-	name = strings.TrimSuffix(name, ".plist")
+	fullName = strings.TrimSuffix(fullName, ".plist")
+	name := fullName
+	identifier := fmt.Sprintf("ci.nn.%s", url.PathEscape(fullName))
+
+	if strings.Contains(fullName, "_") {
+		ss := strings.Split(fullName, "_")
+		name = strings.Join(ss[:len(ss)-1], "_")
+		identifier = ss[len(ss)-1]
+	}
+
 	name = strings.ReplaceAll(name, "<", "[")
 	name = strings.ReplaceAll(name, ">", "]")
 	plist := fmt.Sprintf(`<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -56,13 +63,13 @@ func Plist(c *gin.Context) {
                         <key>kind</key>
                         <string>software-package</string>
                         <key>url</key>
-                        <string>%s</string>
+                        <string><![CDATA[%s]]></string>
                     </dict>
                 </array>
                 <key>metadata</key>
                 <dict>
                     <key>bundle-identifier</key>
-					<string>ci.nn.%s</string>
+					<string>%s</string>
 					<key>bundle-version</key>
                     <string>4.4</string>
                     <key>kind</key>
@@ -73,7 +80,7 @@ func Plist(c *gin.Context) {
             </dict>
         </array>
     </dict>
-</plist>`, Url, url.PathEscape(name), name)
+</plist>`, Url, identifier, name)
 	c.Header("Content-Type", "application/xml;charset=utf-8")
 	c.Status(200)
 	_, _ = c.Writer.WriteString(plist)
