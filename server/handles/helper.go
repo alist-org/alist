@@ -1,6 +1,7 @@
 package handles
 
 import (
+	"encoding/base64"
 	"fmt"
 	"net/url"
 	"strings"
@@ -16,21 +17,30 @@ func Favicon(c *gin.Context) {
 	c.Redirect(302, setting.GetStr(conf.Favicon))
 }
 
+var DEC = map[string]string{
+	"-": "+",
+	"_": "/",
+	".": "=",
+}
+
 func Plist(c *gin.Context) {
 	link := c.Param("link")
-	u, err := url.PathUnescape(link)
+	for k, v := range DEC {
+		link = strings.ReplaceAll(link, k, v)
+	}
+	u, err := base64.StdEncoding.DecodeString(link)
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return
 	}
-	uUrl, err := url.Parse(u)
+	uUrl, err := url.Parse(string(u))
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return
 	}
 	name := c.Param("name")
 	log.Debug("name", name)
-	u = uUrl.String()
+	Url := uUrl.String()
 	name = strings.TrimSuffix(name, ".plist")
 	name = strings.ReplaceAll(name, "<", "[")
 	name = strings.ReplaceAll(name, ">", "]")
@@ -63,7 +73,7 @@ func Plist(c *gin.Context) {
             </dict>
         </array>
     </dict>
-</plist>`, u, url.PathEscape(name), name)
+</plist>`, Url, url.PathEscape(name), name)
 	c.Header("Content-Type", "application/xml;charset=utf-8")
 	c.Status(200)
 	_, _ = c.Writer.WriteString(plist)
