@@ -42,10 +42,10 @@ func Plist(c *gin.Context) {
 	fullName = strings.TrimSuffix(fullName, ".plist")
 	name := fullName
 	identifier := fmt.Sprintf("ci.nn.%s", url.PathEscape(fullName))
-
-	if strings.Contains(fullName, "_") {
-		ss := strings.Split(fullName, "_")
-		name = strings.Join(ss[:len(ss)-1], "_")
+	sep := "@"
+	if strings.Contains(fullName, sep) {
+		ss := strings.Split(fullName, sep)
+		name = strings.Join(ss[:len(ss)-1], sep)
 		identifier = ss[len(ss)-1]
 	}
 
