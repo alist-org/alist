@@ -122,6 +122,10 @@ func (tm *Manager[K]) ClearDone() {
 	tm.RemoveByStates(SUCCEEDED, CANCELED, ERRORED)
 }
 
+func (tm *Manager[K]) RawTasks() *generic_sync.MapOf[K, *Task[K]] {
+	return &tm.tasks
+}
+
 func NewTaskManager[K comparable](maxWorker int, updateID ...func(*K)) *Manager[K] {
 	tm := &Manager[K]{
 		tasks:   generic_sync.MapOf[K, *Task[K]]{},

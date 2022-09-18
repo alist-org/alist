@@ -76,10 +76,15 @@ func (m *Monitor) Update() (bool, error) {
 	}
 	m.retried = 0
 	if len(info.FollowedBy) != 0 {
+		log.Debugf("followen by: %+v", info.FollowedBy)
 		gid := info.FollowedBy[0]
 		notify.Signals.Delete(m.tsk.ID)
+		oldId := m.tsk.ID
 		m.tsk.ID = gid
+		DownTaskManager.RawTasks().Delete(oldId)
+		DownTaskManager.RawTasks().Store(m.tsk.ID, m.tsk)
 		notify.Signals.Store(gid, m.c)
+		return false, nil
 	}
 	// update download status
 	total, err := strconv.ParseUint(info.TotalLength, 10, 64)
@@ -120,6 +125,7 @@ func (m *Monitor) Complete() error {
 	}
 	// get files
 	files, err := client.GetFiles(m.tsk.ID)
+	log.Debugf("files len: %d", len(files))
 	if err != nil {
 		return errors.Wrapf(err, "failed to get files of %s", m.tsk.ID)
 	}
@@ -134,7 +140,8 @@ func (m *Monitor) Complete() error {
 			log.Errorf("failed to remove aria2 temp dir: %+v", err.Error())
 		}
 	}()
-	for _, file := range files {
+	for i, _ := range files {
+		file := files[i]
 		TransferTaskManager.Submit(task.WithCancelCtx(&task.Task[uint64]{
 			Name: fmt.Sprintf("transfer %s to [%s](%s)", file.Path, storage.GetStorage().MountPath, dstDirActualPath),
 			Func: func(tsk *task.Task[uint64]) error {
