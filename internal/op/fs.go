@@ -52,7 +52,7 @@ func List(ctx context.Context, storage driver.Driver, path string, args model.Li
 	}
 	key := Key(storage, path)
 	if len(refresh) == 0 || !refresh[0] {
-		if files, ok := listCache.Get(key); ok {
+		if files, ok := listCache.Get(key); ok && len(files) > 0 {
 			return files, nil
 		}
 	}
