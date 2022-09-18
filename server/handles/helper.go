@@ -1,13 +1,13 @@
 package handles
 
 import (
-	"encoding/base64"
 	"fmt"
 	"net/url"
 	"strings"
 
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/setting"
+	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
 )
@@ -16,30 +16,26 @@ func Favicon(c *gin.Context) {
 	c.Redirect(302, setting.GetStr(conf.Favicon))
 }
 
-var DEC = map[string]string{
-	"-": "+",
-	"_": "/",
-	".": "=",
-}
-
 func Plist(c *gin.Context) {
 	link := c.Param("link")
-	for k, v := range DEC {
-		link = strings.ReplaceAll(link, k, v)
-	}
-	u, err := base64.StdEncoding.DecodeString(link)
+	u, err := utils.SafeAtob(link)
 	if err != nil {
-		common.ErrorResp(c, err, 500)
+		common.ErrorResp(c, err, 400)
 		return
 	}
-	uUrl, err := url.Parse(string(u))
+	uUrl, err := url.Parse(u)
 	if err != nil {
-		common.ErrorResp(c, err, 500)
+		common.ErrorResp(c, err, 400)
 		return
 	}
 	fullName := c.Param("name")
 	Url := uUrl.String()
 	fullName = strings.TrimSuffix(fullName, ".plist")
+	fullName, err = utils.SafeAtob(fullName)
+	if err != nil {
+		common.ErrorResp(c, err, 400)
+		return
+	}
 	name := fullName
 	identifier := fmt.Sprintf("ci.nn.%s", url.PathEscape(fullName))
 	sep := "@"
