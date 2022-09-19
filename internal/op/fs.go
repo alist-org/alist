@@ -181,42 +181,49 @@ func Other(ctx context.Context, storage driver.Driver, args model.FsOtherArgs) (
 	}
 }
 
+var mkdirG singleflight.Group[interface{}]
+
 func MakeDir(ctx context.Context, storage driver.Driver, path string) error {
 	if storage.Config().CheckStatus && storage.GetStorage().Status != WORK {
 		return errors.Errorf("storage not init: %s", storage.GetStorage().Status)
 	}
 	path = utils.StandardizePath(path)
-	// check if dir exists
-	f, err := Get(ctx, storage, path)
-	if err != nil {
-		if errs.IsObjectNotFound(err) {
-			parentPath, dirName := stdpath.Split(path)
-			err = MakeDir(ctx, storage, parentPath)
-			if err != nil {
-				return errors.WithMessagef(err, "failed to make parent dir [%s]", parentPath)
+	key := Key(storage, path)
+	_, err, _ := mkdirG.Do(key, func() (interface{}, error) {
+		// check if dir exists
+		f, err := Get(ctx, storage, path)
+		if err != nil {
+			if errs.IsObjectNotFound(err) {
+				parentPath, dirName := stdpath.Split(path)
+				err = MakeDir(ctx, storage, parentPath)
+				if err != nil {
+					return nil, errors.WithMessagef(err, "failed to make parent dir [%s]", parentPath)
+				}
+				parentDir, err := Get(ctx, storage, parentPath)
+				// this should not happen
+				if err != nil {
+					return nil, errors.WithMessagef(err, "failed to get parent dir [%s]", parentPath)
+				}
+				err = storage.MakeDir(ctx, parentDir, dirName)
+				if err == nil {
+					ClearCache(storage, parentPath)
+				}
+				return nil, errors.WithStack(err)
+			} else {
+				return nil, errors.WithMessage(err, "failed to check if dir exists")
 			}
-			parentDir, err := Get(ctx, storage, parentPath)
-			// this should not happen
-			if err != nil {
-				return errors.WithMessagef(err, "failed to get parent dir [%s]", parentPath)
-			}
-			err = storage.MakeDir(ctx, parentDir, dirName)
-			if err == nil {
-				ClearCache(storage, parentPath)
-			}
-			return errors.WithStack(err)
 		} else {
-			return errors.WithMessage(err, "failed to check if dir exists")
+			// dir exists
+			if f.IsDir() {
+				return nil, nil
+			} else {
+				// dir to make is a file
+				return nil, errors.New("file exists")
+			}
 		}
-	} else {
-		// dir exists
-		if f.IsDir() {
-			return nil
-		} else {
-			// dir to make is a file
-			return errors.New("file exists")
-		}
-	}
+	})
+	return err
+
 }
 
 func Move(ctx context.Context, storage driver.Driver, srcPath, dstDirPath string) error {
