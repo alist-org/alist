@@ -31,7 +31,7 @@ func FsMkdir(c *gin.Context) {
 	user := c.MustGet("user").(*model.User)
 	req.Path = stdpath.Join(user.BasePath, req.Path)
 	if !user.CanWrite() {
-		meta, err := db.GetNearestMeta(req.Path)
+		meta, err := db.GetNearestMeta(stdpath.Dir(req.Path))
 		if err != nil {
 			if !errors.Is(errors.Cause(err), errs.MetaNotFound) {
 				common.ErrorResp(c, err, 500, true)
@@ -199,7 +199,7 @@ func FsPut(c *gin.Context) {
 	user := c.MustGet("user").(*model.User)
 	path = stdpath.Join(user.BasePath, path)
 	if !user.CanWrite() {
-		meta, err := db.GetNearestMeta(path)
+		meta, err := db.GetNearestMeta(stdpath.Dir(path))
 		if err != nil {
 			if !errors.Is(errors.Cause(err), errs.MetaNotFound) {
 				common.ErrorResp(c, err, 500, true)
