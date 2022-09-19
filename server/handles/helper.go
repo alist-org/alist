@@ -17,21 +17,32 @@ func Favicon(c *gin.Context) {
 }
 
 func Plist(c *gin.Context) {
-	link := c.Param("link")
-	u, err := utils.SafeAtob(link)
+	linkNameB64 := strings.TrimSuffix(c.Param("link_name"), ".plist")
+	linkName, err := utils.SafeAtob(linkNameB64)
 	if err != nil {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	uUrl, err := url.Parse(u)
+	linkNameSplit := strings.Split(linkName, "/")
+	if len(linkNameSplit) != 2 {
+		common.ErrorStrResp(c, "malformed link", 400)
+		return
+	}
+	linkEncode := linkNameSplit[0]
+	linkStr, err := url.PathUnescape(linkEncode)
+	if err != nil {
+		common.ErrorResp(c, err, 400)
+		return
+	}
+	link, err := url.Parse(linkStr)
 	if err != nil {
 		common.ErrorResp(c, err, 400)
 		return
 	}
 	fullName := c.Param("name")
-	Url := uUrl.String()
-	fullName = strings.TrimSuffix(fullName, ".plist")
-	fullName, err = utils.SafeAtob(fullName)
+	Url := link.String()
+	nameEncode := linkNameSplit[1]
+	fullName, err = url.PathUnescape(nameEncode)
 	if err != nil {
 		common.ErrorResp(c, err, 400)
 		return

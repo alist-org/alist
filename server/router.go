@@ -19,7 +19,7 @@ func Init(r *gin.Engine) {
 	WebDav(r.Group("/dav"))
 
 	r.GET("/favicon.ico", handles.Favicon)
-	r.GET("/i/:link/:name", handles.Plist)
+	r.GET("/i/:link_name", handles.Plist)
 	r.GET("/d/*path", middlewares.Down, handles.Down)
 	r.GET("/p/*path", middlewares.Down, handles.Proxy)
 
