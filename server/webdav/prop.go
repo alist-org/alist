@@ -419,10 +419,11 @@ func findContentType(ctx context.Context, ls LockSystem, name string, fi model.O
 	//defer f.Close()
 	// This implementation is based on serveContent's code in the standard net/http package.
 	ctype := mime.TypeByExtension(path.Ext(name))
-	if ctype != "" {
-		return ctype, nil
-	}
-	return "application/octet-stream", nil
+	return ctype, nil
+	//if ctype != "" {
+	//	return ctype, nil
+	//}
+	//return "application/octet-stream", nil
 	// Read a chunk to decide between utf-8 text and binary.
 	//var buf [512]byte
 	//n, err := io.ReadFull(f, buf[:])
