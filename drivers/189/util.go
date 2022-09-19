@@ -215,6 +215,7 @@ func (d *Cloud189) getFiles(fileId string) ([]model.Obj, error) {
 					ID:       strconv.FormatInt(file.Id, 10),
 					Name:     file.Name,
 					Modified: lastOpTime,
+					Size:     file.Size,
 				},
 				Thumbnail: model.Thumbnail{Thumbnail: file.Icon.SmallUrl},
 			})
