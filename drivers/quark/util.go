@@ -62,7 +62,9 @@ func (d *Quark) GetFiles(parent string) ([]File, error) {
 		"pdir_fid":     parent,
 		"_size":        strconv.Itoa(size),
 		"_fetch_total": "1",
-		"_sort":        "file_type:asc," + d.OrderBy + ":" + d.OrderDirection,
+	}
+	if d.OrderBy != "none" {
+		query["_sort"] = "file_type:asc," + d.OrderBy + ":" + d.OrderDirection
 	}
 	for {
 		query["_page"] = strconv.Itoa(page)
