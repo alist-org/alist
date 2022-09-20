@@ -19,5 +19,6 @@ func (d *FTP) login() error {
 	if err != nil {
 		return err
 	}
+	d.conn = conn
 	return nil
 }
