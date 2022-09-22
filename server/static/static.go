@@ -10,6 +10,7 @@ import (
 	"github.com/alist-org/alist/v3/cmd/flags"
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/setting"
+	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/public"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
@@ -28,6 +29,12 @@ func UpdateIndex() {
 	cdn := strings.TrimSuffix(conf.Conf.Cdn, "/")
 	cdn = strings.ReplaceAll(cdn, "$version", conf.WebVersion)
 	basePath := setting.GetStr(conf.BasePath)
+	if basePath != "" {
+		basePath = utils.StandardizePath(basePath)
+	}
+	if cdn == "" {
+		cdn = basePath
+	}
 	apiUrl := setting.GetStr(conf.ApiUrl)
 	favicon := setting.GetStr(conf.Favicon)
 	title := setting.GetStr(conf.SiteTitle)
