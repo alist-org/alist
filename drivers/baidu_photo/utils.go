@@ -333,6 +333,7 @@ func (d *BaiduPhoto) linkAlbum(ctx context.Context, file model.Obj, args model.L
 		URL: res.Header().Get("location"),
 		Header: http.Header{
 			"User-Agent": []string{headers["User-Agent"]},
+			"Referer":    []string{"https://photo.baidu.com/"},
 		},
 		//Expiration: &exp,
 	}
@@ -369,6 +370,7 @@ func (d *BaiduPhoto) linkFile(ctx context.Context, file model.Obj, args model.Li
 		URL: downloadUrl.Dlink,
 		Header: http.Header{
 			"User-Agent": []string{headers["User-Agent"]},
+			"Referer":    []string{"https://photo.baidu.com/"},
 		},
 		//Expiration: &exp,
 	}
