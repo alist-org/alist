@@ -42,10 +42,11 @@ type ObjResp struct {
 }
 
 type FsListResp struct {
-	Content []ObjResp `json:"content"`
-	Total   int64     `json:"total"`
-	Readme  string    `json:"readme"`
-	Write   bool      `json:"write"`
+	Content  []ObjResp `json:"content"`
+	Total    int64     `json:"total"`
+	Readme   string    `json:"readme"`
+	Write    bool      `json:"write"`
+	Provider string    `json:"provider"`
 }
 
 func FsList(c *gin.Context) {
@@ -79,11 +80,17 @@ func FsList(c *gin.Context) {
 		return
 	}
 	total, objs := pagination(objs, &req.PageReq)
+	provider := "unknown"
+	storage, err := fs.GetStorage(req.Path)
+	if err == nil {
+		provider = storage.GetStorage().Driver
+	}
 	common.SuccessResp(c, FsListResp{
-		Content: toObjResp(objs, isEncrypt(meta, req.Path)),
-		Total:   int64(total),
-		Readme:  getReadme(meta, req.Path),
-		Write:   user.CanWrite() || canWrite(meta, req.Path),
+		Content:  toObjResp(objs, isEncrypt(meta, req.Path)),
+		Total:    int64(total),
+		Readme:   getReadme(meta, req.Path),
+		Write:    user.CanWrite() || canWrite(meta, req.Path),
+		Provider: provider,
 	})
 }
 
