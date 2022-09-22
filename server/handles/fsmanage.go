@@ -2,10 +2,7 @@ package handles
 
 import (
 	"fmt"
-	"net/url"
 	stdpath "path"
-	"strconv"
-	"time"
 
 	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/errs"
@@ -185,59 +182,6 @@ func FsRemove(c *gin.Context) {
 		}
 	}
 	//fs.ClearCache(req.Dir)
-	common.SuccessResp(c)
-}
-
-func FsPut(c *gin.Context) {
-	path := c.GetHeader("File-Path")
-	path, err := url.PathUnescape(path)
-	if err != nil {
-		common.ErrorResp(c, err, 400)
-		return
-	}
-	asTask := c.GetHeader("As-Task") == "true"
-	user := c.MustGet("user").(*model.User)
-	path = stdpath.Join(user.BasePath, path)
-	if !user.CanWrite() {
-		meta, err := db.GetNearestMeta(stdpath.Dir(path))
-		if err != nil {
-			if !errors.Is(errors.Cause(err), errs.MetaNotFound) {
-				common.ErrorResp(c, err, 500, true)
-				return
-			}
-		}
-		if !canWrite(meta, path) {
-			common.ErrorResp(c, errs.PermissionDenied, 403)
-			return
-		}
-	}
-
-	dir, name := stdpath.Split(path)
-	sizeStr := c.GetHeader("Content-Length")
-	size, err := strconv.ParseInt(sizeStr, 10, 64)
-	if err != nil {
-		common.ErrorResp(c, err, 400)
-		return
-	}
-	stream := &model.FileStream{
-		Obj: &model.Object{
-			Name:     name,
-			Size:     size,
-			Modified: time.Now(),
-		},
-		ReadCloser:   c.Request.Body,
-		Mimetype:     c.GetHeader("Content-Type"),
-		WebPutAsTask: asTask,
-	}
-	if asTask {
-		err = fs.PutAsTask(dir, stream)
-	} else {
-		err = fs.PutDirectly(c, dir, stream)
-	}
-	if err != nil {
-		common.ErrorResp(c, err, 500)
-		return
-	}
 	common.SuccessResp(c)
 }
 

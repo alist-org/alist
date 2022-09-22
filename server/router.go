@@ -119,7 +119,8 @@ func _fs(g *gin.RouterGroup) {
 	g.POST("/move", handles.FsMove)
 	g.POST("/copy", handles.FsCopy)
 	g.POST("/remove", handles.FsRemove)
-	g.PUT("/put", handles.FsPut)
+	g.PUT("/put", handles.FsStream)
+	g.PUT("/form", handles.FsForm)
 	g.POST("/link", middlewares.AuthAdmin, handles.Link)
 	g.POST("/add_aria2", handles.AddAria2)
 }
