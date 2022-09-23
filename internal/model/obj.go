@@ -58,7 +58,7 @@ func SortFiles(objs []Obj, orderBy, orderDirection string) {
 				}
 				return objs[i].GetSize() <= objs[j].GetSize()
 			}
-		case "updated_at":
+		case "modified":
 			if orderDirection == "desc" {
 				return objs[i].ModTime().After(objs[j].ModTime())
 			}
