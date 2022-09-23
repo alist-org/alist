@@ -164,7 +164,7 @@ func (d *Pan123) Remove(ctx context.Context, obj model.Obj) error {
 			"operation":         true,
 			"fileTrashInfoList": []File{f},
 		}
-		_, err := d.request("https://www.123pan.com/a/api/file/trash", http.MethodPost, func(req *resty.Request) {
+		_, err := d.request("https://www.123pan.com/b/api/file/trash", http.MethodPost, func(req *resty.Request) {
 			req.SetBody(data)
 		}, nil)
 		return err
