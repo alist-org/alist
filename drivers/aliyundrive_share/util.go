@@ -80,7 +80,7 @@ func (d *AliyundriveShare) getFiles(fileId string) ([]File, error) {
 		}
 		log.Debugf("aliyundrive share get files: %s", res.String())
 		if e.Code != "" {
-			if e.Code == "AccessTokenInvalid" {
+			if e.Code == "AccessTokenInvalid" || e.Code == "ShareLinkTokenInvalid" {
 				err = d.getShareToken()
 				if err != nil {
 					return nil, err
