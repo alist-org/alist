@@ -70,8 +70,8 @@ func InitialSettings() []model.SettingItem {
 	initialSettingItems = []model.SettingItem{
 		// site settings
 		{Key: conf.VERSION, Value: conf.Version, Type: conf.TypeString, Group: model.SITE, Flag: model.READONLY},
-		{Key: conf.ApiUrl, Value: "", Type: conf.TypeString, Group: model.SITE},
-		{Key: conf.BasePath, Value: "", Type: conf.TypeString, Group: model.SITE},
+		//{Key: conf.ApiUrl, Value: "", Type: conf.TypeString, Group: model.SITE},
+		//{Key: conf.BasePath, Value: "", Type: conf.TypeString, Group: model.SITE},
 		{Key: conf.SiteTitle, Value: "AList", Type: conf.TypeString, Group: model.SITE},
 		{Key: conf.Announcement, Value: "### repo\nhttps://github.com/alist-org/alist", Type: conf.TypeText, Group: model.SITE},
 		{Key: "pagination_type", Value: "all", Type: conf.TypeSelect, Options: "all,pagination,load_more,auto_load_more", Group: model.SITE},

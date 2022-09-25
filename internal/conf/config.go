@@ -35,8 +35,9 @@ type Config struct {
 	Force     bool      `json:"force" env:"FORCE"`
 	Address   string    `json:"address" env:"ADDR"`
 	Port      int       `json:"port" env:"PORT"`
-	JwtSecret string    `json:"jwt_secret" env:"JWT_SECRET"`
+	SiteURL   string    `json:"site_url" env:"SITE_URL"`
 	Cdn       string    `json:"cdn" env:"CDN"`
+	JwtSecret string    `json:"jwt_secret" env:"JWT_SECRET"`
 	Database  Database  `json:"database"`
 	Scheme    Scheme    `json:"scheme"`
 	TempDir   string    `json:"temp_dir" env:"TEMP_DIR"`

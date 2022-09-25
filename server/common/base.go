@@ -10,15 +10,17 @@ import (
 )
 
 func GetApiUrl(r *http.Request) string {
-	api := setting.GetStr(conf.ApiUrl)
-	protocol := "http"
-	if r != nil {
+	api := conf.Conf.SiteURL
+	if api == "" {
+		api = setting.GetStr(conf.ApiUrl)
+	}
+	if r != nil && api == "" {
+		protocol := "http"
 		if r.TLS != nil {
 			protocol = "https"
 		}
-		if api == "" {
-			api = fmt.Sprintf("%s://%s", protocol, r.Host)
-		}
+		api = fmt.Sprintf("%s://%s", protocol, r.Host)
+
 	}
 	strings.TrimSuffix(api, "/")
 	return api
