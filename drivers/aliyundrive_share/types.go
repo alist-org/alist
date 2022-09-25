@@ -50,8 +50,8 @@ func fileToObj(f File) *model.ObjThumb {
 	}
 }
 
-//type ShareLinkResp struct {
-//	DownloadUrl string `json:"download_url"`
-//	Url         string `json:"url"`
-//	Thumbnail   string `json:"thumbnail"`
-//}
+type ShareLinkResp struct {
+	DownloadUrl string `json:"download_url"`
+	Url         string `json:"url"`
+	Thumbnail   string `json:"thumbnail"`
+}
