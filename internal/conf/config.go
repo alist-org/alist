@@ -23,7 +23,7 @@ type Scheme struct {
 }
 
 type LogConfig struct {
-	Enable     bool   `json:"enable" env:"log_enable"`
+	Enable     bool   `json:"enable" env:"LOG_ENABLE"`
 	Name       string `json:"name" env:"LOG_NAME"`
 	MaxSize    int    `json:"max_size" env:"MAX_SIZE"`
 	MaxBackups int    `json:"max_backups" env:"MAX_BACKUPS"`
@@ -32,16 +32,15 @@ type LogConfig struct {
 }
 
 type Config struct {
-	Force     bool   `json:"force"`
-	Address   string `json:"address" env:"ADDR"`
-	Port      int    `json:"port" env:"PORT"`
-	JwtSecret string `json:"jwt_secret" env:"JWT_SECRET"`
-	// CaCheExpiration int       `json:"cache_expiration" env:"CACHE_EXPIRATION"`
-	Cdn      string    `json:"cdn" env:"CDN"`
-	Database Database  `json:"database"`
-	Scheme   Scheme    `json:"scheme"`
-	TempDir  string    `json:"temp_dir" env:"TEMP_DIR"`
-	Log      LogConfig `json:"log"`
+	Force     bool      `json:"force" env:"FORCE"`
+	Address   string    `json:"address" env:"ADDR"`
+	Port      int       `json:"port" env:"PORT"`
+	JwtSecret string    `json:"jwt_secret" env:"JWT_SECRET"`
+	Cdn       string    `json:"cdn" env:"CDN"`
+	Database  Database  `json:"database"`
+	Scheme    Scheme    `json:"scheme"`
+	TempDir   string    `json:"temp_dir" env:"TEMP_DIR"`
+	Log       LogConfig `json:"log"`
 }
 
 func DefaultConfig() *Config {
