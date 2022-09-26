@@ -39,7 +39,7 @@ func InitConfig() {
 		if err != nil {
 			log.Fatalf("marshal config error: %+v", err)
 		}
-		err = ioutil.WriteFile(flags.Config, confBody, 0777)
+		err = os.WriteFile(flags.Config, confBody, 0777)
 		if err != nil {
 			log.Fatalf("update config struct error: %+v", err)
 		}
@@ -59,7 +59,7 @@ func InitConfig() {
 	if err != nil {
 		log.Errorln("failed delete temp file:", err)
 	}
-	err = os.MkdirAll(conf.Conf.TempDir, 0700)
+	err = os.MkdirAll(conf.Conf.TempDir, 0777)
 	if err != nil {
 		log.Fatalf("create temp dir error: %+v", err)
 	}
