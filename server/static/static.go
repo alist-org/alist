@@ -21,11 +21,19 @@ func InitIndex() {
 		log.Fatalf("failed to read index.html: %v", err)
 	}
 	conf.RawIndexHtml = string(index)
+	siteConfig := getSiteConfig()
+	replaceMap := map[string]string{
+		"cdn: undefined":       fmt.Sprintf("cdn: '%s'", siteConfig.Cdn),
+		"base_path: undefined": fmt.Sprintf("base_path: '%s'", siteConfig.BasePath),
+		"api: undefined":       fmt.Sprintf("api: '%s'", siteConfig.ApiURL),
+	}
+	for k, v := range replaceMap {
+		conf.RawIndexHtml = strings.Replace(conf.RawIndexHtml, k, v, 1)
+	}
 	UpdateIndex()
 }
 
 func UpdateIndex() {
-	siteConfig := getSiteConfig()
 	favicon := setting.GetStr(conf.Favicon)
 	title := setting.GetStr(conf.SiteTitle)
 	customizeHead := setting.GetStr(conf.CustomizeHead)
@@ -35,9 +43,6 @@ func UpdateIndex() {
 	replaceMap1 := map[string]string{
 		"https://jsd.nn.ci/gh/alist-org/logo@main/logo.svg": favicon,
 		"Loading...":            title,
-		"cdn: undefined":        fmt.Sprintf("cdn: '%s'", siteConfig.Cdn),
-		"base_path: undefined":  fmt.Sprintf("base_path: '%s'", siteConfig.BasePath),
-		"api: undefined":        fmt.Sprintf("api: '%s'", siteConfig.ApiURL),
 		"main_color: undefined": fmt.Sprintf("main_color: '%s'", mainColor),
 	}
 	for k, v := range replaceMap1 {

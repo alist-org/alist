@@ -1,7 +1,7 @@
 package static
 
 import (
-	stdpath "path"
+	"net/url"
 	"strings"
 
 	"github.com/alist-org/alist/v3/internal/conf"
@@ -16,9 +16,13 @@ type SiteConfig struct {
 }
 
 func getSiteConfig() SiteConfig {
+	u, err := url.Parse(conf.Conf.SiteURL)
+	if err != nil {
+		utils.Log.Fatalf("can't parse site_url: %+v", err)
+	}
 	siteConfig := SiteConfig{
 		ApiURL:   conf.Conf.SiteURL,
-		BasePath: stdpath.Base(conf.Conf.SiteURL),
+		BasePath: u.Path,
 		Cdn:      strings.ReplaceAll(strings.TrimSuffix(conf.Conf.Cdn, "/"), "$version", conf.WebVersion),
 	}
 	// try to get old config
