@@ -3,6 +3,7 @@ name: Close need info
 on:
   schedule:
     - cron: "0 0 */7 * *"
+  workflow_dispatch:
 
 jobs:
   close-need-info:
