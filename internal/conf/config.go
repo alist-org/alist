@@ -32,32 +32,32 @@ type LogConfig struct {
 }
 
 type Config struct {
-	Force     bool      `json:"force" env:"FORCE"`
-	Address   string    `json:"address" env:"ADDR"`
-	Port      int       `json:"port" env:"PORT"`
-	SiteURL   string    `json:"site_url" env:"SITE_URL"`
-	Cdn       string    `json:"cdn" env:"CDN"`
-	JwtSecret string    `json:"jwt_secret" env:"JWT_SECRET"`
-	Database  Database  `json:"database"`
-	Scheme    Scheme    `json:"scheme"`
-	TempDir   string    `json:"temp_dir" env:"TEMP_DIR"`
-	Log       LogConfig `json:"log"`
+	Force          bool      `json:"force" env:"FORCE"`
+	Address        string    `json:"address" env:"ADDR"`
+	Port           int       `json:"port" env:"PORT"`
+	SiteURL        string    `json:"site_url" env:"SITE_URL"`
+	Cdn            string    `json:"cdn" env:"CDN"`
+	JwtSecret      string    `json:"jwt_secret" env:"JWT_SECRET"`
+	TokenExpiresIn int       `json:"token_expires_in" env:"TOKEN_EXPIRES_IN"`
+	Database       Database  `json:"database"`
+	Scheme         Scheme    `json:"scheme"`
+	TempDir        string    `json:"temp_dir" env:"TEMP_DIR"`
+	Log            LogConfig `json:"log"`
 }
 
 func DefaultConfig() *Config {
 	return &Config{
-		Address:   "0.0.0.0",
-		Port:      5244,
-		JwtSecret: random.String(16),
-		Cdn:       "",
-		TempDir:   "data/temp",
+		Address:        "0.0.0.0",
+		Port:           5244,
+		JwtSecret:      random.String(16),
+		TokenExpiresIn: 48,
+		TempDir:        "data/temp",
 		Database: Database{
 			Type:        "sqlite3",
 			Port:        0,
 			TablePrefix: "x_",
 			DBFile:      "data/data.db",
 		},
-		// CaCheExpiration: 30,
 		Log: LogConfig{
 			Enable:     true,
 			Name:       "log/log.log",

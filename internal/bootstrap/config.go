@@ -1,7 +1,6 @@
 package bootstrap
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -25,7 +24,7 @@ func InitConfig() {
 			log.Fatalf("failed to create default config file")
 		}
 	} else {
-		configBytes, err := ioutil.ReadFile(flags.Config)
+		configBytes, err := os.ReadFile(flags.Config)
 		if err != nil {
 			log.Fatalf("reading config file error: %+v", err)
 		}
