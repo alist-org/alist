@@ -38,6 +38,13 @@ func List(ctx context.Context, storage driver.Driver, path string, args model.Li
 	}
 	path = utils.StandardizePath(path)
 	log.Debugf("op.List %s", path)
+	key := Key(storage, path)
+	if len(refresh) == 0 || !refresh[0] {
+		if files, ok := listCache.Get(key); ok {
+			log.Debugf("use cache when list %s", path)
+			return files, nil
+		}
+	}
 	dir, err := Get(ctx, storage, path)
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed get dir")
@@ -46,22 +53,14 @@ func List(ctx context.Context, storage driver.Driver, path string, args model.Li
 	if !dir.IsDir() {
 		return nil, errors.WithStack(errs.NotFolder)
 	}
-	if storage.Config().NoCache {
-		objs, err := storage.List(ctx, dir, args)
-		return objs, errors.WithStack(err)
-	}
-	key := Key(storage, path)
-	if len(refresh) == 0 || !refresh[0] {
-		if files, ok := listCache.Get(key); ok && len(files) > 0 {
-			return files, nil
-		}
-	}
 	objs, err, _ := listG.Do(key, func() ([]model.Obj, error) {
 		files, err := storage.List(ctx, dir, args)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to list objs")
 		}
-		listCache.Set(key, files, cache.WithEx[[]model.Obj](time.Minute*time.Duration(storage.GetStorage().CacheExpiration)))
+		if !storage.Config().NoCache && len(files) > 0 {
+			listCache.Set(key, files, cache.WithEx[[]model.Obj](time.Minute*time.Duration(storage.GetStorage().CacheExpiration)))
+		}
 		return files, nil
 	})
 	return objs, err
@@ -128,6 +127,7 @@ func Get(ctx context.Context, storage driver.Driver, path string) (model.Obj, er
 			return f, nil
 		}
 	}
+	log.Debugf("cant find obj with name: %s", name)
 	return nil, errors.WithStack(errs.ObjectNotFound)
 }
 
