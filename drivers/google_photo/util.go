@@ -84,7 +84,6 @@ func (d *GooglePhoto) getFiles() ([]MediaItem, error) {
 		}
 		pageToken = resp.NextPageToken
 		res = append(res, resp.MediaItems...)
-		break
 	}
 	return res, nil
 }
