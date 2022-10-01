@@ -7,7 +7,7 @@ import (
 
 type Addition struct {
 	driver.RootPath
-	Region       string `json:"region" type:"select" required:"true" options:"global,cn,us,de"`
+	Region       string `json:"region" type:"select" required:"true" options:"global,cn,us,de" default:"global"`
 	IsSharepoint bool   `json:"is_sharepoint"`
 	ClientID     string `json:"client_id" required:"true"`
 	ClientSecret string `json:"client_secret" required:"true"`
