@@ -16,6 +16,8 @@ var config = driver.Config{
 	Name:        "GooglePhoto",
 	OnlyProxy:   true,
 	DefaultRoot: "root",
+	NoUpload:    true,
+	LocalSort:   true,
 }
 
 func New() driver.Driver {
