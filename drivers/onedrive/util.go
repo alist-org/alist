@@ -166,7 +166,7 @@ func (d *Onedrive) upBig(ctx context.Context, dstDir model.Obj, stream model.Fil
 	}
 	uploadUrl := jsoniter.Get(res, "uploadUrl").ToString()
 	var finish int64 = 0
-	const DEFAULT = 100 * 1024 * 1024
+	DEFAULT := d.ChunkSize * 1024 * 1024
 	for finish < stream.GetSize() {
 		if utils.IsCanceled(ctx) {
 			return ctx.Err()

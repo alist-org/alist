@@ -34,6 +34,9 @@ func (d *Onedrive) Init(ctx context.Context, storage model.Storage) error {
 	if err != nil {
 		return err
 	}
+	if d.ChunkSize < 1 {
+		d.ChunkSize = 5
+	}
 	return d.refreshToken()
 }
 
