@@ -61,7 +61,7 @@ the address is defined in config file`,
 		<-quit
 		utils.Log.Println("Shutdown Server ...")
 
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 		defer cancel()
 		if err := srv.Shutdown(ctx); err != nil {
 			utils.Log.Fatal("Server Shutdown:", err)
@@ -69,7 +69,7 @@ the address is defined in config file`,
 		// catching ctx.Done(). timeout of 3 seconds.
 		select {
 		case <-ctx.Done():
-			utils.Log.Println("timeout of 3 seconds.")
+			utils.Log.Println("timeout of 1 seconds.")
 		}
 		utils.Log.Println("Server exiting")
 	},
