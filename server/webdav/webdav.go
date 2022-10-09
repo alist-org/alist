@@ -300,6 +300,9 @@ func (h *Handler) handlePut(w http.ResponseWriter, r *http.Request) (status int,
 		ReadCloser: r.Body,
 		Mimetype:   r.Header.Get("Content-Type"),
 	}
+	if stream.Mimetype == "" {
+		stream.Mimetype = utils.GetMimeType(reqPath)
+	}
 	err = fs.PutDirectly(ctx, path.Dir(reqPath), stream)
 
 	// TODO(rost): Returning 405 Method Not Allowed might not be appropriate.

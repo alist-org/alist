@@ -3,7 +3,6 @@ package fs
 import (
 	"fmt"
 	"io"
-	"mime"
 	"net/http"
 	"os"
 	stdpath "path"
@@ -38,7 +37,7 @@ var httpClient = &http.Client{}
 
 func getFileStreamFromLink(file model.Obj, link *model.Link) (model.FileStreamer, error) {
 	var rc io.ReadCloser
-	mimetype := mime.TypeByExtension(stdpath.Ext(file.GetName()))
+	mimetype := utils.GetMimeType(file.GetName())
 	if link.Data != nil {
 		rc = link.Data
 	} else if link.FilePath != nil {

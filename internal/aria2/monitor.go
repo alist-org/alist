@@ -2,7 +2,6 @@ package aria2
 
 import (
 	"fmt"
-	"mime"
 	"os"
 	"path"
 	"strconv"
@@ -13,6 +12,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/pkg/task"
+	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
@@ -147,10 +147,7 @@ func (m *Monitor) Complete() error {
 			Func: func(tsk *task.Task[uint64]) error {
 				defer wg.Done()
 				size, _ := strconv.ParseInt(file.Length, 10, 64)
-				mimetype := mime.TypeByExtension(path.Ext(file.Path))
-				if mimetype == "" {
-					mimetype = "application/octet-stream"
-				}
+				mimetype := utils.GetMimeType(file.Path)
 				f, err := os.Open(file.Path)
 				if err != nil {
 					return errors.Wrapf(err, "failed to open file %s", file.Path)

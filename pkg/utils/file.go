@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"mime"
 	"os"
 	"path"
 	"path/filepath"
@@ -135,4 +136,13 @@ func GetFileType(filename string) int {
 		return conf.TEXT
 	}
 	return conf.UNKNOWN
+}
+
+func GetMimeType(name string) string {
+	ext := path.Ext(name)
+	m := mime.TypeByExtension(ext)
+	if m != "" {
+		return m
+	}
+	return "application/octet-stream"
 }
