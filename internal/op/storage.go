@@ -182,13 +182,15 @@ func DeleteStorageById(ctx context.Context, id uint) error {
 	if err != nil {
 		return errors.WithMessage(err, "failed get storage")
 	}
-	storageDriver, err := GetStorageByVirtualPath(storage.MountPath)
-	if err != nil {
-		return errors.WithMessage(err, "failed get storage driver")
-	}
-	// drop the storage in the driver
-	if err := storageDriver.Drop(ctx); err != nil {
-		return errors.Wrapf(err, "failed drop storage")
+	if !storage.Disabled {
+		storageDriver, err := GetStorageByVirtualPath(storage.MountPath)
+		if err != nil {
+			return errors.WithMessage(err, "failed get storage driver")
+		}
+		// drop the storage in the driver
+		if err := storageDriver.Drop(ctx); err != nil {
+			return errors.Wrapf(err, "failed drop storage")
+		}
 	}
 	// delete the storage in the database
 	if err := db.DeleteStorageById(id); err != nil {
