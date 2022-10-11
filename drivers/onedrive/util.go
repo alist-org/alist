@@ -42,6 +42,7 @@ var onedriveHostMap = map[string]Host{
 
 func (d *Onedrive) GetMetaUrl(auth bool, path string) string {
 	host, _ := onedriveHostMap[d.Region]
+	path = utils.EncodePath(path, true)
 	if auth {
 		return host.Oauth
 	}
