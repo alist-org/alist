@@ -1,6 +1,6 @@
 module github.com/alist-org/alist/v3
 
-go 1.18
+go 1.19
 
 require (
 	github.com/Xhofe/go-cache v0.0.0-20220723083548-714439c8af9a

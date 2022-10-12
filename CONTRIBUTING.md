@@ -7,7 +7,7 @@
 Prerequisites:
 
 - [git](https://nodejs.org/zh-cn/)
-- [Go 1.18+](https://golang.org/doc/install)
+- [Go 1.19+](https://golang.org/doc/install)
 - [gcc](https://gcc.gnu.org/)
 - [nodejs](https://nodejs.org/)
 

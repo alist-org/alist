@@ -11,7 +11,7 @@ jobs:
     strategy:
       matrix:
         platform: [ubuntu-latest]
-        go-version: [1.18]
+        go-version: [1.19]
     name: Build
     runs-on: ${{ matrix.platform }}
     steps:
