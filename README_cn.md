@@ -1,14 +1,12 @@
 <div align="center">
   <a href="https://alist.nn.ci"><img height="100px" alt="logo" src="https://cdn.jsdelivr.net/gh/alist-org/logo@main/logo.svg"/></a>
   <p><em>🗂一个支持多存储的文件列表程序，使用 Gin 和 Solidjs。</em></p>
+<div>
   <a href="https://goreportcard.com/report/github.com/alist-org/alist/v3">
     <img src="https://goreportcard.com/badge/github.com/alist-org/alist/v3" alt="latest version" />
   </a>
   <a href="https://github.com/Xhofe/alist/blob/main/LICENSE">
     <img src="https://img.shields.io/github/license/Xhofe/alist" alt="License" />
-  </a>
-  <a href="https://github.com/Xhofe/alist/discussions">
-    <img src="https://img.shields.io/github/discussions/Xhofe/alist?color=%23ED8936" alt="discussions" />
   </a>
   <a href="https://github.com/Xhofe/alist/actions?query=workflow%3ABuild">
     <img src="https://img.shields.io/github/workflow/status/Xhofe/alist/build" alt="Build status" />
@@ -16,15 +14,27 @@
   <a href="https://github.com/Xhofe/alist/releases">
     <img src="https://img.shields.io/github/release/Xhofe/alist" alt="latest version" />
   </a>
-  <a href="https://github.com/Xhofe/alist/releases">
-    <img src="https://img.shields.io/github/downloads/Xhofe/alist/total?color=%239F7AEA" alt="Downloads" />
-  </a>
   <a title="Crowdin" target="_blank" href="https://crwd.in/alist">
     <img src="https://badges.crowdin.net/alist/localized.svg">
   </a>
-  <a href="https://pay.xhofe.top">
-    <img src="https://img.shields.io/badge/%24-sponsor-ff69b4.svg" alt="sponsor" />
+</div>
+<div>
+  <a href="https://github.com/Xhofe/alist/discussions">
+    <img src="https://img.shields.io/github/discussions/Xhofe/alist?color=%23ED8936" alt="discussions" />
   </a>
+  <a href="https://discord.gg/F4ymsH4xv2">
+    <img src="https://img.shields.io/discord/1018870125102895134?logo=discord" alt="discussions" />
+  </a>
+  <a href="https://github.com/Xhofe/alist/releases">
+    <img src="https://img.shields.io/github/downloads/Xhofe/alist/total?color=%239F7AEA&logo=github" alt="Downloads" />
+  </a>
+  <a href="https://github.com/Xhofe/alist/releases">
+    <img src="https://img.shields.io/docker/pulls/xhofe/alist?color=%2348BB78&logo=docker&label=pulls" alt="Downloads" />
+  </a>
+  <a href="https://alist.nn.ci/zh/guide/sponsor.html">
+    <img src="https://img.shields.io/badge/%24-sponsor-F87171.svg" alt="sponsor" />
+  </a>
+</div>
 </div>
 
 ---
@@ -52,6 +62,11 @@
     - [x] [百度网盘](http://pan.baidu.com/)
     - [x] [夸克网盘](https://pan.quark.cn)
     - [x] [迅雷网盘](https://pan.xunlei.com)
+    - [x] [蓝奏云](https://www.lanzou.com/)
+    - [x] [阿里云盘分享](https://www.aliyundrive.com/)
+    - [x] [谷歌相册](https://photos.google.com/)
+    - [x] [Mega.nz](https://mega.nz)
+    - [x] [一刻相册](https://photo.baidu.com/)
 - [x] 部署方便，开箱即用
 - [x] 文件预览（PDF、markdown、代码、纯文本……）
 - [x] 画廊模式下的图像预览
