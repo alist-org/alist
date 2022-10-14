@@ -33,7 +33,7 @@ func fileToObj(f File) *model.ObjThumb {
 			ID:       f.Id,
 			Name:     f.Name,
 			Size:     size,
-			Modified: time.Time{},
+			Modified: f.ModifiedTime,
 			IsFolder: f.MimeType == "application/vnd.google-apps.folder",
 		},
 		Thumbnail: model.Thumbnail{},
