@@ -15,6 +15,7 @@ type Addition struct {
 	Type           string `json:"type" type:"select" options:"personal,family" default:"personal"`
 	FamilyID       string `json:"family_id"`
 	RapidUpload    bool   `json:"rapid_upload"`
+	NonuseOrc      bool   `json:"nonuse_orc"`
 }
 
 var config = driver.Config{

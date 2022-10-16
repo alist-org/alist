@@ -53,6 +53,9 @@ type Common struct {
 	UserAgent         string
 	DownloadUserAgent string
 	UseVideoUrl       bool
+
+	// 验证码token刷新成功回调
+	refreshCTokenCk func(token string)
 }
 
 func (c *Common) SetCaptchaToken(captchaToken string) {
@@ -125,13 +128,16 @@ func (c *Common) refreshCaptchaToken(action string, metas map[string]string) err
 	}
 
 	if resp.Url != "" {
-		return fmt.Errorf("need verify:%s", resp.Url)
+		return fmt.Errorf(`need verify: <a target="_blank" href="%s">Click Here</a>`, resp.Url)
 	}
 
 	if resp.CaptchaToken == "" {
 		return fmt.Errorf("empty captchaToken")
 	}
 
+	if c.refreshCTokenCk != nil {
+		c.refreshCTokenCk(resp.CaptchaToken)
+	}
 	c.SetCaptchaToken(resp.CaptchaToken)
 	return nil
 }
