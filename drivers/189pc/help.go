@@ -110,7 +110,9 @@ func ParseHttpHeader(str string) map[string]string {
 	header := make(map[string]string)
 	for _, value := range strings.Split(str, "&") {
 		i := strings.Index(value, "=")
-		header[strings.TrimSpace(value[0:i])] = strings.TrimSpace(value[i+1:])
+		if i > 0 {
+			header[strings.TrimSpace(value[0:i])] = strings.TrimSpace(value[i+1:])
+		}
 	}
 	return header
 }

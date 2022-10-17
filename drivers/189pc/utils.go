@@ -314,7 +314,7 @@ func (y *Yun189PC) initLoginParam() error {
 	if err != nil {
 		return fmt.Errorf("failed to obtain verification code")
 	}
-	if imgRes.Size() > 0 {
+	if imgRes.Size() > 20 {
 		if setting.GetStr(conf.OcrApi) != "" && !y.NonuseOrc {
 			vRes, err := base.RestyClient.R().
 				SetMultipartField("image", "validateCode.png", "image/png", bytes.NewReader(imgRes.Body())).
@@ -385,6 +385,7 @@ func (y *Yun189PC) CommonUpload(ctx context.Context, dstDir model.Obj, file mode
 	const DEFAULT int64 = 10485760
 	var count = int64(math.Ceil(float64(file.GetSize()) / float64(DEFAULT)))
 
+	requestID := uuid.NewString()
 	params := Params{
 		"parentFolderId": dstDir.GetID(),
 		"fileName":       url.QueryEscape(file.GetName()),
@@ -406,6 +407,7 @@ func (y *Yun189PC) CommonUpload(ctx context.Context, dstDir model.Obj, file mode
 	var initMultiUpload InitMultiUploadResp
 	_, err = y.request(fullUrl+"/initMultiUpload", http.MethodGet, func(req *resty.Request) {
 		req.SetContext(ctx)
+		req.SetHeader("X-Request-ID", requestID)
 	}, params, &initMultiUpload)
 	if err != nil {
 		return err
@@ -440,6 +442,7 @@ func (y *Yun189PC) CommonUpload(ctx context.Context, dstDir model.Obj, file mode
 		_, err = y.request(fullUrl+"/getMultiUploadUrls", http.MethodGet,
 			func(req *resty.Request) {
 				req.SetContext(ctx)
+				req.SetHeader("X-Request-ID", requestID)
 			}, Params{
 				"partInfo":     fmt.Sprintf("%d-%s", i, silceMd5Base64),
 				"uploadFileId": initMultiUpload.Data.UploadFileID,
@@ -475,6 +478,7 @@ func (y *Yun189PC) CommonUpload(ctx context.Context, dstDir model.Obj, file mode
 	_, err = y.request(fullUrl+"/commitMultiUploadFile", http.MethodGet,
 		func(req *resty.Request) {
 			req.SetContext(ctx)
+			req.SetHeader("X-Request-ID", requestID)
 		}, Params{
 			"uploadFileId": initMultiUpload.Data.UploadFileID,
 			"fileMd5":      fileMd5Hex,
@@ -531,6 +535,7 @@ func (y *Yun189PC) FastUpload(ctx context.Context, dstDir model.Obj, file model.
 		sliceMd5Hex = strings.ToUpper(utils.GetMD5Encode(strings.Join(silceMd5Hexs, "\n")))
 	}
 
+	requestID := uuid.NewString()
 	// 检测是否支持快传
 	params := Params{
 		"parentFolderId": dstDir.GetID(),
@@ -553,6 +558,7 @@ func (y *Yun189PC) FastUpload(ctx context.Context, dstDir model.Obj, file model.
 	var uploadInfo InitMultiUploadResp
 	_, err = y.request(fullUrl+"/initMultiUpload", http.MethodGet, func(req *resty.Request) {
 		req.SetContext(ctx)
+		req.SetHeader("X-Request-ID", requestID)
 	}, params, &uploadInfo)
 	if err != nil {
 		return err
@@ -564,6 +570,7 @@ func (y *Yun189PC) FastUpload(ctx context.Context, dstDir model.Obj, file model.
 		_, err = y.request(fullUrl+"/getMultiUploadUrls", http.MethodGet,
 			func(req *resty.Request) {
 				req.SetContext(ctx)
+				req.SetHeader("X-Request-ID", requestID)
 			}, Params{
 				"uploadFileId": uploadInfo.Data.UploadFileID,
 				"partInfo":     strings.Join(silceMd5Base64s, ","),
@@ -600,6 +607,7 @@ func (y *Yun189PC) FastUpload(ctx context.Context, dstDir model.Obj, file model.
 	_, err = y.request(fullUrl+"/commitMultiUploadFile", http.MethodGet,
 		func(req *resty.Request) {
 			req.SetContext(ctx)
+			req.SetHeader("X-Request-ID", requestID)
 		}, Params{
 			"uploadFileId": uploadInfo.Data.UploadFileID,
 			"isLog":        "0",
