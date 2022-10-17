@@ -143,7 +143,12 @@ func (x *ThunderExpert) Init(ctx context.Context, storage model.Storage) (err er
 			Common: &Common{
 				client: base.NewRestyClient(),
 
-				DeviceID:          utils.GetMD5Encode(x.DeviceID),
+				DeviceID: func() string {
+					if len(x.DeviceID) != 32 {
+						return utils.GetMD5Encode(x.DeviceID)
+					}
+					return x.DeviceID
+				}(),
 				ClientID:          x.ClientID,
 				ClientSecret:      x.ClientSecret,
 				ClientVersion:     x.ClientVersion,
