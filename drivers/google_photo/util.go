@@ -10,6 +10,13 @@ import (
 
 // do others that not defined in Driver interface
 
+const (
+	FETCH_ALL = "all"
+	FETCH_ALBUMS = "albums"
+	FETCH_ROOT = "root"
+	FETCH_SHARE_ALBUMS = "share_albums"
+)
+
 func (d *GooglePhoto) refreshToken() error {
 	url := "https://www.googleapis.com/oauth2/v4/token"
 	var resp base.TokenResp
@@ -34,6 +41,7 @@ func (d *GooglePhoto) refreshToken() error {
 func (d *GooglePhoto) request(url string, method string, callback base.ReqCallback, resp interface{}, headers map[string]string) ([]byte, error) {
 	req := base.RestyClient.R()
 	req.SetHeader("Authorization", "Bearer "+d.AccessToken)
+	req.SetHeader("Accept-Encoding", "gzip")
 	if headers != nil {
 		req.SetHeaders(headers)
 	}
@@ -63,32 +71,83 @@ func (d *GooglePhoto) request(url string, method string, callback base.ReqCallba
 	return res.Body(), nil
 }
 
-func (d *GooglePhoto) getFiles() ([]MediaItem, error) {
-	pageToken := "first"
-	res := make([]MediaItem, 0)
-	for pageToken != "" {
-		if pageToken == "first" {
-			pageToken = ""
-		}
-		var resp Files
-		query := map[string]string{
-			"fields":    "mediaItems(id,baseUrl,mimeType,mediaMetadata,filename),nextPageToken",
-			"pageSize":  "100",
-			"pageToken": pageToken,
-		}
-		_, err := d.request("https://photoslibrary.googleapis.com/v1/mediaItems", http.MethodGet, func(req *resty.Request) {
-			req.SetQueryParams(query)
-		}, &resp, nil)
-		if err != nil {
-			return nil, err
-		}
-		pageToken = resp.NextPageToken
-		res = append(res, resp.MediaItems...)
+func (d *GooglePhoto) getFiles(id string) ([]MediaItem, error) {
+	switch id {
+	case FETCH_ALL:
+		return d.getAllMedias()
+	case FETCH_ALBUMS:
+		return d.getAlbums()
+	case FETCH_SHARE_ALBUMS:
+		return d.getShareAlbums()
+	case FETCH_ROOT:
+		return d.getFakeRoot()
+	default:
+		return d.getMedias(id)
 	}
-	return res, nil
 }
 
-func (d *GooglePhoto) getFile(id string) (MediaItem, error) {
+func (d *GooglePhoto) getFakeRoot() ([]MediaItem, error) {
+	return []MediaItem{
+		{
+			Id: FETCH_ALL,
+			Title: "全部媒体",
+		},
+		{
+			Id: FETCH_ALBUMS,
+			Title: "全部影集",
+		},
+		{
+			Id: FETCH_SHARE_ALBUMS,
+			Title: "共享影集",
+		},
+	}, nil
+}
+
+func (d *GooglePhoto) getAlbums() ([]MediaItem, error) {
+	return d.fetchItems(
+		"https://photoslibrary.googleapis.com/v1/albums",
+		map[string]string{
+			"fields":    "albums(id,title,coverPhotoBaseUrl),nextPageToken",
+			"pageSize":  "50",
+			"pageToken": "first",
+		},
+		http.MethodGet)
+}
+
+func (d *GooglePhoto) getShareAlbums() ([]MediaItem, error) {
+	return d.fetchItems(
+		"https://photoslibrary.googleapis.com/v1/sharedAlbums",
+		map[string]string{
+			"fields":    "sharedAlbums(id,title,coverPhotoBaseUrl),nextPageToken",
+			"pageSize":  "50",
+			"pageToken": "first",
+		},
+		http.MethodGet)
+}
+
+func (d *GooglePhoto) getMedias(albumId string) ([]MediaItem, error) {
+	return d.fetchItems(
+		"https://photoslibrary.googleapis.com/v1/mediaItems:search",
+		map[string]string{
+			"fields":    "mediaItems(id,baseUrl,mimeType,mediaMetadata,filename),nextPageToken",
+			"pageSize":  "100",
+			"albumId": albumId,
+			"pageToken": "first",
+		}, http.MethodPost)
+}
+
+func (d *GooglePhoto) getAllMedias() ([]MediaItem, error) {
+	return d.fetchItems(
+		"https://photoslibrary.googleapis.com/v1/mediaItems",
+		map[string]string{
+			"fields":    "mediaItems(id,baseUrl,mimeType,mediaMetadata,filename),nextPageToken",
+			"pageSize":  "100",
+			"pageToken": "first",
+		},
+		http.MethodGet)
+}
+
+func (d *GooglePhoto) getMedia(id string) (MediaItem, error) {
 	var resp MediaItem
 
 	query := map[string]string{
@@ -102,4 +161,26 @@ func (d *GooglePhoto) getFile(id string) (MediaItem, error) {
 	}
 
 	return resp, nil
+}
+
+func (d *GooglePhoto) fetchItems(url string, query map[string]string, method string) ([]MediaItem, error){
+	res := make([]MediaItem, 0)
+	for query["pageToken"] != "" {
+		if query["pageToken"] == "first" {
+			query["pageToken"] = ""
+		}
+		var resp Items
+
+		_, err := d.request(url, method, func(req *resty.Request) {
+			req.SetQueryParams(query)
+		}, &resp, nil)
+		if err != nil {
+			return nil, err
+		}
+		query["pageToken"] = resp.NextPageToken
+		res = append(res, resp.MediaItems...)
+		res = append(res, resp.Albums...)
+		res = append(res, resp.SharedAlbums...)
+	}
+	return res, nil
 }
