@@ -57,17 +57,16 @@ func fileToObj(f MediaItem) *model.ObjThumb {
 				Thumbnail: f.BaseURL + "=w100-h100-c",
 			},
 		}
-	} else {
-		return &model.ObjThumb{
-			Object: model.Object{
-				ID:       f.Id,
-				Name:     f.Title,
-				Size:     0,
-				Modified: time.Time{},
-				IsFolder: true,
-			},
-			Thumbnail: model.Thumbnail{},
-		}
+	}
+	return &model.ObjThumb{
+		Object: model.Object{
+			ID:       f.Id,
+			Name:     f.Title,
+			Size:     0,
+			Modified: time.Time{},
+			IsFolder: true,
+		},
+		Thumbnail: model.Thumbnail{},
 	}
 }
 
