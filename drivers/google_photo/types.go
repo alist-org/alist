@@ -1,6 +1,7 @@
 package google_photo
 
 import (
+	"reflect"
 	"time"
 
 	"github.com/alist-org/alist/v3/internal/model"
@@ -11,17 +12,21 @@ type TokenError struct {
 	ErrorDescription string `json:"error_description"`
 }
 
-type Files struct {
+type Items struct {
 	NextPageToken string      `json:"nextPageToken"`
-	MediaItems    []MediaItem `json:"mediaItems"`
+	MediaItems    []MediaItem `json:"mediaItems,omitempty"`
+	Albums        []MediaItem `json:"albums,omitempty"`
+	SharedAlbums  []MediaItem `json:"sharedAlbums,omitempty"`
 }
 
 type MediaItem struct {
-	Id            string        `json:"id"`
-	BaseURL       string        `json:"baseUrl"`
-	MimeType      string        `json:"mimeType"`
-	FileName      string        `json:"filename"`
-	MediaMetadata MediaMetadata `json:"mediaMetadata"`
+	Id                string        `json:"id"`
+	Title             string        `json:"title,omitempty"`
+	BaseURL           string        `json:"baseUrl,omitempty"`
+	CoverPhotoBaseUrl string        `json:"coverPhotoBaseUrl,omitempty"`
+	MimeType          string        `json:"mimeType,omitempty"`
+	FileName          string        `json:"filename,omitempty"`
+	MediaMetadata MediaMetadata     `json:"mediaMetadata,omitempty"`
 }
 
 type MediaMetadata struct {
@@ -39,18 +44,29 @@ type Video struct {
 }
 
 func fileToObj(f MediaItem) *model.ObjThumb {
-	//size, _ := strconv.ParseInt(f.Size, 10, 64)
+	if !reflect.DeepEqual(f.MediaMetadata, MediaMetadata{}){
+		return &model.ObjThumb{
+			Object: model.Object{
+				ID:       f.Id,
+				Name:     f.FileName,
+				Size:     0,
+				Modified: f.MediaMetadata.CreationTime,
+				IsFolder: false,
+			},
+			Thumbnail: model.Thumbnail{
+				Thumbnail: f.BaseURL + "=w100-h100-c",
+			},
+		}
+	}
 	return &model.ObjThumb{
 		Object: model.Object{
 			ID:       f.Id,
-			Name:     f.FileName,
+			Name:     f.Title,
 			Size:     0,
-			Modified: f.MediaMetadata.CreationTime,
-			IsFolder: false,
+			Modified: time.Time{},
+			IsFolder: true,
 		},
-		Thumbnail: model.Thumbnail{
-			Thumbnail: f.BaseURL + "=w100-h100-c",
-		},
+		Thumbnail: model.Thumbnail{},
 	}
 }
 

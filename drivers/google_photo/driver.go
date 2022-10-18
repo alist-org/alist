@@ -43,7 +43,7 @@ func (d *GooglePhoto) Drop(ctx context.Context) error {
 }
 
 func (d *GooglePhoto) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
-	files, err := d.getFiles()
+	files, err := d.getFiles(dir.GetID())
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +58,7 @@ func (d *GooglePhoto) List(ctx context.Context, dir model.Obj, args model.ListAr
 //}
 
 func (d *GooglePhoto) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
-	f, err := d.getFile(file.GetID())
+	f, err := d.getMedia(file.GetID())
 	if err != nil {
 		return nil, err
 	}
