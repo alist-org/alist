@@ -52,11 +52,12 @@ func getKey(path string, dir bool) string {
 	return path
 }
 
-// var defaultPlaceholderName = ".placeholder"
+var defaultPlaceholderName = ".alist"
+
 func getPlaceholderName(placeholder string) string {
-	//if placeholder == "" {
-	//	return defaultPlaceholderName
-	//}
+	if placeholder == "" {
+		return defaultPlaceholderName
+	}
 	return placeholder
 }
 
@@ -88,7 +89,7 @@ func (d *S3) listV1(prefix string) ([]model.Obj, error) {
 		}
 		for _, object := range listObjectsResult.Contents {
 			name := path.Base(*object.Key)
-			if name == getPlaceholderName(d.Placeholder) {
+			if name == getPlaceholderName(d.Placeholder) || name == d.Placeholder {
 				continue
 			}
 			file := model.Object{
@@ -140,7 +141,7 @@ func (d *S3) listV2(prefix string) ([]model.Obj, error) {
 		}
 		for _, object := range listObjectsResult.Contents {
 			name := path.Base(*object.Key)
-			if name == getPlaceholderName(d.Placeholder) {
+			if name == getPlaceholderName(d.Placeholder) || name == d.Placeholder {
 				continue
 			}
 			file := model.Object{
@@ -222,11 +223,12 @@ func (d *S3) removeDir(ctx context.Context, src string) error {
 		}
 	}
 	_ = d.removeFile(path.Join(src, getPlaceholderName(d.Placeholder)))
+	_ = d.removeFile(path.Join(src, d.Placeholder))
 	return nil
 }
 
 func (d *S3) removeFile(src string) error {
-	key := getKey(src, true)
+	key := getKey(src, false)
 	input := &s3.DeleteObjectInput{
 		Bucket: &d.Bucket,
 		Key:    &key,
