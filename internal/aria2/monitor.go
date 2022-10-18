@@ -70,6 +70,8 @@ func (m *Monitor) Update() (bool, error) {
 	info, err := client.TellStatus(m.tsk.ID)
 	if err != nil {
 		m.retried++
+		log.Errorf("failed to get status of %s, retried %d times", m.tsk.ID, m.retried)
+		return false, nil
 	}
 	if m.retried > 5 {
 		return true, errors.Errorf("failed to get status of %s, retried %d times", m.tsk.ID, m.retried)
