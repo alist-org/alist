@@ -28,7 +28,7 @@
   <a href="https://github.com/Xhofe/alist/releases">
     <img src="https://img.shields.io/github/downloads/Xhofe/alist/total?color=%239F7AEA&logo=github" alt="Downloads" />
   </a>
-  <a href="https://github.com/Xhofe/alist/releases">
+  <a href="https://hub.docker.com/r/xhofe/alist">
     <img src="https://img.shields.io/docker/pulls/xhofe/alist?color=%2348BB78&logo=docker&label=pulls" alt="Downloads" />
   </a>
   <a href="https://alist.nn.ci/zh/guide/sponsor.html">
