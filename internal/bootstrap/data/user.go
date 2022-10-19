@@ -1,6 +1,8 @@
 package data
 
 import (
+	"os"
+
 	"github.com/alist-org/alist/v3/cmd/flags"
 	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/model"
@@ -13,8 +15,11 @@ import (
 func initUser() {
 	admin, err := db.GetAdmin()
 	adminPassword := random.String(8)
+	envpass := os.Getenv("ALIST_ADMIN_PASSWORD")
 	if flags.Dev {
 		adminPassword = "admin"
+	} else if len(envpass) > 0 {
+		adminPassword = envpass
 	}
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
