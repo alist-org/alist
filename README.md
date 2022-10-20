@@ -31,7 +31,7 @@
   <a href="https://hub.docker.com/r/xhofe/alist">
     <img src="https://img.shields.io/docker/pulls/xhofe/alist?color=%2348BB78&logo=docker&label=pulls" alt="Downloads" />
   </a>
-  <a href="https://alist.nn.ci/zh/guide/sponsor.html">
+  <a href="https://alist.nn.ci/guide/sponsor.html">
     <img src="https://img.shields.io/badge/%24-sponsor-F87171.svg" alt="sponsor" />
   </a>
 </div>
