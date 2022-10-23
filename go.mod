@@ -6,6 +6,7 @@ require (
 	github.com/Xhofe/go-cache v0.0.0-20220723083548-714439c8af9a
 	github.com/aws/aws-sdk-go v1.44.88
 	github.com/caarlos0/env/v6 v6.9.3
+	github.com/deadblue/elevengo v0.2.2
 	github.com/disintegration/imaging v1.6.2
 	github.com/gin-contrib/cors v1.3.1
 	github.com/gin-gonic/gin v1.8.0
@@ -70,3 +71,5 @@ require (
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
+
+replace github.com/deadblue/elevengo => github.com/SheltonZhu/elevengo v0.2.3
