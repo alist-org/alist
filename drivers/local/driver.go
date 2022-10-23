@@ -68,7 +68,7 @@ func (d *Local) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([
 	}
 	var files []model.Obj
 	for _, f := range rawFiles {
-		if strings.HasPrefix(f.Name(), ".") {
+		if !d.ShowHidden && strings.HasPrefix(f.Name(), ".") {
 			continue
 		}
 		thumb := ""
