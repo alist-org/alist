@@ -17,7 +17,7 @@ func initDevData() {
 		Order:     0,
 		Driver:    "Local",
 		Status:    "",
-		Addition:  `{"root_folder":"."}`,
+		Addition:  `{"root_folder_path":"."}`,
 	})
 	if err != nil {
 		log.Fatalf("failed to create storage: %+v", err)
