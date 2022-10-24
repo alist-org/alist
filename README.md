@@ -91,7 +91,7 @@ English | [中文](./README_cn.md) | [Contributors](./CONTRIBUTORS.md) | [Contri
 
 ## Demo
 
-<https://pan.nn.ci>
+<https://al.nn.ci>
 
 ## Discussion
 
@@ -99,7 +99,7 @@ Please go to our [discussion forum](https://github.com/Xhofe/alist/discussions) 
 
 ## Special sponsors
 - [找资源 - 阿里云盘资源搜索引擎](https://zhaoziyuan.la/)
-- [KinhDown 百度云盘不限速下载！永久免费！已稳定运行3年！非常可靠!](https://kinhdown.com/?Type=Tutorials)
+- [KinhDown 百度云盘不限速下载！永久免费！已稳定运行3年！非常可靠！Q群 -> 786799372](https://kinhdown.com)
 - [JetBrains: Essential tools for software developers and teams](https://www.jetbrains.com/)
 
 ## License
