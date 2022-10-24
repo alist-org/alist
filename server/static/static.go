@@ -10,15 +10,18 @@ import (
 	"github.com/alist-org/alist/v3/cmd/flags"
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/setting"
+	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/public"
 	"github.com/gin-gonic/gin"
-	log "github.com/sirupsen/logrus"
 )
 
 func InitIndex() {
 	index, err := public.Public.ReadFile("dist/index.html")
 	if err != nil {
-		log.Fatalf("failed to read index.html: %v", err)
+		if err == fs.ErrNotExist {
+			utils.Log.Fatalf("index.html not exist, you may forget to put dist of frontend to public/dist")
+		}
+		utils.Log.Fatalf("failed to read index.html: %v", err)
 	}
 	conf.RawIndexHtml = string(index)
 	siteConfig := getSiteConfig()
@@ -65,7 +68,7 @@ func Static(r *gin.Engine) {
 		folder = "dist/" + folder
 		sub, err := fs.Sub(public.Public, folder)
 		if err != nil {
-			log.Fatalf("can't find folder: %s", folder)
+			utils.Log.Fatalf("can't find folder: %s", folder)
 		}
 		r.StaticFS(fmt.Sprintf("/%s/", folders[i]), http.FS(sub))
 	}
