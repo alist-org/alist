@@ -69,8 +69,14 @@ func (d *SMB) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]m
 //}
 
 func (d *SMB) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
-	fullPath := file.GetPath()
-	return &model.Link{FilePath: &fullPath}, nil
+	fullPath := d.getSMBPath(file)
+	remoteFile, err := d.fs.Open(fullPath)
+	if err != nil {
+		return nil, err
+	}
+	return &model.Link{
+		Data: remoteFile,
+	}, nil
 }
 
 func (d *SMB) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
