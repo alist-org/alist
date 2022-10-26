@@ -146,16 +146,16 @@ func IsNumber(str string) bool {
 
 var findFromReg = regexp.MustCompile(`data : '(.+?)'`) // 查找from字符串
 
-// 解析html中的from
+// 解析html中的form
 func htmlFormToMap(html string) (map[string]string, error) {
-	froms := findFromReg.FindStringSubmatch(html)
-	if len(froms) != 2 {
+	forms := findFromReg.FindStringSubmatch(html)
+	if len(forms) != 2 {
 		return nil, fmt.Errorf("not find file sgin")
 	}
-	return fromToMap(froms[1]), nil
+	return formToMap(forms[1]), nil
 }
 
-func fromToMap(from string) map[string]string {
+func formToMap(from string) map[string]string {
 	var param = make(map[string]string)
 	for _, kv := range strings.Split(from, "&") {
 		kv := strings.SplitN(kv, "=", 2)[:2]

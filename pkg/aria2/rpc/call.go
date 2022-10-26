@@ -28,7 +28,7 @@ type httpCaller struct {
 	once   sync.Once
 }
 
-func newHTTPCaller(ctx context.Context, u *url.URL, timeout time.Duration, notifer Notifier) *httpCaller {
+func newHTTPCaller(ctx context.Context, u *url.URL, timeout time.Duration, notifier Notifier) *httpCaller {
 	c := &http.Client{
 		Transport: &http.Transport{
 			MaxIdleConnsPerHost: 1,
@@ -45,8 +45,8 @@ func newHTTPCaller(ctx context.Context, u *url.URL, timeout time.Duration, notif
 	var wg sync.WaitGroup
 	ctx, cancel := context.WithCancel(ctx)
 	h := &httpCaller{uri: u.String(), c: c, cancel: cancel, wg: &wg}
-	if notifer != nil {
-		h.setNotifier(ctx, *u, notifer)
+	if notifier != nil {
+		h.setNotifier(ctx, *u, notifier)
 	}
 	return h
 }
@@ -59,7 +59,7 @@ func (h *httpCaller) Close() (err error) {
 	return
 }
 
-func (h *httpCaller) setNotifier(ctx context.Context, u url.URL, notifer Notifier) (err error) {
+func (h *httpCaller) setNotifier(ctx context.Context, u url.URL, notifier Notifier) (err error) {
 	u.Scheme = "ws"
 	conn, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
@@ -101,17 +101,17 @@ func (h *httpCaller) setNotifier(ctx context.Context, u url.URL, notifer Notifie
 			}
 			switch request.Method {
 			case "aria2.onDownloadStart":
-				notifer.OnDownloadStart(request.Params)
+				notifier.OnDownloadStart(request.Params)
 			case "aria2.onDownloadPause":
-				notifer.OnDownloadPause(request.Params)
+				notifier.OnDownloadPause(request.Params)
 			case "aria2.onDownloadStop":
-				notifer.OnDownloadStop(request.Params)
+				notifier.OnDownloadStop(request.Params)
 			case "aria2.onDownloadComplete":
-				notifer.OnDownloadComplete(request.Params)
+				notifier.OnDownloadComplete(request.Params)
 			case "aria2.onDownloadError":
-				notifer.OnDownloadError(request.Params)
+				notifier.OnDownloadError(request.Params)
 			case "aria2.onBtDownloadComplete":
-				notifer.OnBtDownloadComplete(request.Params)
+				notifier.OnBtDownloadComplete(request.Params)
 			default:
 				log.Printf("unexpected notification: %s", request.Method)
 			}
