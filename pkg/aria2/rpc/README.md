@@ -191,7 +191,7 @@ func (id *Client) PauseAll() (g string, err error)
 `aria2.pauseAll()` This method is equal to calling `aria2.pause()` for every active/waiting download. This methods returns OK for success.
 
 ```
-func (id *Client) PurgeDowloadResult() (g string, err error)
+func (id *Client) PurgeDownloadResult() (g string, err error)
 ```
 
 `aria2.purgeDownloadResult()` This method purges completed/error/removed downloads to free memory. This method returns OK.

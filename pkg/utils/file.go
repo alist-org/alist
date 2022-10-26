@@ -88,7 +88,7 @@ func CreateNestedFile(path string) (*os.File, error) {
 	if !Exists(basePath) {
 		err := os.MkdirAll(basePath, 0700)
 		if err != nil {
-			log.Errorf("can't create foler，%s", err)
+			log.Errorf("can't create folder, %s", err)
 			return nil, err
 		}
 	}
