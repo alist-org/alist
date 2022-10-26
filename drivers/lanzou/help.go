@@ -146,7 +146,7 @@ func IsNumber(str string) bool {
 
 var findFromReg = regexp.MustCompile(`data : '(.+?)'`) // 查找from字符串
 
-// 解析html中的from
+// 解析html中的form
 func htmlFormToMap(html string) (map[string]string, error) {
 	forms := findFromReg.FindStringSubmatch(html)
 	if len(forms) != 2 {
