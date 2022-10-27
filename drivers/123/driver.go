@@ -6,6 +6,7 @@ import (
 	"crypto/md5"
 	"encoding/binary"
 	"encoding/hex"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"net/http"
@@ -95,6 +96,14 @@ func (d *Pan123) Link(ctx context.Context, file model.Obj, args model.LinkArgs) 
 		u, err := url.Parse(resp.Data.DownloadUrl)
 		if err != nil {
 			return nil, err
+		}
+		nu := u.Query().Get("params")
+		if nu != "" {
+			du, _ := base64.StdEncoding.DecodeString(nu)
+			u, err = url.Parse(string(du))
+			if err != nil {
+				return nil, err
+			}
 		}
 		u_ := fmt.Sprintf("https://%s%s", u.Host, u.Path)
 		res, err := base.NoRedirectClient.R().SetQueryParamsFromValues(u.Query()).Head(u_)
