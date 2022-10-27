@@ -10,6 +10,7 @@ import (
 	"os"
 	"path"
 	"strconv"
+	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
@@ -91,7 +92,21 @@ func (d *MediaTrack) Link(ctx context.Context, file model.Obj, args model.LinkAr
 	}
 	token := utils.Json.Get(body, "data", "token").ToString()
 	url = "https://kayn.api.mediatrack.cn/v1/download/redirect?token=" + token
-	return &model.Link{URL: url}, nil
+	res, err := base.NoRedirectClient.R().Get(url)
+	if err != nil {
+		return nil, err
+	}
+	log.Debug(res.String())
+	link := model.Link{
+		URL: url,
+	}
+	log.Debugln("res code: ", res.StatusCode())
+	if res.StatusCode() == 302 {
+		link.URL = res.Header().Get("location")
+		expired := time.Duration(60) * time.Second
+		link.Expiration = &expired
+	}
+	return &link, nil
 }
 
 func (d *MediaTrack) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
