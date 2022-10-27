@@ -2,7 +2,6 @@ package alist_v3
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
@@ -13,20 +12,20 @@ import (
 	"github.com/alist-org/alist/v3/server/handles"
 )
 
-type AList_V3 struct {
+type AListV3 struct {
 	model.Storage
 	Addition
 }
 
-func (d *AList_V3) Config() driver.Config {
+func (d *AListV3) Config() driver.Config {
 	return config
 }
 
-func (d *AList_V3) GetAddition() driver.Additional {
+func (d *AListV3) GetAddition() driver.Additional {
 	return d.Addition
 }
 
-func (d *AList_V3) Init(ctx context.Context, storage model.Storage) error {
+func (d *AListV3) Init(ctx context.Context, storage model.Storage) error {
 	d.Storage = storage
 	err := utils.Json.UnmarshalFromString(d.Storage.Addition, &d.Addition)
 	if err != nil {
@@ -37,13 +36,13 @@ func (d *AList_V3) Init(ctx context.Context, storage model.Storage) error {
 	return err
 }
 
-func (d *AList_V3) Drop(ctx context.Context) error {
+func (d *AListV3) Drop(ctx context.Context) error {
 	return nil
 }
 
-func (d *AList_V3) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
+func (d *AListV3) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
 	url := d.Address + "/api/fs/list"
-	var resp common.Resp
+	var resp common.Resp[handles.FsListResp]
 	_, err := base.RestyClient.R().
 		SetResult(&resp).
 		SetHeader("Authorization", d.AccessToken).
@@ -59,17 +58,8 @@ func (d *AList_V3) List(ctx context.Context, dir model.Obj, args model.ListArgs)
 	if err != nil {
 		return nil, err
 	}
-	dataStr, err := json.Marshal(resp.Data)
-	if err != nil {
-		return nil, err
-	}
-	var data handles.FsListResp
-	err = json.Unmarshal(dataStr, &data)
-	if err != nil {
-		return nil, err
-	}
 	var files []model.Obj
-	for _, f := range data.Content {
+	for _, f := range resp.Data.Content {
 		file := model.ObjThumb{
 			Object: model.Object{
 				Name:     f.Name,
@@ -77,6 +67,7 @@ func (d *AList_V3) List(ctx context.Context, dir model.Obj, args model.ListArgs)
 				Size:     f.Size,
 				IsFolder: f.IsDir,
 			},
+			Thumbnail: model.Thumbnail{Thumbnail: f.Thumb},
 		}
 		files = append(files, &file)
 	}
@@ -88,9 +79,9 @@ func (d *AList_V3) List(ctx context.Context, dir model.Obj, args model.ListArgs)
 //	return nil, errs.NotImplement
 //}
 
-func (d *AList_V3) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
+func (d *AListV3) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	url := d.Address + "/api/fs/get"
-	var resp common.Resp
+	var resp common.Resp[handles.FsGetResp]
 	_, err := base.RestyClient.R().
 		SetResult(&resp).
 		SetHeader("Authorization", d.AccessToken).
@@ -101,41 +92,32 @@ func (d *AList_V3) Link(ctx context.Context, file model.Obj, args model.LinkArgs
 	if err != nil {
 		return nil, err
 	}
-	dataStr, err := json.Marshal(resp.Data)
-	if err != nil {
-		return nil, err
-	}
-	var data handles.FsGetResp
-	err = json.Unmarshal(dataStr, &data)
-	if err != nil {
-		return nil, err
-	}
 	return &model.Link{
-		URL: data.RawURL,
+		URL: resp.Data.RawURL,
 	}, nil
 }
 
-func (d *AList_V3) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
+func (d *AListV3) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
 	return errs.NotImplement
 }
 
-func (d *AList_V3) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
+func (d *AListV3) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 	return errs.NotImplement
 }
 
-func (d *AList_V3) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
+func (d *AListV3) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
 	return errs.NotImplement
 }
 
-func (d *AList_V3) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
+func (d *AListV3) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 	return errs.NotImplement
 }
 
-func (d *AList_V3) Remove(ctx context.Context, obj model.Obj) error {
+func (d *AListV3) Remove(ctx context.Context, obj model.Obj) error {
 	return errs.NotImplement
 }
 
-func (d *AList_V3) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
+func (d *AListV3) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
 	return errs.NotImplement
 }
 
@@ -143,4 +125,4 @@ func (d *AList_V3) Put(ctx context.Context, dstDir model.Obj, stream model.FileS
 //	return nil, errs.NotSupport
 //}
 
-var _ driver.Driver = (*AList_V3)(nil)
+var _ driver.Driver = (*AListV3)(nil)

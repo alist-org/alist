@@ -7,8 +7,8 @@ import (
 
 type Addition struct {
 	driver.RootPath
-	Address  string `json:"url" required:"true"`
-	Password string `json:"password"`
+	Address     string `json:"url" required:"true"`
+	Password    string `json:"password"`
 	AccessToken string `json:"access_token"`
 }
 
@@ -21,6 +21,6 @@ var config = driver.Config{
 
 func init() {
 	op.RegisterDriver(config, func() driver.Driver {
-		return &AList_V3{}
+		return &AListV3{}
 	})
 }
