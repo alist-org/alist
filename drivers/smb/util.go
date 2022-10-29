@@ -6,10 +6,19 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/hirochachacha/go-smb2"
 )
+
+func (d *SMB) updateLastConnTime() {
+	d.lastConnTime = time.Now()
+}
+
+func (d *SMB) cleanLastConnTime() {
+	d.lastConnTime = time.Now().AddDate(0, 0, -1)
+}
 
 func (d *SMB) initFS() error {
 	conn, err := net.Dial("tcp", d.Address)
@@ -30,7 +39,18 @@ func (d *SMB) initFS() error {
 	if err != nil {
 		return err
 	}
+	d.updateLastConnTime()
 	return err
+}
+
+func (d *SMB) checkConn() error {
+	if time.Since(d.lastConnTime) < 5*time.Minute {
+		return nil
+	}
+	if d.fs != nil {
+		_ = d.fs.Umount()
+	}
+	return d.initFS()
 }
 
 func (d *SMB) getSMBPath(dir model.Obj) string {
