@@ -39,7 +39,7 @@
 
 ---
 
-[English](./README.md) | 中文 | [Contributors](./CONTRIBUTORS.md) | [Contributing](./CONTRIBUTING.md) | [CODE_OF_CONDUCT](./CODE_OF_CONDUCT.md)
+[English](./README.md) | 中文 | [Contributing](./CONTRIBUTING.md) | [CODE_OF_CONDUCT](./CODE_OF_CONDUCT.md)
 
 ## Features
 
@@ -67,6 +67,7 @@
     - [x] [谷歌相册](https://photos.google.com/)
     - [x] [Mega.nz](https://mega.nz)
     - [x] [一刻相册](https://photo.baidu.com/)
+    - [x] SMB
 - [x] 部署方便，开箱即用
 - [x] 文件预览（PDF、markdown、代码、纯文本……）
 - [x] 画廊模式下的图像预览
@@ -97,13 +98,23 @@
 
 一般问题请到[讨论论坛](https://github.com/Xhofe/alist/discussions) ，**issue仅针对错误报告和功能请求。**
 
-## Special sponsors
+## Sponsor
+
+AList 是一个开源软件，如果你碰巧喜欢这个项目，并希望我继续下去，请考虑赞助我或提供一个单一的捐款！感谢所有的爱和支持：https://alist.nn.ci/zh/guide/sponsor.html
+
+### Special sponsors
 
 - [找资源 - 阿里云盘资源搜索引擎](https://zhaoziyuan.la/)
 - [KinhDown 百度云盘不限速下载！永久免费！已稳定运行3年！非常可靠！Q群 -> 786799372](https://kinhdown.com)
 - [JetBrains: Essential tools for software developers and teams](https://www.jetbrains.com/)
 
-##  许可
+## Contributors
+
+Thanks goes to these wonderful people:
+
+[![Contributors](http://contributors.nn.ci/api?repo=alist-org/alist&repo=alist-org/alist-web&repo=alist-org/docs)](https://github.com/alist-org/alist/graphs/contributors)
+
+## 许可
 
 `AList` 是在 AGPL-3.0 许可下许可的开源软件。
 
