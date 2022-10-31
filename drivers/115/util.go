@@ -18,11 +18,7 @@ func (d *Pan115) login() error {
 		return err
 	}
 	d.client.ImportCredential(cr)
-
-	if err := d.client.LoginCheck(); err != nil {
-		return err
-	}
-	return nil
+	return d.client.LoginCheck()
 }
 
 func (d *Pan115) getFiles(fileId string) ([]driver.File, error) {
