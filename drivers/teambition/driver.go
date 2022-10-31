@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
@@ -55,7 +56,8 @@ func (d *Teambition) Link(ctx context.Context, file model.Obj, args model.LinkAr
 		if res.StatusCode() == 302 {
 			url = res.Header().Get("location")
 		}
-		return &model.Link{URL: url}, nil
+		expired := time.Duration(60) * time.Second
+		return &model.Link{URL: url,Expiration: &expired}, nil
 	}
 	return nil, errors.New("can't convert obj to URL")
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
@@ -89,6 +90,8 @@ func (d *Cloud189) Link(ctx context.Context, file model.Obj, args model.LinkArgs
 		link.URL = resp.FileDownloadUrl
 	}
 	link.URL = strings.Replace(link.URL, "http://", "https://", 1)
+	expired := time.Duration(60) * time.Second
+	link.Expiration = &expired
 	return &link, nil
 }
 

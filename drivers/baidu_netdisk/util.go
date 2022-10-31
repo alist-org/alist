@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/errs"
@@ -140,8 +141,10 @@ func (d *BaiduNetdisk) linkOfficial(file model.Obj, args model.LinkArgs) (*model
 	//if res.StatusCode() == 302 {
 	u = res.Header().Get("location")
 	//}
+	expired := time.Duration(60) * time.Second
 	return &model.Link{
 		URL: u,
+		Expiration: &expired,
 		Header: http.Header{
 			"User-Agent": []string{"pan.baidu.com"},
 		},

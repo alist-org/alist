@@ -124,9 +124,10 @@ func (y *Yun189PC) Link(ctx context.Context, file model.Obj, args model.LinkArgs
 	if res.StatusCode() == 302 {
 		downloadUrl.URL = res.Header().Get("location")
 	}
-
-	like := &model.Link{
+	expired := time.Duration(60) * time.Second
+	link := &model.Link{
 		URL: downloadUrl.URL,
+		Expiration: &expired,
 		Header: http.Header{
 			"User-Agent": []string{base.UserAgent},
 		},
@@ -142,7 +143,7 @@ func (y *Yun189PC) Link(ctx context.Context, file model.Obj, args model.LinkArgs
 			}
 		}
 	*/
-	return like, nil
+	return link, nil
 }
 
 func (y *Yun189PC) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {

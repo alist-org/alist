@@ -137,10 +137,12 @@ func (d *AliyundriveShare) Link(ctx context.Context, file model.Obj, args model.
 	} else {
 		u = utils.Json.Get(res.Body(), "url").ToString()
 	}
+	expired := time.Duration(60) * time.Second
 	return &model.Link{
 		Header: http.Header{
 			"Referer": []string{"https://www.aliyundrive.com/"},
 		},
+		Expiration: &expired,
 		URL: u,
 	}, nil
 }

@@ -70,9 +70,10 @@ func (d *LanZou) Link(ctx context.Context, file model.Obj, args model.LinkArgs) 
 	if err != nil {
 		return nil, err
 	}
-
+	expired := time.Duration(60) * time.Second
 	return &model.Link{
 		URL: fileInfo.Url,
+		Expiration: &expired,
 		Header: http.Header{
 			"User-Agent": []string{base.UserAgent},
 		},

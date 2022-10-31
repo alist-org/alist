@@ -72,8 +72,10 @@ func (d *Quark) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 	if err != nil {
 		return nil, err
 	}
+	expired := time.Duration(60) * time.Second
 	return &model.Link{
 		URL: resp.Data[0].DownloadUrl,
+		Expiration: &expired,
 		Header: http.Header{
 			"Cookie":  []string{d.Cookie},
 			"Referer": []string{"https://pan.quark.cn"},

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
@@ -259,8 +260,10 @@ func (xc *XunLeiCommon) Link(ctx context.Context, file model.Obj, args model.Lin
 	if err != nil {
 		return nil, err
 	}
+	expired := time.Duration(60) * time.Second
 	link := &model.Link{
 		URL: lFile.WebContentLink,
+		Expiration: &expired,
 		Header: http.Header{
 			"User-Agent": {xc.DownloadUserAgent},
 		},

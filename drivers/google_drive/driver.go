@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
@@ -57,8 +58,10 @@ func (d *GoogleDrive) List(ctx context.Context, dir model.Obj, args model.ListAr
 
 func (d *GoogleDrive) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	url := fmt.Sprintf("https://www.googleapis.com/drive/v3/files/%s?includeItemsFromAllDrives=true&supportsAllDrives=true", file.GetID())
+	expired := time.Duration(60) * time.Second
 	link := model.Link{
 		URL: url + "&alt=media",
+		Expiration: &expired,
 		Header: http.Header{
 			"Authorization": []string{"Bearer " + d.AccessToken},
 		},

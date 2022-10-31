@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/errs"
@@ -366,8 +367,10 @@ func (d *BaiduPhoto) linkFile(ctx context.Context, file model.Obj, args model.Li
 	}
 
 	//exp := 8 * time.Hour
+	expired := time.Duration(60) * time.Second
 	link := &model.Link{
 		URL: downloadUrl.Dlink,
+		Expiration: &expired,
 		Header: http.Header{
 			"User-Agent": []string{headers["User-Agent"]},
 			"Referer":    []string{"https://photo.baidu.com/"},

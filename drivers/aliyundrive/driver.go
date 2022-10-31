@@ -103,10 +103,12 @@ func (d *AliDrive) Link(ctx context.Context, file model.Obj, args model.LinkArgs
 	if err != nil {
 		return nil, err
 	}
+	expired := time.Duration(60) * time.Second
 	return &model.Link{
 		Header: http.Header{
 			"Referer": []string{"https://www.aliyundrive.com/"},
 		},
+		Expiration: &expired,
 		URL: utils.Json.Get(res, "url").ToString(),
 	}, nil
 }

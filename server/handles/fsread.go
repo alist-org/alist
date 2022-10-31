@@ -285,12 +285,21 @@ func FsGet(c *gin.Context) {
 				rawURL = u.URL()
 			} else {
 				// if storage is not proxy, use raw url by fs.Link
-				link, _, err := fs.Link(c, req.Path, model.LinkArgs{IP: c.ClientIP(), Header: c.Request.Header})
-				if err != nil {
-					common.ErrorResp(c, err, 500)
-					return
+//				link, _, err := fs.Link(c, req.Path, model.LinkArgs{IP: c.ClientIP(), Header: c.Request.Header})
+//				if err != nil {
+//					common.ErrorResp(c, err, 500)
+//					return
+//				}
+//				rawURL = link.URL
+				go func() {
+					fs.Link(c, req.Path, model.LinkArgs{IP: c.ClientIP(), Header: c.Request.Header})
+				}()
+				rawURL = fmt.Sprintf("%s/d%s",
+				common.GetApiUrl(c.Request),
+				utils.EncodePath(req.Path, true))
+				if(isEncrypt(meta, req.Path)){
+					rawURL = fmt.Sprintf("%s?sign=%s", rawURL, sign.Sign(obj.GetName()))
 				}
-				rawURL = link.URL
 			}
 		}
 	}

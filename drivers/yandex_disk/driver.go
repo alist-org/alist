@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"path"
 	"strconv"
+	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
@@ -63,8 +64,10 @@ func (d *YandexDisk) Link(ctx context.Context, file model.Obj, args model.LinkAr
 	if err != nil {
 		return nil, err
 	}
+	expired := time.Duration(60) * time.Second
 	link := model.Link{
 		URL: resp.Href,
+		Expiration: &expired,
 	}
 	return &link, nil
 }

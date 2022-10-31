@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
@@ -62,14 +63,16 @@ func (d *GooglePhoto) Link(ctx context.Context, file model.Obj, args model.LinkA
 	if err != nil {
 		return nil, err
 	}
-
+	expired := time.Duration(60) * time.Second
 	if strings.Contains(f.MimeType, "image/") {
 		return &model.Link{
 			URL: f.BaseURL + "=d",
+			Expiration: &expired,
 		}, nil
 	} else if strings.Contains(f.MimeType, "video/") {
 		return &model.Link{
 			URL: f.BaseURL + "=dv",
+			Expiration: &expired,
 		}, nil
 	}
 	return &model.Link{}, nil
