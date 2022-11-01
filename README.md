@@ -68,6 +68,7 @@ English | [中文](./README_cn.md) | [Contributing](./CONTRIBUTING.md) | [CODE_O
     - [x] [Mega.nz](https://mega.nz)
     - [x] [Baidu photo](https://photo.baidu.com/)
     - [x] SMB
+    - [x] [115](https://115.com/)
 - [x] Easy to deploy and out-of-the-box
 - [x] File preview (PDF, markdown, code, plain text, ...)
 - [x] Image preview in gallery mode

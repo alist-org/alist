@@ -68,6 +68,7 @@
     - [x] [Mega.nz](https://mega.nz)
     - [x] [一刻相册](https://photo.baidu.com/)
     - [x] SMB
+    - [x] [115](https://115.com/)
 - [x] 部署方便，开箱即用
 - [x] 文件预览（PDF、markdown、代码、纯文本……）
 - [x] 画廊模式下的图像预览
