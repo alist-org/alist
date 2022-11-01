@@ -36,6 +36,7 @@ func Down(c *gin.Context) {
 			common.ErrorResp(c, err, 500)
 			return
 		}
+		c.Header("Referrer-Policy", "no-referrer")
 		c.Redirect(302, link.URL)
 	}
 }
