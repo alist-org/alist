@@ -186,7 +186,7 @@ func (y *Yun189PC) getFiles(ctx context.Context, fileId string) ([]model.Obj, er
 
 func (y *Yun189PC) login() (err error) {
 	// 初始化登陆所需参数
-	if y.loginParam == nil || !y.NonuseOrc {
+	if y.loginParam == nil || !y.NoUseOcr {
 		if err = y.initLoginParam(); err != nil {
 			// 验证码也通过错误返回
 			return err
@@ -198,7 +198,7 @@ func (y *Yun189PC) login() (err error) {
 		// 销毁登陆参数
 		y.loginParam = nil
 		// 遇到错误，重新加载登陆参数
-		if err != nil && y.NonuseOrc {
+		if err != nil && y.NoUseOcr {
 			if err1 := y.initLoginParam(); err1 != nil {
 				err = fmt.Errorf("err1: %s \nerr2: %s", err, err1)
 			}
@@ -315,7 +315,7 @@ func (y *Yun189PC) initLoginParam() error {
 		return fmt.Errorf("failed to obtain verification code")
 	}
 	if imgRes.Size() > 20 {
-		if setting.GetStr(conf.OcrApi) != "" && !y.NonuseOrc {
+		if setting.GetStr(conf.OcrApi) != "" && !y.NoUseOcr {
 			vRes, err := base.RestyClient.R().
 				SetMultipartField("image", "validateCode.png", "image/png", bytes.NewReader(imgRes.Body())).
 				Post(setting.GetStr(conf.OcrApi))
