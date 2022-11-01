@@ -12,19 +12,28 @@ import (
 )
 
 func InitConfig() {
-	log.Infof("reading config file: %s", flags.Config)
-	if !utils.Exists(flags.Config) {
+	if flags.ForceBinDir {
+		ex, err := os.Executable()
+		if err != nil {
+			utils.Log.Fatal(err)
+		}
+		exPath := filepath.Dir(ex)
+		flags.DataDir = filepath.Join(exPath, "data")
+	}
+	configPath := filepath.Join(flags.DataDir, "config.json")
+	log.Infof("reading config file: %s", configPath)
+	if !utils.Exists(configPath) {
 		log.Infof("config file not exists, creating default config file")
-		_, err := utils.CreateNestedFile(flags.Config)
+		_, err := utils.CreateNestedFile(configPath)
 		if err != nil {
 			log.Fatalf("failed to create config file: %+v", err)
 		}
 		conf.Conf = conf.DefaultConfig()
-		if !utils.WriteJsonToFile(flags.Config, conf.Conf) {
+		if !utils.WriteJsonToFile(configPath, conf.Conf) {
 			log.Fatalf("failed to create default config file")
 		}
 	} else {
-		configBytes, err := os.ReadFile(flags.Config)
+		configBytes, err := os.ReadFile(configPath)
 		if err != nil {
 			log.Fatalf("reading config file error: %+v", err)
 		}
@@ -38,7 +47,7 @@ func InitConfig() {
 		if err != nil {
 			log.Fatalf("marshal config error: %+v", err)
 		}
-		err = os.WriteFile(flags.Config, confBody, 0777)
+		err = os.WriteFile(configPath, confBody, 0777)
 		if err != nil {
 			log.Fatalf("update config struct error: %+v", err)
 		}
