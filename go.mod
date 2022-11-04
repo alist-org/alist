@@ -3,7 +3,7 @@ module github.com/alist-org/alist/v3
 go 1.19
 
 require (
-	github.com/SheltonZhu/115driver v1.0.9
+	github.com/SheltonZhu/115driver v1.0.11
 	github.com/Xhofe/go-cache v0.0.0-20220723083548-714439c8af9a
 	github.com/aws/aws-sdk-go v1.44.88
 	github.com/caarlos0/env/v6 v6.9.3
@@ -71,6 +71,7 @@ require (
 	github.com/orzogc/fake115uploader v0.3.3-0.20221009101310-08b764073b77 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.1 // indirect
 	github.com/pierrec/lz4/v4 v4.1.17 // indirect
+	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/ugorji/go/codec v1.2.7 // indirect
 	golang.org/x/image v0.0.0-20220722155232-062f8c9fd539 // indirect

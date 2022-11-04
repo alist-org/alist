@@ -6,7 +6,8 @@ import (
 )
 
 type Addition struct {
-	Cookie string `json:"cookie" required:"true"`
+	Cookie        string `json:"cookie"`
+	QRCodeToken string `json:"qrcode_token"`
 	driver.RootID
 }
 
