@@ -37,6 +37,7 @@ func Down(c *gin.Context) {
 			return
 		}
 		c.Header("Referrer-Policy", "no-referrer")
+		c.Header("Cache-Control", "max-age=0, no-cache, no-store, must-revalidate")
 		c.Redirect(302, link.URL)
 	}
 }
