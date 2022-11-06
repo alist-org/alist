@@ -272,7 +272,10 @@ func FsGet(c *gin.Context) {
 		}
 		if storage.Config().MustProxy() || storage.GetStorage().WebProxy {
 			if storage.GetStorage().DownProxyUrl != "" {
-				rawURL = fmt.Sprintf("%s%s?sign=%s", strings.Split(storage.GetStorage().DownProxyUrl, "\n")[0], req.Path, sign.Sign(obj.GetName()))
+				rawURL = fmt.Sprintf("%s%s?sign=%s",
+					strings.Split(storage.GetStorage().DownProxyUrl, "\n")[0],
+					utils.EncodePath(req.Path, true),
+					sign.Sign(obj.GetName()))
 			} else {
 				rawURL = fmt.Sprintf("%s/p%s?sign=%s",
 					common.GetApiUrl(c.Request),
