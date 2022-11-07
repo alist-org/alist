@@ -1,10 +1,14 @@
 package google_drive
 
 import (
+	"context"
 	"fmt"
+	"io"
 	"net/http"
+	"strconv"
 
 	"github.com/alist-org/alist/v3/drivers/base"
+	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
 )
@@ -94,4 +98,26 @@ func (d *GoogleDrive) getFiles(id string) ([]File, error) {
 		res = append(res, resp.Files...)
 	}
 	return res, nil
+}
+
+func (d *GoogleDrive) chunkUpload(ctx context.Context, stream model.FileStreamer, url string) error {
+	var defaultChunkSize = d.ChunkSize * 1024 * 1024
+	var finish int64 = 0
+	for finish < stream.GetSize() {
+		chunkSize := stream.GetSize() - finish
+		if chunkSize > defaultChunkSize {
+			chunkSize = defaultChunkSize
+		}
+		_, err := d.request(url, http.MethodPut, func(req *resty.Request) {
+			req.SetHeaders(map[string]string{
+				"Content-Length": strconv.FormatInt(chunkSize, 10),
+				"Content-Range":  fmt.Sprintf("bytes %d-%d/%d", finish, finish+chunkSize-1, stream.GetSize()),
+			}).SetBody(io.LimitReader(stream.GetReadCloser(), chunkSize))
+		}, nil)
+		if err != nil {
+			return err
+		}
+		finish += chunkSize
+	}
+	return nil
 }

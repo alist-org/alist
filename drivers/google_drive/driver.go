@@ -36,6 +36,9 @@ func (d *GoogleDrive) Init(ctx context.Context, storage model.Storage) error {
 	if err != nil {
 		return err
 	}
+	if d.ChunkSize == 0 {
+		d.ChunkSize = 5
+	}
 	return d.refreshToken()
 }
 
@@ -160,9 +163,13 @@ func (d *GoogleDrive) Put(ctx context.Context, dstDir model.Obj, stream model.Fi
 		return fmt.Errorf("%s: %v", e.Error.Message, e.Error.Errors)
 	}
 	putUrl := res.Header().Get("location")
-	_, err = d.request(putUrl, http.MethodPut, func(req *resty.Request) {
-		req.SetHeader("Content-Length", strconv.FormatInt(stream.GetSize(), 10)).SetBody(stream.GetReadCloser())
-	}, nil)
+	if stream.GetSize() < d.ChunkSize*1024*1024 {
+		_, err = d.request(putUrl, http.MethodPut, func(req *resty.Request) {
+			req.SetHeader("Content-Length", strconv.FormatInt(stream.GetSize(), 10)).SetBody(stream.GetReadCloser())
+		}, nil)
+	} else {
+		err = d.chunkUpload(ctx, stream, putUrl)
+	}
 	return err
 }
 
