@@ -178,7 +178,6 @@ func (d *Cloud189) request(url string, method string, callback base.ReqCallback,
 func (d *Cloud189) getFiles(fileId string) ([]model.Obj, error) {
 	res := make([]model.Obj, 0)
 	pageNum := 1
-	loc, _ := time.LoadLocation("Local")
 	for {
 		var resp Files
 		_, err := d.request("https://cloud.189.cn/api/open/file/listFiles.action", http.MethodGet, func(req *resty.Request) {
@@ -200,7 +199,7 @@ func (d *Cloud189) getFiles(fileId string) ([]model.Obj, error) {
 			break
 		}
 		for _, folder := range resp.FileListAO.FolderList {
-			lastOpTime, _ := time.ParseInLocation("2006-01-02 15:04:05", folder.LastOpTime, loc)
+			lastOpTime := utils.MustParseCNTime(folder.LastOpTime)
 			res = append(res, &model.Object{
 				ID:       strconv.FormatInt(folder.Id, 10),
 				Name:     folder.Name,
@@ -209,7 +208,7 @@ func (d *Cloud189) getFiles(fileId string) ([]model.Obj, error) {
 			})
 		}
 		for _, file := range resp.FileListAO.FileList {
-			lastOpTime, _ := time.ParseInLocation("2006-01-02 15:04:05", file.LastOpTime, loc)
+			lastOpTime := utils.MustParseCNTime(file.LastOpTime)
 			res = append(res, &model.ObjThumb{
 				Object: model.Object{
 					ID:       strconv.FormatInt(file.Id, 10),
