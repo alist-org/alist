@@ -4,11 +4,14 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	stdpath "path"
+	"strconv"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/go-resty/resty/v2"
 )
@@ -112,15 +115,37 @@ func (d *GoogleDrive) Remove(ctx context.Context, obj model.Obj) error {
 }
 
 func (d *GoogleDrive) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
-	data := base.Json{
-		"name":    stream.GetName(),
-		"parents": []string{dstDir.GetID()},
+	obj, _ := op.Get(ctx, d, stdpath.Join(dstDir.GetPath(), stream.GetName()))
+
+	var (
+		e    Error
+		url  string
+		data base.Json
+		res  *resty.Response
+		err  error
+	)
+	if obj != nil {
+		url = fmt.Sprintf("https://www.googleapis.com/upload/drive/v3/files/%s?uploadType=resumable&supportsAllDrives=true", obj.GetID())
+		data = base.Json{}
+	} else {
+		data = base.Json{
+			"name":    stream.GetName(),
+			"parents": []string{dstDir.GetID()},
+		}
+		url = "https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&supportsAllDrives=true"
 	}
-	var e Error
-	url := "https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&supportsAllDrives=true"
-	res, err := base.NoRedirectClient.R().SetHeader("Authorization", "Bearer "+d.AccessToken).
-		SetError(&e).SetBody(data).
-		Post(url)
+	req := base.NoRedirectClient.R().
+		SetHeaders(map[string]string{
+			"Authorization":           "Bearer " + d.AccessToken,
+			"X-Upload-Content-Type":   stream.GetMimetype(),
+			"X-Upload-Content-Length": strconv.FormatInt(stream.GetSize(), 10),
+		}).
+		SetError(&e).SetBody(data)
+	if obj != nil {
+		res, err = req.Patch(url)
+	} else {
+		res, err = req.Post(url)
+	}
 	if err != nil {
 		return err
 	}
@@ -136,7 +161,7 @@ func (d *GoogleDrive) Put(ctx context.Context, dstDir model.Obj, stream model.Fi
 	}
 	putUrl := res.Header().Get("location")
 	_, err = d.request(putUrl, http.MethodPut, func(req *resty.Request) {
-		req.SetBody(stream.GetReadCloser())
+		req.SetHeader("Content-Length", strconv.FormatInt(stream.GetSize(), 10)).SetBody(stream.GetReadCloser())
 	}, nil)
 	return err
 }
