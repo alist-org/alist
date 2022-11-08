@@ -231,7 +231,7 @@ func (h *Handler) handleGetHeadPost(w http.ResponseWriter, r *http.Request) (sta
 		u := fmt.Sprintf("%s/p%s?sign=%s",
 			common.GetApiUrl(r),
 			utils.EncodePath(reqPath, true),
-			sign.Sign(path.Base(reqPath)))
+			sign.Sign(reqPath))
 		w.Header().Set("Cache-Control", "max-age=0, no-cache, no-store, must-revalidate")
 		http.Redirect(w, r, u, 302)
 	} else {

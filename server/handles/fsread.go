@@ -86,7 +86,7 @@ func FsList(c *gin.Context) {
 		provider = storage.GetStorage().Driver
 	}
 	common.SuccessResp(c, FsListResp{
-		Content:  toObjResp(objs, isEncrypt(meta, req.Path)),
+		Content:  toObjResp(objs, req.Path, isEncrypt(meta, req.Path)),
 		Total:    int64(total),
 		Readme:   getReadme(meta, req.Path),
 		Write:    user.CanWrite() || canWrite(meta, req.Path),
@@ -196,7 +196,7 @@ func pagination(objs []model.Obj, req *common.PageReq) (int, []model.Obj) {
 	return total, objs[start:end]
 }
 
-func toObjResp(objs []model.Obj, encrypt bool) []ObjResp {
+func toObjResp(objs []model.Obj, parent string, encrypt bool) []ObjResp {
 	var resp []ObjResp
 	for _, obj := range objs {
 		thumb := ""
@@ -212,7 +212,7 @@ func toObjResp(objs []model.Obj, encrypt bool) []ObjResp {
 			Size:     obj.GetSize(),
 			IsDir:    obj.IsDir(),
 			Modified: obj.ModTime(),
-			Sign:     common.Sign(obj, encrypt),
+			Sign:     common.Sign(obj, parent, encrypt),
 			Thumb:    thumb,
 			Type:     tp,
 		})
@@ -275,12 +275,12 @@ func FsGet(c *gin.Context) {
 				rawURL = fmt.Sprintf("%s%s?sign=%s",
 					strings.Split(storage.GetStorage().DownProxyUrl, "\n")[0],
 					utils.EncodePath(req.Path, true),
-					sign.Sign(obj.GetName()))
+					sign.Sign(req.Path))
 			} else {
 				rawURL = fmt.Sprintf("%s/p%s?sign=%s",
 					common.GetApiUrl(c.Request),
 					utils.EncodePath(req.Path, true),
-					sign.Sign(obj.GetName()))
+					sign.Sign(req.Path))
 			}
 		} else {
 			// file have raw url
@@ -310,13 +310,13 @@ func FsGet(c *gin.Context) {
 			Size:     obj.GetSize(),
 			IsDir:    obj.IsDir(),
 			Modified: obj.ModTime(),
-			Sign:     common.Sign(obj, isEncrypt(meta, req.Path)),
+			Sign:     common.Sign(obj, parentPath, isEncrypt(meta, req.Path)),
 			Type:     utils.GetFileType(obj.GetName()),
 		},
 		RawURL:   rawURL,
 		Readme:   getReadme(meta, req.Path),
 		Provider: provider,
-		Related:  toObjResp(related, isEncrypt(parentMeta, parentPath)),
+		Related:  toObjResp(related, parentPath, isEncrypt(parentMeta, parentPath)),
 	})
 }
 
