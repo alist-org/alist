@@ -77,12 +77,17 @@ func (d *Local) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([
 			thumb = utils.EncodePath(thumb, true)
 			thumb += "?type=thumb"
 		}
+		isFolder := f.IsDir() || isSymlinkDir(f, fullPath)
+		size := f.Size()
+		if isFolder {
+			size = 0
+		}
 		file := model.ObjThumb{
 			Object: model.Object{
 				Name:     f.Name(),
 				Modified: f.ModTime(),
-				Size:     f.Size(),
-				IsFolder: f.IsDir(),
+				Size:     size,
+				IsFolder: isFolder,
 			},
 			Thumbnail: model.Thumbnail{
 				Thumbnail: thumb,
@@ -101,12 +106,17 @@ func (d *Local) Get(ctx context.Context, path string) (model.Obj, error) {
 		}
 		return nil, err
 	}
+	isFolder := f.IsDir() || isSymlinkDir(f, path)
+	size := f.Size()
+	if isFolder {
+		size = 0
+	}
 	file := model.Object{
 		Path:     path,
 		Name:     f.Name(),
 		Modified: f.ModTime(),
-		Size:     f.Size(),
-		IsFolder: f.IsDir(),
+		Size:     size,
+		IsFolder: isFolder,
 	}
 	return &file, nil
 }
