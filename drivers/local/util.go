@@ -12,6 +12,9 @@ func isSymlinkDir(f fs.FileInfo, path string) bool {
 		if err != nil {
 			return false
 		}
+		if !filepath.IsAbs(dst) {
+			dst = filepath.Join(path, dst)
+		}
 		stat, err := os.Stat(dst)
 		if err != nil {
 			return false
