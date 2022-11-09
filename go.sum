@@ -2,8 +2,8 @@ github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/Masterminds/semver/v3 v3.1.1 h1:hLg3sBzpNErnxhQtUy/mmLR2I9foDujNK030IGemrRc=
 github.com/Masterminds/semver/v3 v3.1.1/go.mod h1:VPu/7SZ7ePZ3QOrcuXROw5FAcLl4a0cBrbBpGY/8hQs=
-github.com/SheltonZhu/115driver v1.0.11 h1:DIZ4Iun5kZEfrcjdAy14qSfWFarxVlJHP7K+pdvXcCY=
-github.com/SheltonZhu/115driver v1.0.11/go.mod h1:00ixivHH5HqDj4S7kAWbkuUrjtsJTxc7cGv5RMw3RVs=
+github.com/SheltonZhu/115driver v1.0.12 h1:+GlIM5h8tzuec6MzK0wFwb7bY77nav7JhY8lTljzls4=
+github.com/SheltonZhu/115driver v1.0.12/go.mod h1:00ixivHH5HqDj4S7kAWbkuUrjtsJTxc7cGv5RMw3RVs=
 github.com/Xhofe/go-cache v0.0.0-20220723083548-714439c8af9a h1:RenIAa2q4H8UcS/cqmwdT1WCWIAH5aumP8m8RpbqVsE=
 github.com/Xhofe/go-cache v0.0.0-20220723083548-714439c8af9a/go.mod h1:sSBbaOg90XwWKtpT56kVujF0bIeVITnPlssLclogS04=
 github.com/aead/ecdh v0.2.0 h1:pYop54xVaq/CEREFEcukHRZfTdjiWvYIsZDXXrBapQQ=
