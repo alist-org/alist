@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/alist-org/alist/v3/internal/model"
+	log "github.com/sirupsen/logrus"
 )
 
 type TokenError struct {
@@ -18,17 +19,22 @@ type Files struct {
 }
 
 type File struct {
-	Id            string    `json:"id"`
-	Name          string    `json:"name"`
-	MimeType      string    `json:"mimeType"`
-	ModifiedTime  time.Time `json:"modifiedTime"`
-	Size          string    `json:"size"`
-	ThumbnailLink string    `json:"thumbnailLink"`
+	Id              string    `json:"id"`
+	Name            string    `json:"name"`
+	MimeType        string    `json:"mimeType"`
+	ModifiedTime    time.Time `json:"modifiedTime"`
+	Size            string    `json:"size"`
+	ThumbnailLink   string    `json:"thumbnailLink"`
+	ShortcutDetails struct {
+		TargetId       string `json:"targetId"`
+		TargetMimeType string `json:"targetMimeType"`
+	} `json:"shortcutDetails"`
 }
 
 func fileToObj(f File) *model.ObjThumb {
+	log.Debugf("google file: %+v", f)
 	size, _ := strconv.ParseInt(f.Size, 10, 64)
-	return &model.ObjThumb{
+	obj := &model.ObjThumb{
 		Object: model.Object{
 			ID:       f.Id,
 			Name:     f.Name,
@@ -38,6 +44,11 @@ func fileToObj(f File) *model.ObjThumb {
 		},
 		Thumbnail: model.Thumbnail{},
 	}
+	if f.MimeType == "application/vnd.google-apps.shortcut" {
+		obj.ID = f.ShortcutDetails.TargetId
+		obj.IsFolder = f.ShortcutDetails.TargetMimeType == "application/vnd.google-apps.folder"
+	}
+	return obj
 }
 
 type Error struct {
