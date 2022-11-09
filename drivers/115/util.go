@@ -6,12 +6,14 @@ import (
 	"github.com/SheltonZhu/115driver/pkg/driver"
 	"github.com/pkg/errors"
 )
+
 var UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36 115Browser/23.9.3.2 115disk/30.1.0"
+
 func (d *Pan115) login() error {
 	var err error
 	opts := []driver.Option{
 		driver.UA(UserAgent),
-		}
+	}
 	d.client = driver.New(opts...)
 	cr := &driver.Credential{}
 	if d.Addition.QRCodeToken != "" {
