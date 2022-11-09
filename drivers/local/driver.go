@@ -82,7 +82,7 @@ func (d *Local) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([
 				Name:     f.Name(),
 				Modified: f.ModTime(),
 				Size:     f.Size(),
-				IsFolder: f.IsDir(),
+				IsFolder: f.IsDir() || isSymlinkDir(f, fullPath),
 			},
 			Thumbnail: model.Thumbnail{
 				Thumbnail: thumb,
@@ -106,7 +106,7 @@ func (d *Local) Get(ctx context.Context, path string) (model.Obj, error) {
 		Name:     f.Name(),
 		Modified: f.ModTime(),
 		Size:     f.Size(),
-		IsFolder: f.IsDir(),
+		IsFolder: f.IsDir() || isSymlinkDir(f, path),
 	}
 	return &file, nil
 }
