@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/alist-org/alist/v3/drivers/base"
+	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/go-resty/resty/v2"
 	jsoniter "github.com/json-iterator/go"
 )
@@ -13,14 +14,24 @@ import (
 // do others that not defined in Driver interface
 
 func (d *Pan123) login() error {
+	var body base.Json
 	url := "https://www.123pan.com/api/user/sign_in"
+	if utils.IsEmailFormat(d.Username) {
+		body = base.Json{
+			"mail":     d.Username,
+			"password": d.Password,
+			"type":     2,
+		}
+	} else {
+		body = base.Json{
+			"passport": d.Username,
+			"password": d.Password,
+		}
+	}
 	var resp TokenResp
 	_, err := base.RestyClient.R().
 		SetResult(&resp).
-		SetBody(base.Json{
-			"passport": d.Username,
-			"password": d.Password,
-		}).Post(url)
+		SetBody(body).Post(url)
 	if err != nil {
 		return err
 	}
