@@ -8,7 +8,7 @@ import (
 type Addition struct {
 	Username       string `json:"username" required:"true"`
 	Password       string `json:"password" required:"true"`
-	OrderBy        string `json:"order_by" type:"select" options:"name,fileId,updateAt,createAt" default:"name"`
+	OrderBy        string `json:"order_by" type:"select" options:"file_name,size,update_at" default:"file_name"`
 	OrderDirection string `json:"order_direction" type:"select" options:"asc,desc" default:"asc"`
 	driver.RootID
 	// define other
