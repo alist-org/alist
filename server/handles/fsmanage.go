@@ -203,8 +203,8 @@ func Link(c *gin.Context) {
 		common.SuccessResp(c, model.Link{
 			URL: fmt.Sprintf("%s/p%s?d&sign=%s",
 				common.GetApiUrl(c.Request),
-				utils.EncodePath(req.Path, true),
-				sign.Sign(stdpath.Base(rawPath))),
+				utils.EncodePath(rawPath, true),
+				sign.Sign(rawPath)),
 		})
 		return
 	}

@@ -1,7 +1,6 @@
 package middlewares
 
 import (
-	stdpath "path"
 	"strings"
 
 	"github.com/alist-org/alist/v3/internal/db"
@@ -17,7 +16,6 @@ import (
 func Down(c *gin.Context) {
 	rawPath := parsePath(c.Param("path"))
 	c.Set("path", rawPath)
-	filename := stdpath.Base(rawPath)
 	meta, err := db.GetNearestMeta(rawPath)
 	if err != nil {
 		if !errors.Is(errors.Cause(err), errs.MetaNotFound) {
@@ -29,7 +27,7 @@ func Down(c *gin.Context) {
 	// verify sign
 	if needSign(meta, rawPath) {
 		s := c.Query("sign")
-		err = sign.Verify(filename, strings.TrimSuffix(s, "/"))
+		err = sign.Verify(rawPath, strings.TrimSuffix(s, "/"))
 		if err != nil {
 			common.ErrorResp(c, err, 401)
 			c.Abort()
