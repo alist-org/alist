@@ -12,7 +12,7 @@ type Addition struct {
 	OrderDirection string `json:"order_direction" type:"select" options:"asc,desc"`
 	ClientID       string `json:"client_id" required:"true" default:"202264815644.apps.googleusercontent.com"`
 	ClientSecret   string `json:"client_secret" required:"true" default:"X4Z3ca8xfWDb1Voo-F9a7ZxJ"`
-	ChunkSize      int64  `json:"chunk_size" default:"5" help:"chunk size while uploading (unit: MB)"`
+	ChunkSize      int64  `json:"chunk_size" type:"number" default:"5" help:"chunk size while uploading (unit: MB)"`
 }
 
 var config = driver.Config{
