@@ -21,6 +21,23 @@ func hidePrivacy(msg string) string {
 // ErrorResp is used to return error response
 // @param l: if true, log error
 func ErrorResp(c *gin.Context, err error, code int, l ...bool) {
+	ErrorWithDataResp(c, err, code, nil, l...)
+	//if len(l) > 0 && l[0] {
+	//	if flags.Debug || flags.Dev {
+	//		log.Errorf("%+v", err)
+	//	} else {
+	//		log.Errorf("%v", err)
+	//	}
+	//}
+	//c.JSON(200, Resp[interface{}]{
+	//	Code:    code,
+	//	Message: hidePrivacy(err.Error()),
+	//	Data:    nil,
+	//})
+	//c.Abort()
+}
+
+func ErrorWithDataResp(c *gin.Context, err error, code int, data interface{}, l ...bool) {
 	if len(l) > 0 && l[0] {
 		if flags.Debug || flags.Dev {
 			log.Errorf("%+v", err)
@@ -31,7 +48,7 @@ func ErrorResp(c *gin.Context, err error, code int, l ...bool) {
 	c.JSON(200, Resp[interface{}]{
 		Code:    code,
 		Message: hidePrivacy(err.Error()),
-		Data:    nil,
+		Data:    data,
 	})
 	c.Abort()
 }

@@ -31,7 +31,7 @@ func GetStorageByVirtualPath(virtualPath string) (driver.Driver, error) {
 
 // CreateStorage Save the storage to database so storage can get an id
 // then instantiate corresponding driver and save it in memory
-func CreateStorage(ctx context.Context, storage model.Storage) error {
+func CreateStorage(ctx context.Context, storage model.Storage) (uint, error) {
 	storage.Modified = time.Now()
 	storage.MountPath = utils.StandardizePath(storage.MountPath)
 	var err error
@@ -39,13 +39,13 @@ func CreateStorage(ctx context.Context, storage model.Storage) error {
 	driverName := storage.Driver
 	driverNew, err := GetDriverNew(driverName)
 	if err != nil {
-		return errors.WithMessage(err, "failed get driver new")
+		return 0, errors.WithMessage(err, "failed get driver new")
 	}
 	storageDriver := driverNew()
 	// insert storage to database
 	err = db.CreateStorage(&storage)
 	if err != nil {
-		return errors.WithMessage(err, "failed create storage in database")
+		return storage.ID, errors.WithMessage(err, "failed create storage in database")
 	}
 	// already has an id
 	err = storageDriver.Init(ctx, storage)
@@ -53,13 +53,13 @@ func CreateStorage(ctx context.Context, storage model.Storage) error {
 	if err != nil {
 		storageDriver.GetStorage().SetStatus(fmt.Sprintf("%+v", err.Error()))
 		MustSaveDriverStorage(storageDriver)
-		return errors.Wrapf(err, "failed init storage but storage is already created")
+		return storage.ID, errors.Wrapf(err, "failed init storage but storage is already created")
 	} else {
 		storageDriver.GetStorage().SetStatus(WORK)
 		MustSaveDriverStorage(storageDriver)
 	}
 	log.Debugf("storage %+v is created", storageDriver)
-	return nil
+	return storage.ID, nil
 }
 
 // LoadStorage load exist storage in db to memory

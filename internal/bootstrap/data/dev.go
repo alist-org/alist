@@ -12,7 +12,7 @@ import (
 )
 
 func initDevData() {
-	err := op.CreateStorage(context.Background(), model.Storage{
+	_, err := op.CreateStorage(context.Background(), model.Storage{
 		MountPath: "/",
 		Order:     0,
 		Driver:    "Local",

@@ -39,7 +39,7 @@ func TestConnect(t *testing.T) {
 
 func TestDown(t *testing.T) {
 	TestConnect(t)
-	err := op.CreateStorage(context.Background(), model.Storage{
+	_, err := op.CreateStorage(context.Background(), model.Storage{
 		ID:        0,
 		MountPath: "/",
 		Order:     0,

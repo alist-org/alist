@@ -30,7 +30,7 @@ func TestCreateStorage(t *testing.T) {
 		{storage: model.Storage{Driver: "None", MountPath: "/none", Addition: `{"root_folder":"."}`}, isErr: true},
 	}
 	for _, storage := range storages {
-		err := op.CreateStorage(context.Background(), storage.storage)
+		_, err := op.CreateStorage(context.Background(), storage.storage)
 		if err != nil {
 			if !storage.isErr {
 				t.Errorf("failed to create storage: %+v", err)
@@ -77,7 +77,7 @@ func setupStorages(t *testing.T) {
 		{Driver: "Local", MountPath: "/a/d/e.balance", Order: 4, Addition: `{"root_folder":"."}`},
 	}
 	for _, storage := range storages {
-		err := op.CreateStorage(context.Background(), storage)
+		_, err := op.CreateStorage(context.Background(), storage)
 		if err != nil {
 			t.Fatalf("failed to create storage: %+v", err)
 		}

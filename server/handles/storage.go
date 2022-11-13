@@ -36,10 +36,14 @@ func CreateStorage(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	if err := op.CreateStorage(c, req); err != nil {
-		common.ErrorResp(c, err, 500, true)
+	if id, err := op.CreateStorage(c, req); err != nil {
+		common.ErrorWithDataResp(c, err, 500, gin.H{
+			"id": id,
+		}, true)
 	} else {
-		common.SuccessResp(c)
+		common.SuccessResp(c, gin.H{
+			"id": id,
+		})
 	}
 }
 
