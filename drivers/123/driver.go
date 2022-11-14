@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"context"
 	"crypto/md5"
+	"encoding/base64"
 	"encoding/binary"
 	"encoding/hex"
-	"encoding/base64"
 	"fmt"
 	"io"
 	"net/http"
@@ -229,13 +229,13 @@ func (d *Pan123) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 		"type":         0,
 	}
 	var resp UploadResp
-	_, err := d.request("https://www.123pan.com/api/file/upload_request", http.MethodPost, func(req *resty.Request) {
+	_, err := d.request("https://www.123pan.com/a/api/file/upload_request", http.MethodPost, func(req *resty.Request) {
 		req.SetBody(data)
 	}, &resp)
 	if err != nil {
 		return err
 	}
-	if resp.Data.Key == "" {
+	if resp.Data.Reuse || resp.Data.Key == "" {
 		return nil
 	}
 	cfg := &aws.Config{

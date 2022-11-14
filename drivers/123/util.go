@@ -15,7 +15,7 @@ import (
 
 func (d *Pan123) login() error {
 	var body base.Json
-	url := "https://www.123pan.com/api/user/sign_in"
+	url := "https://www.123pan.com/a/api/user/sign_in"
 	if utils.IsEmailFormat(d.Username) {
 		body = base.Json{
 			"mail":     d.Username,
@@ -45,7 +45,12 @@ func (d *Pan123) login() error {
 
 func (d *Pan123) request(url string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
 	req := base.RestyClient.R()
-	req.SetHeader("Authorization", "Bearer "+d.AccessToken)
+	req.SetHeaders(map[string]string{
+		"origin":        "https://www.123pan.com",
+		"authorization": "Bearer " + d.AccessToken,
+		"platform":      "web",
+		"app-version":   "1.2",
+	})
 	if callback != nil {
 		callback(req)
 	}

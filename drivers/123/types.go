@@ -85,5 +85,6 @@ type UploadResp struct {
 		SecretAccessKey string `json:"SecretAccessKey"`
 		SessionToken    string `json:"SessionToken"`
 		FileId          int64  `json:"FileId"`
+		Reuse           bool   `json:"Reuse"`
 	} `json:"data"`
 }
