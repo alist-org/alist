@@ -9,7 +9,6 @@ import (
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/server/common"
-	"github.com/alist-org/alist/v3/server/handles"
 )
 
 type AListV3 struct {
@@ -42,11 +41,11 @@ func (d *AListV3) Drop(ctx context.Context) error {
 
 func (d *AListV3) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
 	url := d.Address + "/api/fs/list"
-	var resp common.Resp[handles.FsListResp]
+	var resp common.Resp[FsListResp]
 	_, err := base.RestyClient.R().
 		SetResult(&resp).
 		SetHeader("Authorization", d.AccessToken).
-		SetBody(handles.ListReq{
+		SetBody(ListReq{
 			PageReq: common.PageReq{
 				Page:    1,
 				PerPage: 0,
@@ -81,11 +80,11 @@ func (d *AListV3) List(ctx context.Context, dir model.Obj, args model.ListArgs) 
 
 func (d *AListV3) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	url := d.Address + "/api/fs/get"
-	var resp common.Resp[handles.FsGetResp]
+	var resp common.Resp[FsGetResp]
 	_, err := base.RestyClient.R().
 		SetResult(&resp).
 		SetHeader("Authorization", d.AccessToken).
-		SetBody(handles.FsGetReq{
+		SetBody(FsGetReq{
 			Path:     file.GetPath(),
 			Password: d.Password,
 		}).Post(url)
