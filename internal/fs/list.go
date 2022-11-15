@@ -24,7 +24,7 @@ func list(ctx context.Context, path string, refresh ...bool) ([]model.Obj, error
 			return nil, errors.WithMessage(err, "failed get storage")
 		}
 	} else {
-		objs, err = op.List(ctx, storage, actualPath, model.ListArgs{
+		_objs, err := op.List(ctx, storage, actualPath, model.ListArgs{
 			ReqPath: path,
 		}, refresh...)
 		if err != nil {
@@ -33,6 +33,8 @@ func list(ctx context.Context, path string, refresh ...bool) ([]model.Obj, error
 				return nil, errors.WithMessage(err, "failed get objs")
 			}
 		}
+		objs = make([]model.Obj, len(_objs))
+		copy(objs, _objs)
 	}
 	if objs == nil {
 		objs = virtualFiles

@@ -60,8 +60,10 @@ func List(ctx context.Context, storage driver.Driver, path string, args model.Li
 		}
 		if !storage.Config().NoCache {
 			if len(files) > 0 {
+				log.Debugf("set cache: %s => %+v", key, files)
 				listCache.Set(key, files, cache.WithEx[[]model.Obj](time.Minute*time.Duration(storage.GetStorage().CacheExpiration)))
 			} else {
+				log.Debugf("del cache: %s", key)
 				listCache.Del(key)
 			}
 		}
