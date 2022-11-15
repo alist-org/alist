@@ -10,7 +10,7 @@ jobs:
     if: github.event.label.name == 'question'
     steps:
       - name: Create comment
-        uses: actions-cool/issues-helper@v2.0.0
+        uses: actions-cool/issues-helper@v3.3.3
         with:
           actions: 'create-comment'
           token: ${{ secrets.GITHUB_TOKEN }}
