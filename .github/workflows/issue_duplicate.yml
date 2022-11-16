@@ -10,7 +10,7 @@ jobs:
     if: github.event.label.name == 'duplicate'
     steps:
       - name: Create comment
-        uses: actions-cool/issues-helper@v2
+        uses: actions-cool/issues-helper@v3
         with:
           actions: 'create-comment'
           token: ${{ secrets.GITHUB_TOKEN }}
