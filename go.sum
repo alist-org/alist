@@ -418,4 +418,6 @@ gorm.io/gorm v1.23.6 h1:KFLdNgri4ExFFGTRGGFWON2P1ZN28+9SJRN8voOoYe0=
 gorm.io/gorm v1.23.6/go.mod h1:l2lP/RyAtc1ynaTjFksBde/O8v9oOGIApu2/xRitmZk=
 gorm.io/gorm v1.24.1-0.20221019064659-5dd2bb482755 h1:7AdrbfcvKnzejfqP5g37fdSZOXH/JvaPIzBIHTOqXKk=
 gorm.io/gorm v1.24.1-0.20221019064659-5dd2bb482755/go.mod h1:DVrVomtaYTbqs7gB/x2uVvqnXzv0nqjB396B8cG4dBA=
+gorm.io/gorm v1.24.1 h1:CgvzRniUdG67hBAzsxDGOAuq4Te1osVMYsa1eQbd4fs=
+gorm.io/gorm v1.24.1/go.mod h1:DVrVomtaYTbqs7gB/x2uVvqnXzv0nqjB396B8cG4dBA=
 honnef.co/go/tools v0.0.1-2019.2.3/go.mod h1:a3bituU0lyd329TUQxRnasdCoJDkEUEAqEt0JzvZhAg=
