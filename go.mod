@@ -30,7 +30,7 @@ require (
 	golang.org/x/net v0.2.0
 	gorm.io/driver/mysql v1.4.4
 	gorm.io/driver/postgres v1.4.5
-	gorm.io/driver/sqlite v1.3.4
+	gorm.io/driver/sqlite v1.4.3
 	gorm.io/gorm v1.24.1
 )
 
@@ -65,7 +65,7 @@ require (
 	github.com/kr/fs v0.1.0 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/mattn/go-isatty v0.0.16 // indirect
-	github.com/mattn/go-sqlite3 v1.14.13 // indirect
+	github.com/mattn/go-sqlite3 v1.14.15 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/orzogc/fake115uploader v0.3.3-0.20221009101310-08b764073b77 // indirect
