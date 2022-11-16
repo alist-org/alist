@@ -26,8 +26,8 @@ require (
 	github.com/t3rm1n4l/go-mega v0.0.0-20220725095014-c4e0c2b5debf
 	github.com/upyun/go-sdk/v3 v3.0.3
 	github.com/winfsp/cgofuse v1.5.0
-	golang.org/x/crypto v0.0.0-20221005025214-4161e89ecf1b
-	golang.org/x/net v0.1.0
+	golang.org/x/crypto v0.2.0
+	golang.org/x/net v0.2.0
 	gorm.io/driver/mysql v1.3.4
 	gorm.io/driver/postgres v1.4.5
 	gorm.io/driver/sqlite v1.3.4
@@ -75,7 +75,7 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/ugorji/go/codec v1.2.7 // indirect
 	golang.org/x/image v0.0.0-20220722155232-062f8c9fd539 // indirect
-	golang.org/x/sys v0.1.0 // indirect
+	golang.org/x/sys v0.2.0 // indirect
 	golang.org/x/text v0.4.0 // indirect
 	golang.org/x/time v0.0.0-20220922220347-f3bd1da661af // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
