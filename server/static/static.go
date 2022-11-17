@@ -1,6 +1,7 @@
 package static
 
 import (
+	"errors"
 	"fmt"
 	"io/fs"
 	"net/http"
@@ -18,7 +19,7 @@ import (
 func InitIndex() {
 	index, err := public.Public.ReadFile("dist/index.html")
 	if err != nil {
-		if err == fs.ErrNotExist {
+		if errors.Is(err, fs.ErrNotExist) {
 			utils.Log.Fatalf("index.html not exist, you may forget to put dist of frontend to public/dist")
 		}
 		utils.Log.Fatalf("failed to read index.html: %v", err)
