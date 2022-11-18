@@ -3,7 +3,7 @@ module github.com/alist-org/alist/v3
 go 1.19
 
 require (
-	github.com/SheltonZhu/115driver v1.0.12
+	github.com/SheltonZhu/115driver v1.0.13
 	github.com/Xhofe/go-cache v0.0.0-20220723083548-714439c8af9a
 	github.com/aws/aws-sdk-go v1.44.139
 	github.com/caarlos0/env/v6 v6.10.1
