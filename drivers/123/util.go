@@ -29,14 +29,14 @@ func (d *Pan123) login() error {
 		}
 	}
 	var resp TokenResp
-	_, err := base.RestyClient.R().
+	res, err := base.RestyClient.R().
 		SetResult(&resp).
 		SetBody(body).Post(url)
 	if err != nil {
 		return err
 	}
-	if resp.Code != 200 {
-		err = fmt.Errorf(resp.Message)
+	if utils.Json.Get(res.Body(), "code").ToInt() != 200 {
+		err = fmt.Errorf(utils.Json.Get(res.Body(), "message").ToString())
 	} else {
 		d.AccessToken = resp.Data.Token
 	}
@@ -62,7 +62,7 @@ func (d *Pan123) request(url string, method string, callback base.ReqCallback, r
 		return nil, err
 	}
 	body := res.Body()
-	code := jsoniter.Get(body, "code").ToInt()
+	code := utils.Json.Get(body, "code").ToInt()
 	if code != 0 {
 		if code == 401 {
 			err := d.login()

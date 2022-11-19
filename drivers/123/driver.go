@@ -70,7 +70,7 @@ func (d *Pan123) List(ctx context.Context, dir model.Obj, args model.ListArgs) (
 
 func (d *Pan123) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	if f, ok := file.(File); ok {
-		var resp DownResp
+		//var resp DownResp
 		var headers map[string]string
 		if !utils.IsLocalIPAddr(args.IP) {
 			headers = map[string]string{
@@ -87,13 +87,14 @@ func (d *Pan123) Link(ctx context.Context, file model.Obj, args model.LinkArgs) 
 			"size":      f.Size,
 			"type":      f.Type,
 		}
-		_, err := d.request("https://www.123pan.com/api/file/download_info", http.MethodPost, func(req *resty.Request) {
+		resp, err := d.request("https://www.123pan.com/api/file/download_info", http.MethodPost, func(req *resty.Request) {
 			req.SetBody(data).SetHeaders(headers)
-		}, &resp)
+		}, nil)
 		if err != nil {
 			return nil, err
 		}
-		u, err := url.Parse(resp.Data.DownloadUrl)
+		downloadUrl := utils.Json.Get(resp, "data", "DownloadUrl").ToString()
+		u, err := url.Parse(downloadUrl)
 		if err != nil {
 			return nil, err
 		}
@@ -112,7 +113,7 @@ func (d *Pan123) Link(ctx context.Context, file model.Obj, args model.LinkArgs) 
 		}
 		log.Debug(res.String())
 		link := model.Link{
-			URL: resp.Data.DownloadUrl,
+			URL: downloadUrl,
 		}
 		log.Debugln("res code: ", res.StatusCode())
 		if res.StatusCode() == 302 {
