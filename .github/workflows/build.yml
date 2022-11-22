@@ -25,8 +25,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          docker pull techknowlogick/xgo:latest
-          go install src.techknowlogick.com/xgo@latest
+          docker pull crazymax/xgo:latest
+          go install github.com/crazy-max/xgo@latest
           sudo apt install upx
 
       - name: Build
