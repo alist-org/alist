@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Xhofe/go-cache"
+	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
@@ -122,7 +123,7 @@ func Get(ctx context.Context, storage driver.Driver, path string) (model.Obj, er
 	}
 	for _, f := range files {
 		// TODO maybe copy obj here
-		if f.GetName() == name {
+		if utils.MappingName(f.GetName(), conf.FilenameCharMap) == name {
 			// use path as id, why don't set id in List function?
 			// because files maybe cache, set id here can reduce memory usage
 			if f.GetPath() == "" {

@@ -140,7 +140,7 @@ func filterDirs(objs []model.Obj) []DirResp {
 	for _, obj := range objs {
 		if obj.IsDir() {
 			dirs = append(dirs, DirResp{
-				Name:     obj.GetName(),
+				Name:     utils.MappingName(obj.GetName(), conf.FilenameCharMap),
 				Modified: obj.ModTime(),
 			})
 		}
@@ -208,7 +208,7 @@ func toObjResp(objs []model.Obj, parent string, encrypt bool) []ObjResp {
 			tp = utils.GetFileType(obj.GetName())
 		}
 		resp = append(resp, ObjResp{
-			Name:     obj.GetName(),
+			Name:     utils.MappingName(obj.GetName(), conf.FilenameCharMap),
 			Size:     obj.GetSize(),
 			IsDir:    obj.IsDir(),
 			Modified: obj.ModTime(),
@@ -306,7 +306,7 @@ func FsGet(c *gin.Context) {
 	parentMeta, _ := db.GetNearestMeta(parentPath)
 	common.SuccessResp(c, FsGetResp{
 		ObjResp: ObjResp{
-			Name:     obj.GetName(),
+			Name:     utils.MappingName(obj.GetName(), conf.FilenameCharMap),
 			Size:     obj.GetSize(),
 			IsDir:    obj.IsDir(),
 			Modified: obj.ModTime(),

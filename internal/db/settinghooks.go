@@ -6,7 +6,9 @@ import (
 
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 )
 
 type SettingItemHook struct {
@@ -62,6 +64,16 @@ var SettingItemHooks = map[string]SettingItemHook{
 				regs = append(regs, reg)
 			}
 			conf.PrivacyReg = regs
+			return nil
+		},
+	},
+	conf.FilenameCharMapping: {
+		Hook: func(item *model.SettingItem) error {
+			err := utils.Json.UnmarshalFromString(item.Value, &conf.FilenameCharMap)
+			if err != nil {
+				return err
+			}
+			log.Debugf("filename char mapping: %+v", conf.FilenameCharMap)
 			return nil
 		},
 	},

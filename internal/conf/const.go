@@ -33,13 +33,13 @@ const (
 	VideoAutoplay = "video_autoplay"
 
 	// global
-	HideFiles      = "hide_files"
-	GlobalReadme   = "global_readme"
-	CustomizeHead  = "customize_head"
-	CustomizeBody  = "customize_body"
-	LinkExpiration = "link_expiration"
-	PrivacyRegs    = "privacy_regs"
-	OcrApi         = "ocr_api"
+	HideFiles           = "hide_files"
+	CustomizeHead       = "customize_head"
+	CustomizeBody       = "customize_body"
+	LinkExpiration      = "link_expiration"
+	PrivacyRegs         = "privacy_regs"
+	OcrApi              = "ocr_api"
+	FilenameCharMapping = "filename_char_mapping"
 
 	// aria2
 	Aria2Uri    = "aria2_uri"

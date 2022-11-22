@@ -16,6 +16,7 @@ var (
 )
 
 var TypesMap = make(map[string][]string)
+var FilenameCharMap = make(map[string]string)
 var PrivacyReg []*regexp.Regexp
 
 var (

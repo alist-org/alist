@@ -10,9 +10,11 @@ import (
 	"path"
 	"path/filepath"
 
+	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/fs"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/pkg/utils"
 )
 
 // slashClean is equivalent to but slightly more efficient than
@@ -99,7 +101,7 @@ func walkFS(ctx context.Context, depth int, name string, info model.Obj, walkFn 
 	}
 
 	for _, fileInfo := range objs {
-		filename := path.Join(name, fileInfo.GetName())
+		filename := path.Join(name, utils.MappingName(fileInfo.GetName(), conf.FilenameCharMap))
 		if err != nil {
 			if err := walkFn(filename, fileInfo, err); err != nil && err != filepath.SkipDir {
 				return err
