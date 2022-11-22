@@ -38,16 +38,16 @@ type File struct {
 }
 
 func fileToObj(f File) *model.ObjThumb {
-	return &model.ObjThumb{
-		Object: model.Object{
-			ID:       f.FileId,
-			Name:     f.Name,
-			Size:     f.Size,
-			Modified: f.UpdatedAt,
-			IsFolder: f.Type == "folder",
-		},
-		Thumbnail: model.Thumbnail{Thumbnail: f.Thumbnail},
-	}
+return &model.ObjThumb{
+Object: model.Object{
+ID: f.FileId,
+Name: strings.Replace(f.Name, "/", "♣", -1),
+Size: f.Size,
+Modified: f.UpdatedAt,
+IsFolder: f.Type == "folder",
+},
+Thumbnail: model.Thumbnail{Thumbnail: f.Thumbnail},
+}
 }
 
 type ShareLinkResp struct {
