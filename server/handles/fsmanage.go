@@ -35,7 +35,7 @@ func FsMkdir(c *gin.Context) {
 				return
 			}
 		}
-		if !canWrite(meta, req.Path) {
+		if !common.CanWrite(meta, req.Path) {
 			common.ErrorResp(c, errs.PermissionDenied, 403)
 			return
 		}
@@ -46,13 +46,6 @@ func FsMkdir(c *gin.Context) {
 	}
 	fs.ClearCache(stdpath.Dir(req.Path))
 	common.SuccessResp(c)
-}
-
-func canWrite(meta *model.Meta, path string) bool {
-	if meta == nil || !meta.Write {
-		return false
-	}
-	return meta.WSub || meta.Path == path
 }
 
 type MoveCopyReq struct {
