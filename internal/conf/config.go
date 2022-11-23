@@ -45,11 +45,13 @@ type Config struct {
 	Database       Database  `json:"database"`
 	Scheme         Scheme    `json:"scheme"`
 	TempDir        string    `json:"temp_dir" env:"TEMP_DIR"`
+	IndexDir       string    `json:"index_dir" env:"INDEX_DIR"`
 	Log            LogConfig `json:"log"`
 }
 
 func DefaultConfig() *Config {
 	tempDir := filepath.Join(flags.DataDir, "temp")
+	indexDir := filepath.Join(flags.DataDir, "index")
 	logPath := filepath.Join(flags.DataDir, "log/log.log")
 	dbPath := filepath.Join(flags.DataDir, "data.db")
 	return &Config{
@@ -64,6 +66,7 @@ func DefaultConfig() *Config {
 			TablePrefix: "x_",
 			DBFile:      dbPath,
 		},
+		IndexDir: indexDir,
 		Log: LogConfig{
 			Enable:     true,
 			Name:       logPath,
