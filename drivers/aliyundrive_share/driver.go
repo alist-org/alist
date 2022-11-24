@@ -80,62 +80,40 @@ func (d *AliyundriveShare) List(ctx context.Context, dir model.Obj, args model.L
 
 func (d *AliyundriveShare) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	data := base.Json{
-		"drive_id":   d.DriveId,
-		"file_id":    file.GetID(),
-		"expire_sec": 14400,
+		"drive_id": d.DriveId,
+		"file_id":  file.GetID(),
+		// // Only ten minutes lifetime
+		"expire_sec": 600,
+		"share_id":   d.ShareId,
 	}
+	var resp ShareLinkResp
 	var e ErrorResp
-	res, err := base.RestyClient.R().
-		SetError(&e).SetBody(data).
+	_, err := base.RestyClient.R().
+		SetError(&e).SetBody(data).SetResult(&resp).
 		SetHeader("content-type", "application/json").
 		SetHeader("Authorization", "Bearer\t"+d.AccessToken).
-		Post("https://api.aliyundrive.com/v2/file/get_download_url")
+		SetHeader("x-share-token", d.ShareToken).
+		Post("https://api.aliyundrive.com/v2/file/get_share_link_download_url")
 	if err != nil {
 		return nil, err
 	}
 	var u string
 	if e.Code != "" {
-		if e.Code == "AccessTokenInvalid" {
-			err = d.refreshToken()
+		if e.Code == "AccessTokenInvalid" || e.Code == "ShareLinkTokenInvalid" {
+			if e.Code == "AccessTokenInvalid" {
+				err = d.refreshToken()
+			} else {
+				err = d.getShareToken()
+			}
 			if err != nil {
 				return nil, err
 			}
 			return d.Link(ctx, file, args)
-		} else if e.Code == "ForbiddenNoPermission.File" {
-			data = utils.MergeMap(data, base.Json{
-				// Only ten minutes valid
-				"expire_sec": 600,
-				"share_id":   d.ShareId,
-			})
-			var resp ShareLinkResp
-			var e2 ErrorResp
-			_, err = base.RestyClient.R().
-				SetError(&e2).SetBody(data).SetResult(&resp).
-				SetHeader("content-type", "application/json").
-				SetHeader("Authorization", "Bearer\t"+d.AccessToken).
-				SetHeader("x-share-token", d.ShareToken).
-				Post("https://api.aliyundrive.com/v2/file/get_share_link_download_url")
-			if err != nil {
-				return nil, err
-			}
-			if e2.Code != "" {
-				if e2.Code == "AccessTokenInvalid" || e2.Code == "ShareLinkTokenInvalid" {
-					err = d.getShareToken()
-					if err != nil {
-						return nil, err
-					}
-					return d.Link(ctx, file, args)
-				} else {
-					return nil, errors.New(e2.Code + ":" + e2.Message)
-				}
-			} else {
-				u = resp.DownloadUrl
-			}
 		} else {
-			return nil, errors.New(e.Code + ":" + e.Message)
+			return nil, errors.New(e.Code + ": " + e.Message)
 		}
 	} else {
-		u = utils.Json.Get(res.Body(), "url").ToString()
+		u = resp.DownloadUrl
 	}
 	return &model.Link{
 		Header: http.Header{
