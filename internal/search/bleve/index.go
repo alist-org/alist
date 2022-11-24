@@ -1,9 +1,10 @@
-package index
+package bleve
 
 import (
 	"os"
 
 	"github.com/alist-org/alist/v3/internal/conf"
+	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/blevesearch/bleve/v2"
 	log "github.com/sirupsen/logrus"
 )
@@ -24,7 +25,7 @@ func Init(indexPath *string) {
 	progress := ReadProgress()
 	if !progress.IsDone {
 		log.Warnf("Last index build does not succeed!")
-		WriteProgress(&Progress{
+		WriteProgress(&model.IndexProgress{
 			FileCount:    progress.FileCount,
 			IsDone:       false,
 			LastDoneTime: nil,
@@ -39,7 +40,7 @@ func Reset() {
 		log.Fatal(err)
 	}
 	Init(&conf.Conf.IndexDir)
-	WriteProgress(&Progress{
+	WriteProgress(&model.IndexProgress{
 		FileCount:    0,
 		IsDone:       false,
 		LastDoneTime: nil,

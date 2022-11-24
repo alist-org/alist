@@ -19,7 +19,7 @@ import (
 )
 
 type ListReq struct {
-	common.PageReq
+	model.PageReq
 	Path     string `json:"path" form:"path"`
 	Password string `json:"password" form:"password"`
 	Refresh  bool   `json:"refresh"`
@@ -165,7 +165,7 @@ func isEncrypt(meta *model.Meta, path string) bool {
 	return true
 }
 
-func pagination(objs []model.Obj, req *common.PageReq) (int, []model.Obj) {
+func pagination(objs []model.Obj, req *model.PageReq) (int, []model.Obj) {
 	pageIndex, pageSize := req.Page, req.PerPage
 	total := len(objs)
 	start := (pageIndex - 1) * pageSize

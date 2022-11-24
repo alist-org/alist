@@ -11,7 +11,7 @@ import (
 )
 
 func ListUsers(c *gin.Context) {
-	var req common.PageReq
+	var req model.PageReq
 	if err := c.ShouldBind(&req); err != nil {
 		common.ErrorResp(c, err, 400)
 		return

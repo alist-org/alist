@@ -2,9 +2,9 @@ package bootstrap
 
 import (
 	"github.com/alist-org/alist/v3/internal/conf"
-	"github.com/alist-org/alist/v3/internal/index"
+	"github.com/alist-org/alist/v3/internal/search/bleve"
 )
 
 func InitIndex() {
-	index.Init(&conf.Conf.IndexDir)
+	bleve.Init(&conf.Conf.IndexDir)
 }
