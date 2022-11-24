@@ -107,6 +107,11 @@ func admin(g *gin.RouterGroup) {
 	ms := g.Group("/message")
 	ms.POST("/get", message.HttpInstance.GetHandle)
 	ms.POST("/send", message.HttpInstance.SendHandle)
+
+	index := g.Group("/index")
+	index.POST("/build", handles.BuildIndex)
+	index.GET("/progress", handles.GetProgress)
+	index.GET("/search", handles.Search)
 }
 
 func _fs(g *gin.RouterGroup) {
