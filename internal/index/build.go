@@ -53,18 +53,14 @@ type Data struct {
 }
 
 func BuildIndex(ctx context.Context, indexPaths, ignorePaths []string, maxDepth int) {
-	WriteProgress(&Progress{
-		FileCount:    0,
-		IsDone:       false,
-		LastDoneTime: nil,
-	})
+	// TODO: partial remove indices
+	Reset()
 	var batchs []*bleve.Batch
 	var fileCount uint64 = 0
 	for _, indexPath := range indexPaths {
 		batch := func() *bleve.Batch {
 			batch := index.NewBatch()
 			// TODO: cache unchanged part
-			// TODO: store current progress
 			walkFn := func(indexPath string, info model.Obj, err error) error {
 				for _, avoidPath := range ignorePaths {
 					if indexPath == avoidPath {
