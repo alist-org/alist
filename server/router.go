@@ -109,13 +109,13 @@ func admin(g *gin.RouterGroup) {
 	ms.POST("/send", message.HttpInstance.SendHandle)
 
 	index := g.Group("/index")
-	index.POST("/build", handles.BuildIndex)
-	index.GET("/progress", handles.GetProgress)
-	index.GET("/search", handles.Search)
+	index.POST("/build", middlewares.SearchIndex, handles.BuildIndex)
+	index.GET("/progress", middlewares.SearchIndex, handles.GetProgress)
 }
 
 func _fs(g *gin.RouterGroup) {
 	g.Any("/list", handles.FsList)
+	g.Any("/search", middlewares.SearchIndex, handles.Search)
 	g.Any("/get", handles.FsGet)
 	g.Any("/other", handles.FsOther)
 	g.Any("/dirs", handles.FsDirs)

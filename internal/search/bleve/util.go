@@ -12,7 +12,7 @@ import (
 )
 
 func ReadProgress() model.IndexProgress {
-	progressFilePath := filepath.Join(conf.Conf.IndexDir, "progress.json")
+	progressFilePath := filepath.Join(conf.Conf.BleveDir, "progress.json")
 	_, err := os.Stat(progressFilePath)
 	progress := model.IndexProgress{}
 	if errors.Is(err, os.ErrNotExist) {
@@ -32,7 +32,7 @@ func ReadProgress() model.IndexProgress {
 }
 
 func WriteProgress(progress *model.IndexProgress) {
-	progressFilePath := filepath.Join(conf.Conf.IndexDir, "progress.json")
+	progressFilePath := filepath.Join(conf.Conf.BleveDir, "progress.json")
 	log.Infof("write index progress: %v", progress)
 	if !utils.WriteJsonToFile(progressFilePath, progress) {
 		log.Fatalf("failed to write to index progress file")

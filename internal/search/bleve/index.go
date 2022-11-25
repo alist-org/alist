@@ -35,11 +35,11 @@ func Init(indexPath *string) {
 
 func Reset() {
 	log.Infof("Removing old index...")
-	err := os.RemoveAll(conf.Conf.IndexDir)
+	err := os.RemoveAll(conf.Conf.BleveDir)
 	if err != nil {
 		log.Fatal(err)
 	}
-	Init(&conf.Conf.IndexDir)
+	Init(&conf.Conf.BleveDir)
 	WriteProgress(&model.IndexProgress{
 		FileCount:    0,
 		IsDone:       false,

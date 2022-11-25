@@ -28,7 +28,7 @@ func BuildIndex(c *gin.Context) {
 }
 
 func GetProgress(c *gin.Context) {
-	progress, err := search.Searcher.Progress(c)
+	progress, err := search.Progress(c)
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return

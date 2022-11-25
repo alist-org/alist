@@ -40,6 +40,7 @@ const (
 	PrivacyRegs         = "privacy_regs"
 	OcrApi              = "ocr_api"
 	FilenameCharMapping = "filename_char_mapping"
+	SearchIndex         = "search_index"
 
 	// aria2
 	Aria2Uri    = "aria2_uri"

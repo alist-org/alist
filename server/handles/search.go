@@ -17,7 +17,7 @@ func Search(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	objs, total, err := search.Searcher.Search(c, req)
+	objs, total, err := search.Search(c, req)
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return

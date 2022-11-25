@@ -6,6 +6,7 @@ import (
 
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/search"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -75,6 +76,12 @@ var SettingItemHooks = map[string]SettingItemHook{
 			}
 			log.Debugf("filename char mapping: %+v", conf.FilenameCharMap)
 			return nil
+		},
+	},
+	conf.SearchIndex: {
+		Hook: func(item *model.SettingItem) error {
+			// TODO init/reset search
+			return search.Init(item.Value)
 		},
 	},
 }
