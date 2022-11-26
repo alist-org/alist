@@ -5,7 +5,6 @@ import (
 
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/internal/search"
 	"github.com/alist-org/alist/v3/internal/search/searcher"
 )
 
@@ -24,7 +23,7 @@ func (n None) Del(ctx context.Context, path string, maxDepth int) error {
 }
 
 func init() {
-	search.RegisterDriver(searcher.Config{Name: "none"}, func() searcher.Searcher {
+	searcher.RegisterDriver(searcher.Config{Name: "none"}, func() searcher.Searcher {
 		return None{}
 	})
 }

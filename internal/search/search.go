@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/alist-org/alist/v3/internal/conf"
+	"github.com/alist-org/alist/v3/internal/db"
+	"github.com/alist-org/alist/v3/internal/fs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/search/searcher"
 )
@@ -11,7 +14,7 @@ import (
 var instance searcher.Searcher
 
 func Init(mode string) error {
-	s, ok := searcherNewMap[mode]
+	s, ok := searcher.NewMap[mode]
 	if !ok {
 		return fmt.Errorf("not support index: %s", mode)
 	}
@@ -30,6 +33,13 @@ func Progress(ctx context.Context) (*model.IndexProgress, error) {
 
 func BuildIndex(ctx context.Context, indexPaths, ignorePaths []string, maxDepth int) error {
 	// TODO
+	fs.Get(ctx, "/")
 	panic("")
-	//fs.Get(ctx, "/")
+}
+
+func init() {
+	db.SettingItemHooks[conf.SearchIndex] = db.SettingItemHook{
+		Hook: func(item *model.SettingItem) error {
+			return Init(item.Value)
+		}}
 }

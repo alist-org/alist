@@ -5,7 +5,6 @@ import (
 	"path"
 
 	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/internal/search"
 	"github.com/alist-org/alist/v3/internal/search/searcher"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/blevesearch/bleve/v2"
@@ -50,7 +49,7 @@ func (b *Bleve) Del(ctx context.Context, path string, maxDepth int) error {
 var _ searcher.Searcher = (*Bleve)(nil)
 
 func init() {
-	search.RegisterDriver(searcher.Config{
+	searcher.RegisterDriver(searcher.Config{
 		Name: "bleve",
 	}, func() searcher.Searcher {
 		return nil
