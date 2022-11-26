@@ -8,6 +8,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/search/searcher"
+	log "github.com/sirupsen/logrus"
 )
 
 var instance searcher.Searcher
@@ -15,6 +16,11 @@ var instance searcher.Searcher
 func Init(mode string) error {
 	if instance != nil {
 		_ = instance.Drop(context.Background())
+		instance = nil
+	}
+	if mode == "none" {
+		log.Warnf("not enable search")
+		return nil
 	}
 	s, ok := searcher.NewMap[mode]
 	if !ok {
