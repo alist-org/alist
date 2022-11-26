@@ -12,8 +12,12 @@ type Config struct {
 }
 
 type Searcher interface {
+	// Search specific keywords in specific path
 	Search(ctx context.Context, req model.SearchReq) ([]model.SearchNode, int64, error)
-	Index(ctx context.Context, path string, obj model.Obj) error
+	// Index obj with path
+	Index(ctx context.Context, parent string, obj model.Obj) error
+	// Del path
 	Del(ctx context.Context, path string, maxDepth int) error
+	// Drop searcher, clear all index now
 	Drop(ctx context.Context) error
 }

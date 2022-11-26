@@ -6,7 +6,6 @@ import (
 
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/db"
-	"github.com/alist-org/alist/v3/internal/fs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/search/searcher"
 )
@@ -14,6 +13,9 @@ import (
 var instance searcher.Searcher
 
 func Init(mode string) error {
+	if instance != nil {
+		_ = instance.Drop(context.Background())
+	}
 	s, ok := searcher.NewMap[mode]
 	if !ok {
 		return fmt.Errorf("not support index: %s", mode)
@@ -26,20 +28,8 @@ func Search(ctx context.Context, req model.SearchReq) ([]model.SearchNode, int64
 	return instance.Search(ctx, req)
 }
 
-func Progress(ctx context.Context) (*model.IndexProgress, error) {
-	// TODO
-	panic("")
-}
-
-func BuildIndex(ctx context.Context, indexPaths, ignorePaths []string, maxDepth int) error {
-	// TODO
-	fs.Get(ctx, "/")
-	panic("")
-}
-
 func init() {
-	db.SettingItemHooks[conf.SearchIndex] = db.SettingItemHook{
-		Hook: func(item *model.SettingItem) error {
-			return Init(item.Value)
-		}}
+	db.RegisterSettingItemHook(conf.SearchIndex, func(item *model.SettingItem) error {
+		return Init(item.Value)
+	})
 }

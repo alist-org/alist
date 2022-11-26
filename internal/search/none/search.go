@@ -27,7 +27,7 @@ func (n None) Del(ctx context.Context, path string, maxDepth int) error {
 }
 
 func init() {
-	searcher.RegisterDriver(searcher.Config{Name: "none"}, func() searcher.Searcher {
+	searcher.RegisterSearcher(searcher.Config{Name: "none"}, func() searcher.Searcher {
 		return None{}
 	})
 }

@@ -1,29 +1,28 @@
 package handles
 
 import (
-	"context"
-	"strconv"
-
-	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/search"
-	"github.com/alist-org/alist/v3/internal/search/bleve"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
 )
 
+type BuildIndexReq struct {
+	Paths       []string `json:"paths"`
+	MaxDepth    int      `json:"max_depth"`
+	IgnorePaths []string `json:"ignore_paths"`
+}
+
 func BuildIndex(c *gin.Context) {
-	go func() {
-		// TODO: consider run build index as non-admin
-		user, _ := db.GetAdmin()
-		ctx := context.WithValue(c.Request.Context(), "user", user)
-		maxDepth, err := strconv.Atoi(c.PostForm("max_depth"))
-		if err != nil {
-			maxDepth = -1
-		}
-		indexPaths := []string{"/"}
-		ignorePaths := c.PostFormArray("ignore_paths")
-		bleve.BuildIndex(ctx, indexPaths, ignorePaths, maxDepth)
-	}()
+	var req BuildIndexReq
+	if err := c.ShouldBind(&req); err != nil {
+		common.ErrorResp(c, err, 400)
+		return
+	}
+	err := search.BuildIndex(c, req.Paths, req.IgnorePaths, req.MaxDepth)
+	if err != nil {
+		common.ErrorResp(c, err, 500)
+		return
+	}
 	common.SuccessResp(c)
 }
 

@@ -47,7 +47,8 @@ const (
 	Aria2Secret = "aria2_secret"
 
 	// single
-	Token = "token"
+	Token         = "token"
+	IndexProgress = "index_progress"
 )
 
 const (

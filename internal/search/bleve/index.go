@@ -4,14 +4,11 @@ import (
 	"os"
 
 	"github.com/alist-org/alist/v3/internal/conf"
-	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/blevesearch/bleve/v2"
 	log "github.com/sirupsen/logrus"
 )
 
-var index bleve.Index
-
-func Init(indexPath *string) {
+func Init(indexPath *string) bleve.Index {
 	fileIndex, err := bleve.Open(*indexPath)
 	if err == bleve.ErrorIndexPathDoesNotExist {
 		log.Infof("Creating new index...")
@@ -21,16 +18,7 @@ func Init(indexPath *string) {
 			log.Fatal(err)
 		}
 	}
-	index = fileIndex
-	progress := ReadProgress()
-	if !progress.IsDone {
-		log.Warnf("Last index build does not succeed!")
-		WriteProgress(&model.IndexProgress{
-			FileCount:    progress.FileCount,
-			IsDone:       false,
-			LastDoneTime: nil,
-		})
-	}
+	return fileIndex
 }
 
 func Reset() {
@@ -40,9 +28,4 @@ func Reset() {
 		log.Fatal(err)
 	}
 	Init(&conf.Conf.BleveDir)
-	WriteProgress(&model.IndexProgress{
-		FileCount:    0,
-		IsDone:       false,
-		LastDoneTime: nil,
-	})
 }
