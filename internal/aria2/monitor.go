@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -171,7 +172,12 @@ func (m *Monitor) Complete() error {
 					ReadCloser: f,
 					Mimetype:   mimetype,
 				}
-				return op.Put(tsk.Ctx, storage, dstDirActualPath, stream, tsk.SetProgress)
+				relDir, err := filepath.Rel(m.tempDir, filepath.Dir(file.Path))
+				if err != nil {
+					log.Errorf("find relation directory error: %v", err)
+				}
+				newDistDir := filepath.Join(dstDirActualPath, relDir)
+				return op.Put(tsk.Ctx, storage, newDistDir, stream, tsk.SetProgress)
 			},
 		}))
 	}
