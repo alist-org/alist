@@ -46,6 +46,13 @@ func (b *Bleve) Del(ctx context.Context, path string, maxDepth int) error {
 	panic("implement me")
 }
 
+func (b *Bleve) Drop(ctx context.Context) error {
+	if b.BIndex != nil {
+		return b.BIndex.Close()
+	}
+	return nil
+}
+
 var _ searcher.Searcher = (*Bleve)(nil)
 
 func init() {

@@ -10,6 +10,10 @@ import (
 
 type None struct{}
 
+func (n None) Drop(ctx context.Context) error {
+	return errs.SearchNotAvailable
+}
+
 func (n None) Search(ctx context.Context, req model.SearchReq) ([]model.SearchNode, int64, error) {
 	return nil, 0, errs.SearchNotAvailable
 }
