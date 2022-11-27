@@ -41,7 +41,7 @@ func (b *Bleve) Search(ctx context.Context, req model.SearchReq) ([]model.Search
 			Parent: path.Dir(p),
 			Name:   path.Base(p),
 			IsDir:  src.Fields["IsDir"].(bool),
-			Size:   src.Fields["Size"].(int64),
+			Size:   int64(src.Fields["Size"].(float64)),
 		}, nil
 	})
 	return res, int64(len(res)), nil
