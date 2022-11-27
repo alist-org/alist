@@ -61,7 +61,7 @@ func List(ctx context.Context, storage driver.Driver, path string, args model.Li
 		}
 		// call hooks
 		go func() {
-			for _, hook := range ObjsUpdateHooks {
+			for _, hook := range objsUpdateHooks {
 				hook(args.ReqPath, files)
 			}
 		}()

@@ -22,6 +22,7 @@ type SearchNode struct {
 	Parent string `json:"parent"`
 	Name   string `json:"name"`
 	IsDir  bool   `json:"is_dir"`
+	Size   int64  `json:"size"`
 }
 
 func (p *SearchReq) Validate() error {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"path"
 
+	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/search/searcher"
 	"github.com/alist-org/alist/v3/pkg/utils"
@@ -17,11 +18,16 @@ type Bleve struct {
 	BIndex bleve.Index
 }
 
+func (b *Bleve) Config() searcher.Config {
+	return config
+}
+
 func (b *Bleve) Search(ctx context.Context, req model.SearchReq) ([]model.SearchNode, int64, error) {
 	query := bleve.NewMatchQuery(req.Keywords)
+	query.SetField("Path")
 	search := bleve.NewSearchRequest(query)
 	search.Size = req.PerPage
-	search.Fields = []string{"Path"}
+	search.Fields = []string{"*"}
 	searchResults, err := b.BIndex.Search(search)
 	if err != nil {
 		log.Errorf("search error: %+v", err)
@@ -32,22 +38,33 @@ func (b *Bleve) Search(ctx context.Context, req model.SearchReq) ([]model.Search
 		return model.SearchNode{
 			Parent: path.Dir(p),
 			Name:   path.Base(p),
+			IsDir:  src.Fields["IsDir"].(bool),
+			Size:   src.Fields["Size"].(int64),
 		}, nil
 	})
 	return res, int64(len(res)), nil
 }
 
 type Data struct {
-	Path string
+	Path  string
+	IsDir bool
+	Size  int64
 }
 
 func (b *Bleve) Index(ctx context.Context, parent string, obj model.Obj) error {
-	return b.BIndex.Index(uuid.NewString(), Data{Path: path.Join(parent, obj.GetName())})
+	return b.BIndex.Index(uuid.NewString(), Data{
+		Path:  path.Join(parent, obj.GetName()),
+		IsDir: obj.IsDir(),
+		Size:  obj.GetSize(),
+	})
 }
 
-func (b *Bleve) Del(ctx context.Context, path string, maxDepth int) error {
-	//TODO implement me
-	panic("implement me")
+func (b *Bleve) Get(ctx context.Context, parent string) ([]model.SearchNode, error) {
+	return nil, errs.NotSupport
+}
+
+func (b *Bleve) Del(ctx context.Context, prefix string) error {
+	return errs.NotSupport
 }
 
 func (b *Bleve) Drop(ctx context.Context) error {
@@ -59,11 +76,3 @@ func (b *Bleve) Drop(ctx context.Context) error {
 }
 
 var _ searcher.Searcher = (*Bleve)(nil)
-
-func init() {
-	searcher.RegisterSearcher(searcher.Config{
-		Name: "bleve",
-	}, func() searcher.Searcher {
-		return nil
-	})
-}

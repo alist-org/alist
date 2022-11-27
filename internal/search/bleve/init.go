@@ -4,9 +4,14 @@ import (
 	"os"
 
 	"github.com/alist-org/alist/v3/internal/conf"
+	"github.com/alist-org/alist/v3/internal/search/searcher"
 	"github.com/blevesearch/bleve/v2"
 	log "github.com/sirupsen/logrus"
 )
+
+var config = searcher.Config{
+	Name: "bleve",
+}
 
 func Init(indexPath *string) bleve.Index {
 	fileIndex, err := bleve.Open(*indexPath)
@@ -27,5 +32,11 @@ func Reset() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	Init(&conf.Conf.BleveDir)
+}
+
+func init() {
+	searcher.RegisterSearcher(config, func() searcher.Searcher {
+		b := Init(&conf.Conf.BleveDir)
+		return &Bleve{BIndex: b}
+	})
 }
