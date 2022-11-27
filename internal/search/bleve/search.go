@@ -2,8 +2,10 @@ package bleve
 
 import (
 	"context"
+	"os"
 	"path"
 
+	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/search/searcher"
@@ -67,11 +69,19 @@ func (b *Bleve) Del(ctx context.Context, prefix string) error {
 	return errs.NotSupport
 }
 
-func (b *Bleve) Drop(ctx context.Context) error {
+func (b *Bleve) Release(ctx context.Context) error {
 	if b.BIndex != nil {
 		return b.BIndex.Close()
 	}
-	Reset()
+	return nil
+}
+
+func (b *Bleve) Clear(ctx context.Context) error {
+	log.Infof("Removing old index...")
+	err := os.RemoveAll(conf.Conf.BleveDir)
+	if err != nil {
+		log.Errorf("clear bleve error: %+v", err)
+	}
 	return nil
 }
 

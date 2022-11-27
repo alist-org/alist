@@ -1,6 +1,6 @@
 package searcher
 
-type New func() Searcher
+type New func() (Searcher, error)
 
 var NewMap = map[string]New{}
 

@@ -13,14 +13,14 @@ type IndexProgress struct {
 }
 
 type SearchReq struct {
-	Path     string `json:"path"`
+	Parent   string `json:"path"`
 	Keywords string `json:"keywords"`
 	PageReq
 }
 
 type SearchNode struct {
-	Parent string `json:"parent"`
-	Name   string `json:"name"`
+	Parent string `json:"parent" gorm:"index"`
+	Name   string `json:"name" gorm:"index"`
 	IsDir  bool   `json:"is_dir"`
 	Size   int64  `json:"size"`
 }

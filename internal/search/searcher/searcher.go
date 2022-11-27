@@ -22,6 +22,8 @@ type Searcher interface {
 	Get(ctx context.Context, parent string) ([]model.SearchNode, error)
 	// Del with prefix
 	Del(ctx context.Context, prefix string) error
-	// Drop searcher, clear all index now
-	Drop(ctx context.Context) error
+	// Release resource
+	Release(ctx context.Context) error
+	// Clear all index
+	Clear(ctx context.Context) error
 }

@@ -1,8 +1,6 @@
 package bleve
 
 import (
-	"os"
-
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/search/searcher"
 	"github.com/blevesearch/bleve/v2"
@@ -13,30 +11,28 @@ var config = searcher.Config{
 	Name: "bleve",
 }
 
-func Init(indexPath *string) bleve.Index {
+func Init(indexPath *string) (bleve.Index, error) {
+	log.Debugf("bleve path: %s", *indexPath)
 	fileIndex, err := bleve.Open(*indexPath)
 	if err == bleve.ErrorIndexPathDoesNotExist {
 		log.Infof("Creating new index...")
 		indexMapping := bleve.NewIndexMapping()
 		fileIndex, err = bleve.New(*indexPath, indexMapping)
 		if err != nil {
-			log.Fatal(err)
+			return nil, err
 		}
+	} else if err != nil {
+		return nil, err
 	}
-	return fileIndex
-}
-
-func Reset() {
-	log.Infof("Removing old index...")
-	err := os.RemoveAll(conf.Conf.BleveDir)
-	if err != nil {
-		log.Fatal(err)
-	}
+	return fileIndex, nil
 }
 
 func init() {
-	searcher.RegisterSearcher(config, func() searcher.Searcher {
-		b := Init(&conf.Conf.BleveDir)
-		return &Bleve{BIndex: b}
+	searcher.RegisterSearcher(config, func() (searcher.Searcher, error) {
+		b, err := Init(&conf.Conf.BleveDir)
+		if err != nil {
+			return nil, err
+		}
+		return &Bleve{BIndex: b}, nil
 	})
 }

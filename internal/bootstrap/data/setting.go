@@ -25,12 +25,13 @@ func initSettings() {
 			settings[i].Flag = model.DEPRECATED
 		}
 	}
-	if settings != nil && len(settings) > 0 {
-		err = db.SaveSettingItems(settings)
-		if err != nil {
-			log.Fatalf("failed save settings: %+v", err)
-		}
-	}
+	// what's going on here???
+	//if settings != nil && len(settings) > 0 {
+	//	err = db.SaveSettingItems(settings)
+	//	if err != nil {
+	//		log.Fatalf("failed save settings: %+v", err)
+	//	}
+	//}
 	// insert new items
 	for i := range initialSettingItems {
 		v := initialSettingItems[i]

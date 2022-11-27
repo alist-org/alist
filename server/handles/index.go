@@ -1,9 +1,12 @@
 package handles
 
 import (
+	"context"
+
 	"github.com/alist-org/alist/v3/internal/search"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 )
 
 type BuildIndexReq struct {
@@ -18,11 +21,17 @@ func BuildIndex(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	err := search.BuildIndex(c, req.Paths, req.IgnorePaths, req.MaxDepth)
-	if err != nil {
-		common.ErrorResp(c, err, 500)
-		return
-	}
+	go func() {
+		ctx := context.Background()
+		err := search.Clear(ctx)
+		if err != nil {
+			log.Errorf("clear index error: %+v", err)
+		}
+		err = search.BuildIndex(context.Background(), req.Paths, req.IgnorePaths, req.MaxDepth)
+		if err != nil {
+			log.Errorf("build index error: %+v", err)
+		}
+	}()
 	common.SuccessResp(c)
 }
 

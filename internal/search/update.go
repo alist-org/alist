@@ -15,6 +15,15 @@ func Update(parent string, objs []model.Obj) {
 		return
 	}
 	ctx := context.Background()
+	// only update when index have built
+	progress, err := Progress(ctx)
+	if err != nil {
+		log.Errorf("update search index error while get progress: %+v", err)
+		return
+	}
+	if !progress.IsDone {
+		return
+	}
 	nodes, err := instance.Get(ctx, parent)
 	if err != nil {
 		log.Errorf("update search index error while get nodes: %+v", err)
@@ -46,6 +55,14 @@ func Update(parent string, objs []model.Obj) {
 			if err != nil {
 				log.Errorf("update search index error while index new node: %+v", err)
 				return
+			}
+			// build index if it's a folder
+			if objs[i].IsDir() {
+				err = BuildIndex(ctx, []string{path.Join(parent, objs[i].GetName())}, nil, -1)
+				if err != nil {
+					log.Errorf("update search index error while build index: %+v", err)
+					return
+				}
 			}
 		}
 	}
