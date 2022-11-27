@@ -13,7 +13,7 @@ type IndexProgress struct {
 }
 
 type SearchReq struct {
-	Parent   string `json:"path"`
+	Parent   string `json:"parent"`
 	Keywords string `json:"keywords"`
 	PageReq
 }
