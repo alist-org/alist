@@ -21,6 +21,7 @@ import (
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/disintegration/imaging"
+	"golang.org/x/image/webp"
 )
 
 type Local struct {
@@ -125,25 +126,48 @@ func (d *Local) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 	fullPath := file.GetPath()
 	var link model.Link
 	if args.Type == "thumb" && utils.Ext(file.GetName()) != "svg" {
-		imgData, err := ioutil.ReadFile(fullPath)
-		if err != nil {
-			return nil, err
-		}
-		srcBuf := bytes.NewBuffer(imgData)
-		image, err := imaging.Decode(srcBuf)
-		if err != nil {
-			return nil, err
-		}
-		thumbImg := imaging.Resize(image, 144, 0, imaging.Lanczos)
-		var buf bytes.Buffer
-		err = imaging.Encode(&buf, thumbImg, imaging.PNG)
-		if err != nil {
-			return nil, err
-		}
-		size := buf.Len()
-		link.Data = io.NopCloser(&buf)
-		link.Header = http.Header{
-			"Content-Length": []string{strconv.Itoa(size)},
+		if utils.Ext(file.GetName()) == "webp" {
+			imgData, err := ioutil.ReadFile(fullPath)
+			if err != nil {
+				return nil, err
+			}
+			srcBuf := bytes.NewBuffer(imgData)
+			image, err := webp.Decode(srcBuf)
+			if err != nil {
+				return nil, err
+			}
+			thumbImg := imaging.Resize(image, 144, 0, imaging.Lanczos)
+			var buf bytes.Buffer
+			err = imaging.Encode(&buf, thumbImg, imaging.PNG)
+			if err != nil {
+				return nil, err
+			}
+			size := buf.Len()
+			link.Data = io.NopCloser(&buf)
+			link.Header = http.Header{
+				"Content-Length": []string{strconv.Itoa(size)},
+			}
+		} else {
+			imgData, err := ioutil.ReadFile(fullPath)
+			if err != nil {
+				return nil, err
+			}
+			srcBuf := bytes.NewBuffer(imgData)
+			image, err := imaging.Decode(srcBuf)
+			if err != nil {
+				return nil, err
+			}
+			thumbImg := imaging.Resize(image, 144, 0, imaging.Lanczos)
+			var buf bytes.Buffer
+			err = imaging.Encode(&buf, thumbImg, imaging.PNG)
+			if err != nil {
+				return nil, err
+			}
+			size := buf.Len()
+			link.Data = io.NopCloser(&buf)
+			link.Header = http.Header{
+				"Content-Length": []string{strconv.Itoa(size)},
+			}
 		}
 	} else {
 		link.FilePath = &fullPath
