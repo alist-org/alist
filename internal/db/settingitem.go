@@ -4,44 +4,43 @@ import (
 	"fmt"
 
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/pkg/generic_sync"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
 
-var settingsMap map[string]string
-var publicSettingsMap map[string]string
+var settingsMap generic_sync.MapOf[string, string]
+var publicSettingsMap generic_sync.MapOf[string, string]
 
 func settingsUpdate() {
-	settingsMap = nil
-	publicSettingsMap = nil
+	settingsMap.Clear()
+	publicSettingsMap.Clear()
 }
 
 func GetPublicSettingsMap() map[string]string {
-	if publicSettingsMap == nil {
-		publicSettingsMap = make(map[string]string)
+	if publicSettingsMap.Empty() {
 		settingItems, err := GetPublicSettingItems()
 		if err != nil {
 			log.Errorf("failed to get settingItems: %+v", err)
 		}
 		for _, settingItem := range settingItems {
-			publicSettingsMap[settingItem.Key] = settingItem.Value
+			publicSettingsMap.Store(settingItem.Key, settingItem.Value)
 		}
 	}
-	return publicSettingsMap
+	return publicSettingsMap.ToMap()
 }
 
-func GetSettingsMap() map[string]string {
-	if settingsMap == nil {
-		settingsMap = make(map[string]string)
+func GetSettingsMap() *generic_sync.MapOf[string, string] {
+	if settingsMap.Empty() {
 		settingItems, err := GetSettingItems()
 		if err != nil {
 			log.Errorf("failed to get settingItems: %+v", err)
 		}
 		for _, settingItem := range settingItems {
-			settingsMap[settingItem.Key] = settingItem.Value
+			settingsMap.Store(settingItem.Key, settingItem.Value)
 		}
 	}
-	return settingsMap
+	return &settingsMap
 }
 
 func GetSettingItems() ([]model.SettingItem, error) {

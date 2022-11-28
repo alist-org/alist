@@ -7,7 +7,7 @@ import (
 )
 
 func GetStr(key string, defaultValue ...string) string {
-	val, ok := db.GetSettingsMap()[key]
+	val, ok := db.GetSettingsMap().Load(key)
 	if !ok {
 		if len(defaultValue) > 0 {
 			return defaultValue[0]

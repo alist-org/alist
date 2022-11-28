@@ -347,6 +347,23 @@ func (m *MapOf[K, V]) Values() []V {
 	return values
 }
 
+func (m *MapOf[K, V]) Count() int {
+	return len(m.dirty)
+}
+
+func (m *MapOf[K, V]) Empty() bool {
+	return m.Count() == 0
+}
+
+func (m *MapOf[K, V]) ToMap() map[K]V {
+	ans := make(map[K]V)
+	m.Range(func(key K, value V) bool {
+		ans[key] = value
+		return true
+	})
+	return ans
+}
+
 func (m *MapOf[K, V]) Clear() {
 	m.Range(func(key K, value V) bool {
 		m.Delete(key)
