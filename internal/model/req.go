@@ -1,4 +1,4 @@
-package common
+package model
 
 type PageReq struct {
 	Page    int `json:"page" form:"page"`

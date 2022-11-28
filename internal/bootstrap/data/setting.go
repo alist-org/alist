@@ -25,12 +25,13 @@ func initSettings() {
 			settings[i].Flag = model.DEPRECATED
 		}
 	}
-	if settings != nil && len(settings) > 0 {
-		err = db.SaveSettingItems(settings)
-		if err != nil {
-			log.Fatalf("failed save settings: %+v", err)
-		}
-	}
+	// what's going on here???
+	//if settings != nil && len(settings) > 0 {
+	//	err = db.SaveSettingItems(settings)
+	//	if err != nil {
+	//		log.Fatalf("failed save settings: %+v", err)
+	//	}
+	//}
 	// insert new items
 	for i := range initialSettingItems {
 		v := initialSettingItems[i]
@@ -122,11 +123,13 @@ func InitialSettings() []model.SettingItem {
 			Type: conf.TypeText, Group: model.GLOBAL, Flag: model.PRIVATE},
 		{Key: conf.OcrApi, Value: "https://api.nn.ci/ocr/file/json", Type: conf.TypeString, Group: model.GLOBAL},
 		{Key: conf.FilenameCharMapping, Value: `{"/": "|"}`, Type: conf.TypeText, Group: model.GLOBAL},
+		{Key: conf.SearchIndex, Value: "none", Type: conf.TypeSelect, Options: "database,bleve,none", Group: model.GLOBAL},
 		// aria2 settings
 		{Key: conf.Aria2Uri, Value: "http://localhost:6800/jsonrpc", Type: conf.TypeString, Group: model.ARIA2, Flag: model.PRIVATE},
 		{Key: conf.Aria2Secret, Value: "", Type: conf.TypeString, Group: model.ARIA2, Flag: model.PRIVATE},
 		// single settings
 		{Key: conf.Token, Value: token, Type: conf.TypeString, Group: model.SINGLE, Flag: model.PRIVATE},
+		{Key: conf.IndexProgress, Value: "{}", Type: conf.TypeText, Group: model.SINGLE, Flag: model.PRIVATE},
 	}
 	if flags.Dev {
 		initialSettingItems = append(initialSettingItems, []model.SettingItem{

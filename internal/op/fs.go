@@ -59,6 +59,12 @@ func List(ctx context.Context, storage driver.Driver, path string, args model.Li
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to list objs")
 		}
+		// call hooks
+		go func() {
+			for _, hook := range objsUpdateHooks {
+				hook(args.ReqPath, files)
+			}
+		}()
 		if !storage.Config().NoCache {
 			if len(files) > 0 {
 				log.Debugf("set cache: %s => %+v", key, files)

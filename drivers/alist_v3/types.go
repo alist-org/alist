@@ -3,11 +3,11 @@ package alist_v3
 import (
 	"time"
 
-	"github.com/alist-org/alist/v3/server/common"
+	"github.com/alist-org/alist/v3/internal/model"
 )
 
 type ListReq struct {
-	common.PageReq
+	model.PageReq
 	Path     string `json:"path" form:"path"`
 	Password string `json:"password" form:"password"`
 	Refresh  bool   `json:"refresh"`

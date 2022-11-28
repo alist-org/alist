@@ -35,3 +35,12 @@ func SliceConvert[S any, D any](srcS []S, convert func(src S) (D, error)) ([]D, 
 	}
 	return res, nil
 }
+
+func MustSliceConvert[S any, D any](srcS []S, convert func(src S) D) []D {
+	var res []D
+	for i := range srcS {
+		dst := convert(srcS[i])
+		res = append(res, dst)
+	}
+	return res
+}

@@ -46,7 +46,7 @@ func (d *AListV3) List(ctx context.Context, dir model.Obj, args model.ListArgs) 
 		SetResult(&resp).
 		SetHeader("Authorization", d.AccessToken).
 		SetBody(ListReq{
-			PageReq: common.PageReq{
+			PageReq: model.PageReq{
 				Page:    1,
 				PerPage: 0,
 			},

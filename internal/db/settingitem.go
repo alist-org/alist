@@ -108,11 +108,17 @@ func SaveSettingItems(items []model.SettingItem) error {
 			others = append(others, items[i])
 		}
 	}
-	err := db.Save(others).Error
-	if err == nil {
-		settingsUpdate()
+	if len(others) > 0 {
+		err := db.Save(others).Error
+		if err != nil {
+			if len(others) < len(items) {
+				settingsUpdate()
+			}
+			return err
+		}
 	}
-	return err
+	settingsUpdate()
+	return nil
 }
 
 func SaveSettingItem(item model.SettingItem) error {
