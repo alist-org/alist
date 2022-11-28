@@ -45,13 +45,8 @@ func (b *Bleve) Search(ctx context.Context, req model.SearchReq) ([]model.Search
 	return res, int64(len(res)), nil
 }
 
-func (b *Bleve) Index(ctx context.Context, parent string, obj model.Obj) error {
-	return b.BIndex.Index(uuid.NewString(), model.SearchNode{
-		Parent: parent,
-		Name:   obj.GetName(),
-		IsDir:  obj.IsDir(),
-		Size:   obj.GetSize(),
-	})
+func (b *Bleve) Index(ctx context.Context, node model.SearchNode) error {
+	return b.BIndex.Index(uuid.NewString(), node)
 }
 
 func (b *Bleve) Get(ctx context.Context, parent string) ([]model.SearchNode, error) {

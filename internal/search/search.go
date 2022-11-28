@@ -6,8 +6,10 @@ import (
 
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/db"
+	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/search/searcher"
+	"github.com/alist-org/alist/v3/pkg/utils"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -44,6 +46,18 @@ func Init(mode string) error {
 
 func Search(ctx context.Context, req model.SearchReq) ([]model.SearchNode, int64, error) {
 	return instance.Search(ctx, req)
+}
+
+func Index(ctx context.Context, parent string, obj model.Obj) error {
+	if instance == nil {
+		return errs.SearchNotAvailable
+	}
+	return instance.Index(ctx, model.SearchNode{
+		Parent: parent,
+		Name:   utils.MappingName(obj.GetName(), conf.FilenameCharMap),
+		IsDir:  obj.IsDir(),
+		Size:   obj.GetSize(),
+	})
 }
 
 func init() {

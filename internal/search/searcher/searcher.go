@@ -17,7 +17,7 @@ type Searcher interface {
 	// Search specific keywords in specific path
 	Search(ctx context.Context, req model.SearchReq) ([]model.SearchNode, int64, error)
 	// Index obj with parent
-	Index(ctx context.Context, parent string, obj model.Obj) error
+	Index(ctx context.Context, node model.SearchNode) error
 	// Get by parent
 	Get(ctx context.Context, parent string) ([]model.SearchNode, error)
 	// Del with prefix

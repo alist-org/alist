@@ -51,7 +51,7 @@ func Update(parent string, objs []model.Obj) {
 	}
 	for i := range objs {
 		if toAdd.Contains(objs[i].GetName()) {
-			err = instance.Index(ctx, parent, objs[i])
+			err = Index(ctx, parent, objs[i])
 			if err != nil {
 				log.Errorf("update search index error while index new node: %+v", err)
 				return

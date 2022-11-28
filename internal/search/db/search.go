@@ -18,13 +18,8 @@ func (D DB) Search(ctx context.Context, req model.SearchReq) ([]model.SearchNode
 	return db.SearchNode(req)
 }
 
-func (D DB) Index(ctx context.Context, parent string, obj model.Obj) error {
-	return db.CreateSearchNode(&model.SearchNode{
-		Parent: parent,
-		Name:   obj.GetName(),
-		IsDir:  obj.IsDir(),
-		Size:   obj.GetSize(),
-	})
+func (D DB) Index(ctx context.Context, node model.SearchNode) error {
+	return db.CreateSearchNode(&node)
 }
 
 func (D DB) Get(ctx context.Context, parent string) ([]model.SearchNode, error) {

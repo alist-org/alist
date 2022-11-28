@@ -63,7 +63,7 @@ func BuildIndex(ctx context.Context, indexPaths, ignorePaths []string, maxDepth 
 			if indexPath == "/" {
 				return nil
 			}
-			err = instance.Index(ctx, path.Dir(indexPath), info)
+			err = Index(ctx, path.Dir(indexPath), info)
 			if err != nil {
 				return err
 			} else {
