@@ -16,7 +16,7 @@ var (
 	Running = false
 )
 
-func BuildIndex(ctx context.Context, indexPaths, ignorePaths []string, maxDepth int) error {
+func BuildIndex(ctx context.Context, indexPaths, ignorePaths []string, maxDepth int, count bool) error {
 	var objCount uint64 = 0
 	Running = true
 	var (
@@ -28,20 +28,29 @@ func BuildIndex(ctx context.Context, indexPaths, ignorePaths []string, maxDepth 
 		now := time.Now()
 		eMsg := ""
 		if err != nil {
+			log.Errorf("build index error: %+v", err)
 			eMsg = err.Error()
 		} else {
 			log.Infof("success build index, count: %d", objCount)
 		}
-		WriteProgress(&model.IndexProgress{
-			ObjCount:     objCount,
-			IsDone:       err == nil,
-			LastDoneTime: &now,
-			Error:        eMsg,
-		})
+		if count {
+			WriteProgress(&model.IndexProgress{
+				ObjCount:     objCount,
+				IsDone:       err == nil,
+				LastDoneTime: &now,
+				Error:        eMsg,
+			})
+		}
 	}()
 	admin, err := db.GetAdmin()
 	if err != nil {
 		return err
+	}
+	if count {
+		WriteProgress(&model.IndexProgress{
+			ObjCount: 0,
+			IsDone:   false,
+		})
 	}
 	for _, indexPath := range indexPaths {
 		walkFn := func(indexPath string, info model.Obj, err error) error {
@@ -63,11 +72,13 @@ func BuildIndex(ctx context.Context, indexPaths, ignorePaths []string, maxDepth 
 			if objCount%100 == 0 {
 				log.Infof("index obj count: %d", objCount)
 				log.Debugf("current success index: %s", indexPath)
-				WriteProgress(&model.IndexProgress{
-					ObjCount:     objCount,
-					IsDone:       false,
-					LastDoneTime: nil,
-				})
+				if count {
+					WriteProgress(&model.IndexProgress{
+						ObjCount:     objCount,
+						IsDone:       false,
+						LastDoneTime: nil,
+					})
+				}
 			}
 			return nil
 		}

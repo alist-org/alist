@@ -3,7 +3,6 @@ package bleve
 import (
 	"context"
 	"os"
-	"path"
 
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/errs"
@@ -26,7 +25,7 @@ func (b *Bleve) Config() searcher.Config {
 
 func (b *Bleve) Search(ctx context.Context, req model.SearchReq) ([]model.SearchNode, int64, error) {
 	query := bleve.NewMatchQuery(req.Keywords)
-	query.SetField("Path")
+	query.SetField("name")
 	search := bleve.NewSearchRequest(query)
 	search.Size = req.PerPage
 	search.Fields = []string{"*"}
@@ -36,28 +35,22 @@ func (b *Bleve) Search(ctx context.Context, req model.SearchReq) ([]model.Search
 		return nil, 0, err
 	}
 	res, err := utils.SliceConvert(searchResults.Hits, func(src *search2.DocumentMatch) (model.SearchNode, error) {
-		p := src.Fields["Path"].(string)
 		return model.SearchNode{
-			Parent: path.Dir(p),
-			Name:   path.Base(p),
-			IsDir:  src.Fields["IsDir"].(bool),
-			Size:   int64(src.Fields["Size"].(float64)),
+			Parent: src.Fields["parent"].(string),
+			Name:   src.Fields["name"].(string),
+			IsDir:  src.Fields["is_dir"].(bool),
+			Size:   int64(src.Fields["size"].(float64)),
 		}, nil
 	})
 	return res, int64(len(res)), nil
 }
 
-type Data struct {
-	Path  string
-	IsDir bool
-	Size  int64
-}
-
 func (b *Bleve) Index(ctx context.Context, parent string, obj model.Obj) error {
-	return b.BIndex.Index(uuid.NewString(), Data{
-		Path:  path.Join(parent, obj.GetName()),
-		IsDir: obj.IsDir(),
-		Size:  obj.GetSize(),
+	return b.BIndex.Index(uuid.NewString(), model.SearchNode{
+		Parent: parent,
+		Name:   obj.GetName(),
+		IsDir:  obj.IsDir(),
+		Size:   obj.GetSize(),
 	})
 }
 
@@ -77,11 +70,20 @@ func (b *Bleve) Release(ctx context.Context) error {
 }
 
 func (b *Bleve) Clear(ctx context.Context) error {
+	err := b.Release(ctx)
+	if err != nil {
+		return err
+	}
 	log.Infof("Removing old index...")
-	err := os.RemoveAll(conf.Conf.BleveDir)
+	err = os.RemoveAll(conf.Conf.BleveDir)
 	if err != nil {
 		log.Errorf("clear bleve error: %+v", err)
 	}
+	bIndex, err := Init(&conf.Conf.BleveDir)
+	if err != nil {
+		return err
+	}
+	b.BIndex = bIndex
 	return nil
 }
 

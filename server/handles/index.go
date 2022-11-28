@@ -30,8 +30,9 @@ func BuildIndex(c *gin.Context) {
 		err := search.Clear(ctx)
 		if err != nil {
 			log.Errorf("clear index error: %+v", err)
+			return
 		}
-		err = search.BuildIndex(context.Background(), req.Paths, req.IgnorePaths, req.MaxDepth)
+		err = search.BuildIndex(context.Background(), req.Paths, req.IgnorePaths, req.MaxDepth, true)
 		if err != nil {
 			log.Errorf("build index error: %+v", err)
 		}
