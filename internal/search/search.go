@@ -17,8 +17,13 @@ var instance searcher.Searcher = nil
 func Init(mode string) error {
 	if instance != nil {
 		err := instance.Release(context.Background())
-		log.Errorf("release instance err: %+v", err)
+		if err != nil {
+			log.Errorf("release instance err: %+v", err)
+		}
 		instance = nil
+	}
+	if Running {
+		return fmt.Errorf("index is running")
 	}
 	if mode == "none" {
 		log.Warnf("not enable search")

@@ -138,6 +138,13 @@ func GetFileType(filename string) int {
 	return conf.UNKNOWN
 }
 
+func GetObjType(filename string, isDir bool) int {
+	if isDir {
+		return conf.FOLDER
+	}
+	return GetFileType(filename)
+}
+
 func GetMimeType(name string) string {
 	ext := path.Ext(name)
 	m := mime.TypeByExtension(ext)

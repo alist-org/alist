@@ -86,7 +86,7 @@ func FsList(c *gin.Context) {
 		provider = storage.GetStorage().Driver
 	}
 	common.SuccessResp(c, FsListResp{
-		Content:  toObjResp(objs, req.Path, isEncrypt(meta, req.Path)),
+		Content:  toObjsResp(objs, req.Path, isEncrypt(meta, req.Path)),
 		Total:    int64(total),
 		Readme:   getReadme(meta, req.Path),
 		Write:    user.CanWrite() || common.CanWrite(meta, req.Path),
@@ -179,16 +179,12 @@ func pagination(objs []model.Obj, req *model.PageReq) (int, []model.Obj) {
 	return total, objs[start:end]
 }
 
-func toObjResp(objs []model.Obj, parent string, encrypt bool) []ObjResp {
+func toObjsResp(objs []model.Obj, parent string, encrypt bool) []ObjResp {
 	var resp []ObjResp
 	for _, obj := range objs {
 		thumb := ""
 		if t, ok := obj.(model.Thumb); ok {
 			thumb = t.Thumb()
-		}
-		tp := conf.FOLDER
-		if !obj.IsDir() {
-			tp = utils.GetFileType(obj.GetName())
 		}
 		resp = append(resp, ObjResp{
 			Name:     utils.MappingName(obj.GetName(), conf.FilenameCharMap),
@@ -197,7 +193,7 @@ func toObjResp(objs []model.Obj, parent string, encrypt bool) []ObjResp {
 			Modified: obj.ModTime(),
 			Sign:     common.Sign(obj, parent, encrypt),
 			Thumb:    thumb,
-			Type:     tp,
+			Type:     utils.GetObjType(obj.GetName(), obj.IsDir()),
 		})
 	}
 	return resp
@@ -299,7 +295,7 @@ func FsGet(c *gin.Context) {
 		RawURL:   rawURL,
 		Readme:   getReadme(meta, req.Path),
 		Provider: provider,
-		Related:  toObjResp(related, parentPath, isEncrypt(parentMeta, parentPath)),
+		Related:  toObjsResp(related, parentPath, isEncrypt(parentMeta, parentPath)),
 	})
 }
 

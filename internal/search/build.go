@@ -12,13 +12,19 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+var (
+	Running = false
+)
+
 func BuildIndex(ctx context.Context, indexPaths, ignorePaths []string, maxDepth int) error {
 	var objCount uint64 = 0
+	Running = true
 	var (
 		err error
 		fi  model.Obj
 	)
 	defer func() {
+		Running = false
 		now := time.Now()
 		eMsg := ""
 		if err != nil {
@@ -27,7 +33,7 @@ func BuildIndex(ctx context.Context, indexPaths, ignorePaths []string, maxDepth 
 			log.Infof("success build index, count: %d", objCount)
 		}
 		WriteProgress(&model.IndexProgress{
-			FileCount:    objCount,
+			ObjCount:     objCount,
 			IsDone:       err == nil,
 			LastDoneTime: &now,
 			Error:        eMsg,
@@ -58,7 +64,7 @@ func BuildIndex(ctx context.Context, indexPaths, ignorePaths []string, maxDepth 
 				log.Infof("index obj count: %d", objCount)
 				log.Debugf("current success index: %s", indexPath)
 				WriteProgress(&model.IndexProgress{
-					FileCount:    objCount,
+					ObjCount:     objCount,
 					IsDone:       false,
 					LastDoneTime: nil,
 				})

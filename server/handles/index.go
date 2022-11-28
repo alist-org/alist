@@ -21,6 +21,10 @@ func BuildIndex(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
+	if search.Running {
+		common.ErrorStrResp(c, "index is running", 400)
+		return
+	}
 	go func() {
 		ctx := context.Background()
 		err := search.Clear(ctx)
