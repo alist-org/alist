@@ -21,6 +21,7 @@ import (
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/disintegration/imaging"
+	_ "golang.org/x/image/webp"
 )
 
 type Local struct {
