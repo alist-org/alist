@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strconv"
 	"time"
+
+	"github.com/alist-org/alist/v3/pkg/utils"
 )
 
 type ErrResp struct {
@@ -147,7 +149,7 @@ type Files struct {
 }
 
 func (c *Files) GetSize() int64     { size, _ := strconv.ParseInt(c.Size, 10, 64); return size }
-func (c *Files) GetName() string    { return c.Name }
+func (c *Files) GetName() string    { return utils.MappingName(c.Name) }
 func (c *Files) ModTime() time.Time { return c.ModifiedTime }
 func (c *Files) IsDir() bool        { return c.Kind == FOLDER }
 func (c *Files) GetID() string      { return c.ID }

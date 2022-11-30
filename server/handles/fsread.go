@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/fs"
@@ -140,7 +139,7 @@ func filterDirs(objs []model.Obj) []DirResp {
 	for _, obj := range objs {
 		if obj.IsDir() {
 			dirs = append(dirs, DirResp{
-				Name:     utils.MappingName(obj.GetName(), conf.FilenameCharMap),
+				Name:     obj.GetName(),
 				Modified: obj.ModTime(),
 			})
 		}
@@ -187,7 +186,7 @@ func toObjsResp(objs []model.Obj, parent string, encrypt bool) []ObjResp {
 			thumb = t.Thumb()
 		}
 		resp = append(resp, ObjResp{
-			Name:     utils.MappingName(obj.GetName(), conf.FilenameCharMap),
+			Name:     obj.GetName(),
 			Size:     obj.GetSize(),
 			IsDir:    obj.IsDir(),
 			Modified: obj.ModTime(),
@@ -285,7 +284,7 @@ func FsGet(c *gin.Context) {
 	parentMeta, _ := db.GetNearestMeta(parentPath)
 	common.SuccessResp(c, FsGetResp{
 		ObjResp: ObjResp{
-			Name:     utils.MappingName(obj.GetName(), conf.FilenameCharMap),
+			Name:     obj.GetName(),
 			Size:     obj.GetSize(),
 			IsDir:    obj.IsDir(),
 			Modified: obj.ModTime(),

@@ -1,6 +1,10 @@
 package model
 
-import "time"
+import (
+	"time"
+
+	"github.com/alist-org/alist/v3/pkg/utils"
+)
 
 type Object struct {
 	ID       string
@@ -12,7 +16,7 @@ type Object struct {
 }
 
 func (o *Object) GetName() string {
-	return o.Name
+	return utils.MappingName(o.Name)
 }
 
 func (o *Object) GetSize() int64 {

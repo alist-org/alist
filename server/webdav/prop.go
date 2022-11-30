@@ -15,9 +15,7 @@ import (
 	"path"
 	"strconv"
 
-	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/pkg/utils"
 )
 
 // Proppatch describes a property update instruction as defined in RFC 4918.
@@ -199,7 +197,7 @@ func props(ctx context.Context, ls LockSystem, fi model.Obj, pnames []xml.Name) 
 		}
 		// Otherwise, it must either be a live property or we don't know it.
 		if prop := liveProps[pn]; prop.findFn != nil && (prop.dir || !isDir) {
-			innerXML, err := prop.findFn(ctx, ls, utils.MappingName(fi.GetName(), conf.FilenameCharMap), fi)
+			innerXML, err := prop.findFn(ctx, ls, fi.GetName(), fi)
 			if err != nil {
 				return nil, err
 			}
@@ -375,7 +373,7 @@ func findDisplayName(ctx context.Context, ls LockSystem, name string, fi model.O
 		// Hide the real name of a possibly prefixed root directory.
 		return "", nil
 	}
-	return escapeXML(utils.MappingName(fi.GetName(), conf.FilenameCharMap)), nil
+	return escapeXML(fi.GetName()), nil
 }
 
 func findContentLength(ctx context.Context, ls LockSystem, name string, fi model.Obj) (string, error) {

@@ -1,9 +1,13 @@
 package utils
 
-import "strings"
+import (
+	"strings"
 
-func MappingName(name string, m map[string]string) string {
-	for k, v := range m {
+	"github.com/alist-org/alist/v3/internal/conf"
+)
+
+func MappingName(name string) string {
+	for k, v := range conf.FilenameCharMap {
 		name = strings.ReplaceAll(name, k, v)
 	}
 	return name
