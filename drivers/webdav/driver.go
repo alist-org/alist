@@ -88,6 +88,7 @@ func (d *WebDav) Link(ctx context.Context, file model.Obj, args model.LinkArgs) 
 	link := &model.Link{Data: reader}
 	if header.Get("Content-Range") != "" {
 		link.Status = 206
+		header.Del("set-cookie")
 		link.Header = header
 	}
 	return link, nil
