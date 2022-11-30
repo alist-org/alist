@@ -70,7 +70,7 @@ func FsList(c *gin.Context) {
 	}
 	c.Set("meta", meta)
 	if !common.CanAccess(user, meta, reqPath, req.Password) {
-		common.ErrorStrResp(c, "password is incorrect", 403)
+		common.ErrorStrResp(c, "password is incorrect or you have no permission", 403)
 		return
 	}
 	if !user.CanWrite() && !common.CanWrite(meta, reqPath) && req.Refresh {
@@ -104,7 +104,7 @@ func FsDirs(c *gin.Context) {
 		return
 	}
 	user := c.MustGet("user").(*model.User)
-	var reqPath string
+	reqPath := req.Path
 	if req.ForceRoot {
 		if !user.IsAdmin() {
 			common.ErrorStrResp(c, "Permission denied", 403)
@@ -127,7 +127,7 @@ func FsDirs(c *gin.Context) {
 	}
 	c.Set("meta", meta)
 	if !common.CanAccess(user, meta, reqPath, req.Password) {
-		common.ErrorStrResp(c, "password is incorrect", 403)
+		common.ErrorStrResp(c, "password is incorrect or you have no permission", 403)
 		return
 	}
 	objs, err := fs.List(c, reqPath)
@@ -242,7 +242,7 @@ func FsGet(c *gin.Context) {
 	}
 	c.Set("meta", meta)
 	if !common.CanAccess(user, meta, reqPath, req.Password) {
-		common.ErrorStrResp(c, "password is incorrect", 403)
+		common.ErrorStrResp(c, "password is incorrect or you have no permission", 403)
 		return
 	}
 	obj, err := fs.Get(c, reqPath)
@@ -353,7 +353,7 @@ func FsOther(c *gin.Context) {
 	}
 	c.Set("meta", meta)
 	if !common.CanAccess(user, meta, req.Path, req.Password) {
-		common.ErrorStrResp(c, "password is incorrect", 403)
+		common.ErrorStrResp(c, "password is incorrect or you have no permission", 403)
 		return
 	}
 	res, err := fs.Other(c, req.FsOtherArgs)

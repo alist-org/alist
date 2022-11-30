@@ -84,7 +84,7 @@ func hide(objs []model.Obj, meta *model.Meta) []model.Obj {
 	deleted := make([]bool, len(objs))
 	rs := strings.Split(meta.Hide, "\n")
 	for _, r := range rs {
-		re, _ := regexp.Compile(r)
+		re := regexp.MustCompile(r)
 		for i, obj := range objs {
 			if deleted[i] {
 				continue
