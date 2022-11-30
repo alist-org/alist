@@ -218,7 +218,8 @@ func (h *Handler) handleGetHeadPost(w http.ResponseWriter, r *http.Request) (sta
 	w.Header().Set("ETag", etag)
 	// Let ServeContent determine the Content-Type header.
 	storage, _ := fs.GetStorage(reqPath)
-	if storage.GetStorage().WebdavNative() {
+	downProxyUrl := storage.GetStorage().DownProxyUrl
+	if storage.GetStorage().WebdavNative() || (storage.GetStorage().WebdavProxy() && downProxyUrl == "") {
 		link, _, err := fs.Link(ctx, reqPath, model.LinkArgs{Header: r.Header})
 		if err != nil {
 			return http.StatusInternalServerError, err
@@ -227,19 +228,19 @@ func (h *Handler) handleGetHeadPost(w http.ResponseWriter, r *http.Request) (sta
 		if err != nil {
 			return http.StatusInternalServerError, err
 		}
-	} else if storage.Config().MustProxy() || storage.GetStorage().WebdavProxy() {
-		u := fmt.Sprintf("%s/p%s?sign=%s",
-			common.GetApiUrl(r),
+	} else if storage.GetStorage().WebdavProxy() && downProxyUrl != "" {
+		u := fmt.Sprintf("%s%s?sign=%s",
+			strings.Split(downProxyUrl, "\n")[0],
 			utils.EncodePath(reqPath, true),
 			sign.Sign(reqPath))
 		w.Header().Set("Cache-Control", "max-age=0, no-cache, no-store, must-revalidate")
-		http.Redirect(w, r, u, 302)
+		http.Redirect(w, r, u, http.StatusFound)
 	} else {
 		link, _, err := fs.Link(ctx, reqPath, model.LinkArgs{IP: utils.ClientIP(r)})
 		if err != nil {
 			return http.StatusInternalServerError, err
 		}
-		http.Redirect(w, r, link.URL, 302)
+		http.Redirect(w, r, link.URL, http.StatusFound)
 	}
 	return 0, nil
 }
