@@ -2,6 +2,7 @@ package model
 
 import (
 	"github.com/alist-org/alist/v3/internal/errs"
+	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
 )
 
@@ -88,4 +89,8 @@ func (u User) CanWebdavRead() bool {
 
 func (u User) CanWebdavManage() bool {
 	return u.IsAdmin() || (u.Permission>>9)&1 == 1
+}
+
+func (u User) JoinPath(reqPath string) (string, error) {
+	return utils.JoinBasePath(u.BasePath, reqPath)
 }

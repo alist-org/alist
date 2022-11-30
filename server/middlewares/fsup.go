@@ -22,7 +22,11 @@ func FsUp(c *gin.Context) {
 		return
 	}
 	user := c.MustGet("user").(*model.User)
-	path = stdpath.Join(user.BasePath, path)
+	path, err = user.JoinPath(path)
+	if err != nil {
+		common.ErrorResp(c, err, 403)
+		return
+	}
 	meta, err := db.GetNearestMeta(stdpath.Dir(path))
 	if err != nil {
 		if !errors.Is(errors.Cause(err), errs.MetaNotFound) {

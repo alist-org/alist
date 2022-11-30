@@ -178,7 +178,10 @@ func (h *Handler) handleOptions(w http.ResponseWriter, r *http.Request) (status 
 	}
 	ctx := r.Context()
 	user := ctx.Value("user").(*model.User)
-	reqPath = path.Join(user.BasePath, reqPath)
+	reqPath, err = user.JoinPath(reqPath)
+	if err != nil {
+		return 403, err
+	}
 	allow := "OPTIONS, LOCK, PUT, MKCOL"
 	if fi, err := fs.Get(ctx, reqPath); err == nil {
 		if fi.IsDir() {
@@ -203,7 +206,10 @@ func (h *Handler) handleGetHeadPost(w http.ResponseWriter, r *http.Request) (sta
 	// TODO: check locks for read-only access??
 	ctx := r.Context()
 	user := ctx.Value("user").(*model.User)
-	reqPath = path.Join(user.BasePath, reqPath)
+	reqPath, err = user.JoinPath(reqPath)
+	if err != nil {
+		return 403, err
+	}
 	fi, err := fs.Get(ctx, reqPath)
 	if err != nil {
 		return http.StatusNotFound, err
@@ -258,7 +264,10 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) (status i
 
 	ctx := r.Context()
 	user := ctx.Value("user").(*model.User)
-	reqPath = path.Join(user.BasePath, reqPath)
+	reqPath, err = user.JoinPath(reqPath)
+	if err != nil {
+		return 403, err
+	}
 	// TODO: return MultiStatus where appropriate.
 
 	// "godoc os RemoveAll" says that "If the path does not exist, RemoveAll
@@ -291,7 +300,10 @@ func (h *Handler) handlePut(w http.ResponseWriter, r *http.Request) (status int,
 	// comments in http.checkEtag.
 	ctx := r.Context()
 	user := ctx.Value("user").(*model.User)
-	reqPath = path.Join(user.BasePath, reqPath)
+	reqPath, err = user.JoinPath(reqPath)
+	if err != nil {
+		return 403, err
+	}
 	obj := model.Object{
 		Name:     path.Base(reqPath),
 		Size:     r.ContentLength,
@@ -337,7 +349,10 @@ func (h *Handler) handleMkcol(w http.ResponseWriter, r *http.Request) (status in
 
 	ctx := r.Context()
 	user := ctx.Value("user").(*model.User)
-	reqPath = path.Join(user.BasePath, reqPath)
+	reqPath, err = user.JoinPath(reqPath)
+	if err != nil {
+		return 403, err
+	}
 
 	if r.ContentLength > 0 {
 		return http.StatusUnsupportedMediaType, nil
@@ -384,8 +399,14 @@ func (h *Handler) handleCopyMove(w http.ResponseWriter, r *http.Request) (status
 
 	ctx := r.Context()
 	user := ctx.Value("user").(*model.User)
-	src = path.Join(user.BasePath, src)
-	dst = path.Join(user.BasePath, dst)
+	src, err = user.JoinPath(src)
+	if err != nil {
+		return 403, err
+	}
+	dst, err = user.JoinPath(dst)
+	if err != nil {
+		return 403, err
+	}
 
 	if r.Method == "COPY" {
 		// Section 7.5.1 says that a COPY only needs to lock the destination,
@@ -476,7 +497,10 @@ func (h *Handler) handleLock(w http.ResponseWriter, r *http.Request) (retStatus 
 			}
 		}
 		reqPath, status, err := h.stripPrefix(r.URL.Path)
-		reqPath = path.Join(user.BasePath, reqPath)
+		reqPath, err = user.JoinPath(reqPath)
+		if err != nil {
+			return 403, err
+		}
 		if err != nil {
 			return status, err
 		}
@@ -557,7 +581,10 @@ func (h *Handler) handlePropfind(w http.ResponseWriter, r *http.Request) (status
 	}
 	ctx := r.Context()
 	user := ctx.Value("user").(*model.User)
-	reqPath = path.Join(user.BasePath, reqPath)
+	reqPath, err = user.JoinPath(reqPath)
+	if err != nil {
+		return 403, err
+	}
 	fi, err := fs.Get(ctx, reqPath)
 	if err != nil {
 		if errs.IsObjectNotFound(err) {
@@ -633,8 +660,10 @@ func (h *Handler) handleProppatch(w http.ResponseWriter, r *http.Request) (statu
 
 	ctx := r.Context()
 	user := ctx.Value("user").(*model.User)
-	reqPath = path.Join(user.BasePath, reqPath)
-
+	reqPath, err = user.JoinPath(reqPath)
+	if err != nil {
+		return 403, err
+	}
 	if _, err := fs.Get(ctx, reqPath); err != nil {
 		if errs.IsObjectNotFound(err) {
 			return http.StatusNotFound, err

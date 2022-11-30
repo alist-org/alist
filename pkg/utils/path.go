@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	"github.com/alist-org/alist/v3/internal/errs"
 )
 
 // StandardizePath convert path like '/' '/root' '/a/b'
@@ -59,4 +61,11 @@ func EncodePath(path string, all ...bool) string {
 		}
 	}
 	return strings.Join(seg, "/")
+}
+
+func JoinBasePath(basePath, reqPath string) (string, error) {
+	if strings.HasSuffix(reqPath, "..") || strings.Contains(reqPath, "../") {
+		return "", errs.RelativePath
+	}
+	return stdpath.Join(basePath, reqPath), nil
 }

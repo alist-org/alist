@@ -1,8 +1,6 @@
 package handles
 
 import (
-	stdpath "path"
-
 	"github.com/alist-org/alist/v3/internal/aria2"
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/db"
@@ -58,9 +56,13 @@ func AddAria2(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	req.Path = stdpath.Join(user.BasePath, req.Path)
+	reqPath, err := user.JoinPath(req.Path)
+	if err != nil {
+		common.ErrorResp(c, err, 403)
+		return
+	}
 	for _, url := range req.Urls {
-		err := aria2.AddURI(c, url, req.Path)
+		err := aria2.AddURI(c, url, reqPath)
 		if err != nil {
 			common.ErrorResp(c, err, 500)
 			return
