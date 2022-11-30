@@ -73,24 +73,14 @@ func (d *WebDav) List(ctx context.Context, dir model.Obj, args model.ListArgs) (
 //}
 
 func (d *WebDav) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
-	callback := func(r *http.Request) {
-		if args.Header.Get("Range") != "" {
-			r.Header.Set("Range", args.Header.Get("Range"))
-		}
-		if args.Header.Get("If-Range") != "" {
-			r.Header.Set("If-Range", args.Header.Get("If-Range"))
-		}
-	}
-	reader, header, err := d.client.ReadStream(file.GetPath(), callback)
+	url, header, err := d.client.Link(file.GetPath())
 	if err != nil {
 		return nil, err
 	}
-	link := &model.Link{Data: reader}
-	if header.Get("Content-Range") != "" {
-		link.Status = 206
-		link.Header = header
-	}
-	return link, nil
+	return &model.Link{
+		URL:    url,
+		Header: header,
+	}, nil
 }
 
 func (d *WebDav) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
