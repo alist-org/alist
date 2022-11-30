@@ -342,6 +342,58 @@ func (c *Client) Read(path string) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+func (c *Client) Link(path string) (string, http.Header, error) {
+	method := "HEAD"
+	url := PathEscape(Join(c.root, path))
+	r, err := http.NewRequest(method, url, nil)
+
+	if err != nil {
+		return "", nil, newPathErrorErr("Link", path, err)
+	}
+
+	for k, vals := range c.headers {
+		for _, v := range vals {
+			r.Header.Add(k, v)
+		}
+	}
+
+	c.authMutex.Lock()
+	auth := c.auth
+	c.authMutex.Unlock()
+
+	auth.Authorize(r, method, path)
+
+	if c.interceptor != nil {
+		c.interceptor(method, r)
+	}
+
+	rs, err := c.c.Do(r)
+	if err != nil {
+		return "", nil, newPathErrorErr("Link", path, err)
+	}
+
+	if rs.StatusCode == 401 {
+		wwwAuthenticateHeader := strings.ToLower(rs.Header.Get("Www-Authenticate"))
+		if strings.Contains(wwwAuthenticateHeader, "digest") {
+			c.authMutex.Lock()
+			c.auth = &DigestAuth{auth.User(), auth.Pass(), digestParts(rs)}
+			c.auth.Authorize(r, method, path)
+			c.authMutex.Unlock()
+		} else if strings.Contains(wwwAuthenticateHeader, "basic") {
+			c.authMutex.Lock()
+			c.auth = &BasicAuth{auth.User(), auth.Pass()}
+			c.auth.Authorize(r, method, path)
+			c.authMutex.Unlock()
+		} else {
+			return "", nil, newPathError("Authorize", c.root, rs.StatusCode)
+		}
+	} else if rs.StatusCode > 400 {
+		return "", nil, newPathError("Authorize", path, rs.StatusCode)
+	}
+
+	return r.URL.String(), r.Header, nil
+}
+
 // ReadStream reads the stream for a given path
 func (c *Client) ReadStream(path string, callback func(rq *http.Request)) (io.ReadCloser, http.Header, error) {
 	rs, err := c.req("GET", path, nil, callback)

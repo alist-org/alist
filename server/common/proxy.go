@@ -28,6 +28,8 @@ func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.
 		w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"; filename*=UTF-8''%s`, file.GetName(), url.QueryEscape(file.GetName())))
 		w.Header().Set("Content-Length", strconv.FormatInt(file.GetSize(), 10))
 		if link.Header != nil {
+			// TODO clean header with blacklist or whitelist
+			link.Header.Del("set-cookie")
 			for h, val := range link.Header {
 				w.Header()[h] = val
 			}
@@ -81,6 +83,8 @@ func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.
 			_ = res.Body.Close()
 		}()
 		log.Debugf("proxy status: %d", res.StatusCode)
+		// TODO clean header with blacklist or whitelist
+		res.Header.Del("set-cookie")
 		for h, v := range res.Header {
 			w.Header()[h] = v
 		}
