@@ -3,9 +3,11 @@ package middlewares
 import (
 	"strings"
 
+	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/setting"
 	"github.com/alist-org/alist/v3/internal/sign"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/server/common"
@@ -44,6 +46,9 @@ func parsePath(path string) string {
 }
 
 func needSign(meta *model.Meta, path string) bool {
+	if setting.GetBool(conf.SignAll) {
+		return true
+	}
 	if meta == nil || meta.Password == "" {
 		return false
 	}
