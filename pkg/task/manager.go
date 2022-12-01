@@ -8,8 +8,8 @@ import (
 )
 
 type Manager[K comparable] struct {
-	workerC  chan struct{}
 	curID    K
+	workerC  chan struct{}
 	updateID func(*K)
 	tasks    generic_sync.MapOf[K, *Task[K]]
 }
@@ -94,7 +94,7 @@ func (tm *Manager[K]) RemoveByStates(states ...string) {
 	tasks := tm.GetAll()
 	for _, task := range tasks {
 		if utils.SliceContains(states, task.GetState()) {
-			tm.Remove(task.ID)
+			_ = tm.Remove(task.ID)
 		}
 	}
 }
