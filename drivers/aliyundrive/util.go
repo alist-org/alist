@@ -62,6 +62,8 @@ func (d *AliDrive) request(url, method string, callback base.ReqCallback, resp i
 			return d.request(url, method, callback, resp)
 		}
 		return nil, errors.New(e.Message), e
+	} else if res.IsError() {
+		return nil, errors.New("bad status code " + res.Status()), e
 	}
 	return res.Body(), nil, e
 }
