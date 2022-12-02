@@ -1,11 +1,17 @@
 package handles
 
 import (
+	"path"
+	"strings"
+
+	"github.com/alist-org/alist/v3/internal/db"
+	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/search"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
 )
 
 type SearchResp struct {
@@ -28,8 +34,24 @@ func Search(c *gin.Context) {
 		common.ErrorResp(c, err, 500)
 		return
 	}
+	filteredNodes := []model.SearchNode{}
+	user := c.MustGet("user").(*model.User)
+	for _, node := range nodes {
+		if !strings.HasPrefix(node.Parent, user.BasePath) {
+			continue
+		}
+		meta, err := db.GetNearestMeta(node.Parent)
+		if err != nil && !errors.Is(errors.Cause(err), errs.MetaNotFound) {
+			continue
+		}
+		if !common.CanAccess(user, meta, path.Join(node.Parent, node.Name), "") {
+			continue
+		}
+		// node.Parent = "/" + strings.Replace(node.Parent, user.BasePath, "", 1)
+		filteredNodes = append(filteredNodes, node)
+	}
 	common.SuccessResp(c, common.PageResp{
-		Content: utils.MustSliceConvert(nodes, nodeToSearchResp),
+		Content: utils.MustSliceConvert(filteredNodes, nodeToSearchResp),
 		Total:   total,
 	})
 }
