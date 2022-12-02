@@ -45,30 +45,33 @@ func (h *Handler) stripPrefix(p string) (string, int, error) {
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	status, err := http.StatusBadRequest, errUnsupportedMethod
+	brw := newBufferedResponseWriter()
+	useBufferedWriter := true
 	if h.LockSystem == nil {
 		status, err = http.StatusInternalServerError, errNoLockSystem
 	} else {
 		switch r.Method {
 		case "OPTIONS":
-			status, err = h.handleOptions(w, r)
+			status, err = h.handleOptions(brw, r)
 		case "GET", "HEAD", "POST":
+			useBufferedWriter = false
 			status, err = h.handleGetHeadPost(w, r)
 		case "DELETE":
-			status, err = h.handleDelete(w, r)
+			status, err = h.handleDelete(brw, r)
 		case "PUT":
-			status, err = h.handlePut(w, r)
+			status, err = h.handlePut(brw, r)
 		case "MKCOL":
-			status, err = h.handleMkcol(w, r)
+			status, err = h.handleMkcol(brw, r)
 		case "COPY", "MOVE":
-			status, err = h.handleCopyMove(w, r)
+			status, err = h.handleCopyMove(brw, r)
 		case "LOCK":
-			status, err = h.handleLock(w, r)
+			status, err = h.handleLock(brw, r)
 		case "UNLOCK":
-			status, err = h.handleUnlock(w, r)
+			status, err = h.handleUnlock(brw, r)
 		case "PROPFIND":
-			status, err = h.handlePropfind(w, r)
+			status, err = h.handlePropfind(brw, r)
 		case "PROPPATCH":
-			status, err = h.handleProppatch(w, r)
+			status, err = h.handleProppatch(brw, r)
 		}
 	}
 
@@ -77,6 +80,8 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if status != http.StatusNoContent {
 			w.Write([]byte(StatusText(status)))
 		}
+	} else if useBufferedWriter {
+		brw.WriteToResponse(w)
 	}
 	if h.Logger != nil && err != nil {
 		h.Logger(r, err)
