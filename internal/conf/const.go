@@ -37,7 +37,7 @@ const (
 	CustomizeHead       = "customize_head"
 	CustomizeBody       = "customize_body"
 	LinkExpiration      = "link_expiration"
-	SignAll             = "sign all"
+	SignAll             = "sign_all"
 	PrivacyRegs         = "privacy_regs"
 	OcrApi              = "ocr_api"
 	FilenameCharMapping = "filename_char_mapping"
