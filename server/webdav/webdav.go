@@ -53,11 +53,9 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case "OPTIONS":
 			status, err = h.handleOptions(brw, r)
-		case "GET":
+		case "GET", "HEAD", "POST":
 			useBufferedWriter = false
 			status, err = h.handleGetHeadPost(w, r)
-		case "HEAD", "POST":
-			status, err = h.handleGetHeadPost(brw, r)
 		case "DELETE":
 			status, err = h.handleDelete(brw, r)
 		case "PUT":
