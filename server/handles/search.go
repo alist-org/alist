@@ -47,7 +47,7 @@ func Search(c *gin.Context) {
 		if !common.CanAccess(user, meta, path.Join(node.Parent, node.Name), "") {
 			continue
 		}
-		node.Parent = "/" + strings.Replace(node.Parent, user.BasePath, "", 1)
+		// node.Parent = "/" + strings.Replace(node.Parent, user.BasePath, "", 1)
 		filteredNodes = append(filteredNodes, node)
 	}
 	common.SuccessResp(c, common.PageResp{
