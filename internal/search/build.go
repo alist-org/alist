@@ -62,7 +62,7 @@ func BuildIndex(ctx context.Context, indexPaths, ignorePaths []string, maxDepth 
 		})
 	}
 	for _, indexPath := range indexPaths {
-		walkFn := func(indexPath string, info model.Obj, err error) error {
+		walkFn := func(indexPath string, info model.Obj) error {
 			for _, avoidPath := range ignorePaths {
 				if indexPath == avoidPath {
 					return filepath.SkipDir
