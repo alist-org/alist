@@ -42,6 +42,14 @@ jobs:
           cd alist
           go run ./main.go lang
           cd ..
+      - name: Format lang file
+        run: |
+          for file in ./alist/lang/*.json
+          do
+            cp -f "$file" "$file.old" || :
+            jq --sort-keys . "$file.old" > "$file" || :
+          done
+          rm ./alist/lang/*.json.old
       - name: Copy lang file
         run: |
           cp -f ./alist/lang/*.json ./alist-web/src/lang/en/ 2>/dev/null || :
