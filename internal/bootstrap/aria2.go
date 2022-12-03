@@ -6,9 +6,11 @@ import (
 )
 
 func InitAria2() {
-	_, err := aria2.InitClient(2)
-	if err != nil {
-		//utils.Log.Errorf("failed to init aria2 client: %+v", err)
-		utils.Log.Infof("Aria2 not ready.")
-	}
+	go func() {
+		_, err := aria2.InitClient(2)
+		if err != nil {
+			//utils.Log.Errorf("failed to init aria2 client: %+v", err)
+			utils.Log.Infof("Aria2 not ready.")
+		}
+	}()
 }
