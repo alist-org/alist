@@ -17,12 +17,21 @@ var (
 )
 
 func BuildIndex(ctx context.Context, indexPaths, ignorePaths []string, maxDepth int, count bool) error {
-	var objCount uint64 = 0
-	Running = true
+	storages, err := db.GetEnabledStorages()
+	if err != nil {
+		return err
+	}
+	for _, storage := range storages {
+		if storage.Driver == "AList V2" || storage.Driver == "AList V3" {
+			// TODO: request for indexing permission
+			ignorePaths = append(ignorePaths, storage.MountPath)
+		}
+	}
 	var (
-		err error
-		fi  model.Obj
+		objCount uint64 = 0
+		fi       model.Obj
 	)
+	Running = true
 	defer func() {
 		Running = false
 		now := time.Now()
