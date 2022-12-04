@@ -64,12 +64,7 @@ func BuildIndex(ctx context.Context, indexPaths, ignorePaths []string, maxDepth 
 				ticker.Stop()
 				eMsg := ""
 				now := time.Now()
-				if err != nil {
-					log.Errorf("build index error: %+v", err)
-					eMsg = err.Error()
-				} else {
-					log.Infof("success build index, count: %d", objCount)
-				}
+				originErr := err
 				if err = BatchIndex(ctx, parents, infos); err != nil {
 					log.Errorf("build index in batch error: %+v", err)
 				} else {
@@ -77,10 +72,16 @@ func BuildIndex(ctx context.Context, indexPaths, ignorePaths []string, maxDepth 
 				}
 				parents = nil
 				infos = nil
+				if originErr != nil {
+					log.Errorf("build index error: %+v", err)
+					eMsg = err.Error()
+				} else {
+					log.Infof("success build index, count: %d", objCount)
+				}
 				if count {
 					WriteProgress(&model.IndexProgress{
 						ObjCount:     objCount,
-						IsDone:       err == nil,
+						IsDone:       originErr == nil,
 						LastDoneTime: &now,
 						Error:        eMsg,
 					})
