@@ -32,24 +32,64 @@ func BuildIndex(ctx context.Context, indexPaths, ignorePaths []string, maxDepth 
 		fi       model.Obj
 	)
 	Running = true
+	quit := make(chan struct{})
+	parents := []string{}
+	infos := []model.Obj{}
+	go func() {
+		ticker := time.NewTicker(5 * time.Second)
+		for {
+			select {
+			case <-ticker.C:
+				log.Infof("index obj count: %d", objCount)
+				if len(parents) != 0 {
+					log.Debugf("current index: %s", parents[len(parents)-1])
+				}
+				if err = BatchIndex(ctx, parents, infos); err != nil {
+					log.Errorf("build index in batch error: %+v", err)
+				} else {
+					objCount = objCount + uint64(len(parents))
+				}
+				if count {
+					WriteProgress(&model.IndexProgress{
+						ObjCount:     objCount,
+						IsDone:       false,
+						LastDoneTime: nil,
+					})
+				}
+				parents = nil
+				infos = nil
+			case <-quit:
+				ticker.Stop()
+				eMsg := ""
+				now := time.Now()
+				if err != nil {
+					log.Errorf("build index error: %+v", err)
+					eMsg = err.Error()
+				} else {
+					log.Infof("success build index, count: %d", objCount)
+				}
+				if err = BatchIndex(ctx, parents, infos); err != nil {
+					log.Errorf("build index in batch error: %+v", err)
+				} else {
+					objCount = objCount + uint64(len(parents))
+				}
+				parents = nil
+				infos = nil
+				if count {
+					WriteProgress(&model.IndexProgress{
+						ObjCount:     objCount,
+						IsDone:       err == nil,
+						LastDoneTime: &now,
+						Error:        eMsg,
+					})
+				}
+				return
+			}
+		}
+	}()
 	defer func() {
 		Running = false
-		now := time.Now()
-		eMsg := ""
-		if err != nil {
-			log.Errorf("build index error: %+v", err)
-			eMsg = err.Error()
-		} else {
-			log.Infof("success build index, count: %d", objCount)
-		}
-		if count {
-			WriteProgress(&model.IndexProgress{
-				ObjCount:     objCount,
-				IsDone:       err == nil,
-				LastDoneTime: &now,
-				Error:        eMsg,
-			})
-		}
+		quit <- struct{}{}
 	}()
 	admin, err := db.GetAdmin()
 	if err != nil {
@@ -72,23 +112,8 @@ func BuildIndex(ctx context.Context, indexPaths, ignorePaths []string, maxDepth 
 			if indexPath == "/" {
 				return nil
 			}
-			err = Index(ctx, path.Dir(indexPath), info)
-			if err != nil {
-				return err
-			} else {
-				objCount++
-			}
-			if objCount%100 == 0 {
-				log.Infof("index obj count: %d", objCount)
-				log.Debugf("current success index: %s", indexPath)
-				if count {
-					WriteProgress(&model.IndexProgress{
-						ObjCount:     objCount,
-						IsDone:       false,
-						LastDoneTime: nil,
-					})
-				}
-			}
+			parents = append(parents, path.Dir(indexPath))
+			infos = append(infos, info)
 			return nil
 		}
 		fi, err = fs.Get(ctx, indexPath)
