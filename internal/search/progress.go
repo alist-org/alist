@@ -1,8 +1,6 @@
 package search
 
 import (
-	"context"
-
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/model"
@@ -11,7 +9,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func Progress(ctx context.Context) (*model.IndexProgress, error) {
+func Progress() (*model.IndexProgress, error) {
 	p := setting.GetStr(conf.IndexProgress)
 	var progress model.IndexProgress
 	err := utils.Json.UnmarshalFromString(p, &progress)

@@ -14,6 +14,7 @@ import (
 
 var (
 	Running = false
+	Quit    chan struct{}
 )
 
 func BuildIndex(ctx context.Context, indexPaths, ignorePaths []string, maxDepth int, count bool) error {
@@ -32,7 +33,7 @@ func BuildIndex(ctx context.Context, indexPaths, ignorePaths []string, maxDepth 
 		fi       model.Obj
 	)
 	Running = true
-	quit := make(chan struct{})
+	Quit = make(chan struct{}, 1)
 	parents := []string{}
 	infos := []model.Obj{}
 	go func() {
@@ -58,7 +59,8 @@ func BuildIndex(ctx context.Context, indexPaths, ignorePaths []string, maxDepth 
 				}
 				parents = nil
 				infos = nil
-			case <-quit:
+			case <-Quit:
+				Running = false
 				ticker.Stop()
 				eMsg := ""
 				now := time.Now()
@@ -88,8 +90,9 @@ func BuildIndex(ctx context.Context, indexPaths, ignorePaths []string, maxDepth 
 		}
 	}()
 	defer func() {
-		Running = false
-		quit <- struct{}{}
+		if Running {
+			Quit <- struct{}{}
+		}
 	}()
 	admin, err := db.GetAdmin()
 	if err != nil {

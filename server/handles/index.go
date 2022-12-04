@@ -40,8 +40,17 @@ func BuildIndex(c *gin.Context) {
 	common.SuccessResp(c)
 }
 
+func StopIndex(c *gin.Context) {
+	if !search.Running {
+		common.ErrorStrResp(c, "index is not running", 400)
+		return
+	}
+	search.Quit <- struct{}{}
+	common.SuccessResp(c)
+}
+
 func GetProgress(c *gin.Context) {
-	progress, err := search.Progress(c)
+	progress, err := search.Progress()
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return
