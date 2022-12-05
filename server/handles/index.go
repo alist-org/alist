@@ -25,6 +25,12 @@ func BuildIndex(c *gin.Context) {
 		common.ErrorStrResp(c, "index is running", 400)
 		return
 	}
+	ignorePaths, err := search.GetIgnorePaths()
+	if err != nil {
+		common.ErrorResp(c, err, 500)
+		return
+	}
+	ignorePaths = append(ignorePaths, req.IgnorePaths...)
 	go func() {
 		ctx := context.Background()
 		err := search.Clear(ctx)
@@ -32,7 +38,7 @@ func BuildIndex(c *gin.Context) {
 			log.Errorf("clear index error: %+v", err)
 			return
 		}
-		err = search.BuildIndex(context.Background(), req.Paths, req.IgnorePaths, req.MaxDepth, true)
+		err = search.BuildIndex(context.Background(), req.Paths, ignorePaths, req.MaxDepth, true)
 		if err != nil {
 			log.Errorf("build index error: %+v", err)
 		}

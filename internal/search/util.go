@@ -1,6 +1,8 @@
 package search
 
 import (
+	"strings"
+
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/model"
@@ -31,4 +33,33 @@ func WriteProgress(progress *model.IndexProgress) {
 	if err != nil {
 		log.Errorf("save progress error: %+v", err)
 	}
+}
+
+func GetIgnorePaths() ([]string, error) {
+	storages, err := db.GetEnabledStorages()
+	if err != nil {
+		return nil, err
+	}
+	ignorePaths := make([]string, 0)
+	var skipDrivers = []string{"AList V2", "AList V3"}
+	for _, storage := range storages {
+		if utils.SliceContains(skipDrivers, storage.Driver) {
+			// TODO: request for indexing permission
+			ignorePaths = append(ignorePaths, storage.MountPath)
+		}
+	}
+	customIgnorePaths := setting.GetStr(conf.IgnorePaths)
+	if customIgnorePaths != "" {
+		ignorePaths = append(ignorePaths, strings.Split(customIgnorePaths, "\n")...)
+	}
+	return ignorePaths, nil
+}
+
+func isIgnorePath(path string, ignorePaths []string) bool {
+	for _, ignorePath := range ignorePaths {
+		if strings.HasPrefix(path, ignorePath) {
+			return true
+		}
+	}
+	return false
 }

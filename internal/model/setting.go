@@ -1,12 +1,13 @@
 package model
 
 const (
-	SITE = iota
+	SINGLE = iota
+	SITE
 	STYLE
 	PREVIEW
 	GLOBAL
-	SINGLE
 	ARIA2
+	INDEX
 )
 
 const (
