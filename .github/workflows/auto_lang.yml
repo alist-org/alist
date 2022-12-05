@@ -43,7 +43,9 @@ jobs:
           go run ./main.go lang
           cd ..
       - name: Format lang file
+        shell: bash
         run: |
+          shopt -s nullglob
           for file in ./alist/lang/*.json
           do
             cp -f "$file" "$file.old" || :
