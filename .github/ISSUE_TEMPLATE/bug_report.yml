@@ -54,4 +54,3 @@ body:
       description: |
         Please copy and paste any relevant log output.
         请复制粘贴错误日志，或者截图
-      render: shell
