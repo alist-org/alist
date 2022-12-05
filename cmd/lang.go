@@ -71,7 +71,7 @@ func writeFile(name string, data interface{}) {
 	} else {
 		log.Infof("%s.json changed, update file", name)
 		//log.Infof("old: %+v\nnew:%+v", oldData, data)
-		utils.WriteJsonToFile(fmt.Sprintf("lang/%s.json", name), data)
+		utils.WriteJsonToFile(fmt.Sprintf("lang/%s.json", name), newData, true)
 	}
 }
 
