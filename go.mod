@@ -3,16 +3,17 @@ module github.com/alist-org/alist/v3
 go 1.19
 
 require (
-	github.com/SheltonZhu/115driver v1.0.12
+	github.com/SheltonZhu/115driver v1.0.13
 	github.com/Xhofe/go-cache v0.0.0-20220723083548-714439c8af9a
-	github.com/aws/aws-sdk-go v1.44.142
+	github.com/aws/aws-sdk-go v1.44.152
 	github.com/blevesearch/bleve/v2 v2.3.5
 	github.com/caarlos0/env/v6 v6.10.1
+	github.com/deckarep/golang-set/v2 v2.1.0
 	github.com/disintegration/imaging v1.6.2
 	github.com/gin-contrib/cors v1.4.0
 	github.com/gin-gonic/gin v1.8.1
 	github.com/go-resty/resty/v2 v2.7.0
-	github.com/golang-jwt/jwt/v4 v4.4.2
+	github.com/golang-jwt/jwt/v4 v4.4.3
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/websocket v1.5.0
 	github.com/hirochachacha/go-smb2 v1.1.0
@@ -28,6 +29,7 @@ require (
 	github.com/upyun/go-sdk/v3 v3.0.3
 	github.com/winfsp/cgofuse v1.5.0
 	golang.org/x/crypto v0.3.0
+	golang.org/x/image v0.1.0
 	golang.org/x/net v0.2.0
 	gorm.io/driver/mysql v1.4.4
 	gorm.io/driver/postgres v1.4.5
@@ -58,7 +60,6 @@ require (
 	github.com/blevesearch/zapx/v15 v15.3.6 // indirect
 	github.com/bluele/gcache v0.0.2 // indirect
 	github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc // indirect
-	github.com/deckarep/golang-set/v2 v2.1.0 // indirect
 	github.com/gaoyb7/115drive-webdav v0.1.8 // indirect
 	github.com/geoffgarside/ber v1.1.0 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
@@ -98,7 +99,6 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/ugorji/go/codec v1.2.7 // indirect
 	go.etcd.io/bbolt v1.3.5 // indirect
-	golang.org/x/image v0.0.0-20220722155232-062f8c9fd539 // indirect
 	golang.org/x/sys v0.2.0 // indirect
 	golang.org/x/text v0.4.0 // indirect
 	golang.org/x/time v0.0.0-20220922220347-f3bd1da661af // indirect
