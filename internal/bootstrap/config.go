@@ -13,12 +13,14 @@ import (
 
 func InitConfig() {
 	if flags.ForceBinDir {
-		ex, err := os.Executable()
-		if err != nil {
-			utils.Log.Fatal(err)
+		if !filepath.IsAbs(flags.DataDir) {
+			ex, err := os.Executable()
+			if err != nil {
+				utils.Log.Fatal(err)
+			}
+			exPath := filepath.Dir(ex)
+			flags.DataDir = filepath.Join(exPath, flags.DataDir)
 		}
-		exPath := filepath.Dir(ex)
-		flags.DataDir = filepath.Join(exPath, "data")
 	}
 	configPath := filepath.Join(flags.DataDir, "config.json")
 	log.Infof("reading config file: %s", configPath)
