@@ -59,6 +59,25 @@ func Index(ctx context.Context, parent string, obj model.Obj) error {
 	})
 }
 
+func BatchIndex(ctx context.Context, parents []string, objs []model.Obj) error {
+	if instance == nil {
+		return errs.SearchNotAvailable
+	}
+	if len(parents) == 0 {
+		return nil
+	}
+	searchNodes := []model.SearchNode{}
+	for i := range parents {
+		searchNodes = append(searchNodes, model.SearchNode{
+			Parent: parents[i],
+			Name:   objs[i].GetName(),
+			IsDir:  objs[i].IsDir(),
+			Size:   objs[i].GetSize(),
+		})
+	}
+	return instance.BatchIndex(ctx, searchNodes)
+}
+
 func init() {
 	db.RegisterSettingItemHook(conf.SearchIndex, func(item *model.SettingItem) error {
 		log.Debugf("searcher init, mode: %s", item.Value)

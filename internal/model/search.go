@@ -34,3 +34,7 @@ func (p *SearchReq) Validate() error {
 	}
 	return nil
 }
+
+func (s *SearchNode) Type() string {
+	return "SearchNode"
+}

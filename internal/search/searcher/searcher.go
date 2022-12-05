@@ -18,6 +18,8 @@ type Searcher interface {
 	Search(ctx context.Context, req model.SearchReq) ([]model.SearchNode, int64, error)
 	// Index obj with parent
 	Index(ctx context.Context, node model.SearchNode) error
+	// Index obj with parent in batches
+	BatchIndex(ctx context.Context, nodes []model.SearchNode) error
 	// Get by parent
 	Get(ctx context.Context, parent string) ([]model.SearchNode, error)
 	// Del with prefix

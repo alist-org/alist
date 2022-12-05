@@ -16,7 +16,7 @@ func Update(parent string, objs []model.Obj) {
 	}
 	ctx := context.Background()
 	// only update when index have built
-	progress, err := Progress(ctx)
+	progress, err := Progress()
 	if err != nil {
 		log.Errorf("update search index error while get progress: %+v", err)
 		return

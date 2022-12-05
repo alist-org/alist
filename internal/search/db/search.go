@@ -22,6 +22,10 @@ func (D DB) Index(ctx context.Context, node model.SearchNode) error {
 	return db.CreateSearchNode(&node)
 }
 
+func (D DB) BatchIndex(ctx context.Context, nodes []model.SearchNode) error {
+	return db.BatchCreateSearchNodes(&nodes)
+}
+
 func (D DB) Get(ctx context.Context, parent string) ([]model.SearchNode, error) {
 	return db.GetSearchNodesByParent(parent)
 }

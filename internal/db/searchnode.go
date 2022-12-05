@@ -11,6 +11,10 @@ func CreateSearchNode(node *model.SearchNode) error {
 	return db.Create(node).Error
 }
 
+func BatchCreateSearchNodes(nodes *[]model.SearchNode) error {
+	return db.CreateInBatches(nodes, 1000).Error
+}
+
 func DeleteSearchNodesByParent(parent string) error {
 	return db.Where(fmt.Sprintf("%s LIKE ?",
 		columnName("path")), fmt.Sprintf("%s%%", parent)).
