@@ -187,6 +187,7 @@ func Update(parent string, objs []model.Obj) {
 	toAdd := now.Difference(old)
 	for i := range nodes {
 		if toDelete.Contains(nodes[i].Name) {
+			log.Debugf("delete index: %s", path.Join(parent, nodes[i].Name))
 			err = instance.Del(ctx, path.Join(parent, nodes[i].Name))
 			if err != nil {
 				log.Errorf("update search index error while del old node: %+v", err)
@@ -196,6 +197,7 @@ func Update(parent string, objs []model.Obj) {
 	}
 	for i := range objs {
 		if toAdd.Contains(objs[i].GetName()) {
+			log.Debugf("add index: %s", path.Join(parent, objs[i].GetName()))
 			err = Index(ctx, parent, objs[i])
 			if err != nil {
 				log.Errorf("update search index error while index new node: %+v", err)
