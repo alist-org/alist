@@ -75,8 +75,8 @@ func BuildIndex(ctx context.Context, indexPaths, ignorePaths []string, maxDepth 
 						objCount = objCount + uint64(len(messages))
 					}
 					if originErr != nil {
-						log.Errorf("build index error: %+v", err)
-						eMsg = err.Error()
+						log.Errorf("build index error: %+v", originErr)
+						eMsg = originErr.Error()
 					} else {
 						log.Infof("success build index, count: %d", objCount)
 					}
