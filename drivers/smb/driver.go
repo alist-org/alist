@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/alist-org/alist/v3/internal/driver"
@@ -33,6 +34,9 @@ func (d *SMB) Init(ctx context.Context, storage model.Storage) error {
 	err := utils.Json.UnmarshalFromString(d.Storage.Addition, &d.Addition)
 	if err != nil {
 		return err
+	}
+	if strings.Index(d.Addition.Address, ":") < 0{
+		d.Addition.Address = d.Addition.Address + ":445"
 	}
 	return d.initFS()
 }
