@@ -134,6 +134,7 @@ func _fs(g *gin.RouterGroup) {
 func Cors(r *gin.Engine) {
 	config := cors.DefaultConfig()
 	config.AllowAllOrigins = true
-	config.AllowHeaders = append(config.AllowHeaders, "Authorization", "range", "File-Path", "As-Task", "Password")
+	//config.AllowHeaders = append(config.AllowHeaders, "Authorization", "range", "File-Path", "As-Task", "Password")
+	config.AllowHeaders = []string{"*"}
 	r.Use(cors.New(config))
 }
