@@ -43,6 +43,7 @@ jobs:
           go run ./main.go lang
           cd ..
       - name: Format lang file
+        shell: bash
         run: |
           for file in ./alist/lang/*.json
           do
