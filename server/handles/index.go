@@ -21,7 +21,7 @@ func BuildIndex(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	if search.Running {
+	if search.Running.Load() {
 		common.ErrorStrResp(c, "index is running", 400)
 		return
 	}
@@ -41,7 +41,7 @@ func BuildIndex(c *gin.Context) {
 }
 
 func StopIndex(c *gin.Context) {
-	if !search.Running {
+	if !search.Running.Load() {
 		common.ErrorStrResp(c, "index is not running", 400)
 		return
 	}

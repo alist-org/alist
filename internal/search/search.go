@@ -17,13 +17,17 @@ var instance searcher.Searcher = nil
 // Init or reset index
 func Init(mode string) error {
 	if instance != nil {
+		// unchanged, do nothing
+		if instance.Config().Name == mode {
+			return nil
+		}
 		err := instance.Release(context.Background())
 		if err != nil {
 			log.Errorf("release instance err: %+v", err)
 		}
 		instance = nil
 	}
-	if Running {
+	if Running.Load() {
 		return fmt.Errorf("index is running")
 	}
 	if mode == "none" {
@@ -59,17 +63,22 @@ func Index(ctx context.Context, parent string, obj model.Obj) error {
 	})
 }
 
-func BatchIndex(ctx context.Context, parents []string, objs []model.Obj) error {
+type ObjWithParent struct {
+	Parent string
+	model.Obj
+}
+
+func BatchIndex(ctx context.Context, objs []ObjWithParent) error {
 	if instance == nil {
 		return errs.SearchNotAvailable
 	}
-	if len(parents) == 0 {
+	if len(objs) == 0 {
 		return nil
 	}
-	searchNodes := []model.SearchNode{}
-	for i := range parents {
+	var searchNodes []model.SearchNode
+	for i := range objs {
 		searchNodes = append(searchNodes, model.SearchNode{
-			Parent: parents[i],
+			Parent: objs[i].Parent,
 			Name:   objs[i].GetName(),
 			IsDir:  objs[i].IsDir(),
 			Size:   objs[i].GetSize(),

@@ -11,7 +11,7 @@ import (
 )
 
 func Update(parent string, objs []model.Obj) {
-	if instance != nil && !instance.Config().AutoUpdate {
+	if instance == nil || !instance.Config().AutoUpdate || Running.Load() {
 		return
 	}
 	ctx := context.Background()
