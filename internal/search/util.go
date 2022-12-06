@@ -41,7 +41,7 @@ func GetIgnorePaths() ([]string, error) {
 		return nil, err
 	}
 	ignorePaths := make([]string, 0)
-	var skipDrivers = []string{"AList V2", "AList V3"}
+	var skipDrivers = []string{"AList V2", "AList V3", "Virtual"}
 	for _, storage := range storages {
 		if utils.SliceContains(skipDrivers, storage.Driver) {
 			// TODO: request for indexing permission
