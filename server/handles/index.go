@@ -13,6 +13,7 @@ type BuildIndexReq struct {
 	Paths       []string `json:"paths"`
 	MaxDepth    int      `json:"max_depth"`
 	IgnorePaths []string `json:"ignore_paths"`
+	Clear       bool     `json:"clear"`
 }
 
 func BuildIndex(c *gin.Context) {
@@ -33,10 +34,21 @@ func BuildIndex(c *gin.Context) {
 	ignorePaths = append(ignorePaths, req.IgnorePaths...)
 	go func() {
 		ctx := context.Background()
-		err := search.Clear(ctx)
-		if err != nil {
-			log.Errorf("clear index error: %+v", err)
-			return
+		var err error
+		if req.Clear {
+			err = search.Clear(ctx)
+			if err != nil {
+				log.Errorf("clear index error: %+v", err)
+				return
+			}
+		} else {
+			for _, path := range req.Paths {
+				err = search.Del(ctx, path)
+				if err != nil {
+					log.Errorf("delete index on %s error: %+v", path, err)
+					return
+				}
+			}
 		}
 		err = search.BuildIndex(context.Background(), req.Paths, ignorePaths, req.MaxDepth, true)
 		if err != nil {
