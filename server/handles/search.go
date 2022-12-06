@@ -20,8 +20,17 @@ type SearchResp struct {
 }
 
 func Search(c *gin.Context) {
-	var req model.SearchReq
-	if err := c.ShouldBind(&req); err != nil {
+	var (
+		req model.SearchReq
+		err error
+	)
+	if err = c.ShouldBind(&req); err != nil {
+		common.ErrorResp(c, err, 400)
+		return
+	}
+	user := c.MustGet("user").(*model.User)
+	req.Parent, err = user.JoinPath(req.Parent)
+	if err != nil {
 		common.ErrorResp(c, err, 400)
 		return
 	}
@@ -34,8 +43,7 @@ func Search(c *gin.Context) {
 		common.ErrorResp(c, err, 500)
 		return
 	}
-	filteredNodes := []model.SearchNode{}
-	user := c.MustGet("user").(*model.User)
+	var filteredNodes []model.SearchNode
 	for _, node := range nodes {
 		if !strings.HasPrefix(node.Parent, user.BasePath) {
 			continue
@@ -47,7 +55,6 @@ func Search(c *gin.Context) {
 		if !common.CanAccess(user, meta, path.Join(node.Parent, node.Name), "") {
 			continue
 		}
-		// node.Parent = "/" + strings.Replace(node.Parent, user.BasePath, "", 1)
 		filteredNodes = append(filteredNodes, node)
 	}
 	common.SuccessResp(c, common.PageResp{
