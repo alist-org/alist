@@ -3,8 +3,9 @@ package model
 import (
 	"io"
 	"sort"
-	"strings"
 	"time"
+
+	"github.com/maruel/natural"
 )
 
 type Obj interface {
@@ -45,11 +46,11 @@ func SortFiles(objs []Obj, orderBy, orderDirection string) {
 		switch orderBy {
 		case "name":
 			{
-				c := strings.Compare(objs[i].GetName(), objs[j].GetName())
+				c := natural.Less(objs[i].GetName(), objs[j].GetName())
 				if orderDirection == "desc" {
-					return c >= 0
+					return !c
 				}
-				return c <= 0
+				return c
 			}
 		case "size":
 			{
