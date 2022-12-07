@@ -155,6 +155,10 @@ func Update(parent string, objs []model.Obj) {
 	if instance == nil || !instance.Config().AutoUpdate || Running.Load() {
 		return
 	}
+	indexPaths := GetIndexPaths()
+	if !isIndexPath(parent, indexPaths) {
+		return
+	}
 	ignorePaths, err := GetIgnorePaths()
 	if err != nil {
 		log.Errorf("update search index error while get ignore paths: %+v", err)
