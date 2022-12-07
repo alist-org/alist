@@ -17,6 +17,15 @@ func Init(indexPath *string) (bleve.Index, error) {
 	if err == bleve.ErrorIndexPathDoesNotExist {
 		log.Infof("Creating new index...")
 		indexMapping := bleve.NewIndexMapping()
+		searchNodeMapping := bleve.NewDocumentMapping()
+		searchNodeMapping.AddFieldMappingsAt("is_dir", bleve.NewBooleanFieldMapping())
+		// TODO: appoint analyzer
+		parentFieldMapping := bleve.NewTextFieldMapping()
+		searchNodeMapping.AddFieldMappingsAt("parent", parentFieldMapping)
+		// TODO: appoint analyzer
+		nameFieldMapping := bleve.NewKeywordFieldMapping()
+		searchNodeMapping.AddFieldMappingsAt("name", nameFieldMapping)
+		indexMapping.AddDocumentMapping("SearchNode", searchNodeMapping)
 		fileIndex, err = bleve.New(*indexPath, indexMapping)
 		if err != nil {
 			return nil, err

@@ -49,6 +49,14 @@ func (b *Bleve) Index(ctx context.Context, node model.SearchNode) error {
 	return b.BIndex.Index(uuid.NewString(), node)
 }
 
+func (b *Bleve) BatchIndex(ctx context.Context, nodes []model.SearchNode) error {
+	batch := b.BIndex.NewBatch()
+	for _, node := range nodes {
+		batch.Index(uuid.NewString(), node)
+	}
+	return b.BIndex.Batch(batch)
+}
+
 func (b *Bleve) Get(ctx context.Context, parent string) ([]model.SearchNode, error) {
 	return nil, errs.NotSupport
 }

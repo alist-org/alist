@@ -14,14 +14,28 @@ import (
 	"github.com/pkg/errors"
 )
 
+type SearchReq struct {
+	model.SearchReq
+	Password string `json:"password"`
+}
+
 type SearchResp struct {
 	model.SearchNode
 	Type int `json:"type"`
 }
 
 func Search(c *gin.Context) {
-	var req model.SearchReq
-	if err := c.ShouldBind(&req); err != nil {
+	var (
+		req SearchReq
+		err error
+	)
+	if err = c.ShouldBind(&req); err != nil {
+		common.ErrorResp(c, err, 400)
+		return
+	}
+	user := c.MustGet("user").(*model.User)
+	req.Parent, err = user.JoinPath(req.Parent)
+	if err != nil {
 		common.ErrorResp(c, err, 400)
 		return
 	}
@@ -29,13 +43,12 @@ func Search(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	nodes, total, err := search.Search(c, req)
+	nodes, total, err := search.Search(c, req.SearchReq)
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return
 	}
-	filteredNodes := []model.SearchNode{}
-	user := c.MustGet("user").(*model.User)
+	var filteredNodes []model.SearchNode
 	for _, node := range nodes {
 		if !strings.HasPrefix(node.Parent, user.BasePath) {
 			continue
@@ -44,10 +57,9 @@ func Search(c *gin.Context) {
 		if err != nil && !errors.Is(errors.Cause(err), errs.MetaNotFound) {
 			continue
 		}
-		if !common.CanAccess(user, meta, path.Join(node.Parent, node.Name), "") {
+		if !common.CanAccess(user, meta, path.Join(node.Parent, node.Name), req.Password) {
 			continue
 		}
-		// node.Parent = "/" + strings.Replace(node.Parent, user.BasePath, "", 1)
 		filteredNodes = append(filteredNodes, node)
 	}
 	common.SuccessResp(c, common.PageResp{
