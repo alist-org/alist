@@ -143,6 +143,10 @@ func BuildIndex(ctx context.Context, indexPaths, ignorePaths []string, maxDepth 
 	return nil
 }
 
+func Del(ctx context.Context, prefix string) error {
+	return instance.Del(ctx, prefix)
+}
+
 func Clear(ctx context.Context) error {
 	return instance.Clear(ctx)
 }
