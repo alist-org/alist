@@ -26,6 +26,10 @@ type LoginReq struct {
 	OtpCode  string `json:"otp_code"`
 }
 
+type LoginReq_Github struct {
+	Github_ID int `json:"githubid" binding:"required"`
+}
+
 func Login(c *gin.Context) {
 	// check count of login
 	ip := c.ClientIP()
@@ -101,6 +105,21 @@ func UpdateCurrent(c *gin.Context) {
 	if req.Password != "" {
 		user.Password = req.Password
 	}
+	if err := db.UpdateUser(user); err != nil {
+		common.ErrorResp(c, err, 500)
+	} else {
+		common.SuccessResp(c)
+	}
+}
+
+func UpdateCurrent_Github(c *gin.Context) {
+	var req LoginReq_Github
+	if err := c.ShouldBind(&req); err != nil {
+		common.ErrorResp(c, err, 400)
+		return
+	}
+	user := c.MustGet("user").(*model.User)
+	user.GithubID = req.Github_ID
 	if err := db.UpdateUser(user); err != nil {
 		common.ErrorResp(c, err, 500)
 	} else {

@@ -133,6 +133,11 @@ func InitialSettings() []model.SettingItem {
 		{Key: conf.Token, Value: token, Type: conf.TypeString, Group: model.SINGLE, Flag: model.PRIVATE},
 		{Key: conf.SearchIndex, Value: "none", Type: conf.TypeSelect, Options: "database,bleve,none", Group: model.SINGLE},
 		{Key: conf.IndexProgress, Value: "{}", Type: conf.TypeText, Group: model.SINGLE, Flag: model.PRIVATE},
+
+		// Github settings
+		{Key: conf.Github_client_id, Value: "", Type: conf.TypeString, Group: model.GITHUB, Flag: model.PRIVATE},
+		{Key: conf.Github_client_secrets, Value: "", Type: conf.TypeString, Group: model.GITHUB, Flag: model.PRIVATE},
+		{Key: conf.Github_login_enabled, Value: "false", Type: conf.TypeBool, Group: model.GITHUB, Flag: model.PUBLIC},
 	}
 	if flags.Dev {
 		initialSettingItems = append(initialSettingItems, []model.SettingItem{

@@ -7,6 +7,7 @@ const (
 	GLOBAL
 	SINGLE
 	ARIA2
+	GITHUB
 )
 
 const (
