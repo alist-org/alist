@@ -3,6 +3,7 @@ package handles
 import (
 	"context"
 
+	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/search"
 	"github.com/alist-org/alist/v3/server/common"
 	mapset "github.com/deckarep/golang-set/v2"
@@ -72,6 +73,21 @@ func StopIndex(c *gin.Context) {
 		return
 	}
 	search.Quit <- struct{}{}
+	common.SuccessResp(c)
+}
+
+func ClearIndex(c *gin.Context) {
+	if search.Running.Load() {
+		common.ErrorStrResp(c, "index is running", 400)
+		return
+	}
+	search.Clear(c)
+	search.WriteProgress(&model.IndexProgress{
+		ObjCount:     0,
+		IsDone:       false,
+		LastDoneTime: nil,
+		Error:        "",
+	})
 	common.SuccessResp(c)
 }
 
