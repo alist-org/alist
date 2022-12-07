@@ -18,6 +18,7 @@ type MQ[T any] interface {
 	Consume(BasicConsumer[T])
 	ConsumeAll(AllConsumer[T])
 	Clear()
+	Len() int
 }
 
 type inMemoryMQ[T any] struct {
@@ -53,4 +54,8 @@ func (mq *inMemoryMQ[T]) Clear() {
 	mq.Lock()
 	defer mq.Unlock()
 	mq.queue.Clear()
+}
+
+func (mq *inMemoryMQ[T]) Len() int {
+	return mq.queue.Len()
 }
