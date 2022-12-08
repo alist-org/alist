@@ -136,5 +136,6 @@ func Cors(r *gin.Engine) {
 	config.AllowAllOrigins = true
 	//config.AllowHeaders = append(config.AllowHeaders, "Authorization", "range", "File-Path", "As-Task", "Password")
 	config.AllowHeaders = []string{"*"}
+	config.AllowMethods = []string{"*"}
 	r.Use(cors.New(config))
 }
