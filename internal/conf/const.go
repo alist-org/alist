@@ -15,6 +15,7 @@ const (
 	BasePath     = "base_path"
 	SiteTitle    = "site_title"
 	Announcement = "announcement"
+	AllowIndexed   = "allow_indexed"
 
 	Logo      = "logo"
 	Favicon   = "favicon"
