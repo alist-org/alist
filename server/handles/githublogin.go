@@ -44,7 +44,6 @@ func Loginredirect(c *gin.Context) {
 	} else {
 		common.ErrorResp(c, errors.New("Github Signin not enabled"), 403)
 	}
-	return
 }
 
 func GithubCallback(c *gin.Context) {
@@ -92,35 +91,34 @@ func GithubCallback(c *gin.Context) {
 			if err != nil {
 				common.ErrorResp(c, err, 400)
 				return
-			} else {
-				body, err := ioutil.ReadAll(resp.Body)
+			}
+			body, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				common.ErrorResp(c, err, 400)
+				return
+			}
+			user_id := utils.Json.Get(body, "id").ToString()
+			if argument == "get_github_id" {
+				c.Redirect(302, callback_url+"?callback-id="+user_id)
+			}
+			if argument == "github_login" {
+				useridint, err := strconv.Atoi(user_id)
 				if err != nil {
 					common.ErrorResp(c, err, 400)
 					return
 				}
-				user_id := utils.Json.Get(body, "id").ToString()
-				if argument == "get_github_id" {
-					c.Redirect(302, callback_url+"?callback-id="+user_id)
+				user, err := db.GetUserByGithubID(useridint)
+				if err != nil {
+					common.ErrorResp(c, err, 400)
 				}
-				if argument == "github_login" {
-					useridint, err := strconv.Atoi(user_id)
-					if err != nil {
-						common.ErrorResp(c, err, 400)
-						return
-					}
-					user, err := db.GetUserByGithubID(useridint)
-					if err != nil {
-						common.ErrorResp(c, err, 400)
-					}
-					token, err := common.GenerateToken(user.Username)
-					with_params := c.Query("with_params")
-					if with_params == "true" {
-						c.Redirect(302, callback_url+"&token="+token)
-					} else if with_params == "false" {
-						c.Redirect(302, callback_url+"?token="+token)
-					}
-					return
+				token, err := common.GenerateToken(user.Username)
+				with_params := c.Query("with_params")
+				if with_params == "true" {
+					c.Redirect(302, callback_url+"&token="+token)
+				} else if with_params == "false" {
+					c.Redirect(302, callback_url+"?token="+token)
 				}
+				return
 			}
 		} else {
 			common.ErrorResp(c, errors.New("Invalid Request"), 500)
