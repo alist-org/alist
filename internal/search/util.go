@@ -35,6 +35,24 @@ func WriteProgress(progress *model.IndexProgress) {
 	}
 }
 
+func GetIndexPaths() []string {
+	indexPaths := make([]string, 0)
+	customIndexPaths := setting.GetStr(conf.IndexPaths)
+	if customIndexPaths != "" {
+		indexPaths = append(indexPaths, strings.Split(customIndexPaths, "\n")...)
+	}
+	return indexPaths
+}
+
+func isIndexPath(path string, indexPaths []string) bool {
+	for _, indexPaths := range indexPaths {
+		if strings.HasPrefix(path, indexPaths) {
+			return true
+		}
+	}
+	return false
+}
+
 func GetIgnorePaths() ([]string, error) {
 	storages, err := db.GetEnabledStorages()
 	if err != nil {

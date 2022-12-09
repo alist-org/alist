@@ -44,6 +44,7 @@ const (
 
 	// index
 	SearchIndex = "search_index"
+	IndexPaths  = "index_paths"
 	IgnorePaths = "ignore_paths"
 
 	// aria2
