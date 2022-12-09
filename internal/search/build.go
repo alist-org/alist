@@ -33,10 +33,17 @@ func BuildIndex(ctx context.Context, indexPaths, ignorePaths []string, maxDepth 
 	Quit = make(chan struct{}, 1)
 	indexMQ := mq.NewInMemoryMQ[ObjWithParent]()
 	go func() {
-		ticker := time.NewTicker(5 * time.Second)
+		ticker := time.NewTicker(time.Second)
+		tickCount := 0
 		for {
 			select {
 			case <-ticker.C:
+				tickCount += 1
+				if indexMQ.Len() < 1000 && tickCount != 5 {
+					continue
+				} else if tickCount >= 5 {
+					tickCount = 0
+				}
 				log.Infof("index obj count: %d", objCount)
 				indexMQ.ConsumeAll(func(messages []mq.Message[ObjWithParent]) {
 					if len(messages) != 0 {
@@ -153,6 +160,10 @@ func Clear(ctx context.Context) error {
 
 func Update(parent string, objs []model.Obj) {
 	if instance == nil || !instance.Config().AutoUpdate || Running.Load() {
+		return
+	}
+	indexPaths := GetIndexPaths()
+	if !isIndexPath(parent, indexPaths) {
 		return
 	}
 	ignorePaths, err := GetIgnorePaths()
