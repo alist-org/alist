@@ -18,6 +18,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/sign"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/disintegration/imaging"
@@ -76,7 +77,7 @@ func (d *Local) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([
 		if d.Thumbnail && utils.GetFileType(f.Name()) == conf.IMAGE {
 			thumb = common.GetApiUrl(nil) + stdpath.Join("/d", args.ReqPath, f.Name())
 			thumb = utils.EncodePath(thumb, true)
-			thumb += "?type=thumb"
+			thumb += "?type=thumb&sign=" + sign.Sign(stdpath.Join(args.ReqPath, f.Name()))
 		}
 		isFolder := f.IsDir() || isSymlinkDir(f, fullPath)
 		size := f.Size()
