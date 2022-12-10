@@ -8,9 +8,9 @@ import (
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/internal/setting"
 	"github.com/alist-org/alist/v3/pkg/utils"
-	mapset "github.com/deckarep/golang-set/v2"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -57,46 +57,27 @@ func isIndexPath(path string, indexPaths []string) bool {
 }
 
 func GetIgnorePaths() ([]string, error) {
-	storages, err := db.GetEnabledStorages()
-	if err != nil {
-		return nil, err
-	}
+	storages := op.GetAllStorages()
 	ignorePaths := make([]string, 0)
 	var skipDrivers = []string{"AList V2", "AList V3", "Virtual"}
-	ignoreAddresses := mapset.NewSet[string]()
-	indexAddresses := mapset.NewSet[string]()
+	v3Visited := make(map[string]bool)
 	for _, storage := range storages {
-		if utils.SliceContains(skipDrivers, storage.Driver) {
-			if storage.Driver == "AList V3" {
-				addition := alist_v3.Addition{}
-				utils.Json.UnmarshalFromString(storage.Addition, &addition)
-				if len(addition.Address) > 0 && string(addition.Address[len(addition.Address)-1]) == "/" {
-					addition.Address = addition.Address[0 : len(addition.Address)-1]
+		if utils.SliceContains(skipDrivers, storage.Config().Name) {
+			if storage.Config().Name == "AList V3" {
+				addition := storage.GetAddition().(alist_v3.Addition)
+				allowIndexed, visited := v3Visited[addition.Address]
+				if !visited {
+					url := addition.Address + "/api/public/settings"
+					res, err := base.RestyClient.R().Get(url)
+					if err == nil {
+						allowIndexed = utils.Json.Get(res.Body(), "data", conf.AllowIndexed).ToBool()
+					}
 				}
-				if !indexAddresses.Contains(addition.Address) {
-					if !ignoreAddresses.Contains(addition.Address) {
-						url := addition.Address + "/api/public/settings"
-						canIndex := false
-						var resp map[string]string
-						_, err := base.RestyClient.R().
-							SetResult(&resp).Get(url)
-						if err == nil {
-							if val, ok := resp[conf.AllowIndexed]; ok {
-								canIndex = setting.GetBool(val)
-							}
-						}
-						if canIndex {
-							indexAddresses.Add(addition.Address)
-						} else {
-							ignoreAddresses.Add(addition.Address)
-						}
-					}
-					if ignoreAddresses.Contains(addition.Address) {
-						ignorePaths = append(ignorePaths, storage.MountPath)
-					}
+				if allowIndexed {
+					ignorePaths = append(ignorePaths, storage.GetStorage().MountPath)
 				}
 			} else {
-				ignorePaths = append(ignorePaths, storage.MountPath)
+				ignorePaths = append(ignorePaths, storage.GetStorage().MountPath)
 			}
 		}
 	}
