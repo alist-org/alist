@@ -43,3 +43,23 @@ type FsGetResp struct {
 	Provider string    `json:"provider"`
 	Related  []ObjResp `json:"related"`
 }
+
+type MkdirOrLinkReq struct {
+	Path string `json:"path" form:"path"`
+}
+
+type MoveCopyReq struct {
+	SrcDir string   `json:"src_dir"`
+	DstDir string   `json:"dst_dir"`
+	Names  []string `json:"names"`
+}
+
+type RenameReq struct {
+	Path string `json:"path"`
+	Name string `json:"name"`
+}
+
+type RemoveReq struct {
+	Dir   string   `json:"dir"`
+	Names []string `json:"names"`
+}

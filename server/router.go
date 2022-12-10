@@ -111,6 +111,7 @@ func admin(g *gin.RouterGroup) {
 	index := g.Group("/index")
 	index.POST("/build", middlewares.SearchIndex, handles.BuildIndex)
 	index.POST("/stop", middlewares.SearchIndex, handles.StopIndex)
+	index.POST("/clear", middlewares.SearchIndex, handles.ClearIndex)
 	index.GET("/progress", middlewares.SearchIndex, handles.GetProgress)
 }
 
@@ -136,5 +137,6 @@ func Cors(r *gin.Engine) {
 	config.AllowAllOrigins = true
 	//config.AllowHeaders = append(config.AllowHeaders, "Authorization", "range", "File-Path", "As-Task", "Password")
 	config.AllowHeaders = []string{"*"}
+	config.AllowMethods = []string{"*"}
 	r.Use(cors.New(config))
 }
