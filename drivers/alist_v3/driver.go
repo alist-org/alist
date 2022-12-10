@@ -5,6 +5,7 @@ import (
 	"io"
 	"path"
 	"strconv"
+	"strings"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
@@ -32,9 +33,7 @@ func (d *AListV3) Init(ctx context.Context, storage model.Storage) error {
 	if err != nil {
 		return err
 	}
-	if len(d.Addition.Address) > 0 && string(d.Addition.Address[len(d.Addition.Address)-1]) == "/" {
-		d.Addition.Address = d.Addition.Address[0 : len(d.Addition.Address)-1]
-	}
+	d.Addition.Address = strings.TrimSuffix(d.Addition.Address, "/")
 	// TODO login / refresh token
 	//op.MustSaveDriverStorage(d)
 	return err

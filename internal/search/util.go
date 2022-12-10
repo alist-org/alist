@@ -3,9 +3,12 @@ package search
 import (
 	"strings"
 
+	"github.com/alist-org/alist/v3/drivers/alist_v3"
+	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/internal/setting"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	log "github.com/sirupsen/logrus"
@@ -54,16 +57,28 @@ func isIndexPath(path string, indexPaths []string) bool {
 }
 
 func GetIgnorePaths() ([]string, error) {
-	storages, err := db.GetEnabledStorages()
-	if err != nil {
-		return nil, err
-	}
+	storages := op.GetAllStorages()
 	ignorePaths := make([]string, 0)
 	var skipDrivers = []string{"AList V2", "AList V3", "Virtual"}
+	v3Visited := make(map[string]bool)
 	for _, storage := range storages {
-		if utils.SliceContains(skipDrivers, storage.Driver) {
-			// TODO: request for indexing permission
-			ignorePaths = append(ignorePaths, storage.MountPath)
+		if utils.SliceContains(skipDrivers, storage.Config().Name) {
+			if storage.Config().Name == "AList V3" {
+				addition := storage.GetAddition().(alist_v3.Addition)
+				allowIndexed, visited := v3Visited[addition.Address]
+				if !visited {
+					url := addition.Address + "/api/public/settings"
+					res, err := base.RestyClient.R().Get(url)
+					if err == nil {
+						allowIndexed = utils.Json.Get(res.Body(), "data", conf.AllowIndexed).ToBool()
+					}
+				}
+				if allowIndexed {
+					ignorePaths = append(ignorePaths, storage.GetStorage().MountPath)
+				}
+			} else {
+				ignorePaths = append(ignorePaths, storage.GetStorage().MountPath)
+			}
 		}
 	}
 	customIgnorePaths := setting.GetStr(conf.IgnorePaths)
