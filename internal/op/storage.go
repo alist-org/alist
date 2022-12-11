@@ -25,6 +25,10 @@ func GetAllStorages() []driver.Driver {
 	return storagesMap.Values()
 }
 
+func HasStorage(mountPath string) bool {
+	return storagesMap.Has(mountPath)
+}
+
 func GetStorageByVirtualPath(virtualPath string) (driver.Driver, error) {
 	storageDriver, ok := storagesMap.Load(virtualPath)
 	if !ok {
