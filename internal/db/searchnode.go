@@ -8,7 +8,15 @@ import (
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
+	"gorm.io/gorm"
 )
+
+func whereInParent(parent string) *gorm.DB {
+	return db.Where(fmt.Sprintf("%s LIKE ?", columnName("parent")),
+		fmt.Sprintf("%s/%%", parent)).
+		Or(fmt.Sprintf("%s = ?", columnName("parent")),
+			fmt.Sprintf("%s%%", parent))
+}
 
 func CreateSearchNode(node *model.SearchNode) error {
 	return db.Create(node).Error
@@ -19,9 +27,7 @@ func BatchCreateSearchNodes(nodes *[]model.SearchNode) error {
 }
 
 func DeleteSearchNodesByParent(prefix string) error {
-	err := db.Where(fmt.Sprintf("%s LIKE ?",
-		columnName("parent")), fmt.Sprintf("%s%%", prefix)).
-		Delete(&model.SearchNode{}).Error
+	err := db.Where(whereInParent(prefix)).Delete(&model.SearchNode{}).Error
 	if err != nil {
 		return err
 	}
@@ -51,9 +57,7 @@ func SearchNode(req model.SearchReq) ([]model.SearchNode, int64, error) {
 			fmt.Sprintf("%s LIKE ?", columnName("name")),
 			fmt.Sprintf("%%%s%%", keyword))
 	}
-	searchDB := db.Model(&model.SearchNode{}).Where(
-		fmt.Sprintf("%s LIKE ?", columnName("parent")),
-		fmt.Sprintf("%s%%", req.Parent)).Where(keywordsClause)
+	searchDB := db.Model(&model.SearchNode{}).Where(whereInParent(req.Parent)).Where(keywordsClause)
 	var count int64
 	if err := searchDB.Count(&count).Error; err != nil {
 		return nil, 0, errors.Wrapf(err, "failed get users count")
