@@ -38,18 +38,13 @@ func (d *AliDrive) Config() driver.Config {
 }
 
 func (d *AliDrive) GetAddition() driver.Additional {
-	return d.Addition
+	return &d.Addition
 }
 
-func (d *AliDrive) Init(ctx context.Context, storage model.Storage) error {
-	d.Storage = storage
-	err := utils.Json.UnmarshalFromString(d.Storage.Addition, &d.Addition)
-	if err != nil {
-		return err
-	}
+func (d *AliDrive) Init(ctx context.Context) error {
 	// TODO login / refresh token
 	//op.MustSaveDriverStorage(d)
-	err = d.refreshToken()
+	err := d.refreshToken()
 	if err != nil {
 		return err
 	}

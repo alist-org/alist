@@ -27,15 +27,10 @@ func (d *GoogleDrive) Config() driver.Config {
 }
 
 func (d *GoogleDrive) GetAddition() driver.Additional {
-	return d.Addition
+	return &d.Addition
 }
 
-func (d *GoogleDrive) Init(ctx context.Context, storage model.Storage) error {
-	d.Storage = storage
-	err := utils.Json.UnmarshalFromString(d.Storage.Addition, &d.Addition)
-	if err != nil {
-		return err
-	}
+func (d *GoogleDrive) Init(ctx context.Context) error {
 	if d.ChunkSize == 0 {
 		d.ChunkSize = 5
 	}

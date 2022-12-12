@@ -21,10 +21,8 @@ var config = driver.Config{
 	//NoCache:   true,
 }
 
-func New() driver.Driver {
-	return &Virtual{}
-}
-
 func init() {
-	op.RegisterDriver(config, New)
+	op.RegisterDriver(func() driver.Driver {
+		return &Virtual{}
+	})
 }

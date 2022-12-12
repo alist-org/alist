@@ -21,10 +21,8 @@ var config = driver.Config{
 	CheckStatus: true,
 }
 
-func New() driver.Driver {
-	return &SFTP{}
-}
-
 func init() {
-	op.RegisterDriver(config, New)
+	op.RegisterDriver(func() driver.Driver {
+		return &SFTP{}
+	})
 }

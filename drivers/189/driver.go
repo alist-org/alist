@@ -26,15 +26,10 @@ func (d *Cloud189) Config() driver.Config {
 }
 
 func (d *Cloud189) GetAddition() driver.Additional {
-	return d.Addition
+	return &d.Addition
 }
 
-func (d *Cloud189) Init(ctx context.Context, storage model.Storage) error {
-	d.Storage = storage
-	err := utils.Json.UnmarshalFromString(d.Storage.Addition, &d.Addition)
-	if err != nil {
-		return err
-	}
+func (d *Cloud189) Init(ctx context.Context) error {
 	d.client = resty.New().
 		SetTimeout(base.DefaultTimeout).
 		SetRetryCount(3).

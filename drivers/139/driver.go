@@ -13,7 +13,6 @@ import (
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/pkg/utils"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -27,16 +26,11 @@ func (d *Yun139) Config() driver.Config {
 }
 
 func (d *Yun139) GetAddition() driver.Additional {
-	return d.Addition
+	return &d.Addition
 }
 
-func (d *Yun139) Init(ctx context.Context, storage model.Storage) error {
-	d.Storage = storage
-	err := utils.Json.UnmarshalFromString(d.Storage.Addition, &d.Addition)
-	if err != nil {
-		return err
-	}
-	_, err = d.post("/orchestration/personalCloud/user/v1.0/qryUserExternInfo", base.Json{
+func (d *Yun139) Init(ctx context.Context) error {
+	_, err := d.post("/orchestration/personalCloud/user/v1.0/qryUserExternInfo", base.Json{
 		"qryUserExternInfoReq": base.Json{
 			"commonAccountInfo": base.Json{
 				"account":     d.Account,

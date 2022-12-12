@@ -20,10 +20,8 @@ var config = driver.Config{
 	LocalSort: true,
 }
 
-func New() driver.Driver {
-	return &USS{}
-}
-
 func init() {
-	op.RegisterDriver(config, New)
+	op.RegisterDriver(func() driver.Driver {
+		return &USS{}
+	})
 }

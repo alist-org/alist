@@ -20,10 +20,8 @@ var config = driver.Config{
 	DefaultRoot: "/",
 }
 
-func New() driver.Driver {
-	return &BaiduNetdisk{}
-}
-
 func init() {
-	op.RegisterDriver(config, New)
+	op.RegisterDriver(func() driver.Driver {
+		return &BaiduNetdisk{}
+	})
 }

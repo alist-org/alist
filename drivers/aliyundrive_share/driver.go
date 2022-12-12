@@ -29,16 +29,11 @@ func (d *AliyundriveShare) Config() driver.Config {
 }
 
 func (d *AliyundriveShare) GetAddition() driver.Additional {
-	return d.Addition
+	return &d.Addition
 }
 
-func (d *AliyundriveShare) Init(ctx context.Context, storage model.Storage) error {
-	d.Storage = storage
-	err := utils.Json.UnmarshalFromString(d.Storage.Addition, &d.Addition)
-	if err != nil {
-		return err
-	}
-	err = d.refreshToken()
+func (d *AliyundriveShare) Init(ctx context.Context) error {
+	err := d.refreshToken()
 	if err != nil {
 		return err
 	}

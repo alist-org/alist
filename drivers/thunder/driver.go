@@ -32,15 +32,10 @@ func (x *Thunder) Config() driver.Config {
 }
 
 func (x *Thunder) GetAddition() driver.Additional {
-	return x.Addition
+	return &x.Addition
 }
 
-func (x *Thunder) Init(ctx context.Context, storage model.Storage) (err error) {
-	x.Storage = storage
-	if err = utils.Json.UnmarshalFromString(x.Storage.Addition, &x.Addition); err != nil {
-		return err
-	}
-
+func (x *Thunder) Init(ctx context.Context) (err error) {
 	// 初始化所需参数
 	if x.XunLeiCommon == nil {
 		x.XunLeiCommon = &XunLeiCommon{
@@ -126,15 +121,10 @@ func (x *ThunderExpert) Config() driver.Config {
 }
 
 func (x *ThunderExpert) GetAddition() driver.Additional {
-	return x.ExpertAddition
+	return &x.ExpertAddition
 }
 
-func (x *ThunderExpert) Init(ctx context.Context, storage model.Storage) (err error) {
-	x.Storage = storage
-	if err = utils.Json.UnmarshalFromString(x.Storage.Addition, &x.ExpertAddition); err != nil {
-		return err
-	}
-
+func (x *ThunderExpert) Init(ctx context.Context) (err error) {
 	// 防止重复登录
 	identity := x.GetIdentity()
 	if identity != x.identity || !x.IsLogin() {

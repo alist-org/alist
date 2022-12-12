@@ -37,15 +37,10 @@ func (d *Pan123) Config() driver.Config {
 }
 
 func (d *Pan123) GetAddition() driver.Additional {
-	return d.Addition
+	return &d.Addition
 }
 
-func (d *Pan123) Init(ctx context.Context, storage model.Storage) error {
-	d.Storage = storage
-	err := utils.Json.UnmarshalFromString(d.Storage.Addition, &d.Addition)
-	if err != nil {
-		return err
-	}
+func (d *Pan123) Init(ctx context.Context) error {
 	return d.login()
 }
 

@@ -8,7 +8,6 @@ import (
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/go-resty/resty/v2"
 )
 
@@ -22,16 +21,11 @@ func (d *Teambition) Config() driver.Config {
 }
 
 func (d *Teambition) GetAddition() driver.Additional {
-	return d.Addition
+	return &d.Addition
 }
 
-func (d *Teambition) Init(ctx context.Context, storage model.Storage) error {
-	d.Storage = storage
-	err := utils.Json.UnmarshalFromString(d.Storage.Addition, &d.Addition)
-	if err != nil {
-		return err
-	}
-	_, err = d.request("/api/v2/roles", http.MethodGet, nil, nil)
+func (d *Teambition) Init(ctx context.Context) error {
+	_, err := d.request("/api/v2/roles", http.MethodGet, nil, nil)
 	return err
 }
 
