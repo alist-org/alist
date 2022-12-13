@@ -17,10 +17,10 @@ var driverInfoMap = map[string]driver.Info{}
 
 func RegisterDriver(driver New) {
 	// log.Infof("register driver: [%s]", config.Name)
-	tempdriver := driver()
-	tempconfig := tempdriver.Config()
-	registerDriverItems(tempconfig, tempdriver.GetAddition())
-	driverNewMap[tempconfig.Name] = driver
+	tempDriver := driver()
+	tempConfig := tempDriver.Config()
+	registerDriverItems(tempConfig, tempDriver.GetAddition())
+	driverNewMap[tempConfig.Name] = driver
 }
 
 func GetDriverNew(name string) (New, error) {
