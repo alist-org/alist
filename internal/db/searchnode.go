@@ -12,10 +12,12 @@ import (
 )
 
 func whereInParent(parent string) *gorm.DB {
+	if parent == "/" {
+		return db.Where("1 = 1")
+	}
 	return db.Where(fmt.Sprintf("%s LIKE ?", columnName("parent")),
 		fmt.Sprintf("%s/%%", parent)).
-		Or(fmt.Sprintf("%s = ?", columnName("parent")),
-			fmt.Sprintf("%s%%", parent))
+		Or(fmt.Sprintf("%s = ?", columnName("parent")), parent)
 }
 
 func CreateSearchNode(node *model.SearchNode) error {
