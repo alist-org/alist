@@ -2,7 +2,6 @@ package op
 
 import (
 	"context"
-	"fmt"
 	"sort"
 	"strings"
 	"time"
@@ -56,15 +55,9 @@ func CreateStorage(ctx context.Context, storage model.Storage) (uint, error) {
 		return storage.ID, errors.WithMessage(err, "failed create storage in database")
 	}
 	// already has an id
-	err = storageDriver.Init(ctx, storage)
-	storagesMap.Store(storage.MountPath, storageDriver)
+	err = initStorage(ctx, storage, storageDriver)
 	if err != nil {
-		storageDriver.GetStorage().SetStatus(fmt.Sprintf("%+v", err.Error()))
-		MustSaveDriverStorage(storageDriver)
-		return storage.ID, errors.Wrapf(err, "failed init storage but storage is already created")
-	} else {
-		storageDriver.GetStorage().SetStatus(WORK)
-		MustSaveDriverStorage(storageDriver)
+		return storage.ID, errors.Wrap(err, "failed init storage but storage is already created")
 	}
 	log.Debugf("storage %+v is created", storageDriver)
 	return storage.ID, nil
@@ -80,18 +73,31 @@ func LoadStorage(ctx context.Context, storage model.Storage) error {
 		return errors.WithMessage(err, "failed get driver new")
 	}
 	storageDriver := driverNew()
-	err = storageDriver.Init(ctx, storage)
-	storagesMap.Store(storage.MountPath, storageDriver)
-	if err != nil {
-		storageDriver.GetStorage().SetStatus(fmt.Sprintf("%+v", err.Error()))
-		MustSaveDriverStorage(storageDriver)
-		return errors.Wrapf(err, "failed init storage")
-	} else {
-		storageDriver.GetStorage().SetStatus(WORK)
-		MustSaveDriverStorage(storageDriver)
-	}
+
+	err = initStorage(ctx, storage, storageDriver)
 	log.Debugf("storage %+v is created", storageDriver)
-	return nil
+	return err
+}
+
+// initStorage initialize the driver and store to storagesMap
+func initStorage(ctx context.Context, storage model.Storage, storageDriver driver.Driver) (err error) {
+	storageDriver.SetStorage(storage)
+	driverStorage := storageDriver.GetStorage()
+
+	// Unmarshal Addition
+	err = utils.Json.UnmarshalFromString(driverStorage.Addition, storageDriver.GetAddition())
+	if err == nil {
+		err = storageDriver.Init(ctx)
+	}
+	storagesMap.Store(driverStorage.MountPath, storageDriver)
+	if err != nil {
+		driverStorage.SetStatus(err.Error())
+		err = errors.Wrap(err, "failed init storage")
+	} else {
+		driverStorage.SetStatus(WORK)
+	}
+	MustSaveDriverStorage(storageDriver)
+	return err
 }
 
 func EnableStorage(ctx context.Context, id uint) error {
@@ -128,7 +134,7 @@ func DisableStorage(ctx context.Context, id uint) error {
 	}
 	// drop the storage in the driver
 	if err := storageDriver.Drop(ctx); err != nil {
-		return errors.Wrapf(err, "failed drop storage")
+		return errors.Wrap(err, "failed drop storage")
 	}
 	// delete the storage in the memory
 	storage.Disabled = true
@@ -172,17 +178,10 @@ func UpdateStorage(ctx context.Context, storage model.Storage) error {
 	if err != nil {
 		return errors.Wrapf(err, "failed drop storage")
 	}
-	err = storageDriver.Init(ctx, storage)
-	storagesMap.Store(storage.MountPath, storageDriver)
-	if err != nil {
-		storageDriver.GetStorage().SetStatus(fmt.Sprintf("%+v", err.Error()))
-		MustSaveDriverStorage(storageDriver)
-		return errors.Wrapf(err, "failed init storage")
-	} else {
-		storageDriver.GetStorage().SetStatus(WORK)
-		MustSaveDriverStorage(storageDriver)
-	}
-	return nil
+
+	err = initStorage(ctx, storage, storageDriver)
+	log.Debugf("storage %+v is update", storageDriver)
+	return err
 }
 
 func DeleteStorageById(ctx context.Context, id uint) error {
@@ -220,11 +219,11 @@ func MustSaveDriverStorage(driver driver.Driver) {
 func saveDriverStorage(driver driver.Driver) error {
 	storage := driver.GetStorage()
 	addition := driver.GetAddition()
-	bytes, err := utils.Json.Marshal(addition)
+	strs, err := utils.Json.MarshalToString(addition)
 	if err != nil {
 		return errors.Wrap(err, "error while marshal addition")
 	}
-	storage.Addition = string(bytes)
+	storage.Addition = strs
 	err = db.UpdateStorage(storage)
 	if err != nil {
 		return errors.WithMessage(err, "failed update storage in database")

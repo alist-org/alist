@@ -93,10 +93,10 @@ var configExpert = driver.Config{
 }
 
 func init() {
-	op.RegisterDriver(config, func() driver.Driver {
+	op.RegisterDriver(func() driver.Driver {
 		return &Thunder{}
 	})
-	op.RegisterDriver(configExpert, func() driver.Driver {
+	op.RegisterDriver(func() driver.Driver {
 		return &ThunderExpert{}
 	})
 }

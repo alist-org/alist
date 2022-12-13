@@ -64,7 +64,7 @@ func GetIgnorePaths() ([]string, error) {
 	for _, storage := range storages {
 		if utils.SliceContains(skipDrivers, storage.Config().Name) {
 			if storage.Config().Name == "AList V3" {
-				addition := storage.GetAddition().(alist_v3.Addition)
+				addition := storage.GetAddition().(*alist_v3.Addition)
 				allowIndexed, visited := v3Visited[addition.Address]
 				if !visited {
 					url := addition.Address + "/api/public/settings"

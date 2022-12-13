@@ -31,15 +31,10 @@ func (y *Yun189PC) Config() driver.Config {
 }
 
 func (y *Yun189PC) GetAddition() driver.Additional {
-	return y.Addition
+	return &y.Addition
 }
 
-func (y *Yun189PC) Init(ctx context.Context, storage model.Storage) (err error) {
-	y.Storage = storage
-	if err = utils.Json.UnmarshalFromString(y.Storage.Addition, &y.Addition); err != nil {
-		return err
-	}
-
+func (y *Yun189PC) Init(ctx context.Context) (err error) {
 	// 处理个人云和家庭云参数
 	if y.isFamily() && y.RootFolderID == "-11" {
 		y.RootFolderID = ""

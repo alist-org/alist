@@ -9,7 +9,6 @@ import (
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/go-resty/resty/v2"
 )
 
@@ -25,15 +24,10 @@ func (d *LanZou) Config() driver.Config {
 }
 
 func (d *LanZou) GetAddition() driver.Additional {
-	return d.Addition
+	return &d.Addition
 }
 
-func (d *LanZou) Init(ctx context.Context, storage model.Storage) error {
-	d.Storage = storage
-	err := utils.Json.UnmarshalFromString(d.Storage.Addition, &d.Addition)
-	if err != nil {
-		return err
-	}
+func (d *LanZou) Init(ctx context.Context) error {
 	if d.IsCookie() {
 		if d.RootFolderID == "" {
 			d.RootFolderID = "-1"

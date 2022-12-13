@@ -6,7 +6,7 @@ import (
 )
 
 type Addition struct {
-	Cookie        string `json:"cookie"`
+	Cookie      string `json:"cookie"`
 	QRCodeToken string `json:"qrcode_token"`
 	driver.RootID
 }
@@ -18,10 +18,8 @@ var config = driver.Config{
 	OnlyLocal:   true,
 }
 
-func New() driver.Driver {
-	return &Pan115{}
-}
-
 func init() {
-	op.RegisterDriver(config, New)
+	op.RegisterDriver(func() driver.Driver {
+		return &Pan115{}
+	})
 }

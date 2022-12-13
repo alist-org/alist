@@ -21,10 +21,8 @@ var config = driver.Config{
 	DefaultRoot: "0",
 }
 
-func New() driver.Driver {
-	return &Pan123{}
-}
-
 func init() {
-	op.RegisterDriver(config, New)
+	op.RegisterDriver(func() driver.Driver {
+		return &Pan123{}
+	})
 }

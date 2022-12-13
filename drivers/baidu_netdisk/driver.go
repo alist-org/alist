@@ -31,15 +31,10 @@ func (d *BaiduNetdisk) Config() driver.Config {
 }
 
 func (d *BaiduNetdisk) GetAddition() driver.Additional {
-	return d.Addition
+	return &d.Addition
 }
 
-func (d *BaiduNetdisk) Init(ctx context.Context, storage model.Storage) error {
-	d.Storage = storage
-	err := utils.Json.UnmarshalFromString(d.Storage.Addition, &d.Addition)
-	if err != nil {
-		return err
-	}
+func (d *BaiduNetdisk) Init(ctx context.Context) error {
 	return d.refreshToken()
 }
 

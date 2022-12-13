@@ -7,7 +7,6 @@ import (
 
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/pkg/utils/random"
 )
 
@@ -20,12 +19,7 @@ func (d *Virtual) Config() driver.Config {
 	return config
 }
 
-func (d *Virtual) Init(ctx context.Context, storage model.Storage) error {
-	d.Storage = storage
-	err := utils.Json.UnmarshalFromString(storage.Addition, &d.Addition)
-	if err != nil {
-		return err
-	}
+func (d *Virtual) Init(ctx context.Context) error {
 	return nil
 }
 
@@ -34,7 +28,7 @@ func (d *Virtual) Drop(ctx context.Context) error {
 }
 
 func (d *Virtual) GetAddition() driver.Additional {
-	return d.Addition
+	return &d.Addition
 }
 
 func (d *Virtual) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {

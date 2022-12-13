@@ -34,12 +34,7 @@ func (d *Local) Config() driver.Config {
 	return config
 }
 
-func (d *Local) Init(ctx context.Context, storage model.Storage) error {
-	d.Storage = storage
-	err := utils.Json.UnmarshalFromString(d.Storage.Addition, &d.Addition)
-	if err != nil {
-		return err
-	}
+func (d *Local) Init(ctx context.Context) (err error) {
 	if !utils.Exists(d.GetRootPath()) {
 		err = fmt.Errorf("root folder %s not exists", d.GetRootPath())
 	} else {
@@ -59,7 +54,7 @@ func (d *Local) Drop(ctx context.Context) error {
 }
 
 func (d *Local) GetAddition() driver.Additional {
-	return d.Addition
+	return &d.Addition
 }
 
 func (d *Local) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {

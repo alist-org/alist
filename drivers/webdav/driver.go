@@ -26,16 +26,11 @@ func (d *WebDav) Config() driver.Config {
 }
 
 func (d *WebDav) GetAddition() driver.Additional {
-	return d.Addition
+	return &d.Addition
 }
 
-func (d *WebDav) Init(ctx context.Context, storage model.Storage) error {
-	d.Storage = storage
-	err := utils.Json.UnmarshalFromString(d.Storage.Addition, &d.Addition)
-	if err != nil {
-		return err
-	}
-	err = d.setClient()
+func (d *WebDav) Init(ctx context.Context) error {
+	err := d.setClient()
 	if err == nil {
 		d.cron = cron.NewCron(time.Hour * 12)
 		d.cron.Do(func() {

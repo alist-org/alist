@@ -26,16 +26,11 @@ func (d *SMB) Config() driver.Config {
 }
 
 func (d *SMB) GetAddition() driver.Additional {
-	return d.Addition
+	return &d.Addition
 }
 
-func (d *SMB) Init(ctx context.Context, storage model.Storage) error {
-	d.Storage = storage
-	err := utils.Json.UnmarshalFromString(d.Storage.Addition, &d.Addition)
-	if err != nil {
-		return err
-	}
-	if strings.Index(d.Addition.Address, ":") < 0{
+func (d *SMB) Init(ctx context.Context) error {
+	if strings.Index(d.Addition.Address, ":") < 0 {
 		d.Addition.Address = d.Addition.Address + ":445"
 	}
 	return d.initFS()

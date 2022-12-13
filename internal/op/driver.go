@@ -15,10 +15,12 @@ type New func() driver.Driver
 var driverNewMap = map[string]New{}
 var driverInfoMap = map[string]driver.Info{}
 
-func RegisterDriver(config driver.Config, driver New) {
+func RegisterDriver(driver New) {
 	// log.Infof("register driver: [%s]", config.Name)
-	registerDriverItems(config, driver().GetAddition())
-	driverNewMap[config.Name] = driver
+	tempDriver := driver()
+	tempConfig := tempDriver.Config()
+	registerDriverItems(tempConfig, tempDriver.GetAddition())
+	driverNewMap[tempConfig.Name] = driver
 }
 
 func GetDriverNew(name string) (New, error) {
@@ -44,6 +46,9 @@ func GetDriverInfoMap() map[string]driver.Info {
 func registerDriverItems(config driver.Config, addition driver.Additional) {
 	// log.Debugf("addition of %s: %+v", config.Name, addition)
 	tAddition := reflect.TypeOf(addition)
+	for tAddition.Kind() == reflect.Pointer {
+		tAddition = tAddition.Elem()
+	}
 	mainItems := getMainItems(config)
 	additionalItems := getAdditionalItems(tAddition, config.DefaultRoot)
 	driverInfoMap[config.Name] = driver.Info{

@@ -19,10 +19,8 @@ var config = driver.Config{
 	DefaultRoot: "/",
 }
 
-func New() driver.Driver {
-	return &YandexDisk{}
-}
-
 func init() {
-	op.RegisterDriver(config, New)
+	op.RegisterDriver(func() driver.Driver {
+		return &YandexDisk{}
+	})
 }

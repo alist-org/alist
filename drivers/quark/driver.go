@@ -29,16 +29,11 @@ func (d *Quark) Config() driver.Config {
 }
 
 func (d *Quark) GetAddition() driver.Additional {
-	return d.Addition
+	return &d.Addition
 }
 
-func (d *Quark) Init(ctx context.Context, storage model.Storage) error {
-	d.Storage = storage
-	err := utils.Json.UnmarshalFromString(d.Storage.Addition, &d.Addition)
-	if err != nil {
-		return err
-	}
-	_, err = d.request("/config", http.MethodGet, nil, nil)
+func (d *Quark) Init(ctx context.Context) error {
+	_, err := d.request("/config", http.MethodGet, nil, nil)
 	return err
 }
 
