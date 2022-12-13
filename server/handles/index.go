@@ -51,7 +51,7 @@ func BuildIndex(c *gin.Context) {
 				return
 			}
 		} else {
-			for _, path := range req.Paths {
+			for _, path := range indexPaths {
 				err = search.Del(ctx, path)
 				if err != nil {
 					log.Errorf("delete index on %s error: %+v", path, err)

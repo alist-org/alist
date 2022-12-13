@@ -15,7 +15,7 @@ const (
 	BasePath     = "base_path"
 	SiteTitle    = "site_title"
 	Announcement = "announcement"
-	AllowIndexed   = "allow_indexed"
+	AllowIndexed = "allow_indexed"
 
 	Logo      = "logo"
 	Favicon   = "favicon"
@@ -44,9 +44,10 @@ const (
 	FilenameCharMapping = "filename_char_mapping"
 
 	// index
-	SearchIndex = "search_index"
-	IndexPaths  = "index_paths"
-	IgnorePaths = "ignore_paths"
+	SearchIndex     = "search_index"
+	IndexPaths      = "index_paths"
+	IgnorePaths     = "ignore_paths"
+	AutoUpdateIndex = "auto_update_index"
 
 	// aria2
 	Aria2Uri    = "aria2_uri"
