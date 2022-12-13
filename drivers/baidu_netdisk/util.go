@@ -187,7 +187,7 @@ func (d *BaiduNetdisk) create(path string, size int64, isdir int, uploadid, bloc
 	params := map[string]string{
 		"method": "create",
 	}
-	data := fmt.Sprintf("path=%s&size=%d&isdir=%d", path, size, isdir)
+	data := fmt.Sprintf("path=%s&size=%d&isdir=%d", encodeURIComponent(path), size, isdir)
 	if uploadid != "" {
 		data += fmt.Sprintf("&uploadid=%s&block_list=%s", uploadid, block_list)
 	}
