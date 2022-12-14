@@ -47,6 +47,7 @@ type Config struct {
 	TempDir        string    `json:"temp_dir" env:"TEMP_DIR"`
 	BleveDir       string    `json:"bleve_dir" env:"BLEVE_DIR"`
 	Log            LogConfig `json:"log"`
+	MaxConnections int       `json:"max_connections" env:"MAX_CONNECTIONS"`
 }
 
 func DefaultConfig() *Config {
@@ -74,5 +75,6 @@ func DefaultConfig() *Config {
 			MaxBackups: 5,
 			MaxAge:     28,
 		},
+		MaxConnections: 0,
 	}
 }
