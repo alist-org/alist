@@ -19,11 +19,15 @@ import (
 )
 
 func InitDB() {
+	logLevel := logger.Silent
+	if flags.Debug || flags.Dev {
+		logLevel = logger.Info
+	}
 	newLogger := logger.New(
 		stdlog.New(log.StandardLogger().Out, "\r\n", stdlog.LstdFlags),
 		logger.Config{
 			SlowThreshold:             time.Second,
-			LogLevel:                  logger.Silent,
+			LogLevel:                  logLevel,
 			IgnoreRecordNotFoundError: true,
 			Colorful:                  true,
 		},
