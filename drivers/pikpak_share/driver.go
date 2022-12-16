@@ -2,7 +2,6 @@ package pikpak_share
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/alist-org/alist/v3/internal/driver"
