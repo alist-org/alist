@@ -8,6 +8,10 @@ import (
 	"github.com/maruel/natural"
 )
 
+type Unwarp interface {
+	Unwarp() Obj
+}
+
 type Obj interface {
 	GetSize() int64
 	GetName() string

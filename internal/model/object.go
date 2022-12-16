@@ -6,6 +6,22 @@ import (
 	"github.com/alist-org/alist/v3/pkg/utils"
 )
 
+type ObjWarpName struct {
+	Name string
+	Obj
+}
+
+func (o *ObjWarpName) Unwarp() Obj {
+	return o.Obj
+}
+
+func (o *ObjWarpName) GetName() string {
+	if o.Name == "" {
+		o.Name = utils.MappingName(o.Obj.GetName())
+	}
+	return o.Name
+}
+
 type Object struct {
 	ID       string
 	Path     string
