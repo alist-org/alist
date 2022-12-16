@@ -9,6 +9,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/pkg/utils"
+	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -58,8 +59,14 @@ func (d *PikPakShare) List(ctx context.Context, dir model.Obj, args model.ListAr
 
 func (d *PikPakShare) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	var resp ShareResp
-	_, err := d.request(fmt.Sprintf("https://api-drive.mypikpak.com/drive/v1/share/file_info?share_id=%s&file_id=%s&pass_code_token=%s", d.ShareId, file.GetID(), d.PassCodeToken),
-		http.MethodGet, nil, &resp)
+	query := map[string]string{
+		"share_id":        d.ShareId,
+		"file_id":         file.GetID(),
+		"pass_code_token": d.PassCodeToken,
+	}
+	_, err := d.request("https://api-drive.mypikpak.com/drive/v1/share/file_info", http.MethodGet, func(req *resty.Request) {
+		req.SetQueryParams(query)
+	}, &resp)
 	if err != nil {
 		return nil, err
 	}
