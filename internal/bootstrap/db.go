@@ -42,6 +42,7 @@ func InitDB() {
 	var err error
 	if flags.Dev {
 		dB, err = gorm.Open(sqlite.Open("file::memory:?cache=shared"), gormConfig)
+		conf.Conf.Database.Type = "sqlite3"
 	} else {
 		database := conf.Conf.Database
 		switch database.Type {
