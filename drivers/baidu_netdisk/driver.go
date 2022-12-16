@@ -52,11 +52,6 @@ func (d *BaiduNetdisk) List(ctx context.Context, dir model.Obj, args model.ListA
 	})
 }
 
-//func (d *BaiduNetdisk) Get(ctx context.Context, path string) (model.Obj, error) {
-//	// this is optional
-//	return nil, errs.NotImplement
-//}
-
 func (d *BaiduNetdisk) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	if d.DownloadAPI == "crack" {
 		return d.linkCrack(file, args)

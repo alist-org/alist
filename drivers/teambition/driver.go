@@ -37,11 +37,6 @@ func (d *Teambition) List(ctx context.Context, dir model.Obj, args model.ListArg
 	return d.getFiles(dir.GetID())
 }
 
-//func (d *Teambition) Get(ctx context.Context, path string) (model.Obj, error) {
-//	//  this is optional
-//	return nil, errs.NotImplement
-//}
-
 func (d *Teambition) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	if u, ok := file.(model.URL); ok {
 		url := u.URL()

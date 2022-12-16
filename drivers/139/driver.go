@@ -53,11 +53,6 @@ func (d *Yun139) List(ctx context.Context, dir model.Obj, args model.ListArgs) (
 	}
 }
 
-//func (d *Yun139) Get(ctx context.Context, path string) (model.Obj, error) {
-//	// this is optional
-//	return nil, errs.NotImplement
-//}
-
 func (d *Yun139) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	u, err := d.getLink(file.GetID())
 	if err != nil {

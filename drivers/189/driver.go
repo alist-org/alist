@@ -46,11 +46,6 @@ func (d *Cloud189) List(ctx context.Context, dir model.Obj, args model.ListArgs)
 	return d.getFiles(dir.GetID())
 }
 
-//func (d *Cloud189) Get(ctx context.Context, path string) (model.Obj, error) {
-//	// this is optional
-//	return nil, errs.NotImplement
-//}
-
 func (d *Cloud189) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	var resp DownResp
 	u := "https://cloud.189.cn/api/portal/getFileInfo.action"

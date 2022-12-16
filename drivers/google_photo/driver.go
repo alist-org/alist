@@ -47,11 +47,6 @@ func (d *GooglePhoto) List(ctx context.Context, dir model.Obj, args model.ListAr
 	})
 }
 
-//func (d *GooglePhoto) Get(ctx context.Context, path string) (model.Obj, error) {
-//	// this is optional
-//	return nil, errs.NotImplement
-//}
-
 func (d *GooglePhoto) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	f, err := d.getMedia(file.GetID())
 	if err != nil {

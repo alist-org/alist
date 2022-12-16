@@ -51,11 +51,6 @@ func (d *GoogleDrive) List(ctx context.Context, dir model.Obj, args model.ListAr
 	})
 }
 
-//func (d *GoogleDrive) Get(ctx context.Context, path string) (model.Obj, error) {
-//	// this is optional
-//	return nil, errs.NotImplement
-//}
-
 func (d *GoogleDrive) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	url := fmt.Sprintf("https://www.googleapis.com/drive/v3/files/%s?includeItemsFromAllDrives=true&supportsAllDrives=true", file.GetID())
 	_, err := d.request(url, http.MethodGet, nil, nil)

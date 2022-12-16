@@ -72,11 +72,6 @@ func (d *MediaTrack) List(ctx context.Context, dir model.Obj, args model.ListArg
 	})
 }
 
-//func (d *MediaTrack) Get(ctx context.Context, path string) (model.Obj, error) {
-//	// this is optional
-//	return nil, errs.NotImplement
-//}
-
 func (d *MediaTrack) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	url := fmt.Sprintf("https://kayn.api.mediatrack.cn/v1/download_token/asset?asset_id=%s&source_type=project&password=&source_id=%s",
 		file.GetID(), d.ProjectID)
