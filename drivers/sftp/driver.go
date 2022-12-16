@@ -23,15 +23,10 @@ func (d *SFTP) Config() driver.Config {
 }
 
 func (d *SFTP) GetAddition() driver.Additional {
-	return d.Addition
+	return &d.Addition
 }
 
-func (d *SFTP) Init(ctx context.Context, storage model.Storage) error {
-	d.Storage = storage
-	err := utils.Json.UnmarshalFromString(d.Storage.Addition, &d.Addition)
-	if err != nil {
-		return err
-	}
+func (d *SFTP) Init(ctx context.Context) error {
 	return d.initClient()
 }
 

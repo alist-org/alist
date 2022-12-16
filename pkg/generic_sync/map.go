@@ -125,6 +125,11 @@ func (m *MapOf[K, V]) Load(key K) (value V, ok bool) {
 	return e.load()
 }
 
+func (m *MapOf[K, V]) Has(key K) bool {
+	_, ok := m.Load(key)
+	return ok
+}
+
 func (e *entry[V]) load() (value V, ok bool) {
 	p := atomic.LoadPointer(&e.p)
 	if p == nil || p == expunged {

@@ -6,7 +6,6 @@ import (
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/pkg/utils"
 )
 
 type Template struct {
@@ -19,18 +18,13 @@ func (d *Template) Config() driver.Config {
 }
 
 func (d *Template) GetAddition() driver.Additional {
-	return d.Addition
+	return &d.Addition
 }
 
-func (d *Template) Init(ctx context.Context, storage model.Storage) error {
-	d.Storage = storage
-	err := utils.Json.UnmarshalFromString(d.Storage.Addition, &d.Addition)
-	if err != nil {
-		return err
-	}
+func (d *Template) Init(ctx context.Context) error {
 	// TODO login / refresh token
 	//op.MustSaveDriverStorage(d)
-	return err
+	return nil
 }
 
 func (d *Template) Drop(ctx context.Context) error {

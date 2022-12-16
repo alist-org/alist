@@ -22,7 +22,7 @@ var config = driver.Config{
 }
 
 func init() {
-	op.RegisterDriver(config, func() driver.Driver {
+	op.RegisterDriver(func() driver.Driver {
 		return &SMB{}
 	})
 }

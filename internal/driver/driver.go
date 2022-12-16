@@ -17,11 +17,11 @@ type Meta interface {
 	Config() Config
 	// GetStorage just get raw storage, no need to implement, because model.Storage have implemented
 	GetStorage() *model.Storage
-	// GetAddition Additional can't be modified externally, so needn't return pointer
+	SetStorage(model.Storage)
+	// GetAddition Additional is used for unmarshal of JSON, so need return pointer
 	GetAddition() Additional
 	// Init If already initialized, drop first
-	// need to unmarshal string to addition first
-	Init(ctx context.Context, storage model.Storage) error
+	Init(ctx context.Context) error
 	Drop(ctx context.Context) error
 }
 

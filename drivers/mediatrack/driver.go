@@ -36,16 +36,11 @@ func (d *MediaTrack) Config() driver.Config {
 }
 
 func (d *MediaTrack) GetAddition() driver.Additional {
-	return d.Addition
+	return &d.Addition
 }
 
-func (d *MediaTrack) Init(ctx context.Context, storage model.Storage) error {
-	d.Storage = storage
-	err := utils.Json.UnmarshalFromString(d.Storage.Addition, &d.Addition)
-	if err != nil {
-		return err
-	}
-	_, err = d.request("https://kayle.api.mediatrack.cn/users", http.MethodGet, nil, nil)
+func (d *MediaTrack) Init(ctx context.Context) error {
+	_, err := d.request("https://kayle.api.mediatrack.cn/users", http.MethodGet, nil, nil)
 	return err
 }
 

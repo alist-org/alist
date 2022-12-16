@@ -201,7 +201,7 @@ func Update(parent string, objs []model.Obj) {
 	toDelete := old.Difference(now)
 	toAdd := now.Difference(old)
 	for i := range nodes {
-		if toDelete.Contains(nodes[i].Name) {
+		if toDelete.Contains(nodes[i].Name) && !op.HasStorage(path.Join(parent, nodes[i].Name)) {
 			log.Debugf("delete index: %s", path.Join(parent, nodes[i].Name))
 			err = instance.Del(ctx, path.Join(parent, nodes[i].Name))
 			if err != nil {

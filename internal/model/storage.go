@@ -33,6 +33,10 @@ func (s *Storage) GetStorage() *Storage {
 	return s
 }
 
+func (s *Storage) SetStorage(storage Storage) {
+	*s = storage
+}
+
 func (s *Storage) SetStatus(status string) {
 	s.Status = status
 }

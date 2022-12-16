@@ -20,7 +20,7 @@ type SearchReq struct {
 
 type SearchNode struct {
 	Parent string `json:"parent" gorm:"index"`
-	Name   string `json:"name" gorm:"index"`
+	Name   string `json:"name"`
 	IsDir  bool   `json:"is_dir"`
 	Size   int64  `json:"size"`
 }

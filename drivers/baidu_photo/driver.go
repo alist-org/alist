@@ -29,15 +29,10 @@ func (d *BaiduPhoto) Config() driver.Config {
 }
 
 func (d *BaiduPhoto) GetAddition() driver.Additional {
-	return d.Addition
+	return &d.Addition
 }
 
-func (d *BaiduPhoto) Init(ctx context.Context, storage model.Storage) error {
-	d.Storage = storage
-	err := utils.Json.UnmarshalFromString(d.Storage.Addition, &d.Addition)
-	if err != nil {
-		return err
-	}
+func (d *BaiduPhoto) Init(ctx context.Context) error {
 	return d.refreshToken()
 }
 

@@ -1,7 +1,9 @@
 package bootstrap
 
 import (
+	"io"
 	"log"
+	"os"
 
 	"github.com/alist-org/alist/v3/cmd/flags"
 	"github.com/alist-org/alist/v3/internal/conf"
@@ -38,13 +40,14 @@ func Log() {
 	setLog(utils.Log)
 	logConfig := conf.Conf.Log
 	if logConfig.Enable {
-		logrus.SetOutput(&lumberjack.Logger{
+		mw := io.MultiWriter(os.Stdout, &lumberjack.Logger{
 			Filename:   logConfig.Name,
 			MaxSize:    logConfig.MaxSize, // megabytes
 			MaxBackups: logConfig.MaxBackups,
 			MaxAge:     logConfig.MaxAge,   //days
 			Compress:   logConfig.Compress, // disabled by default
 		})
+		logrus.SetOutput(mw)
 	}
 	utils.Log.Infof("init logrus...")
 }

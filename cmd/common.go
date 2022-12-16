@@ -15,8 +15,8 @@ func Init() {
 	bootstrap.InitConfig()
 	bootstrap.Log()
 	bootstrap.InitDB()
-	bootstrap.InitIndex()
 	data.InitData()
+	bootstrap.InitIndex()
 }
 
 var pid = -1
