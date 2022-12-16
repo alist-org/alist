@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/SheltonZhu/115driver v1.0.13
 	github.com/Xhofe/go-cache v0.0.0-20220723083548-714439c8af9a
-	github.com/aws/aws-sdk-go v1.44.152
+	github.com/aws/aws-sdk-go v1.44.161
 	github.com/blevesearch/bleve/v2 v2.3.5
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/deckarep/golang-set/v2 v2.1.0
@@ -19,6 +19,7 @@ require (
 	github.com/hirochachacha/go-smb2 v1.1.0
 	github.com/jlaffaye/ftp v0.1.0
 	github.com/json-iterator/go v1.1.12
+	github.com/maruel/natural v1.1.0
 	github.com/natefinch/lumberjack v2.0.0+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/pkg/sftp v1.13.5
@@ -87,7 +88,6 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/kr/fs v0.1.0 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
-	github.com/maruel/natural v1.1.0 // indirect
 	github.com/mattn/go-isatty v0.0.16 // indirect
 	github.com/mattn/go-sqlite3 v1.14.15 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
