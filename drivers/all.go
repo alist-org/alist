@@ -21,6 +21,7 @@ import (
 	_ "github.com/alist-org/alist/v3/drivers/mega"
 	_ "github.com/alist-org/alist/v3/drivers/onedrive"
 	_ "github.com/alist-org/alist/v3/drivers/pikpak"
+	_ "github.com/alist-org/alist/v3/drivers/pikpak_share"
 	_ "github.com/alist-org/alist/v3/drivers/quark"
 	_ "github.com/alist-org/alist/v3/drivers/s3"
 	_ "github.com/alist-org/alist/v3/drivers/sftp"
