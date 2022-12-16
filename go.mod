@@ -29,7 +29,7 @@ require (
 	github.com/t3rm1n4l/go-mega v0.0.0-20220725095014-c4e0c2b5debf
 	github.com/upyun/go-sdk/v3 v3.0.3
 	github.com/winfsp/cgofuse v1.5.0
-	golang.org/x/crypto v0.3.0
+	golang.org/x/crypto v0.4.0
 	golang.org/x/image v0.2.0
 	golang.org/x/net v0.4.0
 	gorm.io/driver/mysql v1.4.4
