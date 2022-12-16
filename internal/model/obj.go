@@ -8,7 +8,7 @@ import (
 	"github.com/maruel/natural"
 )
 
-type Unwarp interface {
+type UnwarpObj interface {
 	Unwarp() Obj
 }
 
@@ -17,6 +17,9 @@ type Obj interface {
 	GetName() string
 	ModTime() time.Time
 	IsDir() bool
+
+	// The internal information of the driver.
+	// If you want to use it, please understand what it means
 	GetID() string
 	GetPath() string
 }
@@ -89,4 +92,10 @@ func ExtractFolder(objs []Obj, extractFolder string) {
 		}
 		return false
 	})
+}
+
+func WarpObjsName(objs []Obj) {
+	for i := 0; i < len(objs); i++ {
+		objs[i] = &ObjWarpName{Obj: objs[i]}
+	}
 }

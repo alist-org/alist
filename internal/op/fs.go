@@ -4,7 +4,6 @@ import (
 	"context"
 	"os"
 	stdpath "path"
-	"strings"
 	"time"
 
 	"github.com/Xhofe/go-cache"
@@ -23,12 +22,11 @@ var listCache = cache.NewMemCache(cache.WithShards[[]model.Obj](64))
 var listG singleflight.Group[[]model.Obj]
 
 func ClearCache(storage driver.Driver, path string) {
-	key := stdpath.Join(storage.GetStorage().MountPath, path)
-	listCache.Del(key)
+	listCache.Del(Key(storage, path))
 }
 
 func Key(storage driver.Driver, path string) string {
-	return stdpath.Join(storage.GetStorage().MountPath, utils.StandardizePath(path))
+	return stdpath.Join(storage.GetStorage().MountPath, utils.FixAndCleanPath(path))
 }
 
 // List files in storage, not contains virtual file
@@ -36,7 +34,7 @@ func List(ctx context.Context, storage driver.Driver, path string, args model.Li
 	if storage.Config().CheckStatus && storage.GetStorage().Status != WORK {
 		return nil, errors.Errorf("storage not init: %s", storage.GetStorage().Status)
 	}
-	path = utils.StandardizePath(path)
+	path = utils.FixAndCleanPath(path)
 	log.Debugf("op.List %s", path)
 	key := Key(storage, path)
 	if len(refresh) == 0 || !refresh[0] {
@@ -54,10 +52,17 @@ func List(ctx context.Context, storage driver.Driver, path string, args model.Li
 		return nil, errors.WithStack(errs.NotFolder)
 	}
 	objs, err, _ := listG.Do(key, func() ([]model.Obj, error) {
+		// unwarp obj
+		if obj, ok := dir.(model.UnwarpObj); ok {
+			dir = obj.Unwarp()
+		}
 		files, err := storage.List(ctx, dir, args)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to list objs")
 		}
+		// warp obg name
+		model.WarpObjsName(files)
+
 		// call hooks
 		go func(reqPath string, files []model.Obj) {
 			for _, hook := range objsUpdateHooks {
@@ -78,48 +83,49 @@ func List(ctx context.Context, storage driver.Driver, path string, args model.Li
 	return objs, err
 }
 
-func isRoot(path, rootFolderPath string) bool {
-	if utils.PathEqual(path, rootFolderPath) {
-		return true
-	}
-	rootFolderPath = strings.TrimSuffix(rootFolderPath, "/")
-	rootFolderPath = strings.TrimPrefix(rootFolderPath, "\\")
-	// relative path, this shouldn't happen, because root folder path is absolute
-	if utils.PathEqual(path, "/") && rootFolderPath == "." {
-		return true
-	}
-	return false
-}
-
 // Get object from list of files
 func Get(ctx context.Context, storage driver.Driver, path string) (model.Obj, error) {
-	path = utils.StandardizePath(path)
+	path = utils.FixAndCleanPath(path)
 	log.Debugf("op.Get %s", path)
-	if g, ok := storage.(driver.Getter); ok {
-		obj, err := g.Get(ctx, path)
-		if err == nil {
-			return obj, nil
-		}
-	}
+
 	// is root folder
-	if r, ok := storage.GetAddition().(driver.IRootId); ok && utils.PathEqual(path, "/") {
-		return &model.Object{
-			ID:       r.GetRootId(),
-			Name:     "root",
-			Size:     0,
-			Modified: storage.GetStorage().Modified,
-			IsFolder: true,
+	if utils.PathEqual(path, "/") {
+		var rootObg model.Obj
+		switch r := storage.GetAddition().(type) {
+		case driver.IRootId:
+			rootObg = &model.Object{
+				ID:       r.GetRootId(),
+				Name:     ROOT_NAME,
+				Size:     0,
+				Modified: storage.GetStorage().Modified,
+				IsFolder: true,
+			}
+		case driver.IRootPath:
+			rootObg = &model.Object{
+				Path:     r.GetRootPath(),
+				Name:     ROOT_NAME,
+				Size:     0,
+				Modified: storage.GetStorage().Modified,
+				IsFolder: true,
+			}
+		default:
+			if storage, ok := storage.(driver.Getter); ok {
+				obj, err := storage.GetRoot(ctx)
+				if err != nil {
+					return nil, errors.WithMessage(err, "failed get root obj")
+				}
+				rootObg = obj
+			}
+		}
+		if rootObg == nil {
+			return nil, errors.Errorf("please implement IRootPath or IRootId or Getter method")
+		}
+		return &model.ObjWarpName{
+			Name: ROOT_NAME,
+			Obj:  rootObg,
 		}, nil
 	}
-	if r, ok := storage.GetAddition().(driver.IRootPath); ok && isRoot(path, r.GetRootPath()) {
-		return &model.Object{
-			Path:     r.GetRootPath(),
-			Name:     "root",
-			Size:     0,
-			Modified: storage.GetStorage().Modified,
-			IsFolder: true,
-		}, nil
-	}
+
 	// not root folder
 	dir, name := stdpath.Split(path)
 	files, err := List(ctx, storage, dir, model.ListArgs{})
@@ -129,13 +135,6 @@ func Get(ctx context.Context, storage driver.Driver, path string) (model.Obj, er
 	for _, f := range files {
 		// TODO maybe copy obj here
 		if f.GetName() == name {
-			// use path as id, why don't set id in List function?
-			// because files maybe cache, set id here can reduce memory usage
-			if f.GetPath() == "" {
-				if s, ok := f.(model.SetPath); ok {
-					s.SetPath(path)
-				}
-			}
 			return f, nil
 		}
 	}
@@ -199,7 +198,7 @@ func MakeDir(ctx context.Context, storage driver.Driver, path string) error {
 	if storage.Config().CheckStatus && storage.GetStorage().Status != WORK {
 		return errors.Errorf("storage not init: %s", storage.GetStorage().Status)
 	}
-	path = utils.StandardizePath(path)
+	path = utils.FixAndCleanPath(path)
 	key := Key(storage, path)
 	_, err, _ := mkdirG.Do(key, func() (interface{}, error) {
 		// check if dir exists

@@ -32,7 +32,7 @@ type Object struct {
 }
 
 func (o *Object) GetName() string {
-	return utils.MappingName(o.Name)
+	return o.Name
 }
 
 func (o *Object) GetSize() int64 {

@@ -42,7 +42,7 @@ func Down(c *gin.Context) {
 // TODO: implement
 // path maybe contains # ? etc.
 func parsePath(path string) string {
-	return utils.StandardizePath(path)
+	return utils.FixAndCleanPath(path)
 }
 
 func needSign(meta *model.Meta, path string) bool {

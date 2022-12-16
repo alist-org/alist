@@ -39,7 +39,7 @@ type Reader interface {
 }
 
 type Getter interface {
-	Get(ctx context.Context, path string) (model.Obj, error)
+	GetRoot(ctx context.Context) (model.Obj, error)
 }
 
 type Writer interface {

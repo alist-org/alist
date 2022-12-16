@@ -11,6 +11,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/generic_sync"
 	"github.com/alist-org/alist/v3/pkg/utils"
+	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
@@ -25,10 +26,11 @@ func GetAllStorages() []driver.Driver {
 }
 
 func HasStorage(mountPath string) bool {
-	return storagesMap.Has(mountPath)
+	return storagesMap.Has(utils.FixAndCleanPath(mountPath))
 }
 
 func GetStorageByVirtualPath(virtualPath string) (driver.Driver, error) {
+	virtualPath = utils.FixAndCleanPath(virtualPath)
 	storageDriver, ok := storagesMap.Load(virtualPath)
 	if !ok {
 		return nil, errors.Errorf("no mount path for an storage is: %s", virtualPath)
@@ -40,7 +42,7 @@ func GetStorageByVirtualPath(virtualPath string) (driver.Driver, error) {
 // then instantiate corresponding driver and save it in memory
 func CreateStorage(ctx context.Context, storage model.Storage) (uint, error) {
 	storage.Modified = time.Now()
-	storage.MountPath = utils.StandardizePath(storage.MountPath)
+	storage.MountPath = utils.FixAndCleanPath(storage.MountPath)
 	var err error
 	// check driver first
 	driverName := storage.Driver
@@ -65,7 +67,7 @@ func CreateStorage(ctx context.Context, storage model.Storage) (uint, error) {
 
 // LoadStorage load exist storage in db to memory
 func LoadStorage(ctx context.Context, storage model.Storage) error {
-	storage.MountPath = utils.StandardizePath(storage.MountPath)
+	storage.MountPath = utils.FixAndCleanPath(storage.MountPath)
 	// check driver first
 	driverName := storage.Driver
 	driverNew, err := GetDriverNew(driverName)
@@ -158,7 +160,7 @@ func UpdateStorage(ctx context.Context, storage model.Storage) error {
 		return errors.Errorf("driver cannot be changed")
 	}
 	storage.Modified = time.Now()
-	storage.MountPath = utils.StandardizePath(storage.MountPath)
+	storage.MountPath = utils.FixAndCleanPath(storage.MountPath)
 	err = db.UpdateStorage(&storage)
 	if err != nil {
 		return errors.WithMessage(err, "failed update storage in database")
@@ -237,25 +239,20 @@ func saveDriverStorage(driver driver.Driver) error {
 func getStoragesByPath(path string) []driver.Driver {
 	storages := make([]driver.Driver, 0)
 	curSlashCount := 0
-	storagesMap.Range(func(key string, value driver.Driver) bool {
-		virtualPath := utils.GetActualVirtualPath(value.GetStorage().MountPath)
-		if virtualPath == "/" {
-			virtualPath = ""
+	storagesMap.Range(func(mountPath string, value driver.Driver) bool {
+		virtualPath := utils.GetActualVirtualPath(mountPath)
+		// is this path
+		if strings.HasPrefix(path, virtualPath) {
+			slashCount := strings.Count(utils.PathAddSeparatorSuffix(virtualPath), "/")
+			// not the longest match
+			if slashCount > curSlashCount {
+				storages = storages[:0]
+				curSlashCount = slashCount
+			}
+			if slashCount == curSlashCount {
+				storages = append(storages, value)
+			}
 		}
-		// not this
-		if path != virtualPath && !strings.HasPrefix(path, virtualPath+"/") {
-			return true
-		}
-		slashCount := strings.Count(virtualPath, "/")
-		// not the longest match
-		if slashCount < curSlashCount {
-			return true
-		}
-		if slashCount > curSlashCount {
-			storages = storages[:0]
-			curSlashCount = slashCount
-		}
-		storages = append(storages, value)
 		return true
 	})
 	// make sure the order is the same for same input
@@ -277,36 +274,25 @@ func GetStorageVirtualFilesByPath(prefix string) []model.Obj {
 		}
 		return storages[i].GetStorage().Order < storages[j].GetStorage().Order
 	})
-	prefix = utils.StandardizePath(prefix)
-	if prefix != "/" {
-		prefix += "/"
-	}
-	set := make(map[string]interface{})
+
+	prefix = utils.FixAndCleanPath(prefix)
+	set := mapset.NewSet[string]()
 	for _, v := range storages {
-		// TODO should save a balanced storage
-		// balance storage
-		if utils.IsBalance(v.GetStorage().MountPath) {
+		virtualPath := utils.GetActualVirtualPath(v.GetStorage().MountPath)
+		// Exclude prefix itself and non prefix
+		if len(prefix) >= len(virtualPath) || !strings.HasPrefix(virtualPath, prefix) {
 			continue
 		}
-		virtualPath := v.GetStorage().MountPath
-		if len(virtualPath) <= len(prefix) {
-			continue
+
+		name := strings.SplitN(strings.TrimPrefix(virtualPath[len(prefix):], "/"), "/", 1)[0]
+		if set.Add(name) {
+			files = append(files, &model.Object{
+				Name:     name,
+				Size:     0,
+				Modified: v.GetStorage().Modified,
+				IsFolder: true,
+			})
 		}
-		// not prefixed with `prefix`
-		if !strings.HasPrefix(virtualPath, prefix) {
-			continue
-		}
-		name := strings.Split(strings.TrimPrefix(virtualPath, prefix), "/")[0]
-		if _, ok := set[name]; ok {
-			continue
-		}
-		files = append(files, &model.Object{
-			Name:     name,
-			Size:     0,
-			Modified: v.GetStorage().Modified,
-			IsFolder: true,
-		})
-		set[name] = nil
 	}
 	return files
 }
@@ -315,7 +301,7 @@ var balanceMap generic_sync.MapOf[string, int]
 
 // GetBalancedStorage get storage by path
 func GetBalancedStorage(path string) driver.Driver {
-	path = utils.StandardizePath(path)
+	path = utils.FixAndCleanPath(path)
 	storages := getStoragesByPath(path)
 	storageNum := len(storages)
 	switch storageNum {
@@ -325,15 +311,9 @@ func GetBalancedStorage(path string) driver.Driver {
 		return storages[0]
 	default:
 		virtualPath := utils.GetActualVirtualPath(storages[0].GetStorage().MountPath)
-		cur, ok := balanceMap.Load(virtualPath)
-		i := 0
-		if ok {
-			i = cur
-			i = (i + 1) % storageNum
-			balanceMap.Store(virtualPath, i)
-		} else {
-			balanceMap.Store(virtualPath, i)
-		}
+		i, _ := balanceMap.LoadOrStore(virtualPath, 0)
+		i = (i + 1) % storageNum
+		balanceMap.Store(virtualPath, i)
 		return storages[i]
 	}
 }
