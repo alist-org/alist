@@ -89,9 +89,8 @@ func (d *PikPakShare) request(url string, method string, callback base.ReqCallba
 				return nil, err
 			}
 			return d.request(url, method, callback, resp)
-		} else {
-			return nil, errors.New(e.Error)
 		}
+		return nil, errors.New(e.Error)
 	}
 	return res.Body(), nil
 }
