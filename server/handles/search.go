@@ -4,9 +4,9 @@ import (
 	"path"
 	"strings"
 
-	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/internal/search"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/server/common"
@@ -53,7 +53,7 @@ func Search(c *gin.Context) {
 		if !strings.HasPrefix(node.Parent, user.BasePath) {
 			continue
 		}
-		meta, err := db.GetNearestMeta(node.Parent)
+		meta, err := op.GetNearestMeta(node.Parent)
 		if err != nil && !errors.Is(errors.Cause(err), errs.MetaNotFound) {
 			continue
 		}

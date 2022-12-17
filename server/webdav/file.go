@@ -10,9 +10,9 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/fs"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/op"
 )
 
 // slashClean is equivalent to but slightly more efficient than
@@ -85,7 +85,7 @@ func walkFS(ctx context.Context, depth int, name string, info model.Obj, walkFn 
 	if depth == 1 {
 		depth = 0
 	}
-	meta, _ := db.GetNearestMeta(name)
+	meta, _ := op.GetNearestMeta(name)
 	// Read directory names.
 	objs, err := fs.List(context.WithValue(ctx, "meta", meta), name)
 	//f, err := fs.OpenFile(ctx, name, os.O_RDONLY, 0)
