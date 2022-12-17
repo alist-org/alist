@@ -31,6 +31,7 @@ type FileStreamer interface {
 	SetReadCloser(io.ReadCloser)
 	NeedStore() bool
 	GetReadCloser() io.ReadCloser
+	GetOld() Obj
 }
 
 type URL interface {

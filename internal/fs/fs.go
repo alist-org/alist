@@ -80,7 +80,7 @@ func Remove(ctx context.Context, path string) error {
 	return err
 }
 
-func PutDirectly(ctx context.Context, dstDirPath string, file model.FileStreamer) error {
+func PutDirectly(ctx context.Context, dstDirPath string, file *model.FileStream) error {
 	err := putDirectly(ctx, dstDirPath, file)
 	if err != nil {
 		log.Errorf("failed put %s: %+v", dstDirPath, err)
@@ -88,7 +88,7 @@ func PutDirectly(ctx context.Context, dstDirPath string, file model.FileStreamer
 	return err
 }
 
-func PutAsTask(dstDirPath string, file model.FileStreamer) error {
+func PutAsTask(dstDirPath string, file *model.FileStream) error {
 	err := putAsTask(dstDirPath, file)
 	if err != nil {
 		log.Errorf("failed put %s: %+v", dstDirPath, err)

@@ -42,21 +42,29 @@ type File struct {
 	} `json:"parentReference"`
 }
 
-func fileToObj(f File) *model.ObjThumbURL {
+type Object struct {
+	model.ObjThumbURL
+	ParentID string
+}
+
+func fileToObj(f File, parentID string) *Object {
 	thumb := ""
 	if len(f.Thumbnails) > 0 {
 		thumb = f.Thumbnails[0].Medium.Url
 	}
-	return &model.ObjThumbURL{
-		Object: model.Object{
-			ID:       f.Id,
-			Name:     f.Name,
-			Size:     f.Size,
-			Modified: f.LastModifiedDateTime,
-			IsFolder: f.File == nil,
+	return &Object{
+		ObjThumbURL: model.ObjThumbURL{
+			Object: model.Object{
+				ID:       f.Id,
+				Name:     f.Name,
+				Size:     f.Size,
+				Modified: f.LastModifiedDateTime,
+				IsFolder: f.File == nil,
+			},
+			Thumbnail: model.Thumbnail{Thumbnail: thumb},
+			Url:       model.Url{Url: f.Url},
 		},
-		Thumbnail: model.Thumbnail{Thumbnail: thumb},
-		Url:       model.Url{Url: f.Url},
+		ParentID: parentID,
 	}
 }
 

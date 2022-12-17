@@ -4,14 +4,12 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	stdpath "path"
 	"strconv"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/go-resty/resty/v2"
 )
@@ -112,8 +110,7 @@ func (d *GoogleDrive) Remove(ctx context.Context, obj model.Obj) error {
 }
 
 func (d *GoogleDrive) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
-	obj, _ := op.GetUnwrap(ctx, d, stdpath.Join(dstDir.GetPath(), stream.GetName()))
-
+	obj := stream.GetOld()
 	var (
 		e    Error
 		url  string

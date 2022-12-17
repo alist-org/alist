@@ -319,7 +319,7 @@ func Remove(ctx context.Context, storage driver.Driver, path string) error {
 	return errors.WithStack(err)
 }
 
-func Put(ctx context.Context, storage driver.Driver, dstDirPath string, file model.FileStreamer, up driver.UpdateProgress) error {
+func Put(ctx context.Context, storage driver.Driver, dstDirPath string, file *model.FileStream, up driver.UpdateProgress) error {
 	if storage.Config().CheckStatus && storage.GetStorage().Status != WORK {
 		return errors.Errorf("storage not init: %s", storage.GetStorage().Status)
 	}
@@ -345,9 +345,10 @@ func Put(ctx context.Context, storage driver.Driver, dstDirPath string, file mod
 			if err != nil {
 				return errors.WithMessagef(err, "failed remove file that exist and have size 0")
 			}
+		} else {
+			file.Old = fi
 		}
 	}
-
 	err = MakeDir(ctx, storage, dstDirPath)
 	if err != nil {
 		return errors.WithMessagef(err, "failed to make dir [%s]", dstDirPath)
