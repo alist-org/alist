@@ -8,8 +8,8 @@ import (
 	"github.com/maruel/natural"
 )
 
-type UnwarpObj interface {
-	Unwarp() Obj
+type UnwrapObj interface {
+	Unwrap() Obj
 }
 
 type Obj interface {
@@ -94,8 +94,8 @@ func ExtractFolder(objs []Obj, extractFolder string) {
 	})
 }
 
-func WarpObjsName(objs []Obj) {
+func WrapObjsName(objs []Obj) {
 	for i := 0; i < len(objs); i++ {
-		objs[i] = &ObjWarpName{Obj: objs[i]}
+		objs[i] = &ObjWrapName{Obj: objs[i]}
 	}
 }

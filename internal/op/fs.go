@@ -52,16 +52,16 @@ func List(ctx context.Context, storage driver.Driver, path string, args model.Li
 		return nil, errors.WithStack(errs.NotFolder)
 	}
 	objs, err, _ := listG.Do(key, func() ([]model.Obj, error) {
-		// unwarp obj
-		if obj, ok := dir.(model.UnwarpObj); ok {
-			dir = obj.Unwarp()
+		// unwrap obj
+		if obj, ok := dir.(model.UnwrapObj); ok {
+			dir = obj.Unwrap()
 		}
 		files, err := storage.List(ctx, dir, args)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to list objs")
 		}
 		// warp obg name
-		model.WarpObjsName(files)
+		model.WrapObjsName(files)
 
 		// call hooks
 		go func(reqPath string, files []model.Obj) {
@@ -90,20 +90,20 @@ func Get(ctx context.Context, storage driver.Driver, path string) (model.Obj, er
 
 	// is root folder
 	if utils.PathEqual(path, "/") {
-		var rootObg model.Obj
+		var rootObj model.Obj
 		switch r := storage.GetAddition().(type) {
 		case driver.IRootId:
-			rootObg = &model.Object{
+			rootObj = &model.Object{
 				ID:       r.GetRootId(),
-				Name:     ROOT_NAME,
+				Name:     RootName,
 				Size:     0,
 				Modified: storage.GetStorage().Modified,
 				IsFolder: true,
 			}
 		case driver.IRootPath:
-			rootObg = &model.Object{
+			rootObj = &model.Object{
 				Path:     r.GetRootPath(),
-				Name:     ROOT_NAME,
+				Name:     RootName,
 				Size:     0,
 				Modified: storage.GetStorage().Modified,
 				IsFolder: true,
@@ -114,15 +114,15 @@ func Get(ctx context.Context, storage driver.Driver, path string) (model.Obj, er
 				if err != nil {
 					return nil, errors.WithMessage(err, "failed get root obj")
 				}
-				rootObg = obj
+				rootObj = obj
 			}
 		}
-		if rootObg == nil {
+		if rootObj == nil {
 			return nil, errors.Errorf("please implement IRootPath or IRootId or Getter method")
 		}
-		return &model.ObjWarpName{
-			Name: ROOT_NAME,
-			Obj:  rootObg,
+		return &model.ObjWrapName{
+			Name: RootName,
+			Obj:  rootObj,
 		}, nil
 	}
 

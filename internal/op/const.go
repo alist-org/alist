@@ -1,4 +1,6 @@
 package op
 
-const WORK = "work"
-const ROOT_NAME = "root"
+const (
+	WORK     = "work"
+	RootName = "root"
+)
