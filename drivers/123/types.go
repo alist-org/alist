@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/pkg/utils"
 )
 
 //type BaseResp struct {
@@ -40,7 +39,7 @@ func (f File) GetSize() int64 {
 }
 
 func (f File) GetName() string {
-	return utils.MappingName(f.FileName)
+	return f.FileName
 }
 
 func (f File) ModTime() time.Time {

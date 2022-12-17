@@ -81,11 +81,6 @@ func (d *AliDrive) List(ctx context.Context, dir model.Obj, args model.ListArgs)
 	})
 }
 
-//func (d *AliDrive) Get(ctx context.Context, path string) (model.Obj, error) {
-//	// TODO this is optional
-//	return nil, errs.NotImplement
-//}
-
 func (d *AliDrive) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	data := base.Json{
 		"drive_id":   d.DriveId,

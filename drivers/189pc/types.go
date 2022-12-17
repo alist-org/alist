@@ -6,8 +6,6 @@ import (
 	"sort"
 	"strings"
 	"time"
-
-	"github.com/alist-org/alist/v3/pkg/utils"
 )
 
 // 居然有四种返回方式
@@ -136,7 +134,7 @@ type Cloud189File struct {
 }
 
 func (c *Cloud189File) GetSize() int64  { return c.Size }
-func (c *Cloud189File) GetName() string { return utils.MappingName(c.Name) }
+func (c *Cloud189File) GetName() string { return c.Name }
 func (c *Cloud189File) ModTime() time.Time {
 	if c.parseTime == nil {
 		c.parseTime = MustParseTime(c.LastOpTime)
@@ -168,7 +166,7 @@ type Cloud189Folder struct {
 }
 
 func (c *Cloud189Folder) GetSize() int64  { return 0 }
-func (c *Cloud189Folder) GetName() string { return utils.MappingName(c.Name) }
+func (c *Cloud189Folder) GetName() string { return c.Name }
 func (c *Cloud189Folder) ModTime() time.Time {
 	if c.parseTime == nil {
 		c.parseTime = MustParseTime(c.LastOpTime)

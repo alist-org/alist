@@ -44,7 +44,7 @@ func CreateMeta(c *gin.Context) {
 		common.ErrorStrResp(c, fmt.Sprintf("%s is illegal: %s", r, err.Error()), 400)
 		return
 	}
-	req.Path = utils.StandardizePath(req.Path)
+	req.Path = utils.FixAndCleanPath(req.Path)
 	if err := db.CreateMeta(&req); err != nil {
 		common.ErrorResp(c, err, 500, true)
 	} else {
@@ -63,7 +63,7 @@ func UpdateMeta(c *gin.Context) {
 		common.ErrorStrResp(c, fmt.Sprintf("%s is illegal: %s", r, err.Error()), 400)
 		return
 	}
-	req.Path = utils.StandardizePath(req.Path)
+	req.Path = utils.FixAndCleanPath(req.Path)
 	if err := db.UpdateMeta(&req); err != nil {
 		common.ErrorResp(c, err, 500, true)
 	} else {

@@ -51,11 +51,6 @@ func (d *Quark) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([
 	})
 }
 
-//func (d *Quark) Get(ctx context.Context, path string) (model.Obj, error) {
-//	// TODO this is optional
-//	return nil, errs.NotImplement
-//}
-
 func (d *Quark) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	data := base.Json{
 		"fids": []string{file.GetID()},

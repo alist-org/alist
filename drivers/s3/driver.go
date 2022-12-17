@@ -57,11 +57,6 @@ func (d *S3) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]mo
 	return d.listV1(dir.GetPath())
 }
 
-//func (d *S3) Get(ctx context.Context, path string) (model.Obj, error) {
-//	// this is optional
-//	return nil, errs.NotImplement
-//}
-
 func (d *S3) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	path := getKey(file.GetPath(), false)
 	disposition := fmt.Sprintf(`attachment;filename="%s"`, url.QueryEscape(stdpath.Base(path)))

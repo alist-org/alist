@@ -71,11 +71,6 @@ func (d *USS) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]m
 	return res, err
 }
 
-//func (d *USS) Get(ctx context.Context, path string) (model.Obj, error) {
-//	// this is optional
-//	return nil, errs.NotImplement
-//}
-
 func (d *USS) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	key := getKey(file.GetPath(), false)
 	host := d.CustomHost

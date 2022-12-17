@@ -18,7 +18,7 @@ var UploadTaskManager = task.NewTaskManager(3, func(tid *uint64) {
 })
 
 // putAsTask add as a put task and return immediately
-func putAsTask(dstDirPath string, file model.FileStreamer) error {
+func putAsTask(dstDirPath string, file *model.FileStream) error {
 	storage, dstDirActualPath, err := op.GetStorageAndActualPath(dstDirPath)
 	if err != nil {
 		return errors.WithMessage(err, "failed get storage")
@@ -43,7 +43,7 @@ func putAsTask(dstDirPath string, file model.FileStreamer) error {
 }
 
 // putDirect put the file and return after finish
-func putDirectly(ctx context.Context, dstDirPath string, file model.FileStreamer) error {
+func putDirectly(ctx context.Context, dstDirPath string, file *model.FileStream) error {
 	storage, dstDirActualPath, err := op.GetStorageAndActualPath(dstDirPath)
 	if err != nil {
 		return errors.WithMessage(err, "failed get storage")

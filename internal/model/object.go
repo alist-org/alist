@@ -6,6 +6,22 @@ import (
 	"github.com/alist-org/alist/v3/pkg/utils"
 )
 
+type ObjWrapName struct {
+	Name string
+	Obj
+}
+
+func (o *ObjWrapName) Unwrap() Obj {
+	return o.Obj
+}
+
+func (o *ObjWrapName) GetName() string {
+	if o.Name == "" {
+		o.Name = utils.MappingName(o.Obj.GetName())
+	}
+	return o.Name
+}
+
 type Object struct {
 	ID       string
 	Path     string
@@ -16,7 +32,7 @@ type Object struct {
 }
 
 func (o *Object) GetName() string {
-	return utils.MappingName(o.Name)
+	return o.Name
 }
 
 func (o *Object) GetSize() int64 {

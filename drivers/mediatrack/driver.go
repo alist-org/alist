@@ -8,14 +8,12 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"path"
 	"strconv"
 	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -59,7 +57,7 @@ func (d *MediaTrack) List(ctx context.Context, dir model.Obj, args model.ListArg
 		if f.File != nil && f.File.Cover != "" {
 			thumb = "https://nano.mtres.cn/" + f.File.Cover
 		}
-		return &model.ObjThumb{
+		return &Object{
 			Object: model.Object{
 				ID:       f.ID,
 				Name:     f.Title,
@@ -68,14 +66,10 @@ func (d *MediaTrack) List(ctx context.Context, dir model.Obj, args model.ListArg
 				Size:     size,
 			},
 			Thumbnail: model.Thumbnail{Thumbnail: thumb},
+			ParentID:  dir.GetID(),
 		}, nil
 	})
 }
-
-//func (d *MediaTrack) Get(ctx context.Context, path string) (model.Obj, error) {
-//	// this is optional
-//	return nil, errs.NotImplement
-//}
 
 func (d *MediaTrack) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	url := fmt.Sprintf("https://kayn.api.mediatrack.cn/v1/download_token/asset?asset_id=%s&source_type=project&password=&source_id=%s",
@@ -151,16 +145,18 @@ func (d *MediaTrack) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 }
 
 func (d *MediaTrack) Remove(ctx context.Context, obj model.Obj) error {
-	dir, err := op.Get(ctx, d, path.Dir(obj.GetPath()))
-	if err != nil {
-		return err
+	var parentID string
+	if o, ok := obj.(*Object); ok {
+		parentID = o.ParentID
+	} else {
+		return fmt.Errorf("obj is not local Object")
 	}
 	data := base.Json{
-		"origin_id": dir.GetID(),
+		"origin_id": parentID,
 		"ids":       []string{obj.GetID()},
 	}
 	url := "https://jayce.api.mediatrack.cn/v4/assets/batch/delete"
-	_, err = d.request(url, http.MethodDelete, func(req *resty.Request) {
+	_, err := d.request(url, http.MethodDelete, func(req *resty.Request) {
 		req.SetBody(data)
 	}, nil)
 	return err

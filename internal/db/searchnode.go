@@ -30,6 +30,7 @@ func BatchCreateSearchNodes(nodes *[]model.SearchNode) error {
 }
 
 func DeleteSearchNodesByParent(prefix string) error {
+	prefix = utils.FixAndCleanPath(prefix)
 	err := db.Where(whereInParent(prefix)).Delete(&model.SearchNode{}).Error
 	if err != nil {
 		return err
@@ -37,7 +38,7 @@ func DeleteSearchNodesByParent(prefix string) error {
 	dir, name := path.Split(prefix)
 	return db.Where(fmt.Sprintf("%s = ? AND %s = ?",
 		columnName("parent"), columnName("name")),
-		utils.StandardizePath(dir), name).Delete(&model.SearchNode{}).Error
+		dir, name).Delete(&model.SearchNode{}).Error
 }
 
 func ClearSearchNodes() error {

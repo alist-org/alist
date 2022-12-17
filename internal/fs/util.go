@@ -35,7 +35,7 @@ func containsByName(files []model.Obj, file model.Obj) bool {
 
 var httpClient = &http.Client{}
 
-func getFileStreamFromLink(file model.Obj, link *model.Link) (model.FileStreamer, error) {
+func getFileStreamFromLink(file model.Obj, link *model.Link) (*model.FileStream, error) {
 	var rc io.ReadCloser
 	mimetype := utils.GetMimeType(file.GetName())
 	if link.Data != nil {

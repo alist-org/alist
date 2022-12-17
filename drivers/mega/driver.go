@@ -9,7 +9,6 @@ import (
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/pkg/chanio"
 	log "github.com/sirupsen/logrus"
 	"github.com/t3rm1n4l/go-mega"
 )
@@ -56,13 +55,10 @@ func (d *Mega) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]
 	return nil, fmt.Errorf("unable to convert dir to mega node")
 }
 
-func (d *Mega) Get(ctx context.Context, path string) (model.Obj, error) {
-	if path == "/" {
-		n := d.c.FS.GetRoot()
-		log.Debugf("mega root: %+v", *n)
-		return &MegaNode{n}, nil
-	}
-	return nil, errs.NotSupport
+func (d *Mega) GetRoot(ctx context.Context) (model.Obj, error) {
+	n := d.c.FS.GetRoot()
+	log.Debugf("mega root: %+v", *n)
+	return &MegaNode{n}, nil
 }
 
 func (d *Mega) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
@@ -79,17 +75,21 @@ func (d *Mega) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*
 		//u := down.GetResourceUrl()
 		//u = strings.Replace(u, "http", "https", 1)
 		//return &model.Link{URL: u}, nil
-		c := chanio.New()
+		r, w := io.Pipe()
 		go func() {
 			defer func() {
 				_ = recover()
 			}()
 			log.Debugf("chunk size: %d", down.Chunks())
+			var (
+				chunk []byte
+				err   error
+			)
 			for id := 0; id < down.Chunks(); id++ {
-				chunk, err := down.DownloadChunk(id)
+				chunk, err = down.DownloadChunk(id)
 				if err != nil {
 					log.Errorf("mega down: %+v", err)
-					return
+					break
 				}
 				log.Debugf("id: %d,len: %d", id, len(chunk))
 				//_, _, err = down.ChunkLocation(id)
@@ -98,14 +98,16 @@ func (d *Mega) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*
 				//	return
 				//}
 				//_, err = c.Write(chunk)
-				_, err = c.Write(chunk)
+				if _, err = w.Write(chunk); err != nil {
+					break
+				}
 			}
-			err := c.Close()
+			err = w.CloseWithError(err)
 			if err != nil {
 				log.Errorf("mega down: %+v", err)
 			}
 		}()
-		return &model.Link{Data: c}, nil
+		return &model.Link{Data: r}, nil
 	}
 	return nil, fmt.Errorf("unable to convert dir to mega node")
 }

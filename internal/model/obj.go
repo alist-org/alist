@@ -8,11 +8,18 @@ import (
 	"github.com/maruel/natural"
 )
 
+type UnwrapObj interface {
+	Unwrap() Obj
+}
+
 type Obj interface {
 	GetSize() int64
 	GetName() string
 	ModTime() time.Time
 	IsDir() bool
+
+	// The internal information of the driver.
+	// If you want to use it, please understand what it means
 	GetID() string
 	GetPath() string
 }
@@ -24,6 +31,7 @@ type FileStreamer interface {
 	SetReadCloser(io.ReadCloser)
 	NeedStore() bool
 	GetReadCloser() io.ReadCloser
+	GetOld() Obj
 }
 
 type URL interface {
@@ -85,4 +93,10 @@ func ExtractFolder(objs []Obj, extractFolder string) {
 		}
 		return false
 	})
+}
+
+func WrapObjsName(objs []Obj) {
+	for i := 0; i < len(objs); i++ {
+		objs[i] = &ObjWrapName{Obj: objs[i]}
+	}
 }

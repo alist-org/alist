@@ -68,11 +68,6 @@ func (d *AliyundriveShare) List(ctx context.Context, dir model.Obj, args model.L
 	})
 }
 
-//func (d *AliyundriveShare) Get(ctx context.Context, path string) (model.Obj, error) {
-//	// this is optional
-//	return nil, errs.NotImplement
-//}
-
 func (d *AliyundriveShare) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	data := base.Json{
 		"drive_id": d.DriveId,

@@ -2,14 +2,13 @@ package onedrive
 
 import (
 	"context"
+	"fmt"
 	"net/http"
-	stdpath "path"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/go-resty/resty/v2"
 )
@@ -45,7 +44,7 @@ func (d *Onedrive) List(ctx context.Context, dir model.Obj, args model.ListArgs)
 		return nil, err
 	}
 	return utils.SliceConvert(files, func(src File) (model.Obj, error) {
-		return fileToObj(src), nil
+		return fileToObj(src, dir.GetID()), nil
 	})
 }
 
@@ -90,18 +89,21 @@ func (d *Onedrive) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 }
 
 func (d *Onedrive) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
-	dstDir, err := op.Get(ctx, d, stdpath.Dir(srcObj.GetPath()))
-	if err != nil {
-		return err
+	//dstDir, err := op.GetUnwrap(ctx, d, stdpath.Dir(srcObj.GetPath()))
+	var parentID string
+	if o, ok := srcObj.(*Object); ok {
+		parentID = o.ParentID
+	} else {
+		return fmt.Errorf("srcObj is not Object")
 	}
 	data := base.Json{
 		"parentReference": base.Json{
-			"id": dstDir.GetID(),
+			"id": parentID,
 		},
 		"name": newName,
 	}
 	url := d.GetMetaUrl(false, srcObj.GetPath())
-	_, err = d.Request(url, http.MethodPatch, func(req *resty.Request) {
+	_, err := d.Request(url, http.MethodPatch, func(req *resty.Request) {
 		req.SetBody(data)
 	}, nil)
 	return err

@@ -1,3 +1,6 @@
 package op
 
-var WORK = "work"
+const (
+	WORK     = "work"
+	RootName = "root"
+)

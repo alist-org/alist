@@ -67,11 +67,6 @@ func (d *AListV2) List(ctx context.Context, dir model.Obj, args model.ListArgs) 
 	return files, nil
 }
 
-//func (d *AList) Get(ctx context.Context, path string) (model.Obj, error) {
-//	// this is optional
-//	return nil, errs.NotImplement
-//}
-
 func (d *AListV2) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	url := d.Address + "/api/public/path"
 	var resp common.Resp[PathResp]
