@@ -56,9 +56,14 @@ func List(ctx context.Context, storage driver.Driver, path string, args model.Li
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to list objs")
 		}
-		// warp obg name
+		// set path
+		for _, f := range files {
+			if s, ok := f.(model.SetPath); ok && f.GetPath() == "" && dir.GetPath() != "" {
+				s.SetPath(stdpath.Join(dir.GetPath(), f.GetName()))
+			}
+		}
+		// warp obj name
 		model.WrapObjsName(files)
-
 		// call hooks
 		go func(reqPath string, files []model.Obj) {
 			for _, hook := range objsUpdateHooks {
