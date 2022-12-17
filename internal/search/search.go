@@ -5,9 +5,9 @@ import (
 	"fmt"
 
 	"github.com/alist-org/alist/v3/internal/conf"
-	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/internal/search/searcher"
 	log "github.com/sirupsen/logrus"
 )
@@ -88,7 +88,7 @@ func BatchIndex(ctx context.Context, objs []ObjWithParent) error {
 }
 
 func init() {
-	db.RegisterSettingItemHook(conf.SearchIndex, func(item *model.SettingItem) error {
+	op.RegisterSettingItemHook(conf.SearchIndex, func(item *model.SettingItem) error {
 		log.Debugf("searcher init, mode: %s", item.Value)
 		return Init(item.Value)
 	})

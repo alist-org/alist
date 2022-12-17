@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/alist-org/alist/v3/internal/conf"
-	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/internal/sign"
 	"github.com/alist-org/alist/v3/pkg/utils/random"
 	"github.com/alist-org/alist/v3/server/common"
@@ -17,7 +17,7 @@ import (
 func ResetToken(c *gin.Context) {
 	token := random.Token()
 	item := model.SettingItem{Key: "token", Value: token, Type: conf.TypeString, Group: model.SINGLE, Flag: model.PRIVATE}
-	if err := db.SaveSettingItem(item); err != nil {
+	if err := op.SaveSettingItem(&item); err != nil {
 		common.ErrorResp(c, err, 500)
 		return
 	}
@@ -29,14 +29,14 @@ func GetSetting(c *gin.Context) {
 	key := c.Query("key")
 	keys := c.Query("keys")
 	if key != "" {
-		item, err := db.GetSettingItemByKey(key)
+		item, err := op.GetSettingItemByKey(key)
 		if err != nil {
 			common.ErrorResp(c, err, 400)
 			return
 		}
 		common.SuccessResp(c, item)
 	} else {
-		items, err := db.GetSettingItemInKeys(strings.Split(keys, ","))
+		items, err := op.GetSettingItemInKeys(strings.Split(keys, ","))
 		if err != nil {
 			common.ErrorResp(c, err, 400)
 			return
@@ -51,7 +51,7 @@ func SaveSettings(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	if err := db.SaveSettingItems(req); err != nil {
+	if err := op.SaveSettingItems(req); err != nil {
 		common.ErrorResp(c, err, 500)
 	} else {
 		common.SuccessResp(c)
@@ -65,7 +65,7 @@ func ListSettings(c *gin.Context) {
 	var settings []model.SettingItem
 	var err error
 	if groupsStr == "" && groupStr == "" {
-		settings, err = db.GetSettingItems()
+		settings, err = op.GetSettingItems()
 	} else {
 		var groupStrings []string
 		if groupsStr != "" {
@@ -82,7 +82,7 @@ func ListSettings(c *gin.Context) {
 			}
 			groups = append(groups, group)
 		}
-		settings, err = db.GetSettingItemsInGroups(groups)
+		settings, err = op.GetSettingItemsInGroups(groups)
 	}
 	if err != nil {
 		common.ErrorResp(c, err, 400)
@@ -93,7 +93,7 @@ func ListSettings(c *gin.Context) {
 
 func DeleteSetting(c *gin.Context) {
 	key := c.Query("key")
-	if err := db.DeleteSettingItemByKey(key); err != nil {
+	if err := op.DeleteSettingItemByKey(key); err != nil {
 		common.ErrorResp(c, err, 500)
 		return
 	}
@@ -101,5 +101,5 @@ func DeleteSetting(c *gin.Context) {
 }
 
 func PublicSettings(c *gin.Context) {
-	common.SuccessResp(c, db.GetPublicSettingsMap())
+	common.SuccessResp(c, op.GetPublicSettingsMap())
 }
