@@ -43,7 +43,7 @@ func List(ctx context.Context, storage driver.Driver, path string, args model.Li
 			return files, nil
 		}
 	}
-	dir, err := Get(ctx, storage, path)
+	dir, err := GetUnwrap(ctx, storage, path)
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed get dir")
 	}
@@ -52,10 +52,6 @@ func List(ctx context.Context, storage driver.Driver, path string, args model.Li
 		return nil, errors.WithStack(errs.NotFolder)
 	}
 	objs, err, _ := listG.Do(key, func() ([]model.Obj, error) {
-		// unwrap obj
-		if obj, ok := dir.(model.UnwrapObj); ok {
-			dir = obj.Unwrap()
-		}
 		files, err := storage.List(ctx, dir, args)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to list objs")
@@ -142,6 +138,17 @@ func Get(ctx context.Context, storage driver.Driver, path string) (model.Obj, er
 	return nil, errors.WithStack(errs.ObjectNotFound)
 }
 
+func GetUnwrap(ctx context.Context, storage driver.Driver, path string) (model.Obj, error) {
+	obj, err := Get(ctx, storage, path)
+	if err != nil {
+		return nil, err
+	}
+	if unwrap, ok := obj.(model.UnwrapObj); ok {
+		obj = unwrap.Unwrap()
+	}
+	return obj, err
+}
+
 var linkCache = cache.NewMemCache(cache.WithShards[*model.Link](16))
 var linkG singleflight.Group[*model.Link]
 
@@ -150,7 +157,7 @@ func Link(ctx context.Context, storage driver.Driver, path string, args model.Li
 	if storage.Config().CheckStatus && storage.GetStorage().Status != WORK {
 		return nil, nil, errors.Errorf("storage not init: %s", storage.GetStorage().Status)
 	}
-	file, err := Get(ctx, storage, path)
+	file, err := GetUnwrap(ctx, storage, path)
 	if err != nil {
 		return nil, nil, errors.WithMessage(err, "failed to get file")
 	}
@@ -177,7 +184,7 @@ func Link(ctx context.Context, storage driver.Driver, path string, args model.Li
 
 // Other api
 func Other(ctx context.Context, storage driver.Driver, args model.FsOtherArgs) (interface{}, error) {
-	obj, err := Get(ctx, storage, args.Path)
+	obj, err := GetUnwrap(ctx, storage, args.Path)
 	if err != nil {
 		return nil, errors.WithMessagef(err, "failed to get obj")
 	}
@@ -202,7 +209,7 @@ func MakeDir(ctx context.Context, storage driver.Driver, path string) error {
 	key := Key(storage, path)
 	_, err, _ := mkdirG.Do(key, func() (interface{}, error) {
 		// check if dir exists
-		f, err := Get(ctx, storage, path)
+		f, err := GetUnwrap(ctx, storage, path)
 		if err != nil {
 			if errs.IsObjectNotFound(err) {
 				parentPath, dirName := stdpath.Split(path)
@@ -210,7 +217,7 @@ func MakeDir(ctx context.Context, storage driver.Driver, path string) error {
 				if err != nil {
 					return nil, errors.WithMessagef(err, "failed to make parent dir [%s]", parentPath)
 				}
-				parentDir, err := Get(ctx, storage, parentPath)
+				parentDir, err := GetUnwrap(ctx, storage, parentPath)
 				// this should not happen
 				if err != nil {
 					return nil, errors.WithMessagef(err, "failed to get parent dir [%s]", parentPath)
@@ -241,11 +248,11 @@ func Move(ctx context.Context, storage driver.Driver, srcPath, dstDirPath string
 	if storage.Config().CheckStatus && storage.GetStorage().Status != WORK {
 		return errors.Errorf("storage not init: %s", storage.GetStorage().Status)
 	}
-	srcObj, err := Get(ctx, storage, srcPath)
+	srcObj, err := GetUnwrap(ctx, storage, srcPath)
 	if err != nil {
 		return errors.WithMessage(err, "failed to get src object")
 	}
-	dstDir, err := Get(ctx, storage, dstDirPath)
+	dstDir, err := GetUnwrap(ctx, storage, dstDirPath)
 	if err != nil {
 		return errors.WithMessage(err, "failed to get dst dir")
 	}
@@ -256,7 +263,7 @@ func Rename(ctx context.Context, storage driver.Driver, srcPath, dstName string)
 	if storage.Config().CheckStatus && storage.GetStorage().Status != WORK {
 		return errors.Errorf("storage not init: %s", storage.GetStorage().Status)
 	}
-	srcObj, err := Get(ctx, storage, srcPath)
+	srcObj, err := GetUnwrap(ctx, storage, srcPath)
 	if err != nil {
 		return errors.WithMessage(err, "failed to get src object")
 	}
@@ -268,11 +275,11 @@ func Copy(ctx context.Context, storage driver.Driver, srcPath, dstDirPath string
 	if storage.Config().CheckStatus && storage.GetStorage().Status != WORK {
 		return errors.Errorf("storage not init: %s", storage.GetStorage().Status)
 	}
-	srcObj, err := Get(ctx, storage, srcPath)
+	srcObj, err := GetUnwrap(ctx, storage, srcPath)
 	if err != nil {
 		return errors.WithMessage(err, "failed to get src object")
 	}
-	dstDir, err := Get(ctx, storage, dstDirPath)
+	dstDir, err := GetUnwrap(ctx, storage, dstDirPath)
 	return errors.WithStack(storage.Copy(ctx, srcObj, dstDir))
 }
 
@@ -280,7 +287,7 @@ func Remove(ctx context.Context, storage driver.Driver, path string) error {
 	if storage.Config().CheckStatus && storage.GetStorage().Status != WORK {
 		return errors.Errorf("storage not init: %s", storage.GetStorage().Status)
 	}
-	obj, err := Get(ctx, storage, path)
+	obj, err := GetUnwrap(ctx, storage, path)
 	if err != nil {
 		// if object not found, it's ok
 		if errs.IsObjectNotFound(err) {
@@ -331,7 +338,7 @@ func Put(ctx context.Context, storage driver.Driver, dstDirPath string, file mod
 	}()
 	// if file exist and size = 0, delete it
 	dstPath := stdpath.Join(dstDirPath, file.GetName())
-	fi, err := Get(ctx, storage, dstPath)
+	fi, err := GetUnwrap(ctx, storage, dstPath)
 	if err == nil {
 		if fi.GetSize() == 0 {
 			err = Remove(ctx, storage, dstPath)
@@ -345,7 +352,7 @@ func Put(ctx context.Context, storage driver.Driver, dstDirPath string, file mod
 	if err != nil {
 		return errors.WithMessagef(err, "failed to make dir [%s]", dstDirPath)
 	}
-	parentDir, err := Get(ctx, storage, dstDirPath)
+	parentDir, err := GetUnwrap(ctx, storage, dstDirPath)
 	// this should not happen
 	if err != nil {
 		return errors.WithMessagef(err, "failed to get dir [%s]", dstDirPath)

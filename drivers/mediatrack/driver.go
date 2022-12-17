@@ -146,7 +146,7 @@ func (d *MediaTrack) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 }
 
 func (d *MediaTrack) Remove(ctx context.Context, obj model.Obj) error {
-	dir, err := op.Get(ctx, d, path.Dir(obj.GetPath()))
+	dir, err := op.GetUnwrap(ctx, d, path.Dir(obj.GetPath()))
 	if err != nil {
 		return err
 	}

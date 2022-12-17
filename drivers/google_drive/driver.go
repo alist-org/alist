@@ -112,7 +112,7 @@ func (d *GoogleDrive) Remove(ctx context.Context, obj model.Obj) error {
 }
 
 func (d *GoogleDrive) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
-	obj, _ := op.Get(ctx, d, stdpath.Join(dstDir.GetPath(), stream.GetName()))
+	obj, _ := op.GetUnwrap(ctx, d, stdpath.Join(dstDir.GetPath(), stream.GetName()))
 
 	var (
 		e    Error

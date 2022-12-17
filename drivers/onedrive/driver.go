@@ -90,7 +90,7 @@ func (d *Onedrive) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 }
 
 func (d *Onedrive) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
-	dstDir, err := op.Get(ctx, d, stdpath.Dir(srcObj.GetPath()))
+	dstDir, err := op.GetUnwrap(ctx, d, stdpath.Dir(srcObj.GetPath()))
 	if err != nil {
 		return err
 	}
