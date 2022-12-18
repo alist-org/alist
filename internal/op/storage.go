@@ -284,7 +284,7 @@ func GetStorageVirtualFilesByPath(prefix string) []model.Obj {
 			continue
 		}
 
-		name := strings.SplitN(strings.TrimPrefix(virtualPath[len(prefix):], "/"), "/", 1)[0]
+		name := strings.SplitN(strings.TrimPrefix(virtualPath[len(prefix):], "/"), "/", 2)[0]
 		if set.Add(name) {
 			files = append(files, &model.Object{
 				Name:     name,
