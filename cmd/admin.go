@@ -9,8 +9,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// passwordCmd represents the password command
-var passwordCmd = &cobra.Command{
+// PasswordCmd represents the password command
+var PasswordCmd = &cobra.Command{
 	Use:     "admin",
 	Aliases: []string{"password"},
 	Short:   "Show admin user's info",
@@ -26,7 +26,7 @@ var passwordCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(passwordCmd)
+	RootCmd.AddCommand(PasswordCmd)
 
 	// Here you will define your flags and configuration settings.
 

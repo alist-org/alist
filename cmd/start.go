@@ -13,8 +13,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// startCmd represents the start command
-var startCmd = &cobra.Command{
+// StartCmd represents the start command
+var StartCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Silent start alist server with `--force-bin-dir`",
 	Run: func(cmd *cobra.Command, args []string) {
@@ -57,7 +57,7 @@ func start() {
 }
 
 func init() {
-	rootCmd.AddCommand(startCmd)
+	RootCmd.AddCommand(StartCmd)
 
 	// Here you will define your flags and configuration settings.
 

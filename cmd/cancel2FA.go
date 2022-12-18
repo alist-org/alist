@@ -9,8 +9,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// cancel2FACmd represents the delete2fa command
-var cancel2FACmd = &cobra.Command{
+// Cancel2FACmd represents the delete2fa command
+var Cancel2FACmd = &cobra.Command{
 	Use:   "cancel2fa",
 	Short: "Delete 2FA of admin user",
 	Run: func(cmd *cobra.Command, args []string) {
@@ -28,7 +28,7 @@ var cancel2FACmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(cancel2FACmd)
+	RootCmd.AddCommand(Cancel2FACmd)
 
 	// Here you will define your flags and configuration settings.
 

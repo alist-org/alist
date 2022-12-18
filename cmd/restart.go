@@ -7,8 +7,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// restartCmd represents the restart command
-var restartCmd = &cobra.Command{
+// RestartCmd represents the restart command
+var RestartCmd = &cobra.Command{
 	Use:   "restart",
 	Short: "Restart alist server by daemon/pid file",
 	Run: func(cmd *cobra.Command, args []string) {
@@ -18,7 +18,7 @@ var restartCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(restartCmd)
+	RootCmd.AddCommand(RestartCmd)
 
 	// Here you will define your flags and configuration settings.
 
