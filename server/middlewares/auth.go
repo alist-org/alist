@@ -2,8 +2,8 @@ package middlewares
 
 import (
 	"github.com/alist-org/alist/v3/internal/conf"
-	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/internal/setting"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
@@ -15,7 +15,7 @@ import (
 func Auth(c *gin.Context) {
 	token := c.GetHeader("Authorization")
 	if token == setting.GetStr(conf.Token) {
-		admin, err := db.GetAdmin()
+		admin, err := op.GetAdmin()
 		if err != nil {
 			common.ErrorResp(c, err, 500)
 			c.Abort()
@@ -27,7 +27,7 @@ func Auth(c *gin.Context) {
 		return
 	}
 	if token == "" {
-		guest, err := db.GetGuest()
+		guest, err := op.GetGuest()
 		if err != nil {
 			common.ErrorResp(c, err, 500)
 			c.Abort()
@@ -44,7 +44,7 @@ func Auth(c *gin.Context) {
 		c.Abort()
 		return
 	}
-	user, err := db.GetUserByName(userClaims.Username)
+	user, err := op.GetUserByName(userClaims.Username)
 	if err != nil {
 		common.ErrorResp(c, err, 401)
 		c.Abort()

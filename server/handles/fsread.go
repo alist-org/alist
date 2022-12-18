@@ -6,10 +6,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/fs"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/internal/sign"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/server/common"
@@ -61,7 +61,7 @@ func FsList(c *gin.Context) {
 		common.ErrorResp(c, err, 403)
 		return
 	}
-	meta, err := db.GetNearestMeta(reqPath)
+	meta, err := op.GetNearestMeta(reqPath)
 	if err != nil {
 		if !errors.Is(errors.Cause(err), errs.MetaNotFound) {
 			common.ErrorResp(c, err, 500, true)
@@ -118,7 +118,7 @@ func FsDirs(c *gin.Context) {
 		}
 		reqPath = tmp
 	}
-	meta, err := db.GetNearestMeta(reqPath)
+	meta, err := op.GetNearestMeta(reqPath)
 	if err != nil {
 		if !errors.Is(errors.Cause(err), errs.MetaNotFound) {
 			common.ErrorResp(c, err, 500, true)
@@ -233,7 +233,7 @@ func FsGet(c *gin.Context) {
 		common.ErrorResp(c, err, 403)
 		return
 	}
-	meta, err := db.GetNearestMeta(reqPath)
+	meta, err := op.GetNearestMeta(reqPath)
 	if err != nil {
 		if !errors.Is(errors.Cause(err), errs.MetaNotFound) {
 			common.ErrorResp(c, err, 500)
@@ -295,7 +295,7 @@ func FsGet(c *gin.Context) {
 	if err == nil {
 		related = filterRelated(sameLevelFiles, obj)
 	}
-	parentMeta, _ := db.GetNearestMeta(parentPath)
+	parentMeta, _ := op.GetNearestMeta(parentPath)
 	common.SuccessResp(c, FsGetResp{
 		ObjResp: ObjResp{
 			Name:     obj.GetName(),
@@ -344,7 +344,7 @@ func FsOther(c *gin.Context) {
 		common.ErrorResp(c, err, 403)
 		return
 	}
-	meta, err := db.GetNearestMeta(req.Path)
+	meta, err := op.GetNearestMeta(req.Path)
 	if err != nil {
 		if !errors.Is(errors.Cause(err), errs.MetaNotFound) {
 			common.ErrorResp(c, err, 500)

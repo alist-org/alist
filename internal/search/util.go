@@ -6,7 +6,6 @@ import (
 	"github.com/alist-org/alist/v3/drivers/alist_v3"
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/conf"
-	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/internal/setting"
@@ -26,7 +25,7 @@ func WriteProgress(progress *model.IndexProgress) {
 	if err != nil {
 		log.Errorf("marshal progress error: %+v", err)
 	}
-	err = db.SaveSettingItem(model.SettingItem{
+	err = op.SaveSettingItem(&model.SettingItem{
 		Key:   conf.IndexProgress,
 		Value: p,
 		Type:  conf.TypeText,

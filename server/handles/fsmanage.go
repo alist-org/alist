@@ -4,10 +4,10 @@ import (
 	"fmt"
 	stdpath "path"
 
-	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/fs"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/internal/sign"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/server/common"
@@ -32,7 +32,7 @@ func FsMkdir(c *gin.Context) {
 		return
 	}
 	if !user.CanWrite() {
-		meta, err := db.GetNearestMeta(stdpath.Dir(reqPath))
+		meta, err := op.GetNearestMeta(stdpath.Dir(reqPath))
 		if err != nil {
 			if !errors.Is(errors.Cause(err), errs.MetaNotFound) {
 				common.ErrorResp(c, err, 500, true)

@@ -19,7 +19,7 @@ func GetStorageAndActualPath(rawPath string) (storage driver.Driver, actualPath 
 		return
 	}
 	log.Debugln("use storage: ", storage.GetStorage().MountPath)
-	virtualPath := utils.GetActualVirtualPath(storage.GetStorage().MountPath)
-	actualPath = utils.FixAndCleanPath(strings.TrimPrefix(rawPath, virtualPath))
+	mountPath := utils.GetActualMountPath(storage.GetStorage().MountPath)
+	actualPath = utils.FixAndCleanPath(strings.TrimPrefix(rawPath, mountPath))
 	return
 }

@@ -2,8 +2,12 @@ package model
 
 import (
 	"io"
+	"regexp"
 	"sort"
+	"strings"
 	"time"
+
+	mapset "github.com/deckarep/golang-set/v2"
 
 	"github.com/maruel/natural"
 )
@@ -99,4 +103,51 @@ func WrapObjsName(objs []Obj) {
 	for i := 0; i < len(objs); i++ {
 		objs[i] = &ObjWrapName{Obj: objs[i]}
 	}
+}
+
+func NewObjMerge() *ObjMerge {
+	return &ObjMerge{
+		set: mapset.NewSet[string](),
+	}
+}
+
+type ObjMerge struct {
+	regs []*regexp.Regexp
+	set  mapset.Set[string]
+}
+
+func (om *ObjMerge) Merge(objs []Obj, objs_ ...Obj) []Obj {
+	newObjs := make([]Obj, 0, len(objs)+len(objs_))
+	newObjs = om.insertObjs(om.insertObjs(newObjs, objs...), objs_...)
+	return newObjs
+}
+
+func (om *ObjMerge) insertObjs(objs []Obj, objs_ ...Obj) []Obj {
+	for _, obj := range objs_ {
+		if om.clickObj(obj) {
+			objs = append(objs, obj)
+		}
+	}
+	return objs
+}
+
+func (om *ObjMerge) clickObj(obj Obj) bool {
+	for _, reg := range om.regs {
+		if reg.MatchString(obj.GetName()) {
+			return false
+		}
+	}
+	return om.set.Add(obj.GetName())
+}
+
+func (om *ObjMerge) InitHideReg(hides string) {
+	rs := strings.Split(hides, "\n")
+	om.regs = make([]*regexp.Regexp, 0, len(rs))
+	for _, r := range rs {
+		om.regs = append(om.regs, regexp.MustCompile(r))
+	}
+}
+
+func (om *ObjMerge) Reset() {
+	om.set.Clear()
 }

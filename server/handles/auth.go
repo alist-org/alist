@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/Xhofe/go-cache"
-	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
 	"github.com/pquerna/otp/totp"
@@ -41,7 +41,7 @@ func Login(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	user, err := db.GetUserByName(req.Username)
+	user, err := op.GetUserByName(req.Username)
 	if err != nil {
 		common.ErrorResp(c, err, 400)
 		loginCache.Set(ip, count+1)
@@ -101,7 +101,7 @@ func UpdateCurrent(c *gin.Context) {
 	if req.Password != "" {
 		user.Password = req.Password
 	}
-	if err := db.UpdateUser(user); err != nil {
+	if err := op.UpdateUser(user); err != nil {
 		common.ErrorResp(c, err, 500)
 	} else {
 		common.SuccessResp(c)
@@ -158,7 +158,7 @@ func Verify2FA(c *gin.Context) {
 		return
 	}
 	user.OtpSecret = req.Secret
-	if err := db.UpdateUser(user); err != nil {
+	if err := op.UpdateUser(user); err != nil {
 		common.ErrorResp(c, err, 500)
 	} else {
 		common.SuccessResp(c)

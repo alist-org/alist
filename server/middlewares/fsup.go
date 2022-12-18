@@ -4,9 +4,9 @@ import (
 	"net/url"
 	stdpath "path"
 
-	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
@@ -27,7 +27,7 @@ func FsUp(c *gin.Context) {
 		common.ErrorResp(c, err, 403)
 		return
 	}
-	meta, err := db.GetNearestMeta(stdpath.Dir(path))
+	meta, err := op.GetNearestMeta(stdpath.Dir(path))
 	if err != nil {
 		if !errors.Is(errors.Cause(err), errs.MetaNotFound) {
 			common.ErrorResp(c, err, 500, true)

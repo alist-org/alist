@@ -4,6 +4,8 @@ import (
 	"net/url"
 	stdpath "path"
 	"strings"
+
+	"github.com/alist-org/alist/v3/internal/errs"
 )
 
 // FixAndCleanPath
@@ -34,6 +36,11 @@ func PathAddSeparatorSuffix(path string) string {
 // PathEqual judge path is equal
 func PathEqual(path1, path2 string) bool {
 	return FixAndCleanPath(path1) == FixAndCleanPath(path2)
+}
+
+func IsSubPath(path string, subPath string) bool {
+	path, subPath = FixAndCleanPath(path), FixAndCleanPath(subPath)
+	return path == subPath || strings.HasPrefix(path, subPath+"/")
 }
 
 func Ext(path string) string {
@@ -68,5 +75,8 @@ func EncodePath(path string, all ...bool) string {
 }
 
 func JoinBasePath(basePath, reqPath string) (string, error) {
+	if strings.HasSuffix(reqPath, "..") || strings.Contains(reqPath, "../") {
+		return "", errs.RelativePath
+	}
 	return stdpath.Join(FixAndCleanPath(basePath), FixAndCleanPath(reqPath)), nil
 }

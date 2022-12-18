@@ -3,8 +3,8 @@ package data
 import (
 	"github.com/alist-org/alist/v3/cmd/flags"
 	"github.com/alist-org/alist/v3/internal/conf"
-	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/pkg/utils/random"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -16,40 +16,45 @@ var initialSettingItems []model.SettingItem
 func initSettings() {
 	InitialSettings()
 	// check deprecated
-	settings, err := db.GetSettingItems()
+	settings, err := op.GetSettingItems()
 	if err != nil {
 		log.Fatalf("failed get settings: %+v", err)
 	}
+
 	for i := range settings {
-		if !isActive(settings[i].Key) {
+		if !isActive(settings[i].Key) && settings[i].Flag != model.DEPRECATED {
 			settings[i].Flag = model.DEPRECATED
+			err = op.SaveSettingItem(&settings[i])
+			if err != nil {
+				log.Fatalf("failed save setting: %+v", err)
+			}
 		}
 	}
-	// what's going on here???
-	//if settings != nil && len(settings) > 0 {
-	//	err = db.SaveSettingItems(settings)
-	//	if err != nil {
-	//		log.Fatalf("failed save settings: %+v", err)
-	//	}
-	//}
-	// insert new items
+
+	// create or save setting
 	for i := range initialSettingItems {
-		v := initialSettingItems[i]
-		stored, err := db.GetSettingItemByKey(v.Key)
-		if errors.Is(err, gorm.ErrRecordNotFound) || v.Key == conf.VERSION {
-			err = db.SaveSettingItem(v)
-			if err != nil {
-				log.Fatalf("failed create setting: %+v", err)
-			}
-		} else if err != nil {
+		item := &initialSettingItems[i]
+		// err
+		stored, err := op.GetSettingItemByKey(item.Key)
+		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			log.Fatalf("failed get setting: %+v", err)
-		} else {
-			v.Value = stored.Value
-			err = db.SaveSettingItem(v)
-			if err != nil {
-				log.Fatalf("failed resave setting: %+v", err)
-			}
+			continue
 		}
+
+		// save
+		if stored != nil {
+			item.Value = stored.Value
+		}
+		if stored == nil || *item != *stored {
+			err = op.SaveSettingItem(item)
+			if err != nil {
+				log.Fatalf("failed save setting: %+v", err)
+			}
+			continue
+		}
+
+		// Not save so needs to execute hook
+		op.HandleSettingItemHook(item)
 	}
 }
 

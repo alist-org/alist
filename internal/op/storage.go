@@ -29,7 +29,7 @@ func HasStorage(mountPath string) bool {
 	return storagesMap.Has(utils.FixAndCleanPath(mountPath))
 }
 
-func GetStorageByVirtualPath(virtualPath string) (driver.Driver, error) {
+func GetStorageByMountPath(virtualPath string) (driver.Driver, error) {
 	virtualPath = utils.FixAndCleanPath(virtualPath)
 	storageDriver, ok := storagesMap.Load(virtualPath)
 	if !ok {
@@ -130,7 +130,7 @@ func DisableStorage(ctx context.Context, id uint) error {
 	if storage.Disabled {
 		return errors.Errorf("this storage have disabled")
 	}
-	storageDriver, err := GetStorageByVirtualPath(storage.MountPath)
+	storageDriver, err := GetStorageByMountPath(storage.MountPath)
 	if err != nil {
 		return errors.WithMessage(err, "failed get storage driver")
 	}
@@ -168,7 +168,7 @@ func UpdateStorage(ctx context.Context, storage model.Storage) error {
 	if storage.Disabled {
 		return nil
 	}
-	storageDriver, err := GetStorageByVirtualPath(oldStorage.MountPath)
+	storageDriver, err := GetStorageByMountPath(oldStorage.MountPath)
 	if oldStorage.MountPath != storage.MountPath {
 		// mount path renamed, need to drop the storage
 		storagesMap.Delete(oldStorage.MountPath)
@@ -192,7 +192,7 @@ func DeleteStorageById(ctx context.Context, id uint) error {
 		return errors.WithMessage(err, "failed get storage")
 	}
 	if !storage.Disabled {
-		storageDriver, err := GetStorageByVirtualPath(storage.MountPath)
+		storageDriver, err := GetStorageByMountPath(storage.MountPath)
 		if err != nil {
 			return errors.WithMessage(err, "failed get storage driver")
 		}
@@ -221,11 +221,11 @@ func MustSaveDriverStorage(driver driver.Driver) {
 func saveDriverStorage(driver driver.Driver) error {
 	storage := driver.GetStorage()
 	addition := driver.GetAddition()
-	strs, err := utils.Json.MarshalToString(addition)
+	str, err := utils.Json.MarshalToString(addition)
 	if err != nil {
 		return errors.Wrap(err, "error while marshal addition")
 	}
-	storage.Addition = strs
+	storage.Addition = str
 	err = db.UpdateStorage(storage)
 	if err != nil {
 		return errors.WithMessage(err, "failed update storage in database")
@@ -240,10 +240,10 @@ func getStoragesByPath(path string) []driver.Driver {
 	storages := make([]driver.Driver, 0)
 	curSlashCount := 0
 	storagesMap.Range(func(mountPath string, value driver.Driver) bool {
-		virtualPath := utils.GetActualVirtualPath(mountPath)
+		mountPath = utils.GetActualMountPath(mountPath)
 		// is this path
-		if strings.HasPrefix(path, virtualPath) {
-			slashCount := strings.Count(utils.PathAddSeparatorSuffix(virtualPath), "/")
+		if utils.IsSubPath(path, mountPath) {
+			slashCount := strings.Count(utils.PathAddSeparatorSuffix(mountPath), "/")
 			// not the longest match
 			if slashCount > curSlashCount {
 				storages = storages[:0]
@@ -278,13 +278,12 @@ func GetStorageVirtualFilesByPath(prefix string) []model.Obj {
 	prefix = utils.FixAndCleanPath(prefix)
 	set := mapset.NewSet[string]()
 	for _, v := range storages {
-		virtualPath := utils.GetActualVirtualPath(v.GetStorage().MountPath)
+		mountPath := utils.GetActualMountPath(v.GetStorage().MountPath)
 		// Exclude prefix itself and non prefix
-		if len(prefix) >= len(virtualPath) || !strings.HasPrefix(virtualPath, prefix) {
+		if len(prefix) >= len(mountPath) || !utils.IsSubPath(mountPath, prefix) {
 			continue
 		}
-
-		name := strings.SplitN(strings.TrimPrefix(virtualPath[len(prefix):], "/"), "/", 1)[0]
+		name := strings.SplitN(strings.TrimPrefix(mountPath[len(prefix):], "/"), "/", 2)[0]
 		if set.Add(name) {
 			files = append(files, &model.Object{
 				Name:     name,
@@ -310,7 +309,7 @@ func GetBalancedStorage(path string) driver.Driver {
 	case 1:
 		return storages[0]
 	default:
-		virtualPath := utils.GetActualVirtualPath(storages[0].GetStorage().MountPath)
+		virtualPath := utils.GetActualMountPath(storages[0].GetStorage().MountPath)
 		i, _ := balanceMap.LoadOrStore(virtualPath, 0)
 		i = (i + 1) % storageNum
 		balanceMap.Store(virtualPath, i)
