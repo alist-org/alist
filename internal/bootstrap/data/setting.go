@@ -32,7 +32,8 @@ func initSettings() {
 	}
 
 	// create or save setting
-	for i, item := range initialSettingItems {
+	for i := range initialSettingItems {
+		item := &initialSettingItems[i]
 		// err
 		stored, err := op.GetSettingItemByKey(item.Key)
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -44,8 +45,8 @@ func initSettings() {
 		if stored != nil {
 			item.Value = stored.Value
 		}
-		if stored == nil || item != *stored {
-			err = op.SaveSettingItem(&initialSettingItems[i])
+		if stored == nil || *item != *stored {
+			err = op.SaveSettingItem(item)
 			if err != nil {
 				log.Fatalf("failed save setting: %+v", err)
 			}
@@ -53,7 +54,7 @@ func initSettings() {
 		}
 
 		// Not save so needs to execute hook
-		op.HandleSettingItemHook(&initialSettingItems[i])
+		op.HandleSettingItemHook(item)
 	}
 }
 
