@@ -20,8 +20,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// serverCmd represents the server command
-var serverCmd = &cobra.Command{
+// ServerCmd represents the server command
+var ServerCmd = &cobra.Command{
 	Use:   "server",
 	Short: "Start the server at the specified address",
 	Long: `Start the server at the specified address
@@ -76,7 +76,7 @@ the address is defined in config file`,
 }
 
 func init() {
-	rootCmd.AddCommand(serverCmd)
+	RootCmd.AddCommand(ServerCmd)
 
 	// Here you will define your flags and configuration settings.
 
@@ -95,5 +95,5 @@ func OutAlistInit() {
 		cmd  *cobra.Command
 		args []string
 	)
-	serverCmd.Run(cmd, args)
+	ServerCmd.Run(cmd, args)
 }

@@ -10,8 +10,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// stopCmd represents the stop command
-var stopCmd = &cobra.Command{
+// StopCmd represents the stop command
+var StopCmd = &cobra.Command{
 	Use:   "stop",
 	Short: "Stop alist server by daemon/pid file",
 	Run: func(cmd *cobra.Command, args []string) {
@@ -44,7 +44,7 @@ func stop() {
 }
 
 func init() {
-	rootCmd.AddCommand(stopCmd)
+	RootCmd.AddCommand(StopCmd)
 
 	// Here you will define your flags and configuration settings.
 

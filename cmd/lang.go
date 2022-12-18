@@ -123,8 +123,8 @@ func generateSettingsJson() {
 	//utils.WriteJsonToFile("lang/settings.json", settingsLang)
 }
 
-// langCmd represents the lang command
-var langCmd = &cobra.Command{
+// LangCmd represents the lang command
+var LangCmd = &cobra.Command{
 	Use:   "lang",
 	Short: "Generate language json file",
 	Run: func(cmd *cobra.Command, args []string) {
@@ -138,7 +138,7 @@ var langCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(langCmd)
+	RootCmd.AddCommand(LangCmd)
 
 	// Here you will define your flags and configuration settings.
 
