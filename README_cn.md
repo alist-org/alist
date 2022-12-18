@@ -9,7 +9,7 @@
     <img src="https://img.shields.io/github/license/Xhofe/alist" alt="License" />
   </a>
   <a href="https://github.com/Xhofe/alist/actions?query=workflow%3ABuild">
-    <img src="https://img.shields.io/github/workflow/status/Xhofe/alist/build" alt="Build status" />
+    <img src="https://img.shields.io/github/actions/workflow/status/Xhofe/alist/build.yml?branch=main" alt="Build status" />
   </a>
   <a href="https://github.com/Xhofe/alist/releases">
     <img src="https://img.shields.io/github/release/Xhofe/alist" alt="latest version" />
