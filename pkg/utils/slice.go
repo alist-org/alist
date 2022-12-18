@@ -1,5 +1,11 @@
 package utils
 
+import (
+	"strings"
+
+	"github.com/pkg/errors"
+)
+
 // SliceEqual check if two slices are equal
 func SliceEqual[T comparable](a, b []T) bool {
 	if len(a) != len(b) {
@@ -43,4 +49,14 @@ func MustSliceConvert[S any, D any](srcS []S, convert func(src S) D) []D {
 		res = append(res, dst)
 	}
 	return res
+}
+
+func MergeErrors(errs ...error) error {
+	errStr := strings.Join(MustSliceConvert(errs, func(err error) string {
+		return err.Error()
+	}), "\n")
+	if errStr != "" {
+		return errors.New(errStr)
+	}
+	return nil
 }

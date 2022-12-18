@@ -80,19 +80,19 @@ func RegisterSettingItemHook(key string, hook SettingItemHook) {
 	settingItemHooks[key] = hook
 }
 
-func HandleSettingItemHook(item *model.SettingItem) (hashook bool, err error) {
+func HandleSettingItemHook(item *model.SettingItem) (hasHook bool, err error) {
 	if hook, ok := settingItemHooks[item.Key]; ok {
 		return true, hook(item)
 	}
 	return false, nil
 }
 
-func HandleSettingItemsHook(items []model.SettingItem) (err error) {
-	for i := 0; i < len(items); i++ {
-		_, err = HandleSettingItemHook(&items[i])
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
+//func HandleSettingItemsHook(items []model.SettingItem) (err error) {
+//	for i := 0; i < len(items); i++ {
+//		_, err = HandleSettingItemHook(&items[i])
+//		if err != nil {
+//			return err
+//		}
+//	}
+//	return nil
+//}

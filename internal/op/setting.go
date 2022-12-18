@@ -3,12 +3,14 @@ package op
 import (
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/Xhofe/go-cache"
 	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/singleflight"
+	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
 )
 
@@ -123,10 +125,9 @@ func GetSettingItemsByGroup(group int) ([]model.SettingItem, error) {
 
 func GetSettingItemsInGroups(groups []int) ([]model.SettingItem, error) {
 	sort.Ints(groups)
-	var key string
-	for _, group := range groups {
-		key += strconv.Itoa(group)
-	}
+	key := strings.Join(utils.MustSliceConvert(groups, func(i int) string {
+		return strconv.Itoa(i)
+	}), ",")
 
 	if items, ok := settingGroupCache.Get(key); ok {
 		return items, nil
@@ -142,28 +143,36 @@ func GetSettingItemsInGroups(groups []int) ([]model.SettingItem, error) {
 	return items, err
 }
 
-func SaveSettingItems(items []model.SettingItem) (err error) {
-	// save
-	if err = db.SaveSettingItems(items); err != nil {
-		return err
+func SaveSettingItems(items []model.SettingItem) error {
+	noHookItems := make([]model.SettingItem, 0)
+	errs := make([]error, 0)
+	for i := range items {
+		if ok, err := HandleSettingItemHook(&items[i]); ok {
+			if err != nil {
+				errs = append(errs, err)
+			} else {
+				err = db.SaveSettingItem(&items[i])
+				if err != nil {
+					errs = append(errs, err)
+				}
+			}
+		} else {
+			noHookItems = append(noHookItems, items[i])
+		}
 	}
-	// hook
-	if err = HandleSettingItemsHook(items); err != nil {
-		return err
+	if len(noHookItems) > 0 {
+		err := db.SaveSettingItems(noHookItems)
+		if err != nil {
+			errs = append(errs, err)
+		}
 	}
-	// update
-	if err = db.SaveSettingItems(items); err != nil {
-		return err
+	if len(errs) < len(items)-len(noHookItems)+1 {
+		settingCacheUpdate()
 	}
-	settingCacheUpdate()
-	return nil
+	return utils.MergeErrors(errs...)
 }
 
 func SaveSettingItem(item *model.SettingItem) (err error) {
-	// save
-	if err = db.SaveSettingItem(item); err != nil {
-		return err
-	}
 	// hook
 	if _, err := HandleSettingItemHook(item); err != nil {
 		return err
