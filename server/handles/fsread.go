@@ -56,8 +56,11 @@ func FsList(c *gin.Context) {
 	}
 	req.Validate()
 	user := c.MustGet("user").(*model.User)
-	reqPath := user.JoinPath(req.Path)
-
+	reqPath, err := user.JoinPath(req.Path)
+	if err != nil {
+		common.ErrorResp(c, err, 403)
+		return
+	}
 	meta, err := op.GetNearestMeta(reqPath)
 	if err != nil {
 		if !errors.Is(errors.Cause(err), errs.MetaNotFound) {
@@ -108,7 +111,12 @@ func FsDirs(c *gin.Context) {
 			return
 		}
 	} else {
-		reqPath = user.JoinPath(req.Path)
+		tmp, err := user.JoinPath(req.Path)
+		if err != nil {
+			common.ErrorResp(c, err, 403)
+			return
+		}
+		reqPath = tmp
 	}
 	meta, err := op.GetNearestMeta(reqPath)
 	if err != nil {
@@ -220,8 +228,11 @@ func FsGet(c *gin.Context) {
 		return
 	}
 	user := c.MustGet("user").(*model.User)
-	reqPath := user.JoinPath(req.Path)
-
+	reqPath, err := user.JoinPath(req.Path)
+	if err != nil {
+		common.ErrorResp(c, err, 403)
+		return
+	}
 	meta, err := op.GetNearestMeta(reqPath)
 	if err != nil {
 		if !errors.Is(errors.Cause(err), errs.MetaNotFound) {
@@ -328,8 +339,11 @@ func FsOther(c *gin.Context) {
 	}
 	user := c.MustGet("user").(*model.User)
 	var err error
-	req.Path = user.JoinPath(req.Path)
-
+	req.Path, err = user.JoinPath(req.Path)
+	if err != nil {
+		common.ErrorResp(c, err, 403)
+		return
+	}
 	meta, err := op.GetNearestMeta(req.Path)
 	if err != nil {
 		if !errors.Is(errors.Cause(err), errs.MetaNotFound) {
