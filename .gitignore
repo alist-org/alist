@@ -20,11 +20,12 @@ output/
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
-bin/*
+/bin/*
 *.json
-data/
-log/
-lang/
-daemon/
-public/dist/*
-!public/dist/README.md
+/build
+/data/
+/log/
+/lang/
+/daemon/
+/public/dist/*
+/!public/dist/README.md
