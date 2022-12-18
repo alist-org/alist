@@ -191,10 +191,7 @@ func pagination(objs []model.Obj, req *model.PageReq) (int, []model.Obj) {
 func toObjsResp(objs []model.Obj, parent string, encrypt bool) []ObjResp {
 	var resp []ObjResp
 	for _, obj := range objs {
-		thumb := ""
-		if t, ok := obj.(model.Thumb); ok {
-			thumb = t.Thumb()
-		}
+		thumb, _ := model.GetThumb(obj)
 		resp = append(resp, ObjResp{
 			Name:     obj.GetName(),
 			Size:     obj.GetSize(),
@@ -276,8 +273,8 @@ func FsGet(c *gin.Context) {
 			}
 		} else {
 			// file have raw url
-			if u, ok := obj.(model.URL); ok {
-				rawURL = u.URL()
+			if url, ok := model.GetUrl(obj); ok {
+				rawURL = url
 			} else {
 				// if storage is not proxy, use raw url by fs.Link
 				link, _, err := fs.Link(c, reqPath, model.LinkArgs{IP: c.ClientIP(), Header: c.Request.Header})
