@@ -56,11 +56,7 @@ func AddAria2(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	reqPath, err := user.JoinPath(req.Path)
-	if err != nil {
-		common.ErrorResp(c, err, 403)
-		return
-	}
+	reqPath := user.JoinPath(req.Path)
 	for _, url := range req.Urls {
 		err := aria2.AddURI(c, url, reqPath)
 		if err != nil {

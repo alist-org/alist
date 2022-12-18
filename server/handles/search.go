@@ -34,11 +34,8 @@ func Search(c *gin.Context) {
 		return
 	}
 	user := c.MustGet("user").(*model.User)
-	req.Parent, err = user.JoinPath(req.Parent)
-	if err != nil {
-		common.ErrorResp(c, err, 400)
-		return
-	}
+	req.Parent = user.JoinPath(req.Parent)
+
 	if err := req.Validate(); err != nil {
 		common.ErrorResp(c, err, 400)
 		return

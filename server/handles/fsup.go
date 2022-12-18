@@ -21,11 +21,8 @@ func FsStream(c *gin.Context) {
 	}
 	asTask := c.GetHeader("As-Task") == "true"
 	user := c.MustGet("user").(*model.User)
-	path, err = user.JoinPath(path)
-	if err != nil {
-		common.ErrorResp(c, err, 403)
-		return
-	}
+	path = user.JoinPath(path)
+
 	dir, name := stdpath.Split(path)
 	sizeStr := c.GetHeader("Content-Length")
 	size, err := strconv.ParseInt(sizeStr, 10, 64)
@@ -64,11 +61,8 @@ func FsForm(c *gin.Context) {
 	}
 	asTask := c.GetHeader("As-Task") == "true"
 	user := c.MustGet("user").(*model.User)
-	path, err = user.JoinPath(path)
-	if err != nil {
-		common.ErrorResp(c, err, 403)
-		return
-	}
+	path = user.JoinPath(path)
+
 	storage, err := fs.GetStorage(path)
 	if err != nil {
 		common.ErrorResp(c, err, 400)

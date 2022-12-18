@@ -26,11 +26,7 @@ func FsMkdir(c *gin.Context) {
 		return
 	}
 	user := c.MustGet("user").(*model.User)
-	reqPath, err := user.JoinPath(req.Path)
-	if err != nil {
-		common.ErrorResp(c, err, 403)
-		return
-	}
+	reqPath := user.JoinPath(req.Path)
 	if !user.CanWrite() {
 		meta, err := op.GetNearestMeta(stdpath.Dir(reqPath))
 		if err != nil {
@@ -73,16 +69,9 @@ func FsMove(c *gin.Context) {
 		common.ErrorResp(c, errs.PermissionDenied, 403)
 		return
 	}
-	srcDir, err := user.JoinPath(req.SrcDir)
-	if err != nil {
-		common.ErrorResp(c, err, 403)
-		return
-	}
-	dstDir, err := user.JoinPath(req.DstDir)
-	if err != nil {
-		common.ErrorResp(c, err, 403)
-		return
-	}
+	srcDir := user.JoinPath(req.SrcDir)
+	dstDir := user.JoinPath(req.DstDir)
+
 	for _, name := range req.Names {
 		err := fs.Move(c, stdpath.Join(srcDir, name), dstDir)
 		if err != nil {
@@ -110,16 +99,9 @@ func FsCopy(c *gin.Context) {
 		common.ErrorResp(c, errs.PermissionDenied, 403)
 		return
 	}
-	srcDir, err := user.JoinPath(req.SrcDir)
-	if err != nil {
-		common.ErrorResp(c, err, 403)
-		return
-	}
-	dstDir, err := user.JoinPath(req.DstDir)
-	if err != nil {
-		common.ErrorResp(c, err, 403)
-		return
-	}
+	srcDir := user.JoinPath(req.SrcDir)
+	dstDir := user.JoinPath(req.DstDir)
+
 	var addedTask []string
 	for _, name := range req.Names {
 		ok, err := fs.Copy(c, stdpath.Join(srcDir, name), dstDir)
@@ -157,11 +139,8 @@ func FsRename(c *gin.Context) {
 		common.ErrorResp(c, errs.PermissionDenied, 403)
 		return
 	}
-	reqPath, err := user.JoinPath(req.Path)
-	if err != nil {
-		common.ErrorResp(c, err, 403)
-		return
-	}
+	reqPath := user.JoinPath(req.Path)
+
 	if err := fs.Rename(c, reqPath, req.Name); err != nil {
 		common.ErrorResp(c, err, 500)
 		return
@@ -190,11 +169,8 @@ func FsRemove(c *gin.Context) {
 		common.ErrorResp(c, errs.PermissionDenied, 403)
 		return
 	}
-	reqDir, err := user.JoinPath(req.Dir)
-	if err != nil {
-		common.ErrorResp(c, err, 403)
-		return
-	}
+	reqDir := user.JoinPath(req.Dir)
+
 	for _, name := range req.Names {
 		err := fs.Remove(c, stdpath.Join(reqDir, name))
 		if err != nil {

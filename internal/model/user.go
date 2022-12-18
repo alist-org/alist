@@ -91,6 +91,6 @@ func (u User) CanWebdavManage() bool {
 	return u.IsAdmin() || (u.Permission>>9)&1 == 1
 }
 
-func (u User) JoinPath(reqPath string) (string, error) {
+func (u User) JoinPath(reqPath string) string {
 	return utils.JoinBasePath(u.BasePath, reqPath)
 }

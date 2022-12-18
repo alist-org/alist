@@ -67,6 +67,6 @@ func EncodePath(path string, all ...bool) string {
 	return strings.Join(seg, "/")
 }
 
-func JoinBasePath(basePath, reqPath string) (string, error) {
-	return stdpath.Join(FixAndCleanPath(basePath), FixAndCleanPath(reqPath)), nil
+func JoinBasePath(basePath, reqPath string) string {
+	return stdpath.Join(FixAndCleanPath(basePath), FixAndCleanPath(reqPath))
 }
