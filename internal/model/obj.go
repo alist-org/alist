@@ -117,9 +117,9 @@ type ObjMerge struct {
 }
 
 func (om *ObjMerge) Merge(objs []Obj, objs_ ...Obj) []Obj {
-	newobjs := make([]Obj, 0, len(objs)+len(objs_))
-	newobjs = om.insertObjs(om.insertObjs(newobjs, objs...), objs_...)
-	return newobjs
+	newObjs := make([]Obj, 0, len(objs)+len(objs_))
+	newObjs = om.insertObjs(om.insertObjs(newObjs, objs...), objs_...)
+	return newObjs
 }
 
 func (om *ObjMerge) insertObjs(objs []Obj, objs_ ...Obj) []Obj {
