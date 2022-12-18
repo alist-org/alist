@@ -39,7 +39,8 @@ func PathEqual(path1, path2 string) bool {
 }
 
 func IsSubPath(path string, subPath string) bool {
-	return strings.HasPrefix(FixAndCleanPath(subPath), FixAndCleanPath(path))
+	path, subPath = FixAndCleanPath(path), FixAndCleanPath(subPath)
+	return path == subPath || strings.HasPrefix(path, subPath+"/")
 }
 
 func Ext(path string) string {
