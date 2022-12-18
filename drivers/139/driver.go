@@ -264,7 +264,7 @@ func (d *Yun139) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 	if err != nil {
 		return err
 	}
-	var Default int64 = 10485760
+	var Default int64 = 104857600
 	part := int(math.Ceil(float64(stream.GetSize()) / float64(Default)))
 	var start int64 = 0
 	for i := 0; i < part; i++ {
