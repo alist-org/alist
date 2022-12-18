@@ -81,6 +81,7 @@ func DeleteUserById(id uint) error {
 	if old.IsAdmin() || old.IsGuest() {
 		return errs.DeleteAdminOrGuest
 	}
+	userCache.Del(old.Username)
 	return db.DeleteUserById(id)
 }
 
@@ -102,7 +103,7 @@ func UpdateUser(u *model.User) error {
 
 func Cancel2FAByUser(u *model.User) error {
 	u.OtpSecret = ""
-	return db.UpdateUser(u)
+	return UpdateUser(u)
 }
 
 func Cancel2FAById(id uint) error {
