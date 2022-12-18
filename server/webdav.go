@@ -4,8 +4,8 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/server/webdav"
 	"github.com/gin-gonic/gin"
@@ -45,7 +45,7 @@ func ServeWebDAV(c *gin.Context) {
 }
 
 func WebDAVAuth(c *gin.Context) {
-	guest, _ := db.GetGuest()
+	guest, _ := op.GetGuest()
 	username, password, ok := c.Request.BasicAuth()
 	if !ok {
 		if c.Request.Method == "OPTIONS" {
@@ -58,7 +58,7 @@ func WebDAVAuth(c *gin.Context) {
 		c.Abort()
 		return
 	}
-	user, err := db.GetUserByName(username)
+	user, err := op.GetUserByName(username)
 	if err != nil || user.ValidatePassword(password) != nil {
 		if c.Request.Method == "OPTIONS" {
 			c.Set("user", guest)

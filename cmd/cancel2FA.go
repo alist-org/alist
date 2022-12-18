@@ -4,7 +4,7 @@ Copyright © 2022 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"github.com/alist-org/alist/v3/internal/db"
+	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/spf13/cobra"
 )
@@ -15,11 +15,11 @@ var cancel2FACmd = &cobra.Command{
 	Short: "Delete 2FA of admin user",
 	Run: func(cmd *cobra.Command, args []string) {
 		Init()
-		admin, err := db.GetAdmin()
+		admin, err := op.GetAdmin()
 		if err != nil {
 			utils.Log.Errorf("failed to get admin user: %+v", err)
 		} else {
-			err := db.Cancel2FAByUser(admin)
+			err := op.Cancel2FAByUser(admin)
 			if err != nil {
 				utils.Log.Errorf("failed to cancel 2FA: %+v", err)
 			}

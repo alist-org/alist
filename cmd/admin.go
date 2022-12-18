@@ -4,7 +4,7 @@ Copyright © 2022 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"github.com/alist-org/alist/v3/internal/db"
+	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/spf13/cobra"
 )
@@ -16,7 +16,7 @@ var passwordCmd = &cobra.Command{
 	Short:   "Show admin user's info",
 	Run: func(cmd *cobra.Command, args []string) {
 		Init()
-		admin, err := db.GetAdmin()
+		admin, err := op.GetAdmin()
 		if err != nil {
 			utils.Log.Errorf("failed get admin user: %+v", err)
 		} else {
