@@ -4,6 +4,8 @@ import (
 	"net/url"
 	stdpath "path"
 	"strings"
+
+	"github.com/alist-org/alist/v3/internal/errs"
 )
 
 // FixAndCleanPath
@@ -72,5 +74,8 @@ func EncodePath(path string, all ...bool) string {
 }
 
 func JoinBasePath(basePath, reqPath string) (string, error) {
+	if strings.HasSuffix(reqPath, "..") || strings.Contains(reqPath, "../") {
+		return "", errs.RelativePath
+	}
 	return stdpath.Join(FixAndCleanPath(basePath), FixAndCleanPath(reqPath)), nil
 }
