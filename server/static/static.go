@@ -68,7 +68,7 @@ func Static(r *gin.Engine) {
 	r.Use(func(c *gin.Context) {
 		for i := range folders {
 			if strings.HasPrefix(c.Request.RequestURI, fmt.Sprintf("/%s/", folders[i])) {
-				c.Header("Cache-Control", "max-age=86400")
+				c.Header("Cache-Control", "public, max-age=15552000")
 			}
 		}
 	})
