@@ -64,7 +64,7 @@ func UpdateIndex() {
 
 func Static(r *gin.Engine) {
 	InitIndex()
-	folders := []string{"assets", "images", "streamer"}
+	folders := []string{"assets", "images", "streamer", "static"}
 	r.Use(func(c *gin.Context) {
 		for i := range folders {
 			if strings.HasPrefix(c.Request.RequestURI, fmt.Sprintf("/%s/", folders[i])) {
