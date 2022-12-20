@@ -21,13 +21,13 @@ import (
 var listCache = cache.NewMemCache(cache.WithShards[[]model.Obj](64))
 var listG singleflight.Group[[]model.Obj]
 
-func updateCacheObj(storage driver.Driver, path string, oldobj model.Obj, newobj model.Obj) {
+func updateCacheObj(storage driver.Driver, path string, oldObj model.Obj, newObj model.Obj) {
 	key := Key(storage, path)
 	objs, ok := listCache.Get(key)
 	if ok {
 		for i, obj := range objs {
-			if obj.GetName() == oldobj.GetName() {
-				objs[i] = newobj
+			if obj.GetName() == oldObj.GetName() {
+				objs[i] = newObj
 				break
 			}
 		}
@@ -39,8 +39,8 @@ func delCacheObj(storage driver.Driver, path string, obj model.Obj) {
 	key := Key(storage, path)
 	objs, ok := listCache.Get(key)
 	if ok {
-		for i, oldobj := range objs {
-			if oldobj.GetName() == obj.GetName() {
+		for i, oldObj := range objs {
+			if oldObj.GetName() == obj.GetName() {
 				objs = append(objs[:i], objs[i+1:]...)
 				break
 			}
@@ -49,17 +49,17 @@ func delCacheObj(storage driver.Driver, path string, obj model.Obj) {
 	}
 }
 
-func addCacheObj(storage driver.Driver, path string, newobj model.Obj) {
+func addCacheObj(storage driver.Driver, path string, newObj model.Obj) {
 	key := Key(storage, path)
 	objs, ok := listCache.Get(key)
 	if ok {
 		for i, obj := range objs {
-			if obj.GetName() == newobj.GetName() {
-				objs[i] = newobj
+			if obj.GetName() == newObj.GetName() {
+				objs[i] = newObj
 				return
 			}
 		}
-		objs = append(objs, newobj)
+		objs = append(objs, newObj)
 		listCache.Set(key, objs, cache.WithEx[[]model.Obj](time.Minute*time.Duration(storage.GetStorage().CacheExpiration)))
 	}
 }

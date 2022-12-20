@@ -42,14 +42,14 @@ type Getter interface {
 	GetRoot(ctx context.Context) (model.Obj, error)
 }
 
-type Writer interface {
-	Mkdir
-	Move
-	Rename
-	Copy
-	Remove
-	Put
-}
+//type Writer interface {
+//	Mkdir
+//	Move
+//	Rename
+//	Copy
+//	Remove
+//	Put
+//}
 
 type Mkdir interface {
 	MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error
@@ -75,14 +75,14 @@ type Put interface {
 	Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up UpdateProgress) error
 }
 
-type WriteResult interface {
-	MkdirResult
-	MoveResult
-	RenameResult
-	CopyResult
-	PutResult
-	Remove
-}
+//type WriteResult interface {
+//	MkdirResult
+//	MoveResult
+//	RenameResult
+//	CopyResult
+//	PutResult
+//	Remove
+//}
 
 type MkdirResult interface {
 	MakeDir(ctx context.Context, parentDir model.Obj, dirName string) (model.Obj, error)
