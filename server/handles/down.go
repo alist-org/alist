@@ -91,7 +91,7 @@ func shouldProxy(storage driver.Driver, filename string) bool {
 	if storage.Config().MustProxy() || storage.GetStorage().WebProxy {
 		return true
 	}
-	if utils.SliceContains(conf.TypesMap[conf.ProxyTypes], utils.Ext(filename)) {
+	if utils.SliceContains(conf.SlicesMap[conf.ProxyTypes], utils.Ext(filename)) {
 		return true
 	}
 	return false
@@ -108,10 +108,10 @@ func canProxy(storage driver.Driver, filename string) bool {
 	if storage.Config().MustProxy() || storage.GetStorage().WebProxy || storage.GetStorage().WebdavProxy() {
 		return true
 	}
-	if utils.SliceContains(conf.TypesMap[conf.ProxyTypes], utils.Ext(filename)) {
+	if utils.SliceContains(conf.SlicesMap[conf.ProxyTypes], utils.Ext(filename)) {
 		return true
 	}
-	if utils.SliceContains(conf.TypesMap[conf.TextTypes], utils.Ext(filename)) {
+	if utils.SliceContains(conf.SlicesMap[conf.TextTypes], utils.Ext(filename)) {
 		return true
 	}
 	return false
