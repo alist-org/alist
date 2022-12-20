@@ -136,6 +136,9 @@ func (d *Local) MakeDir(ctx context.Context, parentDir model.Obj, dirName string
 func (d *Local) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 	srcPath := srcObj.GetPath()
 	dstPath := filepath.Join(dstDir.GetPath(), srcObj.GetName())
+	if utils.IsSubPath(srcPath, dstPath) {
+		return fmt.Errorf("the destination folder is a subfolder of the source folder")
+	}
 	err := os.Rename(srcPath, dstPath)
 	if err != nil {
 		return err
@@ -156,6 +159,9 @@ func (d *Local) Rename(ctx context.Context, srcObj model.Obj, newName string) er
 func (d *Local) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 	srcPath := srcObj.GetPath()
 	dstPath := filepath.Join(dstDir.GetPath(), srcObj.GetName())
+	if utils.IsSubPath(srcPath, dstPath) {
+		return fmt.Errorf("the destination folder is a subfolder of the source folder")
+	}
 	var err error
 	if srcObj.IsDir() {
 		err = utils.CopyDir(srcPath, dstPath)

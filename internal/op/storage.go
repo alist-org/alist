@@ -242,7 +242,7 @@ func getStoragesByPath(path string) []driver.Driver {
 	storagesMap.Range(func(mountPath string, value driver.Driver) bool {
 		mountPath = utils.GetActualMountPath(mountPath)
 		// is this path
-		if utils.IsSubPath(path, mountPath) {
+		if utils.IsSubPath(mountPath, path) {
 			slashCount := strings.Count(utils.PathAddSeparatorSuffix(mountPath), "/")
 			// not the longest match
 			if slashCount > curSlashCount {
@@ -280,7 +280,7 @@ func GetStorageVirtualFilesByPath(prefix string) []model.Obj {
 	for _, v := range storages {
 		mountPath := utils.GetActualMountPath(v.GetStorage().MountPath)
 		// Exclude prefix itself and non prefix
-		if len(prefix) >= len(mountPath) || !utils.IsSubPath(mountPath, prefix) {
+		if len(prefix) >= len(mountPath) || !utils.IsSubPath(prefix, mountPath) {
 			continue
 		}
 		name := strings.SplitN(strings.TrimPrefix(mountPath[len(prefix):], "/"), "/", 2)[0]

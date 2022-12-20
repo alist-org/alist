@@ -40,7 +40,7 @@ func PathEqual(path1, path2 string) bool {
 
 func IsSubPath(path string, subPath string) bool {
 	path, subPath = FixAndCleanPath(path), FixAndCleanPath(subPath)
-	return path == subPath || strings.HasPrefix(path, PathAddSeparatorSuffix(subPath))
+	return path == subPath || strings.HasPrefix(subPath, PathAddSeparatorSuffix(path))
 }
 
 func Ext(path string) string {
