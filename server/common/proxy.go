@@ -67,7 +67,7 @@ func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.
 			return err
 		}
 		for h, val := range r.Header {
-			if strings.ToLower(h) == "authorization" {
+			if strings.ToLower(h) == "authorization" || strings.ToLower(h) == "referer" {
 				continue
 			}
 			req.Header[h] = val
