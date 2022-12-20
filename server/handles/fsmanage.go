@@ -48,7 +48,6 @@ func FsMkdir(c *gin.Context) {
 		common.ErrorResp(c, err, 500)
 		return
 	}
-	fs.ClearCache(stdpath.Dir(reqPath))
 	common.SuccessResp(c)
 }
 
@@ -83,15 +82,13 @@ func FsMove(c *gin.Context) {
 		common.ErrorResp(c, err, 403)
 		return
 	}
-	for _, name := range req.Names {
-		err := fs.Move(c, stdpath.Join(srcDir, name), dstDir)
+	for i, name := range req.Names {
+		err := fs.Move(c, stdpath.Join(srcDir, name), dstDir, len(req.Names) > i+1)
 		if err != nil {
 			common.ErrorResp(c, err, 500)
 			return
 		}
 	}
-	fs.ClearCache(srcDir)
-	fs.ClearCache(dstDir)
 	common.SuccessResp(c)
 }
 
@@ -121,8 +118,8 @@ func FsCopy(c *gin.Context) {
 		return
 	}
 	var addedTask []string
-	for _, name := range req.Names {
-		ok, err := fs.Copy(c, stdpath.Join(srcDir, name), dstDir)
+	for i, name := range req.Names {
+		ok, err := fs.Copy(c, stdpath.Join(srcDir, name), dstDir, len(req.Names) > i+1)
 		if ok {
 			addedTask = append(addedTask, name)
 		}
@@ -130,9 +127,6 @@ func FsCopy(c *gin.Context) {
 			common.ErrorResp(c, err, 500)
 			return
 		}
-	}
-	if len(req.Names) != len(addedTask) {
-		fs.ClearCache(dstDir)
 	}
 	if len(addedTask) > 0 {
 		common.SuccessResp(c, fmt.Sprintf("Added %d tasks", len(addedTask)))
@@ -166,7 +160,6 @@ func FsRename(c *gin.Context) {
 		common.ErrorResp(c, err, 500)
 		return
 	}
-	fs.ClearCache(stdpath.Dir(reqPath))
 	common.SuccessResp(c)
 }
 

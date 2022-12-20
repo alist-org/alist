@@ -46,8 +46,6 @@ func moveFiles(ctx context.Context, src, dst string, overwrite bool) (status int
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}
-	fs.ClearCache(srcDir)
-	fs.ClearCache(dstDir)
 	// TODO if there are no files copy, should return 204
 	return http.StatusCreated, nil
 }
@@ -60,7 +58,6 @@ func copyFiles(ctx context.Context, src, dst string, overwrite bool) (status int
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}
-	fs.ClearCache(path.Dir(dst))
 	// TODO if there are no files copy, should return 204
 	return http.StatusCreated, nil
 }

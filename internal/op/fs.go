@@ -21,6 +21,49 @@ import (
 var listCache = cache.NewMemCache(cache.WithShards[[]model.Obj](64))
 var listG singleflight.Group[[]model.Obj]
 
+func updateCacheObj(storage driver.Driver, path string, oldObj model.Obj, newObj model.Obj) {
+	key := Key(storage, path)
+	objs, ok := listCache.Get(key)
+	if ok {
+		for i, obj := range objs {
+			if obj.GetName() == oldObj.GetName() {
+				objs[i] = newObj
+				break
+			}
+		}
+		listCache.Set(key, objs, cache.WithEx[[]model.Obj](time.Minute*time.Duration(storage.GetStorage().CacheExpiration)))
+	}
+}
+
+func delCacheObj(storage driver.Driver, path string, obj model.Obj) {
+	key := Key(storage, path)
+	objs, ok := listCache.Get(key)
+	if ok {
+		for i, oldObj := range objs {
+			if oldObj.GetName() == obj.GetName() {
+				objs = append(objs[:i], objs[i+1:]...)
+				break
+			}
+		}
+		listCache.Set(key, objs, cache.WithEx[[]model.Obj](time.Minute*time.Duration(storage.GetStorage().CacheExpiration)))
+	}
+}
+
+func addCacheObj(storage driver.Driver, path string, newObj model.Obj) {
+	key := Key(storage, path)
+	objs, ok := listCache.Get(key)
+	if ok {
+		for i, obj := range objs {
+			if obj.GetName() == newObj.GetName() {
+				objs[i] = newObj
+				return
+			}
+		}
+		objs = append(objs, newObj)
+		listCache.Set(key, objs, cache.WithEx[[]model.Obj](time.Minute*time.Duration(storage.GetStorage().CacheExpiration)))
+	}
+}
+
 func ClearCache(storage driver.Driver, path string) {
 	listCache.Del(Key(storage, path))
 }
@@ -37,7 +80,7 @@ func List(ctx context.Context, storage driver.Driver, path string, args model.Li
 	path = utils.FixAndCleanPath(path)
 	log.Debugf("op.List %s", path)
 	key := Key(storage, path)
-	if len(refresh) == 0 || !refresh[0] {
+	if !utils.IsBool(refresh...) {
 		if files, ok := listCache.Get(key); ok {
 			log.Debugf("use cache when list %s", path)
 			return files, nil
@@ -148,10 +191,7 @@ func GetUnwrap(ctx context.Context, storage driver.Driver, path string) (model.O
 	if err != nil {
 		return nil, err
 	}
-	if unwrap, ok := obj.(model.UnwrapObj); ok {
-		obj = unwrap.Unwrap()
-	}
-	return obj, err
+	return model.UnwrapObjs(obj), err
 }
 
 var linkCache = cache.NewMemCache(cache.WithShards[*model.Link](16))
@@ -169,7 +209,7 @@ func Link(ctx context.Context, storage driver.Driver, path string, args model.Li
 	if file.IsDir() {
 		return nil, nil, errors.WithStack(errs.NotFile)
 	}
-	key := stdpath.Join(storage.GetStorage().MountPath, path) + ":" + args.IP
+	key := Key(storage, path) + ":" + args.IP
 	if link, ok := linkCache.Get(key); ok {
 		return link, file, nil
 	}
@@ -206,7 +246,7 @@ func Other(ctx context.Context, storage driver.Driver, args model.FsOtherArgs) (
 
 var mkdirG singleflight.Group[interface{}]
 
-func MakeDir(ctx context.Context, storage driver.Driver, path string) error {
+func MakeDir(ctx context.Context, storage driver.Driver, path string, lazyCache ...bool) error {
 	if storage.Config().CheckStatus && storage.GetStorage().Status != WORK {
 		return errors.Errorf("storage not init: %s", storage.GetStorage().Status)
 	}
@@ -227,32 +267,124 @@ func MakeDir(ctx context.Context, storage driver.Driver, path string) error {
 				if err != nil {
 					return nil, errors.WithMessagef(err, "failed to get parent dir [%s]", parentPath)
 				}
-				err = storage.MakeDir(ctx, parentDir, dirName)
-				if err == nil {
-					ClearCache(storage, parentPath)
+
+				switch s := storage.(type) {
+				case driver.MkdirResult:
+					var newObj model.Obj
+					newObj, err = s.MakeDir(ctx, parentDir, dirName)
+					if err == nil {
+						if newObj != nil {
+							addCacheObj(storage, parentPath, model.WrapObjName(newObj))
+						} else if !utils.IsBool(lazyCache...) {
+							ClearCache(storage, parentPath)
+						}
+					}
+				case driver.Mkdir:
+					err = s.MakeDir(ctx, parentDir, dirName)
+					if err == nil && !utils.IsBool(lazyCache...) {
+						ClearCache(storage, parentPath)
+					}
+				default:
+					return nil, errs.NotImplement
 				}
 				return nil, errors.WithStack(err)
-			} else {
-				return nil, errors.WithMessage(err, "failed to check if dir exists")
 			}
-		} else {
-			// dir exists
-			if f.IsDir() {
-				return nil, nil
-			} else {
-				// dir to make is a file
-				return nil, errors.New("file exists")
-			}
+			return nil, errors.WithMessage(err, "failed to check if dir exists")
 		}
+		// dir exists
+		if f.IsDir() {
+			return nil, nil
+		}
+		// dir to make is a file
+		return nil, errors.New("file exists")
 	})
 	return err
-
 }
 
-func Move(ctx context.Context, storage driver.Driver, srcPath, dstDirPath string) error {
+func Move(ctx context.Context, storage driver.Driver, srcPath, dstDirPath string, lazyCache ...bool) error {
 	if storage.Config().CheckStatus && storage.GetStorage().Status != WORK {
 		return errors.Errorf("storage not init: %s", storage.GetStorage().Status)
 	}
+	srcPath = utils.FixAndCleanPath(srcPath)
+	dstDirPath = utils.FixAndCleanPath(dstDirPath)
+	srcRawObj, err := Get(ctx, storage, srcPath)
+	if err != nil {
+		return errors.WithMessage(err, "failed to get src object")
+	}
+	srcObj := model.UnwrapObjs(srcRawObj)
+	dstDir, err := GetUnwrap(ctx, storage, dstDirPath)
+	if err != nil {
+		return errors.WithMessage(err, "failed to get dst dir")
+	}
+	srcDirPath := stdpath.Dir(srcPath)
+
+	switch s := storage.(type) {
+	case driver.MoveResult:
+		var newObj model.Obj
+		newObj, err = s.Move(ctx, srcObj, dstDir)
+		if err == nil {
+			delCacheObj(storage, srcDirPath, srcRawObj)
+			if newObj != nil {
+				addCacheObj(storage, dstDirPath, model.WrapObjName(newObj))
+			} else if !utils.IsBool(lazyCache...) {
+				ClearCache(storage, dstDirPath)
+			}
+		}
+	case driver.Move:
+		err = s.Move(ctx, srcObj, dstDir)
+		if err == nil {
+			delCacheObj(storage, srcDirPath, srcRawObj)
+			if !utils.IsBool(lazyCache...) {
+				ClearCache(storage, dstDirPath)
+			}
+		}
+	default:
+		return errs.NotImplement
+	}
+	return errors.WithStack(err)
+}
+
+func Rename(ctx context.Context, storage driver.Driver, srcPath, dstName string, lazyCache ...bool) error {
+	if storage.Config().CheckStatus && storage.GetStorage().Status != WORK {
+		return errors.Errorf("storage not init: %s", storage.GetStorage().Status)
+	}
+	srcPath = utils.FixAndCleanPath(srcPath)
+	srcRawObj, err := Get(ctx, storage, srcPath)
+	if err != nil {
+		return errors.WithMessage(err, "failed to get src object")
+	}
+	srcObj := model.UnwrapObjs(srcRawObj)
+	srcDirPath := stdpath.Dir(srcPath)
+
+	switch s := storage.(type) {
+	case driver.RenameResult:
+		var newObj model.Obj
+		newObj, err = s.Rename(ctx, srcObj, dstName)
+		if err == nil {
+			if newObj != nil {
+				updateCacheObj(storage, srcDirPath, srcRawObj, model.WrapObjName(newObj))
+			} else if !utils.IsBool(lazyCache...) {
+				ClearCache(storage, srcDirPath)
+			}
+		}
+	case driver.Rename:
+		err = s.Rename(ctx, srcObj, dstName)
+		if err == nil && !utils.IsBool(lazyCache...) {
+			ClearCache(storage, srcDirPath)
+		}
+	default:
+		return errs.NotImplement
+	}
+	return errors.WithStack(err)
+}
+
+// Copy Just copy file[s] in a storage
+func Copy(ctx context.Context, storage driver.Driver, srcPath, dstDirPath string, lazyCache ...bool) error {
+	if storage.Config().CheckStatus && storage.GetStorage().Status != WORK {
+		return errors.Errorf("storage not init: %s", storage.GetStorage().Status)
+	}
+	srcPath = utils.FixAndCleanPath(srcPath)
+	dstDirPath = utils.FixAndCleanPath(dstDirPath)
 	srcObj, err := GetUnwrap(ctx, storage, srcPath)
 	if err != nil {
 		return errors.WithMessage(err, "failed to get src object")
@@ -261,38 +393,35 @@ func Move(ctx context.Context, storage driver.Driver, srcPath, dstDirPath string
 	if err != nil {
 		return errors.WithMessage(err, "failed to get dst dir")
 	}
-	return errors.WithStack(storage.Move(ctx, srcObj, dstDir))
-}
 
-func Rename(ctx context.Context, storage driver.Driver, srcPath, dstName string) error {
-	if storage.Config().CheckStatus && storage.GetStorage().Status != WORK {
-		return errors.Errorf("storage not init: %s", storage.GetStorage().Status)
+	switch s := storage.(type) {
+	case driver.CopyResult:
+		var newObj model.Obj
+		newObj, err = s.Copy(ctx, srcObj, dstDir)
+		if err == nil {
+			if newObj != nil {
+				addCacheObj(storage, dstDirPath, model.WrapObjName(newObj))
+			} else if !utils.IsBool(lazyCache...) {
+				ClearCache(storage, dstDirPath)
+			}
+		}
+	case driver.Copy:
+		err = s.Copy(ctx, srcObj, dstDir)
+		if err == nil && !utils.IsBool(lazyCache...) {
+			ClearCache(storage, dstDirPath)
+		}
+	default:
+		return errs.NotImplement
 	}
-	srcObj, err := GetUnwrap(ctx, storage, srcPath)
-	if err != nil {
-		return errors.WithMessage(err, "failed to get src object")
-	}
-	return errors.WithStack(storage.Rename(ctx, srcObj, dstName))
-}
-
-// Copy Just copy file[s] in a storage
-func Copy(ctx context.Context, storage driver.Driver, srcPath, dstDirPath string) error {
-	if storage.Config().CheckStatus && storage.GetStorage().Status != WORK {
-		return errors.Errorf("storage not init: %s", storage.GetStorage().Status)
-	}
-	srcObj, err := GetUnwrap(ctx, storage, srcPath)
-	if err != nil {
-		return errors.WithMessage(err, "failed to get src object")
-	}
-	dstDir, err := GetUnwrap(ctx, storage, dstDirPath)
-	return errors.WithStack(storage.Copy(ctx, srcObj, dstDir))
+	return errors.WithStack(err)
 }
 
 func Remove(ctx context.Context, storage driver.Driver, path string) error {
 	if storage.Config().CheckStatus && storage.GetStorage().Status != WORK {
 		return errors.Errorf("storage not init: %s", storage.GetStorage().Status)
 	}
-	obj, err := GetUnwrap(ctx, storage, path)
+	path = utils.FixAndCleanPath(path)
+	rawObj, err := Get(ctx, storage, path)
 	if err != nil {
 		// if object not found, it's ok
 		if errs.IsObjectNotFound(err) {
@@ -300,31 +429,21 @@ func Remove(ctx context.Context, storage driver.Driver, path string) error {
 		}
 		return errors.WithMessage(err, "failed to get object")
 	}
-	err = storage.Remove(ctx, obj)
-	if err == nil {
-		key := Key(storage, stdpath.Dir(path))
-		if objs, ok := listCache.Get(key); ok {
-			j := -1
-			for i, m := range objs {
-				if m.GetName() == obj.GetName() {
-					j = i
-					break
-				}
-			}
-			if j >= 0 && j < len(objs) {
-				objs = append(objs[:j], objs[j+1:]...)
-				listCache.Set(key, objs)
-			} else {
-				log.Debugf("not found obj")
-			}
-		} else {
-			log.Debugf("not found parent cache")
+	dirPath := stdpath.Dir(path)
+
+	switch s := storage.(type) {
+	case driver.Remove:
+		err = s.Remove(ctx, model.UnwrapObjs(rawObj))
+		if err == nil {
+			delCacheObj(storage, dirPath, rawObj)
 		}
+	default:
+		return errs.NotImplement
 	}
 	return errors.WithStack(err)
 }
 
-func Put(ctx context.Context, storage driver.Driver, dstDirPath string, file *model.FileStream, up driver.UpdateProgress) error {
+func Put(ctx context.Context, storage driver.Driver, dstDirPath string, file *model.FileStream, up driver.UpdateProgress, lazyCache ...bool) error {
 	if storage.Config().CheckStatus && storage.GetStorage().Status != WORK {
 		return errors.Errorf("storage not init: %s", storage.GetStorage().Status)
 	}
@@ -342,6 +461,7 @@ func Put(ctx context.Context, storage driver.Driver, dstDirPath string, file *mo
 		}
 	}()
 	// if file exist and size = 0, delete it
+	dstDirPath = utils.FixAndCleanPath(dstDirPath)
 	dstPath := stdpath.Join(dstDirPath, file.GetName())
 	fi, err := GetUnwrap(ctx, storage, dstPath)
 	if err == nil {
@@ -367,7 +487,26 @@ func Put(ctx context.Context, storage driver.Driver, dstDirPath string, file *mo
 	if up == nil {
 		up = func(p int) {}
 	}
-	err = storage.Put(ctx, parentDir, file, up)
+
+	switch s := storage.(type) {
+	case driver.PutResult:
+		var newObj model.Obj
+		newObj, err = s.Put(ctx, parentDir, file, up)
+		if err == nil {
+			if newObj != nil {
+				addCacheObj(storage, dstDirPath, model.WrapObjName(newObj))
+			} else if !utils.IsBool(lazyCache...) {
+				ClearCache(storage, dstDirPath)
+			}
+		}
+	case driver.Put:
+		err = s.Put(ctx, parentDir, file, up)
+		if err == nil && !utils.IsBool(lazyCache...) {
+			ClearCache(storage, dstDirPath)
+		}
+	default:
+		return errs.NotImplement
+	}
 	log.Debugf("put file [%s] done", file.GetName())
 	//if err == nil {
 	//	//clear cache

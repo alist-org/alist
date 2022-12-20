@@ -9,15 +9,15 @@ import (
 	"github.com/pkg/errors"
 )
 
-func makeDir(ctx context.Context, path string) error {
+func makeDir(ctx context.Context, path string, lazyCache ...bool) error {
 	storage, actualPath, err := op.GetStorageAndActualPath(path)
 	if err != nil {
 		return errors.WithMessage(err, "failed get storage")
 	}
-	return op.MakeDir(ctx, storage, actualPath)
+	return op.MakeDir(ctx, storage, actualPath, lazyCache...)
 }
 
-func move(ctx context.Context, srcPath, dstDirPath string) error {
+func move(ctx context.Context, srcPath, dstDirPath string, lazyCache ...bool) error {
 	srcStorage, srcActualPath, err := op.GetStorageAndActualPath(srcPath)
 	if err != nil {
 		return errors.WithMessage(err, "failed get src storage")
@@ -29,15 +29,15 @@ func move(ctx context.Context, srcPath, dstDirPath string) error {
 	if srcStorage.GetStorage() != dstStorage.GetStorage() {
 		return errors.WithStack(errs.MoveBetweenTwoStorages)
 	}
-	return op.Move(ctx, srcStorage, srcActualPath, dstDirActualPath)
+	return op.Move(ctx, srcStorage, srcActualPath, dstDirActualPath, lazyCache...)
 }
 
-func rename(ctx context.Context, srcPath, dstName string) error {
+func rename(ctx context.Context, srcPath, dstName string, lazyCache ...bool) error {
 	storage, srcActualPath, err := op.GetStorageAndActualPath(srcPath)
 	if err != nil {
 		return errors.WithMessage(err, "failed get storage")
 	}
-	return op.Rename(ctx, storage, srcActualPath, dstName)
+	return op.Rename(ctx, storage, srcActualPath, dstName, lazyCache...)
 }
 
 func remove(ctx context.Context, path string) error {

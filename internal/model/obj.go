@@ -99,12 +99,45 @@ func ExtractFolder(objs []Obj, extractFolder string) {
 	})
 }
 
+// Wrap
+func WrapObjName(objs Obj) Obj {
+	return &ObjWrapName{Obj: objs}
+}
+
 func WrapObjsName(objs []Obj) {
 	for i := 0; i < len(objs); i++ {
 		objs[i] = &ObjWrapName{Obj: objs[i]}
 	}
 }
 
+func UnwrapObjs(obj Obj) Obj {
+	if unwrap, ok := obj.(UnwrapObj); ok {
+		obj = unwrap.Unwrap()
+	}
+	return obj
+}
+
+func GetThumb(obj Obj) (thumb string, ok bool) {
+	if obj, ok := obj.(Thumb); ok {
+		return obj.Thumb(), true
+	}
+	if unwrap, ok := obj.(UnwrapObj); ok {
+		return GetThumb(unwrap.Unwrap())
+	}
+	return thumb, false
+}
+
+func GetUrl(obj Obj) (url string, ok bool) {
+	if obj, ok := obj.(URL); ok {
+		return obj.URL(), true
+	}
+	if unwrap, ok := obj.(UnwrapObj); ok {
+		return GetUrl(unwrap.Unwrap())
+	}
+	return url, false
+}
+
+// Merge
 func NewObjMerge() *ObjMerge {
 	return &ObjMerge{
 		set: mapset.NewSet[string](),
