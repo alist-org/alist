@@ -119,19 +119,16 @@ func CreateTempFile(r io.ReadCloser) (*os.File, error) {
 // GetFileType get file type
 func GetFileType(filename string) int {
 	ext := strings.ToLower(Ext(filename))
-	//if SliceContains(conf.TypesMap[conf.OfficeTypes], ext) {
-	//	return conf.OFFICE
-	//}
-	if SliceContains(conf.TypesMap[conf.AudioTypes], ext) {
+	if SliceContains(conf.SlicesMap[conf.AudioTypes], ext) {
 		return conf.AUDIO
 	}
-	if SliceContains(conf.TypesMap[conf.VideoTypes], ext) {
+	if SliceContains(conf.SlicesMap[conf.VideoTypes], ext) {
 		return conf.VIDEO
 	}
-	if SliceContains(conf.TypesMap[conf.ImageTypes], ext) {
+	if SliceContains(conf.SlicesMap[conf.ImageTypes], ext) {
 		return conf.IMAGE
 	}
-	if SliceContains(conf.TypesMap[conf.TextTypes], ext) {
+	if SliceContains(conf.SlicesMap[conf.TextTypes], ext) {
 		return conf.TEXT
 	}
 	return conf.UNKNOWN

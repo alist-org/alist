@@ -15,23 +15,21 @@ const (
 	BasePath     = "base_path"
 	SiteTitle    = "site_title"
 	Announcement = "announcement"
-	AllowIndexed   = "allow_indexed"
+	AllowIndexed = "allow_indexed"
 
 	Logo      = "logo"
 	Favicon   = "favicon"
 	MainColor = "main_color"
 
 	// preview
-	TextTypes  = "text_types"
-	AudioTypes = "audio_types"
-	VideoTypes = "video_types"
-	ImageTypes = "image_types"
-	// OfficeTypes   = "office_types"
-	ProxyTypes    = "proxy_types"
-	OfficeViewers = "office_viewers"
-	PdfViewers    = "pdf_viewers"
-	AudioAutoplay = "audio_autoplay"
-	VideoAutoplay = "video_autoplay"
+	TextTypes          = "text_types"
+	AudioTypes         = "audio_types"
+	VideoTypes         = "video_types"
+	ImageTypes         = "image_types"
+	ProxyTypes         = "proxy_types"
+	ProxyIgnoreHeaders = "proxy_ignore_headers"
+	AudioAutoplay      = "audio_autoplay"
+	VideoAutoplay      = "video_autoplay"
 
 	// global
 	HideFiles           = "hide_files"
