@@ -113,6 +113,7 @@ func (d *FTP) Put(ctx context.Context, dstDir model.Obj, stream model.FileStream
 	if err := d.login(); err != nil {
 		return err
 	}
+	// TODO: support cancel
 	return d.conn.Stor(stdpath.Join(dstDir.GetPath(), stream.GetName()), stream)
 }
 

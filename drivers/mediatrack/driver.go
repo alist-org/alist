@@ -195,7 +195,7 @@ func (d *MediaTrack) Put(ctx context.Context, dstDir model.Obj, stream model.Fil
 		Key:    &resp.Data.Object,
 		Body:   tempFile,
 	}
-	_, err = uploader.Upload(input)
+	_, err = uploader.UploadWithContext(ctx, input)
 	if err != nil {
 		return err
 	}

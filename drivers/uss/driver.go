@@ -123,6 +123,7 @@ func (d *USS) Remove(ctx context.Context, obj model.Obj) error {
 }
 
 func (d *USS) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
+	// TODO not support cancel??
 	return d.client.Put(&upyun.PutObjectConfig{
 		Path:   getKey(path.Join(dstDir.GetPath(), stream.GetName()), false),
 		Reader: stream,

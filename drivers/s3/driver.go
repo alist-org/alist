@@ -134,7 +134,7 @@ func (d *S3) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreame
 		Key:    &key,
 		Body:   stream,
 	}
-	_, err := uploader.Upload(input)
+	_, err := uploader.UploadWithContext(ctx, input)
 	return err
 }
 

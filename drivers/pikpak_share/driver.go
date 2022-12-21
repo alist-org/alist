@@ -6,7 +6,6 @@ import (
 
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
@@ -77,36 +76,6 @@ func (d *PikPakShare) Link(ctx context.Context, file model.Obj, args model.LinkA
 		link.URL = resp.FileInfo.Medias[0].Link.Url
 	}
 	return &link, nil
-}
-
-func (d *PikPakShare) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
-	// TODO create folder
-	return errs.NotSupport
-}
-
-func (d *PikPakShare) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
-	// TODO move obj
-	return errs.NotSupport
-}
-
-func (d *PikPakShare) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
-	// TODO rename obj
-	return errs.NotSupport
-}
-
-func (d *PikPakShare) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
-	// TODO copy obj
-	return errs.NotSupport
-}
-
-func (d *PikPakShare) Remove(ctx context.Context, obj model.Obj) error {
-	// TODO remove obj
-	return errs.NotSupport
-}
-
-func (d *PikPakShare) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
-	// TODO upload file
-	return errs.NotSupport
 }
 
 var _ driver.Driver = (*PikPakShare)(nil)

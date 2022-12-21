@@ -9,6 +9,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/pkg/utils"
 	log "github.com/sirupsen/logrus"
 	"github.com/t3rm1n4l/go-mega"
 )
@@ -155,6 +156,9 @@ func (d *Mega) Put(ctx context.Context, dstDir model.Obj, stream model.FileStrea
 		}
 
 		for id := 0; id < u.Chunks(); id++ {
+			if utils.IsCanceled(ctx) {
+				return ctx.Err()
+			}
 			_, chkSize, err := u.ChunkLocation(id)
 			if err != nil {
 				return err

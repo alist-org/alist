@@ -189,7 +189,7 @@ func (d *PikPak) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 		Key:    &key,
 		Body:   tempFile,
 	}
-	_, err = uploader.Upload(input)
+	_, err = uploader.UploadWithContext(ctx, input)
 	return err
 }
 

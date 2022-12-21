@@ -8,7 +8,6 @@ import (
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
-	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/cron"
 	"github.com/alist-org/alist/v3/pkg/utils"
@@ -111,36 +110,6 @@ func (d *AliyundriveShare) Link(ctx context.Context, file model.Obj, args model.
 		},
 		URL: u,
 	}, nil
-}
-
-func (d *AliyundriveShare) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
-	// TODO create folder
-	return errs.NotSupport
-}
-
-func (d *AliyundriveShare) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
-	// TODO move obj
-	return errs.NotSupport
-}
-
-func (d *AliyundriveShare) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
-	// TODO rename obj
-	return errs.NotSupport
-}
-
-func (d *AliyundriveShare) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
-	// TODO copy obj
-	return errs.NotSupport
-}
-
-func (d *AliyundriveShare) Remove(ctx context.Context, obj model.Obj) error {
-	// TODO remove obj
-	return errs.NotSupport
-}
-
-func (d *AliyundriveShare) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
-	// TODO upload file
-	return errs.NotSupport
 }
 
 var _ driver.Driver = (*AliyundriveShare)(nil)

@@ -162,7 +162,7 @@ func (d *AListV3) Put(ctx context.Context, dstDir model.Obj, stream model.FileSt
 	if err != nil {
 		return nil
 	}
-	_, err = base.RestyClient.R().
+	_, err = base.RestyClient.R().SetContext(ctx).
 		SetResult(&resp).
 		SetHeader("Authorization", d.AccessToken).
 		SetHeader("File-Path", path.Join(dstDir.GetPath(), stream.GetName())).

@@ -134,7 +134,7 @@ func (d *GoogleDrive) Put(ctx context.Context, dstDir model.Obj, stream model.Fi
 			"X-Upload-Content-Type":   stream.GetMimetype(),
 			"X-Upload-Content-Length": strconv.FormatInt(stream.GetSize(), 10),
 		}).
-		SetError(&e).SetBody(data)
+		SetError(&e).SetBody(data).SetContext(ctx)
 	if obj != nil {
 		res, err = req.Patch(url)
 	} else {

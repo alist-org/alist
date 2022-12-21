@@ -194,7 +194,7 @@ func (d *Cloud189) Remove(ctx context.Context, obj model.Obj) error {
 }
 
 func (d *Cloud189) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
-	return d.newUpload(dstDir, stream, up)
+	return d.newUpload(ctx, dstDir, stream, up)
 }
 
 var _ driver.Driver = (*Cloud189)(nil)

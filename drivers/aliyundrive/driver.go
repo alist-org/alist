@@ -248,10 +248,14 @@ func (d *AliDrive) Put(ctx context.Context, dstDir model.Obj, stream model.FileS
 	}
 
 	for i, partInfo := range resp.PartInfoList {
+		if utils.IsCanceled(ctx) {
+			return ctx.Err()
+		}
 		req, err := http.NewRequest("PUT", partInfo.UploadUrl, io.LimitReader(file, DEFAULT))
 		if err != nil {
 			return err
 		}
+		req = req.WithContext(ctx)
 		res, err := base.HttpClient.Do(req)
 		if err != nil {
 			return err

@@ -221,7 +221,7 @@ func (d *Pan123) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 	}
 	var resp UploadResp
 	_, err := d.request("https://www.123pan.com/a/api/file/upload_request", http.MethodPost, func(req *resty.Request) {
-		req.SetBody(data)
+		req.SetBody(data).SetContext(ctx)
 	}, &resp)
 	if err != nil {
 		return err
@@ -245,14 +245,14 @@ func (d *Pan123) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 		Key:    &resp.Data.Key,
 		Body:   uploadFile,
 	}
-	_, err = uploader.Upload(input)
+	_, err = uploader.UploadWithContext(ctx, input)
 	if err != nil {
 		return err
 	}
 	_, err = d.request("https://www.123pan.com/api/file/upload_complete", http.MethodPost, func(req *resty.Request) {
 		req.SetBody(base.Json{
 			"fileId": resp.Data.FileId,
-		})
+		}).SetContext(ctx)
 	}, nil)
 	return err
 }

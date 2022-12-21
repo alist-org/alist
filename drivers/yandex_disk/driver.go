@@ -121,10 +121,11 @@ func (d *YandexDisk) Put(ctx context.Context, dstDir model.Obj, stream model.Fil
 	if err != nil {
 		return err
 	}
+	req = req.WithContext(ctx)
 	req.Header.Set("Content-Length", strconv.FormatInt(stream.GetSize(), 10))
 	req.Header.Set("Content-Type", "application/octet-stream")
 	res, err := base.HttpClient.Do(req)
-	res.Body.Close()
+	_ = res.Body.Close()
 	return err
 }
 

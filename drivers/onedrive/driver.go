@@ -137,7 +137,7 @@ func (d *Onedrive) Remove(ctx context.Context, obj model.Obj) error {
 func (d *Onedrive) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
 	var err error
 	if stream.GetSize() <= 4*1024*1024 {
-		err = d.upSmall(dstDir, stream)
+		err = d.upSmall(ctx, dstDir, stream)
 	} else {
 		err = d.upBig(ctx, dstDir, stream, up)
 	}

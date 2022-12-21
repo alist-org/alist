@@ -1,6 +1,7 @@
 package teambition
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -12,6 +13,7 @@ import (
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
 )
@@ -115,13 +117,15 @@ func (d *Teambition) getFiles(parentId string) ([]model.Obj, error) {
 	return files, nil
 }
 
-func (d *Teambition) upload(file model.FileStreamer, token string) (*FileUpload, error) {
+func (d *Teambition) upload(ctx context.Context, file model.FileStreamer, token string) (*FileUpload, error) {
 	prefix := "tcs"
 	if d.isInternational() {
 		prefix = "us-tcs"
 	}
 	var newFile FileUpload
-	_, err := base.RestyClient.R().SetResult(&newFile).SetHeader("Authorization", token).
+	_, err := base.RestyClient.R().
+		SetContext(ctx).
+		SetResult(&newFile).SetHeader("Authorization", token).
 		SetMultipartFormData(map[string]string{
 			"name": file.GetName(),
 			"type": file.GetMimetype(),
@@ -135,7 +139,7 @@ func (d *Teambition) upload(file model.FileStreamer, token string) (*FileUpload,
 	return &newFile, nil
 }
 
-func (d *Teambition) chunkUpload(file model.FileStreamer, token string, up driver.UpdateProgress) (*FileUpload, error) {
+func (d *Teambition) chunkUpload(ctx context.Context, file model.FileStreamer, token string, up driver.UpdateProgress) (*FileUpload, error) {
 	prefix := "tcs"
 	referer := "https://www.teambition.com/"
 	if d.isInternational() {
@@ -153,6 +157,9 @@ func (d *Teambition) chunkUpload(file model.FileStreamer, token string, up drive
 		return nil, err
 	}
 	for i := 0; i < newChunk.Chunks; i++ {
+		if utils.IsCanceled(ctx) {
+			return nil, ctx.Err()
+		}
 		chunkSize := newChunk.ChunkSize
 		if i == newChunk.Chunks-1 {
 			chunkSize = int(file.GetSize()) - i*chunkSize
@@ -166,11 +173,13 @@ func (d *Teambition) chunkUpload(file model.FileStreamer, token string, up drive
 		u := fmt.Sprintf("https://%s.teambition.net/upload/chunk/%s?chunk=%d&chunks=%d",
 			prefix, newChunk.FileKey, i+1, newChunk.Chunks)
 		log.Debugf("url: %s", u)
-		_, err := base.RestyClient.R().SetHeaders(map[string]string{
-			"Authorization": token,
-			"Content-Type":  "application/octet-stream",
-			"Referer":       referer,
-		}).SetBody(chunkData).Post(u)
+		_, err := base.RestyClient.R().
+			SetContext(ctx).
+			SetHeaders(map[string]string{
+				"Authorization": token,
+				"Content-Type":  "application/octet-stream",
+				"Referer":       referer,
+			}).SetBody(chunkData).Post(u)
 		if err != nil {
 			return nil, err
 		}
