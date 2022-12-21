@@ -59,7 +59,7 @@ func SearchNode(req model.SearchReq) ([]model.SearchNode, int64, error) {
 	switch conf.Conf.Database.Type {
 	case "sqlite3":
 		keywordsClause := db.Where("1 = 1")
-		for _, keyword := range strings.Split(req.Keywords, " ") {
+		for _, keyword := range strings.Fields(req.Keywords) {
 			keywordsClause = keywordsClause.Where("name LIKE ?", fmt.Sprintf("%%%s%%", keyword))
 		}
 		searchDB = db.Model(&model.SearchNode{}).Where(whereInParent(req.Parent)).Where(keywordsClause)
@@ -68,7 +68,7 @@ func SearchNode(req model.SearchReq) ([]model.SearchNode, int64, error) {
 			Where("MATCH (name) AGAINST (? IN NATURAL LANGUAGE MODE)", req.Keywords)
 	case "postgres":
 		searchDB = db.Model(&model.SearchNode{}).Where(whereInParent(req.Parent)).
-			Where("to_tsvector(name) @@ to_tsquery(?)", req.Keywords)
+			Where("to_tsvector(name) @@ to_tsquery(?)", strings.Join(strings.Fields(req.Keywords), " & "))
 	}
 	var count int64
 	if err := searchDB.Count(&count).Error; err != nil {
