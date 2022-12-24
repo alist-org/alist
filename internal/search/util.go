@@ -6,6 +6,7 @@ import (
 	"github.com/alist-org/alist/v3/drivers/alist_v3"
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/conf"
+	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/internal/setting"
@@ -37,25 +38,7 @@ func WriteProgress(progress *model.IndexProgress) {
 	}
 }
 
-func GetIndexPaths() []string {
-	indexPaths := make([]string, 0)
-	customIndexPaths := setting.GetStr(conf.IndexPaths)
-	if customIndexPaths != "" {
-		indexPaths = append(indexPaths, strings.Split(customIndexPaths, "\n")...)
-	}
-	return indexPaths
-}
-
-func isIndexPath(path string, indexPaths []string) bool {
-	for _, indexPaths := range indexPaths {
-		if strings.HasPrefix(path, indexPaths) {
-			return true
-		}
-	}
-	return false
-}
-
-func GetIgnorePaths() ([]string, error) {
+func updateIgnorePaths() {
 	storages := op.GetAllStorages()
 	ignorePaths := make([]string, 0)
 	var skipDrivers = []string{"AList V2", "AList V3", "Virtual"}
@@ -84,14 +67,27 @@ func GetIgnorePaths() ([]string, error) {
 	if customIgnorePaths != "" {
 		ignorePaths = append(ignorePaths, strings.Split(customIgnorePaths, "\n")...)
 	}
-	return ignorePaths, nil
+	conf.SlicesMap[conf.IgnorePaths] = ignorePaths
 }
 
-func isIgnorePath(path string, ignorePaths []string) bool {
-	for _, ignorePath := range ignorePaths {
+func isIgnorePath(path string) bool {
+	for _, ignorePath := range conf.SlicesMap[conf.IgnorePaths] {
 		if strings.HasPrefix(path, ignorePath) {
 			return true
 		}
 	}
 	return false
+}
+
+func init() {
+	op.RegisterSettingItemHook(conf.IgnorePaths, func(item *model.SettingItem) error {
+		updateIgnorePaths()
+		return nil
+	})
+	op.RegisterStorageHook(func(typ string, storage driver.Driver) {
+		var skipDrivers = []string{"AList V2", "AList V3", "Virtual"}
+		if utils.SliceContains(skipDrivers, storage.Config().Name) {
+			updateIgnorePaths()
+		}
+	})
 }

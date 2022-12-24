@@ -29,11 +29,11 @@ func HasStorage(mountPath string) bool {
 	return storagesMap.Has(utils.FixAndCleanPath(mountPath))
 }
 
-func GetStorageByMountPath(virtualPath string) (driver.Driver, error) {
-	virtualPath = utils.FixAndCleanPath(virtualPath)
-	storageDriver, ok := storagesMap.Load(virtualPath)
+func GetStorageByMountPath(mountPath string) (driver.Driver, error) {
+	mountPath = utils.FixAndCleanPath(mountPath)
+	storageDriver, ok := storagesMap.Load(mountPath)
 	if !ok {
-		return nil, errors.Errorf("no mount path for an storage is: %s", virtualPath)
+		return nil, errors.Errorf("no mount path for an storage is: %s", mountPath)
 	}
 	return storageDriver, nil
 }
@@ -58,6 +58,7 @@ func CreateStorage(ctx context.Context, storage model.Storage) (uint, error) {
 	}
 	// already has an id
 	err = initStorage(ctx, storage, storageDriver)
+	go callStorageHooks("add", storageDriver)
 	if err != nil {
 		return storage.ID, errors.Wrap(err, "failed init storage but storage is already created")
 	}
@@ -77,6 +78,7 @@ func LoadStorage(ctx context.Context, storage model.Storage) error {
 	storageDriver := driverNew()
 
 	err = initStorage(ctx, storage, storageDriver)
+	go callStorageHooks("add", storageDriver)
 	log.Debugf("storage %+v is created", storageDriver)
 	return err
 }
@@ -145,6 +147,7 @@ func DisableStorage(ctx context.Context, id uint) error {
 		return errors.WithMessage(err, "failed update storage in db")
 	}
 	storagesMap.Delete(storage.MountPath)
+	go callStorageHooks("del", storageDriver)
 	return nil
 }
 
@@ -182,6 +185,7 @@ func UpdateStorage(ctx context.Context, storage model.Storage) error {
 	}
 
 	err = initStorage(ctx, storage, storageDriver)
+	go callStorageHooks("update", storageDriver)
 	log.Debugf("storage %+v is update", storageDriver)
 	return err
 }
@@ -200,13 +204,14 @@ func DeleteStorageById(ctx context.Context, id uint) error {
 		if err := storageDriver.Drop(ctx); err != nil {
 			return errors.Wrapf(err, "failed drop storage")
 		}
+		// delete the storage in the memory
+		storagesMap.Delete(storage.MountPath)
+		go callStorageHooks("del", storageDriver)
 	}
 	// delete the storage in the database
 	if err := db.DeleteStorageById(id); err != nil {
 		return errors.WithMessage(err, "failed delete storage in database")
 	}
-	// delete the storage in the memory
-	storagesMap.Delete(storage.MountPath)
 	return nil
 }
 

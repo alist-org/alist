@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/alist-org/alist/v3/internal/conf"
+	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
@@ -90,12 +91,17 @@ func HandleSettingItemHook(item *model.SettingItem) (hasHook bool, err error) {
 	return false, nil
 }
 
-//func HandleSettingItemsHook(items []model.SettingItem) (err error) {
-//	for i := 0; i < len(items); i++ {
-//		_, err = HandleSettingItemHook(&items[i])
-//		if err != nil {
-//			return err
-//		}
-//	}
-//	return nil
-//}
+// Storage
+type StorageHook func(typ string, storage driver.Driver)
+
+var storageHooks = make([]StorageHook, 0)
+
+func callStorageHooks(typ string, storage driver.Driver) {
+	for _, hook := range storageHooks {
+		hook(typ, storage)
+	}
+}
+
+func RegisterStorageHook(hook StorageHook) {
+	storageHooks = append(storageHooks, hook)
+}
