@@ -51,11 +51,6 @@ func (d *Quark) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([
 	})
 }
 
-//func (d *Quark) Get(ctx context.Context, path string) (model.Obj, error) {
-//	// TODO this is optional
-//	return nil, errs.NotImplement
-//}
-
 func (d *Quark) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	data := base.Json{
 		"fids": []string{file.GetID()},
@@ -184,6 +179,9 @@ func (d *Quark) Put(ctx context.Context, dstDir model.Obj, stream model.FileStre
 	partNumber := 1
 	sizeDivide100 := stream.GetSize() / 100
 	for left > 0 {
+		if utils.IsCanceled(ctx) {
+			return ctx.Err()
+		}
 		if left > int64(partSize) {
 			bytes = defaultBytes
 		} else {
@@ -195,7 +193,7 @@ func (d *Quark) Put(ctx context.Context, dstDir model.Obj, stream model.FileStre
 		}
 		left -= int64(partSize)
 		log.Debugf("left: %d", left)
-		m, err := d.upPart(pre, stream.GetMimetype(), partNumber, bytes)
+		m, err := d.upPart(ctx, pre, stream.GetMimetype(), partNumber, bytes)
 		//m, err := driver.UpPart(pre, file.GetMIMEType(), partNumber, bytes, account, md5Str, sha1Str)
 		if err != nil {
 			return err

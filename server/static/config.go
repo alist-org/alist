@@ -31,7 +31,7 @@ func getSiteConfig() SiteConfig {
 		siteConfig.BasePath = setting.GetStr(conf.BasePath)
 	}
 	if siteConfig.BasePath != "" {
-		siteConfig.BasePath = utils.StandardizePath(siteConfig.BasePath)
+		siteConfig.BasePath = utils.FixAndCleanPath(siteConfig.BasePath)
 	}
 	if siteConfig.Cdn == "" {
 		siteConfig.Cdn = siteConfig.BasePath

@@ -3,8 +3,8 @@ package handles
 import (
 	"github.com/alist-org/alist/v3/internal/aria2"
 	"github.com/alist-org/alist/v3/internal/conf"
-	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
 )
@@ -24,7 +24,7 @@ func SetAria2(c *gin.Context) {
 		{Key: conf.Aria2Uri, Value: req.Uri, Type: conf.TypeString, Group: model.ARIA2, Flag: model.PRIVATE},
 		{Key: conf.Aria2Secret, Value: req.Secret, Type: conf.TypeString, Group: model.ARIA2, Flag: model.PRIVATE},
 	}
-	if err := db.SaveSettingItems(items); err != nil {
+	if err := op.SaveSettingItems(items); err != nil {
 		common.ErrorResp(c, err, 500)
 		return
 	}

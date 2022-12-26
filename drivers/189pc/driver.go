@@ -13,7 +13,7 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
-type Yun189PC struct {
+type Cloud189PC struct {
 	model.Storage
 	Addition
 
@@ -26,15 +26,15 @@ type Yun189PC struct {
 	tokenInfo  *AppSessionResp
 }
 
-func (y *Yun189PC) Config() driver.Config {
+func (y *Cloud189PC) Config() driver.Config {
 	return config
 }
 
-func (y *Yun189PC) GetAddition() driver.Additional {
+func (y *Cloud189PC) GetAddition() driver.Additional {
 	return &y.Addition
 }
 
-func (y *Yun189PC) Init(ctx context.Context) (err error) {
+func (y *Cloud189PC) Init(ctx context.Context) (err error) {
 	// 处理个人云和家庭云参数
 	if y.isFamily() && y.RootFolderID == "-11" {
 		y.RootFolderID = ""
@@ -73,15 +73,15 @@ func (y *Yun189PC) Init(ctx context.Context) (err error) {
 	return
 }
 
-func (y *Yun189PC) Drop(ctx context.Context) error {
+func (y *Cloud189PC) Drop(ctx context.Context) error {
 	return nil
 }
 
-func (y *Yun189PC) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
+func (y *Cloud189PC) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
 	return y.getFiles(ctx, dir.GetID())
 }
 
-func (y *Yun189PC) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
+func (y *Cloud189PC) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	var downloadUrl struct {
 		URL string `json:"fileDownloadUrl"`
 	}
@@ -140,7 +140,7 @@ func (y *Yun189PC) Link(ctx context.Context, file model.Obj, args model.LinkArgs
 	return like, nil
 }
 
-func (y *Yun189PC) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
+func (y *Cloud189PC) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
 	fullUrl := API_URL
 	if y.isFamily() {
 		fullUrl += "/family/file"
@@ -167,7 +167,7 @@ func (y *Yun189PC) MakeDir(ctx context.Context, parentDir model.Obj, dirName str
 	return err
 }
 
-func (y *Yun189PC) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
+func (y *Cloud189PC) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 	_, err := y.post(API_URL+"/batch/createBatchTask.action", func(req *resty.Request) {
 		req.SetContext(ctx)
 		req.SetFormData(map[string]string{
@@ -191,7 +191,7 @@ func (y *Yun189PC) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 	return err
 }
 
-func (y *Yun189PC) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
+func (y *Cloud189PC) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
 	queryParam := make(map[string]string)
 	fullUrl := API_URL
 	method := http.MethodPost
@@ -216,7 +216,7 @@ func (y *Yun189PC) Rename(ctx context.Context, srcObj model.Obj, newName string)
 	return err
 }
 
-func (y *Yun189PC) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
+func (y *Cloud189PC) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 	_, err := y.post(API_URL+"/batch/createBatchTask.action", func(req *resty.Request) {
 		req.SetContext(ctx)
 		req.SetFormData(map[string]string{
@@ -241,7 +241,7 @@ func (y *Yun189PC) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 	return err
 }
 
-func (y *Yun189PC) Remove(ctx context.Context, obj model.Obj) error {
+func (y *Cloud189PC) Remove(ctx context.Context, obj model.Obj) error {
 	_, err := y.post(API_URL+"/batch/createBatchTask.action", func(req *resty.Request) {
 		req.SetContext(ctx)
 		req.SetFormData(map[string]string{
@@ -265,7 +265,7 @@ func (y *Yun189PC) Remove(ctx context.Context, obj model.Obj) error {
 	return err
 }
 
-func (y *Yun189PC) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
+func (y *Cloud189PC) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
 	if y.RapidUpload {
 		return y.FastUpload(ctx, dstDir, stream, up)
 	}

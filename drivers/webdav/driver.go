@@ -62,11 +62,6 @@ func (d *WebDav) List(ctx context.Context, dir model.Obj, args model.ListArgs) (
 	})
 }
 
-//func (d *WebDav) Get(ctx context.Context, path string) (model.Obj, error) {
-//	// this is optional
-//	return nil, errs.NotImplement
-//}
-
 func (d *WebDav) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	url, header, err := d.client.Link(file.GetPath())
 	if err != nil {
@@ -103,6 +98,7 @@ func (d *WebDav) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 		r.Header.Set("Content-Type", stream.GetMimetype())
 		r.ContentLength = stream.GetSize()
 	}
+	// TODO: support cancel
 	err := d.client.WriteStream(path.Join(dstDir.GetPath(), stream.GetName()), stream, 0644, callback)
 	return err
 }

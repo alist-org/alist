@@ -9,6 +9,7 @@ import (
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
 )
@@ -104,6 +105,9 @@ func (d *GoogleDrive) chunkUpload(ctx context.Context, stream model.FileStreamer
 	var defaultChunkSize = d.ChunkSize * 1024 * 1024
 	var finish int64 = 0
 	for finish < stream.GetSize() {
+		if utils.IsCanceled(ctx) {
+			return ctx.Err()
+		}
 		chunkSize := stream.GetSize() - finish
 		if chunkSize > defaultChunkSize {
 			chunkSize = defaultChunkSize
@@ -112,7 +116,7 @@ func (d *GoogleDrive) chunkUpload(ctx context.Context, stream model.FileStreamer
 			req.SetHeaders(map[string]string{
 				"Content-Length": strconv.FormatInt(chunkSize, 10),
 				"Content-Range":  fmt.Sprintf("bytes %d-%d/%d", finish, finish+chunkSize-1, stream.GetSize()),
-			}).SetBody(io.LimitReader(stream.GetReadCloser(), chunkSize))
+			}).SetBody(io.LimitReader(stream.GetReadCloser(), chunkSize)).SetContext(ctx)
 		}, nil)
 		if err != nil {
 			return err

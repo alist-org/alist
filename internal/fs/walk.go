@@ -5,8 +5,8 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/op"
 )
 
 // WalkFS traverses filesystem fs starting at name up to depth levels.
@@ -26,7 +26,7 @@ func WalkFS(ctx context.Context, depth int, name string, info model.Obj, walkFn 
 	if !info.IsDir() || depth == 0 {
 		return nil
 	}
-	meta, _ := db.GetNearestMeta(name)
+	meta, _ := op.GetNearestMeta(name)
 	// Read directory names.
 	objs, err := List(context.WithValue(ctx, "meta", meta), name)
 	if err != nil {

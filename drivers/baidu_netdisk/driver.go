@@ -52,11 +52,6 @@ func (d *BaiduNetdisk) List(ctx context.Context, dir model.Obj, args model.ListA
 	})
 }
 
-//func (d *BaiduNetdisk) Get(ctx context.Context, path string) (model.Obj, error) {
-//	// this is optional
-//	return nil, errs.NotImplement
-//}
-
 func (d *BaiduNetdisk) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	if d.DownloadAPI == "crack" {
 		return d.linkCrack(file, args)
@@ -197,6 +192,9 @@ func (d *BaiduNetdisk) Put(ctx context.Context, dstDir model.Obj, stream model.F
 	}
 	left = stream.GetSize()
 	for i, partseq := range precreateResp.BlockList {
+		if utils.IsCanceled(ctx) {
+			return ctx.Err()
+		}
 		byteSize := Default
 		var byteData []byte
 		if left < Default {
@@ -212,7 +210,11 @@ func (d *BaiduNetdisk) Put(ctx context.Context, dstDir model.Obj, stream model.F
 		}
 		u := "https://d.pcs.baidu.com/rest/2.0/pcs/superfile2"
 		params["partseq"] = strconv.Itoa(partseq)
-		res, err := base.RestyClient.R().SetQueryParams(params).SetFileReader("file", stream.GetName(), bytes.NewReader(byteData)).Post(u)
+		res, err := base.RestyClient.R().
+			SetContext(ctx).
+			SetQueryParams(params).
+			SetFileReader("file", stream.GetName(), bytes.NewReader(byteData)).
+			Post(u)
 		if err != nil {
 			return err
 		}

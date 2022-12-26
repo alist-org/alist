@@ -9,6 +9,7 @@ type FileStream struct {
 	io.ReadCloser
 	Mimetype     string
 	WebPutAsTask bool
+	Old          Obj
 }
 
 func (f *FileStream) GetMimetype() string {
@@ -25,4 +26,8 @@ func (f *FileStream) GetReadCloser() io.ReadCloser {
 
 func (f *FileStream) SetReadCloser(rc io.ReadCloser) {
 	f.ReadCloser = rc
+}
+
+func (f *FileStream) GetOld() Obj {
+	return f.Old
 }

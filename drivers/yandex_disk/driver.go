@@ -45,11 +45,6 @@ func (d *YandexDisk) List(ctx context.Context, dir model.Obj, args model.ListArg
 	})
 }
 
-//func (d *YandexDisk) Get(ctx context.Context, path string) (model.Obj, error) {
-//	// this is optional
-//	return nil, errs.NotImplement
-//}
-
 func (d *YandexDisk) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	var resp DownResp
 	_, err := d.request("/download", http.MethodGet, func(req *resty.Request) {
@@ -126,10 +121,11 @@ func (d *YandexDisk) Put(ctx context.Context, dstDir model.Obj, stream model.Fil
 	if err != nil {
 		return err
 	}
+	req = req.WithContext(ctx)
 	req.Header.Set("Content-Length", strconv.FormatInt(stream.GetSize(), 10))
 	req.Header.Set("Content-Type", "application/octet-stream")
 	res, err := base.HttpClient.Do(req)
-	res.Body.Close()
+	_ = res.Body.Close()
 	return err
 }
 

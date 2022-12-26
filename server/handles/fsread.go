@@ -6,10 +6,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/fs"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/internal/sign"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/server/common"
@@ -61,7 +61,7 @@ func FsList(c *gin.Context) {
 		common.ErrorResp(c, err, 403)
 		return
 	}
-	meta, err := db.GetNearestMeta(reqPath)
+	meta, err := op.GetNearestMeta(reqPath)
 	if err != nil {
 		if !errors.Is(errors.Cause(err), errs.MetaNotFound) {
 			common.ErrorResp(c, err, 500, true)
@@ -118,7 +118,7 @@ func FsDirs(c *gin.Context) {
 		}
 		reqPath = tmp
 	}
-	meta, err := db.GetNearestMeta(reqPath)
+	meta, err := op.GetNearestMeta(reqPath)
 	if err != nil {
 		if !errors.Is(errors.Cause(err), errs.MetaNotFound) {
 			common.ErrorResp(c, err, 500, true)
@@ -191,10 +191,7 @@ func pagination(objs []model.Obj, req *model.PageReq) (int, []model.Obj) {
 func toObjsResp(objs []model.Obj, parent string, encrypt bool) []ObjResp {
 	var resp []ObjResp
 	for _, obj := range objs {
-		thumb := ""
-		if t, ok := obj.(model.Thumb); ok {
-			thumb = t.Thumb()
-		}
+		thumb, _ := model.GetThumb(obj)
 		resp = append(resp, ObjResp{
 			Name:     obj.GetName(),
 			Size:     obj.GetSize(),
@@ -233,7 +230,7 @@ func FsGet(c *gin.Context) {
 		common.ErrorResp(c, err, 403)
 		return
 	}
-	meta, err := db.GetNearestMeta(reqPath)
+	meta, err := op.GetNearestMeta(reqPath)
 	if err != nil {
 		if !errors.Is(errors.Cause(err), errs.MetaNotFound) {
 			common.ErrorResp(c, err, 500)
@@ -276,8 +273,8 @@ func FsGet(c *gin.Context) {
 			}
 		} else {
 			// file have raw url
-			if u, ok := obj.(model.URL); ok {
-				rawURL = u.URL()
+			if url, ok := model.GetUrl(obj); ok {
+				rawURL = url
 			} else {
 				// if storage is not proxy, use raw url by fs.Link
 				link, _, err := fs.Link(c, reqPath, model.LinkArgs{IP: c.ClientIP(), Header: c.Request.Header})
@@ -295,7 +292,7 @@ func FsGet(c *gin.Context) {
 	if err == nil {
 		related = filterRelated(sameLevelFiles, obj)
 	}
-	parentMeta, _ := db.GetNearestMeta(parentPath)
+	parentMeta, _ := op.GetNearestMeta(parentPath)
 	common.SuccessResp(c, FsGetResp{
 		ObjResp: ObjResp{
 			Name:     obj.GetName(),
@@ -344,7 +341,7 @@ func FsOther(c *gin.Context) {
 		common.ErrorResp(c, err, 403)
 		return
 	}
-	meta, err := db.GetNearestMeta(req.Path)
+	meta, err := op.GetNearestMeta(req.Path)
 	if err != nil {
 		if !errors.Is(errors.Cause(err), errs.MetaNotFound) {
 			common.ErrorResp(c, err, 500)

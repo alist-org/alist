@@ -2,17 +2,28 @@ package model
 
 import (
 	"io"
+	"regexp"
 	"sort"
+	"strings"
 	"time"
+
+	mapset "github.com/deckarep/golang-set/v2"
 
 	"github.com/maruel/natural"
 )
+
+type UnwrapObj interface {
+	Unwrap() Obj
+}
 
 type Obj interface {
 	GetSize() int64
 	GetName() string
 	ModTime() time.Time
 	IsDir() bool
+
+	// The internal information of the driver.
+	// If you want to use it, please understand what it means
 	GetID() string
 	GetPath() string
 }
@@ -24,6 +35,7 @@ type FileStreamer interface {
 	SetReadCloser(io.ReadCloser)
 	NeedStore() bool
 	GetReadCloser() io.ReadCloser
+	GetOld() Obj
 }
 
 type URL interface {
@@ -85,4 +97,90 @@ func ExtractFolder(objs []Obj, extractFolder string) {
 		}
 		return false
 	})
+}
+
+// Wrap
+func WrapObjName(objs Obj) Obj {
+	return &ObjWrapName{Obj: objs}
+}
+
+func WrapObjsName(objs []Obj) {
+	for i := 0; i < len(objs); i++ {
+		objs[i] = &ObjWrapName{Obj: objs[i]}
+	}
+}
+
+func UnwrapObjs(obj Obj) Obj {
+	if unwrap, ok := obj.(UnwrapObj); ok {
+		obj = unwrap.Unwrap()
+	}
+	return obj
+}
+
+func GetThumb(obj Obj) (thumb string, ok bool) {
+	if obj, ok := obj.(Thumb); ok {
+		return obj.Thumb(), true
+	}
+	if unwrap, ok := obj.(UnwrapObj); ok {
+		return GetThumb(unwrap.Unwrap())
+	}
+	return thumb, false
+}
+
+func GetUrl(obj Obj) (url string, ok bool) {
+	if obj, ok := obj.(URL); ok {
+		return obj.URL(), true
+	}
+	if unwrap, ok := obj.(UnwrapObj); ok {
+		return GetUrl(unwrap.Unwrap())
+	}
+	return url, false
+}
+
+// Merge
+func NewObjMerge() *ObjMerge {
+	return &ObjMerge{
+		set: mapset.NewSet[string](),
+	}
+}
+
+type ObjMerge struct {
+	regs []*regexp.Regexp
+	set  mapset.Set[string]
+}
+
+func (om *ObjMerge) Merge(objs []Obj, objs_ ...Obj) []Obj {
+	newObjs := make([]Obj, 0, len(objs)+len(objs_))
+	newObjs = om.insertObjs(om.insertObjs(newObjs, objs...), objs_...)
+	return newObjs
+}
+
+func (om *ObjMerge) insertObjs(objs []Obj, objs_ ...Obj) []Obj {
+	for _, obj := range objs_ {
+		if om.clickObj(obj) {
+			objs = append(objs, obj)
+		}
+	}
+	return objs
+}
+
+func (om *ObjMerge) clickObj(obj Obj) bool {
+	for _, reg := range om.regs {
+		if reg.MatchString(obj.GetName()) {
+			return false
+		}
+	}
+	return om.set.Add(obj.GetName())
+}
+
+func (om *ObjMerge) InitHideReg(hides string) {
+	rs := strings.Split(hides, "\n")
+	om.regs = make([]*regexp.Regexp, 0, len(rs))
+	for _, r := range rs {
+		om.regs = append(om.regs, regexp.MustCompile(r))
+	}
+}
+
+func (om *ObjMerge) Reset() {
+	om.set.Clear()
 }

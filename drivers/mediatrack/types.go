@@ -1,6 +1,10 @@
 package mediatrack
 
-import "time"
+import (
+	"time"
+
+	"github.com/alist-org/alist/v3/internal/model"
+)
 
 type BaseResp struct {
 	Status  string `json:"status"`
@@ -59,4 +63,10 @@ type UploadResp struct {
 	Path      string `json:"path"`
 	TraceID   string `json:"trace_id"`
 	RequestID string `json:"requestId"`
+}
+
+type Object struct {
+	model.Object
+	model.Thumbnail
+	ParentID string
 }

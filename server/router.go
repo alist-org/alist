@@ -74,6 +74,7 @@ func admin(g *gin.RouterGroup) {
 	storage.POST("/delete", handles.DeleteStorage)
 	storage.POST("/enable", handles.EnableStorage)
 	storage.POST("/disable", handles.DisableStorage)
+	storage.POST("/load_all", handles.LoadAllStorages)
 
 	driver := g.Group("/driver")
 	driver.GET("/list", handles.ListDriverInfo)
@@ -116,6 +117,7 @@ func admin(g *gin.RouterGroup) {
 
 	index := g.Group("/index")
 	index.POST("/build", middlewares.SearchIndex, handles.BuildIndex)
+	index.POST("/update", middlewares.SearchIndex, handles.UpdateIndex)
 	index.POST("/stop", middlewares.SearchIndex, handles.StopIndex)
 	index.POST("/clear", middlewares.SearchIndex, handles.ClearIndex)
 	index.GET("/progress", middlewares.SearchIndex, handles.GetProgress)

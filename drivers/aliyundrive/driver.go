@@ -81,11 +81,6 @@ func (d *AliDrive) List(ctx context.Context, dir model.Obj, args model.ListArgs)
 	})
 }
 
-//func (d *AliDrive) Get(ctx context.Context, path string) (model.Obj, error) {
-//	// TODO this is optional
-//	return nil, errs.NotImplement
-//}
-
 func (d *AliDrive) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	data := base.Json{
 		"drive_id":   d.DriveId,
@@ -253,10 +248,14 @@ func (d *AliDrive) Put(ctx context.Context, dstDir model.Obj, stream model.FileS
 	}
 
 	for i, partInfo := range resp.PartInfoList {
+		if utils.IsCanceled(ctx) {
+			return ctx.Err()
+		}
 		req, err := http.NewRequest("PUT", partInfo.UploadUrl, io.LimitReader(file, DEFAULT))
 		if err != nil {
 			return err
 		}
+		req = req.WithContext(ctx)
 		res, err := base.HttpClient.Do(req)
 		if err != nil {
 			return err

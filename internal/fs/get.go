@@ -12,7 +12,7 @@ import (
 )
 
 func get(ctx context.Context, path string) (model.Obj, error) {
-	path = utils.StandardizePath(path)
+	path = utils.FixAndCleanPath(path)
 	// maybe a virtual file
 	if path != "/" {
 		virtualFiles := op.GetStorageVirtualFilesByPath(stdpath.Dir(path))

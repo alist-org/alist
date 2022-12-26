@@ -1,6 +1,7 @@
 package quark
 
 import (
+	"context"
 	"crypto/md5"
 	"encoding/base64"
 	"errors"
@@ -118,7 +119,7 @@ func (d *Quark) upHash(md5, sha1, taskId string) (bool, error) {
 	return resp.Data.Finish, err
 }
 
-func (d *Quark) upPart(pre UpPreResp, mineType string, partNumber int, bytes []byte) (string, error) {
+func (d *Quark) upPart(ctx context.Context, pre UpPreResp, mineType string, partNumber int, bytes []byte) (string, error) {
 	//func (driver Quark) UpPart(pre UpPreResp, mineType string, partNumber int, bytes []byte, account *model.Account, md5Str, sha1Str string) (string, error) {
 	timeStr := time.Now().UTC().Format(http.TimeFormat)
 	data := base.Json{
@@ -135,7 +136,7 @@ x-oss-user-agent:aliyun-sdk-js/6.6.1 Chrome 98.0.4758.80 on Windows 10 64-bit
 	}
 	var resp UpAuthResp
 	_, err := d.request("/file/upload/auth", http.MethodPost, func(req *resty.Request) {
-		req.SetBody(data)
+		req.SetBody(data).SetContext(ctx)
 	}, &resp)
 	if err != nil {
 		return "", err
@@ -150,7 +151,7 @@ x-oss-user-agent:aliyun-sdk-js/6.6.1 Chrome 98.0.4758.80 on Windows 10 64-bit
 	//	}
 	//}
 	u := fmt.Sprintf("https://%s.%s/%s", pre.Data.Bucket, pre.Data.UploadUrl[7:], pre.Data.ObjKey)
-	res, err := base.RestyClient.R().
+	res, err := base.RestyClient.R().SetContext(ctx).
 		SetHeaders(map[string]string{
 			"Authorization":    resp.Data.AuthKey,
 			"Content-Type":     mineType,

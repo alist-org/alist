@@ -8,8 +8,8 @@ func IsBalance(str string) bool {
 	return strings.Contains(str, balance)
 }
 
-// GetActualVirtualPath remove balance suffix
-func GetActualVirtualPath(virtualPath string) string {
+// GetActualMountPath remove balance suffix
+func GetActualMountPath(virtualPath string) string {
 	bIndex := strings.LastIndex(virtualPath, ".balance")
 	if bIndex != -1 {
 		virtualPath = virtualPath[:bIndex]

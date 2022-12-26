@@ -3,8 +3,8 @@ package data
 import (
 	"github.com/alist-org/alist/v3/cmd/flags"
 	"github.com/alist-org/alist/v3/internal/conf"
-	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/pkg/utils/random"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -16,40 +16,45 @@ var initialSettingItems []model.SettingItem
 func initSettings() {
 	InitialSettings()
 	// check deprecated
-	settings, err := db.GetSettingItems()
+	settings, err := op.GetSettingItems()
 	if err != nil {
 		log.Fatalf("failed get settings: %+v", err)
 	}
+
 	for i := range settings {
-		if !isActive(settings[i].Key) {
+		if !isActive(settings[i].Key) && settings[i].Flag != model.DEPRECATED {
 			settings[i].Flag = model.DEPRECATED
+			err = op.SaveSettingItem(&settings[i])
+			if err != nil {
+				log.Fatalf("failed save setting: %+v", err)
+			}
 		}
 	}
-	// what's going on here???
-	//if settings != nil && len(settings) > 0 {
-	//	err = db.SaveSettingItems(settings)
-	//	if err != nil {
-	//		log.Fatalf("failed save settings: %+v", err)
-	//	}
-	//}
-	// insert new items
+
+	// create or save setting
 	for i := range initialSettingItems {
-		v := initialSettingItems[i]
-		stored, err := db.GetSettingItemByKey(v.Key)
-		if errors.Is(err, gorm.ErrRecordNotFound) || v.Key == conf.VERSION {
-			err = db.SaveSettingItem(v)
-			if err != nil {
-				log.Fatalf("failed create setting: %+v", err)
-			}
-		} else if err != nil {
+		item := &initialSettingItems[i]
+		// err
+		stored, err := op.GetSettingItemByKey(item.Key)
+		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			log.Fatalf("failed get setting: %+v", err)
-		} else {
-			v.Value = stored.Value
-			err = db.SaveSettingItem(v)
-			if err != nil {
-				log.Fatalf("failed resave setting: %+v", err)
-			}
+			continue
 		}
+
+		// save
+		if stored != nil {
+			item.Value = stored.Value
+		}
+		if stored == nil || *item != *stored {
+			err = op.SaveSettingItem(item)
+			if err != nil {
+				log.Fatalf("failed save setting: %+v", err)
+			}
+			continue
+		}
+
+		// Not save so needs to execute hook
+		op.HandleSettingItemHook(item)
 	}
 }
 
@@ -85,6 +90,7 @@ func InitialSettings() []model.SettingItem {
 		{Key: conf.MainColor, Value: "#1890ff", Type: conf.TypeString, Group: model.STYLE},
 		{Key: "home_icon", Value: "🏠", Type: conf.TypeString, Group: model.STYLE},
 		{Key: "home_container", Value: "max_980px", Type: conf.TypeSelect, Options: "max_980px,hope_container", Group: model.STYLE},
+		{Key: "settings_layout", Value: "list", Type: conf.TypeSelect, Options: "list,responsive", Group: model.STYLE},
 		// preview settings
 		{Key: conf.TextTypes, Value: "txt,htm,html,xml,java,properties,sql,js,md,json,conf,ini,vue,php,py,bat,gitignore,yml,go,sh,c,cpp,h,hpp,tsx,vtt,srt,ass,rs,lrc", Type: conf.TypeText, Group: model.PREVIEW, Flag: model.PRIVATE},
 		{Key: conf.AudioTypes, Value: "mp3,flac,ogg,m4a,wav,opus", Type: conf.TypeText, Group: model.PREVIEW, Flag: model.PRIVATE},
@@ -92,6 +98,7 @@ func InitialSettings() []model.SettingItem {
 		{Key: conf.ImageTypes, Value: "jpg,tiff,jpeg,png,gif,bmp,svg,ico,swf,webp", Type: conf.TypeText, Group: model.PREVIEW, Flag: model.PRIVATE},
 		//{Key: conf.OfficeTypes, Value: "doc,docx,xls,xlsx,ppt,pptx", Type: conf.TypeText, Group: model.PREVIEW, Flag: model.PRIVATE},
 		{Key: conf.ProxyTypes, Value: "m3u8", Type: conf.TypeText, Group: model.PREVIEW, Flag: model.PRIVATE},
+		{Key: conf.ProxyIgnoreHeaders, Value: "authorization,referer", Type: conf.TypeText, Group: model.PREVIEW, Flag: model.PRIVATE},
 		{Key: "external_previews", Value: `{}`, Type: conf.TypeText, Group: model.PREVIEW},
 		{Key: "iframe_previews", Value: `{
 	"doc,docx,xls,xlsx,ppt,pptx": {
@@ -100,6 +107,9 @@ func InitialSettings() []model.SettingItem {
 	},
 	"pdf": {
 		"PDF.js":"https://alist-org.github.io/pdf.js/web/viewer.html?file=$e_url"
+	},
+	"epub": {
+		"EPUB.js":"/static/epub.js/viewer.html?url=$e_url"
 	}
 }`, Type: conf.TypeText, Group: model.PREVIEW},
 		//		{Key: conf.OfficeViewers, Value: `{
@@ -133,7 +143,6 @@ func InitialSettings() []model.SettingItem {
 		// single settings
 		{Key: conf.Token, Value: token, Type: conf.TypeString, Group: model.SINGLE, Flag: model.PRIVATE},
 		{Key: conf.SearchIndex, Value: "none", Type: conf.TypeSelect, Options: "database,bleve,none", Group: model.INDEX},
-		{Key: conf.IndexPaths, Value: "/", Type: conf.TypeText, Group: model.INDEX, Flag: model.PRIVATE, Help: `one path per line`},
 		{Key: conf.IgnorePaths, Value: "", Type: conf.TypeText, Group: model.INDEX, Flag: model.PRIVATE, Help: `one path per line`},
 		{Key: conf.IndexProgress, Value: "{}", Type: conf.TypeText, Group: model.SINGLE, Flag: model.PRIVATE},
 

@@ -10,7 +10,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
@@ -67,7 +69,7 @@ func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.
 			return err
 		}
 		for h, val := range r.Header {
-			if strings.ToLower(h) == "authorization" {
+			if utils.SliceContains(conf.SlicesMap[conf.ProxyIgnoreHeaders], strings.ToLower(h)) {
 				continue
 			}
 			req.Header[h] = val

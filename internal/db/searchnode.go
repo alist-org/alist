@@ -5,6 +5,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
@@ -29,6 +30,7 @@ func BatchCreateSearchNodes(nodes *[]model.SearchNode) error {
 }
 
 func DeleteSearchNodesByParent(prefix string) error {
+	prefix = utils.FixAndCleanPath(prefix)
 	err := db.Where(whereInParent(prefix)).Delete(&model.SearchNode{}).Error
 	if err != nil {
 		return err
@@ -36,7 +38,7 @@ func DeleteSearchNodesByParent(prefix string) error {
 	dir, name := path.Split(prefix)
 	return db.Where(fmt.Sprintf("%s = ? AND %s = ?",
 		columnName("parent"), columnName("name")),
-		utils.StandardizePath(dir), name).Delete(&model.SearchNode{}).Error
+		dir, name).Delete(&model.SearchNode{}).Error
 }
 
 func ClearSearchNodes() error {
@@ -53,13 +55,21 @@ func GetSearchNodesByParent(parent string) ([]model.SearchNode, error) {
 }
 
 func SearchNode(req model.SearchReq) ([]model.SearchNode, int64, error) {
-	keywordsClause := db.Where("1 = 1")
-	for _, keyword := range strings.Split(req.Keywords, " ") {
-		keywordsClause = keywordsClause.Where(
-			fmt.Sprintf("%s LIKE ?", columnName("name")),
-			fmt.Sprintf("%%%s%%", keyword))
+	var searchDB *gorm.DB
+	switch conf.Conf.Database.Type {
+	case "sqlite3":
+		keywordsClause := db.Where("1 = 1")
+		for _, keyword := range strings.Fields(req.Keywords) {
+			keywordsClause = keywordsClause.Where("name LIKE ?", fmt.Sprintf("%%%s%%", keyword))
+		}
+		searchDB = db.Model(&model.SearchNode{}).Where(whereInParent(req.Parent)).Where(keywordsClause)
+	case "mysql":
+		searchDB = db.Model(&model.SearchNode{}).Where(whereInParent(req.Parent)).
+			Where("MATCH (name) AGAINST (? IN NATURAL LANGUAGE MODE)", req.Keywords)
+	case "postgres":
+		searchDB = db.Model(&model.SearchNode{}).Where(whereInParent(req.Parent)).
+			Where("to_tsvector(name) @@ to_tsquery(?)", strings.Join(strings.Fields(req.Keywords), " & "))
 	}
-	searchDB := db.Model(&model.SearchNode{}).Where(whereInParent(req.Parent)).Where(keywordsClause)
 	var count int64
 	if err := searchDB.Count(&count).Error; err != nil {
 		return nil, 0, errors.Wrapf(err, "failed get users count")

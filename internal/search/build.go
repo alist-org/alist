@@ -8,10 +8,11 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/alist-org/alist/v3/internal/db"
+	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/fs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/op"
+	"github.com/alist-org/alist/v3/internal/search/searcher"
 	"github.com/alist-org/alist/v3/pkg/mq"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	mapset "github.com/deckarep/golang-set/v2"
@@ -105,7 +106,7 @@ func BuildIndex(ctx context.Context, indexPaths, ignorePaths []string, maxDepth 
 			Quit <- struct{}{}
 		}
 	}()
-	admin, err := db.GetAdmin()
+	admin, err := op.GetAdmin()
 	if err != nil {
 		return err
 	}
@@ -158,20 +159,15 @@ func Clear(ctx context.Context) error {
 	return instance.Clear(ctx)
 }
 
+func Config(ctx context.Context) searcher.Config {
+	return instance.Config()
+}
+
 func Update(parent string, objs []model.Obj) {
 	if instance == nil || !instance.Config().AutoUpdate || Running.Load() {
 		return
 	}
-	indexPaths := GetIndexPaths()
-	if !isIndexPath(parent, indexPaths) {
-		return
-	}
-	ignorePaths, err := GetIgnorePaths()
-	if err != nil {
-		log.Errorf("update search index error while get ignore paths: %+v", err)
-		return
-	}
-	if isIgnorePath(parent, ignorePaths) {
+	if isIgnorePath(parent) {
 		return
 	}
 	ctx := context.Background()
@@ -220,7 +216,10 @@ func Update(parent string, objs []model.Obj) {
 			}
 			// build index if it's a folder
 			if objs[i].IsDir() {
-				err = BuildIndex(ctx, []string{path.Join(parent, objs[i].GetName())}, ignorePaths, -1, false)
+				err = BuildIndex(ctx,
+					[]string{path.Join(parent, objs[i].GetName())},
+					conf.SlicesMap[conf.IgnorePaths],
+					-1, false)
 				if err != nil {
 					log.Errorf("update search index error while build index: %+v", err)
 					return

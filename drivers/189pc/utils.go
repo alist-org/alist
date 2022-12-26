@@ -47,7 +47,7 @@ const (
 	CHANNEL_ID = "web_cloud.189.cn"
 )
 
-func (y *Yun189PC) request(url, method string, callback base.ReqCallback, params Params, resp interface{}) ([]byte, error) {
+func (y *Cloud189PC) request(url, method string, callback base.ReqCallback, params Params, resp interface{}) ([]byte, error) {
 	dateOfGmt := getHttpDateStr()
 	sessionKey := y.tokenInfo.SessionKey
 	sessionSecret := y.tokenInfo.SessionSecret
@@ -124,15 +124,15 @@ func (y *Yun189PC) request(url, method string, callback base.ReqCallback, params
 	}
 }
 
-func (y *Yun189PC) get(url string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+func (y *Cloud189PC) get(url string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
 	return y.request(url, http.MethodGet, callback, nil, resp)
 }
 
-func (y *Yun189PC) post(url string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+func (y *Cloud189PC) post(url string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
 	return y.request(url, http.MethodPost, callback, nil, resp)
 }
 
-func (y *Yun189PC) getFiles(ctx context.Context, fileId string) ([]model.Obj, error) {
+func (y *Cloud189PC) getFiles(ctx context.Context, fileId string) ([]model.Obj, error) {
 	fullUrl := API_URL
 	if y.isFamily() {
 		fullUrl += "/family/file"
@@ -184,7 +184,7 @@ func (y *Yun189PC) getFiles(ctx context.Context, fileId string) ([]model.Obj, er
 	return res, nil
 }
 
-func (y *Yun189PC) login() (err error) {
+func (y *Cloud189PC) login() (err error) {
 	// 初始化登陆所需参数
 	if y.loginParam == nil || !y.NoUseOcr {
 		if err = y.initLoginParam(); err != nil {
@@ -264,7 +264,7 @@ func (y *Yun189PC) login() (err error) {
 /* 初始化登陆需要的参数
 *  如果遇到验证码返回错误
  */
-func (y *Yun189PC) initLoginParam() error {
+func (y *Cloud189PC) initLoginParam() error {
 	// 清除cookie
 	jar, _ := cookiejar.New(nil)
 	y.client.SetCookieJar(jar)
@@ -335,7 +335,7 @@ func (y *Yun189PC) initLoginParam() error {
 }
 
 // 刷新会话
-func (y *Yun189PC) refreshSession() (err error) {
+func (y *Cloud189PC) refreshSession() (err error) {
 	var erron RespErr
 	var userSessionResp UserSessionResp
 	_, err = y.client.R().
@@ -381,7 +381,7 @@ func (y *Yun189PC) refreshSession() (err error) {
 }
 
 // 普通上传
-func (y *Yun189PC) CommonUpload(ctx context.Context, dstDir model.Obj, file model.FileStreamer, up driver.UpdateProgress) (err error) {
+func (y *Cloud189PC) CommonUpload(ctx context.Context, dstDir model.Obj, file model.FileStreamer, up driver.UpdateProgress) (err error) {
 	const DEFAULT int64 = 10485760
 	var count = int64(math.Ceil(float64(file.GetSize()) / float64(DEFAULT)))
 
@@ -418,10 +418,8 @@ func (y *Yun189PC) CommonUpload(ctx context.Context, dstDir model.Obj, file mode
 	silceMd5Hexs := make([]string, 0, count)
 	byteData := bytes.NewBuffer(make([]byte, DEFAULT))
 	for i := int64(1); i <= count; i++ {
-		select {
-		case <-ctx.Done():
+		if utils.IsCanceled(ctx) {
 			return ctx.Err()
-		default:
 		}
 
 		// 读取块
@@ -491,7 +489,7 @@ func (y *Yun189PC) CommonUpload(ctx context.Context, dstDir model.Obj, file mode
 }
 
 // 快传
-func (y *Yun189PC) FastUpload(ctx context.Context, dstDir model.Obj, file model.FileStreamer, up driver.UpdateProgress) (err error) {
+func (y *Cloud189PC) FastUpload(ctx context.Context, dstDir model.Obj, file model.FileStreamer, up driver.UpdateProgress) (err error) {
 	// 需要获取完整文件md5,必须支持 io.Seek
 	tempFile, err := utils.CreateTempFile(file.GetReadCloser())
 	if err != nil {
@@ -511,10 +509,8 @@ func (y *Yun189PC) FastUpload(ctx context.Context, dstDir model.Obj, file model.
 	silceMd5Hexs := make([]string, 0, count)
 	silceMd5Base64s := make([]string, 0, count)
 	for i := 1; i <= count; i++ {
-		select {
-		case <-ctx.Done():
+		if utils.IsCanceled(ctx) {
 			return ctx.Err()
-		default:
 		}
 
 		silceMd5.Reset()
@@ -616,11 +612,11 @@ func (y *Yun189PC) FastUpload(ctx context.Context, dstDir model.Obj, file model.
 	return err
 }
 
-func (y *Yun189PC) isFamily() bool {
+func (y *Cloud189PC) isFamily() bool {
 	return y.Type == "family"
 }
 
-func (y *Yun189PC) isLogin() bool {
+func (y *Cloud189PC) isLogin() bool {
 	if y.tokenInfo == nil {
 		return false
 	}
@@ -629,7 +625,7 @@ func (y *Yun189PC) isLogin() bool {
 }
 
 // 获取家庭云所有用户信息
-func (y *Yun189PC) getFamilyInfoList() ([]FamilyInfoResp, error) {
+func (y *Cloud189PC) getFamilyInfoList() ([]FamilyInfoResp, error) {
 	var resp FamilyInfoListResp
 	_, err := y.get(API_URL+"/family/manage/getFamilyList.action", nil, &resp)
 	if err != nil {
@@ -639,7 +635,7 @@ func (y *Yun189PC) getFamilyInfoList() ([]FamilyInfoResp, error) {
 }
 
 // 抽取家庭云ID
-func (y *Yun189PC) getFamilyID() (string, error) {
+func (y *Cloud189PC) getFamilyID() (string, error) {
 	infos, err := y.getFamilyInfoList()
 	if err != nil {
 		return "", err

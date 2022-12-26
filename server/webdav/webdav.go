@@ -337,7 +337,6 @@ func (h *Handler) handlePut(w http.ResponseWriter, r *http.Request) (status int,
 		return http.StatusInternalServerError, err
 	}
 	w.Header().Set("ETag", etag)
-	fs.ClearCache(path.Dir(reqPath))
 	return http.StatusCreated, nil
 }
 
@@ -368,7 +367,6 @@ func (h *Handler) handleMkcol(w http.ResponseWriter, r *http.Request) (status in
 		}
 		return http.StatusMethodNotAllowed, err
 	}
-	fs.ClearCache(path.Dir(reqPath))
 	return http.StatusCreated, nil
 }
 

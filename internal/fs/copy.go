@@ -21,7 +21,7 @@ var CopyTaskManager = task.NewTaskManager(3, func(tid *uint64) {
 
 // Copy if in the same storage, call move method
 // if not, add copy task
-func _copy(ctx context.Context, srcObjPath, dstDirPath string) (bool, error) {
+func _copy(ctx context.Context, srcObjPath, dstDirPath string, lazyCache ...bool) (bool, error) {
 	srcStorage, srcObjActualPath, err := op.GetStorageAndActualPath(srcObjPath)
 	if err != nil {
 		return false, errors.WithMessage(err, "failed get src storage")
@@ -32,7 +32,7 @@ func _copy(ctx context.Context, srcObjPath, dstDirPath string) (bool, error) {
 	}
 	// copy if in the same storage, just call driver.Copy
 	if srcStorage.GetStorage() == dstStorage.GetStorage() {
-		return false, op.Copy(ctx, srcStorage, srcObjActualPath, dstDirActualPath)
+		return false, op.Copy(ctx, srcStorage, srcObjActualPath, dstDirActualPath, lazyCache...)
 	}
 	// not in the same storage
 	CopyTaskManager.Submit(task.WithCancelCtx(&task.Task[uint64]{
@@ -95,5 +95,5 @@ func copyFileBetween2Storages(tsk *task.Task[uint64], srcStorage, dstStorage dri
 	if err != nil {
 		return errors.WithMessagef(err, "failed get [%s] stream", srcFilePath)
 	}
-	return op.Put(tsk.Ctx, dstStorage, dstDirPath, stream, tsk.SetProgress)
+	return op.Put(tsk.Ctx, dstStorage, dstDirPath, stream, tsk.SetProgress, true)
 }

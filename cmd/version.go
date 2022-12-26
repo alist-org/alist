@@ -1,6 +1,5 @@
 /*
 Copyright © 2022 NAME HERE <EMAIL ADDRESS>
-
 */
 package cmd
 
@@ -12,8 +11,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// versionCmd represents the version command
-var versionCmd = &cobra.Command{
+// VersionCmd represents the version command
+var VersionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Show current version of AList",
 	Run: func(cmd *cobra.Command, args []string) {
@@ -30,7 +29,7 @@ WebVersion: %s
 }
 
 func init() {
-	rootCmd.AddCommand(versionCmd)
+	RootCmd.AddCommand(VersionCmd)
 
 	// Here you will define your flags and configuration settings.
 

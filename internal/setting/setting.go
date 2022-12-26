@@ -3,18 +3,18 @@ package setting
 import (
 	"strconv"
 
-	"github.com/alist-org/alist/v3/internal/db"
+	"github.com/alist-org/alist/v3/internal/op"
 )
 
 func GetStr(key string, defaultValue ...string) string {
-	val, ok := db.GetSettingsMap().Load(key)
-	if !ok {
+	val, _ := op.GetSettingItemByKey(key)
+	if val == nil {
 		if len(defaultValue) > 0 {
 			return defaultValue[0]
 		}
 		return ""
 	}
-	return val
+	return val.Value
 }
 
 func GetInt(key string, defaultVal int) int {

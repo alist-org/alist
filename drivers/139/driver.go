@@ -13,6 +13,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/pkg/utils"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -52,11 +53,6 @@ func (d *Yun139) List(ctx context.Context, dir model.Obj, args model.ListArgs) (
 		return d.getFiles(dir.GetID())
 	}
 }
-
-//func (d *Yun139) Get(ctx context.Context, path string) (model.Obj, error) {
-//	// this is optional
-//	return nil, errs.NotImplement
-//}
 
 func (d *Yun139) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	u, err := d.getLink(file.GetID())
@@ -269,10 +265,13 @@ func (d *Yun139) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 	if err != nil {
 		return err
 	}
-	var Default int64 = 10485760
+	var Default int64 = 104857600
 	part := int(math.Ceil(float64(stream.GetSize()) / float64(Default)))
 	var start int64 = 0
 	for i := 0; i < part; i++ {
+		if utils.IsCanceled(ctx) {
+			return ctx.Err()
+		}
 		byteSize := stream.GetSize() - start
 		if byteSize > Default {
 			byteSize = Default
@@ -286,6 +285,7 @@ func (d *Yun139) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 		if err != nil {
 			return err
 		}
+		req = req.WithContext(ctx)
 		headers := map[string]string{
 			"Accept":         "*/*",
 			"Content-Type":   "text/plain;name=" + unicode(stream.GetName()),

@@ -2,6 +2,7 @@ package _189
 
 import (
 	"bytes"
+	"context"
 	"crypto/md5"
 	"encoding/base64"
 	"encoding/hex"
@@ -306,7 +307,7 @@ func (d *Cloud189) uploadRequest(uri string, form map[string]string, resp interf
 	return data, nil
 }
 
-func (d *Cloud189) newUpload(dstDir model.Obj, file model.FileStreamer, up driver.UpdateProgress) error {
+func (d *Cloud189) newUpload(ctx context.Context, dstDir model.Obj, file model.FileStreamer, up driver.UpdateProgress) error {
 	sessionKey, err := d.getSessionKey()
 	if err != nil {
 		return err
@@ -335,6 +336,9 @@ func (d *Cloud189) newUpload(dstDir model.Obj, file model.FileStreamer, up drive
 	md5s := make([]string, 0)
 	md5Sum := md5.New()
 	for i = 1; i <= count; i++ {
+		if utils.IsCanceled(ctx) {
+			return ctx.Err()
+		}
 		byteSize = file.GetSize() - finish
 		if DEFAULT < byteSize {
 			byteSize = DEFAULT
@@ -364,12 +368,15 @@ func (d *Cloud189) newUpload(dstDir model.Obj, file model.FileStreamer, up drive
 		log.Debugf("uploadData: %+v", uploadData)
 		requestURL := uploadData.RequestURL
 		uploadHeaders := strings.Split(decodeURIComponent(uploadData.RequestHeader), "&")
-		req, _ := http.NewRequest(http.MethodPut, requestURL, bytes.NewReader(byteData))
+		req, err := http.NewRequest(http.MethodPut, requestURL, bytes.NewReader(byteData))
+		if err != nil {
+			return err
+		}
+		req = req.WithContext(ctx)
 		for _, v := range uploadHeaders {
 			i := strings.Index(v, "=")
 			req.Header.Set(v[0:i], v[i+1:])
 		}
-
 		r, err := base.HttpClient.Do(req)
 		log.Debugf("%+v %+v", r, r.Request.Header)
 		r.Body.Close()

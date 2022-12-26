@@ -147,14 +147,14 @@ func (d *Onedrive) GetFile(path string) (*File, error) {
 	return &file, err
 }
 
-func (d *Onedrive) upSmall(dstDir model.Obj, stream model.FileStreamer) error {
+func (d *Onedrive) upSmall(ctx context.Context, dstDir model.Obj, stream model.FileStreamer) error {
 	url := d.GetMetaUrl(false, stdpath.Join(dstDir.GetPath(), stream.GetName())) + "/content"
 	data, err := io.ReadAll(stream)
 	if err != nil {
 		return err
 	}
 	_, err = d.Request(url, http.MethodPut, func(req *resty.Request) {
-		req.SetBody(data)
+		req.SetBody(data).SetContext(ctx)
 	}, nil)
 	return err
 }
@@ -185,6 +185,10 @@ func (d *Onedrive) upBig(ctx context.Context, dstDir model.Obj, stream model.Fil
 			return err
 		}
 		req, err := http.NewRequest("PUT", uploadUrl, bytes.NewBuffer(byteData))
+		if err != nil {
+			return err
+		}
+		req = req.WithContext(ctx)
 		req.Header.Set("Content-Length", strconv.Itoa(int(byteSize)))
 		req.Header.Set("Content-Range", fmt.Sprintf("bytes %d-%d/%d", finish, finish+byteSize-1, stream.GetSize()))
 		finish += byteSize

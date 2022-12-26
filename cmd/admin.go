@@ -4,19 +4,19 @@ Copyright © 2022 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"github.com/alist-org/alist/v3/internal/db"
+	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
-// passwordCmd represents the password command
-var passwordCmd = &cobra.Command{
+// PasswordCmd represents the password command
+var PasswordCmd = &cobra.Command{
 	Use:     "admin",
 	Aliases: []string{"password"},
 	Short:   "Show admin user's info",
 	Run: func(cmd *cobra.Command, args []string) {
 		Init()
-		admin, err := db.GetAdmin()
+		admin, err := op.GetAdmin()
 		if err != nil {
 			utils.Log.Errorf("failed get admin user: %+v", err)
 		} else {
@@ -26,7 +26,7 @@ var passwordCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(passwordCmd)
+	RootCmd.AddCommand(PasswordCmd)
 
 	// Here you will define your flags and configuration settings.
 

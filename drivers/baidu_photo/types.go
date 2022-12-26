@@ -3,8 +3,6 @@ package baiduphoto
 import (
 	"fmt"
 	"time"
-
-	"github.com/alist-org/alist/v3/pkg/utils"
 )
 
 type TokenErrResp struct {
@@ -102,7 +100,7 @@ type (
 )
 
 func (a *Album) GetSize() int64  { return 0 }
-func (a *Album) GetName() string { return utils.MappingName(a.Title) }
+func (a *Album) GetName() string { return a.Title }
 func (a *Album) ModTime() time.Time {
 	if a.parseTime == nil {
 		a.parseTime = toTime(a.Mtime)

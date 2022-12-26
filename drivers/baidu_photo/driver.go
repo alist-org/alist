@@ -240,6 +240,9 @@ func (d *BaiduPhoto) Put(ctx context.Context, dstDir model.Obj, stream model.Fil
 		}
 
 		for i := 0; i < count; i++ {
+			if utils.IsCanceled(ctx) {
+				return ctx.Err()
+			}
 			uploadParams["partseq"] = fmt.Sprint(i)
 			_, err = d.Post("https://c3.pcs.baidu.com/rest/2.0/pcs/superfile2", func(r *resty.Request) {
 				r.SetContext(ctx)

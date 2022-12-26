@@ -17,7 +17,7 @@ func StoragesLoaded(c *gin.Context) {
 			c.Next()
 			return
 		}
-		paths := []string{"/assets", "/images", "/streamer"}
+		paths := []string{"/assets", "/images", "/streamer", "/static"}
 		for _, path := range paths {
 			if strings.HasPrefix(c.Request.URL.Path, path) {
 				c.Next()

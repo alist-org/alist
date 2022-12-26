@@ -47,11 +47,6 @@ func (d *GooglePhoto) List(ctx context.Context, dir model.Obj, args model.ListAr
 	})
 }
 
-//func (d *GooglePhoto) Get(ctx context.Context, path string) (model.Obj, error) {
-//	// this is optional
-//	return nil, errs.NotImplement
-//}
-
 func (d *GooglePhoto) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	f, err := d.getMedia(file.GetID())
 	if err != nil {
@@ -129,7 +124,7 @@ func (d *GooglePhoto) Put(ctx context.Context, dstDir model.Obj, stream model.Fi
 	}
 
 	resp, err := d.request(postUrl, http.MethodPost, func(req *resty.Request) {
-		req.SetBody(stream.GetReadCloser())
+		req.SetBody(stream.GetReadCloser()).SetContext(ctx)
 	}, nil, postHeaders)
 
 	if err != nil {

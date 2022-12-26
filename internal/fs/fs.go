@@ -40,32 +40,32 @@ func Link(ctx context.Context, path string, args model.LinkArgs) (*model.Link, m
 	return res, file, nil
 }
 
-func MakeDir(ctx context.Context, path string) error {
-	err := makeDir(ctx, path)
+func MakeDir(ctx context.Context, path string, lazyCache ...bool) error {
+	err := makeDir(ctx, path, lazyCache...)
 	if err != nil {
 		log.Errorf("failed make dir %s: %+v", path, err)
 	}
 	return err
 }
 
-func Move(ctx context.Context, srcPath, dstDirPath string) error {
-	err := move(ctx, srcPath, dstDirPath)
+func Move(ctx context.Context, srcPath, dstDirPath string, lazyCache ...bool) error {
+	err := move(ctx, srcPath, dstDirPath, lazyCache...)
 	if err != nil {
 		log.Errorf("failed move %s to %s: %+v", srcPath, dstDirPath, err)
 	}
 	return err
 }
 
-func Copy(ctx context.Context, srcObjPath, dstDirPath string) (bool, error) {
-	res, err := _copy(ctx, srcObjPath, dstDirPath)
+func Copy(ctx context.Context, srcObjPath, dstDirPath string, lazyCache ...bool) (bool, error) {
+	res, err := _copy(ctx, srcObjPath, dstDirPath, lazyCache...)
 	if err != nil {
 		log.Errorf("failed copy %s to %s: %+v", srcObjPath, dstDirPath, err)
 	}
 	return res, err
 }
 
-func Rename(ctx context.Context, srcPath, dstName string) error {
-	err := rename(ctx, srcPath, dstName)
+func Rename(ctx context.Context, srcPath, dstName string, lazyCache ...bool) error {
+	err := rename(ctx, srcPath, dstName, lazyCache...)
 	if err != nil {
 		log.Errorf("failed rename %s to %s: %+v", srcPath, dstName, err)
 	}
@@ -80,15 +80,15 @@ func Remove(ctx context.Context, path string) error {
 	return err
 }
 
-func PutDirectly(ctx context.Context, dstDirPath string, file model.FileStreamer) error {
-	err := putDirectly(ctx, dstDirPath, file)
+func PutDirectly(ctx context.Context, dstDirPath string, file *model.FileStream, lazyCache ...bool) error {
+	err := putDirectly(ctx, dstDirPath, file, lazyCache...)
 	if err != nil {
 		log.Errorf("failed put %s: %+v", dstDirPath, err)
 	}
 	return err
 }
 
-func PutAsTask(dstDirPath string, file model.FileStreamer) error {
+func PutAsTask(dstDirPath string, file *model.FileStream) error {
 	err := putAsTask(dstDirPath, file)
 	if err != nil {
 		log.Errorf("failed put %s: %+v", dstDirPath, err)

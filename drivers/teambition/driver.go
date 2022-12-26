@@ -37,11 +37,6 @@ func (d *Teambition) List(ctx context.Context, dir model.Obj, args model.ListArg
 	return d.getFiles(dir.GetID())
 }
 
-//func (d *Teambition) Get(ctx context.Context, path string) (model.Obj, error) {
-//	//  this is optional
-//	return nil, errs.NotImplement
-//}
-
 func (d *Teambition) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	if u, ok := file.(model.URL); ok {
 		url := u.URL()
@@ -137,11 +132,11 @@ func (d *Teambition) Put(ctx context.Context, dstDir model.Obj, stream model.Fil
 	var newFile *FileUpload
 	if stream.GetSize() <= 20971520 {
 		// post upload
-		newFile, err = d.upload(stream, token)
+		newFile, err = d.upload(ctx, stream, token)
 	} else {
 		// chunk upload
 		//err = base.ErrNotImplement
-		newFile, err = d.chunkUpload(stream, token, up)
+		newFile, err = d.chunkUpload(ctx, stream, token, up)
 	}
 	if err != nil {
 		return err
