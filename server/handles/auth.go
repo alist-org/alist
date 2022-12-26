@@ -120,7 +120,7 @@ func UpdateCurrent_Github(c *gin.Context) {
 	}
 	user := c.MustGet("user").(*model.User)
 	user.GithubID = req.Github_ID
-	if err := db.UpdateUser(user); err != nil {
+	if err := op.UpdateUser(user); err != nil {
 		common.ErrorResp(c, err, 500)
 	} else {
 		common.SuccessResp(c)
