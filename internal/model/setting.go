@@ -8,6 +8,7 @@ const (
 	GLOBAL
 	ARIA2
 	INDEX
+	GITHUB
 )
 
 const (

@@ -53,6 +53,11 @@ const (
 	// single
 	Token         = "token"
 	IndexProgress = "index_progress"
+
+	//Github
+	GithubClientId      = "github_client_id"
+	GithubClientSecrets = "github_client_secrets"
+	GithubLoginEnabled  = "github_login_enabled"
 )
 
 const (

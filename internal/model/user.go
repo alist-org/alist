@@ -31,6 +31,7 @@ type User struct {
 	//  9: webdav write
 	Permission int32  `json:"permission"`
 	OtpSecret  string `json:"-"`
+	GithubID   int    `json:"github_id"`
 }
 
 func (u User) IsGuest() bool {

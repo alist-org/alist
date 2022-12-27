@@ -21,6 +21,14 @@ func GetUserByName(username string) (*model.User, error) {
 	return &user, nil
 }
 
+func GetUserByGithubID(githubID int) (*model.User, error) {
+	user := model.User{GithubID: githubID}
+	if err := db.Where(user).First(&user).Error; err != nil {
+		return nil, errors.Wrapf(err, "The Github ID is not associated with a user")
+	}
+	return &user, nil
+}
+
 func GetUserById(id uint) (*model.User, error) {
 	var u model.User
 	if err := db.First(&u, id).Error; err != nil {

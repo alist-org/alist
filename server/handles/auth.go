@@ -91,7 +91,7 @@ func CurrentUser(c *gin.Context) {
 }
 
 func UpdateCurrent(c *gin.Context) {
-	var req LoginReq
+	var req model.User
 	if err := c.ShouldBind(&req); err != nil {
 		common.ErrorResp(c, err, 400)
 		return
@@ -101,6 +101,7 @@ func UpdateCurrent(c *gin.Context) {
 	if req.Password != "" {
 		user.Password = req.Password
 	}
+	user.GithubID = req.GithubID
 	if err := op.UpdateUser(user); err != nil {
 		common.ErrorResp(c, err, 500)
 	} else {
