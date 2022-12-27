@@ -146,10 +146,10 @@ func InitialSettings() []model.SettingItem {
 		{Key: conf.IgnorePaths, Value: "", Type: conf.TypeText, Group: model.INDEX, Flag: model.PRIVATE, Help: `one path per line`},
 		{Key: conf.IndexProgress, Value: "{}", Type: conf.TypeText, Group: model.SINGLE, Flag: model.PRIVATE},
 
-		// Github settings
-		{Key: conf.Github_client_id, Value: "", Type: conf.TypeString, Group: model.GITHUB, Flag: model.PRIVATE},
-		{Key: conf.Github_client_secrets, Value: "", Type: conf.TypeString, Group: model.GITHUB, Flag: model.PRIVATE},
-		{Key: conf.Github_login_enabled, Value: "false", Type: conf.TypeBool, Group: model.GITHUB, Flag: model.PUBLIC},
+		// GitHub settings
+		{Key: conf.GithubClientId, Value: "", Type: conf.TypeString, Group: model.GITHUB, Flag: model.PRIVATE},
+		{Key: conf.GithubClientSecrets, Value: "", Type: conf.TypeString, Group: model.GITHUB, Flag: model.PRIVATE},
+		{Key: conf.GithubLoginEnabled, Value: "false", Type: conf.TypeBool, Group: model.GITHUB, Flag: model.PUBLIC},
 	}
 	if flags.Dev {
 		initialSettingItems = append(initialSettingItems, []model.SettingItem{

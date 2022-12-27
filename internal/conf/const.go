@@ -55,9 +55,9 @@ const (
 	IndexProgress = "index_progress"
 
 	//Github
-	Github_client_id      = "github_client_id"
-	Github_client_secrets = "github_client_secrets"
-	Github_login_enabled  = "github_login_enabled"
+	GithubClientId      = "github_client_id"
+	GithubClientSecrets = "github_client_secrets"
+	GithubLoginEnabled  = "github_login_enabled"
 )
 
 const (
