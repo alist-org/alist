@@ -27,7 +27,7 @@ func getNearestMeta(path string) (*model.Meta, error) {
 	if err == nil {
 		return meta, nil
 	}
-	if errors.Cause(err) != gorm.ErrRecordNotFound {
+	if errors.Cause(err) != errs.MetaNotFound {
 		return nil, err
 	}
 	if path == "/" {
@@ -42,11 +42,18 @@ func GetMetaByPath(path string) (*model.Meta, error) {
 func getMetaByPath(path string) (*model.Meta, error) {
 	meta, ok := metaCache.Get(path)
 	if ok {
+		if meta == nil {
+			return meta, errs.MetaNotFound
+		}
 		return meta, nil
 	}
 	meta, err, _ := metaG.Do(path, func() (*model.Meta, error) {
 		_meta, err := db.GetMetaByPath(path)
 		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				metaCache.Set(path, nil)
+				return nil, errs.MetaNotFound
+			}
 			return nil, err
 		}
 		metaCache.Set(path, _meta, cache.WithEx[*model.Meta](time.Hour))
@@ -76,6 +83,7 @@ func UpdateMeta(u *model.Meta) error {
 
 func CreateMeta(u *model.Meta) error {
 	u.Path = utils.FixAndCleanPath(u.Path)
+	metaCache.Del(u.Path)
 	return db.CreateMeta(u)
 }
 
