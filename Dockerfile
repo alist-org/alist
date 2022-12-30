@@ -13,6 +13,6 @@ COPY --from=builder /app/bin/alist ./
 COPY entrypoint.sh /entrypoint.sh
 RUN apk add ca-certificates bash su-exec; \
     chmod +x /entrypoint.sh
-ENV PUID=1000 PGID=1000 UMASK=022
+ENV PUID=0 PGID=0 UMASK=022
 EXPOSE 5244
 ENTRYPOINT [ "/entrypoint.sh" ]
