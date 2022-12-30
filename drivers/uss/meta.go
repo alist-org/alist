@@ -16,8 +16,9 @@ type Addition struct {
 }
 
 var config = driver.Config{
-	Name:      "USS",
-	LocalSort: true,
+	Name:        "USS",
+	LocalSort:   true,
+	DefaultRoot: "/",
 }
 
 func init() {

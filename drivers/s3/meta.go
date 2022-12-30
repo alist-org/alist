@@ -21,6 +21,7 @@ type Addition struct {
 
 var config = driver.Config{
 	Name:        "S3",
+	DefaultRoot: "/",
 	LocalSort:   true,
 	CheckStatus: true,
 }
