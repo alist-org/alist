@@ -18,13 +18,6 @@ type SearchReq struct {
 	PageReq
 }
 
-type SearchNodeMySQL struct {
-	Parent string `json:"parent" gorm:"index"`
-	Name   string `json:"name" gorm:"index:,class:FULLTEXT"`
-	IsDir  bool   `json:"is_dir"`
-	Size   int64  `json:"size"`
-}
-
 type SearchNode struct {
 	Parent string `json:"parent" gorm:"index"`
 	Name   string `json:"name"`

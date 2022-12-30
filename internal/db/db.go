@@ -13,14 +13,15 @@ var db *gorm.DB
 
 func Init(d *gorm.DB) {
 	db = d
-	var err error
+	err := AutoMigrate(new(model.Storage), new(model.User), new(model.Meta), new(model.SettingItem), new(model.SearchNode))
 	switch conf.Conf.Database.Type {
 	case "sqlite3":
-		err = AutoMigrate(new(model.Storage), new(model.User), new(model.Meta), new(model.SettingItem), new(model.SearchNode))
 	case "mysql":
-		err = AutoMigrate(new(model.Storage), new(model.User), new(model.Meta), new(model.SettingItem), new(model.SearchNodeMySQL))
+		if err == nil {
+			tableName := fmt.Sprintf("%ssearch_nodes", conf.Conf.Database.TablePrefix)
+			db.Exec(fmt.Sprintf("CREATE FULLTEXT INDEX idx_%s_name_fulltext ON %s(name);", tableName, tableName))
+		}
 	case "postgres":
-		err = AutoMigrate(new(model.Storage), new(model.User), new(model.Meta), new(model.SettingItem), new(model.SearchNode))
 		if err == nil {
 			db.Exec("CREATE EXTENSION pg_trgm;")
 			db.Exec("CREATE EXTENSION btree_gin;")
