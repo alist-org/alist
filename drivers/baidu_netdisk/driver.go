@@ -88,12 +88,11 @@ func (d *BaiduNetdisk) Rename(ctx context.Context, srcObj model.Obj, newName str
 }
 
 func (d *BaiduNetdisk) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
-	dest, newname := stdpath.Split(dstDir.GetPath())
 	data := []base.Json{
 		{
 			"path":    srcObj.GetPath(),
-			"dest":    dest,
-			"newname": newname,
+			"dest":    dstDir.GetPath(),
+			"newname": srcObj.GetName(),
 		},
 	}
 	_, err := d.manage("copy", data)
@@ -165,7 +164,8 @@ func (d *BaiduNetdisk) Put(ctx context.Context, dstDir model.Obj, stream model.F
 			return err
 		}
 	}
-	path := encodeURIComponent(stdpath.Join(dstDir.GetPath(), stream.GetName()))
+	rawPath := stdpath.Join(dstDir.GetPath(), stream.GetName())
+	path := encodeURIComponent(rawPath)
 	block_list_str := fmt.Sprintf("[%s]", strings.Join(block_list, ","))
 	data := fmt.Sprintf("path=%s&size=%d&isdir=0&autoinit=1&block_list=%s&content-md5=%s&slice-md5=%s",
 		path, stream.GetSize(),
@@ -223,7 +223,7 @@ func (d *BaiduNetdisk) Put(ctx context.Context, dstDir model.Obj, stream model.F
 			up(i * 100 / len(precreateResp.BlockList))
 		}
 	}
-	_, err = d.create(path, stream.GetSize(), 0, precreateResp.Uploadid, block_list_str)
+	_, err = d.create(rawPath, stream.GetSize(), 0, precreateResp.Uploadid, block_list_str)
 	return err
 }
 
