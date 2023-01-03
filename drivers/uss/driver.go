@@ -46,14 +46,12 @@ func (d *USS) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]m
 	objsChan := make(chan *upyun.FileInfo, 10)
 	var err error
 	defer close(objsChan)
-	go func() {
-		err = d.client.List(&upyun.GetObjectsConfig{
-			Path:           prefix,
-			ObjectsChan:    objsChan,
-			MaxListObjects: 0,
-			MaxListLevel:   1,
-		})
-	}()
+	err = d.client.List(&upyun.GetObjectsConfig{
+		Path:           prefix,
+		ObjectsChan:    objsChan,
+		MaxListObjects: 0,
+		MaxListLevel:   1,
+	})
 	if err != nil {
 		return nil, err
 	}
