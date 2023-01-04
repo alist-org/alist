@@ -44,19 +44,17 @@ func (d *USS) Drop(ctx context.Context) error {
 func (d *USS) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
 	prefix := getKey(dir.GetPath(), true)
 	objsChan := make(chan *upyun.FileInfo, 10)
-	var err error
-	defer close(objsChan)
-	go func() {
-		err = d.client.List(&upyun.GetObjectsConfig{
-			Path:           prefix,
-			ObjectsChan:    objsChan,
-			MaxListObjects: 0,
-			MaxListLevel:   1,
-		})
-	}()
-	if err != nil {
+
+	cfg := &upyun.GetObjectsConfig{
+		Path:           prefix,
+		ObjectsChan:    objsChan,
+		MaxListObjects: 0,
+		MaxListLevel:   1,
+	}
+	if err := d.client.List(cfg); err != nil {
 		return nil, err
 	}
+
 	res := make([]model.Obj, 0)
 	for obj := range objsChan {
 		t := obj.Time
@@ -68,7 +66,7 @@ func (d *USS) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]m
 		}
 		res = append(res, &f)
 	}
-	return res, err
+	return res, nil
 }
 
 func (d *USS) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
