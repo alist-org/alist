@@ -14,6 +14,8 @@ github.com/andreburgaud/crypt2go v1.1.0 h1:eitZxTPY1krUsxinsng3Qvt/Ud7q/aQmmYRh8
 github.com/andreburgaud/crypt2go v1.1.0/go.mod h1:4qhZPzarj1dCIRmCkpdgCklwp+hBq9yEt0zPe9Ayuhc=
 github.com/aws/aws-sdk-go v1.44.173 h1:8kXIxvQnBpGhmR3Eof6SnCKgR0q5/L/3Qbv9vAC5wic=
 github.com/aws/aws-sdk-go v1.44.173/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
+github.com/aws/aws-sdk-go v1.44.174 h1:9lR4a6MKQW/t6YCG0ZKAt1GAkjdEPP8sWch/pfcuR0c=
+github.com/aws/aws-sdk-go v1.44.174/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
 github.com/bits-and-blooms/bitset v1.2.0 h1:Kn4yilvwNtMACtf1eYDlG8H77R07mZSPbMjLyS07ChA=
 github.com/bits-and-blooms/bitset v1.2.0/go.mod h1:gIdJ4wp64HaoK2YrL1Q5/N7Y16edYb8uY+O0FJTyyDA=
 github.com/blevesearch/bleve/v2 v2.3.6 h1:NlntUHcV5CSWIhpugx4d/BRMGCiaoI8ZZXrXlahzNq4=
