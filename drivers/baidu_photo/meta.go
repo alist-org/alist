@@ -14,10 +14,6 @@ type Addition struct {
 	ClientSecret string `json:"client_secret" required:"true" default:"jXiFMOPVPCWlO2M5CwWQzffpNPaGTRBG"`
 }
 
-func (a Addition) GetRootId() string {
-	return a.AlbumID
-}
-
 var config = driver.Config{
 	Name:      "BaiduPhoto",
 	LocalSort: true,

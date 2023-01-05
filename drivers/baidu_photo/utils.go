@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/errs"
@@ -17,6 +16,7 @@ import (
 
 const (
 	API_URL         = "https://photo.baidu.com/youai"
+	USER_API_URL    = API_URL + "/user/v1"
 	ALBUM_API_URL   = API_URL + "/album/v1"
 	FILE_API_URL_V1 = API_URL + "/file/v1"
 	FILE_API_URL_V2 = API_URL + "/file/v2"
@@ -116,11 +116,11 @@ func (p *BaiduPhoto) GetAllFile(ctx context.Context) (files []File, err error) {
 }
 
 // 删除根文件
-func (p *BaiduPhoto) DeleteFile(ctx context.Context, fileIDs ...string) error {
+func (p *BaiduPhoto) DeleteFile(ctx context.Context, file *File) error {
 	_, err := p.Get(FILE_API_URL_V1+"/delete", func(req *resty.Request) {
 		req.SetContext(ctx)
 		req.SetQueryParams(map[string]string{
-			"fsid_list": fmt.Sprintf("[%s]", strings.Join(fileIDs, ",")),
+			"fsid_list": fmt.Sprintf("[%d]", file.Fsid),
 		})
 	}, nil)
 	return err
@@ -156,14 +156,14 @@ func (p *BaiduPhoto) GetAllAlbum(ctx context.Context) (albums []Album, err error
 }
 
 // 获取相册中所有文件
-func (p *BaiduPhoto) GetAllAlbumFile(ctx context.Context, albumID, passwd string) (files []AlbumFile, err error) {
+func (p *BaiduPhoto) GetAllAlbumFile(ctx context.Context, album *Album, passwd string) (files []AlbumFile, err error) {
 	var cursor string
 	for {
 		var resp AlbumFileListResp
 		_, err = p.Get(ALBUM_API_URL+"/listfile", func(r *resty.Request) {
 			r.SetContext(ctx)
 			r.SetQueryParams(map[string]string{
-				"album_id":    albumID,
+				"album_id":    album.AlbumID,
 				"need_amount": "1",
 				"limit":       "1000",
 				"passwd":      passwd,
@@ -187,45 +187,52 @@ func (p *BaiduPhoto) GetAllAlbumFile(ctx context.Context, albumID, passwd string
 }
 
 // 创建相册
-func (p *BaiduPhoto) CreateAlbum(ctx context.Context, name string) error {
+func (p *BaiduPhoto) CreateAlbum(ctx context.Context, name string) (*Album, error) {
 	if !checkName(name) {
-		return ErrNotSupportName
+		return nil, ErrNotSupportName
 	}
+	var resp JoinOrCreateAlbumResp
 	_, err := p.Post(ALBUM_API_URL+"/create", func(r *resty.Request) {
-		r.SetContext(ctx)
+		r.SetContext(ctx).SetResult(&resp)
 		r.SetQueryParams(map[string]string{
 			"title":  name,
 			"tid":    getTid(),
 			"source": "0",
 		})
 	}, nil)
-	return err
+	if err != nil {
+		return nil, err
+	}
+	return p.GetAlbumDetail(ctx, resp.AlbumID)
 }
 
 // 相册改名
-func (p *BaiduPhoto) SetAlbumName(ctx context.Context, albumID, tID, name string) error {
+func (p *BaiduPhoto) SetAlbumName(ctx context.Context, album *Album, name string) (*Album, error) {
 	if !checkName(name) {
-		return ErrNotSupportName
+		return nil, ErrNotSupportName
 	}
 
 	_, err := p.Post(ALBUM_API_URL+"/settitle", func(r *resty.Request) {
 		r.SetContext(ctx)
 		r.SetFormData(map[string]string{
 			"title":    name,
-			"album_id": albumID,
-			"tid":      tID,
+			"album_id": album.AlbumID,
+			"tid":      fmt.Sprint(album.Tid),
 		})
 	}, nil)
-	return err
+	if err != nil {
+		return nil, err
+	}
+	return renameAlbum(album, name), nil
 }
 
 // 删除相册
-func (p *BaiduPhoto) DeleteAlbum(ctx context.Context, albumID, tID string) error {
+func (p *BaiduPhoto) DeleteAlbum(ctx context.Context, album *Album) error {
 	_, err := p.Post(ALBUM_API_URL+"/delete", func(r *resty.Request) {
 		r.SetContext(ctx)
 		r.SetFormData(map[string]string{
-			"album_id":            albumID,
-			"tid":                 tID,
+			"album_id":            album.AlbumID,
+			"tid":                 fmt.Sprint(album.Tid),
 			"delete_origin_image": "0", // 是否删除原图 0 不删除 1 删除
 		})
 	}, nil)
@@ -233,13 +240,13 @@ func (p *BaiduPhoto) DeleteAlbum(ctx context.Context, albumID, tID string) error
 }
 
 // 删除相册文件
-func (p *BaiduPhoto) DeleteAlbumFile(ctx context.Context, albumID, tID string, fileIDs ...string) error {
+func (p *BaiduPhoto) DeleteAlbumFile(ctx context.Context, file *AlbumFile) error {
 	_, err := p.Post(ALBUM_API_URL+"/delfile", func(r *resty.Request) {
 		r.SetContext(ctx)
 		r.SetFormData(map[string]string{
-			"album_id":   albumID,
-			"tid":        tID,
-			"list":       fsidsFormat(fileIDs...),
+			"album_id":   fmt.Sprint(file.AlbumID),
+			"tid":        fmt.Sprint(file.Tid),
+			"list":       fmt.Sprintf(`[{"fsid":%d,"uk":%d}]`, file.Fsid, file.Uk),
 			"del_origin": "0", // 是否删除原图 0 不删除 1 删除
 		})
 	}, nil)
@@ -247,39 +254,42 @@ func (p *BaiduPhoto) DeleteAlbumFile(ctx context.Context, albumID, tID string, f
 }
 
 // 增加相册文件
-func (p *BaiduPhoto) AddAlbumFile(ctx context.Context, albumID, tID string, fileIDs ...string) error {
+func (p *BaiduPhoto) AddAlbumFile(ctx context.Context, album *Album, file *File) (*AlbumFile, error) {
 	_, err := p.Get(ALBUM_API_URL+"/addfile", func(r *resty.Request) {
 		r.SetContext(ctx)
 		r.SetQueryParams(map[string]string{
-			"album_id": albumID,
-			"tid":      tID,
-			"list":     fsidsFormatNotUk(fileIDs...),
+			"album_id": fmt.Sprint(album.AlbumID),
+			"tid":      fmt.Sprint(album.Tid),
+			"list":     fsidsFormatNotUk(file.Fsid),
 		})
 	}, nil)
-	return err
+	if err != nil {
+		return nil, err
+	}
+	return moveFileToAlbumFile(file, album, p.Uk), nil
 }
 
 // 保存相册文件为根文件
-func (p *BaiduPhoto) CopyAlbumFile(ctx context.Context, albumID, tID, uk string, fileID ...string) (*CopyFile, error) {
+func (p *BaiduPhoto) CopyAlbumFile(ctx context.Context, file *AlbumFile) (*File, error) {
 	var resp CopyFileResp
 	_, err := p.Post(ALBUM_API_URL+"/copyfile", func(r *resty.Request) {
 		r.SetContext(ctx)
 		r.SetFormData(map[string]string{
-			"album_id": albumID,
-			"tid":      tID,
-			"uk":       uk,
-			"list":     fsidsFormatNotUk(fileID...),
+			"album_id": file.AlbumID,
+			"tid":      fmt.Sprint(file.Tid),
+			"uk":       fmt.Sprint(file.Uk),
+			"list":     fsidsFormatNotUk(file.Fsid),
 		})
 		r.SetResult(&resp)
 	}, nil)
 	if err != nil {
 		return nil, err
 	}
-	return &resp.List[0], nil
+	return copyFile(file, &resp.List[0]), nil
 }
 
 // 加入相册
-func (p *BaiduPhoto) JoinAlbum(ctx context.Context, code string) error {
+func (p *BaiduPhoto) JoinAlbum(ctx context.Context, code string) (*Album, error) {
 	var resp InviteResp
 	_, err := p.Get(ALBUM_API_URL+"/querypcode", func(req *resty.Request) {
 		req.SetContext(ctx)
@@ -289,18 +299,37 @@ func (p *BaiduPhoto) JoinAlbum(ctx context.Context, code string) error {
 		})
 	}, &resp)
 	if err != nil {
-		return err
+		return nil, err
 	}
+	var resp2 JoinOrCreateAlbumResp
 	_, err = p.Get(ALBUM_API_URL+"/join", func(req *resty.Request) {
 		req.SetContext(ctx)
 		req.SetQueryParams(map[string]string{
 			"invite_code": resp.Pdata.InviteCode,
 		})
-	}, nil)
-	return err
+	}, &resp2)
+	if err != nil {
+		return nil, err
+	}
+	return p.GetAlbumDetail(ctx, resp2.AlbumID)
 }
 
-func (d *BaiduPhoto) linkAlbum(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
+// 获取相册详细信息
+func (p *BaiduPhoto) GetAlbumDetail(ctx context.Context, albumID string) (*Album, error) {
+	var album Album
+	_, err := p.Get(ALBUM_API_URL+"/detail", func(req *resty.Request) {
+		req.SetContext(ctx).SetResult(&album)
+		req.SetQueryParams(map[string]string{
+			"album_id": albumID,
+		})
+	}, &album)
+	if err != nil {
+		return nil, err
+	}
+	return &album, nil
+}
+
+func (d *BaiduPhoto) linkAlbum(ctx context.Context, file *AlbumFile, args model.LinkArgs) (*model.Link, error) {
 	headers := map[string]string{
 		"User-Agent": base.UserAgent,
 	}
@@ -311,16 +340,15 @@ func (d *BaiduPhoto) linkAlbum(ctx context.Context, file model.Obj, args model.L
 		headers["X-Forwarded-For"] = args.IP
 	}
 
-	e := splitID(file.GetID())
 	res, err := base.NoRedirectClient.R().
 		SetContext(ctx).
 		SetHeaders(headers).
 		SetQueryParams(map[string]string{
 			"access_token": d.AccessToken,
-			"fsid":         e[0],
-			"album_id":     e[1],
-			"tid":          e[2],
-			"uk":           e[3],
+			"fsid":         fmt.Sprint(file.Fsid),
+			"album_id":     file.AlbumID,
+			"tid":          fmt.Sprint(file.Tid),
+			"uk":           fmt.Sprint(file.Uk),
 		}).
 		Head(ALBUM_API_URL + "/download")
 
@@ -328,19 +356,17 @@ func (d *BaiduPhoto) linkAlbum(ctx context.Context, file model.Obj, args model.L
 		return nil, err
 	}
 
-	//exp := 8 * time.Hour
 	link := &model.Link{
 		URL: res.Header().Get("location"),
 		Header: http.Header{
 			"User-Agent": []string{headers["User-Agent"]},
 			"Referer":    []string{"https://photo.baidu.com/"},
 		},
-		//Expiration: &exp,
 	}
 	return link, nil
 }
 
-func (d *BaiduPhoto) linkFile(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
+func (d *BaiduPhoto) linkFile(ctx context.Context, file *File, args model.LinkArgs) (*model.Link, error) {
 	headers := map[string]string{
 		"User-Agent": base.UserAgent,
 	}
@@ -358,21 +384,31 @@ func (d *BaiduPhoto) linkFile(ctx context.Context, file model.Obj, args model.Li
 		r.SetContext(ctx)
 		r.SetHeaders(headers)
 		r.SetQueryParams(map[string]string{
-			"fsid": splitID(file.GetID())[0],
+			"fsid": fmt.Sprint(file.Fsid),
 		})
 	}, &downloadUrl)
 	if err != nil {
 		return nil, err
 	}
 
-	//exp := 8 * time.Hour
 	link := &model.Link{
 		URL: downloadUrl.Dlink,
 		Header: http.Header{
 			"User-Agent": []string{headers["User-Agent"]},
 			"Referer":    []string{"https://photo.baidu.com/"},
 		},
-		//Expiration: &exp,
 	}
 	return link, nil
+}
+
+// 获取uk
+func (d *BaiduPhoto) uInfo() (*UInfo, error) {
+	var info UInfo
+	_, err := d.Get(USER_API_URL+"/getuinfo", func(req *resty.Request) {
+
+	}, &info)
+	if err != nil {
+		return nil, err
+	}
+	return &info, nil
 }

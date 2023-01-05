@@ -31,7 +31,7 @@ func SliceContains[T comparable](arr []T, v T) bool {
 
 // SliceConvert convert slice to another type slice
 func SliceConvert[S any, D any](srcS []S, convert func(src S) (D, error)) ([]D, error) {
-	var res []D
+	res := make([]D, 0, len(srcS))
 	for i := range srcS {
 		dst, err := convert(srcS[i])
 		if err != nil {
@@ -43,7 +43,7 @@ func SliceConvert[S any, D any](srcS []S, convert func(src S) (D, error)) ([]D, 
 }
 
 func MustSliceConvert[S any, D any](srcS []S, convert func(src S) D) []D {
-	var res []D
+	res := make([]D, 0, len(srcS))
 	for i := range srcS {
 		dst := convert(srcS[i])
 		res = append(res, dst)
