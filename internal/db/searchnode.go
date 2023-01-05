@@ -65,7 +65,7 @@ func SearchNode(req model.SearchReq) ([]model.SearchNode, int64, error) {
 		searchDB = db.Model(&model.SearchNode{}).Where(whereInParent(req.Parent)).Where(keywordsClause)
 	case "mysql":
 		searchDB = db.Model(&model.SearchNode{}).Where(whereInParent(req.Parent)).
-			Where("MATCH (name) AGAINST (? IN NATURAL LANGUAGE MODE)", req.Keywords)
+			Where("MATCH (name) AGAINST (? IN BOOLEAN MODE)", "'*" + req.Keywords + "*'")
 	case "postgres":
 		searchDB = db.Model(&model.SearchNode{}).Where(whereInParent(req.Parent)).
 			Where("to_tsvector(name) @@ to_tsquery(?)", strings.Join(strings.Fields(req.Keywords), " & "))
