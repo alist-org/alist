@@ -8,10 +8,13 @@ import (
 	"strings"
 	"time"
 	"unicode"
+
+	log "github.com/sirupsen/logrus"
 )
 
 const DAY time.Duration = 84600000000000
 
+// 解析时间
 var timeSplitReg = regexp.MustCompile("([0-9.]*)\\s*([\u4e00-\u9fa5]+)")
 
 func MustParseTime(str string) time.Time {
@@ -41,6 +44,7 @@ func MustParseTime(str string) time.Time {
 	return lastOpTime
 }
 
+// 解析大小
 var sizeSplitReg = regexp.MustCompile(`(?i)([0-9.]+)\s*([bkm]+)`)
 
 func SizeStrToInt64(size string) int64 {
@@ -71,6 +75,7 @@ var findAcwScV2Reg = regexp.MustCompile(`arg1='([0-9A-Z]+)'`)
 // 在页面被过多访问或其他情况下，有时候会先返回一个加密的页面，其执行计算出一个acw_sc__v2后放入页面后再重新访问页面才能获得正常页面
 // 若该页面进行了js加密，则进行解密，计算acw_sc__v2，并加入cookie
 func CalcAcwScV2(html string) (string, error) {
+	log.Debugln("acw_sc__v2", html)
 	acwScV2s := findAcwScV2Reg.FindStringSubmatch(html)
 	if len(acwScV2s) != 2 {
 		return "", fmt.Errorf("无法匹配acw_sc__v2")
