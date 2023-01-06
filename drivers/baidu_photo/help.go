@@ -8,10 +8,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/pkg/utils"
 )
 
-//Tid生成
+// Tid生成
 func getTid() string {
 	return fmt.Sprintf("3%d%.0f", time.Now().Unix(), math.Floor(9000000*rand.Float64()+1000000))
 }
@@ -26,82 +26,52 @@ func toTime(t int64) *time.Time {
 	return &tm
 }
 
-func fsidsFormat(ids ...string) string {
-	var buf []string
-	for _, id := range ids {
-		e := splitID(id)
-		buf = append(buf, fmt.Sprintf(`{"fsid":%s,"uk":%s}`, e[0], e[3]))
-	}
+func fsidsFormatNotUk(ids ...int64) string {
+	buf := utils.MustSliceConvert(ids, func(id int64) string {
+		return fmt.Sprintf(`{"fsid":%d}`, id)
+	})
 	return fmt.Sprintf("[%s]", strings.Join(buf, ","))
-}
-
-func fsidsFormatNotUk(ids ...string) string {
-	var buf []string
-	for _, id := range ids {
-		buf = append(buf, fmt.Sprintf(`{"fsid":%s}`, splitID(id)[0]))
-	}
-	return fmt.Sprintf("[%s]", strings.Join(buf, ","))
-}
-
-/*
-结构
-
-{fsid} 文件
-
-{album_id}|{tid} 相册
-
-{fsid}|{album_id}|{tid}|{uk} 相册文件
-*/
-func splitID(id string) []string {
-	return strings.SplitN(id, "|", 4)[:4]
-}
-
-/*
-结构
-
-{fsid} 文件
-
-{album_id}|{tid} 相册
-
-{fsid}|{album_id}|{tid}|{uk} 相册文件
-*/
-func joinID(ids ...interface{}) string {
-	idsStr := make([]string, 0, len(ids))
-	for _, id := range ids {
-		idsStr = append(idsStr, fmt.Sprint(id))
-	}
-	return strings.Join(idsStr, "|")
 }
 
 func getFileName(path string) string {
 	return path[strings.LastIndex(path, "/")+1:]
 }
 
-// 相册
-func IsAlbum(obj model.Obj) bool {
-	return obj.IsDir() && obj.GetPath() == "album"
-}
-
-// 根目录
-func IsRoot(obj model.Obj) bool {
-	return obj.IsDir() && obj.GetPath() == "" && obj.GetID() == ""
-}
-
-// 以相册为根目录
-func IsAlbumRoot(obj model.Obj) bool {
-	return obj.IsDir() && obj.GetPath() == "" && obj.GetID() != ""
-}
-
-// 根文件
-func IsFile(obj model.Obj) bool {
-	return !obj.IsDir() && obj.GetPath() == "file"
-}
-
-// 相册文件
-func IsAlbumFile(obj model.Obj) bool {
-	return !obj.IsDir() && obj.GetPath() == "albumfile"
-}
-
 func MustString(str string, err error) string {
 	return str
+}
+
+/*
+*	处理文件变化
+*	最大程度利用重复数据
+**/
+func copyFile(file *AlbumFile, cf *CopyFile) *File {
+	return &File{
+		Fsid:     cf.Fsid,
+		Path:     cf.Path,
+		Ctime:    cf.Ctime,
+		Mtime:    cf.Ctime,
+		Size:     file.Size,
+		Thumburl: file.Thumburl,
+	}
+}
+
+func moveFileToAlbumFile(file *File, album *Album, uk int64) *AlbumFile {
+	return &AlbumFile{
+		File:    *file,
+		AlbumID: album.AlbumID,
+		Tid:     album.Tid,
+		Uk:      uk,
+	}
+}
+
+func renameAlbum(album *Album, newName string) *Album {
+	return &Album{
+		AlbumID:    album.AlbumID,
+		Tid:        album.Tid,
+		JoinTime:   album.JoinTime,
+		CreateTime: album.CreateTime,
+		Title:      newName,
+		Mtime:      time.Now().Unix(),
+	}
 }

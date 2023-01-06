@@ -9,6 +9,8 @@ import (
 	"math"
 	"os"
 	"regexp"
+	"strconv"
+	"strings"
 
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
@@ -22,6 +24,8 @@ type BaiduPhoto struct {
 	Addition
 
 	AccessToken string
+	Uk          int64
+	root        model.Obj
 }
 
 func (d *BaiduPhoto) Config() driver.Config {
@@ -33,146 +37,178 @@ func (d *BaiduPhoto) GetAddition() driver.Additional {
 }
 
 func (d *BaiduPhoto) Init(ctx context.Context) error {
-	return d.refreshToken()
+	if err := d.refreshToken(); err != nil {
+		return err
+	}
+
+	// root
+	if d.AlbumID != "" {
+		albumID := strings.Split(d.AlbumID, "|")[0]
+		album, err := d.GetAlbumDetail(ctx, albumID)
+		if err != nil {
+			return err
+		}
+		d.root = album
+	} else {
+		d.root = &Root{
+			Name:     "root",
+			Modified: d.Modified,
+			IsFolder: true,
+		}
+	}
+
+	// uk
+	info, err := d.uInfo()
+	if err != nil {
+		return err
+	}
+	d.Uk, err = strconv.ParseInt(info.YouaID, 10, 64)
+	return err
+}
+
+func (d *BaiduPhoto) GetRoot(ctx context.Context) (model.Obj, error) {
+	return d.root, nil
 }
 
 func (d *BaiduPhoto) Drop(ctx context.Context) error {
+	d.AccessToken = ""
+	d.Uk = 0
+	d.root = nil
 	return nil
 }
 
 func (d *BaiduPhoto) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
-	var objs []model.Obj
 	var err error
-	if IsRoot(dir) {
-		var albums []Album
-		if d.ShowType != "root_only_file" {
-			albums, err = d.GetAllAlbum(ctx)
-			if err != nil {
-				return nil, err
-			}
-		}
 
-		var files []File
-		if d.ShowType != "root_only_album" {
-			files, err = d.GetAllFile(ctx)
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		alubmName := make(map[string]int)
-		objs, _ = utils.SliceConvert(albums, func(album Album) (model.Obj, error) {
-			i := alubmName[album.GetName()]
-			if i != 0 {
-				alubmName[album.GetName()]++
-				album.Title = fmt.Sprintf("%s(%d)", album.Title, i)
-			}
-			alubmName[album.GetName()]++
-			return &album, nil
-		})
-		for i := 0; i < len(files); i++ {
-			objs = append(objs, &files[i])
-		}
-	} else if IsAlbum(dir) || IsAlbumRoot(dir) {
+	/* album */
+	if album, ok := dir.(*Album); ok {
 		var files []AlbumFile
-		files, err = d.GetAllAlbumFile(ctx, splitID(dir.GetID())[0], "")
+		files, err = d.GetAllAlbumFile(ctx, album, "")
 		if err != nil {
 			return nil, err
 		}
-		objs = make([]model.Obj, 0, len(files))
-		for i := 0; i < len(files); i++ {
-			objs = append(objs, &files[i])
+
+		return utils.MustSliceConvert(files, func(file AlbumFile) model.Obj {
+			return &file
+		}), nil
+	}
+
+	/* root */
+	var albums []Album
+	if d.ShowType != "root_only_file" {
+		albums, err = d.GetAllAlbum(ctx)
+		if err != nil {
+			return nil, err
 		}
 	}
-	return objs, nil
+
+	var files []File
+	if d.ShowType != "root_only_album" {
+		files, err = d.GetAllFile(ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return append(
+		utils.MustSliceConvert(albums, func(album Album) model.Obj {
+			return &album
+		}),
+		utils.MustSliceConvert(files, func(album File) model.Obj {
+			return &album
+		})...,
+	), nil
+
 }
 
 func (d *BaiduPhoto) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
-	if IsAlbumFile(file) {
-		return d.linkAlbum(ctx, file, args)
-	} else if IsFile(file) {
+	switch file := file.(type) {
+	case *File:
 		return d.linkFile(ctx, file, args)
+	case *AlbumFile:
+		return d.linkAlbum(ctx, file, args)
 	}
 	return nil, errs.NotFile
 }
 
-func (d *BaiduPhoto) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
-	if IsRoot(parentDir) {
-		code := regexp.MustCompile(`(?i)join:([\S]*)`).FindStringSubmatch(dirName)
+var joinReg = regexp.MustCompile(`(?i)join:([\S]*)`)
+
+func (d *BaiduPhoto) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) (model.Obj, error) {
+	if _, ok := parentDir.(*Root); ok {
+		code := joinReg.FindStringSubmatch(dirName)
 		if len(code) > 1 {
 			return d.JoinAlbum(ctx, code[1])
 		}
 		return d.CreateAlbum(ctx, dirName)
 	}
-	return errs.NotSupport
+	return nil, errs.NotSupport
 }
 
-func (d *BaiduPhoto) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
-	if IsFile(srcObj) {
-		if IsAlbum(dstDir) {
+func (d *BaiduPhoto) Copy(ctx context.Context, srcObj, dstDir model.Obj) (model.Obj, error) {
+	switch file := srcObj.(type) {
+	case *File:
+		if album, ok := dstDir.(*Album); ok {
 			//rootfile ->  album
-			e := splitID(dstDir.GetID())
-			return d.AddAlbumFile(ctx, e[0], e[1], srcObj.GetID())
+			return d.AddAlbumFile(ctx, album, file)
 		}
-	} else if IsAlbumFile(srcObj) {
-		if IsRoot(dstDir) {
+	case *AlbumFile:
+		switch album := dstDir.(type) {
+		case *Root:
 			//albumfile -> root
-			e := splitID(srcObj.GetID())
-			_, err := d.CopyAlbumFile(ctx, e[1], e[2], e[3], srcObj.GetID())
-			return err
-		} else if IsAlbum(dstDir) {
+			return d.CopyAlbumFile(ctx, file)
+		case *Album:
 			// albumfile -> root -> album
-			e := splitID(srcObj.GetID())
-			file, err := d.CopyAlbumFile(ctx, e[1], e[2], e[3], srcObj.GetID())
+			rootfile, err := d.CopyAlbumFile(ctx, file)
 			if err != nil {
-				return err
+				return nil, err
 			}
-			e = splitID(dstDir.GetID())
-			return d.AddAlbumFile(ctx, e[0], e[1], fmt.Sprint(file.Fsid))
+			return d.AddAlbumFile(ctx, album, rootfile)
 		}
 	}
-	return errs.NotSupport
+	return nil, errs.NotSupport
 }
 
-func (d *BaiduPhoto) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
+func (d *BaiduPhoto) Move(ctx context.Context, srcObj, dstDir model.Obj) (model.Obj, error) {
 	// 仅支持相册之间移动
-	if IsAlbumFile(srcObj) && IsAlbum(dstDir) {
-		err := d.Copy(ctx, srcObj, dstDir)
-		if err != nil {
-			return err
+	if file, ok := srcObj.(*AlbumFile); ok {
+		if _, ok := dstDir.(*Album); ok {
+			newObj, err := d.Copy(ctx, srcObj, dstDir)
+			if err != nil {
+				return nil, err
+			}
+			// 删除原相册文件
+			_ = d.DeleteAlbumFile(ctx, file)
+			return newObj, nil
 		}
-		e := splitID(srcObj.GetID())
-		return d.DeleteAlbumFile(ctx, e[1], e[2], srcObj.GetID())
 	}
-	return errs.NotSupport
+	return nil, errs.NotSupport
 }
 
-func (d *BaiduPhoto) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
+func (d *BaiduPhoto) Rename(ctx context.Context, srcObj model.Obj, newName string) (model.Obj, error) {
 	// 仅支持相册改名
-	if IsAlbum(srcObj) {
-		e := splitID(srcObj.GetID())
-		return d.SetAlbumName(ctx, e[0], e[1], newName)
+	if album, ok := srcObj.(*Album); ok {
+		return d.SetAlbumName(ctx, album, newName)
 	}
-	return errs.NotSupport
+	return nil, errs.NotSupport
 }
 
 func (d *BaiduPhoto) Remove(ctx context.Context, obj model.Obj) error {
-	e := splitID(obj.GetID())
-	if IsFile(obj) {
-		return d.DeleteFile(ctx, e[0])
-	} else if IsAlbum(obj) {
-		return d.DeleteAlbum(ctx, e[0], e[1])
-	} else if IsAlbumFile(obj) {
-		return d.DeleteAlbumFile(ctx, e[1], e[2], obj.GetID())
+	switch obj := obj.(type) {
+	case *File:
+		return d.DeleteFile(ctx, obj)
+	case *AlbumFile:
+		return d.DeleteAlbumFile(ctx, obj)
+	case *Album:
+		return d.DeleteAlbum(ctx, obj)
 	}
 	return errs.NotSupport
 }
 
-func (d *BaiduPhoto) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
+func (d *BaiduPhoto) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) (model.Obj, error) {
 	// 需要获取完整文件md5,必须支持 io.Seek
 	tempFile, err := utils.CreateTempFile(stream.GetReadCloser())
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer func() {
 		_ = tempFile.Close()
@@ -190,20 +226,19 @@ func (d *BaiduPhoto) Put(ctx context.Context, dstDir model.Obj, stream model.Fil
 	sliceMd52 := md5.New()
 	slicemd52Write := utils.LimitWriter(sliceMd52, SliceSize)
 	for i := 1; i <= count; i++ {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		default:
+		if utils.IsCanceled(ctx) {
+			return nil, ctx.Err()
 		}
+
 		_, err := io.CopyN(io.MultiWriter(fileMd5, sliceMd5, slicemd52Write), tempFile, DEFAULT)
 		if err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
-			return err
+			return nil, err
 		}
 		sliceMD5List = append(sliceMD5List, hex.EncodeToString(sliceMd5.Sum(nil)))
 		sliceMd5.Reset()
 	}
 	if _, err = tempFile.Seek(0, io.SeekStart); err != nil {
-		return err
+		return nil, err
 	}
 	content_md5 := hex.EncodeToString(fileMd5.Sum(nil))
 	slice_md5 := hex.EncodeToString(sliceMd52.Sum(nil))
@@ -228,7 +263,7 @@ func (d *BaiduPhoto) Put(ctx context.Context, dstDir model.Obj, stream model.Fil
 		r.SetFormData(params)
 	}, &precreateResp)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	switch precreateResp.ReturnType {
@@ -241,7 +276,7 @@ func (d *BaiduPhoto) Put(ctx context.Context, dstDir model.Obj, stream model.Fil
 
 		for i := 0; i < count; i++ {
 			if utils.IsCanceled(ctx) {
-				return ctx.Err()
+				return nil, ctx.Err()
 			}
 			uploadParams["partseq"] = fmt.Sprint(i)
 			_, err = d.Post("https://c3.pcs.baidu.com/rest/2.0/pcs/superfile2", func(r *resty.Request) {
@@ -250,7 +285,7 @@ func (d *BaiduPhoto) Put(ctx context.Context, dstDir model.Obj, stream model.Fil
 				r.SetFileReader("file", stream.GetName(), io.LimitReader(tempFile, DEFAULT))
 			}, nil)
 			if err != nil {
-				return err
+				return nil, err
 			}
 			up(i * 100 / count)
 		}
@@ -262,19 +297,24 @@ func (d *BaiduPhoto) Put(ctx context.Context, dstDir model.Obj, stream model.Fil
 			r.SetFormData(params)
 		}, &precreateResp)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		fallthrough
 	case 3: // 增加到相册
-		if IsAlbum(dstDir) || IsAlbumRoot(dstDir) {
-			e := splitID(dstDir.GetID())
-			err = d.AddAlbumFile(ctx, e[0], e[1], fmt.Sprint(precreateResp.Data.FsID))
-			if err != nil {
-				return err
-			}
+		rootfile := precreateResp.Data.toFile()
+		if album, ok := dstDir.(*Album); ok {
+			return d.AddAlbumFile(ctx, album, rootfile)
 		}
+		return rootfile, nil
 	}
-	return nil
+	return nil, errs.NotSupport
 }
 
 var _ driver.Driver = (*BaiduPhoto)(nil)
+var _ driver.Getter = (*BaiduPhoto)(nil)
+var _ driver.MkdirResult = (*BaiduPhoto)(nil)
+var _ driver.CopyResult = (*BaiduPhoto)(nil)
+var _ driver.MoveResult = (*BaiduPhoto)(nil)
+var _ driver.Remove = (*BaiduPhoto)(nil)
+var _ driver.PutResult = (*BaiduPhoto)(nil)
+var _ driver.RenameResult = (*BaiduPhoto)(nil)
