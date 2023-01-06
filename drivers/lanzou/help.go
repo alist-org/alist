@@ -67,7 +67,7 @@ func SizeStrToInt64(size string) int64 {
 
 // 移除注释
 func RemoveNotes(html []byte) []byte {
-	return regexp.MustCompile(`<!--.*?-->|//.*|/\*.*?\*/`).ReplaceAll(html, []byte{})
+	return regexp.MustCompile(`<!--.*?-->|(?:[^:])//.*|/\*.*?\*/`).ReplaceAll(html, []byte{})
 }
 
 var findAcwScV2Reg = regexp.MustCompile(`arg1='([0-9A-Z]+)'`)
