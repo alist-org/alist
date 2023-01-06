@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/hirochachacha/go-smb2"
 )
 
@@ -51,14 +50,6 @@ func (d *SMB) checkConn() error {
 		_ = d.fs.Umount()
 	}
 	return d.initFS()
-}
-
-func (d *SMB) getSMBPath(dir model.Obj) string {
-	fullPath := dir.GetPath()
-	if fullPath[0:1] != "." {
-		fullPath = "." + fullPath
-	}
-	return fullPath
 }
 
 // CopyFile File copies a single file from src to dst
