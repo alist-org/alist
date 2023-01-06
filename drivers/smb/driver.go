@@ -47,7 +47,7 @@ func (d *SMB) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]m
 	if err := d.checkConn(); err != nil {
 		return nil, err
 	}
-	fullPath := d.getSMBPath(dir)
+	fullPath := dir.GetPath()
 	rawFiles, err := d.fs.ReadDir(fullPath)
 	if err != nil {
 		d.cleanLastConnTime()
@@ -73,7 +73,7 @@ func (d *SMB) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*m
 	if err := d.checkConn(); err != nil {
 		return nil, err
 	}
-	fullPath := d.getSMBPath(file)
+	fullPath := file.GetPath()
 	remoteFile, err := d.fs.Open(fullPath)
 	if err != nil {
 		d.cleanLastConnTime()
@@ -89,7 +89,7 @@ func (d *SMB) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) 
 	if err := d.checkConn(); err != nil {
 		return err
 	}
-	fullPath := filepath.Join(d.getSMBPath(parentDir), dirName)
+	fullPath := filepath.Join(parentDir.GetPath(), dirName)
 	err := d.fs.MkdirAll(fullPath, 0700)
 	if err != nil {
 		d.cleanLastConnTime()
@@ -103,8 +103,8 @@ func (d *SMB) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 	if err := d.checkConn(); err != nil {
 		return err
 	}
-	srcPath := d.getSMBPath(srcObj)
-	dstPath := filepath.Join(d.getSMBPath(dstDir), srcObj.GetName())
+	srcPath := srcObj.GetPath()
+	dstPath := filepath.Join(dstDir.GetPath(), srcObj.GetName())
 	err := d.fs.Rename(srcPath, dstPath)
 	if err != nil {
 		d.cleanLastConnTime()
@@ -118,7 +118,7 @@ func (d *SMB) Rename(ctx context.Context, srcObj model.Obj, newName string) erro
 	if err := d.checkConn(); err != nil {
 		return err
 	}
-	srcPath := d.getSMBPath(srcObj)
+	srcPath := srcObj.GetPath()
 	dstPath := filepath.Join(filepath.Dir(srcPath), newName)
 	err := d.fs.Rename(srcPath, dstPath)
 	if err != nil {
@@ -133,8 +133,8 @@ func (d *SMB) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 	if err := d.checkConn(); err != nil {
 		return err
 	}
-	srcPath := d.getSMBPath(srcObj)
-	dstPath := filepath.Join(d.getSMBPath(dstDir), srcObj.GetName())
+	srcPath := srcObj.GetPath()
+	dstPath := filepath.Join(dstDir.GetPath(), srcObj.GetName())
 	var err error
 	if srcObj.IsDir() {
 		err = d.CopyDir(srcPath, dstPath)
@@ -154,7 +154,7 @@ func (d *SMB) Remove(ctx context.Context, obj model.Obj) error {
 		return err
 	}
 	var err error
-	fullPath := d.getSMBPath(obj)
+	fullPath := obj.GetPath()
 	if obj.IsDir() {
 		err = d.fs.RemoveAll(fullPath)
 	} else {
@@ -172,7 +172,7 @@ func (d *SMB) Put(ctx context.Context, dstDir model.Obj, stream model.FileStream
 	if err := d.checkConn(); err != nil {
 		return err
 	}
-	fullPath := filepath.Join(d.getSMBPath(dstDir), stream.GetName())
+	fullPath := filepath.Join(dstDir.GetPath(), stream.GetName())
 	out, err := d.fs.Create(fullPath)
 	if err != nil {
 		d.cleanLastConnTime()
