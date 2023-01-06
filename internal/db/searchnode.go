@@ -54,21 +54,23 @@ func GetSearchNodesByParent(parent string) ([]model.SearchNode, error) {
 	return nodes, nil
 }
 
-func SearchNode(req model.SearchReq) ([]model.SearchNode, int64, error) {
+func SearchNode(req model.SearchReq, useFullText bool) ([]model.SearchNode, int64, error) {
 	var searchDB *gorm.DB
-	switch conf.Conf.Database.Type {
-	case "sqlite3":
+	if !useFullText || conf.Conf.Database.Type == "sqlite3" {
 		keywordsClause := db.Where("1 = 1")
 		for _, keyword := range strings.Fields(req.Keywords) {
 			keywordsClause = keywordsClause.Where("name LIKE ?", fmt.Sprintf("%%%s%%", keyword))
 		}
 		searchDB = db.Model(&model.SearchNode{}).Where(whereInParent(req.Parent)).Where(keywordsClause)
-	case "mysql":
-		searchDB = db.Model(&model.SearchNode{}).Where(whereInParent(req.Parent)).
-			Where("MATCH (name) AGAINST (? IN BOOLEAN MODE)", "'*" + req.Keywords + "*'")
-	case "postgres":
-		searchDB = db.Model(&model.SearchNode{}).Where(whereInParent(req.Parent)).
-			Where("to_tsvector(name) @@ to_tsquery(?)", strings.Join(strings.Fields(req.Keywords), " & "))
+	} else {
+		switch conf.Conf.Database.Type {
+		case "mysql":
+			searchDB = db.Model(&model.SearchNode{}).Where(whereInParent(req.Parent)).
+				Where("MATCH (name) AGAINST (? IN BOOLEAN MODE)", "'*"+req.Keywords+"*'")
+		case "postgres":
+			searchDB = db.Model(&model.SearchNode{}).Where(whereInParent(req.Parent)).
+				Where("to_tsvector(name) @@ to_tsquery(?)", strings.Join(strings.Fields(req.Keywords), " & "))
+		}
 	}
 	var count int64
 	if err := searchDB.Count(&count).Error; err != nil {
