@@ -13,6 +13,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/internal/search/searcher"
+	"github.com/alist-org/alist/v3/internal/setting"
 	"github.com/alist-org/alist/v3/pkg/mq"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	mapset "github.com/deckarep/golang-set/v2"
@@ -164,7 +165,7 @@ func Config(ctx context.Context) searcher.Config {
 }
 
 func Update(parent string, objs []model.Obj) {
-	if instance == nil || !instance.Config().AutoUpdate || Running.Load() {
+	if instance == nil || !instance.Config().AutoUpdate || !setting.GetBool(conf.AutoUpdateIndex) || Running.Load() {
 		return
 	}
 	if isIgnorePath(parent) {
