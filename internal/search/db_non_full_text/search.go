@@ -15,7 +15,7 @@ func (D DB) Config() searcher.Config {
 }
 
 func (D DB) Search(ctx context.Context, req model.SearchReq) ([]model.SearchNode, int64, error) {
-	return db.SearchNode(req, true)
+	return db.SearchNode(req, false)
 }
 
 func (D DB) Index(ctx context.Context, node model.SearchNode) error {
