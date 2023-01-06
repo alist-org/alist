@@ -13,7 +13,15 @@ import (
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/go-resty/resty/v2"
+	log "github.com/sirupsen/logrus"
 )
+
+func (d *LanZou) doupload(callback base.ReqCallback, resp interface{}) ([]byte, error) {
+	return d.post(d.BaseUrl+"/doupload.php", func(req *resty.Request) {
+		req.SetQueryParam("uid", d.uid)
+		callback(req)
+	}, resp)
+}
 
 func (d *LanZou) get(url string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
 	return d.request(url, http.MethodGet, callback, false)
@@ -68,7 +76,7 @@ func (d *LanZou) request(url string, method string, callback base.ReqCallback, u
 	if err != nil {
 		return nil, err
 	}
-
+	log.Debugf("lanzou request: url=>%s ,stats=>%d ,body => %s\n", res.Request.URL, res.StatusCode(), res.String())
 	return res.Body(), err
 }
 
@@ -86,21 +94,19 @@ func (d *LanZou) GetFiles(ctx context.Context, folderID string) ([]model.Obj, er
 	if err != nil {
 		return nil, err
 	}
-	objs := make([]model.Obj, 0, len(folders)+len(files))
-	for _, folder := range folders {
-		objs = append(objs, folder.ToObj())
-	}
-
-	for _, file := range files {
-		objs = append(objs, file.ToObj())
-	}
-	return objs, nil
+	return append(
+		utils.MustSliceConvert(folders, func(folder FileOrFolder) model.Obj {
+			return folder.ToObj()
+		}), utils.MustSliceConvert(files, func(file FileOrFolder) model.Obj {
+			return file.ToObj()
+		})...,
+	), nil
 }
 
 // 通过ID获取文件夹
 func (d *LanZou) getFolders(ctx context.Context, folderID string) ([]FileOrFolder, error) {
 	var resp FilesOrFoldersResp
-	_, err := d.post(d.BaseUrl+"/doupload.php", func(req *resty.Request) {
+	_, err := d.doupload(func(req *resty.Request) {
 		req.SetContext(ctx)
 		req.SetFormData(map[string]string{
 			"task":      "47",
@@ -118,7 +124,7 @@ func (d *LanZou) getFiles(ctx context.Context, folderID string) ([]FileOrFolder,
 	files := make([]FileOrFolder, 0)
 	for pg := 1; ; pg++ {
 		var resp FilesOrFoldersResp
-		_, err := d.post(d.BaseUrl+"/doupload.php", func(req *resty.Request) {
+		_, err := d.doupload(func(req *resty.Request) {
 			req.SetContext(ctx)
 			req.SetFormData(map[string]string{
 				"task":      "5",
@@ -140,7 +146,7 @@ func (d *LanZou) getFiles(ctx context.Context, folderID string) ([]FileOrFolder,
 // 通过ID获取文件夹分享地址
 func (d *LanZou) getFolderShareUrlByID(ctx context.Context, fileID string) (share FileShare, err error) {
 	var resp FileShareResp
-	_, err = d.post(d.BaseUrl+"/doupload.php", func(req *resty.Request) {
+	_, err = d.doupload(func(req *resty.Request) {
 		req.SetContext(ctx)
 		req.SetFormData(map[string]string{
 			"task":    "18",
@@ -157,7 +163,7 @@ func (d *LanZou) getFolderShareUrlByID(ctx context.Context, fileID string) (shar
 // 通过ID获取文件分享地址
 func (d *LanZou) getFileShareUrlByID(ctx context.Context, fileID string) (share FileShare, err error) {
 	var resp FileShareResp
-	_, err = d.post(d.BaseUrl+"/doupload.php", func(req *resty.Request) {
+	_, err = d.doupload(func(req *resty.Request) {
 		req.SetContext(ctx)
 		req.SetFormData(map[string]string{
 			"task":    "22",
@@ -197,24 +203,21 @@ func (d *LanZou) GetFileOrFolderByShareUrl(ctx context.Context, downID, pwd stri
 	}
 	pageData = RemoveNotes(pageData)
 
-	var objs []model.Obj
 	if !isFileReg.Match(pageData) {
 		files, err := d.getFolderByShareUrl(ctx, downID, pwd, pageData)
 		if err != nil {
 			return nil, err
 		}
-		objs = make([]model.Obj, 0, len(files))
-		for _, file := range files {
-			objs = append(objs, file.ToObj())
-		}
+		return utils.MustSliceConvert(files, func(file FileOrFolderByShareUrl) model.Obj {
+			return file.ToObj()
+		}), nil
 	} else {
 		file, err := d.getFilesByShareUrl(ctx, downID, pwd, pageData)
 		if err != nil {
 			return nil, err
 		}
-		objs = []model.Obj{file.ToObj()}
+		return []model.Obj{file.ToObj()}, nil
 	}
-	return objs, nil
 }
 
 // 通过分享链接获取文件(下载链接也使用此方法)

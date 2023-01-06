@@ -2,7 +2,9 @@ package lanzou
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"regexp"
 	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
@@ -17,6 +19,7 @@ var upClient = base.NewRestyClient().SetTimeout(120 * time.Second)
 type LanZou struct {
 	Addition
 	model.Storage
+	uid string
 }
 
 func (d *LanZou) Config() driver.Config {
@@ -32,11 +35,17 @@ func (d *LanZou) Init(ctx context.Context) error {
 		if d.RootFolderID == "" {
 			d.RootFolderID = "-1"
 		}
+		ylogin := regexp.MustCompile("ylogin=(.*?);").FindStringSubmatch(d.Cookie)
+		if len(ylogin) < 2 {
+			return fmt.Errorf("cookie does not contain ylogin")
+		}
+		d.uid = ylogin[1]
 	}
 	return nil
 }
 
 func (d *LanZou) Drop(ctx context.Context) error {
+	d.uid = ""
 	return nil
 }
 
@@ -75,7 +84,7 @@ func (d *LanZou) Link(ctx context.Context, file model.Obj, args model.LinkArgs) 
 
 func (d *LanZou) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
 	if d.IsCookie() {
-		_, err := d.post(d.BaseUrl+"/doupload.php", func(req *resty.Request) {
+		_, err := d.doupload(func(req *resty.Request) {
 			req.SetContext(ctx)
 			req.SetFormData(map[string]string{
 				"task":               "2",
@@ -92,7 +101,7 @@ func (d *LanZou) MakeDir(ctx context.Context, parentDir model.Obj, dirName strin
 func (d *LanZou) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 	if d.IsCookie() {
 		if !srcObj.IsDir() {
-			_, err := d.post(d.BaseUrl+"/doupload.php", func(req *resty.Request) {
+			_, err := d.doupload(func(req *resty.Request) {
 				req.SetContext(ctx)
 				req.SetFormData(map[string]string{
 					"task":      "20",
@@ -109,7 +118,7 @@ func (d *LanZou) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 func (d *LanZou) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
 	if d.IsCookie() {
 		if !srcObj.IsDir() {
-			_, err := d.post(d.BaseUrl+"/doupload.php", func(req *resty.Request) {
+			_, err := d.doupload(func(req *resty.Request) {
 				req.SetContext(ctx)
 				req.SetFormData(map[string]string{
 					"task":      "46",
@@ -130,7 +139,7 @@ func (d *LanZou) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 
 func (d *LanZou) Remove(ctx context.Context, obj model.Obj) error {
 	if d.IsCookie() {
-		_, err := d.post(d.BaseUrl+"/doupload.php", func(req *resty.Request) {
+		_, err := d.doupload(func(req *resty.Request) {
 			req.SetContext(ctx)
 			if obj.IsDir() {
 				req.SetFormData(map[string]string{
