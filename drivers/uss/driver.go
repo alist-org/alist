@@ -71,10 +71,7 @@ func (d *USS) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]m
 
 func (d *USS) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	key := getKey(file.GetPath(), false)
-	host := d.CustomHost
-	if host == "" {
-		host = d.Endpoint
-	}
+	host := d.Endpoint
 	if strings.Contains(host, "://") {
 		host = "https://" + host
 	}
