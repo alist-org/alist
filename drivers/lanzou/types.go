@@ -1,11 +1,13 @@
 package lanzou
 
 import (
+	"errors"
 	"fmt"
 	"time"
-
-	"github.com/alist-org/alist/v3/internal/model"
 )
+
+var ErrFileShareCancel = errors.New("file sharing cancellation")
+var ErrFileNotExist = errors.New("file does not exist")
 
 type FilesOrFoldersResp struct {
 	Text []FileOrFolder `json:"text"`
@@ -34,27 +36,51 @@ type FileOrFolder struct {
 	FolID string `json:"fol_id"`
 	//Folderlock string `json:"folderlock"`
 	//FolderDes  string `json:"folder_des"`
+
+	// 缓存字段
+	size       *int64     `json:"-"`
+	time       *time.Time `json:"-"`
+	repairFlag bool       `json:"-"`
+	shareInfo  *FileShare `json:"-"`
 }
 
-func (f *FileOrFolder) isFloder() bool {
-	return f.FolID != ""
-}
-func (f *FileOrFolder) ToObj() model.Obj {
-	obj := &model.Object{}
-	if f.isFloder() {
-		obj.ID = f.FolID
-		obj.Name = f.Name
-		obj.Modified = time.Now()
-		obj.IsFolder = true
-	} else {
-		obj.ID = f.ID
-		obj.Name = f.NameAll
-		obj.Modified = MustParseTime(f.Time)
-		obj.Size = SizeStrToInt64(f.Size)
+func (f *FileOrFolder) GetID() string {
+	if f.IsDir() {
+		return f.FolID
 	}
-	return obj
+	return f.ID
+}
+func (f *FileOrFolder) GetName() string {
+	if f.IsDir() {
+		return f.Name
+	}
+	return f.NameAll
+}
+func (f *FileOrFolder) GetPath() string { return "" }
+func (f *FileOrFolder) GetSize() int64 {
+	if f.size == nil {
+		size := SizeStrToInt64(f.Size)
+		f.size = &size
+	}
+	return *f.size
+}
+func (f *FileOrFolder) IsDir() bool { return f.FolID != "" }
+func (f *FileOrFolder) ModTime() time.Time {
+	if f.time == nil {
+		time := MustParseTime(f.Time)
+		f.time = &time
+	}
+	return *f.time
 }
 
+func (f *FileOrFolder) SetShareInfo(fs *FileShare) {
+	f.shareInfo = fs
+}
+func (f *FileOrFolder) GetShareInfo() *FileShare {
+	return f.shareInfo
+}
+
+/* 通过ID获取文件/文件夹分享信息 */
 type FileShareResp struct {
 	Info FileShare `json:"info"`
 }
@@ -73,31 +99,55 @@ type FileShare struct {
 	Des    string `json:"des"`
 }
 
+/* 分享类型为文件夹 */
 type FileOrFolderByShareUrlResp struct {
 	Text []FileOrFolderByShareUrl `json:"text"`
 }
 type FileOrFolderByShareUrl struct {
 	ID      string `json:"id"`
 	NameAll string `json:"name_all"`
-	Size    string `json:"size"`
-	Time    string `json:"time"`
-	Duan    string `json:"duan"`
+
+	// 文件特有
+	Duan string `json:"duan"`
+	Size string `json:"size"`
+	Time string `json:"time"`
 	//Icon          string `json:"icon"`
 	//PIco int `json:"p_ico"`
 	//T int `json:"t"`
-	IsFloder bool
+
+	// 文件夹特有
+	IsFloder bool `json:"-"`
+
+	//
+	Url string `json:"-"`
+	Pwd string `json:"-"`
+
+	// 缓存字段
+	size       *int64     `json:"-"`
+	time       *time.Time `json:"-"`
+	repairFlag bool       `json:"-"`
 }
 
-func (f *FileOrFolderByShareUrl) ToObj() model.Obj {
-	return &model.Object{
-		ID:       f.ID,
-		Name:     f.NameAll,
-		Size:     SizeStrToInt64(f.Size),
-		Modified: MustParseTime(f.Time),
-		IsFolder: f.IsFloder,
+func (f *FileOrFolderByShareUrl) GetID() string   { return f.ID }
+func (f *FileOrFolderByShareUrl) GetName() string { return f.NameAll }
+func (f *FileOrFolderByShareUrl) GetPath() string { return "" }
+func (f *FileOrFolderByShareUrl) GetSize() int64 {
+	if f.size == nil {
+		size := SizeStrToInt64(f.Size)
+		f.size = &size
 	}
+	return *f.size
+}
+func (f *FileOrFolderByShareUrl) IsDir() bool { return f.IsFloder }
+func (f *FileOrFolderByShareUrl) ModTime() time.Time {
+	if f.time == nil {
+		time := MustParseTime(f.Time)
+		f.time = &time
+	}
+	return *f.time
 }
 
+// 获取下载链接的响应
 type FileShareInfoAndUrlResp[T string | int] struct {
 	Dom string `json:"dom"`
 	URL string `json:"url"`
@@ -110,22 +160,4 @@ func (u *FileShareInfoAndUrlResp[T]) GetBaseUrl() string {
 
 func (u *FileShareInfoAndUrlResp[T]) GetDownloadUrl() string {
 	return fmt.Sprint(u.GetBaseUrl(), "/", u.URL)
-}
-
-// 通过分享链接获取文件信息和下载链接
-type FileInfoAndUrlByShareUrl struct {
-	ID   string
-	Name string
-	Size string
-	Time string
-	Url  string
-}
-
-func (f *FileInfoAndUrlByShareUrl) ToObj() model.Obj {
-	return &model.Object{
-		ID:       f.ID,
-		Name:     f.Name,
-		Size:     SizeStrToInt64(f.Size),
-		Modified: MustParseTime(f.Time),
-	}
 }
