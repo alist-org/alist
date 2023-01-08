@@ -1,11 +1,9 @@
 package _139
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
-	"math"
 	"net/http"
 	"strconv"
 
@@ -229,10 +227,10 @@ func (d *Yun139) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 		"manualRename": 2,
 		"operation":    0,
 		"fileCount":    1,
-		"totalSize":    stream.GetSize(),
+		"totalSize":    0, // 去除上传大小限制
 		"uploadContentList": []base.Json{{
 			"contentName": stream.GetName(),
-			"contentSize": stream.GetSize(),
+			"contentSize": 0, // 去除上传大小限制
 			// "digest": "5a3231986ce7a6b46e408612d385bafa"
 		}},
 		"parentCatalogID": dstDir.GetID(),
@@ -250,10 +248,10 @@ func (d *Yun139) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 			"operation":    0,
 			"path":         "",
 			"seqNo":        "",
-			"totalSize":    stream.GetSize(),
+			"totalSize":    0,
 			"uploadContentList": []base.Json{{
 				"contentName": stream.GetName(),
-				"contentSize": stream.GetSize(),
+				"contentSize": 0,
 				// "digest": "5a3231986ce7a6b46e408612d385bafa"
 			}},
 		})
@@ -265,51 +263,47 @@ func (d *Yun139) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 	if err != nil {
 		return err
 	}
+
+	// Progress
+	p := driver.NewProgress(stream.GetSize(), up)
+
 	var Default int64 = 104857600
-	part := int(math.Ceil(float64(stream.GetSize()) / float64(Default)))
-	var start int64 = 0
-	for i := 0; i < part; i++ {
+	part := (stream.GetSize() + Default - 1) / Default
+	for i := int64(0); i < part; i++ {
 		if utils.IsCanceled(ctx) {
 			return ctx.Err()
 		}
+
+		start := i * Default
 		byteSize := stream.GetSize() - start
 		if byteSize > Default {
 			byteSize = Default
 		}
-		byteData := make([]byte, byteSize)
-		_, err = io.ReadFull(stream, byteData)
+
+		limitReader := io.LimitReader(stream, byteSize)
+		// Update Progress
+		r := io.TeeReader(limitReader, p)
+		req, err := http.NewRequest("POST", resp.Data.UploadResult.RedirectionURL, r)
 		if err != nil {
 			return err
 		}
-		req, err := http.NewRequest("POST", resp.Data.UploadResult.RedirectionURL, bytes.NewBuffer(byteData))
-		if err != nil {
-			return err
-		}
+
 		req = req.WithContext(ctx)
-		headers := map[string]string{
-			"Accept":         "*/*",
-			"Content-Type":   "text/plain;name=" + unicode(stream.GetName()),
-			"contentSize":    strconv.FormatInt(stream.GetSize(), 10),
-			"range":          fmt.Sprintf("bytes=%d-%d", start, start+byteSize-1),
-			"content-length": strconv.FormatInt(byteSize, 10),
-			"uploadtaskID":   resp.Data.UploadResult.UploadTaskID,
-			"rangeType":      "0",
-			"Referer":        "https://yun.139.com/",
-			"User-Agent":     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36 Edg/95.0.1020.44",
-			"x-SvcType":      "1",
-		}
-		for k, v := range headers {
-			req.Header.Set(k, v)
-		}
+		req.Header.Set("Content-Type", "text/plain;name="+unicode(stream.GetName()))
+		req.Header.Set("contentSize", strconv.FormatInt(stream.GetSize(), 10))
+		req.Header.Set("range", fmt.Sprintf("bytes=%d-%d", start, start+byteSize-1))
+		req.Header.Set("uploadtaskID", resp.Data.UploadResult.UploadTaskID)
+		req.Header.Set("rangeType", "0")
+		req.ContentLength = byteSize
+
 		res, err := base.HttpClient.Do(req)
 		if err != nil {
 			return err
 		}
 		log.Debugf("%+v", res)
 		res.Body.Close()
-		start += byteSize
-		up(i * 100 / part)
 	}
+
 	return nil
 }
 
