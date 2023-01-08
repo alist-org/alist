@@ -53,6 +53,7 @@ English | [中文](./README_cn.md) | [Contributing](./CONTRIBUTING.md) | [CODE_O
     - [x] FTP / SFTP
     - [x] [PikPak](https://www.mypikpak.com/)
     - [x] [S3](https://aws.amazon.com/s3/)
+    - [x] [Seafile](https://seafile.com/)
     - [x] [UPYUN Storage Service](https://www.upyun.com/products/file-storage)
     - [x] WebDav(Support OneDrive/SharePoint without API)
     - [x] Teambition([China](https://www.teambition.com/ ),[International](https://us.teambition.com/ ))
