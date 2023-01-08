@@ -38,7 +38,13 @@ func (d *S3) getClient(link bool) *s3.S3 {
 			if r.HTTPRequest.Method != http.MethodGet {
 				return
 			}
-			r.HTTPRequest.URL.Host = d.CustomHost
+			//判断CustomHost是否以http://或https://开头
+			if strings.Split(d.CustomHost, "://")[0] == "https" || strings.Split(d.CustomHost, "://")[0] == "http" {
+				r.HTTPRequest.URL.Scheme = strings.Split(d.CustomHost, "://")[0]
+				r.HTTPRequest.URL.Host = strings.Split(d.CustomHost, "://")[1]
+			} else {
+				r.HTTPRequest.URL.Host = d.CustomHost
+			}
 		})
 	}
 	return client
