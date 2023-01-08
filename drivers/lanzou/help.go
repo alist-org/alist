@@ -175,3 +175,18 @@ func formToMap(from string) map[string]string {
 	}
 	return param
 }
+
+var regExpirationTime = regexp.MustCompile(`e=(\d+)`)
+
+func GetExpirationTime(url string) (etime time.Duration) {
+	exps := regExpirationTime.FindStringSubmatch(url)
+	if len(exps) < 2 {
+		return
+	}
+	timestamp, err := strconv.ParseInt(exps[1], 10, 64)
+	if err != nil {
+		return
+	}
+	etime = time.Duration(timestamp-time.Now().Unix()) * time.Second
+	return
+}

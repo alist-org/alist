@@ -9,8 +9,12 @@ import (
 var ErrFileShareCancel = errors.New("file sharing cancellation")
 var ErrFileNotExist = errors.New("file does not exist")
 
-type FilesOrFoldersResp struct {
-	Text []FileOrFolder `json:"text"`
+type RespText[T any] struct {
+	Text T `json:"text"`
+}
+
+type RespInfo[T any] struct {
+	Info T `json:"info"`
 }
 
 type FileOrFolder struct {
@@ -81,9 +85,6 @@ func (f *FileOrFolder) GetShareInfo() *FileShare {
 }
 
 /* 通过ID获取文件/文件夹分享信息 */
-type FileShareResp struct {
-	Info FileShare `json:"info"`
-}
 type FileShare struct {
 	Pwd    string `json:"pwd"`
 	Onof   string `json:"onof"`
