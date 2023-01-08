@@ -17,6 +17,7 @@ const DAY time.Duration = 84600000000000
 // 解析时间
 var timeSplitReg = regexp.MustCompile("([0-9.]*)\\s*([\u4e00-\u9fa5]+)")
 
+// 如果解析失败,则返回当前时间
 func MustParseTime(str string) time.Time {
 	lastOpTime, err := time.ParseInLocation("2006-01-02 -07", str+" +08", time.Local)
 	if err != nil {
@@ -47,6 +48,7 @@ func MustParseTime(str string) time.Time {
 // 解析大小
 var sizeSplitReg = regexp.MustCompile(`(?i)([0-9.]+)\s*([bkm]+)`)
 
+// 解析失败返回0
 func SizeStrToInt64(size string) int64 {
 	strs := sizeSplitReg.FindStringSubmatch(size)
 	if len(strs) < 3 {
@@ -66,8 +68,13 @@ func SizeStrToInt64(size string) int64 {
 }
 
 // 移除注释
-func RemoveNotes(html []byte) []byte {
-	return regexp.MustCompile(`<!--.*?-->|//.*|/\*.*?\*/`).ReplaceAll(html, []byte{})
+func RemoveNotes(html string) string {
+	return regexp.MustCompile(`<!--.*?-->|[^:]//.*|/\*.*?\*/`).ReplaceAllStringFunc(html, func(b string) string {
+		if b[1:3] == "//" {
+			return b[:1]
+		}
+		return "\n"
+	})
 }
 
 var findAcwScV2Reg = regexp.MustCompile(`arg1='([0-9A-Z]+)'`)

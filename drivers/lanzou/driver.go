@@ -52,30 +52,65 @@ func (d *LanZou) Drop(ctx context.Context) error {
 // 获取的大小和时间不准确
 func (d *LanZou) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
 	if d.IsCookie() {
-		return d.GetFiles(ctx, dir.GetID())
+		return d.GetAllFiles(dir.GetID())
 	} else {
-		return d.GetFileOrFolderByShareUrl(ctx, dir.GetID(), d.SharePassword)
+		return d.GetFileOrFolderByShareUrl(dir.GetID(), d.SharePassword)
 	}
 }
 
 func (d *LanZou) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
-	downID := file.GetID()
-	pwd := d.SharePassword
-	if d.IsCookie() {
-		share, err := d.getFileShareUrlByID(ctx, file.GetID())
+	var (
+		err   error
+		dfile *FileOrFolderByShareUrl
+	)
+	switch file := file.(type) {
+	case *FileOrFolder:
+		// 先获取分享链接
+		sfile := file.GetShareInfo()
+		if sfile == nil {
+			sfile, err = d.getFileShareUrlByID(file.GetID())
+			if err != nil {
+				return nil, err
+			}
+			file.SetShareInfo(sfile)
+		}
+
+		// 然后获取下载链接
+		dfile, err = d.GetFilesByShareUrl(sfile.FID, sfile.Pwd)
 		if err != nil {
 			return nil, err
 		}
-		downID = share.FID
-		pwd = share.Pwd
-	}
-	fileInfo, err := d.getFilesByShareUrl(ctx, downID, pwd, nil)
-	if err != nil {
-		return nil, err
+		// 修复文件大小
+		if d.RepairFileInfo && !file.repairFlag {
+			size, time := d.getFileRealInfo(dfile.Url)
+			if size != nil {
+				file.size = size
+				file.repairFlag = true
+			}
+			if file.time != nil {
+				file.time = time
+			}
+		}
+	case *FileOrFolderByShareUrl:
+		dfile, err = d.GetFilesByShareUrl(file.GetID(), file.Pwd)
+		if err != nil {
+			return nil, err
+		}
+		// 修复文件大小
+		if d.RepairFileInfo && !file.repairFlag {
+			size, time := d.getFileRealInfo(dfile.Url)
+			if size != nil {
+				file.size = size
+				file.repairFlag = true
+			}
+			if file.time != nil {
+				file.time = time
+			}
+		}
 	}
 
 	return &model.Link{
-		URL: fileInfo.Url,
+		URL: dfile.Url,
 		Header: http.Header{
 			"User-Agent": []string{base.UserAgent},
 		},
@@ -130,10 +165,6 @@ func (d *LanZou) Rename(ctx context.Context, srcObj model.Obj, newName string) e
 			return err
 		}
 	}
-	return errs.NotImplement
-}
-
-func (d *LanZou) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 	return errs.NotImplement
 }
 
