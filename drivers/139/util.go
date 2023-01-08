@@ -28,12 +28,15 @@ func (d *Yun139) isFamily() bool {
 func encodeURIComponent(str string) string {
 	r := url.QueryEscape(str)
 	r = strings.Replace(r, "+", "%20", -1)
+	r = strings.Replace(r, "%21", "!", -1)
+	r = strings.Replace(r, "%27", "'", -1)
+	r = strings.Replace(r, "%28", "(", -1)
+	r = strings.Replace(r, "%29", ")", -1)
+	r = strings.Replace(r, "%2A", "*", -1)
 	return r
 }
 
 func calSign(body, ts, randStr string) string {
-	body = strings.ReplaceAll(body, "\n", "")
-	body = strings.ReplaceAll(body, " ", "")
 	body = encodeURIComponent(body)
 	strs := strings.Split(body, "")
 	sort.Strings(strs)

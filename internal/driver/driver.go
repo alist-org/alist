@@ -105,3 +105,23 @@ type PutResult interface {
 }
 
 type UpdateProgress func(percentage int)
+
+type Progress struct {
+	Total int64
+	Done  int64
+	up    UpdateProgress
+}
+
+func (p *Progress) Write(b []byte) (n int, err error) {
+	n = len(b)
+	p.Done += int64(n)
+	p.up(int(float64(p.Done) / float64(p.Total) * 100))
+	return
+}
+
+func NewProgress(total int64, up UpdateProgress) *Progress {
+	return &Progress{
+		Total: total,
+		up:    up,
+	}
+}
