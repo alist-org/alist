@@ -1,8 +1,7 @@
 package db
 
 import (
-	"fmt"
-	"log"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/model"
@@ -14,21 +13,6 @@ var db *gorm.DB
 func Init(d *gorm.DB) {
 	db = d
 	err := AutoMigrate(new(model.Storage), new(model.User), new(model.Meta), new(model.SettingItem), new(model.SearchNode))
-	switch conf.Conf.Database.Type {
-	case "sqlite3":
-	case "mysql":
-		if err == nil {
-			tableName := fmt.Sprintf("%ssearch_nodes", conf.Conf.Database.TablePrefix)
-			db.Exec(fmt.Sprintf("CREATE FULLTEXT INDEX idx_%s_name_fulltext ON %s(name);", tableName, tableName))
-		}
-	case "postgres":
-		if err == nil {
-			db.Exec("CREATE EXTENSION pg_trgm;")
-			db.Exec("CREATE EXTENSION btree_gin;")
-			tableName := fmt.Sprintf("%ssearch_nodes", conf.Conf.Database.TablePrefix)
-			db.Exec(fmt.Sprintf("CREATE INDEX idx_%s_name ON %s USING GIN (name);", tableName, tableName))
-		}
-	}
 	if err != nil {
 		log.Fatalf("failed migrate database: %s", err.Error())
 	}
@@ -42,4 +26,8 @@ func AutoMigrate(dst ...interface{}) error {
 		err = db.AutoMigrate(dst...)
 	}
 	return err
+}
+
+func GetDb() *gorm.DB {
+	return db;
 }
