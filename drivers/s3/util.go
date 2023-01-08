@@ -9,6 +9,7 @@ import (
 
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/op"
+	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/request"
@@ -39,9 +40,10 @@ func (d *S3) getClient(link bool) *s3.S3 {
 				return
 			}
 			//判断CustomHost是否以http://或https://开头
-			if strings.Split(d.CustomHost, "://")[0] == "https" || strings.Split(d.CustomHost, "://")[0] == "http" {
-				r.HTTPRequest.URL.Scheme = strings.Split(d.CustomHost, "://")[0]
-				r.HTTPRequest.URL.Host = strings.Split(d.CustomHost, "://")[1]
+			split := strings.SplitN(d.CustomHost, "://", 2)
+			if utils.SliceContains([]string{"http", "https"}, split[0]) {
+				r.HTTPRequest.URL.Scheme = split[0]
+				r.HTTPRequest.URL.Host = split[1]
 			} else {
 				r.HTTPRequest.URL.Host = d.CustomHost
 			}
