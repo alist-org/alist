@@ -11,6 +11,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/go-resty/resty/v2"
 )
 
@@ -108,18 +109,19 @@ func (d *LanZou) Link(ctx context.Context, file model.Obj, args model.LinkArgs) 
 			}
 		}
 	}
-
+	exp := GetExpirationTime(dfile.Url)
 	return &model.Link{
 		URL: dfile.Url,
 		Header: http.Header{
 			"User-Agent": []string{base.UserAgent},
 		},
+		Expiration: &exp,
 	}, nil
 }
 
-func (d *LanZou) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
+func (d *LanZou) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) (model.Obj, error) {
 	if d.IsCookie() {
-		_, err := d.doupload(func(req *resty.Request) {
+		data, err := d.doupload(func(req *resty.Request) {
 			req.SetContext(ctx)
 			req.SetFormData(map[string]string{
 				"task":               "2",
@@ -128,12 +130,18 @@ func (d *LanZou) MakeDir(ctx context.Context, parentDir model.Obj, dirName strin
 				"folder_description": "",
 			})
 		}, nil)
-		return err
+		if err != nil {
+			return nil, err
+		}
+		return &FileOrFolder{
+			Name:  dirName,
+			FolID: utils.Json.Get(data, "text").ToString(),
+		}, nil
 	}
-	return errs.NotImplement
+	return nil, errs.NotImplement
 }
 
-func (d *LanZou) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
+func (d *LanZou) Move(ctx context.Context, srcObj, dstDir model.Obj) (model.Obj, error) {
 	if d.IsCookie() {
 		if !srcObj.IsDir() {
 			_, err := d.doupload(func(req *resty.Request) {
@@ -144,13 +152,16 @@ func (d *LanZou) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 					"file_id":   srcObj.GetID(),
 				})
 			}, nil)
-			return err
+			if err != nil {
+				return nil, err
+			}
+			return srcObj, nil
 		}
 	}
-	return errs.NotImplement
+	return nil, errs.NotImplement
 }
 
-func (d *LanZou) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
+func (d *LanZou) Rename(ctx context.Context, srcObj model.Obj, newName string) (model.Obj, error) {
 	if d.IsCookie() {
 		if !srcObj.IsDir() {
 			_, err := d.doupload(func(req *resty.Request) {
@@ -162,10 +173,14 @@ func (d *LanZou) Rename(ctx context.Context, srcObj model.Obj, newName string) e
 					"type":      "2",
 				})
 			}, nil)
-			return err
+			if err != nil {
+				return nil, err
+			}
+			srcObj.(*FileOrFolder).NameAll = newName
+			return srcObj, nil
 		}
 	}
-	return errs.NotImplement
+	return nil, errs.NotImplement
 }
 
 func (d *LanZou) Remove(ctx context.Context, obj model.Obj) error {
@@ -189,8 +204,9 @@ func (d *LanZou) Remove(ctx context.Context, obj model.Obj) error {
 	return errs.NotImplement
 }
 
-func (d *LanZou) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
+func (d *LanZou) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) (model.Obj, error) {
 	if d.IsCookie() {
+		var resp RespText[[]FileOrFolder]
 		_, err := d._post(d.BaseUrl+"/fileup.php", func(req *resty.Request) {
 			req.SetFormData(map[string]string{
 				"task":      "1",
@@ -198,8 +214,11 @@ func (d *LanZou) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 				"name":      stream.GetName(),
 				"folder_id": dstDir.GetID(),
 			}).SetFileReader("upload_file", stream.GetName(), stream).SetContext(ctx)
-		}, nil, true)
-		return err
+		}, &resp, true)
+		if err != nil {
+			return nil, err
+		}
+		return &resp.Text[0], nil
 	}
-	return errs.NotImplement
+	return nil, errs.NotImplement
 }

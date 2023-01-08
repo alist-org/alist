@@ -38,13 +38,6 @@ func list(ctx context.Context, path string, refresh ...bool) ([]model.Obj, error
 		om.InitHideReg(meta.Hide)
 	}
 	objs := om.Merge(virtualFiles, _objs...)
-	// sort objs
-	if storage != nil {
-		if storage.Config().LocalSort {
-			model.SortFiles(objs, storage.GetStorage().OrderBy, storage.GetStorage().OrderDirection)
-		}
-		model.ExtractFolder(objs, storage.GetStorage().ExtractFolder)
-	}
 	return objs, nil
 }
 

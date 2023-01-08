@@ -114,7 +114,7 @@ func (d *LanZou) GetAllFiles(folderID string) ([]model.Obj, error) {
 
 // 通过ID获取文件夹
 func (d *LanZou) GetFolders(folderID string) ([]FileOrFolder, error) {
-	var resp FilesOrFoldersResp
+	var resp RespText[[]FileOrFolder]
 	_, err := d.doupload(func(req *resty.Request) {
 		req.SetFormData(map[string]string{
 			"task":      "47",
@@ -131,7 +131,7 @@ func (d *LanZou) GetFolders(folderID string) ([]FileOrFolder, error) {
 func (d *LanZou) GetFiles(folderID string) ([]FileOrFolder, error) {
 	files := make([]FileOrFolder, 0)
 	for pg := 1; ; pg++ {
-		var resp FilesOrFoldersResp
+		var resp RespText[[]FileOrFolder]
 		_, err := d.doupload(func(req *resty.Request) {
 			req.SetFormData(map[string]string{
 				"task":      "5",
@@ -152,7 +152,7 @@ func (d *LanZou) GetFiles(folderID string) ([]FileOrFolder, error) {
 
 // 通过ID获取文件夹分享地址
 func (d *LanZou) getFolderShareUrlByID(fileID string) (*FileShare, error) {
-	var resp FileShareResp
+	var resp RespInfo[FileShare]
 	_, err := d.doupload(func(req *resty.Request) {
 		req.SetFormData(map[string]string{
 			"task":    "18",
@@ -167,7 +167,7 @@ func (d *LanZou) getFolderShareUrlByID(fileID string) (*FileShare, error) {
 
 // 通过ID获取文件分享地址
 func (d *LanZou) getFileShareUrlByID(fileID string) (*FileShare, error) {
-	var resp FileShareResp
+	var resp RespInfo[FileShare]
 	_, err := d.doupload(func(req *resty.Request) {
 		req.SetFormData(map[string]string{
 			"task":    "22",

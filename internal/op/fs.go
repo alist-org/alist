@@ -10,6 +10,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/pkg/generic_sync"
 	"github.com/alist-org/alist/v3/pkg/singleflight"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
@@ -49,6 +50,8 @@ func delCacheObj(storage driver.Driver, path string, obj model.Obj) {
 	}
 }
 
+var addSortDebounceMap generic_sync.MapOf[string, func(func())]
+
 func addCacheObj(storage driver.Driver, path string, newObj model.Obj) {
 	key := Key(storage, path)
 	objs, ok := listCache.Get(key)
@@ -59,7 +62,24 @@ func addCacheObj(storage driver.Driver, path string, newObj model.Obj) {
 				return
 			}
 		}
-		objs = append(objs, newObj)
+
+		// Simple separation of files and folders
+		if len(objs) > 0 && objs[len(objs)-1].IsDir() == newObj.IsDir() {
+			objs = append(objs, newObj)
+		} else {
+			objs = append([]model.Obj{newObj}, objs...)
+		}
+
+		if storage.Config().LocalSort {
+			debounce, _ := addSortDebounceMap.LoadOrStore(key, utils.NewDebounce(time.Minute))
+			log.Debug("addCacheObj: wait start sort")
+			debounce(func() {
+				log.Debug("addCacheObj: start sort")
+				model.SortFiles(objs, storage.GetStorage().OrderBy, storage.GetStorage().OrderDirection)
+				addSortDebounceMap.Delete(key)
+			})
+		}
+
 		listCache.Set(key, objs, cache.WithEx[[]model.Obj](time.Minute*time.Duration(storage.GetStorage().CacheExpiration)))
 	}
 }
@@ -113,6 +133,13 @@ func List(ctx context.Context, storage driver.Driver, path string, args model.Li
 				hook(args.ReqPath, files)
 			}
 		}(args.ReqPath, files)
+
+		// sort objs
+		if storage.Config().LocalSort {
+			model.SortFiles(files, storage.GetStorage().OrderBy, storage.GetStorage().OrderDirection)
+		}
+		model.ExtractFolder(files, storage.GetStorage().ExtractFolder)
+
 		if !storage.Config().NoCache {
 			if len(files) > 0 {
 				log.Debugf("set cache: %s => %+v", key, files)
