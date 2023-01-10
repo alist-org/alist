@@ -26,12 +26,16 @@ func (d *Seafile) getToken() error {
 	return nil
 }
 
-func (d *Seafile) request(method string, pathname string, callback base.ReqCallback) ([]byte, error) {
+func (d *Seafile) request(method string, pathname string, callback base.ReqCallback, noRedirect ...bool) ([]byte, error) {
 	full := pathname
 	if !strings.HasPrefix(pathname, "http") {
 		full = d.Address + pathname
 	}
-	req := base.RestyClient.R().SetHeader("Authorization", d.authorization)
+	req := base.RestyClient.R()
+	if len(noRedirect) > 0 && noRedirect[0] {
+		req = base.NoRedirectClient.R()
+	}
+	req.SetHeader("Authorization", d.authorization)
 	callback(req)
 	res, err := req.Execute(method, full)
 	if err != nil {

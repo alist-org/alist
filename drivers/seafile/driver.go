@@ -97,7 +97,7 @@ func (d *Seafile) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 			"dst_repo":  d.Addition.RepoId,
 			"dst_dir":   dstDir.GetPath(),
 		})
-	})
+	}, true)
 	return err
 }
 
@@ -109,7 +109,7 @@ func (d *Seafile) Rename(ctx context.Context, srcObj model.Obj, newName string) 
 			"operation": "rename",
 			"newname":   newName,
 		})
-	})
+	}, true)
 	return err
 }
 
