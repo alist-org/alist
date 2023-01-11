@@ -90,3 +90,7 @@ type PrecreateResp struct {
 	Errno      int    `json:"errno"`
 	RequestId  int64  `json:"request_id"`
 }
+
+type CheckLoginResp struct {
+	Errno int `json:"errno"`
+}

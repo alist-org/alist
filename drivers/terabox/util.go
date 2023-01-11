@@ -41,13 +41,17 @@ func (d *Terabox) request(furl string, method string, callback base.ReqCallback,
 
 func (d *Terabox) get(pathname string, params map[string]string, resp interface{}) ([]byte, error) {
 	return d.request("https://www.terabox.com"+pathname, http.MethodGet, func(req *resty.Request) {
-		req.SetQueryParams(params)
+		if params != nil {
+			req.SetQueryParams(params)
+		}
 	}, resp)
 }
 
 func (d *Terabox) post(pathname string, params map[string]string, data interface{}, resp interface{}) ([]byte, error) {
 	return d.request("https://www.terabox.com"+pathname, http.MethodPost, func(req *resty.Request) {
-		req.SetQueryParams(params)
+		if params != nil {
+			req.SetQueryParams(params)
+		}
 		req.SetBody(data)
 	}, resp)
 }
