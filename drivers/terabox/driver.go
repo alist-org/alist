@@ -40,7 +40,11 @@ func (d *Terabox) Init(ctx context.Context) error {
 		return err
 	}
 	if resp.Errno != 0 {
-		return fmt.Errorf("failed to check login status according to cookie")
+		if resp.Errno == 9000 {
+			return fmt.Errorf("terabox is not yet available in this area")
+		} else {
+			return fmt.Errorf("failed to check login status according to cookie")
+		}
 	}
 	return err
 }

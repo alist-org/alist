@@ -17,10 +17,11 @@ import (
 func (d *Terabox) request(furl string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
 	req := base.RestyClient.R()
 	req.SetHeaders(map[string]string{
-		"Cookie":     d.Cookie,
-		"Accept":     "application/json, text/plain, */*",
-		"Referer":    "https://www.terabox.com/",
-		"User-Agent": base.UserAgent,
+		"Cookie":           d.Cookie,
+		"Accept":           "application/json, text/plain, */*",
+		"Referer":          "https://www.terabox.com/",
+		"User-Agent":       base.UserAgent,
+		"X-Requested-With": "XMLHttpRequest",
 	})
 	req.SetQueryParam("app_id", "250528")
 	req.SetQueryParam("web", "1")
@@ -76,6 +77,9 @@ func (d *Terabox) getFiles(dir string) ([]File, error) {
 		_, err := d.get("/api/list", params, &resp)
 		if err != nil {
 			return nil, err
+		}
+		if resp.Errno == 9000 {
+			return nil, fmt.Errorf("terabox is not yet available in this area")
 		}
 		if len(resp.List) == 0 {
 			break
