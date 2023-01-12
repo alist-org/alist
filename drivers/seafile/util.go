@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/alist-org/alist/v3/drivers/base"
+	"github.com/go-resty/resty/v2"
 )
 
 func (d *Seafile) getToken() error {
@@ -35,11 +36,21 @@ func (d *Seafile) request(method string, pathname string, callback base.ReqCallb
 	if len(noRedirect) > 0 && noRedirect[0] {
 		req = base.NoRedirectClient.R()
 	}
-	req.SetHeader("Authorization", d.authorization)
-	callback(req)
-	res, err := req.Execute(method, full)
-	if err != nil {
-		return nil, err
+	var res resty.Response
+	for i := 0; i < 2; i++ {
+		req.SetHeader("Authorization", d.authorization)
+		callback(req)
+		res, err := req.Execute(method, full)
+		if err != nil {
+			return nil, err
+		}
+		if res.StatusCode() != 401 { // Unauthorized
+			break
+		}
+		err = d.getToken()
+		if err != nil {
+			return nil, err
+		}
 	}
 	if res.StatusCode() >= 400 {
 		return nil, fmt.Errorf("request failed: %s", res.String())
