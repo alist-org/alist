@@ -28,13 +28,7 @@ func (d *Cloudreve) GetAddition() driver.Additional {
 }
 
 func (d *Cloudreve) Init(ctx context.Context) error {
-	return d.request(http.MethodPost, "/user/session", func(req *resty.Request) {
-		req.SetBody(base.Json{
-			"username":    d.Addition.Username,
-			"Password":    d.Addition.Password,
-			"captchaCode": "",
-		})
-	}, nil)
+	return d.login()
 }
 
 func (d *Cloudreve) Drop(ctx context.Context) error {

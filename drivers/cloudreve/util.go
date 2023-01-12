@@ -5,10 +5,14 @@ import (
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/cookie"
+	"github.com/go-resty/resty/v2"
 	json "github.com/json-iterator/go"
+	"net/http"
 )
 
 // do others that not defined in Driver interface
+
+const loginPath = "/user/session"
 
 func (d *Cloudreve) request(method string, path string, callback base.ReqCallback, out interface{}) error {
 	u := d.Address + "/api/v3" + path
@@ -36,6 +40,16 @@ func (d *Cloudreve) request(method string, path string, callback base.ReqCallbac
 	}
 
 	if r.Code != 0 {
+
+		// 刷新 cookie
+		if r.Code == http.StatusUnauthorized && path != loginPath {
+			err = d.login()
+			if err != nil {
+				return err
+			}
+			return d.request(method, path, callback, out)
+		}
+
 		return errors.New(r.Msg)
 	}
 	sess := cookie.GetCookie(resp.Cookies(), "cloudreve-session")
@@ -58,7 +72,13 @@ func (d *Cloudreve) request(method string, path string, callback base.ReqCallbac
 }
 
 func (d *Cloudreve) login() error {
-	return nil
+	return d.request(http.MethodPost, loginPath, func(req *resty.Request) {
+		req.SetBody(base.Json{
+			"username":    d.Addition.Username,
+			"Password":    d.Addition.Password,
+			"captchaCode": "",
+		})
+	}, nil)
 }
 
 func convertSrc(obj model.Obj) map[string]interface{} {
