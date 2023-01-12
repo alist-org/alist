@@ -38,11 +38,11 @@ type File struct {
 }
 
 type ListResp struct {
-	Errno     int    `json:"errno"`
-	GuidInfo  string `json:"guid_info"`
-	List      []File `json:"list"`
-	RequestId int64  `json:"request_id"`
-	Guid      int    `json:"guid"`
+	Errno    int    `json:"errno"`
+	GuidInfo string `json:"guid_info"`
+	List     []File `json:"list"`
+	//RequestId int64  `json:"request_id"` 接口返回有时是int有时是string
+	Guid int `json:"guid"`
 }
 
 func fileToObj(f File) *model.ObjThumb {
@@ -70,7 +70,7 @@ type DownloadResp2 struct {
 	Info  []struct {
 		Dlink string `json:"dlink"`
 	} `json:"info"`
-	RequestID int64 `json:"request_id"`
+	//RequestID int64 `json:"request_id"`
 }
 
 type HomeInfoResp struct {
@@ -88,5 +88,9 @@ type PrecreateResp struct {
 	ReturnType int    `json:"return_type"`
 	BlockList  []int  `json:"block_list"`
 	Errno      int    `json:"errno"`
-	RequestId  int64  `json:"request_id"`
+	//RequestId  int64  `json:"request_id"`
+}
+
+type CheckLoginResp struct {
+	Errno int `json:"errno"`
 }

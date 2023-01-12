@@ -61,6 +61,7 @@ English | [中文](./README_cn.md) | [Contributing](./CONTRIBUTING.md) | [CODE_O
     - [x] [139yun](https://yun.139.com/) (Personal, Family)
     - [x] [YandexDisk](https://disk.yandex.com/)
     - [x] [BaiduNetdisk](http://pan.baidu.com/)
+    - [x] [Terabox](https://www.terabox.com/main)
     - [x] [Quark](https://pan.quark.cn)
     - [x] [Thunder](https://pan.xunlei.com)
     - [x] [Lanzou](https://www.lanzou.com/)

@@ -11,7 +11,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io"
 	"math"
-	"net/http"
 	"os"
 	stdpath "path"
 	"strconv"
@@ -35,7 +34,17 @@ func (d *Terabox) GetAddition() driver.Additional {
 }
 
 func (d *Terabox) Init(ctx context.Context) error {
-	_, err := d.request("https://www.terabox.com/api/check/login", http.MethodGet, nil, nil)
+	var resp CheckLoginResp
+	_, err := d.get("/api/check/login", nil, &resp)
+	if err != nil {
+		return err
+	}
+	if resp.Errno != 0 {
+		if resp.Errno == 9000 {
+			return fmt.Errorf("terabox is not yet available in this area")
+		}
+		return fmt.Errorf("failed to check login status according to cookie")
+	}
 	return err
 }
 
