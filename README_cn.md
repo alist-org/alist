@@ -53,6 +53,7 @@
     - [x] FTP / SFTP
     - [x] [PikPak](https://www.mypikpak.com/)
     - [x] [S3](https://aws.amazon.com/cn/s3/)
+    - [x] [Seafile](https://seafile.com/)
     - [x] [又拍云对象存储](https://www.upyun.com/products/file-storage)
     - [x] WebDav(支持无API的OneDrive/SharePoint)
     - [x] Teambition（[中国](https://www.teambition.com/ )，[国际](https://us.teambition.com/ )）
