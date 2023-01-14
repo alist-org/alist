@@ -29,6 +29,9 @@ func (d *AliDrive) refreshToken() error {
 	if e.Code != "" {
 		return fmt.Errorf("failed to refresh token: %s", e.Message)
 	}
+	if resp.RefreshToken == "" {
+		return errors.New("failed to refresh token: refresh token is empty")
+	}
 	d.RefreshToken, d.AccessToken = resp.RefreshToken, resp.AccessToken
 	op.MustSaveDriverStorage(d)
 	return nil
