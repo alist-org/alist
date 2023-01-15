@@ -1,4 +1,4 @@
-package db
+package db_non_full_text
 
 import (
 	"context"
