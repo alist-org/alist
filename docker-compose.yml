@@ -10,5 +10,6 @@ services:
       - PUID=0
       - PGID=0
       - UMASK=022
+      - TZ=UTC
     container_name: alist
     image: 'xhofe/alist:latest'
