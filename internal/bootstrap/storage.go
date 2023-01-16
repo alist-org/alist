@@ -2,6 +2,7 @@ package bootstrap
 
 import (
 	"context"
+	"time"
 
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/db"
@@ -19,7 +20,16 @@ func LoadStorages() {
 		for i := range storages {
 			err := op.LoadStorage(context.Background(), storages[i])
 			if err != nil {
-				utils.Log.Errorf("failed get enabled storages: %+v", err)
+				// 挂载失败，重试一次
+				time.Sleep(1*time.Second)
+				err = op.LoadStorage(context.Background(), storages[i])
+				if err != nil {
+
+					utils.Log.Errorf("failed get enabled storages: %+v", err)
+				} else {
+					utils.Log.Infof("success load storage: [%s], driver: [%s]",
+						storages[i].MountPath, storages[i].Driver)
+				}
 			} else {
 				utils.Log.Infof("success load storage: [%s], driver: [%s]",
 					storages[i].MountPath, storages[i].Driver)
