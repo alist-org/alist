@@ -7,7 +7,7 @@ import (
 )
 
 type ListArgs struct {
-	//ReqPath string
+	ReqPath string
 }
 
 type LinkArgs struct {

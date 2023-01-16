@@ -23,7 +23,7 @@ func list(ctx context.Context, path string, refresh ...bool) ([]model.Obj, error
 	var _objs []model.Obj
 	if storage != nil {
 		_objs, err = op.List(ctx, storage, actualPath, model.ListArgs{
-			//ReqPath: path,
+			ReqPath: path,
 		}, refresh...)
 		if err != nil {
 			log.Errorf("%+v", err)
