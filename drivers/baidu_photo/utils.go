@@ -26,9 +26,9 @@ var (
 	ErrNotSupportName = errors.New("only chinese and english, numbers and underscores are supported, and the length is no more than 20")
 )
 
-func (p *BaiduPhoto) Request(furl string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+func (d *BaiduPhoto) Request(furl string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
 	req := base.RestyClient.R().
-		SetQueryParam("access_token", p.AccessToken)
+		SetQueryParam("access_token", d.AccessToken)
 	if callback != nil {
 		callback(req)
 	}
@@ -49,7 +49,7 @@ func (p *BaiduPhoto) Request(furl string, method string, callback base.ReqCallba
 	case 50820:
 		return nil, fmt.Errorf("no shared albums found")
 	case -6:
-		if err = p.refreshToken(); err != nil {
+		if err = d.refreshToken(); err != nil {
 			return nil, err
 		}
 	default:
@@ -58,15 +58,15 @@ func (p *BaiduPhoto) Request(furl string, method string, callback base.ReqCallba
 	return res.Body(), nil
 }
 
-func (p *BaiduPhoto) refreshToken() error {
+func (d *BaiduPhoto) refreshToken() error {
 	u := "https://openapi.baidu.com/oauth/2.0/token"
 	var resp base.TokenResp
 	var e TokenErrResp
 	_, err := base.RestyClient.R().SetResult(&resp).SetError(&e).SetQueryParams(map[string]string{
 		"grant_type":    "refresh_token",
-		"refresh_token": p.RefreshToken,
-		"client_id":     p.ClientID,
-		"client_secret": p.ClientSecret,
+		"refresh_token": d.RefreshToken,
+		"client_id":     d.ClientID,
+		"client_secret": d.ClientSecret,
 	}).Get(u)
 	if err != nil {
 		return err
@@ -77,25 +77,25 @@ func (p *BaiduPhoto) refreshToken() error {
 	if resp.RefreshToken == "" {
 		return errs.EmptyToken
 	}
-	p.AccessToken, p.RefreshToken = resp.AccessToken, resp.RefreshToken
-	op.MustSaveDriverStorage(p)
+	d.AccessToken, d.RefreshToken = resp.AccessToken, resp.RefreshToken
+	op.MustSaveDriverStorage(d)
 	return nil
 }
 
-func (p *BaiduPhoto) Get(furl string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
-	return p.Request(furl, http.MethodGet, callback, resp)
+func (d *BaiduPhoto) Get(furl string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+	return d.Request(furl, http.MethodGet, callback, resp)
 }
 
-func (p *BaiduPhoto) Post(furl string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
-	return p.Request(furl, http.MethodPost, callback, resp)
+func (d *BaiduPhoto) Post(furl string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+	return d.Request(furl, http.MethodPost, callback, resp)
 }
 
 // 获取所有文件
-func (p *BaiduPhoto) GetAllFile(ctx context.Context) (files []File, err error) {
+func (d *BaiduPhoto) GetAllFile(ctx context.Context) (files []File, err error) {
 	var cursor string
 	for {
 		var resp FileListResp
-		_, err = p.Get(FILE_API_URL_V1+"/list", func(r *resty.Request) {
+		_, err = d.Get(FILE_API_URL_V1+"/list", func(r *resty.Request) {
 			r.SetContext(ctx)
 			r.SetQueryParams(map[string]string{
 				"need_thumbnail":     "1",
@@ -116,8 +116,8 @@ func (p *BaiduPhoto) GetAllFile(ctx context.Context) (files []File, err error) {
 }
 
 // 删除根文件
-func (p *BaiduPhoto) DeleteFile(ctx context.Context, file *File) error {
-	_, err := p.Get(FILE_API_URL_V1+"/delete", func(req *resty.Request) {
+func (d *BaiduPhoto) DeleteFile(ctx context.Context, file *File) error {
+	_, err := d.Get(FILE_API_URL_V1+"/delete", func(req *resty.Request) {
 		req.SetContext(ctx)
 		req.SetQueryParams(map[string]string{
 			"fsid_list": fmt.Sprintf("[%d]", file.Fsid),
@@ -127,11 +127,11 @@ func (p *BaiduPhoto) DeleteFile(ctx context.Context, file *File) error {
 }
 
 // 获取所有相册
-func (p *BaiduPhoto) GetAllAlbum(ctx context.Context) (albums []Album, err error) {
+func (d *BaiduPhoto) GetAllAlbum(ctx context.Context) (albums []Album, err error) {
 	var cursor string
 	for {
 		var resp AlbumListResp
-		_, err = p.Get(ALBUM_API_URL+"/list", func(r *resty.Request) {
+		_, err = d.Get(ALBUM_API_URL+"/list", func(r *resty.Request) {
 			r.SetContext(ctx)
 			r.SetQueryParams(map[string]string{
 				"need_amount": "1",
@@ -156,11 +156,11 @@ func (p *BaiduPhoto) GetAllAlbum(ctx context.Context) (albums []Album, err error
 }
 
 // 获取相册中所有文件
-func (p *BaiduPhoto) GetAllAlbumFile(ctx context.Context, album *Album, passwd string) (files []AlbumFile, err error) {
+func (d *BaiduPhoto) GetAllAlbumFile(ctx context.Context, album *Album, passwd string) (files []AlbumFile, err error) {
 	var cursor string
 	for {
 		var resp AlbumFileListResp
-		_, err = p.Get(ALBUM_API_URL+"/listfile", func(r *resty.Request) {
+		_, err = d.Get(ALBUM_API_URL+"/listfile", func(r *resty.Request) {
 			r.SetContext(ctx)
 			r.SetQueryParams(map[string]string{
 				"album_id":    album.AlbumID,
@@ -187,12 +187,12 @@ func (p *BaiduPhoto) GetAllAlbumFile(ctx context.Context, album *Album, passwd s
 }
 
 // 创建相册
-func (p *BaiduPhoto) CreateAlbum(ctx context.Context, name string) (*Album, error) {
+func (d *BaiduPhoto) CreateAlbum(ctx context.Context, name string) (*Album, error) {
 	if !checkName(name) {
 		return nil, ErrNotSupportName
 	}
 	var resp JoinOrCreateAlbumResp
-	_, err := p.Post(ALBUM_API_URL+"/create", func(r *resty.Request) {
+	_, err := d.Post(ALBUM_API_URL+"/create", func(r *resty.Request) {
 		r.SetContext(ctx).SetResult(&resp)
 		r.SetQueryParams(map[string]string{
 			"title":  name,
@@ -203,16 +203,16 @@ func (p *BaiduPhoto) CreateAlbum(ctx context.Context, name string) (*Album, erro
 	if err != nil {
 		return nil, err
 	}
-	return p.GetAlbumDetail(ctx, resp.AlbumID)
+	return d.GetAlbumDetail(ctx, resp.AlbumID)
 }
 
 // 相册改名
-func (p *BaiduPhoto) SetAlbumName(ctx context.Context, album *Album, name string) (*Album, error) {
+func (d *BaiduPhoto) SetAlbumName(ctx context.Context, album *Album, name string) (*Album, error) {
 	if !checkName(name) {
 		return nil, ErrNotSupportName
 	}
 
-	_, err := p.Post(ALBUM_API_URL+"/settitle", func(r *resty.Request) {
+	_, err := d.Post(ALBUM_API_URL+"/settitle", func(r *resty.Request) {
 		r.SetContext(ctx)
 		r.SetFormData(map[string]string{
 			"title":    name,
@@ -227,8 +227,8 @@ func (p *BaiduPhoto) SetAlbumName(ctx context.Context, album *Album, name string
 }
 
 // 删除相册
-func (p *BaiduPhoto) DeleteAlbum(ctx context.Context, album *Album) error {
-	_, err := p.Post(ALBUM_API_URL+"/delete", func(r *resty.Request) {
+func (d *BaiduPhoto) DeleteAlbum(ctx context.Context, album *Album) error {
+	_, err := d.Post(ALBUM_API_URL+"/delete", func(r *resty.Request) {
 		r.SetContext(ctx)
 		r.SetFormData(map[string]string{
 			"album_id":            album.AlbumID,
@@ -240,8 +240,8 @@ func (p *BaiduPhoto) DeleteAlbum(ctx context.Context, album *Album) error {
 }
 
 // 删除相册文件
-func (p *BaiduPhoto) DeleteAlbumFile(ctx context.Context, file *AlbumFile) error {
-	_, err := p.Post(ALBUM_API_URL+"/delfile", func(r *resty.Request) {
+func (d *BaiduPhoto) DeleteAlbumFile(ctx context.Context, file *AlbumFile) error {
+	_, err := d.Post(ALBUM_API_URL+"/delfile", func(r *resty.Request) {
 		r.SetContext(ctx)
 		r.SetFormData(map[string]string{
 			"album_id":   fmt.Sprint(file.AlbumID),
@@ -254,8 +254,8 @@ func (p *BaiduPhoto) DeleteAlbumFile(ctx context.Context, file *AlbumFile) error
 }
 
 // 增加相册文件
-func (p *BaiduPhoto) AddAlbumFile(ctx context.Context, album *Album, file *File) (*AlbumFile, error) {
-	_, err := p.Get(ALBUM_API_URL+"/addfile", func(r *resty.Request) {
+func (d *BaiduPhoto) AddAlbumFile(ctx context.Context, album *Album, file *File) (*AlbumFile, error) {
+	_, err := d.Get(ALBUM_API_URL+"/addfile", func(r *resty.Request) {
 		r.SetContext(ctx)
 		r.SetQueryParams(map[string]string{
 			"album_id": fmt.Sprint(album.AlbumID),
@@ -266,13 +266,13 @@ func (p *BaiduPhoto) AddAlbumFile(ctx context.Context, album *Album, file *File)
 	if err != nil {
 		return nil, err
 	}
-	return moveFileToAlbumFile(file, album, p.Uk), nil
+	return moveFileToAlbumFile(file, album, d.Uk), nil
 }
 
 // 保存相册文件为根文件
-func (p *BaiduPhoto) CopyAlbumFile(ctx context.Context, file *AlbumFile) (*File, error) {
+func (d *BaiduPhoto) CopyAlbumFile(ctx context.Context, file *AlbumFile) (*File, error) {
 	var resp CopyFileResp
-	_, err := p.Post(ALBUM_API_URL+"/copyfile", func(r *resty.Request) {
+	_, err := d.Post(ALBUM_API_URL+"/copyfile", func(r *resty.Request) {
 		r.SetContext(ctx)
 		r.SetFormData(map[string]string{
 			"album_id": file.AlbumID,
@@ -289,9 +289,9 @@ func (p *BaiduPhoto) CopyAlbumFile(ctx context.Context, file *AlbumFile) (*File,
 }
 
 // 加入相册
-func (p *BaiduPhoto) JoinAlbum(ctx context.Context, code string) (*Album, error) {
+func (d *BaiduPhoto) JoinAlbum(ctx context.Context, code string) (*Album, error) {
 	var resp InviteResp
-	_, err := p.Get(ALBUM_API_URL+"/querypcode", func(req *resty.Request) {
+	_, err := d.Get(ALBUM_API_URL+"/querypcode", func(req *resty.Request) {
 		req.SetContext(ctx)
 		req.SetQueryParams(map[string]string{
 			"pcode": code,
@@ -302,7 +302,7 @@ func (p *BaiduPhoto) JoinAlbum(ctx context.Context, code string) (*Album, error)
 		return nil, err
 	}
 	var resp2 JoinOrCreateAlbumResp
-	_, err = p.Get(ALBUM_API_URL+"/join", func(req *resty.Request) {
+	_, err = d.Get(ALBUM_API_URL+"/join", func(req *resty.Request) {
 		req.SetContext(ctx)
 		req.SetQueryParams(map[string]string{
 			"invite_code": resp.Pdata.InviteCode,
@@ -311,13 +311,13 @@ func (p *BaiduPhoto) JoinAlbum(ctx context.Context, code string) (*Album, error)
 	if err != nil {
 		return nil, err
 	}
-	return p.GetAlbumDetail(ctx, resp2.AlbumID)
+	return d.GetAlbumDetail(ctx, resp2.AlbumID)
 }
 
 // 获取相册详细信息
-func (p *BaiduPhoto) GetAlbumDetail(ctx context.Context, albumID string) (*Album, error) {
+func (d *BaiduPhoto) GetAlbumDetail(ctx context.Context, albumID string) (*Album, error) {
 	var album Album
-	_, err := p.Get(ALBUM_API_URL+"/detail", func(req *resty.Request) {
+	_, err := d.Get(ALBUM_API_URL+"/detail", func(req *resty.Request) {
 		req.SetContext(ctx).SetResult(&album)
 		req.SetQueryParams(map[string]string{
 			"album_id": albumID,

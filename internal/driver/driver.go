@@ -38,8 +38,13 @@ type Reader interface {
 	Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error)
 }
 
-type Getter interface {
+type GetRooter interface {
 	GetRoot(ctx context.Context) (model.Obj, error)
+}
+
+type Getter interface {
+	// Get file by path, the path haven't been joined with root path
+	Get(ctx context.Context, path string) (model.Obj, error)
 }
 
 //type Writer interface {

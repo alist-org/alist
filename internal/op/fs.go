@@ -159,6 +159,14 @@ func Get(ctx context.Context, storage driver.Driver, path string) (model.Obj, er
 	path = utils.FixAndCleanPath(path)
 	log.Debugf("op.Get %s", path)
 
+	// get the obj directly without list so that we can reduce the io
+	if g, ok := storage.(driver.Getter); ok {
+		obj, err := g.Get(ctx, path)
+		if err == nil {
+			return model.WrapObjName(obj), nil
+		}
+	}
+
 	// is root folder
 	if utils.PathEqual(path, "/") {
 		var rootObj model.Obj
@@ -180,7 +188,7 @@ func Get(ctx context.Context, storage driver.Driver, path string) (model.Obj, er
 				IsFolder: true,
 			}
 		default:
-			if storage, ok := storage.(driver.Getter); ok {
+			if storage, ok := storage.(driver.GetRooter); ok {
 				obj, err := storage.GetRoot(ctx)
 				if err != nil {
 					return nil, errors.WithMessage(err, "failed get root obj")
@@ -189,7 +197,7 @@ func Get(ctx context.Context, storage driver.Driver, path string) (model.Obj, er
 			}
 		}
 		if rootObj == nil {
-			return nil, errors.Errorf("please implement IRootPath or IRootId or Getter method")
+			return nil, errors.Errorf("please implement IRootPath or IRootId or GetRooter method")
 		}
 		return &model.ObjWrapName{
 			Name: RootName,
@@ -204,7 +212,6 @@ func Get(ctx context.Context, storage driver.Driver, path string) (model.Obj, er
 		return nil, errors.WithMessage(err, "failed get parent list")
 	}
 	for _, f := range files {
-		// TODO maybe copy obj here
 		if f.GetName() == name {
 			return f, nil
 		}

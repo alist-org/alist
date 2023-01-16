@@ -311,7 +311,7 @@ func (d *BaiduPhoto) Put(ctx context.Context, dstDir model.Obj, stream model.Fil
 }
 
 var _ driver.Driver = (*BaiduPhoto)(nil)
-var _ driver.Getter = (*BaiduPhoto)(nil)
+var _ driver.GetRooter = (*BaiduPhoto)(nil)
 var _ driver.MkdirResult = (*BaiduPhoto)(nil)
 var _ driver.CopyResult = (*BaiduPhoto)(nil)
 var _ driver.MoveResult = (*BaiduPhoto)(nil)

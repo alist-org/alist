@@ -16,6 +16,7 @@ import (
 
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/driver"
+	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/sign"
 	"github.com/alist-org/alist/v3/pkg/utils"
@@ -92,6 +93,30 @@ func (d *Local) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([
 		files = append(files, &file)
 	}
 	return files, nil
+}
+
+func (d *Local) Get(ctx context.Context, path string) (model.Obj, error) {
+	path = filepath.Join(d.GetRootPath(), path)
+	f, err := os.Stat(path)
+	if err != nil {
+		if strings.Contains(err.Error(), "cannot find the file") {
+			return nil, errs.ObjectNotFound
+		}
+		return nil, err
+	}
+	isFolder := f.IsDir() || isSymlinkDir(f, path)
+	size := f.Size()
+	if isFolder {
+		size = 0
+	}
+	file := model.Object{
+		Path:     path,
+		Name:     f.Name(),
+		Modified: f.ModTime(),
+		Size:     size,
+		IsFolder: isFolder,
+	}
+	return &file, nil
 }
 
 func (d *Local) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
