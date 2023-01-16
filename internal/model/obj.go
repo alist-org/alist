@@ -12,7 +12,7 @@ import (
 	"github.com/maruel/natural"
 )
 
-type UnwrapObj interface {
+type ObjUnwrap interface {
 	Unwrap() Obj
 }
 
@@ -99,7 +99,6 @@ func ExtractFolder(objs []Obj, extractFolder string) {
 	})
 }
 
-// Wrap
 func WrapObjName(objs Obj) Obj {
 	return &ObjWrapName{Obj: objs}
 }
@@ -110,8 +109,8 @@ func WrapObjsName(objs []Obj) {
 	}
 }
 
-func UnwrapObjs(obj Obj) Obj {
-	if unwrap, ok := obj.(UnwrapObj); ok {
+func UnwrapObj(obj Obj) Obj {
+	if unwrap, ok := obj.(ObjUnwrap); ok {
 		obj = unwrap.Unwrap()
 	}
 	return obj
@@ -121,7 +120,7 @@ func GetThumb(obj Obj) (thumb string, ok bool) {
 	if obj, ok := obj.(Thumb); ok {
 		return obj.Thumb(), true
 	}
-	if unwrap, ok := obj.(UnwrapObj); ok {
+	if unwrap, ok := obj.(ObjUnwrap); ok {
 		return GetThumb(unwrap.Unwrap())
 	}
 	return thumb, false
@@ -131,7 +130,7 @@ func GetUrl(obj Obj) (url string, ok bool) {
 	if obj, ok := obj.(URL); ok {
 		return obj.URL(), true
 	}
-	if unwrap, ok := obj.(UnwrapObj); ok {
+	if unwrap, ok := obj.(ObjUnwrap); ok {
 		return GetUrl(unwrap.Unwrap())
 	}
 	return url, false

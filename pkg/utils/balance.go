@@ -9,10 +9,10 @@ func IsBalance(str string) bool {
 }
 
 // GetActualMountPath remove balance suffix
-func GetActualMountPath(virtualPath string) string {
-	bIndex := strings.LastIndex(virtualPath, ".balance")
+func GetActualMountPath(mountPath string) string {
+	bIndex := strings.LastIndex(mountPath, ".balance")
 	if bIndex != -1 {
-		virtualPath = virtualPath[:bIndex]
+		mountPath = mountPath[:bIndex]
 	}
-	return virtualPath
+	return mountPath
 }

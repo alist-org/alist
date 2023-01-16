@@ -68,9 +68,9 @@ func (d *Local) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([
 		}
 		thumb := ""
 		if d.Thumbnail && utils.GetFileType(f.Name()) == conf.IMAGE {
-			thumb = common.GetApiUrl(nil) + stdpath.Join("/d", args.ReqPath, f.Name())
+			thumb = common.GetApiUrl(nil) + stdpath.Join("/d", utils.GetFullPath(d.MountPath, fullPath), f.Name())
 			thumb = utils.EncodePath(thumb, true)
-			thumb += "?type=thumb&sign=" + sign.Sign(stdpath.Join(args.ReqPath, f.Name()))
+			thumb += "?type=thumb&sign=" + sign.Sign(stdpath.Join(utils.GetFullPath(d.MountPath, fullPath), f.Name()))
 		}
 		isFolder := f.IsDir() || isSymlinkDir(f, fullPath)
 		var size int64

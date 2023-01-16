@@ -130,9 +130,9 @@ func List(ctx context.Context, storage driver.Driver, path string, args model.Li
 		// call hooks
 		go func(reqPath string, files []model.Obj) {
 			for _, hook := range objsUpdateHooks {
-				hook(args.ReqPath, files)
+				hook(reqPath, files)
 			}
-		}(args.ReqPath, files)
+		}(utils.GetFullPath(storage.GetStorage().MountPath, path), files)
 
 		// sort objs
 		if storage.Config().LocalSort {
@@ -218,7 +218,7 @@ func GetUnwrap(ctx context.Context, storage driver.Driver, path string) (model.O
 	if err != nil {
 		return nil, err
 	}
-	return model.UnwrapObjs(obj), err
+	return model.UnwrapObj(obj), err
 }
 
 var linkCache = cache.NewMemCache(cache.WithShards[*model.Link](16))
@@ -338,7 +338,7 @@ func Move(ctx context.Context, storage driver.Driver, srcPath, dstDirPath string
 	if err != nil {
 		return errors.WithMessage(err, "failed to get src object")
 	}
-	srcObj := model.UnwrapObjs(srcRawObj)
+	srcObj := model.UnwrapObj(srcRawObj)
 	dstDir, err := GetUnwrap(ctx, storage, dstDirPath)
 	if err != nil {
 		return errors.WithMessage(err, "failed to get dst dir")
@@ -380,7 +380,7 @@ func Rename(ctx context.Context, storage driver.Driver, srcPath, dstName string,
 	if err != nil {
 		return errors.WithMessage(err, "failed to get src object")
 	}
-	srcObj := model.UnwrapObjs(srcRawObj)
+	srcObj := model.UnwrapObj(srcRawObj)
 	srcDirPath := stdpath.Dir(srcPath)
 
 	switch s := storage.(type) {
@@ -460,7 +460,7 @@ func Remove(ctx context.Context, storage driver.Driver, path string) error {
 
 	switch s := storage.(type) {
 	case driver.Remove:
-		err = s.Remove(ctx, model.UnwrapObjs(rawObj))
+		err = s.Remove(ctx, model.UnwrapObj(rawObj))
 		if err == nil {
 			delCacheObj(storage, dirPath, rawObj)
 		}
