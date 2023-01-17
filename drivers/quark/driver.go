@@ -175,9 +175,9 @@ func (d *Quark) Put(ctx context.Context, dstDir model.Obj, stream model.FileStre
 	var bytes []byte
 	md5s := make([]string, 0)
 	defaultBytes := make([]byte, partSize)
-	left := stream.GetSize()
+	total := stream.GetSize()
+	left := total
 	partNumber := 1
-	sizeDivide100 := stream.GetSize() / 100
 	for left > 0 {
 		if utils.IsCanceled(ctx) {
 			return ctx.Err()
@@ -191,7 +191,7 @@ func (d *Quark) Put(ctx context.Context, dstDir model.Obj, stream model.FileStre
 		if err != nil {
 			return err
 		}
-		left -= int64(partSize)
+		left -= int64(len(bytes))
 		log.Debugf("left: %d", left)
 		m, err := d.upPart(ctx, pre, stream.GetMimetype(), partNumber, bytes)
 		//m, err := driver.UpPart(pre, file.GetMIMEType(), partNumber, bytes, account, md5Str, sha1Str)
@@ -203,7 +203,7 @@ func (d *Quark) Put(ctx context.Context, dstDir model.Obj, stream model.FileStre
 		}
 		md5s = append(md5s, m)
 		partNumber++
-		up(100 - int(left/sizeDivide100))
+		up(int(100 * (total - left) / total))
 	}
 	err = d.upCommit(pre, md5s)
 	if err != nil {
