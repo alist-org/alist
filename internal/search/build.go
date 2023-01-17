@@ -217,10 +217,11 @@ func Update(parent string, objs []model.Obj) {
 			}
 			// build index if it's a folder
 			if objs[i].IsDir() {
+				dir := path.Join(parent, objs[i].GetName())
 				err = BuildIndex(ctx,
-					[]string{path.Join(parent, objs[i].GetName())},
+					[]string{dir},
 					conf.SlicesMap[conf.IgnorePaths],
-					-1, false)
+					setting.GetInt(conf.MaxIndexDepth, 20)-strings.Count(dir, "/"), false)
 				if err != nil {
 					log.Errorf("update search index error while build index: %+v", err)
 					return

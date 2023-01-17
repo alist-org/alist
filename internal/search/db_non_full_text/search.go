@@ -30,8 +30,8 @@ func (D DB) Get(ctx context.Context, parent string) ([]model.SearchNode, error) 
 	return db.GetSearchNodesByParent(parent)
 }
 
-func (D DB) Del(ctx context.Context, prefix string) error {
-	return db.DeleteSearchNodesByParent(prefix)
+func (D DB) Del(ctx context.Context, path string) error {
+	return db.DeleteSearchNodesByParent(path)
 }
 
 func (D DB) Release(ctx context.Context) error {

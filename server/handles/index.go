@@ -6,23 +6,19 @@ import (
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/search"
+	"github.com/alist-org/alist/v3/internal/setting"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 )
 
-type BuildOrUpdateIndexReq struct {
+type UpdateIndexReq struct {
 	Paths    []string `json:"paths"`
 	MaxDepth int      `json:"max_depth"`
 	//IgnorePaths []string `json:"ignore_paths"`
 }
 
 func BuildIndex(c *gin.Context) {
-	var req BuildOrUpdateIndexReq
-	if err := c.ShouldBind(&req); err != nil {
-		common.ErrorResp(c, err, 400)
-		return
-	}
 	if search.Running.Load() {
 		common.ErrorStrResp(c, "index is running", 400)
 		return
@@ -34,8 +30,8 @@ func BuildIndex(c *gin.Context) {
 			log.Errorf("clear index error: %+v", err)
 			return
 		}
-		err = search.BuildIndex(context.Background(), req.Paths,
-			conf.SlicesMap[conf.IgnorePaths], req.MaxDepth, true)
+		err = search.BuildIndex(context.Background(), []string{"/"},
+			conf.SlicesMap[conf.IgnorePaths], setting.GetInt(conf.MaxIndexDepth, 20), true)
 		if err != nil {
 			log.Errorf("build index error: %+v", err)
 		}
@@ -44,7 +40,7 @@ func BuildIndex(c *gin.Context) {
 }
 
 func UpdateIndex(c *gin.Context) {
-	var req BuildOrUpdateIndexReq
+	var req UpdateIndexReq
 	if err := c.ShouldBind(&req); err != nil {
 		common.ErrorResp(c, err, 400)
 		return

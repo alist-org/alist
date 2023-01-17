@@ -2,7 +2,7 @@ package db
 
 import (
 	"fmt"
-	"path"
+	stdpath "path"
 	"strings"
 
 	"github.com/alist-org/alist/v3/internal/conf"
@@ -29,13 +29,13 @@ func BatchCreateSearchNodes(nodes *[]model.SearchNode) error {
 	return db.CreateInBatches(nodes, 1000).Error
 }
 
-func DeleteSearchNodesByParent(prefix string) error {
-	prefix = utils.FixAndCleanPath(prefix)
-	err := db.Where(whereInParent(prefix)).Delete(&model.SearchNode{}).Error
+func DeleteSearchNodesByParent(path string) error {
+	path = utils.FixAndCleanPath(path)
+	err := db.Where(whereInParent(path)).Delete(&model.SearchNode{}).Error
 	if err != nil {
 		return err
 	}
-	dir, name := path.Split(prefix)
+	dir, name := stdpath.Split(path)
 	return db.Where(fmt.Sprintf("%s = ? AND %s = ?",
 		columnName("parent"), columnName("name")),
 		dir, name).Delete(&model.SearchNode{}).Error

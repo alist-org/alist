@@ -44,8 +44,8 @@ const (
 	// index
 	SearchIndex     = "search_index"
 	AutoUpdateIndex = "auto_update_index"
-	IndexPaths      = "index_paths"
 	IgnorePaths     = "ignore_paths"
+	MaxIndexDepth   = "max_index_depth"
 
 	// aria2
 	Aria2Uri    = "aria2_uri"
