@@ -17,10 +17,10 @@ func CanWrite(meta *model.Meta, path string) bool {
 
 func CanAccess(user *model.User, meta *model.Meta, reqPath string, password string) bool {
 	// if the reqPath is in hide (only can check the nearest meta) and user can't see hides, can't access
-	if meta != nil && !user.CanSeeHides() && meta.Hide != "" {
+	if meta != nil && !user.CanSeeHides() && meta.Hide != "" && !utils.PathEqual(meta.Path, reqPath) {
 		for _, hide := range strings.Split(meta.Hide, "\n") {
 			re := regexp.MustCompile(hide)
-			if re.MatchString(reqPath[len(meta.Path):]) {
+			if re.MatchString(reqPath[len(meta.Path)+1:]) {
 				return false
 			}
 		}
