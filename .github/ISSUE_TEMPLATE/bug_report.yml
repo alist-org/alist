@@ -43,8 +43,8 @@ body:
     attributes:
       label: Reproduction / 复现链接
       description: |
-        Please provide a link to a repo that can reproduce the problem you ran into.
-        请提供能复现此问题的链接
+        Please provide a link to a repo that can reproduce the problem you ran into. Please be aware that your issue may be closed directly if you don't provide it.
+        请提供能复现此问题的链接，请知悉如果不提供它你的issue可能会被直接关闭。
     validations:
       required: true
   - type: textarea
