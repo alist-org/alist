@@ -37,7 +37,7 @@ func list(ctx context.Context, path string, refresh ...bool) ([]model.Obj, error
 	if whetherHide(user, meta, path) {
 		om.InitHideReg(meta.Hide)
 	}
-	objs := om.Merge(virtualFiles, _objs...)
+	objs := om.Merge(_objs, virtualFiles...)
 	return objs, nil
 }
 
