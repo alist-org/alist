@@ -210,6 +210,8 @@ func (d *LanZou) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 		_, err := d._post(d.BaseUrl+"/fileup.php", func(req *resty.Request) {
 			req.SetFormData(map[string]string{
 				"task":      "1",
+				"vie":       "2",
+				"ve":        "2",
 				"id":        "WU_FILE_0",
 				"name":      stream.GetName(),
 				"folder_id": dstDir.GetID(),
