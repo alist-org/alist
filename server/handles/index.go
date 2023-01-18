@@ -87,7 +87,7 @@ func ClearIndex(c *gin.Context) {
 	search.Clear(c)
 	search.WriteProgress(&model.IndexProgress{
 		ObjCount:     0,
-		IsDone:       false,
+		IsDone:       true,
 		LastDoneTime: nil,
 		Error:        "",
 	})
