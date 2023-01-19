@@ -3,24 +3,27 @@ package common
 import (
 	"fmt"
 	"net/http"
+	stdpath "path"
 	"strings"
 
 	"github.com/alist-org/alist/v3/internal/conf"
-	"github.com/alist-org/alist/v3/internal/setting"
 )
 
 func GetApiUrl(r *http.Request) string {
 	api := conf.Conf.SiteURL
-	if api == "" {
-		api = setting.GetStr(conf.ApiUrl)
+	if strings.HasPrefix(api, "http") {
+		return api
 	}
 	if r != nil && api == "" {
 		protocol := "http"
-		if r.TLS != nil {
+		if r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https" {
 			protocol = "https"
 		}
-		api = fmt.Sprintf("%s://%s", protocol, r.Host)
-
+		host := r.Host
+		if r.Header.Get("X-Forwarded-Host") != "" {
+			host = r.Header.Get("X-Forwarded-Host")
+		}
+		api = fmt.Sprintf("%s://%s", protocol, stdpath.Join(host, api))
 	}
 	strings.TrimSuffix(api, "/")
 	return api

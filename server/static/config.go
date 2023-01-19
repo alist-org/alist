@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/alist-org/alist/v3/internal/conf"
-	"github.com/alist-org/alist/v3/internal/setting"
 	"github.com/alist-org/alist/v3/pkg/utils"
 )
 
@@ -24,11 +23,6 @@ func getSiteConfig() SiteConfig {
 		ApiURL:   conf.Conf.SiteURL,
 		BasePath: u.Path,
 		Cdn:      strings.ReplaceAll(strings.TrimSuffix(conf.Conf.Cdn, "/"), "$version", conf.WebVersion),
-	}
-	// try to get old config
-	if siteConfig.ApiURL == "" {
-		siteConfig.ApiURL = setting.GetStr(conf.ApiUrl)
-		siteConfig.BasePath = setting.GetStr(conf.BasePath)
 	}
 	if siteConfig.BasePath != "" {
 		siteConfig.BasePath = utils.FixAndCleanPath(siteConfig.BasePath)
