@@ -31,6 +31,8 @@ func BuildIndex(ctx context.Context, indexPaths, ignorePaths []string, maxDepth 
 		objCount uint64 = 0
 		fi       model.Obj
 	)
+	log.Infof("build index for: %+v", indexPaths)
+	log.Infof("ignore paths: %+v", ignorePaths)
 	Running.Store(true)
 	Quit = make(chan struct{}, 1)
 	indexMQ := mq.NewInMemoryMQ[ObjWithParent]()
