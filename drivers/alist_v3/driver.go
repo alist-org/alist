@@ -131,11 +131,15 @@ func (d *AListV3) Rename(ctx context.Context, srcObj model.Obj, newName string) 
 func (d *AListV3) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 	url := d.Address + "/api/fs/copy"
 	var resp common.Resp[interface{}]
+	srcDir := srcObj.GetPath()
+	if !srcObj.IsDir() {
+		srcDir = srcDir[:strings.LastIndex(srcDir, "/")+1]
+	}
 	_, err := base.RestyClient.R().
 		SetResult(&resp).
 		SetHeader("Authorization", d.AccessToken).
 		SetBody(MoveCopyReq{
-			SrcDir: srcObj.GetPath(),
+			SrcDir: srcDir,
 			DstDir: dstDir.GetPath(),
 			Names:  []string{srcObj.GetName()},
 		}).Post(url)
