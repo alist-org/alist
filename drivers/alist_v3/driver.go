@@ -108,7 +108,7 @@ func (d *AListV3) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 		SetResult(&resp).
 		SetHeader("Authorization", d.AccessToken).
 		SetBody(MoveCopyReq{
-			SrcDir: srcObj.GetPath(),
+			SrcDir: path.Dir(srcObj.GetPath()),
 			DstDir: dstDir.GetPath(),
 			Names:  []string{srcObj.GetName()},
 		}).Post(url)
@@ -135,7 +135,7 @@ func (d *AListV3) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 		SetResult(&resp).
 		SetHeader("Authorization", d.AccessToken).
 		SetBody(MoveCopyReq{
-			SrcDir: srcObj.GetPath(),
+			SrcDir: path.Dir(srcObj.GetPath()),
 			DstDir: dstDir.GetPath(),
 			Names:  []string{srcObj.GetName()},
 		}).Post(url)

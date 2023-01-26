@@ -53,9 +53,10 @@ func updateIgnorePaths() {
 					res, err := base.RestyClient.R().Get(url)
 					if err == nil {
 						allowIndexed = utils.Json.Get(res.Body(), "data", conf.AllowIndexed).ToBool()
+						v3Visited[addition.Address] = allowIndexed
 					}
 				}
-				if allowIndexed {
+				if !allowIndexed {
 					ignorePaths = append(ignorePaths, storage.GetStorage().MountPath)
 				}
 			} else {
