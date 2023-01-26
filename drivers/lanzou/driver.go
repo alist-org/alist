@@ -214,7 +214,7 @@ func (d *LanZou) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 				"ve":        "2",
 				"id":        "WU_FILE_0",
 				"name":      stream.GetName(),
-				"folder_id": dstDir.GetID(),
+				"folder_id_bb_n": dstDir.GetID(),
 			}).SetFileReader("upload_file", stream.GetName(), stream).SetContext(ctx)
 		}, &resp, true)
 		if err != nil {
