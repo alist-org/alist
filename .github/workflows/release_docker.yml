@@ -7,7 +7,7 @@ on:
 
 jobs:
   release_docker:
-    name: Docker
+    name: Release Docker
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -40,3 +40,29 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/386,linux/arm/v6,linux/s390x
+
+  release_docker_with_aria2:
+    needs: release_docker
+    name: Release docker with aria2
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+        with:
+          repository: alist-org/with_aria2
+          ref: main
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Add tag
+        run: |
+          git config --local user.email "i@nn.ci"
+          git config --local user.name "Noah Hsu"
+          git tag -a ${{ github.ref_name }} -m "release ${{ github.ref_name }}"
+
+      - name: Push tags
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.MY_TOKEN }}
+          branch: main
+          repository: alist-org/with_aria2
