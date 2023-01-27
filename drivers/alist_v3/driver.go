@@ -149,7 +149,7 @@ func (d *AListV3) Remove(ctx context.Context, obj model.Obj) error {
 		SetResult(&resp).
 		SetHeader("Authorization", d.AccessToken).
 		SetBody(RemoveReq{
-			Dir:   obj.GetPath(),
+			Dir:   path.Dir(obj.GetPath()),
 			Names: []string{obj.GetName()},
 		}).Post(url)
 	return checkResp(resp, err)
