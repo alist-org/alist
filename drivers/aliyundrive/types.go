@@ -48,7 +48,8 @@ type UploadResp struct {
 	FileId       string `json:"file_id"`
 	UploadId     string `json:"upload_id"`
 	PartInfoList []struct {
-		UploadUrl string `json:"upload_url"`
+		UploadUrl         string `json:"upload_url"`
+		InternalUploadUrl string `json:"internal_upload_url"`
 	} `json:"part_info_list"`
 
 	RapidUpload bool `json:"rapid_upload"`
