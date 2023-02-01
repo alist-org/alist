@@ -56,7 +56,7 @@ func (d *GoogleDrive) Link(ctx context.Context, file model.Obj, args model.LinkA
 		return nil, err
 	}
 	link := model.Link{
-		URL: url + "&alt=media",
+		URL: url + "&alt=media&acknowledgeAbuse=true",
 		Header: http.Header{
 			"Authorization": []string{"Bearer " + d.AccessToken},
 		},
