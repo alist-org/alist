@@ -18,6 +18,7 @@ type User struct {
 	Password string `json:"password"`                                  // password
 	BasePath string `json:"base_path"`                                 // base path
 	Role     int    `json:"role"`                                      // user's role
+	Disabled bool   `json:"disabled"`
 	// Determine permissions by bit
 	//  0: can see hidden files
 	//  1: can access without password
