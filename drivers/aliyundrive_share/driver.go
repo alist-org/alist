@@ -54,6 +54,7 @@ func (d *AliyundriveShare) Drop(ctx context.Context) error {
 	if d.cron != nil {
 		d.cron.Stop()
 	}
+	d.DriveId = ""
 	return nil
 }
 
