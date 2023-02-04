@@ -151,7 +151,7 @@ func (d *Local) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 
 func (d *Local) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
 	fullPath := filepath.Join(parentDir.GetPath(), dirName)
-	err := os.MkdirAll(fullPath, 0700)
+	err := os.MkdirAll(fullPath, 0777)
 	if err != nil {
 		return err
 	}
