@@ -2,6 +2,7 @@ package handles
 
 import (
 	"fmt"
+	"net/url"
 	stdpath "path"
 	"strings"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/fs"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/setting"
 	"github.com/alist-org/alist/v3/internal/sign"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/server/common"
@@ -27,6 +29,7 @@ func Down(c *gin.Context) {
 		Proxy(c)
 		return
 	} else {
+
 		link, _, err := fs.Link(c, rawPath, model.LinkArgs{
 			IP:     c.ClientIP(),
 			Header: c.Request.Header,
@@ -38,6 +41,23 @@ func Down(c *gin.Context) {
 		}
 		c.Header("Referrer-Policy", "no-referrer")
 		c.Header("Cache-Control", "max-age=0, no-cache, no-store, must-revalidate")
+		if setting.GetBool(conf.ForwardDirectLinkParams) {
+			params := c.Request.URL.Query()
+			params.Del("sign")
+			u, err := url.Parse(link.URL)
+			if err != nil {
+				common.ErrorResp(c, err, 500)
+				return
+			}
+			values := u.Query()
+			for k := range params {
+				for i := range params[k] {
+					values.Set(k, params[k][i])
+				}
+			}
+			u.RawQuery = values.Encode()
+			link.URL = u.String()
+		}
 		c.Redirect(302, link.URL)
 	}
 }
@@ -70,6 +90,23 @@ func Proxy(c *gin.Context) {
 		if err != nil {
 			common.ErrorResp(c, err, 500)
 			return
+		}
+		if link.URL != "" && setting.GetBool(conf.ForwardDirectLinkParams) {
+			params := c.Request.URL.Query()
+			params.Del("sign")
+			u, err := url.Parse(link.URL)
+			if err != nil {
+				common.ErrorResp(c, err, 500)
+				return
+			}
+			values := u.Query()
+			for k := range params {
+				for i := range params[k] {
+					values.Set(k, params[k][i])
+				}
+			}
+			u.RawQuery = values.Encode()
+			link.URL = u.String()
 		}
 		err = common.Proxy(c.Writer, c.Request, link, file)
 		if err != nil {

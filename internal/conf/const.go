@@ -30,15 +30,16 @@ const (
 	VideoAutoplay      = "video_autoplay"
 
 	// global
-	HideFiles           = "hide_files"
-	CustomizeHead       = "customize_head"
-	CustomizeBody       = "customize_body"
-	LinkExpiration      = "link_expiration"
-	SignAll             = "sign_all"
-	PrivacyRegs         = "privacy_regs"
-	OcrApi              = "ocr_api"
-	FilenameCharMapping = "filename_char_mapping"
-
+	HideFiles               = "hide_files"
+	CustomizeHead           = "customize_head"
+	CustomizeBody           = "customize_body"
+	LinkExpiration          = "link_expiration"
+	SignAll                 = "sign_all"
+	PrivacyRegs             = "privacy_regs"
+	OcrApi                  = "ocr_api"
+	FilenameCharMapping     = "filename_char_mapping"
+	ForwardDirectLinkParams = "forward_direct_link_params"
+	
 	// index
 	SearchIndex     = "search_index"
 	AutoUpdateIndex = "auto_update_index"
