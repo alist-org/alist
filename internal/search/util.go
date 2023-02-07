@@ -52,10 +52,12 @@ func updateIgnorePaths() {
 					url := addition.Address + "/api/public/settings"
 					res, err := base.RestyClient.R().Get(url)
 					if err == nil {
-						allowIndexed = utils.Json.Get(res.Body(), "data", conf.AllowIndexed).ToBool()
+						log.Debugf("allow_indexed body: %+v", res.String())
+						allowIndexed = utils.Json.Get(res.Body(), "data", conf.AllowIndexed).ToString() == "true"
 						v3Visited[addition.Address] = allowIndexed
 					}
 				}
+				log.Debugf("%s allow_indexed: %v", addition.Address, allowIndexed)
 				if !allowIndexed {
 					ignorePaths = append(ignorePaths, storage.GetStorage().MountPath)
 				}
