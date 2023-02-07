@@ -7,7 +7,7 @@ import (
 	"github.com/alist-org/alist/v3/cmd/flags"
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/pkg/utils"
-	"github.com/caarlos0/env/v6"
+	"github.com/caarlos0/env/v7"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -82,9 +82,7 @@ func confFromEnv() {
 		prefix = ""
 	}
 	log.Infof("load config from env with prefix: %s", prefix)
-	if err := env.Parse(conf.Conf, env.Options{
-		Prefix: prefix,
-	}); err != nil {
+	if err := env.Parse(conf.Conf, env.Options{Prefix: prefix}); err != nil {
 		log.Fatalf("load config from env error: %+v", err)
 	}
 }
