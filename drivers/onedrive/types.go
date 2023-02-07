@@ -43,7 +43,7 @@ type File struct {
 }
 
 type Object struct {
-	model.ObjThumbURL
+	model.ObjThumb
 	ParentID string
 }
 
@@ -53,7 +53,7 @@ func fileToObj(f File, parentID string) *Object {
 		thumb = f.Thumbnails[0].Medium.Url
 	}
 	return &Object{
-		ObjThumbURL: model.ObjThumbURL{
+		ObjThumb: model.ObjThumb{
 			Object: model.Object{
 				ID:       f.Id,
 				Name:     f.Name,
@@ -62,7 +62,7 @@ func fileToObj(f File, parentID string) *Object {
 				IsFolder: f.File == nil,
 			},
 			Thumbnail: model.Thumbnail{Thumbnail: thumb},
-			Url:       model.Url{Url: f.Url},
+			//Url:       model.Url{Url: f.Url},
 		},
 		ParentID: parentID,
 	}
