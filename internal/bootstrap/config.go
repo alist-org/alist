@@ -1,10 +1,12 @@
 package bootstrap
 
 import (
+	"crypto/tls"
 	"os"
 	"path/filepath"
 
 	"github.com/alist-org/alist/v3/cmd/flags"
+	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/caarlos0/env/v7"
@@ -49,7 +51,7 @@ func InitConfig() {
 		if err != nil {
 			log.Fatalf("marshal config error: %+v", err)
 		}
-		err = os.WriteFile(configPath, confBody, 0777)
+		err = os.WriteFile(configPath, confBody, 0o777)
 		if err != nil {
 			log.Fatalf("update config struct error: %+v", err)
 		}
@@ -69,11 +71,14 @@ func InitConfig() {
 	if err != nil {
 		log.Errorln("failed delete temp file:", err)
 	}
-	err = os.MkdirAll(conf.Conf.TempDir, 0777)
+	err = os.MkdirAll(conf.Conf.TempDir, 0o777)
 	if err != nil {
 		log.Fatalf("create temp dir error: %+v", err)
 	}
 	log.Debugf("config: %+v", conf.Conf)
+	if conf.Conf.TlsInsecureSkipVerify {
+		base.RestyClient = base.RestyClient.SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
+	}
 }
 
 func confFromEnv() {
