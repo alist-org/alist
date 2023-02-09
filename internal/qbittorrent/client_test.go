@@ -1,6 +1,9 @@
 package qbittorrent
 
-import "testing"
+import (
+	"github.com/google/uuid"
+	"testing"
+)
 
 func TestLogin(t *testing.T) {
 	// test logging in with wrong password
@@ -52,5 +55,35 @@ func TestAuthorized(t *testing.T) {
 	}
 	if !authorized {
 		t.Error("Should be authorized")
+	}
+}
+
+func TestAdd(t *testing.T) {
+	// init client
+	c, err := New("http://admin:adminadmin@127.0.0.1:8080/")
+	if err != nil {
+		t.Error(err)
+	}
+
+	// test add
+	err = c.login()
+	if err != nil {
+		t.Error(err)
+	}
+	err = c.AddFromLink(
+		"https://releases.ubuntu.com/22.04/ubuntu-22.04.1-desktop-amd64.iso.torrent",
+		"D:\\qBittorrentDownload\\alist",
+		uuid.NewString(),
+	)
+	if err != nil {
+		t.Error(err)
+	}
+	err = c.AddFromLink(
+		"magnet:?xt=urn:btih:375ae3280cd80a8e9d7212e11dfaf7c45069dd35&dn=archlinux-2023.02.01-x86_64.iso",
+		"D:\\qBittorrentDownload\\alist",
+		uuid.NewString(),
+	)
+	if err != nil {
+		t.Error(err)
 	}
 }
