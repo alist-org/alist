@@ -2,14 +2,25 @@ package qbittorrent
 
 import (
 	"github.com/google/uuid"
+	"net/http"
+	"net/http/cookiejar"
+	"net/url"
 	"testing"
 )
 
 func TestLogin(t *testing.T) {
 	// test logging in with wrong password
-	c, err := New("http://admin:admin@127.0.0.1:8080/")
+	u, err := url.Parse("http://admin:admin@127.0.0.1:8080/")
 	if err != nil {
 		t.Error(err)
+	}
+	jar, err := cookiejar.New(nil)
+	if err != nil {
+		t.Error(err)
+	}
+	var c = &client{
+		url:    u,
+		client: http.Client{Jar: jar},
 	}
 	err = c.login()
 	if err == nil {
@@ -17,10 +28,11 @@ func TestLogin(t *testing.T) {
 	}
 
 	// test logging in with correct password
-	c, err = New("http://admin:adminadmin@127.0.0.1:8080/")
+	u, err = url.Parse("http://admin:adminadmin@127.0.0.1:8080/")
 	if err != nil {
 		t.Error(err)
 	}
+	c.url = u
 	err = c.login()
 	if err != nil {
 		t.Error(err)
@@ -30,16 +42,21 @@ func TestLogin(t *testing.T) {
 // in this test, the `Bypass authentication for clients on localhost` option in qBittorrent webui should be disabled
 func TestAuthorized(t *testing.T) {
 	// init client
-	c, err := New("http://admin:adminadmin@127.0.0.1:8080/")
+	u, err := url.Parse("http://admin:adminadmin@127.0.0.1:8080/")
 	if err != nil {
 		t.Error(err)
+	}
+	jar, err := cookiejar.New(nil)
+	if err != nil {
+		t.Error(err)
+	}
+	var c = &client{
+		url:    u,
+		client: http.Client{Jar: jar},
 	}
 
 	// test without logging in, which should be unauthorized
-	authorized, err := c.authorized()
-	if err != nil {
-		t.Error(err)
-	}
+	authorized := c.authorized()
 	if authorized {
 		t.Error("Should not be authorized")
 	}
@@ -49,12 +66,20 @@ func TestAuthorized(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	authorized, err = c.authorized()
+	authorized = c.authorized()
+	if !authorized {
+		t.Error("Should be authorized")
+	}
+}
+
+func TestNew(t *testing.T) {
+	_, err := New("http://admin:adminadmin@127.0.0.1:8080/")
 	if err != nil {
 		t.Error(err)
 	}
-	if !authorized {
-		t.Error("Should be authorized")
+	_, err = New("http://admin:wrong_password@127.0.0.1:8080/")
+	if err == nil {
+		t.Error("Should get an error")
 	}
 }
 
@@ -83,6 +108,18 @@ func TestAdd(t *testing.T) {
 		"D:\\qBittorrentDownload\\alist",
 		uuid.NewString(),
 	)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestGetInfo(t *testing.T) {
+	// init client
+	c, err := New("http://admin:adminadmin@127.0.0.1:8080/")
+	if err != nil {
+		t.Error(err)
+	}
+	_, err = c.GetInfo("b42e81b6-97be-4de0-b8a6-3d490d515121")
 	if err != nil {
 		t.Error(err)
 	}
