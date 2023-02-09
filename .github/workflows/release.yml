@@ -38,6 +38,7 @@ jobs:
 
       - name: Install dependencies
         run: |
+          sudo snap install zig --classic --beta
           docker pull crazymax/xgo:latest
           go install github.com/crazy-max/xgo@latest
           sudo apt install upx
