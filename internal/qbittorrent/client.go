@@ -14,6 +14,7 @@ import (
 type Client interface {
 	AddFromLink(link string, savePath string, id string) error
 	GetInfo(id string) (TorrentInfo, error)
+	Delete(id string) error
 }
 
 type client struct {
@@ -243,4 +244,27 @@ func (c *client) GetInfo(id string) (TorrentInfo, error) {
 		return TorrentInfo{}, errors.New("there should be exactly one task with tag \"alist-" + id + "\"")
 	}
 	return infos[0], nil
+}
+
+func (c *client) Delete(id string) error {
+	err := c.checkAuthorization()
+	if err != nil {
+		return err
+	}
+
+	info, err := c.GetInfo(id)
+	if err != nil {
+		return err
+	}
+	v := url.Values{}
+	v.Set("hashes", info.Hash)
+	v.Set("deleteFiles", "false")
+	response, err := c.post("/api/v2/torrents/delete", v)
+	if err != nil {
+		return err
+	}
+	if response.StatusCode != 200 {
+		return errors.New("failed")
+	}
+	return nil
 }

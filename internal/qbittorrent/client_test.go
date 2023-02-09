@@ -1,7 +1,6 @@
 package qbittorrent
 
 import (
-	"github.com/google/uuid"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -98,7 +97,7 @@ func TestAdd(t *testing.T) {
 	err = c.AddFromLink(
 		"https://releases.ubuntu.com/22.04/ubuntu-22.04.1-desktop-amd64.iso.torrent",
 		"D:\\qBittorrentDownload\\alist",
-		uuid.NewString(),
+		"uuid-1",
 	)
 	if err != nil {
 		t.Error(err)
@@ -106,7 +105,7 @@ func TestAdd(t *testing.T) {
 	err = c.AddFromLink(
 		"magnet:?xt=urn:btih:375ae3280cd80a8e9d7212e11dfaf7c45069dd35&dn=archlinux-2023.02.01-x86_64.iso",
 		"D:\\qBittorrentDownload\\alist",
-		uuid.NewString(),
+		"uuid-2",
 	)
 	if err != nil {
 		t.Error(err)
@@ -119,7 +118,19 @@ func TestGetInfo(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	_, err = c.GetInfo("b42e81b6-97be-4de0-b8a6-3d490d515121")
+	_, err = c.GetInfo("uuid-1")
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestDelete(t *testing.T) {
+	// init client
+	c, err := New("http://admin:adminadmin@127.0.0.1:8080/")
+	if err != nil {
+		t.Error(err)
+	}
+	err = c.Delete("uuid-2")
 	if err != nil {
 		t.Error(err)
 	}
