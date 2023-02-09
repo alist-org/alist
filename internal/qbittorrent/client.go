@@ -14,6 +14,7 @@ import (
 type Client interface {
 	AddFromLink(link string, savePath string, id string) error
 	GetInfo(id string) (TorrentInfo, error)
+	GetFiles(id string) ([]FileInfo, error)
 	Delete(id string) error
 }
 
@@ -268,6 +269,48 @@ func (c *client) GetInfo(id string) (TorrentInfo, error) {
 		return TorrentInfo{}, errors.New("there should be exactly one task with tag \"alist-" + id + "\"")
 	}
 	return infos[0], nil
+}
+
+type FileInfo struct {
+	Index        int     `json:"index"`
+	Name         string  `json:"name"`
+	Size         int64   `json:"size"`
+	Progress     float32 `json:"progress"`
+	Priority     int     `json:"priority"`
+	IsSeed       bool    `json:"is_seed"`
+	PieceRange   []int   `json:"piece_range"`
+	Availability float32 `json:"availability"`
+}
+
+func (c *client) GetFiles(id string) ([]FileInfo, error) {
+	var infos []FileInfo
+
+	err := c.checkAuthorization()
+	if err != nil {
+		return []FileInfo{}, err
+	}
+
+	tInfo, err := c.GetInfo(id)
+	if err != nil {
+		return []FileInfo{}, err
+	}
+
+	v := url.Values{}
+	v.Set("hash", tInfo.Hash)
+	response, err := c.post("/api/v2/torrents/files", v)
+	if err != nil {
+		return []FileInfo{}, err
+	}
+
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		return []FileInfo{}, err
+	}
+	err = utils.Json.Unmarshal(body, &infos)
+	if err != nil {
+		return []FileInfo{}, err
+	}
+	return infos, nil
 }
 
 func (c *client) Delete(id string) error {

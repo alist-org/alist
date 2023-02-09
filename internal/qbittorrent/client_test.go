@@ -124,6 +124,21 @@ func TestGetInfo(t *testing.T) {
 	}
 }
 
+func TestGetFiles(t *testing.T) {
+	// init client
+	c, err := New("http://admin:adminadmin@127.0.0.1:8080/")
+	if err != nil {
+		t.Error(err)
+	}
+	files, err := c.GetFiles("uuid-1")
+	if err != nil {
+		t.Error(err)
+	}
+	if len(files) != 1 {
+		t.Error("should have exactly one file")
+	}
+}
+
 func TestDelete(t *testing.T) {
 	// init client
 	c, err := New("http://admin:adminadmin@127.0.0.1:8080/")
