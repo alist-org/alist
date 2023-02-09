@@ -3,6 +3,8 @@ package qbittorrent
 import (
 	"bytes"
 	"errors"
+	"github.com/alist-org/alist/v3/pkg/utils"
+	"io"
 	"mime/multipart"
 	"net/http"
 	"net/http/cookiejar"
@@ -11,6 +13,7 @@ import (
 
 type Client interface {
 	AddFromLink(link string, savePath string, id string) error
+	GetInfo(id string) (TorrentInfo, error)
 }
 
 type client struct {
@@ -112,10 +115,14 @@ func (c *client) post(path string, data url.Values) (*http.Response, error) {
 }
 
 func (c *client) AddFromLink(link string, savePath string, id string) error {
+	err := c.checkAuthorization()
+	if err != nil {
+		return err
+	}
+
 	buf := new(bytes.Buffer)
 	writer := multipart.NewWriter(buf)
 
-	var err error
 	addField := func(name string, value string) {
 		if err != nil {
 			return
@@ -160,7 +167,7 @@ func (c *client) AddFromLink(link string, savePath string, id string) error {
 }
 
 // https://github.com/DGuang21/PTGo/blob/main/app/client/client_distributer.go
-type torrentInfo struct {
+type TorrentInfo struct {
 	AddedOn           int     `json:"added_on"`           // 将 torrent 添加到客户端的时间（Unix Epoch）
 	AmountLeft        int64   `json:"amount_left"`        // 剩余大小（字节）
 	AutoTmm           bool    `json:"auto_tmm"`           // 此 torrent 是否由 Automatic Torrent Management 管理
@@ -209,6 +216,31 @@ type torrentInfo struct {
 	Upspeed           int     `json:"upspeed"`            // 上传速度（字节/秒）
 }
 
-//func (c *client) getInfo(id string) (torrentInfo, error) {
-//
-//}
+func (c *client) GetInfo(id string) (TorrentInfo, error) {
+	var infos []TorrentInfo
+
+	err := c.checkAuthorization()
+	if err != nil {
+		return TorrentInfo{}, err
+	}
+
+	v := url.Values{}
+	v.Set("tag", "alist-"+id)
+	response, err := c.post("/api/v2/torrents/info", v)
+	if err != nil {
+		return TorrentInfo{}, err
+	}
+
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		return TorrentInfo{}, err
+	}
+	err = utils.Json.Unmarshal(body, &infos)
+	if err != nil {
+		return TorrentInfo{}, err
+	}
+	if len(infos) != 1 {
+		return TorrentInfo{}, errors.New("there should be exactly one task with tag \"alist-" + id + "\"")
+	}
+	return infos[0], nil
+}
