@@ -52,7 +52,6 @@ BuildWinArm64() {
 
 BuildDev() {
   rm -rf .git/
-  BuildWinArm64 ./alist-windows-arm64.exe
   xgo -targets=linux/amd64,windows/amd64,darwin/amd64 -out "$appName" -ldflags="$ldflags" -tags=jsoniter .
   mkdir -p "dist"
   mv alist-* dist
@@ -94,7 +93,7 @@ BuildRelease() {
   xgo -out "$appName" -ldflags="$ldflags" -tags=jsoniter .
   # why? Because some target platforms seem to have issues with upx compression
   upx -9 ./alist-linux-amd64
-  upx -9 ./alist-windows*
+  upx -9 ./alist-windows-amd64.exe
   mv alist-* build
 }
 
