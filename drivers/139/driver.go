@@ -83,8 +83,7 @@ func (d *Yun139) MakeDir(ctx context.Context, parentDir model.Obj, dirName strin
 		}
 		pathname = "/orchestration/familyCloud/cloudCatalog/v1.0/createCloudDoc"
 	}
-	_, err := d.post(pathname,
-		data, nil)
+	_, err := d.post(pathname, data, nil)
 	return err
 }
 
@@ -222,6 +221,22 @@ func (d *Yun139) Remove(ctx context.Context, obj model.Obj) error {
 	return err
 }
 
+const (
+	_  = iota //ignore first value by assigning to blank identifier
+	KB = 1 << (10 * iota)
+	MB
+	GB
+	TB
+)
+
+func getPartSize(size int64) int64 {
+	// 网盘对于分片数量存在上限
+	if size/GB > 30 {
+		return 512 * MB
+	}
+	return 100 * MB
+}
+
 func (d *Yun139) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
 	data := base.Json{
 		"manualRename": 2,
@@ -267,17 +282,17 @@ func (d *Yun139) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 	// Progress
 	p := driver.NewProgress(stream.GetSize(), up)
 
-	var Default int64 = 104857600
-	part := (stream.GetSize() + Default - 1) / Default
+	var partSize = getPartSize(stream.GetSize())
+	part := (stream.GetSize() + partSize - 1) / partSize
 	for i := int64(0); i < part; i++ {
 		if utils.IsCanceled(ctx) {
 			return ctx.Err()
 		}
 
-		start := i * Default
+		start := i * partSize
 		byteSize := stream.GetSize() - start
-		if byteSize > Default {
-			byteSize = Default
+		if byteSize > partSize {
+			byteSize = partSize
 		}
 
 		limitReader := io.LimitReader(stream, byteSize)
@@ -301,6 +316,11 @@ func (d *Yun139) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 			return err
 		}
 		log.Debugf("%+v", res)
+
+		if res.StatusCode != http.StatusOK {
+			return fmt.Errorf("unexpected status code: %d", res.StatusCode)
+		}
+
 		res.Body.Close()
 	}
 

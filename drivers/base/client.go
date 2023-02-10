@@ -23,8 +23,9 @@ func init() {
 }
 
 func NewRestyClient() *resty.Client {
-	return resty.New().
+	client := resty.New().
 		SetHeader("user-agent", UserAgent).
 		SetRetryCount(3).
 		SetTimeout(DefaultTimeout)
+	return client
 }

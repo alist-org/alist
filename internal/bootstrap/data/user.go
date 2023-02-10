@@ -48,6 +48,7 @@ func initUser() {
 				Role:       model.GUEST,
 				BasePath:   "/",
 				Permission: 0,
+				Disabled:   true,
 			}
 			if err := db.CreateUser(guest); err != nil {
 				panic(err)

@@ -29,21 +29,22 @@ const (
     AudioAutoplay      = "audio_autoplay"
     VideoAutoplay      = "video_autoplay"
 
-    // global
-    HideFiles           = "hide_files"
-    CustomizeHead       = "customize_head"
-    CustomizeBody       = "customize_body"
-    LinkExpiration      = "link_expiration"
-    SignAll             = "sign_all"
-    PrivacyRegs         = "privacy_regs"
-    OcrApi              = "ocr_api"
-    FilenameCharMapping = "filename_char_mapping"
-
-    // index
-    SearchIndex     = "search_index"
-    AutoUpdateIndex = "auto_update_index"
-    IgnorePaths     = "ignore_paths"
-    MaxIndexDepth   = "max_index_depth"
+	// global
+	HideFiles               = "hide_files"
+	CustomizeHead           = "customize_head"
+	CustomizeBody           = "customize_body"
+	LinkExpiration          = "link_expiration"
+	SignAll                 = "sign_all"
+	PrivacyRegs             = "privacy_regs"
+	OcrApi                  = "ocr_api"
+	FilenameCharMapping     = "filename_char_mapping"
+	ForwardDirectLinkParams = "forward_direct_link_params"
+	
+	// index
+	SearchIndex     = "search_index"
+	AutoUpdateIndex = "auto_update_index"
+	IgnorePaths     = "ignore_paths"
+	MaxIndexDepth   = "max_index_depth"
 
     // aria2
     Aria2Uri    = "aria2_uri"
