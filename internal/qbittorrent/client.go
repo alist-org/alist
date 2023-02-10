@@ -24,7 +24,7 @@ type client struct {
 	Client
 }
 
-func New(webuiUrl string) (*client, error) {
+func New(webuiUrl string) (Client, error) {
 	u, err := url.Parse(webuiUrl)
 	if err != nil {
 		return nil, err
