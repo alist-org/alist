@@ -138,6 +138,7 @@ func _fs(g *gin.RouterGroup) {
 	g.PUT("/form", middlewares.FsUp, handles.FsForm)
 	g.POST("/link", middlewares.AuthAdmin, handles.Link)
 	g.POST("/add_aria2", handles.AddAria2)
+	g.POST("/add_qbittorrent", handles.AddQbittorrent)
 }
 
 func Cors(r *gin.Engine) {

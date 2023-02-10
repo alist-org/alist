@@ -32,3 +32,38 @@ func SetQbittorrent(c *gin.Context) {
 	}
 	common.SuccessResp(c, "ok")
 }
+
+type AddQbittorrentReq struct {
+	Urls []string `json:"urls"`
+	Path string   `json:"path"`
+}
+
+func AddQbittorrent(c *gin.Context) {
+	user := c.MustGet("user").(*model.User)
+	if !user.CanAddQbittorrentTasks() {
+		common.ErrorStrResp(c, "permission denied", 403)
+		return
+	}
+	if !qbittorrent.IsQbittorrentReady() {
+		common.ErrorStrResp(c, "qbittorrent not ready", 500)
+		return
+	}
+	var req AddQbittorrentReq
+	if err := c.ShouldBind(&req); err != nil {
+		common.ErrorResp(c, err, 400)
+		return
+	}
+	reqPath, err := user.JoinPath(req.Path)
+	if err != nil {
+		common.ErrorResp(c, err, 403)
+		return
+	}
+	for _, url := range req.Urls {
+		err := qbittorrent.AddURL(c, url, reqPath)
+		if err != nil {
+			common.ErrorResp(c, err, 500)
+			return
+		}
+	}
+	common.SuccessResp(c)
+}
