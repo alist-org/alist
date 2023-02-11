@@ -169,17 +169,27 @@ func (d *AliDrive) Put(ctx context.Context, dstDir model.Obj, stream model.FileS
 		"type":            "file",
 	}
 
+	var localFile *os.File
+	if fileStream, ok := file.ReadCloser.(*model.FileStream); ok {
+		localFile, _ = fileStream.ReadCloser.(*os.File)
+	}
 	if d.RapidUpload {
 		buf := bytes.NewBuffer(make([]byte, 0, 1024))
 		io.CopyN(buf, file, 1024)
 		reqBody["pre_hash"] = utils.GetSHA1Encode(buf.String())
-		// 把头部拼接回去
-		file.ReadCloser = struct {
-			io.Reader
-			io.Closer
-		}{
-			Reader: io.MultiReader(buf, file),
-			Closer: file,
+		if localFile != nil {
+			if _, err := localFile.Seek(0, io.SeekStart); err != nil {
+				return err
+			}
+		} else {
+			// 把头部拼接回去
+			file.ReadCloser = struct {
+				io.Reader
+				io.Closer
+			}{
+				Reader: io.MultiReader(buf, file),
+				Closer: file,
+			}
 		}
 	} else {
 		reqBody["content_hash_name"] = "none"
@@ -196,18 +206,28 @@ func (d *AliDrive) Put(ctx context.Context, dstDir model.Obj, stream model.FileS
 	}
 
 	if d.RapidUpload && e.Code == "PreHashMatched" {
-		tempFile, err := os.CreateTemp(conf.Conf.TempDir, "file-*")
-		if err != nil {
-			return err
-		}
-		defer func() {
-			_ = tempFile.Close()
-			_ = os.Remove(tempFile.Name())
-		}()
 		delete(reqBody, "pre_hash")
 		h := sha1.New()
-		if _, err = io.Copy(io.MultiWriter(tempFile, h), file); err != nil {
-			return err
+		if localFile != nil {
+			if _, err = io.Copy(h, localFile); err != nil {
+				return err
+			}
+			if _, err = localFile.Seek(0, io.SeekStart); err != nil {
+				return err
+			}
+		} else {
+			tempFile, err := os.CreateTemp(conf.Conf.TempDir, "file-*")
+			if err != nil {
+				return err
+			}
+			defer func() {
+				_ = tempFile.Close()
+				_ = os.Remove(tempFile.Name())
+			}()
+			if _, err = io.Copy(io.MultiWriter(tempFile, h), file); err != nil {
+				return err
+			}
+			localFile = tempFile
 		}
 		reqBody["content_hash"] = hex.EncodeToString(h.Sum(nil))
 		reqBody["content_hash_name"] = "sha1"
@@ -228,7 +248,7 @@ func (d *AliDrive) Put(ctx context.Context, dstDir model.Obj, stream model.FileS
 		if file.GetSize() > 0 {
 			o = r.Mod(r, i)
 		}
-		n, _ := io.NewSectionReader(tempFile, o.Int64(), 8).Read(buf[:8])
+		n, _ := io.NewSectionReader(localFile, o.Int64(), 8).Read(buf[:8])
 		reqBody["proof_code"] = base64.StdEncoding.EncodeToString(buf[:n])
 
 		_, err, e := d.request("https://api.aliyundrive.com/adrive/v2/file/createWithFolders", http.MethodPost, func(req *resty.Request) {
@@ -241,10 +261,10 @@ func (d *AliDrive) Put(ctx context.Context, dstDir model.Obj, stream model.FileS
 			return nil
 		}
 		// 秒传失败
-		if _, err = tempFile.Seek(0, io.SeekStart); err != nil {
+		if _, err = localFile.Seek(0, io.SeekStart); err != nil {
 			return err
 		}
-		file.ReadCloser = tempFile
+		file.ReadCloser = localFile
 	}
 
 	for i, partInfo := range resp.PartInfoList {
