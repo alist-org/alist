@@ -41,9 +41,9 @@ func getFileStreamFromLink(file model.Obj, link *model.Link) (*model.FileStream,
 	if link.Data != nil {
 		rc = link.Data
 	} else if link.FilePath != nil {
-		// copy a new temp, because will be deleted after upload
+		// create a new temp symbolic link, because it will be deleted after upload
 		newFilePath := stdpath.Join(conf.Conf.TempDir, fmt.Sprintf("%s-%s", uuid.NewString(), file.GetName()))
-		err := utils.CopyFile(*link.FilePath, newFilePath)
+		err := os.Symlink(*link.FilePath, newFilePath)
 		if err != nil {
 			return nil, err
 		}
