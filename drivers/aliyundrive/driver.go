@@ -3,7 +3,9 @@ package aliyundrive
 import (
 	"bytes"
 	"context"
+	"crypto/ecdsa"
 	"crypto/sha1"
+	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
@@ -31,6 +33,12 @@ type AliDrive struct {
 	AccessToken string
 	cron        *cron.Cron
 	DriveId     string
+	UserID      string
+
+	signature  string
+	nonce      int
+	privateKey *ecdsa.PrivateKey
+	cron2      *cron.Cron
 }
 
 func (d *AliDrive) Config() driver.Config {
@@ -54,6 +62,7 @@ func (d *AliDrive) Init(ctx context.Context) error {
 		return err
 	}
 	d.DriveId = utils.Json.Get(res, "default_drive_id").ToString()
+	d.UserID = utils.Json.Get(res, "user_id").ToString()
 	d.cron = cron.NewCron(time.Hour * 2)
 	d.cron.Do(func() {
 		err := d.refreshToken()
@@ -61,12 +70,42 @@ func (d *AliDrive) Init(ctx context.Context) error {
 			log.Errorf("%+v", err)
 		}
 	})
+
+	// init drviceID
+	if len(d.DrviceID) < 64 {
+		buf := sha256.Sum256([]byte(d.DrviceID))
+		d.DrviceID = hex.EncodeToString(buf[:])
+	}
+
+	// init privateKey
+	d.privateKey, _ = NewPrivateKey()
+
+	// init signature
+	d.sign()
+	d.createSession()
+	d.cron2 = cron.NewCron(time.Minute * 5)
+	d.cron2.Do(func() {
+		if d.nonce > 1073741823 {
+			d.nonce = 0
+			d.sign()
+			d.createSession()
+			return
+		}
+
+		d.nonce++
+		d.sign()
+		d.renewSession()
+	})
+
 	return err
 }
 
 func (d *AliDrive) Drop(ctx context.Context) error {
 	if d.cron != nil {
 		d.cron.Stop()
+	}
+	if d.cron2 != nil {
+		d.cron2.Stop()
 	}
 	return nil
 }
