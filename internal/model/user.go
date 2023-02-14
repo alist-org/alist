@@ -20,16 +20,17 @@ type User struct {
 	Role     int    `json:"role"`                                      // user's role
 	Disabled bool   `json:"disabled"`
 	// Determine permissions by bit
-	//  0: can see hidden files
-	//  1: can access without password
-	//  2: can add aria2 tasks
-	//  3: can mkdir and upload
-	//  4: can rename
-	//  5: can move
-	//  6: can copy
-	//  7: can remove
-	//  8: webdav read
-	//  9: webdav write
+	//   0: can see hidden files
+	//   1: can access without password
+	//   2: can add aria2 tasks
+	//   3: can mkdir and upload
+	//   4: can rename
+	//   5: can move
+	//   6: can copy
+	//   7: can remove
+	//   8: webdav read
+	//   9: webdav write
+	//  10: can add qbittorrent tasks
 	Permission int32  `json:"permission"`
 	OtpSecret  string `json:"-"`
 	GithubID   int    `json:"github_id"`
@@ -91,6 +92,10 @@ func (u User) CanWebdavRead() bool {
 
 func (u User) CanWebdavManage() bool {
 	return u.IsAdmin() || (u.Permission>>9)&1 == 1
+}
+
+func (u User) CanAddQbittorrentTasks() bool {
+	return u.IsAdmin() || (u.Permission>>10)&1 == 1
 }
 
 func (u User) JoinPath(reqPath string) (string, error) {
