@@ -63,13 +63,12 @@ func (d *AliDrive) reSign() error {
 	d.sign()
 	if state.nonce == 0 {
 		return d.createSession()
-	} else {
-		err := d.renewSession()
-		if err != nil && err.Error() == "device session signature error" {
-			state.nonce = 0
-			d.sign()
-			return d.createSession()
-		}
+	}
+	err := d.renewSession()
+	if err != nil && err.Error() == "device session signature error" {
+		state.nonce = 0
+		d.sign()
+		return d.createSession()
 	}
 	return nil
 }
