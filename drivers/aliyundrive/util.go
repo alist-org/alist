@@ -13,15 +13,20 @@ import (
 	"github.com/dustinxie/ecc"
 	"github.com/go-resty/resty/v2"
 	"github.com/google/uuid"
+	log "github.com/sirupsen/logrus"
 )
 
 func (d *AliDrive) createSession() error {
+	state, ok := global.Load(d.UserID)
+	if !ok {
+		return fmt.Errorf("can't load user state, user_id: %s", d.UserID)
+	}
 	_, err, _ := d.request("https://api.aliyundrive.com/users/v1/users/device/create_session", http.MethodPost, func(req *resty.Request) {
 		req.SetBody(base.Json{
 			"deviceName":   "samsung",
 			"modelName":    "SM-G9810",
-			"nonce":        d.nonce,
-			"pubKey":       PublicKeyToHex(&d.privateKey.PublicKey),
+			"nonce":        state.nonce,
+			"pubKey":       PublicKeyToHex(&state.privateKey.PublicKey),
 			"refreshToken": d.RefreshToken,
 		})
 	}, nil)
@@ -34,11 +39,38 @@ func (d *AliDrive) renewSession() error {
 }
 
 func (d *AliDrive) sign() {
+	state, ok := global.Load(d.UserID)
+	if !ok {
+		log.Errorf("can't load user state, user_id: %s", d.UserID)
+		return
+	}
 	secpAppID := "5dde4e1bdf9e4966b387ba58f4b3fdc3"
-	singdata := fmt.Sprintf("%s:%s:%s:%d", secpAppID, d.DeviceID, d.UserID, d.nonce)
+	singdata := fmt.Sprintf("%s:%s:%s:%d", secpAppID, state.deviceID, d.UserID, state.nonce)
 	hash := sha256.Sum256([]byte(singdata))
-	data, _ := ecc.SignBytes(d.privateKey, hash[:], ecc.RecID|ecc.LowerS)
-	d.signature = hex.EncodeToString(data)
+	data, _ := ecc.SignBytes(state.privateKey, hash[:], ecc.RecID|ecc.LowerS)
+	state.signature = hex.EncodeToString(data)
+}
+
+func (d *AliDrive) reSign() error {
+	state, ok := global.Load(d.UserID)
+	if !ok {
+		return fmt.Errorf("can't load user state, user_id: %s", d.UserID)
+	}
+	state.nonce++
+	if state.nonce >= 1073741823 {
+		state.nonce = 0
+	}
+	d.sign()
+	if state.nonce == 0 {
+		return d.createSession()
+	}
+	err := d.renewSession()
+	if err != nil && err.Error() == "device session signature error" {
+		state.nonce = 0
+		d.sign()
+		return d.createSession()
+	}
+	return nil
 }
 
 // do others that not defined in Driver interface
@@ -69,15 +101,23 @@ func (d *AliDrive) refreshToken() error {
 
 func (d *AliDrive) request(url, method string, callback base.ReqCallback, resp interface{}) ([]byte, error, RespErr) {
 	req := base.RestyClient.R()
+	state, ok := global.Load(d.UserID)
+	if !ok {
+		if url == "https://api.aliyundrive.com/v2/user/get" {
+			state = &State{}
+		} else {
+			return nil, fmt.Errorf("can't load user state, user_id: %s", d.UserID), RespErr{}
+		}
+	}
 	req.SetHeaders(map[string]string{
 		"Authorization": "Bearer\t" + d.AccessToken,
 		"content-type":  "application/json",
 		"origin":        "https://www.aliyundrive.com",
 		"Referer":       "https://aliyundrive.com/",
-		"X-Signature":   d.signature,
+		"X-Signature":   state.signature,
 		"x-request-id":  uuid.NewString(),
 		"X-Canary":      "client=Android,app=adrive,version=v4.1.0",
-		"X-Device-Id":   d.DeviceID,
+		"X-Device-Id":   state.deviceID,
 	})
 	if callback != nil {
 		callback(req)
@@ -94,14 +134,21 @@ func (d *AliDrive) request(url, method string, callback base.ReqCallback, resp i
 		return nil, err, e
 	}
 	if e.Code != "" {
-		if e.Code == "AccessTokenInvalid" {
+		switch e.Code {
+		case "AccessTokenInvalid":
 			err = d.refreshToken()
 			if err != nil {
 				return nil, err, e
 			}
-			return d.request(url, method, callback, resp)
+		case "DeviceSessionSignatureInvalid":
+			err = d.reSign()
+			if err != nil {
+				return nil, err, e
+			}
+		default:
+			return nil, errors.New(e.Message), e
 		}
-		return nil, errors.New(e.Message), e
+		return d.request(url, method, callback, resp)
 	} else if res.IsError() {
 		return nil, errors.New("bad status code " + res.Status()), e
 	}
