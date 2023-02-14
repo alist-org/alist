@@ -35,7 +35,7 @@ func (d *AliDrive) renewSession() error {
 
 func (d *AliDrive) sign() {
 	secpAppID := "5dde4e1bdf9e4966b387ba58f4b3fdc3"
-	singdata := fmt.Sprintf("%s:%s:%s:%d", secpAppID, d.DrviceID, d.UserID, d.nonce)
+	singdata := fmt.Sprintf("%s:%s:%s:%d", secpAppID, d.DeviceID, d.UserID, d.nonce)
 	hash := sha256.Sum256([]byte(singdata))
 	data, _ := ecc.SignBytes(d.privateKey, hash[:], ecc.RecID|ecc.LowerS)
 	d.signature = hex.EncodeToString(data)
@@ -77,7 +77,7 @@ func (d *AliDrive) request(url, method string, callback base.ReqCallback, resp i
 		"X-Signature":   d.signature,
 		"x-request-id":  uuid.NewString(),
 		"X-Canary":      "client=Android,app=adrive,version=v4.1.0",
-		"X-Device-Id":   d.DrviceID,
+		"X-Device-Id":   d.DeviceID,
 	})
 	if callback != nil {
 		callback(req)

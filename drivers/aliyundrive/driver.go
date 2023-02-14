@@ -70,9 +70,9 @@ func (d *AliDrive) Init(ctx context.Context) error {
 		}
 	})
 
-	// init drviceID
-	if len(d.DrviceID) < 64 {
-		d.DrviceID = utils.GetSHA256Encode(d.DrviceID)
+	// init deviceID
+	if len(d.DeviceID) < 64 {
+		d.DeviceID = utils.GetSHA256Encode(d.DeviceID)
 	}
 
 	// init privateKey
