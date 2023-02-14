@@ -5,7 +5,6 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"crypto/sha1"
-	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
@@ -73,8 +72,7 @@ func (d *AliDrive) Init(ctx context.Context) error {
 
 	// init drviceID
 	if len(d.DrviceID) < 64 {
-		buf := sha256.Sum256([]byte(d.DrviceID))
-		d.DrviceID = hex.EncodeToString(buf[:])
+		d.DrviceID = utils.GetSHA256Encode(d.DrviceID)
 	}
 
 	// init privateKey
@@ -85,18 +83,15 @@ func (d *AliDrive) Init(ctx context.Context) error {
 	d.createSession()
 	d.cron2 = cron.NewCron(time.Minute * 5)
 	d.cron2.Do(func() {
-		if d.nonce > 1073741823 {
+		d.nonce++
+		d.sign()
+		err := d.renewSession()
+		if d.nonce >= 1073741823 || (err != nil && err.Error() == "device session signature error") {
 			d.nonce = 0
 			d.sign()
 			d.createSession()
-			return
 		}
-
-		d.nonce++
-		d.sign()
-		d.renewSession()
 	})
-
 	return err
 }
 

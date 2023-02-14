@@ -1,6 +1,7 @@
 package aliyundrive
 
 import (
+	"crypto/sha256"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -35,8 +36,8 @@ func (d *AliDrive) renewSession() error {
 func (d *AliDrive) sign() {
 	secpAppID := "5dde4e1bdf9e4966b387ba58f4b3fdc3"
 	singdata := fmt.Sprintf("%s:%s:%s:%d", secpAppID, d.DrviceID, d.UserID, d.nonce)
-	hash := utils.GetSHA256Encode(singdata)
-	data, _ := ecc.SignBytes(d.privateKey, []byte(hash), ecc.RecID|ecc.LowerS)
+	hash := sha256.Sum256([]byte(singdata))
+	data, _ := ecc.SignBytes(d.privateKey, hash[:], ecc.RecID|ecc.LowerS)
 	d.signature = hex.EncodeToString(data)
 }
 
