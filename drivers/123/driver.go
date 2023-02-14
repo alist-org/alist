@@ -96,14 +96,14 @@ func (d *Pan123) Link(ctx context.Context, file model.Obj, args model.LinkArgs) 
 				return nil, err
 			}
 		}
-		u_ := fmt.Sprintf("https://%s%s", u.Host, u.Path)
+		u_ := u.String()
 		res, err := base.NoRedirectClient.R().SetQueryParamsFromValues(u.Query()).Head(u_)
 		if err != nil {
 			return nil, err
 		}
 		log.Debug(res.String())
 		link := model.Link{
-			URL: downloadUrl,
+			URL: u_,
 		}
 		log.Debugln("res code: ", res.StatusCode())
 		if res.StatusCode() == 302 {

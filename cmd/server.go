@@ -29,6 +29,7 @@ the address is defined in config file`,
 	Run: func(cmd *cobra.Command, args []string) {
 		Init()
 		bootstrap.InitAria2()
+		bootstrap.InitQbittorrent()
 		bootstrap.LoadStorages()
 		if !flags.Debug && !flags.Dev {
 			gin.SetMode(gin.ReleaseMode)

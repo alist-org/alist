@@ -154,6 +154,9 @@ func InitialSettings() []model.SettingItem {
 		{Key: conf.GithubClientId, Value: "", Type: conf.TypeString, Group: model.GITHUB, Flag: model.PRIVATE},
 		{Key: conf.GithubClientSecrets, Value: "", Type: conf.TypeString, Group: model.GITHUB, Flag: model.PRIVATE},
 		{Key: conf.GithubLoginEnabled, Value: "false", Type: conf.TypeBool, Group: model.GITHUB, Flag: model.PUBLIC},
+
+		// qbittorrent settings
+		{Key: conf.QbittorrentUrl, Value: "http://admin:adminadmin@localhost:8080/", Type: conf.TypeString, Group: model.QBITTORRENT, Flag: model.PRIVATE},
 	}
 	if flags.Dev {
 		initialSettingItems = append(initialSettingItems, []model.SettingItem{

@@ -1,6 +1,8 @@
 package aliyundrive
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"net/http"
@@ -8,8 +10,36 @@ import (
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/pkg/utils"
+	"github.com/dustinxie/ecc"
 	"github.com/go-resty/resty/v2"
+	"github.com/google/uuid"
 )
+
+func (d *AliDrive) createSession() error {
+	_, err, _ := d.request("https://api.aliyundrive.com/users/v1/users/device/create_session", http.MethodPost, func(req *resty.Request) {
+		req.SetBody(base.Json{
+			"deviceName":   "samsung",
+			"modelName":    "SM-G9810",
+			"nonce":        d.nonce,
+			"pubKey":       PublicKeyToHex(&d.privateKey.PublicKey),
+			"refreshToken": d.RefreshToken,
+		})
+	}, nil)
+	return err
+}
+
+func (d *AliDrive) renewSession() error {
+	_, err, _ := d.request("https://api.aliyundrive.com/users/v1/users/device/renew_session", http.MethodPost, nil, nil)
+	return err
+}
+
+func (d *AliDrive) sign() {
+	secpAppID := "5dde4e1bdf9e4966b387ba58f4b3fdc3"
+	singdata := fmt.Sprintf("%s:%s:%s:%d", secpAppID, d.DeviceID, d.UserID, d.nonce)
+	hash := sha256.Sum256([]byte(singdata))
+	data, _ := ecc.SignBytes(d.privateKey, hash[:], ecc.RecID|ecc.LowerS)
+	d.signature = hex.EncodeToString(data)
+}
 
 // do others that not defined in Driver interface
 
@@ -39,9 +69,16 @@ func (d *AliDrive) refreshToken() error {
 
 func (d *AliDrive) request(url, method string, callback base.ReqCallback, resp interface{}) ([]byte, error, RespErr) {
 	req := base.RestyClient.R()
-	req.SetHeader("Authorization", "Bearer\t"+d.AccessToken)
-	req.SetHeader("content-type", "application/json")
-	req.SetHeader("origin", "https://www.aliyundrive.com")
+	req.SetHeaders(map[string]string{
+		"Authorization": "Bearer\t" + d.AccessToken,
+		"content-type":  "application/json",
+		"origin":        "https://www.aliyundrive.com",
+		"Referer":       "https://aliyundrive.com/",
+		"X-Signature":   d.signature,
+		"x-request-id":  uuid.NewString(),
+		"X-Canary":      "client=Android,app=adrive,version=v4.1.0",
+		"X-Device-Id":   d.DeviceID,
+	})
 	if callback != nil {
 		callback(req)
 	} else {
