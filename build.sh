@@ -1,7 +1,7 @@
 appName="alist"
 builtAt="$(date +'%F %T %z')"
 goVersion=$(go version | sed 's/go version //')
-gitAuthor=$(git show -s --format='format:%aN <%ae>' HEAD)
+gitAuthor="Xhofe <i@nn.ci>"
 gitCommit=$(git log --pretty=format:"%h" -1)
 
 if [ "$1" = "dev" ]; then

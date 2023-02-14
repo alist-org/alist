@@ -10,6 +10,7 @@ require (
 	github.com/caarlos0/env/v7 v7.0.0
 	github.com/deckarep/golang-set/v2 v2.1.0
 	github.com/disintegration/imaging v1.6.2
+	github.com/dustinxie/ecc v0.0.0-20210511000915-959544187564
 	github.com/gin-contrib/cors v1.4.0
 	github.com/gin-gonic/gin v1.8.2
 	github.com/go-resty/resty/v2 v2.7.0
@@ -62,7 +63,6 @@ require (
 	github.com/blevesearch/zapx/v15 v15.3.8 // indirect
 	github.com/bluele/gcache v0.0.2 // indirect
 	github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc // indirect
-	github.com/dustinxie/ecc v0.0.0-20210511000915-959544187564 // indirect
 	github.com/gaoyb7/115drive-webdav v0.1.8 // indirect
 	github.com/geoffgarside/ber v1.1.0 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
