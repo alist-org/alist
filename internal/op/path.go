@@ -18,11 +18,9 @@ func GetStorageAndActualPath(rawPath string) (storage driver.Driver, actualPath 
 		if rawPath == "/" {
 			err = errors.New("please add a storage first.")
 			return
-		} else {
-			err = errors.Errorf("can't find storage with rawPath: %s", rawPath)
-			return
 		}
-
+		err = errors.Errorf("can't find storage with rawPath: %s", rawPath)
+		return
 	}
 	log.Debugln("use storage: ", storage.GetStorage().MountPath)
 	mountPath := utils.GetActualMountPath(storage.GetStorage().MountPath)
