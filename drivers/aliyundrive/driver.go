@@ -23,6 +23,7 @@ import (
 	"github.com/alist-org/alist/v3/pkg/cron"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/go-resty/resty/v2"
+	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -71,12 +72,12 @@ func (d *AliDrive) Init(ctx context.Context) error {
 	})
 
 	// init deviceID
-	if len(d.DeviceID) < 64 {
-		d.DeviceID = utils.GetSHA256Encode(d.DeviceID)
+	if len(d.DeviceID) != 64 {
+		d.DeviceID = utils.GetSHA256Encode(uuid.NewString())
 	}
 
 	// init privateKey
-	d.privateKey, _ = NewPrivateKey()
+	d.privateKey, _ = NewPrivateKeyFromHex(d.DeviceID)
 
 	// init signature
 	d.sign()
@@ -92,7 +93,7 @@ func (d *AliDrive) Init(ctx context.Context) error {
 			d.createSession()
 		}
 	})
-	return err
+	return nil
 }
 
 func (d *AliDrive) Drop(ctx context.Context) error {

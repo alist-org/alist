@@ -94,14 +94,23 @@ func (d *AliDrive) request(url, method string, callback base.ReqCallback, resp i
 		return nil, err, e
 	}
 	if e.Code != "" {
-		if e.Code == "AccessTokenInvalid" {
+		switch e.Code {
+		case "AccessTokenInvalid":
 			err = d.refreshToken()
 			if err != nil {
 				return nil, err, e
 			}
-			return d.request(url, method, callback, resp)
+		case "DeviceSessionSignatureInvalid":
+			d.nonce = 0
+			d.sign()
+			err = d.createSession()
+			if err != nil {
+				return nil, err, e
+			}
+		default:
+			return nil, errors.New(e.Message), e
 		}
-		return nil, errors.New(e.Message), e
+		return d.request(url, method, callback, resp)
 	} else if res.IsError() {
 		return nil, errors.New("bad status code " + res.Status()), e
 	}
