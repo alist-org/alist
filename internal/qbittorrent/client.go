@@ -242,6 +242,19 @@ type TorrentInfo struct {
 	Upspeed           int           `json:"upspeed"`            // 上传速度（字节/秒）
 }
 
+type InfoNotFoundError struct {
+	Id  string
+	Err error
+}
+
+func (i InfoNotFoundError) Error() string {
+	return "there should be exactly one task with tag \"alist-" + i.Id + "\""
+}
+
+func NewInfoNotFoundError(id string) InfoNotFoundError {
+	return InfoNotFoundError{Id: id}
+}
+
 func (c *client) GetInfo(id string) (TorrentInfo, error) {
 	var infos []TorrentInfo
 
@@ -266,7 +279,7 @@ func (c *client) GetInfo(id string) (TorrentInfo, error) {
 		return TorrentInfo{}, err
 	}
 	if len(infos) != 1 {
-		return TorrentInfo{}, errors.New("there should be exactly one task with tag \"alist-" + id + "\"")
+		return TorrentInfo{}, NewInfoNotFoundError(id)
 	}
 	return infos[0], nil
 }

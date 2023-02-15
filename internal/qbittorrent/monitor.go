@@ -29,6 +29,30 @@ func (m *Monitor) Loop() error {
 		completed bool
 	)
 	m.finish = make(chan struct{})
+
+	// wait for qbittorrent to parse torrent and create task
+	m.tsk.SetStatus("waiting for qbittorrent to parse torrent and create task")
+	waitCount := 0
+	for {
+		_, err := qbclient.GetInfo(m.tsk.ID)
+		if err == nil {
+			break
+		}
+		switch err.(type) {
+		case InfoNotFoundError:
+			break
+		default:
+			return err
+		}
+
+		waitCount += 1
+		if waitCount >= 60 {
+			return errors.New("torrent parse timeout")
+		}
+		timer := time.NewTimer(time.Second)
+		<-timer.C
+	}
+
 outer:
 	for {
 		select {
