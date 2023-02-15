@@ -2,7 +2,6 @@ package handles
 
 import (
 	"fmt"
-	"net/url"
 	stdpath "path"
 	"strings"
 
@@ -42,21 +41,13 @@ func Down(c *gin.Context) {
 		c.Header("Referrer-Policy", "no-referrer")
 		c.Header("Cache-Control", "max-age=0, no-cache, no-store, must-revalidate")
 		if setting.GetBool(conf.ForwardDirectLinkParams) {
-			params := c.Request.URL.Query()
-			params.Del("sign")
-			u, err := url.Parse(link.URL)
+			query := c.Request.URL.Query()
+			query.Del("sign")
+			link.URL, err = utils.InjectQuery(link.URL, query)
 			if err != nil {
 				common.ErrorResp(c, err, 500)
 				return
 			}
-			values := u.Query()
-			for k := range params {
-				for i := range params[k] {
-					values.Set(k, params[k][i])
-				}
-			}
-			u.RawQuery = values.Encode()
-			link.URL = u.String()
 		}
 		c.Redirect(302, link.URL)
 	}
@@ -92,21 +83,13 @@ func Proxy(c *gin.Context) {
 			return
 		}
 		if link.URL != "" && setting.GetBool(conf.ForwardDirectLinkParams) {
-			params := c.Request.URL.Query()
-			params.Del("sign")
-			u, err := url.Parse(link.URL)
+			query := c.Request.URL.Query()
+			query.Del("sign")
+			link.URL, err = utils.InjectQuery(link.URL, query)
 			if err != nil {
 				common.ErrorResp(c, err, 500)
 				return
 			}
-			values := u.Query()
-			for k := range params {
-				for i := range params[k] {
-					values.Set(k, params[k][i])
-				}
-			}
-			u.RawQuery = values.Encode()
-			link.URL = u.String()
 		}
 		err = common.Proxy(c.Writer, c.Request, link, file)
 		if err != nil {
