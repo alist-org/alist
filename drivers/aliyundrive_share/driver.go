@@ -2,15 +2,16 @@ package aliyundrive_share
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
+	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/cron"
 	"github.com/alist-org/alist/v3/pkg/utils"
+	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -77,40 +78,43 @@ func (d *AliyundriveShare) Link(ctx context.Context, file model.Obj, args model.
 		"share_id":   d.ShareId,
 	}
 	var resp ShareLinkResp
-	var e ErrorResp
-	_, err := base.RestyClient.R().
-		SetError(&e).SetBody(data).SetResult(&resp).
-		SetHeader("content-type", "application/json").
-		SetHeader("Authorization", "Bearer\t"+d.AccessToken).
-		SetHeader("x-share-token", d.ShareToken).
-		Post("https://api.aliyundrive.com/v2/file/get_share_link_download_url")
+	_, err := d.request("https://api.aliyundrive.com/v2/file/get_share_link_download_url", http.MethodPost, func(req *resty.Request) {
+		req.SetBody(data).SetResult(&resp)
+	})
 	if err != nil {
 		return nil, err
-	}
-	var u string
-	if e.Code != "" {
-		if e.Code == "AccessTokenInvalid" || e.Code == "ShareLinkTokenInvalid" {
-			if e.Code == "AccessTokenInvalid" {
-				err = d.refreshToken()
-			} else {
-				err = d.getShareToken()
-			}
-			if err != nil {
-				return nil, err
-			}
-			return d.Link(ctx, file, args)
-		} else {
-			return nil, errors.New(e.Code + ": " + e.Message)
-		}
-	} else {
-		u = resp.DownloadUrl
 	}
 	return &model.Link{
 		Header: http.Header{
 			"Referer": []string{"https://www.aliyundrive.com/"},
 		},
-		URL: u,
+		URL: resp.DownloadUrl,
 	}, nil
+}
+
+func (d *AliyundriveShare) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
+	var resp base.Json
+	var url string
+	data := base.Json{
+		"share_id": d.ShareId,
+		"file_id":  args.Obj.GetID(),
+	}
+	switch args.Method {
+	case "doc_preview":
+		url = "https://api.aliyundrive.com/v2/file/get_office_preview_url"
+	case "video_preview":
+		url = "https://api.aliyundrive.com/v2/file/get_video_preview_play_info"
+		data["category"] = "live_transcoding"
+	default:
+		return nil, errs.NotSupport
+	}
+	_, err := d.request(url, http.MethodPost, func(req *resty.Request) {
+		req.SetBody(data).SetResult(&resp)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
 }
 
 var _ driver.Driver = (*AliyundriveShare)(nil)
