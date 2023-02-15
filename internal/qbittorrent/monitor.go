@@ -85,29 +85,13 @@ func (m *Monitor) update() (bool, error) {
 	progress := float64(info.Completed) / float64(info.Size) * 100
 	m.tsk.SetProgress(int(progress))
 	switch info.State {
-	case UPLOADING:
-	case PAUSEDUP:
-	case QUEUEDUP:
-	case STALLEDUP:
-	case FORCEDUP:
-	case CHECKINGUP:
+	case UPLOADING, PAUSEDUP, QUEUEDUP, STALLEDUP, FORCEDUP, CHECKINGUP:
 		err = m.complete()
 		return true, errors.WithMessage(err, "failed to transfer file")
-	case ALLOCATING:
-	case DOWNLOADING:
-	case METADL:
-	case PAUSEDDL:
-	case QUEUEDDL:
-	case STALLEDDL:
-	case CHECKINGDL:
-	case FORCEDDL:
-	case CHECKINGRESUMEDATA:
-	case MOVING:
-	case UNKNOWN: // or maybe should return an error for UNKNOWN?
+	case ALLOCATING, DOWNLOADING, METADL, PAUSEDDL, QUEUEDDL, STALLEDDL, CHECKINGDL, FORCEDDL, CHECKINGRESUMEDATA, MOVING:
 		m.tsk.SetStatus("qbittorrent downloading")
 		return false, nil
-	case ERROR:
-	case MISSINGFILES:
+	case ERROR, MISSINGFILES, UNKNOWN:
 		return true, errors.Errorf("failed to download %s, error: %s", m.tsk.ID, info.State)
 	}
 	return true, errors.New("unknown error occurred downloading qbittorrent") // should never happen
