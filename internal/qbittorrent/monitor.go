@@ -9,7 +9,6 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"os"
-	"path"
 	"path/filepath"
 	"sync"
 	"sync/atomic"
@@ -138,7 +137,7 @@ func (m *Monitor) complete() error {
 				}
 				stream := &model.FileStream{
 					Obj: &model.Object{
-						Name:     path.Base(filePath),
+						Name:     file.Name,
 						Size:     size,
 						Modified: time.Now(),
 						IsFolder: false,
@@ -146,8 +145,7 @@ func (m *Monitor) complete() error {
 					ReadCloser: f,
 					Mimetype:   mimetype,
 				}
-				newDistDir := filepath.Join(dstDirActualPath, file.Name)
-				return op.Put(tsk.Ctx, storage, newDistDir, stream, tsk.SetProgress)
+				return op.Put(tsk.Ctx, storage, dstDirActualPath, stream, tsk.SetProgress)
 			},
 		}))
 	}
