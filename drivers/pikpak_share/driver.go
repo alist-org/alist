@@ -8,7 +8,6 @@ import (
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/go-resty/resty/v2"
-	log "github.com/sirupsen/logrus"
 )
 
 type PikPakShare struct {
@@ -70,10 +69,6 @@ func (d *PikPakShare) Link(ctx context.Context, file model.Obj, args model.LinkA
 	}
 	link := model.Link{
 		URL: resp.FileInfo.WebContentLink,
-	}
-	if len(resp.FileInfo.Medias) > 0 && resp.FileInfo.Medias[0].Link.Url != "" {
-		log.Debugln("use media link")
-		link.URL = resp.FileInfo.Medias[0].Link.Url
 	}
 	return &link, nil
 }
