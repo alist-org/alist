@@ -13,7 +13,6 @@ import (
 	"github.com/dustinxie/ecc"
 	"github.com/go-resty/resty/v2"
 	"github.com/google/uuid"
-	log "github.com/sirupsen/logrus"
 )
 
 func (d *AliDrive) createSession() error {
@@ -21,56 +20,39 @@ func (d *AliDrive) createSession() error {
 	if !ok {
 		return fmt.Errorf("can't load user state, user_id: %s", d.UserID)
 	}
+	d.sign()
+	state.retry++
+	if state.retry > 3 {
+		state.retry = 0
+		return fmt.Errorf("createSession failed after three retries")
+	}
 	_, err, _ := d.request("https://api.aliyundrive.com/users/v1/users/device/create_session", http.MethodPost, func(req *resty.Request) {
 		req.SetBody(base.Json{
 			"deviceName":   "samsung",
 			"modelName":    "SM-G9810",
-			"nonce":        state.nonce,
+			"nonce":        0,
 			"pubKey":       PublicKeyToHex(&state.privateKey.PublicKey),
 			"refreshToken": d.RefreshToken,
 		})
 	}, nil)
+	if err == nil{
+		state.retry = 0
+	}
 	return err
 }
 
-func (d *AliDrive) renewSession() error {
-	_, err, _ := d.request("https://api.aliyundrive.com/users/v1/users/device/renew_session", http.MethodPost, nil, nil)
-	return err
-}
+// func (d *AliDrive) renewSession() error {
+// 	_, err, _ := d.request("https://api.aliyundrive.com/users/v1/users/device/renew_session", http.MethodPost, nil, nil)
+// 	return err
+// }
 
 func (d *AliDrive) sign() {
-	state, ok := global.Load(d.UserID)
-	if !ok {
-		log.Errorf("can't load user state, user_id: %s", d.UserID)
-		return
-	}
+	state, _ := global.Load(d.UserID)
 	secpAppID := "5dde4e1bdf9e4966b387ba58f4b3fdc3"
-	singdata := fmt.Sprintf("%s:%s:%s:%d", secpAppID, state.deviceID, d.UserID, state.nonce)
+	singdata := fmt.Sprintf("%s:%s:%s:%d", secpAppID, state.deviceID, d.UserID, 0)
 	hash := sha256.Sum256([]byte(singdata))
 	data, _ := ecc.SignBytes(state.privateKey, hash[:], ecc.RecID|ecc.LowerS)
-	state.signature = hex.EncodeToString(data)
-}
-
-func (d *AliDrive) reSign() error {
-	state, ok := global.Load(d.UserID)
-	if !ok {
-		return fmt.Errorf("can't load user state, user_id: %s", d.UserID)
-	}
-	state.nonce++
-	if state.nonce >= 1073741823 {
-		state.nonce = 0
-	}
-	d.sign()
-	if state.nonce == 0 {
-		return d.createSession()
-	}
-	err := d.renewSession()
-	if err != nil && err.Error() == "device session signature error" {
-		state.nonce = 0
-		d.sign()
-		return d.createSession()
-	}
-	return nil
+	state.signature = hex.EncodeToString(data) //strconv.Itoa(state.nonce)
 }
 
 // do others that not defined in Driver interface
@@ -141,7 +123,7 @@ func (d *AliDrive) request(url, method string, callback base.ReqCallback, resp i
 				return nil, err, e
 			}
 		case "DeviceSessionSignatureInvalid":
-			err = d.reSign()
+			err = d.createSession()
 			if err != nil {
 				return nil, err, e
 			}

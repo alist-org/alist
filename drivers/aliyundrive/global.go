@@ -9,7 +9,7 @@ import (
 type State struct {
 	deviceID   string
 	signature  string
-	nonce      int
+	retry      int
 	privateKey *ecdsa.PrivateKey
 }
 
