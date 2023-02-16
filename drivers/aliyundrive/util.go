@@ -35,6 +35,9 @@ func (d *AliDrive) createSession() error {
 			"refreshToken": d.RefreshToken,
 		})
 	}, nil)
+	if err == nil{
+		state.retry = 0
+	}
 	return err
 }
 
