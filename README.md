@@ -121,7 +121,7 @@ Thanks goes to these wonderful people:
 
 ## License
 
-The `AList` is open-source software licensed under the AGPL-3.0 license.
+The `Alist` is open-source software licensed under the AGPL-3.0 license.
 
 ## Disclaimer
 - This program is a free and open source project. It is designed to share files on the network disk, which is convenient for downloading and learning golang. Please abide by relevant laws and regulations when using it, and do not abuse it;
