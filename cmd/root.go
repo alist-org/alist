@@ -26,7 +26,7 @@ func Execute() {
 func init() {
 	RootCmd.PersistentFlags().StringVar(&flags.DataDir, "data", "data", "config file")
 	RootCmd.PersistentFlags().BoolVar(&flags.Debug, "debug", false, "start with debug mode")
-	RootCmd.PersistentFlags().BoolVar(&flags.NoPrefix, "no-prefix", false, "disable env prefix")
+	RootCmd.PersistentFlags().BoolVar(&flags.NoPrefix, "no-prefix", true, "disable env prefix")
 	RootCmd.PersistentFlags().BoolVar(&flags.Dev, "dev", false, "start with dev mode")
 	RootCmd.PersistentFlags().BoolVar(&flags.ForceBinDir, "force-bin-dir", false, "Force to use the directory where the binary file is located as data directory")
 }
