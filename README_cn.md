@@ -101,11 +101,11 @@
 
 一般问题请到[讨论论坛](https://github.com/Xhofe/alist/discussions) ，**issue仅针对错误报告和功能请求。**
 
-## 捐助
+## 赞助
 
 AList 是一个开源软件，如果你碰巧喜欢这个项目，并希望我继续下去，请考虑赞助我或提供一个单一的捐款！感谢所有的爱和支持：https://alist.nn.ci/zh/guide/sponsor.html
 
-### 特殊捐助者
+### 特别赞助
 
 - [找资源 - 阿里云盘资源搜索引擎](https://zhaoziyuan.la/)
 - [KinhDown 百度云盘不限速下载！永久免费！已稳定运行3年！非常可靠！Q群 -> 786799372](https://kinhdown.com)
