@@ -19,10 +19,14 @@ func SetQbittorrent(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	items := []model.SettingItem{
-		{Key: conf.QbittorrentUrl, Value: req.Url, Type: conf.TypeString, Group: model.QBITTORRENT, Flag: model.PRIVATE},
+	item := &model.SettingItem{
+		Key:   conf.QbittorrentUrl,
+		Value: req.Url,
+		Type:  conf.TypeString,
+		Group: model.SINGLE,
+		Flag:  model.PRIVATE,
 	}
-	if err := op.SaveSettingItems(items); err != nil {
+	if err := op.SaveSettingItem(item); err != nil {
 		common.ErrorResp(c, err, 500)
 		return
 	}

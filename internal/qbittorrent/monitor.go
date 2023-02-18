@@ -9,7 +9,6 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"os"
-	"path"
 	"path/filepath"
 	"sync"
 	"sync/atomic"
@@ -29,12 +28,35 @@ func (m *Monitor) Loop() error {
 		completed bool
 	)
 	m.finish = make(chan struct{})
+
+	// wait for qbittorrent to parse torrent and create task
+	m.tsk.SetStatus("waiting for qbittorrent to parse torrent and create task")
+	waitCount := 0
+	for {
+		_, err := qbclient.GetInfo(m.tsk.ID)
+		if err == nil {
+			break
+		}
+		switch err.(type) {
+		case InfoNotFoundError:
+			break
+		default:
+			return err
+		}
+
+		waitCount += 1
+		if waitCount >= 60 {
+			return errors.New("torrent parse timeout")
+		}
+		timer := time.NewTimer(time.Second)
+		<-timer.C
+	}
+
 outer:
 	for {
 		select {
 		case <-m.tsk.Ctx.Done():
-			err = qbclient.Delete(m.tsk.ID)
-			return err
+			return qbclient.Delete(m.tsk.ID)
 		case <-time.After(time.Second * 2):
 			completed, err = m.update()
 			if completed {
@@ -61,29 +83,13 @@ func (m *Monitor) update() (bool, error) {
 	progress := float64(info.Completed) / float64(info.Size) * 100
 	m.tsk.SetProgress(int(progress))
 	switch info.State {
-	case UPLOADING:
-	case PAUSEDUP:
-	case QUEUEDUP:
-	case STALLEDUP:
-	case FORCEDUP:
-	case CHECKINGUP:
+	case UPLOADING, PAUSEDUP, QUEUEDUP, STALLEDUP, FORCEDUP, CHECKINGUP:
 		err = m.complete()
 		return true, errors.WithMessage(err, "failed to transfer file")
-	case ALLOCATING:
-	case DOWNLOADING:
-	case METADL:
-	case PAUSEDDL:
-	case QUEUEDDL:
-	case STALLEDDL:
-	case CHECKINGDL:
-	case FORCEDDL:
-	case CHECKINGRESUMEDATA:
-	case MOVING:
-	case UNKNOWN: // or maybe should return an error for UNKNOWN?
+	case ALLOCATING, DOWNLOADING, METADL, PAUSEDDL, QUEUEDDL, STALLEDDL, CHECKINGDL, FORCEDDL, CHECKINGRESUMEDATA, MOVING:
 		m.tsk.SetStatus("qbittorrent downloading")
 		return false, nil
-	case ERROR:
-	case MISSINGFILES:
+	case ERROR, MISSINGFILES, UNKNOWN:
 		return true, errors.Errorf("failed to download %s, error: %s", m.tsk.ID, info.State)
 	}
 	return true, errors.New("unknown error occurred downloading qbittorrent") // should never happen
@@ -95,7 +101,7 @@ var TransferTaskManager = task.NewTaskManager(3, func(k *uint64) {
 
 func (m *Monitor) complete() error {
 	// check dstDir again
-	storage, dstDirActualPath, err := op.GetStorageAndActualPath(m.dstDirPath)
+	storage, dstBaseDir, err := op.GetStorageAndActualPath(m.dstDirPath)
 	if err != nil {
 		return errors.WithMessage(err, "failed get storage")
 	}
@@ -105,6 +111,12 @@ func (m *Monitor) complete() error {
 		return errors.Wrapf(err, "failed to get files of %s", m.tsk.ID)
 	}
 	log.Debugf("files len: %d", len(files))
+	// delete qbittorrent task but do not delete the files before transferring to avoid qbittorrent
+	// accessing downloaded files and throw `cannot access the file because it is being used by another process` error
+	err = qbclient.Delete(m.tsk.ID)
+	if err != nil {
+		return err
+	}
 	// upload files
 	var wg sync.WaitGroup
 	wg.Add(len(files))
@@ -117,20 +129,23 @@ func (m *Monitor) complete() error {
 		}
 	}()
 	for _, file := range files {
-		filePath := filepath.Join(m.tempDir, file.Name)
+		tempPath := filepath.Join(m.tempDir, file.Name)
+		dstPath := filepath.Join(dstBaseDir, file.Name)
+		dstDir := filepath.Dir(dstPath)
+		fileName := filepath.Base(dstPath)
 		TransferTaskManager.Submit(task.WithCancelCtx(&task.Task[uint64]{
-			Name: fmt.Sprintf("transfer %s to [%s](%s)", filePath, storage.GetStorage().MountPath, dstDirActualPath),
+			Name: fmt.Sprintf("transfer %s to [%s](%s)", tempPath, storage.GetStorage().MountPath, dstPath),
 			Func: func(tsk *task.Task[uint64]) error {
 				defer wg.Done()
 				size := file.Size
-				mimetype := utils.GetMimeType(filePath)
-				f, err := os.Open(filePath)
+				mimetype := utils.GetMimeType(tempPath)
+				f, err := os.Open(tempPath)
 				if err != nil {
-					return errors.Wrapf(err, "failed to open file %s", filePath)
+					return errors.Wrapf(err, "failed to open file %s", tempPath)
 				}
 				stream := &model.FileStream{
 					Obj: &model.Object{
-						Name:     path.Base(filePath),
+						Name:     fileName,
 						Size:     size,
 						Modified: time.Now(),
 						IsFolder: false,
@@ -138,8 +153,7 @@ func (m *Monitor) complete() error {
 					ReadCloser: f,
 					Mimetype:   mimetype,
 				}
-				newDistDir := filepath.Join(dstDirActualPath, file.Name)
-				return op.Put(tsk.Ctx, storage, newDistDir, stream, tsk.SetProgress)
+				return op.Put(tsk.Ctx, storage, dstDir, stream, tsk.SetProgress)
 			},
 		}))
 	}

@@ -9,7 +9,6 @@ const (
 	ARIA2
 	INDEX
 	GITHUB
-	QBITTORRENT
 )
 
 const (
