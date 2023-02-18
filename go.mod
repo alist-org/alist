@@ -33,7 +33,7 @@ require (
 	golang.org/x/crypto v0.6.0
 	golang.org/x/image v0.5.0
 	golang.org/x/net v0.7.0
-	gorm.io/driver/mysql v1.4.6
+	gorm.io/driver/mysql v1.4.7
 	gorm.io/driver/postgres v1.4.8
 	gorm.io/driver/sqlite v1.4.4
 	gorm.io/gorm v1.24.5
