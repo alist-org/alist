@@ -101,7 +101,7 @@ var TransferTaskManager = task.NewTaskManager(3, func(k *uint64) {
 
 func (m *Monitor) complete() error {
 	// check dstDir again
-	storage, dstDirActualPath, err := op.GetStorageAndActualPath(m.dstDirPath)
+	storage, dstBaseDir, err := op.GetStorageAndActualPath(m.dstDirPath)
 	if err != nil {
 		return errors.WithMessage(err, "failed get storage")
 	}
@@ -129,20 +129,23 @@ func (m *Monitor) complete() error {
 		}
 	}()
 	for _, file := range files {
-		filePath := filepath.Join(m.tempDir, file.Name)
+		tempPath := filepath.Join(m.tempDir, file.Name)
+		dstPath := filepath.Join(dstBaseDir, file.Name)
+		dstDir := filepath.Dir(dstPath)
+		fileName := filepath.Base(dstPath)
 		TransferTaskManager.Submit(task.WithCancelCtx(&task.Task[uint64]{
-			Name: fmt.Sprintf("transfer %s to [%s](%s)", filePath, storage.GetStorage().MountPath, dstDirActualPath),
+			Name: fmt.Sprintf("transfer %s to [%s](%s)", tempPath, storage.GetStorage().MountPath, dstPath),
 			Func: func(tsk *task.Task[uint64]) error {
 				defer wg.Done()
 				size := file.Size
-				mimetype := utils.GetMimeType(filePath)
-				f, err := os.Open(filePath)
+				mimetype := utils.GetMimeType(tempPath)
+				f, err := os.Open(tempPath)
 				if err != nil {
-					return errors.Wrapf(err, "failed to open file %s", filePath)
+					return errors.Wrapf(err, "failed to open file %s", tempPath)
 				}
 				stream := &model.FileStream{
 					Obj: &model.Object{
-						Name:     file.Name,
+						Name:     fileName,
 						Size:     size,
 						Modified: time.Now(),
 						IsFolder: false,
@@ -150,7 +153,7 @@ func (m *Monitor) complete() error {
 					ReadCloser: f,
 					Mimetype:   mimetype,
 				}
-				return op.Put(tsk.Ctx, storage, dstDirActualPath, stream, tsk.SetProgress)
+				return op.Put(tsk.Ctx, storage, dstDir, stream, tsk.SetProgress)
 			},
 		}))
 	}
