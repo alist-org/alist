@@ -3,7 +3,9 @@ package server
 import (
 	"context"
 	"net/http"
+	"path"
 
+	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/pkg/utils"
@@ -14,17 +16,14 @@ import (
 
 var handler *webdav.Handler
 
-func init() {
+func WebDav(dav *gin.RouterGroup) {
 	handler = &webdav.Handler{
-		Prefix:     "/dav",
+		Prefix:     path.Join(conf.URL.Path, "/dav"),
 		LockSystem: webdav.NewMemLS(),
 		Logger: func(request *http.Request, err error) {
 			log.Errorf("%s %s %+v", request.Method, request.URL.Path, err)
 		},
 	}
-}
-
-func WebDav(dav *gin.RouterGroup) {
 	dav.Use(WebDAVAuth)
 	dav.Any("/*path", ServeWebDAV)
 	dav.Any("", ServeWebDAV)
