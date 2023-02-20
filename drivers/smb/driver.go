@@ -3,12 +3,16 @@ package smb
 import (
 	"context"
 	"errors"
+	"io"
+	"net/http"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/pkg/http_range"
 	"github.com/alist-org/alist/v3/pkg/utils"
 
 	"github.com/hirochachacha/go-smb2"
@@ -79,10 +83,27 @@ func (d *SMB) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*m
 		d.cleanLastConnTime()
 		return nil, err
 	}
-	d.updateLastConnTime()
-	return &model.Link{
+	link := &model.Link{
 		Data: remoteFile,
-	}, nil
+	}
+	if args.Header.Get("Range") != "" {
+		r, err := http_range.ParseRange(args.Header.Get("Range"), file.GetSize())
+		if err == nil && len(r) > 0 {
+			_, err := remoteFile.Seek(r[0].Start, io.SeekStart)
+			if err == nil {
+				link.Data = utils.NewLimitReadCloser(remoteFile, func() error {
+					return remoteFile.Close()
+				}, r[0].Length)
+				link.Status = 206
+				link.Header = http.Header{
+					"Content-Range":  []string{r[0].ContentRange(file.GetSize())},
+					"Content-Length": []string{strconv.FormatInt(r[0].Length, 10)},
+				}
+			}
+		}
+	}
+	d.updateLastConnTime()
+	return link, nil
 }
 
 func (d *SMB) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
