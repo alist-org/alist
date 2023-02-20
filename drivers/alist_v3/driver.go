@@ -2,6 +2,7 @@ package alist_v3
 
 import (
 	"context"
+	"errors"
 	"io"
 	"path"
 	"strconv"
@@ -55,6 +56,9 @@ func (d *AListV3) List(ctx context.Context, dir model.Obj, args model.ListArgs) 
 	if err != nil {
 		return nil, err
 	}
+	if resp.Code != 200 {
+		return nil, errors.New(resp.Message)
+	}
 	var files []model.Obj
 	for _, f := range resp.Data.Content {
 		file := model.ObjThumb{
@@ -83,6 +87,9 @@ func (d *AListV3) Link(ctx context.Context, file model.Obj, args model.LinkArgs)
 		}).Post(url)
 	if err != nil {
 		return nil, err
+	}
+	if resp.Code != 200 {
+		return nil, errors.New(resp.Message)
 	}
 	return &model.Link{
 		URL: resp.Data.RawURL,

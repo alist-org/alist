@@ -10,7 +10,7 @@ func checkResp(resp common.Resp[interface{}], err error) error {
 	if err != nil {
 		return err
 	}
-	if resp.Message == "success" {
+	if resp.Code == 200 {
 		return nil
 	}
 	return errors.New(resp.Message)
