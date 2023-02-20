@@ -7,8 +7,9 @@ import (
 
 type Addition struct {
 	driver.RootPath
-	Thumbnail  bool `json:"thumbnail" required:"true" help:"enable thumbnail"`
-	ShowHidden bool `json:"show_hidden" default:"true" required:"false" help:"show hidden directories and files"`
+	Thumbnail  bool   `json:"thumbnail" required:"true" help:"enable thumbnail"`
+	ShowHidden bool   `json:"show_hidden" default:"true" required:"false" help:"show hidden directories and files"`
+	MkdirPerm  uint32 `json:"mkdir_perm" default:"777"`
 }
 
 var config = driver.Config{
