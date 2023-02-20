@@ -27,7 +27,7 @@ require (
 	github.com/pquerna/otp v1.4.0
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.6.1
-	github.com/t3rm1n4l/go-mega v0.0.0-20220725095014-c4e0c2b5debf
+	github.com/t3rm1n4l/go-mega v0.0.0-20230220145126-b87ebf5801d8
 	github.com/upyun/go-sdk/v3 v3.0.3
 	github.com/winfsp/cgofuse v1.5.0
 	golang.org/x/crypto v0.6.0
