@@ -350,5 +350,15 @@ func (c *client) Delete(id string, deleteFiles bool) error {
 	if response.StatusCode != 200 {
 		return errors.New("failed to delete qbittorrent task")
 	}
+
+	v = url.Values{}
+	v.Set("tags", "alist-"+id)
+	response, err = c.post("/api/v2/torrents/deleteTags", v)
+	if err != nil {
+		return err
+	}
+	if response.StatusCode != 200 {
+		return errors.New("failed to delete qbittorrent tag")
+	}
 	return nil
 }
