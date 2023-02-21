@@ -56,7 +56,8 @@ outer:
 	for {
 		select {
 		case <-m.tsk.Ctx.Done():
-			return qbclient.Delete(m.tsk.ID)
+			// delete qbittorrent task and downloaded files when the task exits with error
+			return qbclient.Delete(m.tsk.ID, true)
 		case <-time.After(time.Second * 2):
 			completed, err = m.update()
 			if completed {
@@ -113,7 +114,7 @@ func (m *Monitor) complete() error {
 	log.Debugf("files len: %d", len(files))
 	// delete qbittorrent task but do not delete the files before transferring to avoid qbittorrent
 	// accessing downloaded files and throw `cannot access the file because it is being used by another process` error
-	err = qbclient.Delete(m.tsk.ID)
+	err = qbclient.Delete(m.tsk.ID, false)
 	if err != nil {
 		return err
 	}
