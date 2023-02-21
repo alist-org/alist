@@ -14,7 +14,7 @@ func GetApiUrl(r *http.Request) string {
 	if strings.HasPrefix(api, "http") {
 		return api
 	}
-	if r != nil && api == "" {
+	if r != nil {
 		protocol := "http"
 		if r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https" {
 			protocol = "https"
