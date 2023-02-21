@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"path"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
@@ -75,9 +76,19 @@ func (d *Onedrive) MakeDir(ctx context.Context, parentDir model.Obj, dirName str
 }
 
 func (d *Onedrive) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
+	parentPath := ""
+	if dstDir.GetID() == "" {
+		parentPath = dstDir.GetPath()
+		if utils.PathEqual(parentPath, "/") {
+			parentPath = path.Join("/drive/root", parentPath)
+		} else {
+			parentPath = path.Join("/drive/root:/", parentPath)
+		}
+	}
 	data := base.Json{
 		"parentReference": base.Json{
-			"id": dstDir.GetID(),
+			"id":   dstDir.GetID(),
+			"path": parentPath,
 		},
 		"name": srcObj.GetName(),
 	}
@@ -89,12 +100,14 @@ func (d *Onedrive) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 }
 
 func (d *Onedrive) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
-	//dstDir, err := op.GetUnwrap(ctx, d, stdpath.Dir(srcObj.GetPath()))
 	var parentID string
 	if o, ok := srcObj.(*Object); ok {
 		parentID = o.ParentID
 	} else {
 		return fmt.Errorf("srcObj is not Object")
+	}
+	if parentID == "" {
+		parentID = "root"
 	}
 	data := base.Json{
 		"parentReference": base.Json{
