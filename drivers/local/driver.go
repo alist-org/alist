@@ -35,6 +35,9 @@ func (d *Local) Config() driver.Config {
 }
 
 func (d *Local) Init(ctx context.Context) error {
+	if d.MkdirPerm == 0 {
+		d.MkdirPerm = 777
+	}
 	if !utils.Exists(d.GetRootPath()) {
 		return fmt.Errorf("root folder %s not exists", d.GetRootPath())
 	}
