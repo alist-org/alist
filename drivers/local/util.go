@@ -1,6 +1,9 @@
 package local
 
 import (
+	"bytes"
+	"fmt"
+	ffmpeg "github.com/u2takey/ffmpeg-go"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -22,4 +25,17 @@ func isSymlinkDir(f fs.FileInfo, path string) bool {
 		return stat.IsDir()
 	}
 	return false
+}
+
+func GetSnapshot(videoPath string, frameNum int) (imgData *bytes.Buffer, err error) {
+	srcBuf := bytes.NewBuffer(nil)
+	err = ffmpeg.Input(videoPath).Filter("select", ffmpeg.Args{fmt.Sprintf("gte(n,%d)", frameNum)}).
+		Output("pipe:", ffmpeg.KwArgs{"vframes": 1, "format": "image2", "vcodec": "mjpeg"}).
+		WithOutput(srcBuf, os.Stdout).
+		Run()
+
+	if err != nil {
+		return nil, err
+	}
+	return srcBuf, nil
 }
