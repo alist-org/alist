@@ -25,6 +25,6 @@ func GetApiUrl(r *http.Request) string {
 		}
 		api = fmt.Sprintf("%s://%s", protocol, stdpath.Join(host, api))
 	}
-	strings.TrimSuffix(api, "/")
+	api = strings.TrimSuffix(api, "/")
 	return api
 }
