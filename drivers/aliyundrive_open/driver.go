@@ -9,6 +9,7 @@ import (
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
+	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/pkg/cron"
@@ -206,8 +207,28 @@ func (d *AliyundriveOpen) Put(ctx context.Context, dstDir model.Obj, stream mode
 	return err
 }
 
-//func (d *AliyundriveOpen) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
-//	return nil, errs.NotSupport
-//}
+func (d *AliyundriveOpen) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
+	var resp base.Json
+	var uri string
+	data := base.Json{
+		"drive_id": d.DriveId,
+		"file_id":  args.Obj.GetID(),
+	}
+	switch args.Method {
+	case "video_preview":
+		uri = "/adrive/v1.0/openFile/getVideoPreviewPlayInfo"
+		data["category"] = "live_transcoding"
+		data["url_expire_sec"] = 14400
+	default:
+		return nil, errs.NotSupport
+	}
+	_, err := d.request(uri, http.MethodPost, func(req *resty.Request) {
+		req.SetBody(data).SetResult(&resp)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
 
 var _ driver.Driver = (*AliyundriveOpen)(nil)

@@ -19,9 +19,9 @@ func Init(e *gin.Engine) {
 			c.Redirect(302, conf.URL.Path)
 		})
 	}
+	Cors(e)
 	g := e.Group(conf.URL.Path)
 	common.SecretKey = []byte(conf.Conf.JwtSecret)
-	Cors(g)
 	g.Use(middlewares.StoragesLoaded)
 	if conf.Conf.MaxConnections > 0 {
 		g.Use(middlewares.MaxAllowed(conf.Conf.MaxConnections))
@@ -133,7 +133,7 @@ func _fs(g *gin.RouterGroup) {
 	g.POST("/add_qbit", handles.AddQbittorrent)
 }
 
-func Cors(r *gin.RouterGroup) {
+func Cors(r *gin.Engine) {
 	config := cors.DefaultConfig()
 	config.AllowAllOrigins = true
 	config.AllowHeaders = []string{"*"}
