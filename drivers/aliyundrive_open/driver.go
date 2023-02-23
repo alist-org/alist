@@ -44,7 +44,7 @@ func (d *AliyundriveOpen) Init(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	utils.Json.Get(res, "default_drive_id").ToString()
+	d.DriveId = utils.Json.Get(res, "default_drive_id").ToString()
 	d.cron = cron.NewCron(time.Hour * 2)
 	d.cron.Do(func() {
 		err := d.refreshToken()

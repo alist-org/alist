@@ -14,10 +14,13 @@ import (
 
 func (d *AliyundriveOpen) refreshToken() error {
 	url := d.base + "/oauth/access_token"
+	if d.OauthTokenURL != "" && d.ClientID == "" {
+		url = d.OauthTokenURL
+	}
 	var resp base.TokenResp
 	var e ErrResp
 	_, err := base.RestyClient.R().
-		//ForceContentType("application/json").
+		ForceContentType("application/json").
 		SetBody(base.Json{
 			"client_id":     d.ClientID,
 			"client_secret": d.ClientSecret,
