@@ -18,6 +18,7 @@ type Addition struct {
 var config = driver.Config{
 	Name:        "Aliyundrive",
 	DefaultRoot: "root",
+	Alert:       "warning|Deprecated, no longer maintained and will be removed in a future version",
 }
 
 func init() {
