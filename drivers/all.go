@@ -9,6 +9,7 @@ import (
 	_ "github.com/alist-org/alist/v3/drivers/alist_v2"
 	_ "github.com/alist-org/alist/v3/drivers/alist_v3"
 	_ "github.com/alist-org/alist/v3/drivers/aliyundrive"
+	_ "github.com/alist-org/alist/v3/drivers/aliyundrive_open"
 	_ "github.com/alist-org/alist/v3/drivers/aliyundrive_share"
 	_ "github.com/alist-org/alist/v3/drivers/baidu_netdisk"
 	_ "github.com/alist-org/alist/v3/drivers/baidu_photo"
