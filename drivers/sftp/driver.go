@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 
+	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
@@ -52,9 +53,11 @@ func (d *SFTP) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*
 	if err != nil {
 		return nil, err
 	}
-	return &model.Link{
+	link := &model.Link{
 		Data: remoteFile,
-	}, nil
+	}
+	base.HandleRange(link, remoteFile, args.Header, file.GetSize())
+	return link, nil
 }
 
 func (d *SFTP) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {

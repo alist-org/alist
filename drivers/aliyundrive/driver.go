@@ -71,14 +71,14 @@ func (d *AliDrive) Init(ctx context.Context) error {
 	// init privateKey
 	privateKey, _ := NewPrivateKeyFromHex(deviceID)
 	state := State{
-		nonce:      -1,
 		privateKey: privateKey,
 		deviceID:   deviceID,
 	}
 	// store state
 	global.Store(d.UserID, &state)
 	// init signature
-	return d.reSign()
+	d.sign()
+	return nil
 }
 
 func (d *AliDrive) Drop(ctx context.Context) error {

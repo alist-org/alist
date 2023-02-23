@@ -15,6 +15,10 @@ func GetStorageAndActualPath(rawPath string) (storage driver.Driver, actualPath 
 	rawPath = utils.FixAndCleanPath(rawPath)
 	storage = GetBalancedStorage(rawPath)
 	if storage == nil {
+		if rawPath == "/" {
+			err = errors.New("please add a storage first.")
+			return
+		}
 		err = errors.Errorf("can't find storage with rawPath: %s", rawPath)
 		return
 	}
