@@ -88,12 +88,6 @@ func TestAdd(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-
-	// test add
-	err = c.login()
-	if err != nil {
-		t.Error(err)
-	}
 	err = c.AddFromLink(
 		"https://releases.ubuntu.com/22.04/ubuntu-22.04.1-desktop-amd64.iso.torrent",
 		"D:\\qBittorrentDownload\\alist",
@@ -145,7 +139,15 @@ func TestDelete(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	err = c.Delete("uuid-2")
+	err = c.AddFromLink(
+		"https://releases.ubuntu.com/22.04/ubuntu-22.04.1-desktop-amd64.iso.torrent",
+		"D:\\qBittorrentDownload\\alist",
+		"uuid-1",
+	)
+	if err != nil {
+		t.Error(err)
+	}
+	err = c.Delete("uuid-1", true)
 	if err != nil {
 		t.Error(err)
 	}

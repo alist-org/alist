@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/alist-org/alist/v3/server/common"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -20,7 +21,6 @@ import (
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/sign"
 	"github.com/alist-org/alist/v3/pkg/utils"
-	"github.com/alist-org/alist/v3/server/common"
 	"github.com/disintegration/imaging"
 	_ "golang.org/x/image/webp"
 )
@@ -35,6 +35,9 @@ func (d *Local) Config() driver.Config {
 }
 
 func (d *Local) Init(ctx context.Context) error {
+	if d.MkdirPerm == 0 {
+		d.MkdirPerm = 777
+	}
 	if !utils.Exists(d.GetRootPath()) {
 		return fmt.Errorf("root folder %s not exists", d.GetRootPath())
 	}
@@ -68,10 +71,13 @@ func (d *Local) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([
 			continue
 		}
 		thumb := ""
-		if d.Thumbnail && utils.GetFileType(f.Name()) == conf.IMAGE {
-			thumb = common.GetApiUrl(nil) + stdpath.Join("/d", args.ReqPath, f.Name())
-			thumb = utils.EncodePath(thumb, true)
-			thumb += "?type=thumb&sign=" + sign.Sign(stdpath.Join(args.ReqPath, f.Name()))
+		if d.Thumbnail {
+			typeName := utils.GetFileType(f.Name())
+			if typeName == conf.IMAGE || typeName == conf.VIDEO {
+				thumb = common.GetApiUrl(nil) + stdpath.Join("/d", args.ReqPath, f.Name())
+				thumb = utils.EncodePath(thumb, true)
+				thumb += "?type=thumb&sign=" + sign.Sign(stdpath.Join(args.ReqPath, f.Name()))
+			}
 		}
 		isFolder := f.IsDir() || isSymlinkDir(f, fullPath)
 		var size int64
@@ -123,11 +129,22 @@ func (d *Local) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 	fullPath := file.GetPath()
 	var link model.Link
 	if args.Type == "thumb" && utils.Ext(file.GetName()) != "svg" {
-		imgData, err := ioutil.ReadFile(fullPath)
-		if err != nil {
-			return nil, err
+		var srcBuf *bytes.Buffer
+		if utils.GetFileType(file.GetName()) == conf.VIDEO {
+			videoBuf, err := GetSnapshot(fullPath, 10)
+			if err != nil {
+				return nil, err
+			}
+			srcBuf = videoBuf
+		} else {
+			imgData, err := ioutil.ReadFile(fullPath)
+			if err != nil {
+				return nil, err
+			}
+			imgBuf := bytes.NewBuffer(imgData)
+			srcBuf = imgBuf
 		}
-		srcBuf := bytes.NewBuffer(imgData)
+
 		image, err := imaging.Decode(srcBuf)
 		if err != nil {
 			return nil, err
@@ -151,7 +168,7 @@ func (d *Local) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 
 func (d *Local) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
 	fullPath := filepath.Join(parentDir.GetPath(), dirName)
-	err := os.MkdirAll(fullPath, 0777)
+	err := os.MkdirAll(fullPath, os.FileMode(d.MkdirPerm))
 	if err != nil {
 		return err
 	}

@@ -69,3 +69,25 @@ func (l limitWriter) Write(p []byte) (n int, err error) {
 func LimitWriter(w io.Writer, size int64) io.Writer {
 	return &limitWriter{w: w, limit: size}
 }
+
+type ReadCloser struct {
+	io.Reader
+	io.Closer
+}
+
+type CloseFunc func() error
+
+func (c CloseFunc) Close() error {
+	return c()
+}
+
+func NewReadCloser(reader io.Reader, close CloseFunc) io.ReadCloser {
+	return ReadCloser{
+		Reader: reader,
+		Closer: close,
+	}
+}
+
+func NewLimitReadCloser(reader io.Reader, close CloseFunc, limit int64) io.ReadCloser {
+	return NewReadCloser(io.LimitReader(reader, limit), close)
+}

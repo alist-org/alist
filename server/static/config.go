@@ -8,14 +8,12 @@ import (
 )
 
 type SiteConfig struct {
-	ApiURL   string
 	BasePath string
 	Cdn      string
 }
 
 func getSiteConfig() SiteConfig {
 	siteConfig := SiteConfig{
-		ApiURL:   conf.Conf.SiteURL,
 		BasePath: conf.URL.Path,
 		Cdn:      strings.ReplaceAll(strings.TrimSuffix(conf.Conf.Cdn, "/"), "$version", conf.WebVersion),
 	}

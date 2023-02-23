@@ -15,7 +15,7 @@ type Client interface {
 	AddFromLink(link string, savePath string, id string) error
 	GetInfo(id string) (TorrentInfo, error)
 	GetFiles(id string) ([]FileInfo, error)
-	Delete(id string) error
+	Delete(id string, deleteFiles bool) error
 }
 
 type client struct {
@@ -326,7 +326,7 @@ func (c *client) GetFiles(id string) ([]FileInfo, error) {
 	return infos, nil
 }
 
-func (c *client) Delete(id string) error {
+func (c *client) Delete(id string, deleteFiles bool) error {
 	err := c.checkAuthorization()
 	if err != nil {
 		return err
@@ -338,13 +338,27 @@ func (c *client) Delete(id string) error {
 	}
 	v := url.Values{}
 	v.Set("hashes", info.Hash)
-	v.Set("deleteFiles", "false")
+	if deleteFiles {
+		v.Set("deleteFiles", "true")
+	} else {
+		v.Set("deleteFiles", "false")
+	}
 	response, err := c.post("/api/v2/torrents/delete", v)
 	if err != nil {
 		return err
 	}
 	if response.StatusCode != 200 {
-		return errors.New("failed")
+		return errors.New("failed to delete qbittorrent task")
+	}
+
+	v = url.Values{}
+	v.Set("tags", "alist-"+id)
+	response, err = c.post("/api/v2/torrents/deleteTags", v)
+	if err != nil {
+		return err
+	}
+	if response.StatusCode != 200 {
+		return errors.New("failed to delete qbittorrent tag")
 	}
 	return nil
 }
