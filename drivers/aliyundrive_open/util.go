@@ -44,7 +44,7 @@ func (d *AliyundriveOpen) refreshToken() error {
 	return nil
 }
 
-func (d *AliyundriveOpen) request(uri, method string, callback base.ReqCallback) ([]byte, error) {
+func (d *AliyundriveOpen) request(uri, method string, callback base.ReqCallback, retry ...bool) ([]byte, error) {
 	req := base.RestyClient.R()
 	// TODO check whether access_token is expired
 	req.SetHeader("Authorization", "Bearer "+d.AccessToken)
@@ -60,7 +60,15 @@ func (d *AliyundriveOpen) request(uri, method string, callback base.ReqCallback)
 	if err != nil {
 		return nil, err
 	}
+	isRetry := len(retry) > 0 && retry[0]
 	if e.Code != "" {
+		if !isRetry && e.Code == "AccessTokenInvalid" {
+			err = d.refreshToken()
+			if err != nil {
+				return nil, err
+			}
+			return d.request(uri, method, callback, true)
+		}
 		return nil, fmt.Errorf("%s:%s", e.Code, e.Message)
 	}
 	return res.Body(), nil

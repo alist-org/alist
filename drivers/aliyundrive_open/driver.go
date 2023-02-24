@@ -5,24 +5,20 @@ import (
 	"io"
 	"math"
 	"net/http"
-	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/internal/op"
-	"github.com/alist-org/alist/v3/pkg/cron"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/go-resty/resty/v2"
-	log "github.com/sirupsen/logrus"
 )
 
 type AliyundriveOpen struct {
 	model.Storage
 	Addition
 	base string
-	cron *cron.Cron
+	//cron *cron.Cron
 
 	AccessToken string
 	DriveId     string
@@ -46,22 +42,22 @@ func (d *AliyundriveOpen) Init(ctx context.Context) error {
 		return err
 	}
 	d.DriveId = utils.Json.Get(res, "default_drive_id").ToString()
-	d.cron = cron.NewCron(time.Hour * 2)
-	d.cron.Do(func() {
-		err := d.refreshToken()
-		d.Status = err.Error()
-		op.MustSaveDriverStorage(d)
-		if err != nil {
-			log.Errorf("%+v", err)
-		}
-	})
+	//d.cron = cron.NewCron(time.Hour * 2)
+	//d.cron.Do(func() {
+	//	err := d.refreshToken()
+	//	d.Status = err.Error()
+	//	op.MustSaveDriverStorage(d)
+	//	if err != nil {
+	//		log.Errorf("%+v", err)
+	//	}
+	//})
 	return nil
 }
 
 func (d *AliyundriveOpen) Drop(ctx context.Context) error {
-	if d.cron != nil {
-		d.cron.Stop()
-	}
+	//if d.cron != nil {
+	//	d.cron.Stop()
+	//}
 	return nil
 }
 
