@@ -77,6 +77,6 @@ func DefaultConfig() *Config {
 			MaxAge:     28,
 		},
 		MaxConnections:        0,
-		TlsInsecureSkipVerify: false,
+		TlsInsecureSkipVerify: true,
 	}
 }

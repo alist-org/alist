@@ -337,6 +337,7 @@ func (d *AliDrive) Other(ctx context.Context, args model.OtherArgs) (interface{}
 	case "video_preview":
 		url = "https://api.aliyundrive.com/v2/file/get_video_preview_play_info"
 		data["category"] = "live_transcoding"
+		data["url_expire_sec"] = 14400
 	default:
 		return nil, errs.NotSupport
 	}

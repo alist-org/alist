@@ -9,7 +9,8 @@ type Config struct {
 	NoUpload    bool   `json:"no_upload"`
 	NeedMs      bool   `json:"need_ms"` // if need get message from user, such as validate code
 	DefaultRoot string `json:"default_root"`
-	CheckStatus bool
+	CheckStatus bool   `json:"-"`
+	Alert       string `json:"alert"` //info,success,warning,danger
 }
 
 func (c Config) MustProxy() bool {
