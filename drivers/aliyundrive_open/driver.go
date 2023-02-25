@@ -18,7 +18,6 @@ type AliyundriveOpen struct {
 	model.Storage
 	Addition
 	base string
-	//cron *cron.Cron
 
 	AccessToken string
 	DriveId     string
@@ -42,22 +41,10 @@ func (d *AliyundriveOpen) Init(ctx context.Context) error {
 		return err
 	}
 	d.DriveId = utils.Json.Get(res, "default_drive_id").ToString()
-	//d.cron = cron.NewCron(time.Hour * 2)
-	//d.cron.Do(func() {
-	//	err := d.refreshToken()
-	//	d.Status = err.Error()
-	//	op.MustSaveDriverStorage(d)
-	//	if err != nil {
-	//		log.Errorf("%+v", err)
-	//	}
-	//})
 	return nil
 }
 
 func (d *AliyundriveOpen) Drop(ctx context.Context) error {
-	//if d.cron != nil {
-	//	d.cron.Stop()
-	//}
 	return nil
 }
 
