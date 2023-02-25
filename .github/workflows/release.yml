@@ -1,31 +1,25 @@
 name: release
 
 on:
-  push:
-    tags:
-      - '*'
+  release:
+    types: [ published ]
 
 jobs:
-  changelog:
-    name: Create Release
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - run: npx changelogithub # or changelogithub@0.12 if ensure the stable result
-        env:
-          GITHUB_TOKEN: ${{secrets.MY_TOKEN}}
   release:
-    needs: changelog
     strategy:
       matrix:
-        platform: [ubuntu-latest]
-        go-version: [1.19]
+        platform: [ ubuntu-latest ]
+        go-version: [ 1.19 ]
     name: Release
     runs-on: ${{ matrix.platform }}
     steps:
+      - name: prerelease
+        uses: irongut/EditRelease@v1.2.0
+        with:
+          token: ${{ secrets.MY_TOKEN }}
+          id: ${{ github.event.release.id }}
+          prerelease: true
+
       - name: Setup Go
         uses: actions/setup-go@v3
         with:
@@ -46,6 +40,13 @@ jobs:
       - name: Build
         run: |
           bash build.sh release
+
+      - name: prerelease
+        uses: irongut/EditRelease@v1.2.0
+        with:
+          token: ${{ secrets.MY_TOKEN }}
+          id: ${{ github.event.release.id }}
+          prerelease: false
 
       - name: Release
         uses: softprops/action-gh-release@v1
