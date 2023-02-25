@@ -136,8 +136,8 @@ func FsCopy(c *gin.Context) {
 }
 
 type RenameReq struct {
-	Path string `json:"path"`
-	Name string `json:"name"`
+	Paths []string `json:"paths"`
+	Names []string `json:"names"`
 }
 
 func FsRename(c *gin.Context) {
@@ -151,14 +151,16 @@ func FsRename(c *gin.Context) {
 		common.ErrorResp(c, errs.PermissionDenied, 403)
 		return
 	}
-	reqPath, err := user.JoinPath(req.Path)
-	if err != nil {
-		common.ErrorResp(c, err, 403)
-		return
-	}
-	if err := fs.Rename(c, reqPath, req.Name); err != nil {
-		common.ErrorResp(c, err, 500)
-		return
+	for i, p := range req.Paths {
+		reqPath, err := user.JoinPath(p)
+		if err != nil {
+			common.ErrorResp(c, err, 403)
+			return
+		}
+		if err := fs.Rename(c, reqPath, req.Names[i]); err != nil {
+			common.ErrorResp(c, err, 500)
+			return
+		}
 	}
 	common.SuccessResp(c)
 }
@@ -207,7 +209,7 @@ func Link(c *gin.Context) {
 		return
 	}
 	//user := c.MustGet("user").(*model.User)
-	//rawPath := stdpath.Join(user.BasePath, req.Path)
+	//rawPath := stdpath.Join(user.BasePath, req.Paths)
 	// why need not join base_path? because it's always the full path
 	rawPath := req.Path
 	storage, err := fs.GetStorage(rawPath)

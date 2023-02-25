@@ -55,8 +55,8 @@ type MoveCopyReq struct {
 }
 
 type RenameReq struct {
-	Path string `json:"path"`
-	Name string `json:"name"`
+	Paths []string `json:"paths"`
+	Names []string `json:"names"`
 }
 
 type RemoveReq struct {

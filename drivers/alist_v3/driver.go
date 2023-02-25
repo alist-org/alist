@@ -122,15 +122,15 @@ func (d *AListV3) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 	return checkResp(resp, err)
 }
 
-func (d *AListV3) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
+func (d *AListV3) Rename(ctx context.Context, srcObj, newName model.Obj) error {
 	url := d.Address + "/api/fs/rename"
 	var resp common.Resp[interface{}]
 	_, err := base.RestyClient.R().
 		SetResult(&resp).
 		SetHeader("Authorization", d.AccessToken).
 		SetBody(RenameReq{
-			Path: srcObj.GetPath(),
-			Name: newName,
+			Paths: []string{srcObj.GetPath()},
+			Names: []string{newName.GetName()},
 		}).Post(url)
 	return checkResp(resp, err)
 }
