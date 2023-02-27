@@ -8,7 +8,7 @@ if [ "$1" = "dev" ]; then
   version="dev"
   webVersion="dev"
 else
-  version=$(wget -qO- -t1 -T2 "https://api.github.com/repos/Mobiusite/Mobiustorage-web/releases/latest" | grep "tag_name" | head -n 1 | awk -F ":" '{print $2}' | sed 's/\"//g;s/,//g;s/ //g')
+  version=$(git describe --abbrev=0 --tags)
   webVersion=$(wget -qO- -t1 -T2 "https://api.github.com/repos/Mobiusite/Mobiustorage-web/releases/latest" | grep "tag_name" | head -n 1 | awk -F ":" '{print $2}' | sed 's/\"//g;s/,//g;s/ //g')
 fi
 
