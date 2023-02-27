@@ -101,7 +101,7 @@ func UpdateCurrent(c *gin.Context) {
 	if req.Password != "" {
 		user.Password = req.Password
 	}
-	user.GithubID = req.GithubID
+	user.SSOID = req.SSOID
 	if err := op.UpdateUser(user); err != nil {
 		common.ErrorResp(c, err, 500)
 	} else {
