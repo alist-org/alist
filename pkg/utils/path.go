@@ -23,6 +23,14 @@ func FixAndCleanPath(path string) string {
 	}
 	return stdpath.Clean(path)
 }
+//读取是否是文件还是文件夹
+func IsDir(path string) bool {
+	fileInfo, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+	return fileInfo.IsDir()
+}
 
 // PathAddSeparatorSuffix Add path '/' suffix
 // for example /root => /root/
