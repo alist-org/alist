@@ -61,8 +61,9 @@ func (d *AliyundriveOpen) List(ctx context.Context, dir model.Obj, args model.Li
 func (d *AliyundriveOpen) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	res, err := d.request("/adrive/v1.0/openFile/getDownloadUrl", http.MethodPost, func(req *resty.Request) {
 		req.SetBody(base.Json{
-			"drive_id": d.DriveId,
-			"file_id":  file.GetID(),
+			"drive_id":   d.DriveId,
+			"file_id":    file.GetID(),
+			"expire_sec": 14400,
 		})
 	})
 	if err != nil {

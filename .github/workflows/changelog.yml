@@ -1,0 +1,19 @@
+name: auto changelog
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  changelog:
+    name: Create Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - run: npx changelogithub # or changelogithub@0.12 if ensure the stable result
+        env:
+          GITHUB_TOKEN: ${{secrets.MY_TOKEN}}
