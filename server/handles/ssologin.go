@@ -75,7 +75,6 @@ func SSOLoginCallback(c *gin.Context) {
 			authstring = "code"
 			scope = "read:user"
 			idstring = "id"
-			break
 		case "Microsoft":
 			url1 = "https://login.microsoftonline.com/common/oauth2/v2.0/token"
 			url2 = "https://graph.microsoft.com/v1.0/me"
@@ -83,7 +82,6 @@ func SSOLoginCallback(c *gin.Context) {
 			scope = "user.read"
 			authstring = "code"
 			idstring = "id"
-			break
 		case "Google":
 			url1 = "https://oauth2.googleapis.com/token"
 			url2 = "https://www.googleapis.com/oauth2/v1/userinfo"
@@ -91,13 +89,11 @@ func SSOLoginCallback(c *gin.Context) {
 			scope = "https://www.googleapis.com/auth/userinfo.profile"
 			authstring = "code"
 			idstring = "id"
-			break
 		case "Dingtalk":
 			url1 = "https://api.dingtalk.com/v1.0/oauth2/userAccessToken"
 			url2 = "https://api.dingtalk.com/v1.0/contact/users/me"
 			authstring = "authCode"
 			idstring = "unionId"
-			break
 		default:
 			common.ErrorStrResp(c, "invalid platform", 400)
 			return
