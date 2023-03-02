@@ -56,7 +56,7 @@ const (
 
 	//SSO
 	SSOClientId      = "sso_client_id"
-	SSOClientSecrets = "sso_client_secrets"
+	SSOClientSecret  = "sso_client_secret"
 	SSOLoginEnabled  = "sso_login_enabled"
 	SSOLoginplatform = "sso_login_platform"
 

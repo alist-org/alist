@@ -22,7 +22,7 @@ func GetUserByName(username string) (*model.User, error) {
 }
 
 func GetUserBySSOID(ssoID string) (*model.User, error) {
-	user := model.User{SSOID: ssoID}
+	user := model.User{SsoID: ssoID}
 	if err := db.Where(user).First(&user).Error; err != nil {
 		return nil, errors.Wrapf(err, "The single sign on platform is not bound to any users")
 	}

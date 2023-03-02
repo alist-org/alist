@@ -2,9 +2,12 @@ package handles
 
 import (
 	"errors"
+	"fmt"
 	"net/url"
 
+	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/db"
+	"github.com/alist-org/alist/v3/internal/setting"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
@@ -13,15 +16,12 @@ import (
 
 func SSOLoginRedirect(c *gin.Context) {
 	method := c.Query("method")
-	enabled, err := db.GetSettingItemByKey("sso_login_enabled")
-	clientId, err := db.GetSettingItemByKey("sso_client_id")
-	platform, err := db.GetSettingItemByKey("sso_login_platform")
+	enabled := setting.GetBool(conf.SSOLoginEnabled)
+	clientId := setting.GetStr(conf.SSOClientId)
+	platform := setting.GetStr(conf.SSOLoginplatform)
 	var r_url string
 	var redirect_uri string
-	if err != nil {
-		common.ErrorResp(c, err, 400)
-		return
-	} else if enabled.Value == "true" {
+	if enabled {
 		urlValues := url.Values{}
 		if method == "" {
 			common.ErrorStrResp(c, "no method provided", 400)
@@ -30,8 +30,8 @@ func SSOLoginRedirect(c *gin.Context) {
 		redirect_uri = common.GetApiUrl(c.Request) + "/api/auth/sso_callback" + "?method=" + method
 		urlValues.Add("response_type", "code")
 		urlValues.Add("redirect_uri", redirect_uri)
-		urlValues.Add("client_id", clientId.Value)
-		switch platform.Value {
+		urlValues.Add("client_id", clientId)
+		switch platform {
 		case "Github":
 			r_url = "https://github.com/login/oauth/authorize?"
 			urlValues.Add("scope", "read:user")
@@ -62,12 +62,12 @@ var ssoClient = resty.New().SetRetryCount(3)
 func SSOLoginCallback(c *gin.Context) {
 	argument := c.Query("method")
 	if argument == "get_sso_id" || argument == "sso_get_token" {
-		enabled, err := db.GetSettingItemByKey("sso_login_enabled")
-		clientId, err := db.GetSettingItemByKey("sso_client_id")
-		clientSecret, err := db.GetSettingItemByKey("sso_client_secrets")
-		platform, err := db.GetSettingItemByKey("sso_login_platform")
+		enabled := setting.GetBool(conf.SSOLoginEnabled)
+		clientId := setting.GetStr(conf.SSOClientId)
+		platform := setting.GetStr(conf.SSOLoginplatform)
+		clientSecret := setting.GetStr(conf.SSOClientSecret)
 		var url1, url2, additionalbody, scope, authstring, idstring string
-		switch platform.Value {
+		switch platform {
 		case "Github":
 			url1 = "https://github.com/login/oauth/access_token"
 			url2 = "https://api.github.com/user"
@@ -102,10 +102,7 @@ func SSOLoginCallback(c *gin.Context) {
 			common.ErrorStrResp(c, "invalid platform", 400)
 			return
 		}
-		if err != nil {
-			common.ErrorResp(c, err, 400)
-			return
-		} else if enabled.Value == "true" {
+		if enabled {
 			callbackCode := c.Query(authstring)
 			if callbackCode == "" {
 				common.ErrorStrResp(c, "No code provided", 400)
@@ -113,25 +110,25 @@ func SSOLoginCallback(c *gin.Context) {
 			}
 			var resp *resty.Response
 			var err error
-			if platform.Value == "Dingtalk" {
+			if platform == "Dingtalk" {
 				resp, err = ssoClient.R().SetHeader("content-type", "application/json").SetHeader("Accept", "application/json").
 					SetBody(map[string]string{
-						"clientId":     clientId.Value,
-						"clientSecret": clientSecret.Value,
+						"clientId":     clientId,
+						"clientSecret": clientSecret,
 						"code":         callbackCode,
 						"grantType":    "authorization_code",
 					}).
 					Post(url1)
 			} else {
 				resp, err = ssoClient.R().SetHeader("content-type", "application/x-www-form-urlencoded").SetHeader("Accept", "application/json").
-					SetBody("client_id=" + clientId.Value + "&client_secret=" + clientSecret.Value + "&code=" + callbackCode + "&redirect_uri=" + common.GetApiUrl(c.Request) + "/api/auth/sso_callback?method=" + argument + "&scope=" + scope + additionalbody).
+					SetBody("client_id=" + clientId + "&client_secret=" + clientSecret + "&code=" + callbackCode + "&redirect_uri=" + common.GetApiUrl(c.Request) + "/api/auth/sso_callback?method=" + argument + "&scope=" + scope + additionalbody).
 					Post(url1)
 			}
 			if err != nil {
 				common.ErrorResp(c, err, 400)
 				return
 			}
-			if platform.Value == "Dingtalk" {
+			if platform == "Dingtalk" {
 				accessToken := utils.Json.Get(resp.Body(), "accessToken").ToString()
 				resp, err = ssoClient.R().SetHeader("x-acs-dingtalk-access-token", accessToken).
 					Get(url2)
@@ -150,14 +147,14 @@ func SSOLoginCallback(c *gin.Context) {
 				return
 			}
 			if argument == "get_sso_id" {
-				html := `<!DOCTYPE html>
+				html := fmt.Sprintf(`<!DOCTYPE html>
 				<head></head>
 				<body>
 				<script>
-				window.opener.postMessage("` + UserID + `", "*")
+				window.opener.postMessage({"sso_id": "%s"}, "*")
 				window.close()
 				</script>
-				</body>`
+				</body>`, UserID)
 				c.Data(200, "text/html; charset=utf-8", []byte(html))
 				return
 			}
@@ -170,14 +167,14 @@ func SSOLoginCallback(c *gin.Context) {
 				if err != nil {
 					common.ErrorResp(c, err, 400)
 				}
-				html := `<!DOCTYPE html>
+				html := fmt.Sprintf(`<!DOCTYPE html>
 				<head></head>
 				<body>
 				<script>
-				window.opener.postMessage("` + token + `", "*")
+				window.opener.postMessage({"token":"%s"}, "*")
 				window.close()
 				</script>
-				</body>`
+				</body>`, token)
 				c.Data(200, "text/html; charset=utf-8", []byte(html))
 				return
 			}
