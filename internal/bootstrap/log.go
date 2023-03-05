@@ -46,7 +46,7 @@ func Log() {
 			MaxAge:     logConfig.MaxAge,   //days
 			Compress:   logConfig.Compress, // disabled by default
 		}
-		if flags.Debug || flags.Dev {
+		if flags.Debug || flags.Dev || flags.LogStd {
 			w = io.MultiWriter(os.Stdout, w)
 		}
 		logrus.SetOutput(w)
