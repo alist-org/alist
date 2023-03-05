@@ -29,7 +29,7 @@ func CanAccess(user *model.User, meta *model.Meta, reqPath string, password stri
 		IsApply(meta.Path, path.Dir(reqPath), meta.HSub) { // the meta should apply to the parent of current path
 		for _, hide := range strings.Split(meta.Hide, "\n") {
 			re := regexp.MustCompile(hide)
-			if re.MatchString(reqPath[len(meta.Path)+1:]) {
+			if re.MatchString(path.Base(reqPath)) {
 				return false
 			}
 		}
