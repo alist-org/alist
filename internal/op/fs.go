@@ -459,6 +459,7 @@ func Remove(ctx context.Context, storage driver.Driver, path string) error {
 	if err != nil {
 		// if object not found, it's ok
 		if errs.IsObjectNotFound(err) {
+			log.Debugf("%s have been removed", path)
 			return nil
 		}
 		return errors.WithMessage(err, "failed to get object")
@@ -497,12 +498,20 @@ func Put(ctx context.Context, storage driver.Driver, dstDirPath string, file *mo
 	// if file exist and size = 0, delete it
 	dstDirPath = utils.FixAndCleanPath(dstDirPath)
 	dstPath := stdpath.Join(dstDirPath, file.GetName())
+	tempName := file.GetName() + ".alist_to_delete"
+	tempPath := stdpath.Join(dstDirPath, tempName)
 	fi, err := GetUnwrap(ctx, storage, dstPath)
 	if err == nil {
 		if fi.GetSize() == 0 {
 			err = Remove(ctx, storage, dstPath)
 			if err != nil {
 				return errors.WithMessagef(err, "failed remove file that exist and have size 0")
+			}
+		} else if storage.Config().NoOverwriteUpload {
+			// try to rename old obj
+			err = Rename(ctx, storage, dstPath, tempName)
+			if err != nil {
+				return err
 			}
 		} else {
 			file.Old = fi
@@ -542,10 +551,20 @@ func Put(ctx context.Context, storage driver.Driver, dstDirPath string, file *mo
 		return errs.NotImplement
 	}
 	log.Debugf("put file [%s] done", file.GetName())
-	//if err == nil {
-	//	//clear cache
-	//	key := stdpath.Join(storage.GetStorage().MountPath, dstDirPath)
-	//	listCache.Del(key)
-	//}
+	if storage.Config().NoOverwriteUpload && fi != nil && fi.GetSize() > 0 {
+		if err != nil {
+			// upload failed, recover old obj
+			err := Rename(ctx, storage, tempPath, file.GetName())
+			if err != nil {
+				log.Errorf("failed recover old obj: %+v", err)
+			}
+		} else {
+			// upload success, remove old obj
+			err := Remove(ctx, storage, tempPath)
+			if err != nil {
+				return err
+			}
+		}
+	}
 	return errors.WithStack(err)
 }

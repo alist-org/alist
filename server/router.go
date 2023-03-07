@@ -43,8 +43,8 @@ func Init(e *gin.Engine) {
 	auth.POST("/auth/2fa/verify", handles.Verify2FA)
 
 	// github auth
-	api.GET("/auth/github", handles.GithubLoginRedirect)
-	api.GET("/auth/github_callback", handles.GithubLoginCallback)
+	api.GET("/auth/sso", handles.SSOLoginRedirect)
+	api.GET("/auth/sso_callback", handles.SSOLoginCallback)
 
 	// no need auth
 	public := api.Group("/public")

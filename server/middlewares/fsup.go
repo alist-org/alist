@@ -35,7 +35,7 @@ func FsUp(c *gin.Context) {
 			return
 		}
 	}
-	if !(common.CanAccess(user, meta, path, password) && (user.CanWrite() || common.CanWrite(meta, path))) {
+	if !(common.CanAccess(user, meta, path, password) && (user.CanWrite() || common.CanWrite(meta, stdpath.Dir(path)))) {
 		common.ErrorResp(c, errs.PermissionDenied, 403)
 		c.Abort()
 		return
