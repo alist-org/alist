@@ -68,7 +68,7 @@ func WebDAVAuth(c *gin.Context) {
 		c.Abort()
 		return
 	}
-	if !user.CanWebdavRead() {
+	if user.Disabled || !user.CanWebdavRead() {
 		if c.Request.Method == "OPTIONS" {
 			c.Set("user", guest)
 			c.Next()

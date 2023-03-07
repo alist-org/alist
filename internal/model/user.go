@@ -33,7 +33,7 @@ type User struct {
 	//  10: can add qbittorrent tasks
 	Permission int32  `json:"permission"`
 	OtpSecret  string `json:"-"`
-	GithubID   int    `json:"github_id"`
+	SsoID      string `json:"sso_id"`
 }
 
 func (u User) IsGuest() bool {

@@ -1,6 +1,8 @@
 package middlewares
 
 import (
+	"crypto/subtle"
+
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/op"
@@ -14,7 +16,7 @@ import (
 // if token is empty, set user to guest
 func Auth(c *gin.Context) {
 	token := c.GetHeader("Authorization")
-	if token == setting.GetStr(conf.Token) {
+	if subtle.ConstantTimeCompare([]byte(token), []byte(setting.GetStr(conf.Token))) == 1 {
 		admin, err := op.GetAdmin()
 		if err != nil {
 			common.ErrorResp(c, err, 500)

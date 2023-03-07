@@ -21,10 +21,10 @@ func GetUserByName(username string) (*model.User, error) {
 	return &user, nil
 }
 
-func GetUserByGithubID(githubID int) (*model.User, error) {
-	user := model.User{GithubID: githubID}
+func GetUserBySSOID(ssoID string) (*model.User, error) {
+	user := model.User{SsoID: ssoID}
 	if err := db.Where(user).First(&user).Error; err != nil {
-		return nil, errors.Wrapf(err, "The Github ID is not associated with a user")
+		return nil, errors.Wrapf(err, "The single sign on platform is not bound to any users")
 	}
 	return &user, nil
 }

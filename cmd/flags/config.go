@@ -6,4 +6,5 @@ var (
 	NoPrefix    bool
 	Dev         bool
 	ForceBinDir bool
+	LogStd      bool
 )

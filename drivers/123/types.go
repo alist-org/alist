@@ -7,18 +7,6 @@ import (
 	"github.com/alist-org/alist/v3/internal/model"
 )
 
-//type BaseResp struct {
-//	Code    interface{} `json:"code"`
-//	Message string      `json:"message"`
-//}
-
-type TokenResp struct {
-	//BaseResp
-	Data struct {
-		Token string `json:"token"`
-	} `json:"data"`
-}
-
 type File struct {
 	FileName    string    `json:"FileName"`
 	Size        int64     `json:"Size"`

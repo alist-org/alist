@@ -29,9 +29,7 @@ func (d *Pan123) login() error {
 			"password": d.Password,
 		}
 	}
-	var resp TokenResp
 	res, err := base.RestyClient.R().
-		SetResult(&resp).
 		SetBody(body).Post(url)
 	if err != nil {
 		return err
@@ -39,7 +37,7 @@ func (d *Pan123) login() error {
 	if utils.Json.Get(res.Body(), "code").ToInt() != 200 {
 		err = fmt.Errorf(utils.Json.Get(res.Body(), "message").ToString())
 	} else {
-		d.AccessToken = resp.Data.Token
+		d.AccessToken = utils.Json.Get(res.Body(), "data", "token").ToString()
 	}
 	return err
 }
