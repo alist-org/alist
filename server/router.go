@@ -21,6 +21,9 @@ func Init(e *gin.Engine) {
 	}
 	Cors(e)
 	g := e.Group(conf.URL.Path)
+	g.Any("/ping", func(c *gin.Context) {
+		c.String(200, "pong")
+	})
 	common.SecretKey = []byte(conf.Conf.JwtSecret)
 	g.Use(middlewares.StoragesLoaded)
 	if conf.Conf.MaxConnections > 0 {
