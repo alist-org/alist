@@ -125,7 +125,11 @@ func (d *AliyundriveOpen) Copy(ctx context.Context, srcObj, dstDir model.Obj) er
 }
 
 func (d *AliyundriveOpen) Remove(ctx context.Context, obj model.Obj) error {
-	_, err := d.request("/adrive/v1.0/openFile/recyclebin/trash", http.MethodPost, func(req *resty.Request) {
+	uri := "/adrive/v1.0/openFile/recyclebin/trash"
+	if d.RemoveWay == "delete" {
+		uri = "/adrive/v1.0/openFile/delete"
+	}
+	_, err := d.request(uri, http.MethodPost, func(req *resty.Request) {
 		req.SetBody(base.Json{
 			"drive_id": d.DriveId,
 			"file_id":  obj.GetID(),
