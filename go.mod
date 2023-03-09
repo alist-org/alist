@@ -7,7 +7,7 @@ require (
 	github.com/Xhofe/go-cache v0.0.0-20220723083548-714439c8af9a
 	github.com/aws/aws-sdk-go v1.44.194
 	github.com/blevesearch/bleve/v2 v2.3.6
-	github.com/caarlos0/env/v7 v7.0.0
+	github.com/caarlos0/env/v7 v7.1.0
 	github.com/deckarep/golang-set/v2 v2.2.0
 	github.com/disintegration/imaging v1.6.2
 	github.com/dustinxie/ecc v0.0.0-20210511000915-959544187564
@@ -37,7 +37,7 @@ require (
 	gorm.io/driver/mysql v1.4.7
 	gorm.io/driver/postgres v1.4.8
 	gorm.io/driver/sqlite v1.4.4
-	gorm.io/gorm v1.24.6
+	gorm.io/gorm v1.24.5
 )
 
 require (
