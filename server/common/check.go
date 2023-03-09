@@ -20,7 +20,7 @@ func IsApply(metaPath, reqPath string, applySub bool) bool {
 	if utils.PathEqual(metaPath, reqPath) {
 		return true
 	}
-	return utils.IsSubPath(reqPath, metaPath) && applySub
+	return utils.IsSubPath(metaPath, reqPath) && applySub
 }
 
 func CanAccess(user *model.User, meta *model.Meta, reqPath string, password string) bool {
