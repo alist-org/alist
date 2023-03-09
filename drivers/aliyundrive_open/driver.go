@@ -5,6 +5,7 @@ import (
 	"io"
 	"math"
 	"net/http"
+	"strings"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
@@ -170,7 +171,12 @@ func (d *AliyundriveOpen) Put(ctx context.Context, dstDir model.Obj, stream mode
 		if utils.IsCanceled(ctx) {
 			return ctx.Err()
 		}
-		req, err := http.NewRequest("PUT", partInfo.UploadUrl, io.LimitReader(stream, DEFAULT))
+		uploadUrl := partInfo.UploadUrl
+		if d.InternalUpload {
+			//Replace a known public Host with an internal Host
+			uploadUrl = strings.ReplaceAll(uploadUrl, "https://cn-beijing-data.aliyundrive.net/", "http://ccp-bj29-bj-1592982087.oss-cn-beijing-internal.aliyuncs.com/")
+		}
+		req, err := http.NewRequest("PUT", uploadUrl, io.LimitReader(stream, DEFAULT))
 		if err != nil {
 			return err
 		}
