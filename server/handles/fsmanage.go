@@ -3,6 +3,7 @@ package handles
 import (
 	"fmt"
 	stdpath "path"
+	"regexp"
 
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/fs"
@@ -248,6 +249,67 @@ func FsRename(c *gin.Context) {
 		common.ErrorResp(c, err, 500)
 		return
 	}
+	common.SuccessResp(c)
+}
+
+type RegexRenameReq struct {
+	SrcDir       string `json:"src_dir"`
+	SrcNameRegex string `json:"src_name_regex"`
+	NewNameRegex string `json:"new_name_regex"`
+}
+
+func FsRegexRename(c *gin.Context) {
+	var req RegexRenameReq
+	if err := c.ShouldBind(&req); err != nil {
+		common.ErrorResp(c, err, 400)
+		return
+	}
+	user := c.MustGet("user").(*model.User)
+	if !user.CanRename() {
+		common.ErrorResp(c, errs.PermissionDenied, 403)
+		return
+	}
+
+	reqPath, err := user.JoinPath(req.SrcDir)
+	if err != nil {
+		common.ErrorResp(c, err, 403)
+		return
+	}
+
+	meta, err := op.GetNearestMeta(reqPath)
+	if err != nil {
+		if !errors.Is(errors.Cause(err), errs.MetaNotFound) {
+			common.ErrorResp(c, err, 500, true)
+			return
+		}
+	}
+	c.Set("meta", meta)
+
+	srcRegexp, err := regexp.Compile(req.SrcNameRegex)
+	if err != nil {
+		common.ErrorResp(c, err, 500)
+		return
+	}
+
+	files, err := fs.List(c, reqPath, false)
+	if err != nil {
+		common.ErrorResp(c, err, 500)
+		return
+	}
+
+	for _, file := range files {
+
+		if srcRegexp.MatchString(file.GetName()) {
+			filePath := fmt.Sprintf("%s/%s", reqPath, file.GetName())
+			newFileName := srcRegexp.ReplaceAllString(file.GetName(), req.NewNameRegex)
+			if err := fs.Rename(c, filePath, newFileName); err != nil {
+				common.ErrorResp(c, err, 500)
+				return
+			}
+		}
+
+	}
+
 	common.SuccessResp(c)
 }
 
