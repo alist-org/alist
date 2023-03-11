@@ -2,8 +2,10 @@ package trainbit
 
 import (
 	"encoding/base64"
+	"io"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 	"time"
 
@@ -44,6 +46,21 @@ func postForm(endpoint string, data url.Values, apiKey string, AUSHELLPORTAL str
 	})
 	res, err := http.DefaultClient.Do(req)
 	return res, err
+}
+
+func getGuid(AUSHELLPORTAL string) (string, error) {
+	res, err := get("https://trainbit.com/files/", AUSHELLPORTAL)
+	if err != nil {
+		return "", err
+	}
+	data, err := io.ReadAll(res.Body)
+	if err != nil {
+		return "", err
+	}
+	text := string(data)
+	reg := regexp.MustCompile(`app.vars.upload.guid = '([0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12})';`)
+	result := reg.FindAllStringSubmatch(text, -1)
+	return result[0][1], nil
 }
 
 func parseRawFileObject(rawObject []any) ([]model.Obj, error) {

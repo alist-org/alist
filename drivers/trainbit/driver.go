@@ -108,8 +108,23 @@ func (d *Trainbit) Remove(ctx context.Context, obj model.Obj) error {
 }
 
 func (d *Trainbit) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
-	// TODO upload file
-	return errs.NotImplement
+	guid, err := getGuid(d.AUSHELLPORTAL)
+	if err != nil {
+		return err
+	}
+	endpoint, _ := url.Parse("https://tb28.trainbit.com/api/upload/send_raw/")
+	query := &url.Values{}
+	query.Add("q", strings.Split(dstDir.GetID(), "_")[1])
+	query.Add("guid", guid)
+	query.Add("name", base64.URLEncoding.EncodeToString([]byte(stream.GetName())))
+	endpoint.RawQuery = query.Encode()
+	req, err := http.NewRequest(http.MethodPost, endpoint.String(), stream)
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "text/json; charset=UTF-8")
+	_, err = http.DefaultClient.Do(req)
+	return err
 }
 
 var _ driver.Driver = (*Trainbit)(nil)
