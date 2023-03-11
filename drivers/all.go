@@ -13,6 +13,7 @@ import (
 	_ "github.com/alist-org/alist/v3/drivers/aliyundrive_share"
 	_ "github.com/alist-org/alist/v3/drivers/baidu_netdisk"
 	_ "github.com/alist-org/alist/v3/drivers/baidu_photo"
+	_ "github.com/alist-org/alist/v3/drivers/baidu_share"
 	_ "github.com/alist-org/alist/v3/drivers/cloudreve"
 	_ "github.com/alist-org/alist/v3/drivers/ftp"
 	_ "github.com/alist-org/alist/v3/drivers/google_drive"
