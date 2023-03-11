@@ -20,6 +20,8 @@ type Trainbit struct {
 	Addition
 }
 
+var apiExpiredate, guid string
+
 func (d *Trainbit) Config() driver.Config {
 	return config
 }
@@ -32,6 +34,11 @@ func (d *Trainbit) Init(ctx context.Context) error {
 	http.DefaultClient.CheckRedirect = func(req *http.Request, via []*http.Request) error {
         return http.ErrUseLastResponse
     }
+	var err error
+	apiExpiredate, guid, err = getToken(d.ApiKey, d.AUSHELLPORTAL)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -42,7 +49,7 @@ func (d *Trainbit) Drop(ctx context.Context) error {
 func (d *Trainbit) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
 	form := make(url.Values)
 	form.Set("parentid", strings.Split(dir.GetID(), "_")[0])
-	res, err := postForm("https://trainbit.com/lib/api/v1/listoffiles", form, d.ApiKey, d.AUSHELLPORTAL)
+	res, err := postForm("https://trainbit.com/lib/api/v1/listoffiles", form, apiExpiredate, d.ApiKey, d.AUSHELLPORTAL)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +70,7 @@ func (d *Trainbit) List(ctx context.Context, dir model.Obj, args model.ListArgs)
 }
 
 func (d *Trainbit) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
-	res, err := get(fmt.Sprintf("https://trainbit.com/files/%s/", strings.Split(file.GetID(), "_")[0]), d.AUSHELLPORTAL)
+	res, err := get(fmt.Sprintf("https://trainbit.com/files/%s/", strings.Split(file.GetID(), "_")[0]), d.ApiKey, d.AUSHELLPORTAL)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +83,7 @@ func (d *Trainbit) MakeDir(ctx context.Context, parentDir model.Obj, dirName str
 	form := make(url.Values)
 	form.Set("name", base64.URLEncoding.EncodeToString([]byte(dirName)))
 	form.Set("parentid", strings.Split(parentDir.GetID(), "_")[0])
-	_, err := postForm("https://trainbit.com/lib/api/v1/createfolder", form, d.ApiKey, d.AUSHELLPORTAL)
+	_, err := postForm("https://trainbit.com/lib/api/v1/createfolder", form, apiExpiredate, d.ApiKey, d.AUSHELLPORTAL)
 	return err
 }
 
@@ -84,7 +91,7 @@ func (d *Trainbit) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 	form := make(url.Values)
 	form.Set("sourceid", strings.Split(srcObj.GetID(), "_")[0])
 	form.Set("destinationid", strings.Split(dstDir.GetID(), "_")[0])
-	_, err := postForm("https://trainbit.com/lib/api/v1/move", form, d.ApiKey, d.AUSHELLPORTAL)
+	_, err := postForm("https://trainbit.com/lib/api/v1/move", form, apiExpiredate, d.ApiKey, d.AUSHELLPORTAL)
 	return err
 }
 
@@ -92,7 +99,7 @@ func (d *Trainbit) Rename(ctx context.Context, srcObj model.Obj, newName string)
 	form := make(url.Values)
 	form.Set("id", strings.Split(srcObj.GetID(), "_")[0])
 	form.Set("name", base64.URLEncoding.EncodeToString([]byte(newName)))
-	_, err := postForm("https://trainbit.com/lib/api/v1/edit", form, d.ApiKey, d.AUSHELLPORTAL)
+	_, err := postForm("https://trainbit.com/lib/api/v1/edit", form, apiExpiredate, d.ApiKey, d.AUSHELLPORTAL)
 	return err
 }
 
@@ -103,15 +110,11 @@ func (d *Trainbit) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 func (d *Trainbit) Remove(ctx context.Context, obj model.Obj) error {
 	form := make(url.Values)
 	form.Set("id", strings.Split(obj.GetID(), "_")[0])
-	_, err := postForm("https://trainbit.com/lib/api/v1/delete", form, d.ApiKey, d.AUSHELLPORTAL)
+	_, err := postForm("https://trainbit.com/lib/api/v1/delete", form, apiExpiredate, d.ApiKey, d.AUSHELLPORTAL)
 	return err
 }
 
 func (d *Trainbit) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
-	guid, err := getGuid(d.AUSHELLPORTAL)
-	if err != nil {
-		return err
-	}
 	endpoint, _ := url.Parse("https://tb28.trainbit.com/api/upload/send_raw/")
 	query := &url.Values{}
 	query.Add("q", strings.Split(dstDir.GetID(), "_")[1])

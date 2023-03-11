@@ -12,7 +12,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/model"
 )
 
-func get(url string, AUSHELLPORTAL string) (*http.Response, error) {
+func get(url string, apiKey string, AUSHELLPORTAL string) (*http.Response, error) {
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
@@ -22,18 +22,23 @@ func get(url string, AUSHELLPORTAL string) (*http.Response, error) {
 		Value: AUSHELLPORTAL,
 		MaxAge: 2 * 60,
 	})
+	req.AddCookie(&http.Cookie{
+		Name: "retkeyapi",
+		Value: apiKey,
+		MaxAge: 2 * 60,
+	})
 	res, err := http.DefaultClient.Do(req)
 	return res, err
 }
 
-func postForm(endpoint string, data url.Values, apiKey string, AUSHELLPORTAL string) (*http.Response, error) {
+func postForm(endpoint string, data url.Values, apiExpiredate string, apiKey string, AUSHELLPORTAL string) (*http.Response, error) {
 	extData := make(url.Values)
 	for key, value := range data {
 		extData[key] = make([]string, len(value))
 		copy(extData[key], value)
 	}
 	extData.Set("apikey", apiKey)
-	extData.Set("expiredate", "0001-01-06")
+	extData.Set("expiredate", apiExpiredate)
 	req, err := http.NewRequest(http.MethodPost, endpoint, strings.NewReader(extData.Encode()))
 	if err != nil {
 		return nil, err
@@ -44,23 +49,32 @@ func postForm(endpoint string, data url.Values, apiKey string, AUSHELLPORTAL str
 		Value: AUSHELLPORTAL,
 		MaxAge: 2 * 60,
 	})
+	req.AddCookie(&http.Cookie{
+		Name: "retkeyapi",
+		Value: apiKey,
+		MaxAge: 2 * 60,
+	})
 	res, err := http.DefaultClient.Do(req)
 	return res, err
 }
 
-func getGuid(AUSHELLPORTAL string) (string, error) {
-	res, err := get("https://trainbit.com/files/", AUSHELLPORTAL)
+func getToken(apiKey string, AUSHELLPORTAL string) (string, string, error) {
+	res, err := get("https://trainbit.com/files/", apiKey, AUSHELLPORTAL)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	data, err := io.ReadAll(res.Body)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	text := string(data)
-	reg := regexp.MustCompile(`app.vars.upload.guid = '([0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12})';`)
-	result := reg.FindAllStringSubmatch(text, -1)
-	return result[0][1], nil
+	apiExpiredateReg := regexp.MustCompile(`core.api.expiredate = '([^']*)';`)
+	result := apiExpiredateReg.FindAllStringSubmatch(text, -1)
+	apiExpiredate := result[0][1]
+	guidReg := regexp.MustCompile(`app.vars.upload.guid = '([^']*)';`)
+	result = guidReg.FindAllStringSubmatch(text, -1)
+	guid := result[0][1]
+	return apiExpiredate, guid, nil
 }
 
 func parseRawFileObject(rawObject []any) ([]model.Obj, error) {
