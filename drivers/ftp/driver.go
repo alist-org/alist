@@ -4,6 +4,7 @@ import (
 	"context"
 	stdpath "path"
 
+	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
@@ -44,8 +45,7 @@ func (d *FTP) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]m
 		return nil, err
 	}
 	res := make([]model.Obj, 0)
-	for i, _ := range entries {
-		entry := entries[i]
+	for _, entry := range entries {
 		if entry.Name == "." || entry.Name == ".." {
 			continue
 		}
@@ -64,13 +64,13 @@ func (d *FTP) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*m
 	if err := d.login(); err != nil {
 		return nil, err
 	}
-	resp, err := d.conn.Retr(file.GetPath())
-	if err != nil {
-		return nil, err
+
+	r := NewFTPFileReader(d.conn, file.GetPath())
+	link := &model.Link{
+		Data: r,
 	}
-	return &model.Link{
-		Data: resp,
-	}, nil
+	base.HandleRange(link, r, args.Header, file.GetSize())
+	return link, nil
 }
 
 func (d *FTP) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
