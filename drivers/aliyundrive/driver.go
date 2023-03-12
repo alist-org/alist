@@ -226,7 +226,7 @@ func (d *AliDrive) Put(ctx context.Context, dstDir model.Obj, stream model.FileS
 		delete(reqBody, "pre_hash")
 		h := sha1.New()
 		if localFile != nil {
-			if _, err = io.Copy(h, localFile); err != nil {
+			if err = utils.CopyWithCtx(ctx, h, localFile, 0, nil); err != nil {
 				return err
 			}
 			if _, err = localFile.Seek(0, io.SeekStart); err != nil {
@@ -241,7 +241,7 @@ func (d *AliDrive) Put(ctx context.Context, dstDir model.Obj, stream model.FileS
 				_ = tempFile.Close()
 				_ = os.Remove(tempFile.Name())
 			}()
-			if _, err = io.Copy(io.MultiWriter(tempFile, h), file); err != nil {
+			if err = utils.CopyWithCtx(ctx, io.MultiWriter(tempFile, h), file, 0, nil); err != nil {
 				return err
 			}
 			localFile = tempFile
