@@ -96,18 +96,18 @@ func parseRawFileObject(rawObject []any) ([]model.Obj, error) {
 			continue
 		}
 		name, err := base64.URLEncoding.DecodeString(object["name"].(string))
-		if err != nil{
+		if err != nil {
 			return nil, err
 		}
 		modified, err := time.Parse("2006/01/02 15:04:05", object["modified"].(string))
-		if err != nil{
+		if err != nil {
 			return nil, err
 		}
 		objectList = append(objectList, model.Obj(&model.Object{
 			ID: strings.Join([]string{object["id"].(string), strings.Split(object["uploadurl"].(string), "=")[1]}, "_"),
 			Name: string(name),
 			Size: int64(object["byte"].(float64)),
-			Modified: modified,
+			Modified: modified.Add(-210 * time.Minute),
 			IsFolder: int64(object["ty"].(float64)) == 1,
 		}))
 	}
