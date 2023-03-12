@@ -142,6 +142,7 @@ func DisableStorage(ctx context.Context, id uint) error {
 	}
 	// delete the storage in the memory
 	storage.Disabled = true
+	storage.SetStatus(DISABLED)
 	err = db.UpdateStorage(storage)
 	if err != nil {
 		return errors.WithMessage(err, "failed update storage in db")
