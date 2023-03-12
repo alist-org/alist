@@ -2,7 +2,6 @@ package trainbit
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -33,8 +32,8 @@ func (d *Trainbit) GetAddition() driver.Additional {
 
 func (d *Trainbit) Init(ctx context.Context) error {
 	http.DefaultClient.CheckRedirect = func(req *http.Request, via []*http.Request) error {
-        return http.ErrUseLastResponse
-    }
+		return http.ErrUseLastResponse
+	}
 	var err error
 	apiExpiredate, guid, err = getToken(d.ApiKey, d.AUSHELLPORTAL)
 	if err != nil {
@@ -82,7 +81,7 @@ func (d *Trainbit) Link(ctx context.Context, file model.Obj, args model.LinkArgs
 
 func (d *Trainbit) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
 	form := make(url.Values)
-	form.Set("name", base64.URLEncoding.EncodeToString([]byte(dirName)))
+	form.Set("name", local2provider(dirName, true))
 	form.Set("parentid", strings.Split(parentDir.GetID(), "_")[0])
 	_, err := postForm("https://trainbit.com/lib/api/v1/createfolder", form, apiExpiredate, d.ApiKey, d.AUSHELLPORTAL)
 	return err
@@ -99,7 +98,7 @@ func (d *Trainbit) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 func (d *Trainbit) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
 	form := make(url.Values)
 	form.Set("id", strings.Split(srcObj.GetID(), "_")[0])
-	form.Set("name", base64.URLEncoding.EncodeToString([]byte(newName)))
+	form.Set("name", local2provider(newName, srcObj.IsDir()))
 	_, err := postForm("https://trainbit.com/lib/api/v1/edit", form, apiExpiredate, d.ApiKey, d.AUSHELLPORTAL)
 	return err
 }
@@ -120,13 +119,13 @@ func (d *Trainbit) Put(ctx context.Context, dstDir model.Obj, stream model.FileS
 	query := &url.Values{}
 	query.Add("q", strings.Split(dstDir.GetID(), "_")[1])
 	query.Add("guid", guid)
-	query.Add("name", base64.URLEncoding.EncodeToString([]byte(stream.GetName())))
+	query.Add("name", url.QueryEscape(local2provider(stream.GetName(), false)))
 	endpoint.RawQuery = query.Encode()
 	var total int64
 	total = 0
 	progressReader := &ProgressReader{
 		stream,
-		func (byteNum int) {
+		func(byteNum int) {
 			total += int64(byteNum)
 			up(int(math.Round(float64(total) / float64(stream.GetSize()) * 100)))
 		},

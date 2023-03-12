@@ -1,7 +1,6 @@
 package trainbit
 
 import (
-	"encoding/base64"
 	"io"
 	"net/http"
 	"net/url"
@@ -29,13 +28,13 @@ func get(url string, apiKey string, AUSHELLPORTAL string) (*http.Response, error
 		return nil, err
 	}
 	req.AddCookie(&http.Cookie{
-		Name: ".AUSHELLPORTAL",
-		Value: AUSHELLPORTAL,
+		Name:   ".AUSHELLPORTAL",
+		Value:  AUSHELLPORTAL,
 		MaxAge: 2 * 60,
 	})
 	req.AddCookie(&http.Cookie{
-		Name: "retkeyapi",
-		Value: apiKey,
+		Name:   "retkeyapi",
+		Value:  apiKey,
 		MaxAge: 2 * 60,
 	})
 	res, err := http.DefaultClient.Do(req)
@@ -56,13 +55,13 @@ func postForm(endpoint string, data url.Values, apiExpiredate string, apiKey str
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.AddCookie(&http.Cookie{
-		Name: ".AUSHELLPORTAL",
-		Value: AUSHELLPORTAL,
+		Name:   ".AUSHELLPORTAL",
+		Value:  AUSHELLPORTAL,
 		MaxAge: 2 * 60,
 	})
 	req.AddCookie(&http.Cookie{
-		Name: "retkeyapi",
-		Value: apiKey,
+		Name:   "retkeyapi",
+		Value:  apiKey,
 		MaxAge: 2 * 60,
 	})
 	res, err := http.DefaultClient.Do(req)
@@ -88,6 +87,39 @@ func getToken(apiKey string, AUSHELLPORTAL string) (string, string, error) {
 	return apiExpiredate, guid, nil
 }
 
+func local2provider(filename string, isFolder bool) string {
+	filename = strings.Replace(filename, "%", url.QueryEscape("%"), -1)
+	filename = strings.Replace(filename, "/", url.QueryEscape("/"), -1)
+	filename = strings.Replace(filename, ":", url.QueryEscape(":"), -1)
+	filename = strings.Replace(filename, "*", url.QueryEscape("*"), -1)
+	filename = strings.Replace(filename, "?", url.QueryEscape("?"), -1)
+	filename = strings.Replace(filename, "\"", url.QueryEscape("\""), -1)
+	filename = strings.Replace(filename, "<", url.QueryEscape("<"), -1)
+	filename = strings.Replace(filename, ">", url.QueryEscape(">"), -1)
+	filename = strings.Replace(filename, "|", url.QueryEscape("|"), -1)
+	if isFolder {
+		return filename
+	}
+	return strings.Join([]string{filename, ".delete_suffix."}, "")
+}
+
+func provider2local(filename string) string {
+	index := strings.LastIndex(filename, ".delete_suffix.")
+	if index != -1 {
+		filename = filename[:index]
+	}
+	rawName := strings.Replace(filename, url.QueryEscape("/"), "/", -1)
+	rawName = strings.Replace(rawName, url.QueryEscape(":"), ":", -1)
+	rawName = strings.Replace(rawName, url.QueryEscape("*"), "*", -1)
+	rawName = strings.Replace(rawName, url.QueryEscape("?"), "?", -1)
+	rawName = strings.Replace(rawName, url.QueryEscape("\""), "\"", -1)
+	rawName = strings.Replace(rawName, url.QueryEscape("<"), "<", -1)
+	rawName = strings.Replace(rawName, url.QueryEscape(">"), ">", -1)
+	rawName = strings.Replace(rawName, url.QueryEscape("|"), "|", -1)
+	rawName = strings.Replace(rawName, url.QueryEscape("%"), "%", -1)
+	return rawName
+}
+
 func parseRawFileObject(rawObject []any) ([]model.Obj, error) {
 	objectList := make([]model.Obj, 0)
 	for _, each := range rawObject {
@@ -95,20 +127,23 @@ func parseRawFileObject(rawObject []any) ([]model.Obj, error) {
 		if object["id"].(string) == "0" {
 			continue
 		}
-		name, err := base64.URLEncoding.DecodeString(object["name"].(string))
-		if err != nil {
-			return nil, err
+		isFolder := int64(object["ty"].(float64)) == 1
+		var name string
+		if isFolder {
+			name = object["name"].(string)
+		} else {
+			name = strings.Join([]string{object["name"].(string), object["ext"].(string)}, ".")
 		}
 		modified, err := time.Parse("2006/01/02 15:04:05", object["modified"].(string))
 		if err != nil {
 			return nil, err
 		}
 		objectList = append(objectList, model.Obj(&model.Object{
-			ID: strings.Join([]string{object["id"].(string), strings.Split(object["uploadurl"].(string), "=")[1]}, "_"),
-			Name: string(name),
-			Size: int64(object["byte"].(float64)),
+			ID:       strings.Join([]string{object["id"].(string), strings.Split(object["uploadurl"].(string), "=")[1]}, "_"),
+			Name:     provider2local(name),
+			Size:     int64(object["byte"].(float64)),
 			Modified: modified.Add(-210 * time.Minute),
-			IsFolder: int64(object["ty"].(float64)) == 1,
+			IsFolder: isFolder,
 		}))
 	}
 	return objectList, nil
