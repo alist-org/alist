@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"net/url"
 	"strings"
@@ -121,7 +122,16 @@ func (d *Trainbit) Put(ctx context.Context, dstDir model.Obj, stream model.FileS
 	query.Add("guid", guid)
 	query.Add("name", base64.URLEncoding.EncodeToString([]byte(stream.GetName())))
 	endpoint.RawQuery = query.Encode()
-	req, err := http.NewRequest(http.MethodPost, endpoint.String(), stream)
+	var total int64
+	total = 0
+	progressReader := &ProgressReader{
+		stream,
+		func (byteNum int) {
+			total += int64(byteNum)
+			up(int(math.Round(float64(total) / float64(stream.GetSize()) * 100)))
+		},
+	}
+	req, err := http.NewRequest(http.MethodPost, endpoint.String(), progressReader)
 	if err != nil {
 		return err
 	}
