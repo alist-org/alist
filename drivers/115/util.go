@@ -7,7 +7,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-var UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36 115Browser/23.9.3.2 115disk/30.1.0"
+var UserAgent = driver.UA115Desktop
 
 func (d *Pan115) login() error {
 	var err error
@@ -38,7 +38,10 @@ func (d *Pan115) login() error {
 
 func (d *Pan115) getFiles(fileId string) ([]driver.File, error) {
 	res := make([]driver.File, 0)
-	files, err := d.client.List(fileId)
+	if d.PageSize <= 0 {
+		d.PageSize = driver.FileListLimit
+	}
+	files, err := d.client.ListWithLimit(fileId, d.PageSize)
 	if err != nil {
 		return nil, err
 	}
