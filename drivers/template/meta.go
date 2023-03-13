@@ -14,14 +14,17 @@ type Addition struct {
 }
 
 var config = driver.Config{
-	Name:        "Template",
-	LocalSort:   false,
-	OnlyLocal:   false,
-	OnlyProxy:   false,
-	NoCache:     false,
-	NoUpload:    false,
-	NeedMs:      false,
-	DefaultRoot: "root, / or other",
+	Name:              "Template",
+	LocalSort:         false,
+	OnlyLocal:         false,
+	OnlyProxy:         false,
+	NoCache:           false,
+	NoUpload:          false,
+	NeedMs:            false,
+	DefaultRoot:       "root, / or other",
+	CheckStatus:       false,
+	Alert:             "",
+	NoOverwriteUpload: false,
 }
 
 func init() {
