@@ -144,7 +144,7 @@ func (d *Local) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 			}
 			srcBuf = videoBuf
 		} else {
-			imgData, err := ioutil.ReadFile(fullPath)
+			imgData, err := os.ReadFile(fullPath)
 			if err != nil {
 				return nil, err
 			}
