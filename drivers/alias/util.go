@@ -38,7 +38,10 @@ func getPair(path string) (string, string) {
 	return stdpath.Base(path), path
 }
 
-func getRootAndPath(path string) (string, string) {
+func (d *Alias) getRootAndPath(path string) (string, string) {
+	if d.autoFlatten {
+		return d.oneKey, path
+	}
 	path = strings.TrimPrefix(path, "/")
 	parts := strings.SplitN(path, "/", 2)
 	if len(parts) == 1 {
