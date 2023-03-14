@@ -59,7 +59,8 @@ func (d *S3) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]mo
 
 func (d *S3) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	path := getKey(file.GetPath(), false)
-	disposition := fmt.Sprintf(`attachment;filename="%s"`, url.QueryEscape(stdpath.Base(path)))
+	filename := stdpath.Base(path)
+	disposition := fmt.Sprintf(`attachment; filename="%s"; filename*=UTF-8''%s`, filename, url.PathEscape(filename))
 	input := &s3.GetObjectInput{
 		Bucket: &d.Bucket,
 		Key:    &path,
