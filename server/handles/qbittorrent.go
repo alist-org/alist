@@ -10,7 +10,8 @@ import (
 )
 
 type SetQbittorrentReq struct {
-	Url string `json:"url" form:"url"`
+	Url      string `json:"url" form:"url"`
+	Seedtime string `json:"seedtime" form:"seedtime"`
 }
 
 func SetQbittorrent(c *gin.Context) {
@@ -19,14 +20,11 @@ func SetQbittorrent(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	item := &model.SettingItem{
-		Key:   conf.QbittorrentUrl,
-		Value: req.Url,
-		Type:  conf.TypeString,
-		Group: model.SINGLE,
-		Flag:  model.PRIVATE,
+	items := []model.SettingItem{
+		{Key: conf.QbittorrentUrl, Value: req.Url, Type: conf.TypeString, Group: model.SINGLE, Flag: model.PRIVATE},
+		{Key: conf.QbittorrentSeedtime, Value: req.Seedtime, Type: conf.TypeNumber, Group: model.SINGLE, Flag: model.PRIVATE},
 	}
-	if err := op.SaveSettingItem(item); err != nil {
+	if err := op.SaveSettingItems(items); err != nil {
 		common.ErrorResp(c, err, 500)
 		return
 	}
