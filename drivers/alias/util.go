@@ -84,6 +84,10 @@ func (d *Alias) link(ctx context.Context, dst, sub string, args model.LinkArgs) 
 	if err != nil {
 		return nil, err
 	}
+	_, err = fs.Get(ctx, reqPath)
+	if err != nil {
+		return nil, err
+	}
 	if common.ShouldProxy(storage, stdpath.Base(sub)) {
 		return &model.Link{
 			URL: fmt.Sprintf("/p%s?sign=%s",
