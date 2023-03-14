@@ -8,6 +8,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/op"
+	"github.com/alist-org/alist/v3/internal/setting"
 	"github.com/alist-org/alist/v3/pkg/task"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
@@ -50,6 +51,7 @@ func AddURL(ctx context.Context, url string, dstDirPath string) error {
 				tsk:        tsk,
 				tempDir:    tempDir,
 				dstDirPath: dstDirPath,
+				seedtime:   setting.GetInt(conf.QbittorrentSeedtime, 0),
 			}
 			return m.Loop()
 		},

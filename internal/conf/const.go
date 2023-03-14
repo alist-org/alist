@@ -61,7 +61,8 @@ const (
 	SSOLoginplatform = "sso_login_platform"
 
 	// qbittorrent
-	QbittorrentUrl = "qbittorrent_url"
+	QbittorrentUrl      = "qbittorrent_url"
+	QbittorrentSeedtime = "qbittorrent_seedtime"
 )
 
 const (

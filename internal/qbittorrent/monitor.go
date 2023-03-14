@@ -2,23 +2,26 @@ package qbittorrent
 
 import (
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
+	"sync"
+	"sync/atomic"
+	"time"
+
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/pkg/task"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-	"os"
-	"path/filepath"
-	"sync"
-	"sync/atomic"
-	"time"
 )
 
 type Monitor struct {
 	tsk        *task.Task[string]
 	tempDir    string
 	dstDirPath string
+	seedtime   int
 	finish     chan struct{}
 }
 
@@ -114,17 +117,27 @@ func (m *Monitor) complete() error {
 	log.Debugf("files len: %d", len(files))
 	// delete qbittorrent task but do not delete the files before transferring to avoid qbittorrent
 	// accessing downloaded files and throw `cannot access the file because it is being used by another process` error
-	err = qbclient.Delete(m.tsk.ID, false)
-	if err != nil {
-		return err
-	}
+	// err = qbclient.Delete(m.tsk.ID, false)
+	// if err != nil {
+	// 	return err
+	// }
 	// upload files
 	var wg sync.WaitGroup
 	wg.Add(len(files))
 	go func() {
 		wg.Wait()
-		err := os.RemoveAll(m.tempDir)
 		m.finish <- struct{}{}
+		if m.seedtime < 0 {
+			log.Debugf("do not delete qb task %s", m.tsk.ID)
+			return
+		}
+		log.Debugf("delete qb task %s after %d minutes", m.tsk.ID, m.seedtime)
+		<-time.After(time.Duration(m.seedtime) * time.Minute)
+		err := qbclient.Delete(m.tsk.ID, true)
+		if err != nil {
+			log.Errorln(err.Error())
+		}
+		err = os.RemoveAll(m.tempDir)
 		if err != nil {
 			log.Errorf("failed to remove qbittorrent temp dir: %+v", err.Error())
 		}
@@ -151,7 +164,7 @@ func (m *Monitor) complete() error {
 						Modified: time.Now(),
 						IsFolder: false,
 					},
-					ReadCloser: f,
+					ReadCloser: struct{ io.ReadSeekCloser }{f},
 					Mimetype:   mimetype,
 				}
 				return op.Put(tsk.Ctx, storage, dstDir, stream, tsk.SetProgress)
