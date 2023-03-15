@@ -8,6 +8,7 @@ import (
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/go-resty/resty/v2"
 )
 
@@ -124,11 +125,11 @@ func (d *Teambition) Remove(ctx context.Context, obj model.Obj) error {
 }
 
 func (d *Teambition) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
-	res, err := d.request("/projects", http.MethodGet, nil, nil)
+	res, err := d.request("/api/v2/users/me", http.MethodGet, nil, nil)
 	if err != nil {
 		return err
 	}
-	token := GetBetweenStr(string(res), "strikerAuth&quot;:&quot;", "&quot;,&quot;phoneForLogin")
+	token := utils.Json.Get(res, "strikerAuth").ToString()
 	var newFile *FileUpload
 	if stream.GetSize() <= 20971520 {
 		// post upload
