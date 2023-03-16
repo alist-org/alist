@@ -92,8 +92,25 @@ func taskRoute[K comparable](g *gin.RouterGroup, manager *task.Manager[K], k2Str
 			common.SuccessResp(c)
 		}
 	})
+	g.POST("/retry", func(c *gin.Context) {
+		tid := c.Query("tid")
+		id, err := str2K(tid)
+		if err != nil {
+			common.ErrorResp(c, err, 400)
+			return
+		}
+		if err := manager.Retry(id); err != nil {
+			common.ErrorResp(c, err, 500)
+		} else {
+			common.SuccessResp(c)
+		}
+	})
 	g.POST("/clear_done", func(c *gin.Context) {
 		manager.ClearDone()
+		common.SuccessResp(c)
+	})
+	g.POST("/clear_succeeded", func(c *gin.Context) {
+		manager.ClearSucceeded()
 		common.SuccessResp(c)
 	})
 }
