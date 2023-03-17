@@ -15,10 +15,10 @@ import (
 )
 
 type SMB struct {
+	lastConnTime int64
 	model.Storage
 	Addition
-	fs           *smb2.Share
-	lastConnTime int64
+	fs *smb2.Share
 }
 
 func (d *SMB) Config() driver.Config {
