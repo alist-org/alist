@@ -14,7 +14,9 @@ import (
 type Alias struct {
 	model.Storage
 	Addition
-	pathMap map[string][]string
+	pathMap     map[string][]string
+	autoFlatten bool
+	oneKey      string
 }
 
 func (d *Alias) Config() driver.Config {
@@ -38,6 +40,12 @@ func (d *Alias) Init(ctx context.Context) error {
 		k, v := getPair(path)
 		d.pathMap[k] = append(d.pathMap[k], v)
 	}
+	if len(d.pathMap) == 1 {
+		for k := range d.pathMap {
+			d.oneKey = k
+		}
+		d.autoFlatten = true
+	}
 	return nil
 }
 
@@ -54,7 +62,7 @@ func (d *Alias) Get(ctx context.Context, path string) (model.Obj, error) {
 			Path:     "/",
 		}, nil
 	}
-	root, sub := getRootAndPath(path)
+	root, sub := d.getRootAndPath(path)
 	dsts, ok := d.pathMap[root]
 	if !ok {
 		return nil, errs.ObjectNotFound
@@ -70,10 +78,10 @@ func (d *Alias) Get(ctx context.Context, path string) (model.Obj, error) {
 
 func (d *Alias) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
 	path := dir.GetPath()
-	if utils.PathEqual(path, "/") {
+	if utils.PathEqual(path, "/") && !d.autoFlatten {
 		return d.listRoot(), nil
 	}
-	root, sub := getRootAndPath(path)
+	root, sub := d.getRootAndPath(path)
 	dsts, ok := d.pathMap[root]
 	if !ok {
 		return nil, errs.ObjectNotFound
@@ -89,7 +97,7 @@ func (d *Alias) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([
 }
 
 func (d *Alias) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
-	root, sub := getRootAndPath(file.GetPath())
+	root, sub := d.getRootAndPath(file.GetPath())
 	dsts, ok := d.pathMap[root]
 	if !ok {
 		return nil, errs.ObjectNotFound

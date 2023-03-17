@@ -2,6 +2,7 @@ package handles
 
 import (
 	"fmt"
+	"io"
 	stdpath "path"
 	"regexp"
 
@@ -15,6 +16,7 @@ import (
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 )
 
 type MkdirOrLinkReq struct {
@@ -378,6 +380,14 @@ func Link(c *gin.Context) {
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return
+	}
+	if link.Data != nil {
+		defer func(Data io.ReadCloser) {
+			err := Data.Close()
+			if err != nil {
+				log.Errorf("close link data error: %v", err)
+			}
+		}(link.Data)
 	}
 	common.SuccessResp(c, link)
 	return

@@ -122,6 +122,10 @@ func (tm *Manager[K]) ClearDone() {
 	tm.RemoveByStates(SUCCEEDED, CANCELED, ERRORED)
 }
 
+func (tm *Manager[K]) ClearSucceeded() {
+	tm.RemoveByStates(SUCCEEDED)
+}
+
 func (tm *Manager[K]) RawTasks() *generic_sync.MapOf[K, *Task[K]] {
 	return &tm.tasks
 }

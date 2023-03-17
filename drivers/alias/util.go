@@ -2,12 +2,15 @@ package alias
 
 import (
 	"context"
+	"fmt"
 	stdpath "path"
 	"strings"
 
 	"github.com/alist-org/alist/v3/internal/fs"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/sign"
 	"github.com/alist-org/alist/v3/pkg/utils"
+	"github.com/alist-org/alist/v3/server/common"
 )
 
 func (d *Alias) listRoot() []model.Obj {
@@ -35,7 +38,10 @@ func getPair(path string) (string, string) {
 	return stdpath.Base(path), path
 }
 
-func getRootAndPath(path string) (string, string) {
+func (d *Alias) getRootAndPath(path string) (string, string) {
+	if d.autoFlatten {
+		return d.oneKey, path
+	}
 	path = strings.TrimPrefix(path, "/")
 	parts := strings.SplitN(path, "/", 2)
 	if len(parts) == 1 {
@@ -76,6 +82,22 @@ func (d *Alias) list(ctx context.Context, dst, sub string) ([]model.Obj, error) 
 }
 
 func (d *Alias) link(ctx context.Context, dst, sub string, args model.LinkArgs) (*model.Link, error) {
-	link, _, err := fs.Link(ctx, stdpath.Join(dst, sub), args)
+	reqPath := stdpath.Join(dst, sub)
+	storage, err := fs.GetStorage(reqPath)
+	if err != nil {
+		return nil, err
+	}
+	_, err = fs.Get(ctx, reqPath)
+	if err != nil {
+		return nil, err
+	}
+	if common.ShouldProxy(storage, stdpath.Base(sub)) {
+		return &model.Link{
+			URL: fmt.Sprintf("/p%s?sign=%s",
+				utils.EncodePath(reqPath, true),
+				sign.Sign(reqPath)),
+		}, nil
+	}
+	link, _, err := fs.Link(ctx, reqPath, args)
 	return link, err
 }
