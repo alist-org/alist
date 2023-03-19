@@ -1,13 +1,18 @@
 package cloudreve
 
 import (
+	"encoding/base64"
 	"errors"
 	"github.com/alist-org/alist/v3/drivers/base"
+	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/setting"
 	"github.com/alist-org/alist/v3/pkg/cookie"
 	"github.com/go-resty/resty/v2"
 	json "github.com/json-iterator/go"
+	jsoniter "github.com/json-iterator/go"
 	"net/http"
+	"strings"
 )
 
 // do others that not defined in Driver interface
@@ -72,13 +77,57 @@ func (d *Cloudreve) request(method string, path string, callback base.ReqCallbac
 }
 
 func (d *Cloudreve) login() error {
-	return d.request(http.MethodPost, loginPath, func(req *resty.Request) {
+	var siteConfig Config
+	err := d.request(http.MethodGet, "/site/config", nil, &siteConfig)
+	if err != nil {
+		return err
+	}
+	for i := 0; i < 5; i++ {
+		err = d.doLogin(siteConfig.LoginCaptcha)
+		if err == nil {
+			break
+		}
+		if err != nil && err.Error() != "CAPTCHA not match." {
+			break
+		}
+	}
+	return err
+}
+
+func (d *Cloudreve) doLogin(needCaptcha bool) error {
+	var captchaCode string
+	var err error
+	if needCaptcha {
+		var captcha string
+		err = d.request(http.MethodGet, "/site/captcha", nil, &captcha)
+		if err != nil {
+			return err
+		}
+		if len(captcha) == 0 {
+			return errors.New("can not get captcha")
+		}
+		i := strings.Index(captcha, ",")
+		dec := base64.NewDecoder(base64.StdEncoding, strings.NewReader(captcha[i+1:]))
+		vRes, err := base.RestyClient.R().SetMultipartField(
+			"image", "validateCode.png", "image/png", dec).
+			Post(setting.GetStr(conf.OcrApi))
+		if err != nil {
+			return err
+		}
+		if jsoniter.Get(vRes.Body(), "status").ToInt() != 200 {
+			return errors.New("ocr error:" + jsoniter.Get(vRes.Body(), "msg").ToString())
+		}
+		captchaCode = jsoniter.Get(vRes.Body(), "result").ToString()
+	}
+	var resp Resp
+	err = d.request(http.MethodPost, loginPath, func(req *resty.Request) {
 		req.SetBody(base.Json{
 			"username":    d.Addition.Username,
 			"Password":    d.Addition.Password,
-			"captchaCode": "",
+			"captchaCode": captchaCode,
 		})
-	}, nil)
+	}, &resp)
+	return err
 }
 
 func convertSrc(obj model.Obj) map[string]interface{} {

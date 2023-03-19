@@ -52,3 +52,8 @@ func objectToObj(f Object) *model.Object {
 		IsFolder: f.Type == "dir",
 	}
 }
+
+type Config struct {
+	LoginCaptcha bool   `json:"loginCaptcha"`
+	CaptchaType  string `json:"captcha_type"`
+}
