@@ -5,6 +5,8 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/alist-org/alist/v3/internal/conf"
+	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/utils"
 )
@@ -20,7 +22,7 @@ func IsApply(metaPath, reqPath string, applySub bool) bool {
 	if utils.PathEqual(metaPath, reqPath) {
 		return true
 	}
-	return utils.IsSubPath(reqPath, metaPath) && applySub
+	return utils.IsSubPath(metaPath, reqPath) && applySub
 }
 
 func CanAccess(user *model.User, meta *model.Meta, reqPath string, password string) bool {
@@ -48,4 +50,19 @@ func CanAccess(user *model.User, meta *model.Meta, reqPath string, password stri
 	}
 	// validate password
 	return meta.Password == password
+}
+
+// ShouldProxy TODO need optimize
+// when should be proxy?
+// 1. config.MustProxy()
+// 2. storage.WebProxy
+// 3. proxy_types
+func ShouldProxy(storage driver.Driver, filename string) bool {
+	if storage.Config().MustProxy() || storage.GetStorage().WebProxy {
+		return true
+	}
+	if utils.SliceContains(conf.SlicesMap[conf.ProxyTypes], utils.Ext(filename)) {
+		return true
+	}
+	return false
 }

@@ -26,8 +26,9 @@ func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.
 		defer func() {
 			_ = link.Data.Close()
 		}()
+		filename := file.GetName()
 		w.Header().Set("Content-Type", "application/octet-stream")
-		w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"; filename*=UTF-8''%s`, file.GetName(), url.QueryEscape(file.GetName())))
+		w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"; filename*=UTF-8''%s`, filename, url.PathEscape(filename)))
 		w.Header().Set("Content-Length", strconv.FormatInt(file.GetSize(), 10))
 		if link.Header != nil {
 			// TODO clean header with blacklist or whitelist

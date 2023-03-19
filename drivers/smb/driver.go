@@ -5,7 +5,6 @@ import (
 	"errors"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
@@ -16,10 +15,10 @@ import (
 )
 
 type SMB struct {
+	lastConnTime int64
 	model.Storage
 	Addition
-	fs           *smb2.Share
-	lastConnTime time.Time
+	fs *smb2.Share
 }
 
 func (d *SMB) Config() driver.Config {
