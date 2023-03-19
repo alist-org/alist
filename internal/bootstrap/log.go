@@ -35,19 +35,22 @@ func setLog(l *logrus.Logger) {
 }
 
 func Log() {
-	log.SetOutput(logrus.StandardLogger().Out)
 	setLog(logrus.StandardLogger())
 	setLog(utils.Log)
 	logConfig := conf.Conf.Log
 	if logConfig.Enable {
-		mw := io.MultiWriter(os.Stdout, &lumberjack.Logger{
+		var w io.Writer = &lumberjack.Logger{
 			Filename:   logConfig.Name,
 			MaxSize:    logConfig.MaxSize, // megabytes
 			MaxBackups: logConfig.MaxBackups,
 			MaxAge:     logConfig.MaxAge,   //days
 			Compress:   logConfig.Compress, // disabled by default
-		})
-		logrus.SetOutput(mw)
+		}
+		if flags.Debug || flags.Dev || flags.LogStd {
+			w = io.MultiWriter(os.Stdout, w)
+		}
+		logrus.SetOutput(w)
 	}
+	log.SetOutput(logrus.StandardLogger().Out)
 	utils.Log.Infof("init logrus...")
 }

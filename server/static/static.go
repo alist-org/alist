@@ -29,7 +29,6 @@ func InitIndex() {
 	replaceMap := map[string]string{
 		"cdn: undefined":       fmt.Sprintf("cdn: '%s'", siteConfig.Cdn),
 		"base_path: undefined": fmt.Sprintf("base_path: '%s'", siteConfig.BasePath),
-		"api: undefined":       fmt.Sprintf("api: '%s'", siteConfig.ApiURL),
 	}
 	for k, v := range replaceMap {
 		conf.RawIndexHtml = strings.Replace(conf.RawIndexHtml, k, v, 1)
@@ -62,7 +61,7 @@ func UpdateIndex() {
 	}
 }
 
-func Static(r *gin.Engine) {
+func Static(r *gin.RouterGroup, noRoute func(handlers ...gin.HandlerFunc)) {
 	InitIndex()
 	folders := []string{"assets", "images", "streamer", "static"}
 	r.Use(func(c *gin.Context) {
@@ -81,7 +80,7 @@ func Static(r *gin.Engine) {
 		r.StaticFS(fmt.Sprintf("/%s/", folders[i]), http.FS(sub))
 	}
 
-	r.NoRoute(func(c *gin.Context) {
+	noRoute(func(c *gin.Context) {
 		c.Header("Content-Type", "text/html")
 		c.Status(200)
 		if strings.HasPrefix(c.Request.URL.Path, "/@manage") {

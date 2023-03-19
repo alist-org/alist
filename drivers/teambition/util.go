@@ -210,7 +210,7 @@ func (d *Teambition) finishUpload(file *FileUpload, parentId string) error {
 	return err
 }
 
-func GetBetweenStr(str, start, end string) string {
+func getBetweenStr(str, start, end string) string {
 	n := strings.Index(str, start)
 	if n == -1 {
 		return ""

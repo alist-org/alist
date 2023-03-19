@@ -1,7 +1,7 @@
 appName="alist"
 builtAt="$(date +'%F %T %z')"
 goVersion=$(go version | sed 's/go version //')
-gitAuthor=$(git show -s --format='format:%aN <%ae>' HEAD)
+gitAuthor="Xhofe <i@nn.ci>"
 gitCommit=$(git log --pretty=format:"%h" -1)
 
 if [ "$1" = "dev" ]; then
@@ -41,6 +41,17 @@ FetchWebRelease() {
   rm -rf dist.tar.gz
 }
 
+BuildWinArm64() {
+  echo building for windows-arm64
+  chmod +x ./wrapper/zcc-arm64
+  chmod +x ./wrapper/zcxx-arm64
+  export GOOS=windows
+  export GOARCH=arm64
+  export CC=$(pwd)/wrapper/zcc-arm64
+  export CXX=$(pwd)/wrapper/zcxx-arm64
+  go build -o "$1" -ldflags="$ldflags" -tags=jsoniter .
+}
+
 BuildDev() {
   rm -rf .git/
   xgo -targets=linux/amd64,windows/amd64,darwin/amd64 -out "$appName" -ldflags="$ldflags" -tags=jsoniter .
@@ -48,7 +59,7 @@ BuildDev() {
   mv alist-* dist
   cd dist
   upx -9 ./alist-linux*
-  upx -9 ./alist-windows*
+  upx -9 ./alist-windows-amd64.exe
   find . -type f -print0 | xargs -0 md5sum >md5.txt
   cat md5.txt
 }
@@ -80,10 +91,11 @@ BuildRelease() {
     export CGO_ENABLED=1
     go build -o ./build/$appName-$os_arch -ldflags="$muslflags" -tags=jsoniter .
   done
+  BuildWinArm64 ./build/alist-windows-arm64.exe
   xgo -out "$appName" -ldflags="$ldflags" -tags=jsoniter .
   # why? Because some target platforms seem to have issues with upx compression
   upx -9 ./alist-linux-amd64
-  upx -9 ./alist-windows*
+  upx -9 ./alist-windows-amd64.exe
   mv alist-* build
 }
 

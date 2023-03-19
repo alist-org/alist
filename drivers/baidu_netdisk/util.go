@@ -154,7 +154,7 @@ func (d *BaiduNetdisk) linkCrack(file model.Obj, args model.LinkArgs) (*model.Li
 		"target": fmt.Sprintf("[\"%s\"]", file.GetPath()),
 		"dlink":  "1",
 		"web":    "5",
-		"origin": "dlna",
+		//"origin": "dlna",
 	}
 	_, err := d.request("https://pan.baidu.com/api/filemetas", http.MethodGet, func(req *resty.Request) {
 		req.SetQueryParams(param)
@@ -165,7 +165,7 @@ func (d *BaiduNetdisk) linkCrack(file model.Obj, args model.LinkArgs) (*model.Li
 	return &model.Link{
 		URL: resp.Info[0].Dlink,
 		Header: http.Header{
-			"User-Agent": []string{"pan.baidu.com"},
+			"User-Agent": []string{"netdisk"},
 		},
 	}, nil
 }
@@ -187,7 +187,7 @@ func (d *BaiduNetdisk) create(path string, size int64, isdir int, uploadid, bloc
 	params := map[string]string{
 		"method": "create",
 	}
-	data := fmt.Sprintf("path=%s&size=%d&isdir=%d", encodeURIComponent(path), size, isdir)
+	data := fmt.Sprintf("path=%s&size=%d&isdir=%d&rtype=3", encodeURIComponent(path), size, isdir)
 	if uploadid != "" {
 		data += fmt.Sprintf("&uploadid=%s&block_list=%s", uploadid, block_list)
 	}

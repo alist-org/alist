@@ -31,6 +31,7 @@ type AliDrive struct {
 	AccessToken string
 	cron        *cron.Cron
 	DriveId     string
+	UserID      string
 }
 
 func (d *AliDrive) Config() driver.Config {
@@ -54,6 +55,7 @@ func (d *AliDrive) Init(ctx context.Context) error {
 		return err
 	}
 	d.DriveId = utils.Json.Get(res, "default_drive_id").ToString()
+	d.UserID = utils.Json.Get(res, "user_id").ToString()
 	d.cron = cron.NewCron(time.Hour * 2)
 	d.cron.Do(func() {
 		err := d.refreshToken()
@@ -61,7 +63,22 @@ func (d *AliDrive) Init(ctx context.Context) error {
 			log.Errorf("%+v", err)
 		}
 	})
-	return err
+	if global.Has(d.UserID) {
+		return nil
+	}
+	// init deviceID
+	deviceID := utils.GetSHA256Encode(d.UserID)
+	// init privateKey
+	privateKey, _ := NewPrivateKeyFromHex(deviceID)
+	state := State{
+		privateKey: privateKey,
+		deviceID:   deviceID,
+	}
+	// store state
+	global.Store(d.UserID, &state)
+	// init signature
+	d.sign()
+	return nil
 }
 
 func (d *AliDrive) Drop(ctx context.Context) error {
@@ -169,17 +186,27 @@ func (d *AliDrive) Put(ctx context.Context, dstDir model.Obj, stream model.FileS
 		"type":            "file",
 	}
 
+	var localFile *os.File
+	if fileStream, ok := file.ReadCloser.(*model.FileStream); ok {
+		localFile, _ = fileStream.ReadCloser.(*os.File)
+	}
 	if d.RapidUpload {
 		buf := bytes.NewBuffer(make([]byte, 0, 1024))
 		io.CopyN(buf, file, 1024)
 		reqBody["pre_hash"] = utils.GetSHA1Encode(buf.String())
-		// 把头部拼接回去
-		file.ReadCloser = struct {
-			io.Reader
-			io.Closer
-		}{
-			Reader: io.MultiReader(buf, file),
-			Closer: file,
+		if localFile != nil {
+			if _, err := localFile.Seek(0, io.SeekStart); err != nil {
+				return err
+			}
+		} else {
+			// 把头部拼接回去
+			file.ReadCloser = struct {
+				io.Reader
+				io.Closer
+			}{
+				Reader: io.MultiReader(buf, file),
+				Closer: file,
+			}
 		}
 	} else {
 		reqBody["content_hash_name"] = "none"
@@ -196,18 +223,28 @@ func (d *AliDrive) Put(ctx context.Context, dstDir model.Obj, stream model.FileS
 	}
 
 	if d.RapidUpload && e.Code == "PreHashMatched" {
-		tempFile, err := os.CreateTemp(conf.Conf.TempDir, "file-*")
-		if err != nil {
-			return err
-		}
-		defer func() {
-			_ = tempFile.Close()
-			_ = os.Remove(tempFile.Name())
-		}()
 		delete(reqBody, "pre_hash")
 		h := sha1.New()
-		if _, err = io.Copy(io.MultiWriter(tempFile, h), file); err != nil {
-			return err
+		if localFile != nil {
+			if err = utils.CopyWithCtx(ctx, h, localFile, 0, nil); err != nil {
+				return err
+			}
+			if _, err = localFile.Seek(0, io.SeekStart); err != nil {
+				return err
+			}
+		} else {
+			tempFile, err := os.CreateTemp(conf.Conf.TempDir, "file-*")
+			if err != nil {
+				return err
+			}
+			defer func() {
+				_ = tempFile.Close()
+				_ = os.Remove(tempFile.Name())
+			}()
+			if err = utils.CopyWithCtx(ctx, io.MultiWriter(tempFile, h), file, 0, nil); err != nil {
+				return err
+			}
+			localFile = tempFile
 		}
 		reqBody["content_hash"] = hex.EncodeToString(h.Sum(nil))
 		reqBody["content_hash_name"] = "sha1"
@@ -228,7 +265,7 @@ func (d *AliDrive) Put(ctx context.Context, dstDir model.Obj, stream model.FileS
 		if file.GetSize() > 0 {
 			o = r.Mod(r, i)
 		}
-		n, _ := io.NewSectionReader(tempFile, o.Int64(), 8).Read(buf[:8])
+		n, _ := io.NewSectionReader(localFile, o.Int64(), 8).Read(buf[:8])
 		reqBody["proof_code"] = base64.StdEncoding.EncodeToString(buf[:n])
 
 		_, err, e := d.request("https://api.aliyundrive.com/adrive/v2/file/createWithFolders", http.MethodPost, func(req *resty.Request) {
@@ -241,17 +278,21 @@ func (d *AliDrive) Put(ctx context.Context, dstDir model.Obj, stream model.FileS
 			return nil
 		}
 		// 秒传失败
-		if _, err = tempFile.Seek(0, io.SeekStart); err != nil {
+		if _, err = localFile.Seek(0, io.SeekStart); err != nil {
 			return err
 		}
-		file.ReadCloser = tempFile
+		file.ReadCloser = localFile
 	}
 
 	for i, partInfo := range resp.PartInfoList {
 		if utils.IsCanceled(ctx) {
 			return ctx.Err()
 		}
-		req, err := http.NewRequest("PUT", partInfo.UploadUrl, io.LimitReader(file, DEFAULT))
+		url := partInfo.UploadUrl
+		if d.InternalUpload {
+			url = partInfo.InternalUploadUrl
+		}
+		req, err := http.NewRequest("PUT", url, io.LimitReader(file, DEFAULT))
 		if err != nil {
 			return err
 		}
@@ -296,6 +337,7 @@ func (d *AliDrive) Other(ctx context.Context, args model.OtherArgs) (interface{}
 	case "video_preview":
 		url = "https://api.aliyundrive.com/v2/file/get_video_preview_play_info"
 		data["category"] = "live_transcoding"
+		data["url_expire_sec"] = 14400
 	default:
 		return nil, errs.NotSupport
 	}

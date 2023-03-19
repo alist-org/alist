@@ -32,42 +32,42 @@ func (d *Template) Drop(ctx context.Context) error {
 }
 
 func (d *Template) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
-	// TODO return the files list
+	// TODO return the files list, required
 	return nil, errs.NotImplement
 }
 
 func (d *Template) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
-	// TODO return link of file
+	// TODO return link of file, required
 	return nil, errs.NotImplement
 }
 
 func (d *Template) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
-	// TODO create folder
+	// TODO create folder, optional
 	return errs.NotImplement
 }
 
 func (d *Template) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
-	// TODO move obj
+	// TODO move obj, optional
 	return errs.NotImplement
 }
 
 func (d *Template) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
-	// TODO rename obj
+	// TODO rename obj, optional
 	return errs.NotImplement
 }
 
 func (d *Template) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
-	// TODO copy obj
+	// TODO copy obj, optional
 	return errs.NotImplement
 }
 
 func (d *Template) Remove(ctx context.Context, obj model.Obj) error {
-	// TODO remove obj
+	// TODO remove obj, optional
 	return errs.NotImplement
 }
 
 func (d *Template) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
-	// TODO upload file
+	// TODO upload file, optional
 	return errs.NotImplement
 }
 

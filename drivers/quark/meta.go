@@ -16,6 +16,7 @@ var config = driver.Config{
 	Name:        "Quark",
 	OnlyProxy:   true,
 	DefaultRoot: "0",
+	NoOverwriteUpload: true,
 }
 
 func init() {

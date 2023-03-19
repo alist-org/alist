@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/pkg/utils"
@@ -28,9 +29,7 @@ func (d *Pan123) login() error {
 			"password": d.Password,
 		}
 	}
-	var resp TokenResp
 	res, err := base.RestyClient.R().
-		SetResult(&resp).
 		SetBody(body).Post(url)
 	if err != nil {
 		return err
@@ -38,7 +37,7 @@ func (d *Pan123) login() error {
 	if utils.Json.Get(res.Body(), "code").ToInt() != 200 {
 		err = fmt.Errorf(utils.Json.Get(res.Body(), "message").ToString())
 	} else {
-		d.AccessToken = resp.Data.Token
+		d.AccessToken = utils.Json.Get(res.Body(), "data", "token").ToString()
 	}
 	return err
 }
@@ -77,18 +76,19 @@ func (d *Pan123) request(url string, method string, callback base.ReqCallback, r
 }
 
 func (d *Pan123) getFiles(parentId string) ([]File, error) {
-	next := "0"
+	page := 1
 	res := make([]File, 0)
-	for next != "-1" {
+	for {
 		var resp Files
 		query := map[string]string{
 			"driveId":        "0",
 			"limit":          "100",
-			"next":           next,
+			"next":           "0",
 			"orderBy":        d.OrderBy,
 			"orderDirection": d.OrderDirection,
 			"parentFileId":   parentId,
 			"trashed":        "false",
+			"Page":           strconv.Itoa(page),
 		}
 		_, err := d.request("https://www.123pan.com/api/file/list/new", http.MethodGet, func(req *resty.Request) {
 			req.SetQueryParams(query)
@@ -96,8 +96,11 @@ func (d *Pan123) getFiles(parentId string) ([]File, error) {
 		if err != nil {
 			return nil, err
 		}
-		next = resp.Data.Next
+		page++
 		res = append(res, resp.Data.InfoList...)
+		if len(resp.Data.InfoList) == 0 || resp.Data.Next == "-1" {
+			break
+		}
 	}
 	return res, nil
 }

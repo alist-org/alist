@@ -1,6 +1,8 @@
 package middlewares
 
 import (
+	"crypto/subtle"
+
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/op"
@@ -14,7 +16,7 @@ import (
 // if token is empty, set user to guest
 func Auth(c *gin.Context) {
 	token := c.GetHeader("Authorization")
-	if token == setting.GetStr(conf.Token) {
+	if subtle.ConstantTimeCompare([]byte(token), []byte(setting.GetStr(conf.Token))) == 1 {
 		admin, err := op.GetAdmin()
 		if err != nil {
 			common.ErrorResp(c, err, 500)
@@ -33,6 +35,11 @@ func Auth(c *gin.Context) {
 			c.Abort()
 			return
 		}
+		if guest.Disabled {
+			common.ErrorStrResp(c, "Guest user is disabled, login please", 401)
+			c.Abort()
+			return
+		}
 		c.Set("user", guest)
 		log.Debugf("use empty token: %+v", guest)
 		c.Next()
@@ -47,6 +54,11 @@ func Auth(c *gin.Context) {
 	user, err := op.GetUserByName(userClaims.Username)
 	if err != nil {
 		common.ErrorResp(c, err, 401)
+		c.Abort()
+		return
+	}
+	if user.Disabled {
+		common.ErrorStrResp(c, "Current user is disabled, replace please", 401)
 		c.Abort()
 		return
 	}

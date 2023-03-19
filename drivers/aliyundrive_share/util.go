@@ -52,6 +52,40 @@ func (d *AliyundriveShare) getShareToken() error {
 	return nil
 }
 
+func (d *AliyundriveShare) request(url, method string, callback base.ReqCallback) ([]byte, error) {
+	var e ErrorResp
+	req := base.RestyClient.R().
+		SetError(&e).
+		SetHeader("content-type", "application/json").
+		SetHeader("Authorization", "Bearer\t"+d.AccessToken).
+		SetHeader("x-share-token", d.ShareToken)
+	if callback != nil {
+		callback(req)
+	} else {
+		req.SetBody("{}")
+	}
+	resp, err := req.Execute(method, url)
+	if err != nil {
+		return nil, err
+	}
+	if e.Code != "" {
+		if e.Code == "AccessTokenInvalid" || e.Code == "ShareLinkTokenInvalid" {
+			if e.Code == "AccessTokenInvalid" {
+				err = d.refreshToken()
+			} else {
+				err = d.getShareToken()
+			}
+			if err != nil {
+				return nil, err
+			}
+			return d.request(url, method, callback)
+		} else {
+			return nil, errors.New(e.Code + ": " + e.Message)
+		}
+	}
+	return resp.Body(), nil
+}
+
 func (d *AliyundriveShare) getFiles(fileId string) ([]File, error) {
 	files := make([]File, 0)
 	data := base.Json{

@@ -5,8 +5,8 @@ import (
 	"errors"
 	"path/filepath"
 	"strings"
-	"time"
 
+	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/utils"
@@ -15,10 +15,10 @@ import (
 )
 
 type SMB struct {
+	lastConnTime int64
 	model.Storage
 	Addition
-	fs           *smb2.Share
-	lastConnTime time.Time
+	fs *smb2.Share
 }
 
 func (d *SMB) Config() driver.Config {
@@ -79,10 +79,12 @@ func (d *SMB) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*m
 		d.cleanLastConnTime()
 		return nil, err
 	}
-	d.updateLastConnTime()
-	return &model.Link{
+	link := &model.Link{
 		Data: remoteFile,
-	}, nil
+	}
+	base.HandleRange(link, remoteFile, args.Header, file.GetSize())
+	d.updateLastConnTime()
+	return link, nil
 }
 
 func (d *SMB) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {

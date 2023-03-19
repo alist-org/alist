@@ -296,6 +296,9 @@ func (h *Handler) handlePut(w http.ResponseWriter, r *http.Request) (status int,
 	if err != nil {
 		return status, err
 	}
+	if reqPath == "" {
+		return http.StatusMethodNotAllowed, nil
+	}
 	release, status, err := h.confirmLocks(r, reqPath, "")
 	if err != nil {
 		return status, err

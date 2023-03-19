@@ -148,6 +148,9 @@ func (d *S3) listV2(prefix string) ([]model.Obj, error) {
 			files = append(files, &file)
 		}
 		for _, object := range listObjectsResult.Contents {
+			if strings.HasSuffix(*object.Key, "/") {
+				continue
+			}
 			name := path.Base(*object.Key)
 			if name == getPlaceholderName(d.Placeholder) || name == d.Placeholder {
 				continue

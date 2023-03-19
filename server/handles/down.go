@@ -2,6 +2,7 @@ package handles
 
 import (
 	"fmt"
+	"io"
 	stdpath "path"
 	"strings"
 
@@ -9,10 +10,12 @@ import (
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/fs"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/setting"
 	"github.com/alist-org/alist/v3/internal/sign"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 )
 
 func Down(c *gin.Context) {
@@ -23,7 +26,7 @@ func Down(c *gin.Context) {
 		common.ErrorResp(c, err, 500)
 		return
 	}
-	if shouldProxy(storage, filename) {
+	if common.ShouldProxy(storage, filename) {
 		Proxy(c)
 		return
 	} else {
@@ -36,8 +39,25 @@ func Down(c *gin.Context) {
 			common.ErrorResp(c, err, 500)
 			return
 		}
+		if link.Data != nil {
+			defer func(Data io.ReadCloser) {
+				err := Data.Close()
+				if err != nil {
+					log.Errorf("close data error: %s", err)
+				}
+			}(link.Data)
+		}
 		c.Header("Referrer-Policy", "no-referrer")
 		c.Header("Cache-Control", "max-age=0, no-cache, no-store, must-revalidate")
+		if setting.GetBool(conf.ForwardDirectLinkParams) {
+			query := c.Request.URL.Query()
+			query.Del("sign")
+			link.URL, err = utils.InjectQuery(link.URL, query)
+			if err != nil {
+				common.ErrorResp(c, err, 500)
+				return
+			}
+		}
 		c.Redirect(302, link.URL)
 	}
 }
@@ -71,6 +91,15 @@ func Proxy(c *gin.Context) {
 			common.ErrorResp(c, err, 500)
 			return
 		}
+		if link.URL != "" && setting.GetBool(conf.ForwardDirectLinkParams) {
+			query := c.Request.URL.Query()
+			query.Del("sign")
+			link.URL, err = utils.InjectQuery(link.URL, query)
+			if err != nil {
+				common.ErrorResp(c, err, 500)
+				return
+			}
+		}
 		err = common.Proxy(c.Writer, c.Request, link, file)
 		if err != nil {
 			common.ErrorResp(c, err, 500, true)
@@ -80,21 +109,6 @@ func Proxy(c *gin.Context) {
 		common.ErrorStrResp(c, "proxy not allowed", 403)
 		return
 	}
-}
-
-// TODO need optimize
-// when should be proxy?
-// 1. config.MustProxy()
-// 2. storage.WebProxy
-// 3. proxy_types
-func shouldProxy(storage driver.Driver, filename string) bool {
-	if storage.Config().MustProxy() || storage.GetStorage().WebProxy {
-		return true
-	}
-	if utils.SliceContains(conf.SlicesMap[conf.ProxyTypes], utils.Ext(filename)) {
-		return true
-	}
-	return false
 }
 
 // TODO need optimize

@@ -30,14 +30,15 @@ const (
 	VideoAutoplay      = "video_autoplay"
 
 	// global
-	HideFiles           = "hide_files"
-	CustomizeHead       = "customize_head"
-	CustomizeBody       = "customize_body"
-	LinkExpiration      = "link_expiration"
-	SignAll             = "sign_all"
-	PrivacyRegs         = "privacy_regs"
-	OcrApi              = "ocr_api"
-	FilenameCharMapping = "filename_char_mapping"
+	HideFiles               = "hide_files"
+	CustomizeHead           = "customize_head"
+	CustomizeBody           = "customize_body"
+	LinkExpiration          = "link_expiration"
+	SignAll                 = "sign_all"
+	PrivacyRegs             = "privacy_regs"
+	OcrApi                  = "ocr_api"
+	FilenameCharMapping     = "filename_char_mapping"
+	ForwardDirectLinkParams = "forward_direct_link_params"
 
 	// index
 	SearchIndex     = "search_index"
@@ -53,10 +54,15 @@ const (
 	Token         = "token"
 	IndexProgress = "index_progress"
 
-	//Github
-	GithubClientId      = "github_client_id"
-	GithubClientSecrets = "github_client_secrets"
-	GithubLoginEnabled  = "github_login_enabled"
+	//SSO
+	SSOClientId      = "sso_client_id"
+	SSOClientSecret  = "sso_client_secret"
+	SSOLoginEnabled  = "sso_login_enabled"
+	SSOLoginplatform = "sso_login_platform"
+
+	// qbittorrent
+	QbittorrentUrl      = "qbittorrent_url"
+	QbittorrentSeedtime = "qbittorrent_seedtime"
 )
 
 const (

@@ -6,17 +6,22 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"sync/atomic"
 	"time"
 
 	"github.com/hirochachacha/go-smb2"
 )
 
 func (d *SMB) updateLastConnTime() {
-	d.lastConnTime = time.Now()
+	atomic.StoreInt64(&d.lastConnTime, time.Now().Unix())
 }
 
 func (d *SMB) cleanLastConnTime() {
-	d.lastConnTime = time.Now().AddDate(0, 0, -1)
+	atomic.StoreInt64(&d.lastConnTime, 0)
+}
+
+func (d *SMB) getLastConnTime() time.Time {
+	return time.Unix(atomic.LoadInt64(&d.lastConnTime), 0)
 }
 
 func (d *SMB) initFS() error {
@@ -43,7 +48,7 @@ func (d *SMB) initFS() error {
 }
 
 func (d *SMB) checkConn() error {
-	if time.Since(d.lastConnTime) < 5*time.Minute {
+	if time.Since(d.getLastConnTime()) < 5*time.Minute {
 		return nil
 	}
 	if d.fs != nil {

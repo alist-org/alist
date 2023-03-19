@@ -1,6 +1,9 @@
 package conf
 
-import "regexp"
+import (
+	"net/url"
+	"regexp"
+)
 
 var (
 	BuiltAt    string
@@ -13,6 +16,7 @@ var (
 
 var (
 	Conf *Config
+	URL  *url.URL
 )
 
 var SlicesMap = make(map[string][]string)
