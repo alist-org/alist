@@ -1,6 +1,7 @@
 package trainbit
 
 import (
+	"html"
 	"io"
 	"net/http"
 	"net/url"
@@ -95,6 +96,7 @@ func local2provider(filename string, isFolder bool) string {
 }
 
 func provider2local(filename string) string {
+	filename = html.UnescapeString(filename)
 	index := strings.LastIndex(filename, ".delete_suffix")
 	if index != -1 {
 		filename = filename[:index]
