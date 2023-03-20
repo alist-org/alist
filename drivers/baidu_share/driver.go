@@ -10,16 +10,17 @@ import (
 	"path"
 	"time"
 
-	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/go-resty/resty/v2"
 )
 
 type BaiduShare struct {
 	model.Storage
 	Addition
-	info struct {
+	client *resty.Client
+	info   struct {
 		Root    string
 		Seckey  string
 		Shareid string
@@ -38,6 +39,11 @@ func (d *BaiduShare) GetAddition() driver.Additional {
 func (d *BaiduShare) Init(ctx context.Context) error {
 	// TODO login / refresh token
 	//op.MustSaveDriverStorage(d)
+	d.client = resty.New().
+		SetBaseURL("https://pan.baidu.com").
+		SetHeader("User-Agent", "netdisk").
+		SetCookie(&http.Cookie{Name: "BDUSS", Value: d.BDUSS}).
+		SetCookie(&http.Cookie{Name: "ndut_fmt"})
 	respJson := struct {
 		Errno int64 `json:"errno"`
 		Data  struct {
@@ -49,17 +55,16 @@ func (d *BaiduShare) Init(ctx context.Context) error {
 			Seckey  string      `json:"seckey"`
 		} `json:"data"`
 	}{}
-	resp, err := base.NewRestyClient().R().
-		SetCookies([]*http.Cookie{{Name: "BDUSS", Value: ""}}).
+	resp, err := d.client.R().
 		SetBody(url.Values{
 			"pwd":      {d.Pwd},
 			"root":     {"1"},
 			"shorturl": {d.Surl},
 		}.Encode()).
 		SetResult(&respJson).
-		Post("https://pan.baidu.com/share/wxlist?channel=weixin&version=2.2.2&clienttype=25&web=1")
+		Post("share/wxlist?channel=weixin&version=2.2.2&clienttype=25&web=1")
 	if err == nil {
-		if resp.StatusCode() == 200 && respJson.Errno == 0 {
+		if resp.IsSuccess() && respJson.Errno == 0 {
 			d.info.Root = path.Dir(respJson.Data.List[0].Path)
 			d.info.Seckey = respJson.Data.Seckey
 			d.info.Shareid = respJson.Data.Shareid.String()
@@ -77,9 +82,6 @@ func (d *BaiduShare) Drop(ctx context.Context) error {
 
 func (d *BaiduShare) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
 	// TODO return the files list, required
-	client := base.NewRestyClient().
-		SetCookie(&http.Cookie{Name: "BDUSS", Value: ""}).
-		SetBaseURL("https://pan.baidu.com")
 	reqDir := dir.GetPath()
 	isRoot := "0"
 	if reqDir == d.RootFolderPath {
@@ -107,7 +109,7 @@ func (d *BaiduShare) List(ctx context.Context, dir model.Obj, args model.ListArg
 				} `json:"list"`
 			} `json:"data"`
 		}{}
-		resp, e := client.R().
+		resp, e := d.client.R().
 			SetBody(url.Values{
 				"dir":      {reqDir},
 				"num":      {"1000"},
@@ -121,7 +123,7 @@ func (d *BaiduShare) List(ctx context.Context, dir model.Obj, args model.ListArg
 			Post("share/wxlist?channel=weixin&version=2.2.2&clienttype=25&web=1")
 		err = e
 		if err == nil {
-			if resp.StatusCode() == 200 && respJson.Errno == 0 {
+			if resp.IsSuccess() && respJson.Errno == 0 {
 				page++
 				more = respJson.Data.More
 				for _, v := range respJson.Data.List {
@@ -146,10 +148,7 @@ func (d *BaiduShare) List(ctx context.Context, dir model.Obj, args model.ListArg
 
 func (d *BaiduShare) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	// TODO return link of file, required
-	client := base.NewRestyClient().
-		SetCookie(&http.Cookie{Name: "BDUSS", Value: d.BDUSS}).
-		SetBaseURL("https://pan.baidu.com")
-	link := model.Link{Header: http.Header{"User-Agent": {""}}}
+	link := model.Link{Header: d.client.Header}
 	sign := ""
 	stamp := ""
 	signJson := struct {
@@ -159,13 +158,12 @@ func (d *BaiduShare) Link(ctx context.Context, file model.Obj, args model.LinkAr
 			Sign  string      `json:"sign"`
 		} `json:"data"`
 	}{}
-	resp, err := client.R().
-		SetHeader("User-Agent", "netdisk").
+	resp, err := d.client.R().
 		SetQueryParam("surl", d.Surl).
 		SetResult(&signJson).
 		Get("share/tplconfig?fields=sign,timestamp&channel=chunlei&web=1&app_id=250528&clienttype=0")
 	if err == nil {
-		if resp.StatusCode() == 200 && signJson.Errno == 0 {
+		if resp.IsSuccess() && signJson.Errno == 0 {
 			stamp = signJson.Data.Stamp.String()
 			sign = signJson.Data.Sign
 		} else {
@@ -179,8 +177,7 @@ func (d *BaiduShare) Link(ctx context.Context, file model.Obj, args model.LinkAr
 				Dlink string `json:"dlink"`
 			} `json:"list"`
 		}{}
-		resp, err = client.R().
-			SetCookie(&http.Cookie{Name: "ndut_fmt", Value: ""}).
+		resp, err = d.client.R().
 			SetQueryParam("sign", sign).
 			SetQueryParam("timestamp", stamp).
 			SetBody(url.Values{
@@ -195,23 +192,20 @@ func (d *BaiduShare) Link(ctx context.Context, file model.Obj, args model.LinkAr
 			SetResult(&respJson).
 			Post("api/sharedownload?app_id=250528&channel=chunlei&clienttype=12&web=1")
 		if err == nil {
-			if resp.StatusCode() == 200 && respJson.Errno == 0 && respJson.List[0].Dlink != "" {
+			if resp.IsSuccess() && respJson.Errno == 0 && respJson.List[0].Dlink != "" {
 				link.URL = respJson.List[0].Dlink
 			} else {
 				err = fmt.Errorf(" %s; %s; ", resp.Status(), resp.Body())
 			}
 		}
 		if err == nil {
-			resp, err = base.NewRestyClient().R().
-				SetHeaderMultiValues(link.Header).
+			resp, err = d.client.R().
 				SetDoNotParseResponse(true).
 				Get(link.URL)
 			if err == nil {
-				if resp.StatusCode() == 200 {
-					link.Data = resp.RawBody()
-				} else {
+				defer resp.RawBody().Close()
+				if resp.IsError() {
 					byt, _ := io.ReadAll(resp.RawBody())
-					resp.RawBody().Close()
 					err = fmt.Errorf(" %s; %s; ", resp.Status(), byt)
 				}
 			}
