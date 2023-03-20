@@ -20,8 +20,7 @@ type AliyundriveOpen struct {
 	Addition
 	base string
 
-	AccessToken string
-	DriveId     string
+	DriveId string
 }
 
 func (d *AliyundriveOpen) Config() driver.Config {
@@ -33,10 +32,6 @@ func (d *AliyundriveOpen) GetAddition() driver.Additional {
 }
 
 func (d *AliyundriveOpen) Init(ctx context.Context) error {
-	err := d.refreshToken()
-	if err != nil {
-		return err
-	}
 	res, err := d.request("/adrive/v1.0/user/getDriveInfo", http.MethodPost, nil)
 	if err != nil {
 		return err
