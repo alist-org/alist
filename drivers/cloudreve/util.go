@@ -3,6 +3,9 @@ package cloudreve
 import (
 	"encoding/base64"
 	"errors"
+	"net/http"
+	"strings"
+
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/model"
@@ -11,8 +14,6 @@ import (
 	"github.com/go-resty/resty/v2"
 	json "github.com/json-iterator/go"
 	jsoniter "github.com/json-iterator/go"
-	"net/http"
-	"strings"
 )
 
 // do others that not defined in Driver interface
