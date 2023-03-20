@@ -1,6 +1,7 @@
 package trainbit
 
 import (
+	"html"
 	"io"
 	"net/http"
 	"net/url"
@@ -88,36 +89,19 @@ func getToken(apiKey string, AUSHELLPORTAL string) (string, string, error) {
 }
 
 func local2provider(filename string, isFolder bool) string {
-	filename = strings.Replace(filename, "%", url.QueryEscape("%"), -1)
-	filename = strings.Replace(filename, "/", url.QueryEscape("/"), -1)
-	filename = strings.Replace(filename, ":", url.QueryEscape(":"), -1)
-	filename = strings.Replace(filename, "*", url.QueryEscape("*"), -1)
-	filename = strings.Replace(filename, "?", url.QueryEscape("?"), -1)
-	filename = strings.Replace(filename, "\"", url.QueryEscape("\""), -1)
-	filename = strings.Replace(filename, "<", url.QueryEscape("<"), -1)
-	filename = strings.Replace(filename, ">", url.QueryEscape(">"), -1)
-	filename = strings.Replace(filename, "|", url.QueryEscape("|"), -1)
 	if isFolder {
 		return filename
 	}
-	return strings.Join([]string{filename, ".delete_suffix."}, "")
+	return filename + ".delete_suffix"
 }
 
 func provider2local(filename string) string {
-	index := strings.LastIndex(filename, ".delete_suffix.")
+	filename = html.UnescapeString(filename)
+	index := strings.LastIndex(filename, ".delete_suffix")
 	if index != -1 {
 		filename = filename[:index]
 	}
-	rawName := strings.Replace(filename, url.QueryEscape("/"), "/", -1)
-	rawName = strings.Replace(rawName, url.QueryEscape(":"), ":", -1)
-	rawName = strings.Replace(rawName, url.QueryEscape("*"), "*", -1)
-	rawName = strings.Replace(rawName, url.QueryEscape("?"), "?", -1)
-	rawName = strings.Replace(rawName, url.QueryEscape("\""), "\"", -1)
-	rawName = strings.Replace(rawName, url.QueryEscape("<"), "<", -1)
-	rawName = strings.Replace(rawName, url.QueryEscape(">"), ">", -1)
-	rawName = strings.Replace(rawName, url.QueryEscape("|"), "|", -1)
-	rawName = strings.Replace(rawName, url.QueryEscape("%"), "%", -1)
-	return rawName
+	return filename
 }
 
 func parseRawFileObject(rawObject []any) ([]model.Obj, error) {
@@ -132,7 +116,7 @@ func parseRawFileObject(rawObject []any) ([]model.Obj, error) {
 		if isFolder {
 			name = object["name"].(string)
 		} else {
-			name = strings.Join([]string{object["name"].(string), object["ext"].(string)}, ".")
+			name = object["name"].(string) + object["ext"].(string)
 		}
 		modified, err := time.Parse("2006/01/02 15:04:05", object["modified"].(string))
 		if err != nil {

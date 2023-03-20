@@ -119,7 +119,7 @@ func (d *Trainbit) Put(ctx context.Context, dstDir model.Obj, stream model.FileS
 	query := &url.Values{}
 	query.Add("q", strings.Split(dstDir.GetID(), "_")[1])
 	query.Add("guid", guid)
-	query.Add("name", url.QueryEscape(local2provider(stream.GetName(), false)))
+	query.Add("name", url.QueryEscape(local2provider(stream.GetName(), false) + "."))
 	endpoint.RawQuery = query.Encode()
 	var total int64
 	total = 0
