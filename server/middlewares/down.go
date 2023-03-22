@@ -36,8 +36,6 @@ func Down(c *gin.Context) {
 			return
 		}
 	}
-	// verify token
-
 	c.Next()
 }
 
@@ -49,6 +47,9 @@ func parsePath(path string) string {
 
 func needSign(meta *model.Meta, path string) bool {
 	if setting.GetBool(conf.SignAll) {
+		return true
+	}
+	if sign.IsStorageSigned(path) {
 		return true
 	}
 	if meta == nil || meta.Password == "" {

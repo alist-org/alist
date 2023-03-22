@@ -264,7 +264,7 @@ func FsGet(c *gin.Context) {
 		if storage.Config().MustProxy() || storage.GetStorage().WebProxy {
 			query := "?"
 			if needSign(meta, reqPath) {
-				query = query + "sign=" + sign.Sign(reqPath) + "&"
+				query = query + "sign=" + sign.Sign(reqPath)
 			}
 			if query == "?" {
 				query = ""
@@ -372,6 +372,9 @@ func FsOther(c *gin.Context) {
 
 func needSign(meta *model.Meta, path string) bool {
 	if setting.GetBool(conf.SignAll) {
+		return true
+	}
+	if sign.IsStorageSigned(path) {
 		return true
 	}
 	if meta == nil || meta.Password == "" {
