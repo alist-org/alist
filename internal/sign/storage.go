@@ -5,14 +5,18 @@ import (
 	json "github.com/json-iterator/go"
 )
 
+type signType struct {
+	Sign bool `json:"sign"`
+}
+
 func IsStorageSigned(rawPath string) bool {
+	var jsonData signType
 	storage := op.GetBalancedStorage(rawPath).GetStorage()
-	var jsonData = map[string]interface{}{}
 	err := json.Unmarshal([]byte(storage.Addition), &jsonData)
 	if err != nil {
 		return false
 	}
-	if jsonData["sign"] == "true" {
+	if jsonData.Sign == true {
 		return true
 	}
 	return false

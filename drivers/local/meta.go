@@ -8,6 +8,7 @@ import (
 type Addition struct {
 	driver.RootPath
 	Thumbnail  bool   `json:"thumbnail" required:"true" help:"enable thumbnail"`
+	Sign       bool   `json:"sign" default:"false" required:"false" help:"enable sign"`
 	ShowHidden bool   `json:"show_hidden" default:"true" required:"false" help:"show hidden directories and files"`
 	MkdirPerm  string `json:"mkdir_perm" default:"777"`
 }
