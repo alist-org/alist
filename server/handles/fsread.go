@@ -167,6 +167,9 @@ func getReadme(meta *model.Meta, path string) string {
 }
 
 func isEncrypt(meta *model.Meta, path string) bool {
+	if sign.IsStorageSigned(path) {
+		return true
+	}
 	if meta == nil || meta.Password == "" {
 		return false
 	}
