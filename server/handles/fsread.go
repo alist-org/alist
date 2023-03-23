@@ -293,6 +293,7 @@ func FsGet(c *gin.Context) {
 		related = filterRelated(sameLevelFiles, obj)
 	}
 	parentMeta, _ := op.GetNearestMeta(parentPath)
+	thumb, _ := model.GetThumb(obj)
 	common.SuccessResp(c, FsGetResp{
 		ObjResp: ObjResp{
 			Name:     obj.GetName(),
@@ -301,6 +302,7 @@ func FsGet(c *gin.Context) {
 			Modified: obj.ModTime(),
 			Sign:     common.Sign(obj, parentPath, isEncrypt(meta, reqPath)),
 			Type:     utils.GetFileType(obj.GetName()),
+			Thumb:    thumb,
 		},
 		RawURL:   rawURL,
 		Readme:   getReadme(meta, reqPath),
