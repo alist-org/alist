@@ -15,6 +15,11 @@ type Storage struct {
 	Disabled        bool      `json:"disabled"` // if disabled
 	Sort
 	Proxy
+	Sign
+}
+
+type Sign struct {
+	EnableSign bool `json:"enable_sign"`
 }
 
 type Sort struct {
