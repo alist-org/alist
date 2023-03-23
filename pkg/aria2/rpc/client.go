@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/base64"
 	"errors"
-	"io/ioutil"
 	"net/url"
+	"os"
 	"time"
 )
 
@@ -89,7 +89,7 @@ func (c *client) AddURI(uris []string, options ...interface{}) (gid string, err 
 // If a file with the same name already exists, it is overwritten!
 // If the file cannot be saved successfully or --rpc-save-upload-metadata is false, the downloads added by this method are not saved by --save-session.
 func (c *client) AddTorrent(filename string, options ...interface{}) (gid string, err error) {
-	co, err := ioutil.ReadFile(filename)
+	co, err := os.ReadFile(filename)
 	if err != nil {
 		return
 	}
@@ -120,7 +120,7 @@ func (c *client) AddTorrent(filename string, options ...interface{}) (gid string
 // If a file with the same name already exists, it is overwritten!
 // If the file cannot be saved successfully or --rpc-save-upload-metadata is false, the downloads added by this method are not saved by --save-session.
 func (c *client) AddMetalink(filename string, options ...interface{}) (gid []string, err error) {
-	co, err := ioutil.ReadFile(filename)
+	co, err := os.ReadFile(filename)
 	if err != nil {
 		return
 	}

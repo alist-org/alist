@@ -3,7 +3,6 @@ package common
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -94,7 +93,7 @@ func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.
 		}
 		w.WriteHeader(res.StatusCode)
 		if res.StatusCode >= 400 {
-			all, _ := ioutil.ReadAll(res.Body)
+			all, _ := io.ReadAll(res.Body)
 			msg := string(all)
 			log.Debugln(msg)
 			return errors.New(msg)
