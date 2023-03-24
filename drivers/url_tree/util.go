@@ -59,7 +59,7 @@ func BuildTree(text string, headSize bool) (*Node, error) {
 		}
 		// if level isn't greater than the level of the top of the stack
 		// it is not the child of the top of the stack
-		if level <= stack[len(stack)-1].Level {
+		for level <= stack[len(stack)-1].Level {
 			// pop the top of the stack
 			stack = stack[:len(stack)-1]
 		}
