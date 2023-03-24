@@ -2,8 +2,6 @@ package handles
 
 import (
 	"fmt"
-	"github.com/alist-org/alist/v3/internal/conf"
-	"github.com/alist-org/alist/v3/internal/setting"
 	stdpath "path"
 	"strings"
 	"time"
@@ -265,18 +263,15 @@ func FsGet(c *gin.Context) {
 			return
 		}
 		if storage.Config().MustProxy() || storage.GetStorage().WebProxy {
-			query := "?"
-			if needSign(meta, reqPath) {
-				query = query + "sign=" + sign.Sign(reqPath)
-			}
-			if query == "?" {
-				query = ""
+			query := "?sign="
+			if isEncrypt(meta, reqPath) {
+				query = query + sign.Sign(reqPath)
 			}
 			if storage.GetStorage().DownProxyUrl != "" {
-				rawURL = fmt.Sprintf("%s%s%s",
+				rawURL = fmt.Sprintf("%s%s?sign=%s",
 					strings.Split(storage.GetStorage().DownProxyUrl, "\n")[0],
 					utils.EncodePath(reqPath, true),
-					query)
+					sign.Sign(reqPath))
 			} else {
 				rawURL = fmt.Sprintf("%s/p%s%s",
 					common.GetApiUrl(c.Request),
@@ -373,20 +368,4 @@ func FsOther(c *gin.Context) {
 		return
 	}
 	common.SuccessResp(c, res)
-}
-
-func needSign(meta *model.Meta, path string) bool {
-	if setting.GetBool(conf.SignAll) {
-		return true
-	}
-	if sign.IsStorageSigned(path) {
-		return true
-	}
-	if meta == nil || meta.Password == "" {
-		return false
-	}
-	if !meta.PSub && path != meta.Path {
-		return false
-	}
-	return true
 }
