@@ -8,16 +8,16 @@ import (
 
 func testTree() (*url_tree.Node, error) {
 	text := `folder1:
-  name1:url1
-  url2
+  name1:https://url1
+  http://url2
   folder2:
-    url3
-    url4
-  url5
+    http://url3
+    http://url4
+  http://url5
 folder3:
-  url6
-  url7
-url8`
+  http://url6
+  http://url7
+http://url8`
 	return url_tree.BuildTree(text, false)
 }
 
