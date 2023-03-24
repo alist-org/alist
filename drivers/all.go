@@ -36,6 +36,7 @@ import (
 	_ "github.com/alist-org/alist/v3/drivers/terabox"
 	_ "github.com/alist-org/alist/v3/drivers/thunder"
 	_ "github.com/alist-org/alist/v3/drivers/trainbit"
+	_ "github.com/alist-org/alist/v3/drivers/url_tree"
 	_ "github.com/alist-org/alist/v3/drivers/uss"
 	_ "github.com/alist-org/alist/v3/drivers/virtual"
 	_ "github.com/alist-org/alist/v3/drivers/webdav"
