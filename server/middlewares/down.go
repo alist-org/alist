@@ -1,9 +1,10 @@
 package middlewares
 
 import (
+	"strings"
+
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/setting"
-	"strings"
 
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
@@ -49,7 +50,7 @@ func needSign(meta *model.Meta, path string) bool {
 	if setting.GetBool(conf.SignAll) {
 		return true
 	}
-	if sign.IsStorageSigned(path) {
+	if common.IsStorageSignEnabled(path) {
 		return true
 	}
 	if meta == nil || meta.Password == "" {

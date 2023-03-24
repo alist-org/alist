@@ -165,7 +165,7 @@ func getReadme(meta *model.Meta, path string) string {
 }
 
 func isEncrypt(meta *model.Meta, path string) bool {
-	if sign.IsStorageSigned(path) {
+	if common.IsStorageSignEnabled(path) {
 		return true
 	}
 	if meta == nil || meta.Password == "" {
@@ -263,9 +263,9 @@ func FsGet(c *gin.Context) {
 			return
 		}
 		if storage.Config().MustProxy() || storage.GetStorage().WebProxy {
-			query := "?sign="
+			query := ""
 			if isEncrypt(meta, reqPath) {
-				query = query + sign.Sign(reqPath)
+				query = "?sign=" + sign.Sign(reqPath)
 			}
 			if storage.GetStorage().DownProxyUrl != "" {
 				rawURL = fmt.Sprintf("%s%s?sign=%s",

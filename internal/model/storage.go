@@ -13,13 +13,9 @@ type Storage struct {
 	Remark          string    `json:"remark"`
 	Modified        time.Time `json:"modified"`
 	Disabled        bool      `json:"disabled"` // if disabled
+	EnableSign      bool      `json:"enable_sign"`
 	Sort
 	Proxy
-	Sign
-}
-
-type Sign struct {
-	EnableSign bool `json:"enable_sign"`
 }
 
 type Sort struct {
