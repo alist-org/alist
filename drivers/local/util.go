@@ -3,10 +3,12 @@ package local
 import (
 	"bytes"
 	"fmt"
-	ffmpeg "github.com/u2takey/ffmpeg-go"
 	"io/fs"
 	"os"
 	"path/filepath"
+	"sort"
+
+	ffmpeg "github.com/u2takey/ffmpeg-go"
 )
 
 func isSymlinkDir(f fs.FileInfo, path string) bool {
@@ -38,4 +40,18 @@ func GetSnapshot(videoPath string, frameNum int) (imgData *bytes.Buffer, err err
 		return nil, err
 	}
 	return srcBuf, nil
+}
+
+func readDir(dirname string) ([]fs.FileInfo, error) {
+	f, err := os.Open(dirname)
+	if err != nil {
+		return nil, err
+	}
+	list, err := f.Readdir(-1)
+	f.Close()
+	if err != nil {
+		return nil, err
+	}
+	sort.Slice(list, func(i, j int) bool { return list[i].Name() < list[j].Name() })
+	return list, nil
 }
