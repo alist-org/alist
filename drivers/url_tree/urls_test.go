@@ -18,7 +18,7 @@ folder3:
   url6
   url7
 url8`
-	return url_tree.BuildTree(text)
+	return url_tree.BuildTree(text, false)
 }
 
 func TestBuildTree(t *testing.T) {

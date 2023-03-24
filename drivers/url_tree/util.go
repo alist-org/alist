@@ -3,15 +3,23 @@ package url_tree
 import (
 	"fmt"
 	stdpath "path"
+	"strconv"
 	"strings"
 	"time"
 
+	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
+	log "github.com/sirupsen/logrus"
 )
 
-// build tree from text, text structure:
+// build tree from text, text structure definition:
 /**
+ * FolderName:
+ *   [FileName:][FileSize:][Modified:]Url
+ */
+/**
+ * For example:
  * folder1:
  *   name1:url1
  *   url2
@@ -25,7 +33,7 @@ import (
  * url8
  */
 // if there are no name, use the last segment of url as name
-func BuildTree(text string) (*Node, error) {
+func BuildTree(text string, headSize bool) (*Node, error) {
 	lines := strings.Split(text, "\n")
 	var root = &Node{Level: -1, Name: "root"}
 	stack := []*Node{root}
@@ -69,7 +77,7 @@ func BuildTree(text string) (*Node, error) {
 		} else {
 			// if the line is a file
 			// create a new node
-			node, err := parseFileLine(line)
+			node, err := parseFileLine(line, headSize)
 			if err != nil {
 				return nil, err
 			}
@@ -85,21 +93,60 @@ func isFolder(line string) bool {
 	return strings.HasSuffix(line, ":")
 }
 
-func parseFileLine(line string) (*Node, error) {
-	if strings.HasPrefix(line, "http://") || strings.HasPrefix(line, "https://") {
-		return &Node{
-			Name: stdpath.Base(line),
-			Url:  line,
-		}, nil
+// line definition:
+// [FileName:][FileSize:][Modified:]Url
+func parseFileLine(line string, headSize bool) (*Node, error) {
+	// if there is no url, it is an error
+	if !strings.Contains(line, "http://") && !strings.Contains(line, "https://") {
+		return nil, fmt.Errorf("invalid line: %s, because url is required for file", line)
 	}
-	parts := strings.SplitN(line, ":", 2)
-	if len(parts) != 2 {
-		return nil, fmt.Errorf("invalid line: %s", line)
+	index := strings.Index(line, "http://")
+	if index == -1 {
+		index = strings.Index(line, "https://")
 	}
-	return &Node{
-		Name: parts[0],
-		Url:  parts[1],
-	}, nil
+	url := line[index:]
+	info := line[:index]
+	node := &Node{
+		Url: url,
+	}
+	haveSize := false
+	if index > 0 {
+		if !strings.HasSuffix(info, ":") {
+			return nil, fmt.Errorf("invalid line: %s, because file info must end with ':'", line)
+		}
+		info = info[:len(info)-1]
+		if info == "" {
+			return nil, fmt.Errorf("invalid line: %s, because file name can't be empty", line)
+		}
+		infoParts := strings.Split(info, ":")
+		node.Name = infoParts[0]
+		if len(infoParts) > 1 {
+			size, err := strconv.ParseInt(infoParts[1], 10, 64)
+			if err != nil {
+				return nil, fmt.Errorf("invalid line: %s, because file size must be an integer", line)
+			}
+			node.Size = size
+			haveSize = true
+			if len(infoParts) > 2 {
+				modified, err := strconv.ParseInt(infoParts[2], 10, 64)
+				if err != nil {
+					return nil, fmt.Errorf("invalid line: %s, because file modified must be an unix timestamp", line)
+				}
+				node.Modified = modified
+			}
+		}
+	} else {
+		node.Name = stdpath.Base(url)
+	}
+	if !haveSize && headSize {
+		size, err := getSizeFromUrl(url)
+		if err != nil {
+			log.Errorf("get size from url error: %s", err)
+		} else {
+			node.Size = size
+		}
+	}
+	return node, nil
 }
 
 func splitPath(path string) []string {
@@ -126,4 +173,20 @@ func nodeToObj(node *Node, path string) (model.Obj, error) {
 		IsFolder: !node.isFile(),
 		Path:     path,
 	}, nil
+}
+
+func getSizeFromUrl(url string) (int64, error) {
+	res, err := base.RestyClient.R().SetDoNotParseResponse(true).Head(url)
+	if err != nil {
+		return 0, err
+	}
+	defer res.RawResponse.Body.Close()
+	if res.StatusCode() >= 300 {
+		return 0, fmt.Errorf("get size from url %s failed, status code: %d", url, res.StatusCode())
+	}
+	size, err := strconv.ParseInt(res.Header().Get("Content-Length"), 10, 64)
+	if err != nil {
+		return 0, err
+	}
+	return size, nil
 }

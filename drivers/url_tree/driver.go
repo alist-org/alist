@@ -26,7 +26,7 @@ func (d *Urls) GetAddition() driver.Additional {
 }
 
 func (d *Urls) Init(ctx context.Context) error {
-	node, err := BuildTree(d.UrlStructure)
+	node, err := BuildTree(d.UrlStructure, d.HeadSize)
 	if err != nil {
 		return err
 	}

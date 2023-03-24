@@ -11,6 +11,7 @@ type Addition struct {
 	// driver.RootID
 	// define other
 	UrlStructure string `json:"url_structure" type:"text" required:"true" default:"https://jsd.nn.ci/gh/alist-org/alist/README.md\nhttps://jsd.nn.ci/gh/alist-org/alist/README_cn.md\nfolder:\n  https://jsd.nn.ci/gh/alist-org/alist/CONTRIBUTING.md\n  https://jsd.nn.ci/gh/alist-org/alist/CODE_OF_CONDUCT.md"`
+	HeadSize     bool   `json:"head_size" type:"bool" default:"false"`
 }
 
 var config = driver.Config{
