@@ -1,4 +1,4 @@
-package urls
+package url_tree
 
 import (
 	"fmt"

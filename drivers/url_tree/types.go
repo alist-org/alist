@@ -1,4 +1,4 @@
-package urls
+package url_tree
 
 // Node is a node in the folder tree
 type Node struct {
