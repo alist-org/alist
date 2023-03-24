@@ -8,8 +8,14 @@ import (
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/pkg/utils"
 )
+
+func IsStorageSignEnabled(rawPath string) bool {
+	storage := op.GetBalancedStorage(rawPath)
+	return storage != nil && storage.GetStorage().EnableSign
+}
 
 func CanWrite(meta *model.Meta, path string) bool {
 	if meta == nil || !meta.Write {
