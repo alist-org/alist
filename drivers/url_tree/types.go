@@ -32,3 +32,15 @@ func (node *Node) getByPath(paths []string) *Node {
 func (node *Node) isFile() bool {
 	return node.Url != ""
 }
+
+func (node *Node) calSize() int64 {
+	if node.isFile() {
+		return node.Size
+	}
+	var size int64 = 0
+	for _, child := range node.Children {
+		size += child.calSize()
+	}
+	node.Size = size
+	return size
+}

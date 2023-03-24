@@ -30,6 +30,7 @@ func (d *Urls) Init(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	node.calSize()
 	d.root = node
 	return nil
 }

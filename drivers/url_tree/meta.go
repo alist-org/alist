@@ -10,7 +10,7 @@ type Addition struct {
 	// driver.RootPath
 	// driver.RootID
 	// define other
-	UrlStructure string `json:"url_structure" type:"text" required:"true" default:"https://jsd.nn.ci/gh/alist-org/alist/README.md\nhttps://jsd.nn.ci/gh/alist-org/alist/README_cn.md\nfolder:\n  https://jsd.nn.ci/gh/alist-org/alist/CONTRIBUTING.md\n  https://jsd.nn.ci/gh/alist-org/alist/CODE_OF_CONDUCT.md"`
+	UrlStructure string `json:"url_structure" type:"text" required:"true" default:"https://jsd.nn.ci/gh/alist-org/alist/README.md\nhttps://jsd.nn.ci/gh/alist-org/alist/README_cn.md\nfolder:\n  CONTRIBUTING.md:1635:https://jsd.nn.ci/gh/alist-org/alist/CONTRIBUTING.md\n  CODE_OF_CONDUCT.md:2093:https://jsd.nn.ci/gh/alist-org/alist/CODE_OF_CONDUCT.md"`
 	HeadSize     bool   `json:"head_size" type:"bool" default:"false"`
 }
 
