@@ -22,6 +22,8 @@ var Cancel2FACmd = &cobra.Command{
 			err := op.Cancel2FAByUser(admin)
 			if err != nil {
 				utils.Log.Errorf("failed to cancel 2FA: %+v", err)
+			} else {
+				utils.Log.Info("2FA canceled")
 			}
 		}
 	},
