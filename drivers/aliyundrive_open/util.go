@@ -1,14 +1,19 @@
 package aliyundrive_open
 
 import (
+	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/go-resty/resty/v2"
 )
+
+const uploadPartEach = 20
 
 // do others that not defined in Driver interface
 
@@ -120,4 +125,47 @@ func makePartInfos(begin, size int) []base.Json {
 		partInfoList[i] = base.Json{"part_number": begin + i}
 	}
 	return partInfoList
+}
+
+func (d *AliyundriveOpen) getUploadUrl(i, count int, fileId, uploadId string) ([]PartInfo, error) {
+	partInfoList := makePartInfos(i, min(count-i+1, uploadPartEach))
+	var resp CreateResp
+	_, err := d.request("/adrive/v1.0/openFile/getUploadUrl", http.MethodPost, func(req *resty.Request) {
+		req.SetBody(base.Json{
+			"drive_id":       d.DriveId,
+			"file_id":        fileId,
+			"part_info_list": partInfoList,
+			"upload_id":      uploadId,
+		}).SetResult(&resp)
+	})
+	return resp.PartInfoList, err
+}
+
+func (d *AliyundriveOpen) uploadPart(ctx context.Context, i, j, count int, part []byte, resp *CreateResp, retry bool) error {
+	partInfo := resp.PartInfoList[j]
+	uploadUrl := partInfo.UploadUrl
+	if d.InternalUpload {
+		uploadUrl = strings.ReplaceAll(uploadUrl, "https://cn-beijing-data.aliyundrive.net/", "http://ccp-bj29-bj-1592982087.oss-cn-beijing-internal.aliyuncs.com/")
+	}
+	req, err := http.NewRequest("PUT", uploadUrl, bytes.NewReader(part))
+	if err != nil {
+		return err
+	}
+	req = req.WithContext(ctx)
+	res, err := base.HttpClient.Do(req)
+	if err != nil {
+		return err
+	}
+	res.Body.Close()
+	if retry && res.StatusCode == http.StatusForbidden {
+		resp.PartInfoList, err = d.getUploadUrl(i-j, count, resp.FileId, resp.UploadId)
+		if err != nil {
+			return err
+		}
+		return d.uploadPart(ctx, i, j, count, part, resp, false)
+	}
+	if res.StatusCode != http.StatusOK {
+		return fmt.Errorf("upload status: %d", res.StatusCode)
+	}
+	return nil
 }
