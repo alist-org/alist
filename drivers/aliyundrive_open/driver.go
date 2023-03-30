@@ -15,6 +15,8 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
+const uploadPartEach = 20
+
 type AliyundriveOpen struct {
 	model.Storage
 	Addition
@@ -148,11 +150,7 @@ func (d *AliyundriveOpen) Put(ctx context.Context, dstDir model.Obj, stream mode
 	count := 1
 	if stream.GetSize() > DEFAULT {
 		count = int(math.Ceil(float64(stream.GetSize()) / float64(DEFAULT)))
-		partInfoList := make([]base.Json, 0, count)
-		for i := 1; i <= count; i++ {
-			partInfoList = append(partInfoList, base.Json{"part_number": i})
-		}
-		createData["part_info_list"] = partInfoList
+		createData["part_info_list"] = makePartInfos(1, min(count, uploadPartEach))
 	}
 	var createResp CreateResp
 	_, err := d.request("/adrive/v1.0/openFile/create", http.MethodPost, func(req *resty.Request) {
@@ -162,28 +160,49 @@ func (d *AliyundriveOpen) Put(ctx context.Context, dstDir model.Obj, stream mode
 		return err
 	}
 	// 2. upload
-	for i, partInfo := range createResp.PartInfoList {
-		if utils.IsCanceled(ctx) {
-			return ctx.Err()
+	i := 0
+	for {
+		for _, partInfo := range createResp.PartInfoList {
+			if utils.IsCanceled(ctx) {
+				return ctx.Err()
+			}
+			uploadUrl := partInfo.UploadUrl
+			if d.InternalUpload {
+				//Replace a known public Host with an internal Host
+				uploadUrl = strings.ReplaceAll(uploadUrl, "https://cn-beijing-data.aliyundrive.net/", "http://ccp-bj29-bj-1592982087.oss-cn-beijing-internal.aliyuncs.com/")
+			}
+			req, err := http.NewRequest("PUT", uploadUrl, io.LimitReader(stream, DEFAULT))
+			if err != nil {
+				return err
+			}
+			req = req.WithContext(ctx)
+			res, err := base.HttpClient.Do(req)
+			if err != nil {
+				return err
+			}
+			res.Body.Close()
+			if count > 0 {
+				up(i * 100 / count)
+			}
+			i++
 		}
-		uploadUrl := partInfo.UploadUrl
-		if d.InternalUpload {
-			//Replace a known public Host with an internal Host
-			uploadUrl = strings.ReplaceAll(uploadUrl, "https://cn-beijing-data.aliyundrive.net/", "http://ccp-bj29-bj-1592982087.oss-cn-beijing-internal.aliyuncs.com/")
+		if i > count {
+			break
 		}
-		req, err := http.NewRequest("PUT", uploadUrl, io.LimitReader(stream, DEFAULT))
+		partInfoList := makePartInfos(i, min(count-i+1, uploadPartEach))
+		var resp CreateResp
+		_, err = d.request("/adrive/v1.0/openFile/getUploadUrl", http.MethodPost, func(req *resty.Request) {
+			req.SetBody(base.Json{
+				"drive_id":       d.DriveId,
+				"file_id":        createResp.FileId,
+				"part_info_list": partInfoList,
+				"upload_id":      createResp.UploadId,
+			}).SetResult(&resp)
+		})
 		if err != nil {
 			return err
 		}
-		req = req.WithContext(ctx)
-		res, err := base.HttpClient.Do(req)
-		if err != nil {
-			return err
-		}
-		res.Body.Close()
-		if count > 0 {
-			up(i * 100 / count)
-		}
+		createResp.PartInfoList = resp.PartInfoList
 	}
 	// 3. complete
 	_, err = d.request("/adrive/v1.0/openFile/complete", http.MethodPost, func(req *resty.Request) {
