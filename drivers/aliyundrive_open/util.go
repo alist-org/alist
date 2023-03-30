@@ -164,7 +164,7 @@ func (d *AliyundriveOpen) uploadPart(ctx context.Context, i, j, count int, part 
 		}
 		return d.uploadPart(ctx, i, j, count, part, resp, false)
 	}
-	if res.StatusCode != http.StatusOK {
+	if res.StatusCode != http.StatusOK && res.StatusCode != http.StatusConflict {
 		return fmt.Errorf("upload status: %d", res.StatusCode)
 	}
 	return nil
