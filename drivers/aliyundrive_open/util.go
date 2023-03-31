@@ -110,16 +110,16 @@ func (d *AliyundriveOpen) getFiles(fileId string) ([]File, error) {
 	return res, nil
 }
 
-func makePartInfos(begin, size int) []base.Json {
+func makePartInfos(size int) []base.Json {
 	partInfoList := make([]base.Json, size)
-	for i := 0; i < size; i++ {
-		partInfoList[i] = base.Json{"part_number": begin + i}
+	for i := 1; i <= size; i++ {
+		partInfoList[i] = base.Json{"part_number": i}
 	}
 	return partInfoList
 }
 
-func (d *AliyundriveOpen) getUploadUrl(i, count int, fileId, uploadId string) ([]PartInfo, error) {
-	partInfoList := makePartInfos(i, count)
+func (d *AliyundriveOpen) getUploadUrl(count int, fileId, uploadId string) ([]PartInfo, error) {
+	partInfoList := makePartInfos(count)
 	var resp CreateResp
 	_, err := d.request("/adrive/v1.0/openFile/getUploadUrl", http.MethodPost, func(req *resty.Request) {
 		req.SetBody(base.Json{
@@ -153,7 +153,7 @@ func (d *AliyundriveOpen) uploadPart(ctx context.Context, i, count int, reader *
 	}
 	res.Body.Close()
 	if retry && res.StatusCode == http.StatusForbidden {
-		resp.PartInfoList, err = d.getUploadUrl(1, count, resp.FileId, resp.UploadId)
+		resp.PartInfoList, err = d.getUploadUrl(count, resp.FileId, resp.UploadId)
 		if err != nil {
 			return err
 		}

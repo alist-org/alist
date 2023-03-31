@@ -147,7 +147,7 @@ func (d *AliyundriveOpen) Put(ctx context.Context, dstDir model.Obj, stream mode
 	count := 1
 	if stream.GetSize() > DEFAULT {
 		count = int(math.Ceil(float64(stream.GetSize()) / float64(DEFAULT)))
-		createData["part_info_list"] = makePartInfos(1, count)
+		createData["part_info_list"] = makePartInfos(count)
 	}
 	var createResp CreateResp
 	_, err := d.request("/adrive/v1.0/openFile/create", http.MethodPost, func(req *resty.Request) {
@@ -157,6 +157,7 @@ func (d *AliyundriveOpen) Put(ctx context.Context, dstDir model.Obj, stream mode
 		return err
 	}
 	// 2. upload
+	const REFRESH_INTERVAL int = 20
 	for i := 1; i <= len(createResp.PartInfoList); i++ {
 		if utils.IsCanceled(ctx) {
 			return ctx.Err()
@@ -167,6 +168,12 @@ func (d *AliyundriveOpen) Put(ctx context.Context, dstDir model.Obj, stream mode
 		}
 		if count > 0 {
 			up(i * 100 / count)
+		}
+		if i%REFRESH_INTERVAL == 0 {
+			createResp.PartInfoList, err = d.getUploadUrl(count, createResp.FileId, createResp.UploadId)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	// 3. complete
