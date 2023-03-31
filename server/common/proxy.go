@@ -16,7 +16,15 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-var HttpClient = &http.Client{}
+var HttpClient = &http.Client{
+	CheckRedirect: func(req *http.Request, via []*http.Request) error {
+		if len(via) >= 10 {
+			return errors.New("stopped after 10 redirects")
+		}
+		req.Header.Del("Referer")
+		return nil
+	},
+}
 
 func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.Obj) error {
 	// read data with native
