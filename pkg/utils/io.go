@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"bytes"
 	"context"
 	"io"
 )
@@ -90,4 +91,47 @@ func NewReadCloser(reader io.Reader, close CloseFunc) io.ReadCloser {
 
 func NewLimitReadCloser(reader io.Reader, close CloseFunc, limit int64) io.ReadCloser {
 	return NewReadCloser(io.LimitReader(reader, limit), close)
+}
+
+type MultiReadable struct {
+	originReader io.Reader
+	reader       io.Reader
+	cache        *bytes.Buffer
+}
+
+func NewMultiReadable(reader io.Reader) *MultiReadable {
+	return &MultiReadable{
+		originReader: reader,
+		reader:       reader,
+	}
+}
+
+func (mr *MultiReadable) Read(p []byte) (int, error) {
+	n, err := mr.reader.Read(p)
+	if _, ok := mr.reader.(io.Seeker); !ok && n > 0 {
+		if mr.cache == nil {
+			mr.cache = &bytes.Buffer{}
+		}
+		mr.cache.Write(p[:n])
+	}
+	return n, err
+}
+
+func (mr *MultiReadable) Reset() error {
+	if seeker, ok := mr.reader.(io.Seeker); ok {
+		_, err := seeker.Seek(0, io.SeekStart)
+		return err
+	}
+	if mr.cache != nil && mr.cache.Len() > 0 {
+		mr.reader = io.MultiReader(mr.cache, mr.reader)
+		mr.cache = nil
+	}
+	return nil
+}
+
+func (mr *MultiReadable) Close() error {
+	if closer, ok := mr.originReader.(io.Closer); ok {
+		return closer.Close()
+	}
+	return nil
 }
