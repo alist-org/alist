@@ -161,11 +161,7 @@ func (d *AliyundriveOpen) Put(ctx context.Context, dstDir model.Obj, stream mode
 		if utils.IsCanceled(ctx) {
 			return ctx.Err()
 		}
-		part, err := io.ReadAll(io.LimitReader(stream, DEFAULT))
-		if err != nil {
-			return err
-		}
-		err = d.uploadPart(ctx, i, count, part, &createResp, true)
+		err = d.uploadPart(ctx, i, count, utils.NewMultiReadable(io.LimitReader(stream, DEFAULT)), &createResp, true)
 		if err != nil {
 			return err
 		}

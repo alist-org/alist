@@ -1,7 +1,6 @@
 package aliyundrive_open
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -10,10 +9,9 @@ import (
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/op"
+	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/go-resty/resty/v2"
 )
-
-const uploadPartEach = 20
 
 // do others that not defined in Driver interface
 
@@ -112,13 +110,6 @@ func (d *AliyundriveOpen) getFiles(fileId string) ([]File, error) {
 	return res, nil
 }
 
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
 func makePartInfos(begin, size int) []base.Json {
 	partInfoList := make([]base.Json, size)
 	for i := 0; i < size; i++ {
@@ -128,7 +119,7 @@ func makePartInfos(begin, size int) []base.Json {
 }
 
 func (d *AliyundriveOpen) getUploadUrl(i, count int, fileId, uploadId string) ([]PartInfo, error) {
-	partInfoList := makePartInfos(i, min(count-i+1, uploadPartEach))
+	partInfoList := makePartInfos(i, count)
 	var resp CreateResp
 	_, err := d.request("/adrive/v1.0/openFile/getUploadUrl", http.MethodPost, func(req *resty.Request) {
 		req.SetBody(base.Json{
@@ -141,13 +132,13 @@ func (d *AliyundriveOpen) getUploadUrl(i, count int, fileId, uploadId string) ([
 	return resp.PartInfoList, err
 }
 
-func (d *AliyundriveOpen) uploadPart(ctx context.Context, i, count int, part []byte, resp *CreateResp, retry bool) error {
+func (d *AliyundriveOpen) uploadPart(ctx context.Context, i, count int, reader *utils.MultiReadable, resp *CreateResp, retry bool) error {
 	partInfo := resp.PartInfoList[i-1]
 	uploadUrl := partInfo.UploadUrl
 	if d.InternalUpload {
 		uploadUrl = strings.ReplaceAll(uploadUrl, "https://cn-beijing-data.aliyundrive.net/", "http://ccp-bj29-bj-1592982087.oss-cn-beijing-internal.aliyuncs.com/")
 	}
-	req, err := http.NewRequest("PUT", uploadUrl, bytes.NewReader(part))
+	req, err := http.NewRequest("PUT", uploadUrl, reader)
 	if err != nil {
 		return err
 	}
@@ -155,7 +146,8 @@ func (d *AliyundriveOpen) uploadPart(ctx context.Context, i, count int, part []b
 	res, err := base.HttpClient.Do(req)
 	if err != nil {
 		if retry {
-			return d.uploadPart(ctx, i, count, part, resp, false)
+			reader.Reset()
+			return d.uploadPart(ctx, i, count, reader, resp, false)
 		}
 		return err
 	}
@@ -165,7 +157,8 @@ func (d *AliyundriveOpen) uploadPart(ctx context.Context, i, count int, part []b
 		if err != nil {
 			return err
 		}
-		return d.uploadPart(ctx, i, count, part, resp, false)
+		reader.Reset()
+		return d.uploadPart(ctx, i, count, reader, resp, false)
 	}
 	if res.StatusCode != http.StatusOK && res.StatusCode != http.StatusConflict {
 		return fmt.Errorf("upload status: %d", res.StatusCode)
