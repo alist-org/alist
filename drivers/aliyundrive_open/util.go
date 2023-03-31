@@ -112,8 +112,8 @@ func (d *AliyundriveOpen) getFiles(fileId string) ([]File, error) {
 
 func makePartInfos(size int) []base.Json {
 	partInfoList := make([]base.Json, size)
-	for i := 1; i <= size; i++ {
-		partInfoList[i] = base.Json{"part_number": i}
+	for i := 0; i < size; i++ {
+		partInfoList[i] = base.Json{"part_number": 1 + i}
 	}
 	return partInfoList
 }
