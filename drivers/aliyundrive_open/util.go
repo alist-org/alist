@@ -141,8 +141,8 @@ func (d *AliyundriveOpen) getUploadUrl(i, count int, fileId, uploadId string) ([
 	return resp.PartInfoList, err
 }
 
-func (d *AliyundriveOpen) uploadPart(ctx context.Context, i, j, count int, part []byte, resp *CreateResp, retry bool) error {
-	partInfo := resp.PartInfoList[j]
+func (d *AliyundriveOpen) uploadPart(ctx context.Context, i, count int, part []byte, resp *CreateResp, retry bool) error {
+	partInfo := resp.PartInfoList[i-1]
 	uploadUrl := partInfo.UploadUrl
 	if d.InternalUpload {
 		uploadUrl = strings.ReplaceAll(uploadUrl, "https://cn-beijing-data.aliyundrive.net/", "http://ccp-bj29-bj-1592982087.oss-cn-beijing-internal.aliyuncs.com/")
@@ -154,15 +154,18 @@ func (d *AliyundriveOpen) uploadPart(ctx context.Context, i, j, count int, part 
 	req = req.WithContext(ctx)
 	res, err := base.HttpClient.Do(req)
 	if err != nil {
+		if retry {
+			return d.uploadPart(ctx, i, count, part, resp, false)
+		}
 		return err
 	}
 	res.Body.Close()
 	if retry && res.StatusCode == http.StatusForbidden {
-		resp.PartInfoList, err = d.getUploadUrl(i-j, count, resp.FileId, resp.UploadId)
+		resp.PartInfoList, err = d.getUploadUrl(1, count, resp.FileId, resp.UploadId)
 		if err != nil {
 			return err
 		}
-		return d.uploadPart(ctx, i, j, count, part, resp, false)
+		return d.uploadPart(ctx, i, count, part, resp, false)
 	}
 	if res.StatusCode != http.StatusOK && res.StatusCode != http.StatusConflict {
 		return fmt.Errorf("upload status: %d", res.StatusCode)
