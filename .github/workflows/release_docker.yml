@@ -17,7 +17,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: xhofe/alist
+          images: jmheqiao/a3v
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -28,7 +28,7 @@ jobs:
       - name: Login to DockerHub
         uses: docker/login-action@v2
         with:
-          username: xhofe
+          username: jmheqiao
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push
