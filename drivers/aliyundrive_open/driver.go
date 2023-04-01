@@ -5,6 +5,7 @@ import (
 	"io"
 	"math"
 	"net/http"
+	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
@@ -157,7 +158,7 @@ func (d *AliyundriveOpen) Put(ctx context.Context, dstDir model.Obj, stream mode
 		return err
 	}
 	// 2. upload
-	const REFRESH_INTERVAL int = 20
+	preTime := time.Now()
 	for i := 1; i <= len(createResp.PartInfoList); i++ {
 		if utils.IsCanceled(ctx) {
 			return ctx.Err()
@@ -169,11 +170,13 @@ func (d *AliyundriveOpen) Put(ctx context.Context, dstDir model.Obj, stream mode
 		if count > 0 {
 			up(i * 100 / count)
 		}
-		if i%REFRESH_INTERVAL == 0 {
+		// refresh upload url if 50 minutes passed
+		if time.Since(preTime) > 50*time.Minute {
 			createResp.PartInfoList, err = d.getUploadUrl(count, createResp.FileId, createResp.UploadId)
 			if err != nil {
 				return err
 			}
+			preTime = time.Now()
 		}
 	}
 	// 3. complete
