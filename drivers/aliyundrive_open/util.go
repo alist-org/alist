@@ -1,12 +1,15 @@
 package aliyundrive_open
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/op"
+	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/go-resty/resty/v2"
 )
 
@@ -105,4 +108,60 @@ func (d *AliyundriveOpen) getFiles(fileId string) ([]File, error) {
 		res = append(res, resp.Items...)
 	}
 	return res, nil
+}
+
+func makePartInfos(size int) []base.Json {
+	partInfoList := make([]base.Json, size)
+	for i := 0; i < size; i++ {
+		partInfoList[i] = base.Json{"part_number": 1 + i}
+	}
+	return partInfoList
+}
+
+func (d *AliyundriveOpen) getUploadUrl(count int, fileId, uploadId string) ([]PartInfo, error) {
+	partInfoList := makePartInfos(count)
+	var resp CreateResp
+	_, err := d.request("/adrive/v1.0/openFile/getUploadUrl", http.MethodPost, func(req *resty.Request) {
+		req.SetBody(base.Json{
+			"drive_id":       d.DriveId,
+			"file_id":        fileId,
+			"part_info_list": partInfoList,
+			"upload_id":      uploadId,
+		}).SetResult(&resp)
+	})
+	return resp.PartInfoList, err
+}
+
+func (d *AliyundriveOpen) uploadPart(ctx context.Context, i, count int, reader *utils.MultiReadable, resp *CreateResp, retry bool) error {
+	partInfo := resp.PartInfoList[i-1]
+	uploadUrl := partInfo.UploadUrl
+	if d.InternalUpload {
+		uploadUrl = strings.ReplaceAll(uploadUrl, "https://cn-beijing-data.aliyundrive.net/", "http://ccp-bj29-bj-1592982087.oss-cn-beijing-internal.aliyuncs.com/")
+	}
+	req, err := http.NewRequest("PUT", uploadUrl, reader)
+	if err != nil {
+		return err
+	}
+	req = req.WithContext(ctx)
+	res, err := base.HttpClient.Do(req)
+	if err != nil {
+		if retry {
+			reader.Reset()
+			return d.uploadPart(ctx, i, count, reader, resp, false)
+		}
+		return err
+	}
+	res.Body.Close()
+	if retry && res.StatusCode == http.StatusForbidden {
+		resp.PartInfoList, err = d.getUploadUrl(count, resp.FileId, resp.UploadId)
+		if err != nil {
+			return err
+		}
+		reader.Reset()
+		return d.uploadPart(ctx, i, count, reader, resp, false)
+	}
+	if res.StatusCode != http.StatusOK && res.StatusCode != http.StatusConflict {
+		return fmt.Errorf("upload status: %d", res.StatusCode)
+	}
+	return nil
 }

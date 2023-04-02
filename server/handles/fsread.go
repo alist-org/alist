@@ -6,10 +6,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/fs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/op"
+	"github.com/alist-org/alist/v3/internal/setting"
 	"github.com/alist-org/alist/v3/internal/sign"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/server/common"
@@ -264,7 +266,7 @@ func FsGet(c *gin.Context) {
 		}
 		if storage.Config().MustProxy() || storage.GetStorage().WebProxy {
 			query := ""
-			if isEncrypt(meta, reqPath) {
+			if isEncrypt(meta, reqPath) || setting.GetBool(conf.SignAll) {
 				query = "?sign=" + sign.Sign(reqPath)
 			}
 			if storage.GetStorage().DownProxyUrl != "" {
