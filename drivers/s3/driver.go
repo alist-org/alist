@@ -128,6 +128,9 @@ func (d *S3) Remove(ctx context.Context, obj model.Obj) error {
 
 func (d *S3) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
 	uploader := s3manager.NewUploader(d.Session)
+	if stream.GetSize() > s3manager.MaxUploadParts*s3manager.DefaultUploadPartSize {
+		uploader.PartSize = stream.GetSize() / (s3manager.MaxUploadParts - 1)
+	}
 	key := getKey(stdpath.Join(dstDir.GetPath(), stream.GetName()), false)
 	log.Debugln("key:", key)
 	input := &s3manager.UploadInput{

@@ -29,7 +29,6 @@ import (
 type Pan123 struct {
 	model.Storage
 	Addition
-	AccessToken string
 }
 
 func (d *Pan123) Config() driver.Config {
@@ -41,7 +40,8 @@ func (d *Pan123) GetAddition() driver.Additional {
 }
 
 func (d *Pan123) Init(ctx context.Context) error {
-	return d.login()
+	_, err := d.request("https://www.123pan.com/b/api/user/info", http.MethodGet, nil, nil)
+	return err
 }
 
 func (d *Pan123) Drop(ctx context.Context) error {

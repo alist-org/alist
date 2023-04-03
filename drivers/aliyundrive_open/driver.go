@@ -5,7 +5,7 @@ import (
 	"io"
 	"math"
 	"net/http"
-	"strings"
+	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
@@ -148,11 +148,7 @@ func (d *AliyundriveOpen) Put(ctx context.Context, dstDir model.Obj, stream mode
 	count := 1
 	if stream.GetSize() > DEFAULT {
 		count = int(math.Ceil(float64(stream.GetSize()) / float64(DEFAULT)))
-		partInfoList := make([]base.Json, 0, count)
-		for i := 1; i <= count; i++ {
-			partInfoList = append(partInfoList, base.Json{"part_number": i})
-		}
-		createData["part_info_list"] = partInfoList
+		createData["part_info_list"] = makePartInfos(count)
 	}
 	var createResp CreateResp
 	_, err := d.request("/adrive/v1.0/openFile/create", http.MethodPost, func(req *resty.Request) {
@@ -162,27 +158,25 @@ func (d *AliyundriveOpen) Put(ctx context.Context, dstDir model.Obj, stream mode
 		return err
 	}
 	// 2. upload
-	for i, partInfo := range createResp.PartInfoList {
+	preTime := time.Now()
+	for i := 1; i <= len(createResp.PartInfoList); i++ {
 		if utils.IsCanceled(ctx) {
 			return ctx.Err()
 		}
-		uploadUrl := partInfo.UploadUrl
-		if d.InternalUpload {
-			//Replace a known public Host with an internal Host
-			uploadUrl = strings.ReplaceAll(uploadUrl, "https://cn-beijing-data.aliyundrive.net/", "http://ccp-bj29-bj-1592982087.oss-cn-beijing-internal.aliyuncs.com/")
-		}
-		req, err := http.NewRequest("PUT", uploadUrl, io.LimitReader(stream, DEFAULT))
+		err = d.uploadPart(ctx, i, count, utils.NewMultiReadable(io.LimitReader(stream, DEFAULT)), &createResp, true)
 		if err != nil {
 			return err
 		}
-		req = req.WithContext(ctx)
-		res, err := base.HttpClient.Do(req)
-		if err != nil {
-			return err
-		}
-		res.Body.Close()
 		if count > 0 {
 			up(i * 100 / count)
+		}
+		// refresh upload url if 50 minutes passed
+		if time.Since(preTime) > 50*time.Minute {
+			createResp.PartInfoList, err = d.getUploadUrl(count, createResp.FileId, createResp.UploadId)
+			if err != nil {
+				return err
+			}
+			preTime = time.Now()
 		}
 	}
 	// 3. complete

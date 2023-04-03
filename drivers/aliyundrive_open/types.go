@@ -45,6 +45,14 @@ func fileToObj(f File) *model.ObjThumb {
 	}
 }
 
+type PartInfo struct {
+	Etag        interface{} `json:"etag"`
+	PartNumber  int         `json:"part_number"`
+	PartSize    interface{} `json:"part_size"`
+	UploadUrl   string      `json:"upload_url"`
+	ContentType string      `json:"content_type"`
+}
+
 type CreateResp struct {
 	//Type         string `json:"type"`
 	//ParentFileId string `json:"parent_file_id"`
@@ -56,12 +64,6 @@ type CreateResp struct {
 	//FileName     string `json:"file_name"`
 	UploadId string `json:"upload_id"`
 	//Location     string `json:"location"`
-	RapidUpload  bool `json:"rapid_upload"`
-	PartInfoList []struct {
-		Etag        interface{} `json:"etag"`
-		PartNumber  int         `json:"part_number"`
-		PartSize    interface{} `json:"part_size"`
-		UploadUrl   string      `json:"upload_url"`
-		ContentType string      `json:"content_type"`
-	} `json:"part_info_list"`
+	RapidUpload  bool       `json:"rapid_upload"`
+	PartInfoList []PartInfo `json:"part_info_list"`
 }
