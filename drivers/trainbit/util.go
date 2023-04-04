@@ -113,10 +113,10 @@ func parseRawFileObject(rawObject []any) ([]model.Obj, error) {
 		}
 		isFolder := int64(object["ty"].(float64)) == 1
 		var name string
-		if isFolder {
-			name = object["name"].(string)
+		if object["ext"].(string) != "" {
+			name = strings.Join([]string{object["name"].(string), object["ext"].(string)}, ".")
 		} else {
-			name = object["name"].(string) + object["ext"].(string)
+			name = object["name"].(string)
 		}
 		modified, err := time.Parse("2006/01/02 15:04:05", object["modified"].(string))
 		if err != nil {
