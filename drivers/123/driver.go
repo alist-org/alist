@@ -40,7 +40,7 @@ func (d *Pan123) GetAddition() driver.Additional {
 }
 
 func (d *Pan123) Init(ctx context.Context) error {
-	_, err := d.request("https://www.123pan.com/b/api/user/info", http.MethodGet, nil, nil)
+	_, err := d.request(UserInfo, http.MethodGet, nil, nil)
 	return err
 }
 
@@ -77,7 +77,7 @@ func (d *Pan123) Link(ctx context.Context, file model.Obj, args model.LinkArgs) 
 			"size":      f.Size,
 			"type":      f.Type,
 		}
-		resp, err := d.request("https://www.123pan.com/api/file/download_info", http.MethodPost, func(req *resty.Request) {
+		resp, err := d.request(DownloadInfo, http.MethodPost, func(req *resty.Request) {
 			req.SetBody(data).SetHeaders(headers)
 		}, nil)
 		if err != nil {
@@ -124,7 +124,7 @@ func (d *Pan123) MakeDir(ctx context.Context, parentDir model.Obj, dirName strin
 		"size":         0,
 		"type":         1,
 	}
-	_, err := d.request("https://www.123pan.com/api/file/upload_request", http.MethodPost, func(req *resty.Request) {
+	_, err := d.request(Mkdir, http.MethodPost, func(req *resty.Request) {
 		req.SetBody(data)
 	}, nil)
 	return err
@@ -135,7 +135,7 @@ func (d *Pan123) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 		"fileIdList":   []base.Json{{"FileId": srcObj.GetID()}},
 		"parentFileId": dstDir.GetID(),
 	}
-	_, err := d.request("https://www.123pan.com/api/file/mod_pid", http.MethodPost, func(req *resty.Request) {
+	_, err := d.request(Move, http.MethodPost, func(req *resty.Request) {
 		req.SetBody(data)
 	}, nil)
 	return err
@@ -147,7 +147,7 @@ func (d *Pan123) Rename(ctx context.Context, srcObj model.Obj, newName string) e
 		"fileId":   srcObj.GetID(),
 		"fileName": newName,
 	}
-	_, err := d.request("https://www.123pan.com/api/file/rename", http.MethodPost, func(req *resty.Request) {
+	_, err := d.request(Rename, http.MethodPost, func(req *resty.Request) {
 		req.SetBody(data)
 	}, nil)
 	return err
@@ -164,7 +164,7 @@ func (d *Pan123) Remove(ctx context.Context, obj model.Obj) error {
 			"operation":         true,
 			"fileTrashInfoList": []File{f},
 		}
-		_, err := d.request("https://www.123pan.com/b/api/file/trash", http.MethodPost, func(req *resty.Request) {
+		_, err := d.request(Trash, http.MethodPost, func(req *resty.Request) {
 			req.SetBody(data)
 		}, nil)
 		return err
@@ -220,7 +220,7 @@ func (d *Pan123) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 		"type":         0,
 	}
 	var resp UploadResp
-	_, err := d.request("https://www.123pan.com/a/api/file/upload_request", http.MethodPost, func(req *resty.Request) {
+	_, err := d.request(UploadRequest, http.MethodPost, func(req *resty.Request) {
 		req.SetBody(data).SetContext(ctx)
 	}, &resp)
 	if err != nil {
@@ -249,7 +249,7 @@ func (d *Pan123) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 	if err != nil {
 		return err
 	}
-	_, err = d.request("https://www.123pan.com/api/file/upload_complete", http.MethodPost, func(req *resty.Request) {
+	_, err = d.request(UploadComplete, http.MethodPost, func(req *resty.Request) {
 		req.SetBody(base.Json{
 			"fileId": resp.Data.FileId,
 		}).SetContext(ctx)

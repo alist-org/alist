@@ -14,9 +14,22 @@ import (
 
 // do others that not defined in Driver interface
 
+const (
+	API            = "https://www.123pan.com/b/api"
+	SignIn         = API + "/user/sign_in"
+	UserInfo       = API + "/user/info"
+	FileList       = API + "/file/list/new"
+	DownloadInfo   = API + "/file/download_info"
+	Mkdir          = API + "/file/upload_request"
+	Move           = API + "/file/mod_pid"
+	Rename         = API + "/file/rename"
+	Trash          = API + "/file/trash"
+	UploadRequest  = API + "/file/upload_request"
+	UploadComplete = API + "/file/upload_complete"
+)
+
 func (d *Pan123) login() error {
 	var body base.Json
-	url := "https://www.123pan.com/a/api/user/sign_in"
 	if utils.IsEmailFormat(d.Username) {
 		body = base.Json{
 			"mail":     d.Username,
@@ -30,7 +43,7 @@ func (d *Pan123) login() error {
 		}
 	}
 	res, err := base.RestyClient.R().
-		SetBody(body).Post(url)
+		SetBody(body).Post(SignIn)
 	if err != nil {
 		return err
 	}
@@ -90,7 +103,7 @@ func (d *Pan123) getFiles(parentId string) ([]File, error) {
 			"trashed":        "false",
 			"Page":           strconv.Itoa(page),
 		}
-		_, err := d.request("https://www.123pan.com/api/file/list/new", http.MethodGet, func(req *resty.Request) {
+		_, err := d.request(FileList, http.MethodGet, func(req *resty.Request) {
 			req.SetQueryParams(query)
 		}, &resp)
 		if err != nil {
