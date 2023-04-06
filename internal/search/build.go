@@ -141,7 +141,7 @@ func BuildIndex(ctx context.Context, indexPaths, ignorePaths []string, maxDepth 
 			})
 			return nil
 		}
-		fi, err = fs.Get(ctx, indexPath)
+		fi, err = fs.Get(ctx, indexPath, &fs.GetArgs{})
 		if err != nil {
 			return err
 		}

@@ -51,7 +51,7 @@ func (d *Alias) getRootAndPath(path string) (string, string) {
 }
 
 func (d *Alias) get(ctx context.Context, path string, dst, sub string) (model.Obj, error) {
-	obj, err := fs.Get(ctx, stdpath.Join(dst, sub))
+	obj, err := fs.Get(ctx, stdpath.Join(dst, sub), &fs.GetArgs{NoLog: true})
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +65,7 @@ func (d *Alias) get(ctx context.Context, path string, dst, sub string) (model.Ob
 }
 
 func (d *Alias) list(ctx context.Context, dst, sub string) ([]model.Obj, error) {
-	objs, err := fs.List(ctx, stdpath.Join(dst, sub))
+	objs, err := fs.List(ctx, stdpath.Join(dst, sub), &fs.ListArgs{NoLog: true})
 	// the obj must implement the model.SetPath interface
 	// return objs, err
 	if err != nil {
@@ -83,11 +83,11 @@ func (d *Alias) list(ctx context.Context, dst, sub string) ([]model.Obj, error) 
 
 func (d *Alias) link(ctx context.Context, dst, sub string, args model.LinkArgs) (*model.Link, error) {
 	reqPath := stdpath.Join(dst, sub)
-	storage, err := fs.GetStorage(reqPath)
+	storage, err := fs.GetStorage(reqPath, &fs.GetStoragesArgs{NoLog: true})
 	if err != nil {
 		return nil, err
 	}
-	_, err = fs.Get(ctx, reqPath)
+	_, err = fs.Get(ctx, reqPath, &fs.GetArgs{NoLog: true})
 	if err != nil {
 		return nil, err
 	}
