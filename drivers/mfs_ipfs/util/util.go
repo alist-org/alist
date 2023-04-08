@@ -22,11 +22,15 @@ import (
 	"github.com/ipfs/kubo/plugin/loader"
 	"github.com/ipfs/kubo/repo"
 	"github.com/ipfs/kubo/repo/fsrepo"
+	"github.com/libp2p/go-libp2p/core/peer"
 )
 
 type MfsAPI struct {
-	cid   *string
-	mroot *mfs.Root
+	CID       *string
+	PinID     *string
+	lock      sync.RWMutex
+	mroot     *mfs.Root
+	pinclient *pinningservice.Client
 }
 type nodeObj struct {
 	Id    string
@@ -43,16 +47,17 @@ var nodeApi iface.CoreAPI
 var plugins = false
 var repopath = ""
 
-func buildInit() error {
+func NewMfs(purl, ptoken string) (mapi *MfsAPI, err error) {
 	buildLock.Lock()
 	defer buildLock.Unlock()
 	if buildCount >= 0 {
 		buildCount++
-		return nil
+		return &MfsAPI{
+			pinclient: pinningservice.NewClient(purl, ptoken),
+		}, nil
 	}
 	buildCount = -1
 	nodeApi = nil
-	var err error
 	if !plugins {
 		var pluginload *loader.PluginLoader
 		if pluginload, err = loader.NewPluginLoader(""); err == nil {
@@ -70,13 +75,9 @@ func buildInit() error {
 	if err == nil {
 		repopath = path.Join(DefaultPath, "ipfs_"+newcfg.Identity.PeerID)
 		defer func() {
-			r := recover()
-			if err != nil || r != nil {
+			if mapi == nil {
 				os.RemoveAll(repopath)
 				repopath = ""
-			}
-			if r != nil {
-				panic(r)
 			}
 		}()
 		err = fsrepo.Init(repopath, newcfg)
@@ -89,13 +90,9 @@ func buildInit() error {
 	if err == nil {
 		closeFunc = newrepo.Close
 		defer func() {
-			r := recover()
-			if err != nil || r != nil {
+			if mapi == nil {
 				closeFunc()
 				closeFunc = nil
-			}
-			if r != nil {
-				panic(r)
 			}
 		}()
 		newnode, err = core.NewNode(context.Background(), &core.BuildCfg{Online: true, Repo: newrepo})
@@ -108,40 +105,60 @@ func buildInit() error {
 	if err == nil {
 		nodeApi = newapi
 		buildCount = 1
+		return &MfsAPI{
+			pinclient: pinningservice.NewClient(purl, ptoken),
+		}, nil
 	}
-	return err
+	return
 }
-func buildDrop() {
-	buildLock.Lock()
-	defer buildLock.Unlock()
-	if buildCount--; buildCount <= 0 {
-		buildCount = -1
-		nodeApi = nil
-		defer os.RemoveAll(repopath)
-		repopath = ""
-		closeFunc()
-		closeFunc = nil
-	}
-}
-func NewMfs(cid *string) (*MfsAPI, error) {
-	err := buildInit()
-	if err != nil {
-		return nil, err
-	}
+func (mapi *MfsAPI) Close() (err error) {
+	mapi.lock.Lock()
 	defer func() {
-		r := recover()
-		if err != nil || r != nil {
-			buildDrop()
-		}
-		if r != nil {
-			panic(r)
+		buildLock.Lock()
+		defer buildLock.Unlock()
+		if buildCount--; buildCount <= 0 {
+			buildCount = -1
+			nodeApi = nil
+			defer os.RemoveAll(repopath)
+			repopath = ""
+			closeFunc()
+			closeFunc = nil
 		}
 	}()
-	ctx := context.Background()
-	var rnode ipldformat.Node
-	if err == nil {
-		rnode, err = nodeApi.ResolveNode(ctx, ifacepath.New(*cid))
+	if mapi.mroot != nil {
+		err = mapi.mroot.Close()
+		mapi.mroot = nil
 	}
+	return
+}
+func (mapi *MfsAPI) newRoot(force bool) (err error) {
+	mapi.lock.Lock()
+	defer mapi.lock.Unlock()
+	if !force && mapi.mroot != nil {
+		return
+	}
+	emptystr := ""
+	pinid := &emptystr
+	rootcid := &emptystr
+	if ptr := mapi.PinID; ptr != nil {
+		pinid = ptr
+	}
+	if ptr := mapi.CID; ptr != nil {
+		rootcid = ptr
+	}
+	ctx := context.Background()
+	if pinstatus, err := mapi.pinclient.GetStatusByID(ctx, *pinid); err == nil {
+		if info, err := peer.AddrInfosFromP2pAddrs(pinstatus.GetDelegates()...); err == nil {
+			for _, a := range info {
+				nodeApi.Swarm().Connect(ctx, a)
+			}
+		}
+		if pinstatus.GetStatus() == pinningservice.StatusPinned {
+			*rootcid = pinstatus.GetPin().GetCid().String()
+		}
+	}
+	var rnode ipldformat.Node
+	rnode, err = nodeApi.ResolveNode(ctx, ifacepath.New(*rootcid))
 	pnode := &merkledag.ProtoNode{}
 	if err == nil {
 		ok := true
@@ -153,27 +170,30 @@ func NewMfs(cid *string) (*MfsAPI, error) {
 	if err == nil {
 		mroot, err = mfs.NewRoot(ctx, nodeApi.Dag(), pnode, nil)
 	}
-	if err != nil {
-		return nil, err
+	if err == nil {
+		mapi.mroot = mroot
 	}
-	return &MfsAPI{cid: cid, mroot: mroot}, err
+	return
 }
-func (mapi *MfsAPI) Close() error {
-	defer buildDrop()
-	return mapi.mroot.Close()
-}
-func (mapi *MfsAPI) List(spath string) ([]nodeObj, error) {
+func (mapi *MfsAPI) List(spath string) (ol []nodeObj, err error) {
+	if mapi.mroot == nil {
+		if err = mapi.newRoot(false); err != nil {
+			return
+		}
+	}
+	mapi.lock.RLock()
+	defer mapi.lock.RUnlock()
 	pnode, err := mfs.Lookup(mapi.mroot, spath)
 	dnode, ok := pnode.(*mfs.Directory)
 	if err == nil && !ok {
 		err = fmt.Errorf(reflect.TypeOf(pnode).String())
 	}
 	nl := []mfs.NodeListing{}
-	ol := []nodeObj{}
 	if err == nil {
 		nl, err = dnode.List(context.Background())
 	}
 	if err == nil {
+		ol = []nodeObj{}
 		for _, n := range nl {
 			ol = append(ol, nodeObj{
 				Id:    n.Hash,
@@ -185,7 +205,14 @@ func (mapi *MfsAPI) List(spath string) ([]nodeObj, error) {
 	}
 	return ol, err
 }
-func (mapi *MfsAPI) todo() {
-	files.NewReaderFile(nil)
-	pinningservice.NewClient("", "")
+func (mapi *MfsAPI) Put(rc io.ReadCloser) (err error) {
+	if mapi.mroot == nil {
+		if err = mapi.newRoot(false); err != nil {
+			return
+		}
+	}
+	mapi.lock.RLock()
+	defer mapi.lock.RUnlock()
+	files.NewReaderFile(rc)
+	return
 }

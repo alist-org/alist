@@ -14,7 +14,8 @@ import (
 type MfsIpfs struct {
 	model.Storage
 	Addition
-	mapi *util.MfsAPI
+	mapi    *util.MfsAPI
+	gateurl *url.URL
 }
 
 func (d *MfsIpfs) Config() driver.Config {
@@ -29,9 +30,11 @@ func (d *MfsIpfs) Init(ctx context.Context) error {
 	// TODO login / refresh token
 	//op.MustSaveDriverStorage(d)
 	util.DefaultPath = conf.Conf.TempDir
-	mapi, err := util.NewMfs(&d.CID)
-	if err == nil {
-		d.mapi = mapi
+	var err error
+	d.gateurl, _ = url.Parse(d.Gateway)
+	if d.mapi, err = util.NewMfs(d.Endpoint, d.JWToken); err == nil {
+		d.mapi.CID = &d.CID
+		d.mapi.PinID = &d.PinID
 	}
 	return err
 }
@@ -45,10 +48,10 @@ func (d *MfsIpfs) Drop(ctx context.Context) error {
 
 func (d *MfsIpfs) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
 	// TODO return the files list, required
-	gateurl, _ := url.Parse(d.Gateway)
 	nodelist, err := d.mapi.List(dir.GetPath())
 	objlist := []model.Obj{}
 	for _, v := range nodelist {
+		gateurl := *d.gateurl
 		gateurl.Path = "ipfs/" + v.Id
 		gateurl.RawQuery = "filename=" + v.Name
 		objlist = append(objlist, &model.ObjectURL{
@@ -61,11 +64,11 @@ func (d *MfsIpfs) List(ctx context.Context, dir model.Obj, args model.ListArgs) 
 
 func (d *MfsIpfs) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	// TODO return link of file, required
-	f, ok := file.(*model.ObjectURL)
+	link, ok := model.GetUrl(file)
 	if !ok {
 		return nil, errs.NotSupport
 	}
-	return &model.Link{URL: f.Url.Url}, nil
+	return &model.Link{URL: link}, nil
 }
 
 func (d *MfsIpfs) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {

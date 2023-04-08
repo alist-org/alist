@@ -11,11 +11,11 @@ type Addition struct {
 	// driver.RootID
 	// define other
 	// Field string `json:"field" type:"select" required:"true" options:"a,b,c" default:"a"`
-	CID string `json:"cid"`
-	// PinID    string `json:"pinid"`
-	// Token    string `json:"token"`
-	// Endpoint string `json:"endpoint"`
-	Gateway string `json:"gateway" default:"https://dweb.link"`
+	CID      string `json:"cid"`
+	PinID    string `json:"pinid"`
+	JWToken  string `json:"jwtoken"`
+	Endpoint string `json:"endpoint"`
+	Gateway  string `json:"gateway" default:"https://dweb.link"`
 }
 
 var config = driver.Config{
