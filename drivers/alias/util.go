@@ -83,7 +83,7 @@ func (d *Alias) list(ctx context.Context, dst, sub string) ([]model.Obj, error) 
 
 func (d *Alias) link(ctx context.Context, dst, sub string, args model.LinkArgs) (*model.Link, error) {
 	reqPath := stdpath.Join(dst, sub)
-	storage, err := fs.GetStorage(reqPath, &fs.GetStoragesArgs{NoLog: true})
+	storage, err := fs.GetStorage(reqPath, &fs.GetStoragesArgs{})
 	if err != nil {
 		return nil, err
 	}

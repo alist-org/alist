@@ -21,7 +21,9 @@ type ListArgs struct {
 func List(ctx context.Context, path string, args *ListArgs) ([]model.Obj, error) {
 	res, err := list(ctx, path, args)
 	if err != nil {
-		log.Errorf("failed list %s: %+v", path, err)
+		if !args.NoLog {
+			log.Errorf("failed list %s: %+v", path, err)
+		}
 		return nil, err
 	}
 	return res, nil
@@ -33,8 +35,10 @@ type GetArgs struct {
 
 func Get(ctx context.Context, path string, args *GetArgs) (model.Obj, error) {
 	res, err := get(ctx, path)
-	if err != nil && !args.NoLog {
-		log.Errorf("failed get %s: %+v", path, err)
+	if err != nil {
+		if !args.NoLog {
+			log.Errorf("failed get %s: %+v", path, err)
+		}
 		return nil, err
 	}
 	return res, nil
@@ -106,12 +110,11 @@ func PutAsTask(dstDirPath string, file *model.FileStream) error {
 }
 
 type GetStoragesArgs struct {
-	NoLog bool
 }
 
 func GetStorage(path string, args *GetStoragesArgs) (driver.Driver, error) {
 	storageDriver, _, err := op.GetStorageAndActualPath(path)
-	if err != nil && !args.NoLog {
+	if err != nil {
 		return nil, err
 	}
 	return storageDriver, nil

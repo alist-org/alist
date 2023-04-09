@@ -26,7 +26,9 @@ func list(ctx context.Context, path string, args *ListArgs) ([]model.Obj, error)
 			ReqPath: path,
 		}, args.Refresh)
 		if err != nil {
-			log.Errorf("%+v", err)
+			if !args.NoLog {
+				log.Errorf("fs/list: %+v", err)
+			}
 			if len(virtualFiles) == 0 {
 				return nil, errors.WithMessage(err, "failed get objs")
 			}
