@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/SheltonZhu/115driver v1.0.14
 	github.com/Xhofe/go-cache v0.0.0-20220723083548-714439c8af9a
-	github.com/aws/aws-sdk-go v1.44.238
+	github.com/aws/aws-sdk-go v1.44.239
 	github.com/blevesearch/bleve/v2 v2.3.7
 	github.com/caarlos0/env/v7 v7.1.0
 	github.com/deckarep/golang-set/v2 v2.3.0
@@ -27,6 +27,7 @@ require (
 	github.com/ipfs/kubo v0.19.1
 	github.com/jlaffaye/ftp v0.1.0
 	github.com/json-iterator/go v1.1.12
+	github.com/libp2p/go-libp2p v0.26.4
 	github.com/maruel/natural v1.1.0
 	github.com/natefinch/lumberjack v2.0.0+incompatible
 	github.com/pkg/errors v0.9.1
@@ -38,7 +39,7 @@ require (
 	github.com/u2takey/ffmpeg-go v0.4.1
 	github.com/upyun/go-sdk/v3 v3.0.4
 	github.com/winfsp/cgofuse v1.5.0
-	golang.org/x/crypto v0.7.0
+	golang.org/x/crypto v0.8.0
 	golang.org/x/image v0.7.0
 	golang.org/x/net v0.9.0
 	gorm.io/driver/mysql v1.4.7
@@ -191,7 +192,6 @@ require (
 	github.com/libp2p/go-cidranger v1.1.0 // indirect
 	github.com/libp2p/go-doh-resolver v0.4.0 // indirect
 	github.com/libp2p/go-flow-metrics v0.1.0 // indirect
-	github.com/libp2p/go-libp2p v0.26.4 // indirect
 	github.com/libp2p/go-libp2p-asn-util v0.2.0 // indirect
 	github.com/libp2p/go-libp2p-kad-dht v0.21.1 // indirect
 	github.com/libp2p/go-libp2p-kbucket v0.5.0 // indirect
