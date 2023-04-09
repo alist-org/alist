@@ -3,6 +3,7 @@ package mfs_ipfs
 import (
 	"context"
 	"net/url"
+	"path"
 
 	"github.com/alist-org/alist/v3/drivers/mfs_ipfs/util"
 	"github.com/alist-org/alist/v3/internal/conf"
@@ -35,6 +36,7 @@ func (d *MfsIpfs) Init(ctx context.Context) error {
 	if d.mapi, err = util.NewMfs(d.Endpoint, d.JWToken); err == nil {
 		d.mapi.CID = &d.CID
 		d.mapi.PinID = &d.PinID
+		go d.mapi.List("")
 	}
 	return err
 }
@@ -73,32 +75,32 @@ func (d *MfsIpfs) Link(ctx context.Context, file model.Obj, args model.LinkArgs)
 
 func (d *MfsIpfs) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
 	// TODO create folder, optional
-	return errs.NotImplement
+	return d.mapi.Mkdir(path.Join(parentDir.GetPath(), dirName))
 }
 
 func (d *MfsIpfs) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 	// TODO move obj, optional
-	return errs.NotImplement
+	return d.mapi.Mv(srcObj.GetPath(), dstDir.GetPath())
 }
 
 func (d *MfsIpfs) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
 	// TODO rename obj, optional
-	return errs.NotImplement
+	return d.mapi.Mv(srcObj.GetPath(), path.Join(path.Dir(srcObj.GetPath()), newName))
 }
 
 func (d *MfsIpfs) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 	// TODO copy obj, optional
-	return errs.NotImplement
+	return d.mapi.Put(dstDir.GetPath(), srcObj.GetID(), nil)
 }
 
 func (d *MfsIpfs) Remove(ctx context.Context, obj model.Obj) error {
 	// TODO remove obj, optional
-	return errs.NotImplement
+	return d.mapi.Unlink(path.Dir(obj.GetPath()), obj.GetName())
 }
 
 func (d *MfsIpfs) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
 	// TODO upload file, optional
-	return errs.NotImplement
+	return d.mapi.Put(dstDir.GetPath(), stream.GetID(), stream.GetReadCloser())
 }
 
 //func (d *Template) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
