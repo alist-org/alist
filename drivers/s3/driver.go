@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/url"
 	stdpath "path"
+	"strings"
 	"time"
 
 	"github.com/alist-org/alist/v3/internal/driver"
@@ -75,6 +76,9 @@ func (d *S3) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*mo
 	if d.CustomHost != "" {
 		err = req.Build()
 		link = req.HTTPRequest.URL.String()
+		if d.RemoveBucket {
+			link = strings.Replace(link, "/"+d.Bucket, "", 1)
+		}
 	} else {
 		link, err = req.Presign(time.Hour * time.Duration(d.SignURLExpire))
 	}
