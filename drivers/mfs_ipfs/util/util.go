@@ -134,34 +134,36 @@ func (mapi *MfsAPI) Close() (err error) {
 	return
 }
 func (mapi *MfsAPI) newRoot(force bool) (err error) {
+	if !force && mapi.mroot != nil {
+		return
+	}
 	mapi.lock.Lock()
 	defer mapi.lock.Unlock()
 	if !force && mapi.mroot != nil {
 		return
 	}
-	emptystr := ""
-	pinid := &emptystr
-	rootcid := &emptystr
+	pinid := ""
+	rootcid := ""
 	if ptr := mapi.PinID; ptr != nil {
-		pinid = ptr
+		pinid = *ptr
 	}
 	if ptr := mapi.CID; ptr != nil {
-		rootcid = ptr
+		rootcid = *ptr
 	}
-	if pinstatus, err := mapi.pinclient.GetStatusByID(Ctx, *pinid); err == nil {
+	if pinstatus, err := mapi.pinclient.GetStatusByID(Ctx, pinid); err == nil {
 		if info, err := peer.AddrInfosFromP2pAddrs(pinstatus.GetDelegates()...); err == nil {
 			for _, a := range info {
 				go nodeApi.Swarm().Connect(Ctx, a)
 			}
 		}
 		if pinstatus.GetStatus() == pinningservice.StatusPinned {
-			*rootcid = pinstatus.GetPin().GetCid().String()
+			rootcid = pinstatus.GetPin().GetCid().String()
 		}
 	}
 	var ldnode ipldformat.Node
 	if err == nil {
 		tctx, tcancel := context.WithTimeout(Ctx, time.Minute)
-		ldnode, err = nodeApi.ResolveNode(tctx, ifacepath.New(*rootcid))
+		ldnode, err = nodeApi.ResolveNode(tctx, ifacepath.New(rootcid))
 		tcancel()
 	}
 	prnode := &merkledag.ProtoNode{}
@@ -176,18 +178,22 @@ func (mapi *MfsAPI) newRoot(force bool) (err error) {
 		mroot, err = mfs.NewRoot(Ctx, nodeApi.Dag(), prnode, nil)
 	}
 	if err == nil {
+		ldnode, err = mroot.GetDirectory().GetNode()
+	}
+	if err == nil {
 		if mapi.mroot != nil {
 			mapi.mroot.FlushMemFree(Ctx)
 		}
 		mapi.mroot = mroot
+		if ptr := mapi.CID; ptr != nil {
+			*ptr = ldnode.Cid().String()
+		}
 	}
 	return
 }
 func (mapi *MfsAPI) List(pth string) (ol []nodeObj, err error) {
-	if mapi.mroot == nil {
-		if err = mapi.newRoot(false); err != nil {
-			return
-		}
+	if err = mapi.newRoot(false); err != nil {
+		return
 	}
 	mapi.lock.RLock()
 	defer mapi.lock.RUnlock()
@@ -214,64 +220,54 @@ func (mapi *MfsAPI) List(pth string) (ol []nodeObj, err error) {
 	return ol, err
 }
 func (mapi *MfsAPI) Mkdir(pth string) (err error) {
-	if mapi.mroot == nil {
-		if err = mapi.newRoot(false); err != nil {
-			return
-		}
+	if err = mapi.newRoot(false); err != nil {
+		return
 	}
 	mapi.lock.RLock()
 	defer mapi.lock.RUnlock()
 	if err = mfs.Mkdir(mapi.mroot, pth, mfs.MkdirOpts{}); err == nil {
-		err = fmt.Errorf("NotImplement")
+		err = mapi.waitpin()
 	}
 	return
 }
 func (mapi *MfsAPI) Mv(src, dst string) (err error) {
-	if mapi.mroot == nil {
-		if err = mapi.newRoot(false); err != nil {
-			return
-		}
+	if err = mapi.newRoot(false); err != nil {
+		return
 	}
 	mapi.lock.RLock()
 	defer mapi.lock.RUnlock()
 	if err = mfs.Mv(mapi.mroot, src, dst); err == nil {
-		err = fmt.Errorf("NotImplement")
+		err = mapi.waitpin()
 	}
 	return
 }
 func (mapi *MfsAPI) Put(pth, nodecid string, rc io.ReadCloser) (err error) {
-	if mapi.mroot == nil {
-		if err = mapi.newRoot(false); err != nil {
-			return
-		}
+	if err = mapi.newRoot(false); err != nil {
+		return
 	}
 	mapi.lock.RLock()
 	defer mapi.lock.RUnlock()
 	var rsnode ipldformat.Node
 	if err == nil {
-		tctx, tcancel := context.WithTimeout(Ctx, time.Minute)
-		rsnode, err = nodeApi.ResolveNode(tctx, ifacepath.New(nodecid))
+		rsnode, err = nodeApi.ResolveNode(Ctx, ifacepath.New(nodecid))
 		if err != nil {
 			var rspath ifacepath.Resolved
-			if rspath, err = nodeApi.Unixfs().Add(tctx, files.NewReaderFile(rc)); err == nil {
-				rsnode, err = nodeApi.ResolveNode(tctx, rspath)
+			if rspath, err = nodeApi.Unixfs().Add(Ctx, files.NewReaderFile(rc)); err == nil {
+				rsnode, err = nodeApi.ResolveNode(Ctx, rspath)
 			}
 		}
-		tcancel()
 	}
 	if err == nil {
 		err = mfs.PutNode(mapi.mroot, pth, rsnode)
 	}
 	if err == nil {
-		err = fmt.Errorf("NotImplement")
+		err = mapi.waitpin()
 	}
 	return
 }
 func (mapi *MfsAPI) Unlink(pth, fname string) (err error) {
-	if mapi.mroot == nil {
-		if err = mapi.newRoot(false); err != nil {
-			return
-		}
+	if err = mapi.newRoot(false); err != nil {
+		return
 	}
 	mapi.lock.RLock()
 	defer mapi.lock.RUnlock()
@@ -281,6 +277,13 @@ func (mapi *MfsAPI) Unlink(pth, fname string) (err error) {
 		err = fmt.Errorf(reflect.TypeOf(snode).String())
 	}
 	if err = dnode.Unlink(fname); err == nil {
+		err = mapi.waitpin()
+	}
+	return
+}
+func (mapi *MfsAPI) waitpin() (err error) {
+	err = mapi.mroot.Flush()
+	if err == nil {
 		err = fmt.Errorf("NotImplement")
 	}
 	return

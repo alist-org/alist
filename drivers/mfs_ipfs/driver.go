@@ -80,7 +80,7 @@ func (d *MfsIpfs) MakeDir(ctx context.Context, parentDir model.Obj, dirName stri
 
 func (d *MfsIpfs) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 	// TODO move obj, optional
-	return d.mapi.Mv(srcObj.GetPath(), dstDir.GetPath())
+	return d.mapi.Mv(srcObj.GetPath(), path.Join(dstDir.GetPath(), srcObj.GetName()))
 }
 
 func (d *MfsIpfs) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
@@ -90,7 +90,7 @@ func (d *MfsIpfs) Rename(ctx context.Context, srcObj model.Obj, newName string) 
 
 func (d *MfsIpfs) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 	// TODO copy obj, optional
-	return d.mapi.Put(dstDir.GetPath(), srcObj.GetID(), nil)
+	return d.mapi.Put(path.Join(dstDir.GetPath(), srcObj.GetName()), srcObj.GetID(), nil)
 }
 
 func (d *MfsIpfs) Remove(ctx context.Context, obj model.Obj) error {
@@ -100,7 +100,7 @@ func (d *MfsIpfs) Remove(ctx context.Context, obj model.Obj) error {
 
 func (d *MfsIpfs) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
 	// TODO upload file, optional
-	return d.mapi.Put(dstDir.GetPath(), stream.GetID(), stream.GetReadCloser())
+	return d.mapi.Put(path.Join(dstDir.GetPath(), stream.GetName()), stream.GetID(), stream.GetReadCloser())
 }
 
 //func (d *Template) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
