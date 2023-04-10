@@ -18,6 +18,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/websocket v1.5.0
 	github.com/hirochachacha/go-smb2 v1.1.0
+	github.com/ipfs/go-cid v0.4.0
 	github.com/ipfs/go-ipld-format v0.4.0
 	github.com/ipfs/go-libipfs v0.7.0
 	github.com/ipfs/go-merkledag v0.9.0
@@ -133,7 +134,6 @@ require (
 	github.com/ipfs/go-bitfield v1.1.0 // indirect
 	github.com/ipfs/go-block-format v0.1.1 // indirect
 	github.com/ipfs/go-blockservice v0.5.1 // indirect
-	github.com/ipfs/go-cid v0.4.0 // indirect
 	github.com/ipfs/go-cidutil v0.1.0 // indirect
 	github.com/ipfs/go-datastore v0.6.0 // indirect
 	github.com/ipfs/go-delegated-routing v0.7.0 // indirect
