@@ -11,7 +11,7 @@ type Addition struct {
 	// driver.RootID
 	// define other
 	// Field string `json:"field" type:"select" required:"true" options:"a,b,c" default:"a"`
-	CID      string `json:"cid"`
+	CID      string `json:"cid" default:"bafybeiczsscdsbs7ffqz55asqdf3smv6klcw3gofszvwlyarci47bgf354"`
 	PinID    string `json:"pinid"`
 	JWToken  string `json:"jwtoken"`
 	Endpoint string `json:"endpoint"`
