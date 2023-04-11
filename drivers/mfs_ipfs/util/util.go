@@ -40,7 +40,7 @@ type MfsAPI struct {
 	pinning   []chan<- error
 	queued    []chan<- error
 }
-type nodeObj struct {
+type NodeObj struct {
 	Id    string
 	Name  string
 	Size  int64
@@ -302,7 +302,7 @@ func (mapi *MfsAPI) newRoot(force bool) (err error) {
 	}
 	return
 }
-func (mapi *MfsAPI) List(pth string) (ol []nodeObj, err error) {
+func (mapi *MfsAPI) List(pth string) (ol []NodeObj, err error) {
 	if err = mapi.newRoot(false); err != nil {
 		return
 	}
@@ -318,9 +318,9 @@ func (mapi *MfsAPI) List(pth string) (ol []nodeObj, err error) {
 		nl, err = dnode.List(mapi.ctx)
 	}
 	if err == nil {
-		ol = []nodeObj{}
+		ol = []NodeObj{}
 		for _, n := range nl {
-			ol = append(ol, nodeObj{
+			ol = append(ol, NodeObj{
 				Id:    n.Hash,
 				Name:  n.Name,
 				Size:  n.Size,
