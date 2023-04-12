@@ -32,11 +32,8 @@ type MfsAPI struct {
 	ctx       context.Context
 	lock      *sync.RWMutex
 	mroot     *mfs.Root
-	newcid    *cid.Cid
 	pinclient *pinningservice.Client
-	pinlock   *sync.Mutex
-	pinning   []chan<- error
-	queued    []chan<- error
+	qchan     chan chan<- error
 	refcid    refresher
 	refpinid  refresher
 }
@@ -71,7 +68,6 @@ func NewMfs(purl, ptoken string, rcid, rpinid refresher) (mapi *MfsAPI, err erro
 		}
 		if mapi != nil {
 			go mapi.runPin()
-			go mapi.List("")
 		}
 	}()
 	buildLock.Lock()
@@ -81,11 +77,8 @@ func NewMfs(purl, ptoken string, rcid, rpinid refresher) (mapi *MfsAPI, err erro
 		mapi = &MfsAPI{
 			lock:      &sync.RWMutex{},
 			mroot:     nil,
-			newcid:    nil,
 			pinclient: pinningservice.NewClient(purl, ptoken),
-			pinlock:   &sync.Mutex{},
-			pinning:   []chan<- error{},
-			queued:    []chan<- error{},
+			qchan:     make(chan chan<- error),
 			refcid:    rcid,
 			refpinid:  rpinid,
 		}
@@ -150,11 +143,8 @@ func NewMfs(purl, ptoken string, rcid, rpinid refresher) (mapi *MfsAPI, err erro
 		mapi = &MfsAPI{
 			lock:      &sync.RWMutex{},
 			mroot:     nil,
-			newcid:    nil,
 			pinclient: pinningservice.NewClient(purl, ptoken),
-			pinlock:   &sync.Mutex{},
-			pinning:   []chan<- error{},
-			queued:    []chan<- error{},
+			qchan:     make(chan chan<- error),
 			refcid:    rcid,
 			refpinid:  rpinid,
 		}
@@ -188,15 +178,6 @@ func (mapi *MfsAPI) Close() (err error) {
 			closeFunc = nil
 		}
 	}()
-	ctxerr := mapi.ctx.Err()
-	mapi.pinlock.Lock()
-	mapi.queued = append(mapi.pinning, mapi.queued...)
-	mapi.pinning = []chan<- error{}
-	for _, v := range mapi.queued {
-		v <- ctxerr
-		close(v)
-	}
-	mapi.queued = []chan<- error{}
 	if mapi.mroot != nil {
 		err = mapi.mroot.FlushMemFree(mapi.ctx)
 		mapi.mroot = nil
@@ -205,18 +186,44 @@ func (mapi *MfsAPI) Close() (err error) {
 }
 func (mapi *MfsAPI) runPin() {
 	defer recover()
-	queuelen := 0
-	waittime := 0
+	var newcid *cid.Cid = nil
 	pinid := mapi.refpinid.Get()
+	pinning := []chan<- error{}
+	queued := []chan<- error{}
+	queuelen := 0
+	waitnum := 0
+	waittime := time.NewTimer(0)
+	defer func() {
+		waittime.Stop()
+		err := mapi.ctx.Err()
+		if err == nil {
+			err = fmt.Errorf("Failed")
+		}
+		for _, v := range pinning {
+			v <- err
+		}
+		pinning = []chan<- error{}
+		for _, v := range queued {
+			v <- err
+		}
+		queued = []chan<- error{}
+		close(mapi.qchan)
+		for v := range mapi.qchan {
+			v <- err
+		}
+	}()
 	for {
 		select {
 		case <-mapi.ctx.Done():
 			return
-		case <-time.After(time.Second * 2):
+		case <-waittime.C:
+			if mapi.ctx.Err() != nil {
+				return
+			}
 			func() {
-				mapi.pinlock.Lock()
-				defer mapi.pinlock.Unlock()
-				if len(mapi.pinning) > 0 {
+				mapi.lock.RLock()
+				defer mapi.lock.RUnlock()
+				if len(pinning) > 0 {
 					if pinstatus, err := mapi.pinclient.GetStatusByID(mapi.ctx, pinid); err == nil {
 						if info, err := peer.AddrInfosFromP2pAddrs(pinstatus.GetDelegates()...); err == nil {
 							for _, a := range info {
@@ -224,66 +231,66 @@ func (mapi *MfsAPI) runPin() {
 							}
 						}
 						if pinstatus.GetStatus() == pinningservice.StatusPinned {
-							for _, v := range mapi.pinning {
+							for _, v := range pinning {
 								v <- nil
-								close(v)
 							}
-							mapi.pinning = []chan<- error{}
+							pinning = []chan<- error{}
 							mapi.refcid.Set(pinstatus.GetPin().GetCid().String())
 						} else if pinstatus.GetStatus() == pinningservice.StatusFailed {
-							for _, v := range mapi.pinning {
+							for _, v := range pinning {
 								v <- fmt.Errorf("StatusFailed")
-								close(v)
 							}
-							mapi.pinning = []chan<- error{}
+							pinning = []chan<- error{}
 						}
 					}
 				}
-				if mapi.newcid != nil {
-					if queuelen == len(mapi.queued) || waittime > 10 {
-						nodeApi.Swarm().ListenAddrs(mapi.ctx)
-						if pinstatus, err := mapi.pinclient.Replace(
-							mapi.ctx, pinid, *mapi.newcid, pinningservice.PinOpts.WithOrigins(),
-						); err == nil {
-							if info, err := peer.AddrInfosFromP2pAddrs(pinstatus.GetDelegates()...); err == nil {
-								for _, a := range info {
-									go nodeApi.Swarm().Connect(Ctx, a)
-								}
-							}
-							mapi.pinning = append(mapi.pinning, mapi.queued...)
-							pinid = pinstatus.GetRequestId()
-							mapi.refpinid.Set(pinid)
-						} else {
-							for _, v := range mapi.queued {
-								v <- err
-								close(v)
+				if len(queued) > 0 {
+					if waitnum++; len(queued) == queuelen || waitnum > 10 {
+						if ldnode, err := mapi.mroot.GetDirectory().GetNode(); err == nil {
+							pincid := ldnode.Cid()
+							newcid = &pincid
+							waitnum = 0
+						}
+					}
+				}
+				if newcid != nil {
+					nodeApi.Swarm().ListenAddrs(mapi.ctx)
+					if pinstatus, err := mapi.pinclient.Replace(
+						mapi.ctx, pinid, *newcid, pinningservice.PinOpts.WithOrigins(),
+					); err == nil {
+						if info, err := peer.AddrInfosFromP2pAddrs(pinstatus.GetDelegates()...); err == nil {
+							for _, a := range info {
+								go nodeApi.Swarm().Connect(Ctx, a)
 							}
 						}
-						mapi.newcid = nil
-						mapi.queued = []chan<- error{}
-						waittime = 0
+						pinning = append(pinning, queued...)
+						pinid = pinstatus.GetRequestId()
+						mapi.refpinid.Set(pinid)
+					} else {
+						for _, v := range queued {
+							v <- err
+						}
 					}
-					queuelen = len(mapi.queued)
-					waittime++
+					queued = []chan<- error{}
+					newcid = nil
 				}
+				queuelen = len(queued)
 			}()
+			waittime.Reset(time.Second * 2)
+		case newpin := <-mapi.qchan:
+			queued = append(queued, newpin)
 		}
 	}
 }
-func (mapi *MfsAPI) waitPin(newcid cid.Cid) (ec <-chan error) {
-	echan := make(chan error)
-	if err := mapi.ctx.Err(); err != nil {
-		go func() {
-			echan <- err
-			close(echan)
-		}()
-		return echan
+func (mapi *MfsAPI) waitPin(pe *error) {
+	if err := mapi.ctx.Err(); err != nil && *pe == nil {
+		*pe = err
 	}
-	mapi.pinlock.Lock()
-	defer mapi.pinlock.Unlock()
-	mapi.newcid = &newcid
-	mapi.queued = append(mapi.queued, echan)
-	return echan
+	if *pe == nil {
+		echan := make(chan error)
+		mapi.qchan <- echan
+		*pe = <-echan
+	}
 }
 func (mapi *MfsAPI) newRoot(force bool) (err error) {
 	if err = mapi.ctx.Err(); err != nil {
@@ -377,23 +384,10 @@ func (mapi *MfsAPI) Mkdir(pth string) (err error) {
 	if err = mapi.newRoot(false); err != nil {
 		return
 	}
-	newcid := cid.Cid{}
-	defer func() {
-		if err == nil {
-			err = <-mapi.waitPin(newcid)
-		}
-	}()
+	defer mapi.waitPin(&err)
 	mapi.lock.RLock()
 	defer mapi.lock.RUnlock()
-	if err = mfs.Mkdir(mapi.mroot, pth, mfs.MkdirOpts{}); err == nil {
-		err = mapi.mroot.Flush()
-	}
-	if err == nil {
-		var ldnode ipldformat.Node
-		if ldnode, err = mapi.mroot.GetDirectory().GetNode(); err == nil {
-			newcid = ldnode.Cid()
-		}
-	}
+	err = mfs.Mkdir(mapi.mroot, pth, mfs.MkdirOpts{})
 	return
 }
 func (mapi *MfsAPI) Mv(src, dst string) (err error) {
@@ -405,23 +399,10 @@ func (mapi *MfsAPI) Mv(src, dst string) (err error) {
 	if err = mapi.newRoot(false); err != nil {
 		return
 	}
-	newcid := cid.Cid{}
-	defer func() {
-		if err == nil {
-			err = <-mapi.waitPin(newcid)
-		}
-	}()
+	defer mapi.waitPin(&err)
 	mapi.lock.RLock()
 	defer mapi.lock.RUnlock()
-	if err = mfs.Mv(mapi.mroot, src, dst); err == nil {
-		err = mapi.mroot.Flush()
-	}
-	if err == nil {
-		var ldnode ipldformat.Node
-		if ldnode, err = mapi.mroot.GetDirectory().GetNode(); err == nil {
-			newcid = ldnode.Cid()
-		}
-	}
+	err = mfs.Mv(mapi.mroot, src, dst)
 	return
 }
 func (mapi *MfsAPI) Put(pth, nodecid string, rc io.ReadCloser) (err error) {
@@ -433,12 +414,7 @@ func (mapi *MfsAPI) Put(pth, nodecid string, rc io.ReadCloser) (err error) {
 	if err = mapi.newRoot(false); err != nil {
 		return
 	}
-	newcid := cid.Cid{}
-	defer func() {
-		if err == nil {
-			err = <-mapi.waitPin(newcid)
-		}
-	}()
+	defer mapi.waitPin(&err)
 	mapi.lock.RLock()
 	defer mapi.lock.RUnlock()
 	var rsnode ipldformat.Node
@@ -451,15 +427,6 @@ func (mapi *MfsAPI) Put(pth, nodecid string, rc io.ReadCloser) (err error) {
 	if err == nil {
 		err = mfs.PutNode(mapi.mroot, pth, rsnode)
 	}
-	if err == nil {
-		err = mapi.mroot.Flush()
-	}
-	if err == nil {
-		var ldnode ipldformat.Node
-		if ldnode, err = mapi.mroot.GetDirectory().GetNode(); err == nil {
-			newcid = ldnode.Cid()
-		}
-	}
 	return
 }
 func (mapi *MfsAPI) Unlink(pth, fname string) (err error) {
@@ -471,12 +438,7 @@ func (mapi *MfsAPI) Unlink(pth, fname string) (err error) {
 	if err = mapi.newRoot(false); err != nil {
 		return
 	}
-	newcid := cid.Cid{}
-	defer func() {
-		if err == nil {
-			err = <-mapi.waitPin(newcid)
-		}
-	}()
+	defer mapi.waitPin(&err)
 	mapi.lock.RLock()
 	defer mapi.lock.RUnlock()
 	snode, err := mfs.Lookup(mapi.mroot, pth)
@@ -486,15 +448,6 @@ func (mapi *MfsAPI) Unlink(pth, fname string) (err error) {
 	}
 	if err == nil {
 		err = dnode.Unlink(fname)
-	}
-	if err == nil {
-		err = mapi.mroot.Flush()
-	}
-	if err == nil {
-		var ldnode ipldformat.Node
-		if ldnode, err = mapi.mroot.GetDirectory().GetNode(); err == nil {
-			newcid = ldnode.Cid()
-		}
 	}
 	return
 }
