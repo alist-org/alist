@@ -74,5 +74,6 @@ type UploadResp struct {
 		SessionToken    string `json:"SessionToken"`
 		FileId          int64  `json:"FileId"`
 		Reuse           bool   `json:"Reuse"`
+		EndPoint        string `json:"EndPoint"`
 	} `json:"data"`
 }
