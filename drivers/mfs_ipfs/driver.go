@@ -10,6 +10,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/op"
 )
 
 type MfsIpfs struct {
@@ -17,6 +18,16 @@ type MfsIpfs struct {
 	Addition
 	mapi    *util.MfsAPI
 	gateurl *url.URL
+}
+type refid struct {
+	d  *MfsIpfs
+	id *string
+}
+
+func (r *refid) Get() (id string) { return *r.id }
+func (r *refid) Set(id string) {
+	*r.id = id
+	op.MustSaveDriverStorage(r.d)
 }
 
 func (d *MfsIpfs) Config() driver.Config {
@@ -33,11 +44,7 @@ func (d *MfsIpfs) Init(ctx context.Context) error {
 	util.DefaultPath = conf.Conf.TempDir
 	var err error
 	d.gateurl, _ = url.Parse(d.Gateway)
-	if d.mapi, err = util.NewMfs(d.Endpoint, d.JWToken); err == nil {
-		d.mapi.CID = &d.CID
-		d.mapi.PinID = &d.PinID
-		go d.mapi.List("")
-	}
+	d.mapi, err = util.NewMfs(d.Endpoint, d.JWToken, &refid{d: d, id: &d.Addition.CID}, &refid{d: d, id: &d.Addition.PinID})
 	return err
 }
 

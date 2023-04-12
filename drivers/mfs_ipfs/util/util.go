@@ -28,8 +28,6 @@ import (
 )
 
 type MfsAPI struct {
-	CID       *string
-	PinID     *string
 	cancel    context.CancelFunc
 	ctx       context.Context
 	lock      *sync.RWMutex
@@ -39,6 +37,8 @@ type MfsAPI struct {
 	pinlock   *sync.Mutex
 	pinning   []chan<- error
 	queued    []chan<- error
+	refcid    refresher
+	refpinid  refresher
 }
 type NodeObj struct {
 	Id    string
@@ -46,6 +46,14 @@ type NodeObj struct {
 	Size  int64
 	Isdir bool
 }
+type refresher interface {
+	Get() (id string)
+	Set(id string)
+}
+type emptyref struct{}
+
+func (emptyref) Get() (id string) { return "" }
+func (emptyref) Set(id string)    {}
 
 var Ctx = context.Background()
 var DefaultPath = ""
@@ -56,10 +64,14 @@ var nodeApi iface.CoreAPI
 var plugins = false
 var repopath = ""
 
-func NewMfs(purl, ptoken string) (mapi *MfsAPI, err error) {
+func NewMfs(purl, ptoken string, rcid, rpinid refresher) (mapi *MfsAPI, err error) {
 	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("%s", r)
+		}
 		if mapi != nil {
 			go mapi.runPin()
+			go mapi.List("")
 		}
 	}()
 	buildLock.Lock()
@@ -74,8 +86,16 @@ func NewMfs(purl, ptoken string) (mapi *MfsAPI, err error) {
 			pinlock:   &sync.Mutex{},
 			pinning:   []chan<- error{},
 			queued:    []chan<- error{},
+			refcid:    rcid,
+			refpinid:  rpinid,
 		}
 		mapi.ctx, mapi.cancel = context.WithCancel(Ctx)
+		if mapi.refcid == nil {
+			mapi.refcid = emptyref{}
+		}
+		if mapi.refpinid == nil {
+			mapi.refpinid = emptyref{}
+		}
 		return
 	}
 	buildCount = -1
@@ -135,12 +155,25 @@ func NewMfs(purl, ptoken string) (mapi *MfsAPI, err error) {
 			pinlock:   &sync.Mutex{},
 			pinning:   []chan<- error{},
 			queued:    []chan<- error{},
+			refcid:    rcid,
+			refpinid:  rpinid,
 		}
 		mapi.ctx, mapi.cancel = context.WithCancel(Ctx)
+		if mapi.refcid == nil {
+			mapi.refcid = emptyref{}
+		}
+		if mapi.refpinid == nil {
+			mapi.refpinid = emptyref{}
+		}
 	}
 	return
 }
 func (mapi *MfsAPI) Close() (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("%s", r)
+		}
+	}()
 	mapi.cancel()
 	mapi.lock.Lock()
 	defer func() {
@@ -171,12 +204,10 @@ func (mapi *MfsAPI) Close() (err error) {
 	return
 }
 func (mapi *MfsAPI) runPin() {
+	defer recover()
 	queuelen := 0
 	waittime := 0
-	pinid := ""
-	if ptr := mapi.PinID; ptr != nil {
-		pinid = *ptr
-	}
+	pinid := mapi.refpinid.Get()
 	for {
 		select {
 		case <-mapi.ctx.Done():
@@ -198,9 +229,7 @@ func (mapi *MfsAPI) runPin() {
 								close(v)
 							}
 							mapi.pinning = []chan<- error{}
-							if ptr := mapi.CID; ptr != nil {
-								*ptr = pinstatus.GetPin().GetCid().String()
-							}
+							mapi.refcid.Set(pinstatus.GetPin().GetCid().String())
 						} else if pinstatus.GetStatus() == pinningservice.StatusFailed {
 							for _, v := range mapi.pinning {
 								v <- fmt.Errorf("StatusFailed")
@@ -212,10 +241,23 @@ func (mapi *MfsAPI) runPin() {
 				}
 				if mapi.newcid != nil {
 					if queuelen == len(mapi.queued) || waittime > 10 {
-						err := fmt.Errorf("NotImplement")
-						for _, v := range mapi.queued {
-							v <- err
-							close(v)
+						nodeApi.Swarm().ListenAddrs(mapi.ctx)
+						if pinstatus, err := mapi.pinclient.Replace(
+							mapi.ctx, pinid, *mapi.newcid, pinningservice.PinOpts.WithOrigins(),
+						); err == nil {
+							if info, err := peer.AddrInfosFromP2pAddrs(pinstatus.GetDelegates()...); err == nil {
+								for _, a := range info {
+									go nodeApi.Swarm().Connect(Ctx, a)
+								}
+							}
+							mapi.pinning = append(mapi.pinning, mapi.queued...)
+							pinid = pinstatus.GetRequestId()
+							mapi.refpinid.Set(pinid)
+						} else {
+							for _, v := range mapi.queued {
+								v <- err
+								close(v)
+							}
 						}
 						mapi.newcid = nil
 						mapi.queued = []chan<- error{}
@@ -255,15 +297,8 @@ func (mapi *MfsAPI) newRoot(force bool) (err error) {
 	if !force && mapi.mroot != nil {
 		return
 	}
-	pinid := ""
-	rootcid := ""
-	if ptr := mapi.PinID; ptr != nil {
-		pinid = *ptr
-	}
-	if ptr := mapi.CID; ptr != nil {
-		rootcid = *ptr
-	}
-	if pinstatus, err := mapi.pinclient.GetStatusByID(mapi.ctx, pinid); err == nil {
+	rootcid := mapi.refcid.Get()
+	if pinstatus, err := mapi.pinclient.GetStatusByID(mapi.ctx, mapi.refpinid.Get()); err == nil {
 		if info, err := peer.AddrInfosFromP2pAddrs(pinstatus.GetDelegates()...); err == nil {
 			for _, a := range info {
 				go nodeApi.Swarm().Connect(Ctx, a)
@@ -296,13 +331,16 @@ func (mapi *MfsAPI) newRoot(force bool) (err error) {
 			mapi.mroot.FlushMemFree(mapi.ctx)
 		}
 		mapi.mroot = mroot
-		if ptr := mapi.CID; ptr != nil {
-			*ptr = ldnode.Cid().String()
-		}
+		mapi.refcid.Set(ldnode.Cid().String())
 	}
 	return
 }
 func (mapi *MfsAPI) List(pth string) (ol []NodeObj, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("%s", r)
+		}
+	}()
 	if err = mapi.newRoot(false); err != nil {
 		return
 	}
@@ -331,6 +369,11 @@ func (mapi *MfsAPI) List(pth string) (ol []NodeObj, err error) {
 	return ol, err
 }
 func (mapi *MfsAPI) Mkdir(pth string) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("%s", r)
+		}
+	}()
 	if err = mapi.newRoot(false); err != nil {
 		return
 	}
@@ -354,6 +397,11 @@ func (mapi *MfsAPI) Mkdir(pth string) (err error) {
 	return
 }
 func (mapi *MfsAPI) Mv(src, dst string) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("%s", r)
+		}
+	}()
 	if err = mapi.newRoot(false); err != nil {
 		return
 	}
@@ -377,6 +425,11 @@ func (mapi *MfsAPI) Mv(src, dst string) (err error) {
 	return
 }
 func (mapi *MfsAPI) Put(pth, nodecid string, rc io.ReadCloser) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("%s", r)
+		}
+	}()
 	if err = mapi.newRoot(false); err != nil {
 		return
 	}
@@ -410,6 +463,11 @@ func (mapi *MfsAPI) Put(pth, nodecid string, rc io.ReadCloser) (err error) {
 	return
 }
 func (mapi *MfsAPI) Unlink(pth, fname string) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("%s", r)
+		}
+	}()
 	if err = mapi.newRoot(false); err != nil {
 		return
 	}
