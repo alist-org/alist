@@ -394,6 +394,8 @@ func FsRemoveEmptyDirectory(c *gin.Context) {
 	fileParentMap := make(map[model.Obj]model.Obj)
 	// removing files
 	removingFiles := generic.NewQueue[model.Obj]()
+	// removed files
+	removedFiles := make(map[string]bool)
 	for _, file := range rootFiles {
 		if !file.IsDir() {
 			continue
@@ -405,9 +407,12 @@ func FsRemoveEmptyDirectory(c *gin.Context) {
 	for !removingFiles.IsEmpty() {
 
 		removingFile := removingFiles.Pop()
-
-		// directory, recursive move
 		removingFilePath := fmt.Sprintf("%s/%s", filePathMap[removingFile], removingFile.GetName())
+
+		if removedFiles[removingFilePath] {
+			continue
+		}
+
 		subFiles, err := fs.List(c, removingFilePath, &fs.ListArgs{Refresh: true})
 		if err != nil {
 			common.ErrorResp(c, err, 500)
@@ -417,6 +422,7 @@ func FsRemoveEmptyDirectory(c *gin.Context) {
 		if len(subFiles) == 0 {
 			// remove empty directory
 			err = fs.Remove(c, removingFilePath)
+			removedFiles[removingFilePath] = true
 			if err != nil {
 				common.ErrorResp(c, err, 500)
 				return
