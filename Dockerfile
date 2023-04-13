@@ -1,11 +1,11 @@
-FROM alpine:edge as builder
+FROM alpine:3.17 as builder
 LABEL stage=go-builder
 WORKDIR /app/
 COPY ./ ./
 RUN apk add --no-cache bash curl gcc git go musl-dev; \
     bash build.sh release docker
 
-FROM alpine:edge
+FROM alpine:3.17
 LABEL MAINTAINER="i@nn.ci"
 VOLUME /opt/alist/data/
 WORKDIR /opt/alist/

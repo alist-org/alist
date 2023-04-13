@@ -17,6 +17,7 @@ type Addition struct {
 	Placeholder       string `json:"placeholder"`
 	ForcePathStyle    bool   `json:"force_path_style"`
 	ListObjectVersion string `json:"list_object_version" type:"select" options:"v1,v2" default:"v1"`
+	RemoveBucket      bool   `json:"remove_bucket" help:"Remove bucket name from path when using custom host."`
 }
 
 var config = driver.Config{

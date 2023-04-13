@@ -133,7 +133,7 @@ func FsRecursiveMove(c *gin.Context) {
 	}
 	c.Set("meta", meta)
 
-	rootFiles, err := fs.List(c, srcDir, false)
+	rootFiles, err := fs.List(c, srcDir, &fs.ListArgs{})
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return
@@ -154,7 +154,7 @@ func FsRecursiveMove(c *gin.Context) {
 		if movingFile.IsDir() {
 			// directory, recursive move
 			subFilePath := movingFilePath
-			subFiles, err := fs.List(c, subFilePath, true)
+			subFiles, err := fs.List(c, subFilePath, &fs.ListArgs{Refresh: true})
 			if err != nil {
 				common.ErrorResp(c, err, 500)
 				return
@@ -293,7 +293,7 @@ func FsRegexRename(c *gin.Context) {
 		return
 	}
 
-	files, err := fs.List(c, reqPath, false)
+	files, err := fs.List(c, reqPath, &fs.ListArgs{})
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return
@@ -362,7 +362,7 @@ func Link(c *gin.Context) {
 	//rawPath := stdpath.Join(user.BasePath, req.Path)
 	// why need not join base_path? because it's always the full path
 	rawPath := req.Path
-	storage, err := fs.GetStorage(rawPath)
+	storage, err := fs.GetStorage(rawPath, &fs.GetStoragesArgs{})
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return

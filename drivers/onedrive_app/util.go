@@ -184,6 +184,9 @@ func (d *OnedriveAPP) upBig(ctx context.Context, dstDir model.Obj, stream model.
 		req.Header.Set("Content-Range", fmt.Sprintf("bytes %d-%d/%d", finish, finish+byteSize-1, stream.GetSize()))
 		finish += byteSize
 		res, err := base.HttpClient.Do(req)
+		if err != nil {
+			return err
+		}
 		if res.StatusCode != 201 && res.StatusCode != 202 {
 			data, _ := io.ReadAll(res.Body)
 			res.Body.Close()

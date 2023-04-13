@@ -220,19 +220,20 @@ func (d *Pan123) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 		"type":         0,
 	}
 	var resp UploadResp
-	_, err := d.request(UploadRequest, http.MethodPost, func(req *resty.Request) {
+	res, err := d.request(UploadRequest, http.MethodPost, func(req *resty.Request) {
 		req.SetBody(data).SetContext(ctx)
 	}, &resp)
 	if err != nil {
 		return err
 	}
+	log.Debugln("upload request res: ", string(res))
 	if resp.Data.Reuse || resp.Data.Key == "" {
 		return nil
 	}
 	cfg := &aws.Config{
 		Credentials:      credentials.NewStaticCredentials(resp.Data.AccessKeyId, resp.Data.SecretAccessKey, resp.Data.SessionToken),
 		Region:           aws.String("123pan"),
-		Endpoint:         aws.String("file.123pan.com"),
+		Endpoint:         aws.String(resp.Data.EndPoint),
 		S3ForcePathStyle: aws.Bool(true),
 	}
 	s, err := session.NewSession(cfg)
