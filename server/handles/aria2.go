@@ -21,8 +21,8 @@ func SetAria2(c *gin.Context) {
 		return
 	}
 	items := []model.SettingItem{
-		{Key: conf.Aria2Uri, Value: req.Uri, Type: conf.TypeString, Group: model.ARIA2, Flag: model.PRIVATE},
-		{Key: conf.Aria2Secret, Value: req.Secret, Type: conf.TypeString, Group: model.ARIA2, Flag: model.PRIVATE},
+		{Key: conf.Aria2Uri, Value: req.Uri, Type: conf.TypeString, Group: model.OFFLINE_DOWNLOAD, Flag: model.PRIVATE},
+		{Key: conf.Aria2Secret, Value: req.Secret, Type: conf.TypeString, Group: model.OFFLINE_DOWNLOAD, Flag: model.PRIVATE},
 	}
 	if err := op.SaveSettingItems(items); err != nil {
 		common.ErrorResp(c, err, 500)

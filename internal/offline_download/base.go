@@ -22,10 +22,10 @@ type Status struct {
 	Err       error
 }
 
-type OfflineDownload interface {
+type Tool interface {
 	// Items return the setting items the tool need
 	Items() []model.SettingItem
-	Init() error
+	Init() (string, error)
 	IsReady() bool
 	// AddURI add an uri to download, return the task id
 	AddURI(args *AddUriArgs) (string, error)

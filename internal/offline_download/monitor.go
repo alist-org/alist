@@ -18,7 +18,7 @@ import (
 )
 
 type Monitor struct {
-	tool       OfflineDownload
+	tool       Tool
 	tsk        *task.Task[string]
 	tempDir    string
 	retried    int

@@ -11,16 +11,16 @@ var (
 	DownTaskManager = task.NewTaskManager[string](3)
 )
 
-type ToolsManager map[string]OfflineDownload
+type ToolsManager map[string]Tool
 
-func (t ToolsManager) Get(name string) (OfflineDownload, error) {
+func (t ToolsManager) Get(name string) (Tool, error) {
 	if tool, ok := t[name]; ok {
 		return tool, nil
 	}
 	return nil, fmt.Errorf("tool %s not found", name)
 }
 
-func (t ToolsManager) Add(name string, tool OfflineDownload) {
+func (t ToolsManager) Add(name string, tool Tool) {
 	t[name] = tool
 }
 
