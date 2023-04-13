@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net"
 	"os"
 	"path"
 	"reflect"
@@ -25,6 +26,7 @@ import (
 	"github.com/ipfs/kubo/repo"
 	"github.com/ipfs/kubo/repo/fsrepo"
 	"github.com/libp2p/go-libp2p/core/peer"
+	"github.com/multiformats/go-multiaddr"
 )
 
 type MfsAPI struct {
@@ -68,10 +70,13 @@ func NewMfs(purl, ptoken string, rcid, rpinid refresher) (mapi *MfsAPI, err erro
 		}
 		if mapi != nil {
 			go mapi.runPin()
+			go mapi.List("")
 		}
 	}()
 	buildLock.Lock()
 	defer buildLock.Unlock()
+
+	// singleton
 	if buildCount >= 0 {
 		buildCount++
 		mapi = &MfsAPI{
@@ -91,6 +96,7 @@ func NewMfs(purl, ptoken string, rcid, rpinid refresher) (mapi *MfsAPI, err erro
 		}
 		return
 	}
+
 	buildCount = -1
 	nodeApi = nil
 	if !plugins {
@@ -103,6 +109,8 @@ func NewMfs(purl, ptoken string, rcid, rpinid refresher) (mapi *MfsAPI, err erro
 			}
 		}
 	}
+
+	// setup repo
 	newcfg := &config.Config{}
 	if err == nil {
 		newcfg, err = config.Init(io.Discard, 2048)
@@ -121,6 +129,8 @@ func NewMfs(purl, ptoken string, rcid, rpinid refresher) (mapi *MfsAPI, err erro
 	if err == nil {
 		newrepo, err = fsrepo.Open(repopath)
 	}
+
+	// setup node
 	newnode := &core.IpfsNode{}
 	if err == nil {
 		closeFunc = newrepo.Close
@@ -184,6 +194,7 @@ func (mapi *MfsAPI) Close() (err error) {
 	}
 	return
 }
+
 func (mapi *MfsAPI) runPin() {
 	defer recover()
 	var newcid *cid.Cid = nil
@@ -223,6 +234,7 @@ func (mapi *MfsAPI) runPin() {
 			func() {
 				mapi.lock.RLock()
 				defer mapi.lock.RUnlock()
+				// get status
 				if len(pinning) > 0 {
 					if pinstatus, err := mapi.pinclient.GetStatusByID(mapi.ctx, pinid); err == nil {
 						if info, err := peer.AddrInfosFromP2pAddrs(pinstatus.GetDelegates()...); err == nil {
@@ -253,10 +265,19 @@ func (mapi *MfsAPI) runPin() {
 						}
 					}
 				}
+				// replace pin
 				if newcid != nil {
-					nodeApi.Swarm().ListenAddrs(mapi.ctx)
+					oriaddr, _ := nodeApi.Swarm().ListenAddrs(mapi.ctx)
+					mafilter := multiaddr.NewFilters()
+					mafilter.DefaultAction = multiaddr.ActionDeny
+					for _, v := range []string{"127.0.0.0/8", "169.254.0.0/16", "172.16.0.0/12", "192.168.0.0/16", "::1/128"} {
+						if _, ipnet, err := net.ParseCIDR(v); err == nil {
+							mafilter.AddFilter(*ipnet, multiaddr.ActionAccept)
+						}
+					}
+					oriaddr = multiaddr.FilterAddrs(oriaddr, mafilter.AddrBlocked)
 					if pinstatus, err := mapi.pinclient.Replace(
-						mapi.ctx, pinid, *newcid, pinningservice.PinOpts.WithOrigins(),
+						mapi.ctx, pinid, *newcid, pinningservice.PinOpts.WithOrigins(oriaddr...),
 					); err == nil {
 						if info, err := peer.AddrInfosFromP2pAddrs(pinstatus.GetDelegates()...); err == nil {
 							for _, a := range info {
@@ -292,6 +313,7 @@ func (mapi *MfsAPI) waitPin(pe *error) {
 		*pe = <-echan
 	}
 }
+
 func (mapi *MfsAPI) newRoot(force bool) (err error) {
 	if err = mapi.ctx.Err(); err != nil {
 		return
@@ -304,6 +326,7 @@ func (mapi *MfsAPI) newRoot(force bool) (err error) {
 	if !force && mapi.mroot != nil {
 		return
 	}
+
 	rootcid := mapi.refcid.Get()
 	if pinstatus, err := mapi.pinclient.GetStatusByID(mapi.ctx, mapi.refpinid.Get()); err == nil {
 		if info, err := peer.AddrInfosFromP2pAddrs(pinstatus.GetDelegates()...); err == nil {
@@ -315,6 +338,7 @@ func (mapi *MfsAPI) newRoot(force bool) (err error) {
 			rootcid = pinstatus.GetPin().GetCid().String()
 		}
 	}
+
 	var ldnode ipldformat.Node
 	if err == nil {
 		ldnode, err = nodeApi.ResolveNode(mapi.ctx, ifacepath.New(rootcid))
