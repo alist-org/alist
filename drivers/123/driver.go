@@ -230,23 +230,27 @@ func (d *Pan123) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 	if resp.Data.Reuse || resp.Data.Key == "" {
 		return nil
 	}
-	cfg := &aws.Config{
-		Credentials:      credentials.NewStaticCredentials(resp.Data.AccessKeyId, resp.Data.SecretAccessKey, resp.Data.SessionToken),
-		Region:           aws.String("123pan"),
-		Endpoint:         aws.String(resp.Data.EndPoint),
-		S3ForcePathStyle: aws.Bool(true),
+	if resp.Data.AccessKeyId == "" || resp.Data.SecretAccessKey == "" || resp.Data.SessionToken == "" {
+		err = d.newUpload(ctx, &resp, stream, uploadFile, up)
+	} else {
+		cfg := &aws.Config{
+			Credentials:      credentials.NewStaticCredentials(resp.Data.AccessKeyId, resp.Data.SecretAccessKey, resp.Data.SessionToken),
+			Region:           aws.String("123pan"),
+			Endpoint:         aws.String(resp.Data.EndPoint),
+			S3ForcePathStyle: aws.Bool(true),
+		}
+		s, err := session.NewSession(cfg)
+		if err != nil {
+			return err
+		}
+		uploader := s3manager.NewUploader(s)
+		input := &s3manager.UploadInput{
+			Bucket: &resp.Data.Bucket,
+			Key:    &resp.Data.Key,
+			Body:   uploadFile,
+		}
+		_, err = uploader.UploadWithContext(ctx, input)
 	}
-	s, err := session.NewSession(cfg)
-	if err != nil {
-		return err
-	}
-	uploader := s3manager.NewUploader(s)
-	input := &s3manager.UploadInput{
-		Bucket: &resp.Data.Bucket,
-		Key:    &resp.Data.Key,
-		Body:   uploadFile,
-	}
-	_, err = uploader.UploadWithContext(ctx, input)
 	if err != nil {
 		return err
 	}
