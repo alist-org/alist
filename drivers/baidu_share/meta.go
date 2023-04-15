@@ -17,14 +17,17 @@ type Addition struct {
 }
 
 var config = driver.Config{
-	Name:        "BaiduShare",
-	LocalSort:   true,
-	OnlyLocal:   false,
-	OnlyProxy:   false,
-	NoCache:     false,
-	NoUpload:    true,
-	NeedMs:      false,
-	DefaultRoot: "",
+	Name:              "BaiduShare",
+	LocalSort:         true,
+	OnlyLocal:         false,
+	OnlyProxy:         false,
+	NoCache:           false,
+	NoUpload:          true,
+	NeedMs:            false,
+	DefaultRoot:       "/",
+	CheckStatus:       false,
+	Alert:             "",
+	NoOverwriteUpload: false,
 }
 
 func init() {

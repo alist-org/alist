@@ -3,7 +3,6 @@ package common
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -17,7 +16,15 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-var HttpClient = &http.Client{}
+var HttpClient = &http.Client{
+	CheckRedirect: func(req *http.Request, via []*http.Request) error {
+		if len(via) >= 10 {
+			return errors.New("stopped after 10 redirects")
+		}
+		req.Header.Del("Referer")
+		return nil
+	},
+}
 
 func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.Obj) error {
 	// read data with native
@@ -61,7 +68,8 @@ func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.
 		if err != nil {
 			return err
 		}
-		w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"; filename*=UTF-8''%s`, file.GetName(), url.QueryEscape(file.GetName())))
+		filename := file.GetName()
+		w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"; filename*=UTF-8''%s`, filename, url.PathEscape(filename)))
 		http.ServeContent(w, r, file.GetName(), fileStat.ModTime(), f)
 		return nil
 	} else {
@@ -93,7 +101,7 @@ func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.
 		}
 		w.WriteHeader(res.StatusCode)
 		if res.StatusCode >= 400 {
-			all, _ := ioutil.ReadAll(res.Body)
+			all, _ := io.ReadAll(res.Body)
 			msg := string(all)
 			log.Debugln(msg)
 			return errors.New(msg)

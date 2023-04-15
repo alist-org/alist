@@ -122,9 +122,14 @@ func getMainItems(config driver.Config) []driver.Item {
 		Type:    conf.TypeSelect,
 		Options: "front,back",
 	})
+	items = append(items, driver.Item{
+		Name:     "enable_sign",
+		Type:     conf.TypeBool,
+		Default:  "false",
+		Required: true,
+	})
 	return items
 }
-
 func getAdditionalItems(t reflect.Type, defaultRoot string) []driver.Item {
 	var items []driver.Item
 	for i := 0; i < t.NumField(); i++ {

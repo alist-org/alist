@@ -84,7 +84,7 @@ func walkFS(ctx context.Context, depth int, name string, info model.Obj, walkFn 
 	}
 	meta, _ := op.GetNearestMeta(name)
 	// Read directory names.
-	objs, err := fs.List(context.WithValue(ctx, "meta", meta), name)
+	objs, err := fs.List(context.WithValue(ctx, "meta", meta), name, &fs.ListArgs{})
 	//f, err := fs.OpenFile(ctx, name, os.O_RDONLY, 0)
 	//if err != nil {
 	//	return walkFn(name, info, err)

@@ -13,19 +13,32 @@ import (
 // So, the purpose of this package is to convert mount path to actual path
 // then pass the actual path to the op package
 
-func List(ctx context.Context, path string, refresh ...bool) ([]model.Obj, error) {
-	res, err := list(ctx, path, refresh...)
+type ListArgs struct {
+	Refresh bool
+	NoLog   bool
+}
+
+func List(ctx context.Context, path string, args *ListArgs) ([]model.Obj, error) {
+	res, err := list(ctx, path, args)
 	if err != nil {
-		log.Errorf("failed list %s: %+v", path, err)
+		if !args.NoLog {
+			log.Errorf("failed list %s: %+v", path, err)
+		}
 		return nil, err
 	}
 	return res, nil
 }
 
-func Get(ctx context.Context, path string) (model.Obj, error) {
+type GetArgs struct {
+	NoLog bool
+}
+
+func Get(ctx context.Context, path string, args *GetArgs) (model.Obj, error) {
 	res, err := get(ctx, path)
 	if err != nil {
-		log.Errorf("failed get %s: %+v", path, err)
+		if !args.NoLog {
+			log.Errorf("failed get %s: %+v", path, err)
+		}
 		return nil, err
 	}
 	return res, nil
@@ -96,7 +109,10 @@ func PutAsTask(dstDirPath string, file *model.FileStream) error {
 	return err
 }
 
-func GetStorage(path string) (driver.Driver, error) {
+type GetStoragesArgs struct {
+}
+
+func GetStorage(path string, args *GetStoragesArgs) (driver.Driver, error) {
 	storageDriver, _, err := op.GetStorageAndActualPath(path)
 	if err != nil {
 		return nil, err

@@ -6,10 +6,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/fs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/op"
+	"github.com/alist-org/alist/v3/internal/setting"
 	"github.com/alist-org/alist/v3/internal/sign"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/server/common"
@@ -77,14 +79,14 @@ func FsList(c *gin.Context) {
 		common.ErrorStrResp(c, "Refresh without permission", 403)
 		return
 	}
-	objs, err := fs.List(c, reqPath, req.Refresh)
+	objs, err := fs.List(c, reqPath, &fs.ListArgs{Refresh: req.Refresh})
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return
 	}
 	total, objs := pagination(objs, &req.PageReq)
 	provider := "unknown"
-	storage, err := fs.GetStorage(reqPath)
+	storage, err := fs.GetStorage(reqPath, &fs.GetStoragesArgs{})
 	if err == nil {
 		provider = storage.GetStorage().Driver
 	}
@@ -130,7 +132,7 @@ func FsDirs(c *gin.Context) {
 		common.ErrorStrResp(c, "password is incorrect or you have no permission", 403)
 		return
 	}
-	objs, err := fs.List(c, reqPath)
+	objs, err := fs.List(c, reqPath, &fs.ListArgs{})
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return
@@ -165,6 +167,9 @@ func getReadme(meta *model.Meta, path string) string {
 }
 
 func isEncrypt(meta *model.Meta, path string) bool {
+	if common.IsStorageSignEnabled(path) {
+		return true
+	}
 	if meta == nil || meta.Password == "" {
 		return false
 	}
@@ -242,14 +247,14 @@ func FsGet(c *gin.Context) {
 		common.ErrorStrResp(c, "password is incorrect or you have no permission", 403)
 		return
 	}
-	obj, err := fs.Get(c, reqPath)
+	obj, err := fs.Get(c, reqPath, &fs.GetArgs{})
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return
 	}
 	var rawURL string
 
-	storage, err := fs.GetStorage(reqPath)
+	storage, err := fs.GetStorage(reqPath, &fs.GetStoragesArgs{})
 	provider := "unknown"
 	if err == nil {
 		provider = storage.Config().Name
@@ -260,16 +265,20 @@ func FsGet(c *gin.Context) {
 			return
 		}
 		if storage.Config().MustProxy() || storage.GetStorage().WebProxy {
+			query := ""
+			if isEncrypt(meta, reqPath) || setting.GetBool(conf.SignAll) {
+				query = "?sign=" + sign.Sign(reqPath)
+			}
 			if storage.GetStorage().DownProxyUrl != "" {
 				rawURL = fmt.Sprintf("%s%s?sign=%s",
 					strings.Split(storage.GetStorage().DownProxyUrl, "\n")[0],
 					utils.EncodePath(reqPath, true),
 					sign.Sign(reqPath))
 			} else {
-				rawURL = fmt.Sprintf("%s/p%s?sign=%s",
+				rawURL = fmt.Sprintf("%s/p%s%s",
 					common.GetApiUrl(c.Request),
 					utils.EncodePath(reqPath, true),
-					sign.Sign(reqPath))
+					query)
 			}
 		} else {
 			// file have raw url
@@ -288,11 +297,12 @@ func FsGet(c *gin.Context) {
 	}
 	var related []model.Obj
 	parentPath := stdpath.Dir(reqPath)
-	sameLevelFiles, err := fs.List(c, parentPath)
+	sameLevelFiles, err := fs.List(c, parentPath, &fs.ListArgs{})
 	if err == nil {
 		related = filterRelated(sameLevelFiles, obj)
 	}
 	parentMeta, _ := op.GetNearestMeta(parentPath)
+	thumb, _ := model.GetThumb(obj)
 	common.SuccessResp(c, FsGetResp{
 		ObjResp: ObjResp{
 			Name:     obj.GetName(),
@@ -301,6 +311,7 @@ func FsGet(c *gin.Context) {
 			Modified: obj.ModTime(),
 			Sign:     common.Sign(obj, parentPath, isEncrypt(meta, reqPath)),
 			Type:     utils.GetFileType(obj.GetName()),
+			Thumb:    thumb,
 		},
 		RawURL:   rawURL,
 		Readme:   getReadme(meta, reqPath),

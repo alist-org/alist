@@ -1,4 +1,4 @@
-package onedrive
+package onedrive_app
 
 import (
 	"bytes"
@@ -40,31 +40,22 @@ var onedriveHostMap = map[string]Host{
 	},
 }
 
-func (d *Onedrive) GetMetaUrl(auth bool, path string) string {
+func (d *OnedriveAPP) GetMetaUrl(auth bool, path string) string {
 	host, _ := onedriveHostMap[d.Region]
 	path = utils.EncodePath(path, true)
 	if auth {
 		return host.Oauth
 	}
-	if d.IsSharepoint {
-		if path == "/" || path == "\\" {
-			return fmt.Sprintf("%s/v1.0/sites/%s/drive/root", host.Api, d.SiteId)
-		} else {
-			return fmt.Sprintf("%s/v1.0/sites/%s/drive/root:%s:", host.Api, d.SiteId, path)
-		}
-	} else {
-		if path == "/" || path == "\\" {
-			return fmt.Sprintf("%s/v1.0/me/drive/root", host.Api)
-		} else {
-			return fmt.Sprintf("%s/v1.0/me/drive/root:%s:", host.Api, path)
-		}
+	if path == "/" || path == "\\" {
+		return fmt.Sprintf("%s/v1.0/users/%s/drive/root", host.Api, d.Email)
 	}
+	return fmt.Sprintf("%s/v1.0/users/%s/drive/root:%s:", host.Api, d.Email, path)
 }
 
-func (d *Onedrive) refreshToken() error {
+func (d *OnedriveAPP) accessToken() error {
 	var err error
 	for i := 0; i < 3; i++ {
-		err = d._refreshToken()
+		err = d._accessToken()
 		if err == nil {
 			break
 		}
@@ -72,16 +63,16 @@ func (d *Onedrive) refreshToken() error {
 	return err
 }
 
-func (d *Onedrive) _refreshToken() error {
-	url := d.GetMetaUrl(true, "") + "/common/oauth2/v2.0/token"
+func (d *OnedriveAPP) _accessToken() error {
+	url := d.GetMetaUrl(true, "") + "/" + d.TenantID + "/oauth2/token"
 	var resp base.TokenResp
 	var e TokenErr
 	_, err := base.RestyClient.R().SetResult(&resp).SetError(&e).SetFormData(map[string]string{
-		"grant_type":    "refresh_token",
+		"grant_type":    "client_credentials",
 		"client_id":     d.ClientID,
 		"client_secret": d.ClientSecret,
-		"redirect_uri":  d.RedirectUri,
-		"refresh_token": d.RefreshToken,
+		"resource":      "https://graph.microsoft.com/",
+		"scope":         "https://graph.microsoft.com/.default",
 	}).Post(url)
 	if err != nil {
 		return err
@@ -89,15 +80,15 @@ func (d *Onedrive) _refreshToken() error {
 	if e.Error != "" {
 		return fmt.Errorf("%s", e.ErrorDescription)
 	}
-	if resp.RefreshToken == "" {
+	if resp.AccessToken == "" {
 		return errs.EmptyToken
 	}
-	d.RefreshToken, d.AccessToken = resp.RefreshToken, resp.AccessToken
+	d.AccessToken = resp.AccessToken
 	op.MustSaveDriverStorage(d)
 	return nil
 }
 
-func (d *Onedrive) Request(url string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+func (d *OnedriveAPP) Request(url string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
 	req := base.RestyClient.R()
 	req.SetHeader("Authorization", "Bearer "+d.AccessToken)
 	if callback != nil {
@@ -114,7 +105,7 @@ func (d *Onedrive) Request(url string, method string, callback base.ReqCallback,
 	}
 	if e.Error.Code != "" {
 		if e.Error.Code == "InvalidAuthenticationToken" {
-			err = d.refreshToken()
+			err = d.accessToken()
 			if err != nil {
 				return nil, err
 			}
@@ -125,7 +116,7 @@ func (d *Onedrive) Request(url string, method string, callback base.ReqCallback,
 	return res.Body(), nil
 }
 
-func (d *Onedrive) getFiles(path string) ([]File, error) {
+func (d *OnedriveAPP) getFiles(path string) ([]File, error) {
 	var res []File
 	nextLink := d.GetMetaUrl(false, path) + "/children?$top=5000&$expand=thumbnails($select=medium)&$select=id,name,size,lastModifiedDateTime,content.downloadUrl,file,parentReference"
 	for nextLink != "" {
@@ -140,14 +131,14 @@ func (d *Onedrive) getFiles(path string) ([]File, error) {
 	return res, nil
 }
 
-func (d *Onedrive) GetFile(path string) (*File, error) {
+func (d *OnedriveAPP) GetFile(path string) (*File, error) {
 	var file File
 	u := d.GetMetaUrl(false, path)
 	_, err := d.Request(u, http.MethodGet, nil, &file)
 	return &file, err
 }
 
-func (d *Onedrive) upSmall(ctx context.Context, dstDir model.Obj, stream model.FileStreamer) error {
+func (d *OnedriveAPP) upSmall(ctx context.Context, dstDir model.Obj, stream model.FileStreamer) error {
 	url := d.GetMetaUrl(false, stdpath.Join(dstDir.GetPath(), stream.GetName())) + "/content"
 	data, err := io.ReadAll(stream)
 	if err != nil {
@@ -159,7 +150,7 @@ func (d *Onedrive) upSmall(ctx context.Context, dstDir model.Obj, stream model.F
 	return err
 }
 
-func (d *Onedrive) upBig(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
+func (d *OnedriveAPP) upBig(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
 	url := d.GetMetaUrl(false, stdpath.Join(dstDir.GetPath(), stream.GetName())) + "/createUploadSession"
 	res, err := d.Request(url, http.MethodPost, nil, nil)
 	if err != nil {

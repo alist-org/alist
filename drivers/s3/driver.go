@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/url"
 	stdpath "path"
+	"strings"
 	"time"
 
 	"github.com/alist-org/alist/v3/internal/driver"
@@ -75,6 +76,9 @@ func (d *S3) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*mo
 	if d.CustomHost != "" {
 		err = req.Build()
 		link = req.HTTPRequest.URL.String()
+		if d.RemoveBucket {
+			link = strings.Replace(link, "/"+d.Bucket, "", 1)
+		}
 	} else {
 		link, err = req.Presign(time.Hour * time.Duration(d.SignURLExpire))
 	}
@@ -128,6 +132,9 @@ func (d *S3) Remove(ctx context.Context, obj model.Obj) error {
 
 func (d *S3) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
 	uploader := s3manager.NewUploader(d.Session)
+	if stream.GetSize() > s3manager.MaxUploadParts*s3manager.DefaultUploadPartSize {
+		uploader.PartSize = stream.GetSize() / (s3manager.MaxUploadParts - 1)
+	}
 	key := getKey(stdpath.Join(dstDir.GetPath(), stream.GetName()), false)
 	log.Debugln("key:", key)
 	input := &s3manager.UploadInput{

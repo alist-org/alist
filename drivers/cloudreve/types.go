@@ -1,8 +1,9 @@
 package cloudreve
 
 import (
-	"github.com/alist-org/alist/v3/internal/model"
 	"time"
+
+	"github.com/alist-org/alist/v3/internal/model"
 )
 
 type Resp struct {
@@ -51,4 +52,9 @@ func objectToObj(f Object) *model.Object {
 		Modified: f.Date,
 		IsFolder: f.Type == "dir",
 	}
+}
+
+type Config struct {
+	LoginCaptcha bool   `json:"loginCaptcha"`
+	CaptchaType  string `json:"captcha_type"`
 }
