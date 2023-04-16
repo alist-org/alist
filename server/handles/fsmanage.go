@@ -150,11 +150,12 @@ func FsRecursiveMove(c *gin.Context) {
 	for !movingFiles.IsEmpty() {
 
 		movingFile := movingFiles.Pop()
-		movingFilePath := fmt.Sprintf("%s/%s", filePathMap[movingFile], movingFile.GetName())
+		movingFilePath := filePathMap[movingFile]
+		movingFileName := fmt.Sprintf("%s/%s", movingFilePath, movingFile.GetName())
 		if movingFile.IsDir() {
 			// directory, recursive move
-			subFilePath := movingFilePath
-			subFiles, err := fs.List(c, subFilePath, &fs.ListArgs{Refresh: true})
+			subFilePath := movingFileName
+			subFiles, err := fs.List(c, movingFileName, &fs.ListArgs{Refresh: true})
 			if err != nil {
 				common.ErrorResp(c, err, 500)
 				return
@@ -171,7 +172,7 @@ func FsRecursiveMove(c *gin.Context) {
 			}
 
 			// move
-			err := fs.Move(c, movingFilePath, dstDir, movingFiles.IsEmpty())
+			err := fs.Move(c, movingFileName, dstDir, movingFiles.IsEmpty())
 			if err != nil {
 				common.ErrorResp(c, err, 500)
 				return
