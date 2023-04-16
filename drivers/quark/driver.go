@@ -71,6 +71,9 @@ func (d *Quark) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 			"Referer":    []string{"https://pan.quark.cn"},
 			"User-Agent": []string{ua},
 		},
+		PresetHeader: http.Header{
+			"Range": []string{"bytes=0-"},
+		},
 	}, nil
 }
 
