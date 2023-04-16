@@ -2,6 +2,7 @@ package mfs_ipfs
 
 import (
 	"context"
+	"log"
 	"net/url"
 	"path"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/op"
+	"github.com/sirupsen/logrus"
 )
 
 type MfsIpfs struct {
@@ -44,7 +46,11 @@ func (d *MfsIpfs) Init(ctx context.Context) error {
 	util.DefaultPath = conf.Conf.TempDir
 	var err error
 	d.gateurl, _ = url.Parse(d.Gateway)
-	d.mapi, err = util.NewMfs(d.Endpoint, d.JWToken, &refid{d: d, id: &d.Addition.CID}, &refid{d: d, id: &d.Addition.PinID})
+	d.mapi, err = util.NewMfs(
+		d.Endpoint, d.JWToken,
+		&refid{d: d, id: &d.Addition.CID}, &refid{d: d, id: &d.Addition.PinID},
+		log.New(logrus.StandardLogger().WriterLevel(logrus.WarnLevel), "IPFS", log.LstdFlags),
+	)
 	return err
 }
 

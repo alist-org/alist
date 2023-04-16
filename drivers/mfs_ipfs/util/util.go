@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"os"
 	"path"
@@ -33,6 +34,7 @@ type MfsAPI struct {
 	cancel    context.CancelFunc
 	ctx       context.Context
 	lock      *sync.RWMutex
+	log       *log.Logger
 	mroot     *mfs.Root
 	pinclient *pinningservice.Client
 	qchan     chan chan<- error
@@ -63,7 +65,7 @@ var nodeApi iface.CoreAPI
 var plugins = false
 var repopath = ""
 
-func NewMfs(purl, ptoken string, rcid, rpinid refresher) (mapi *MfsAPI, err error) {
+func NewMfs(purl, ptoken string, rcid, rpinid refresher, fslog *log.Logger) (mapi *MfsAPI, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("%s", r)
@@ -75,12 +77,22 @@ func NewMfs(purl, ptoken string, rcid, rpinid refresher) (mapi *MfsAPI, err erro
 	}()
 	buildLock.Lock()
 	defer buildLock.Unlock()
+	if rcid == nil {
+		rcid = emptyref{}
+	}
+	if rpinid == nil {
+		rpinid = emptyref{}
+	}
+	if fslog == nil {
+		fslog = log.New(io.Discard, "", log.LstdFlags)
+	}
 
 	// singleton
 	if buildCount >= 0 {
 		buildCount++
 		mapi = &MfsAPI{
 			lock:      &sync.RWMutex{},
+			log:       fslog,
 			mroot:     nil,
 			pinclient: pinningservice.NewClient(purl, ptoken),
 			qchan:     make(chan chan<- error),
@@ -88,12 +100,6 @@ func NewMfs(purl, ptoken string, rcid, rpinid refresher) (mapi *MfsAPI, err erro
 			refpinid:  rpinid,
 		}
 		mapi.ctx, mapi.cancel = context.WithCancel(Ctx)
-		if mapi.refcid == nil {
-			mapi.refcid = emptyref{}
-		}
-		if mapi.refpinid == nil {
-			mapi.refpinid = emptyref{}
-		}
 		return
 	}
 
@@ -152,6 +158,7 @@ func NewMfs(purl, ptoken string, rcid, rpinid refresher) (mapi *MfsAPI, err erro
 		buildCount = 1
 		mapi = &MfsAPI{
 			lock:      &sync.RWMutex{},
+			log:       fslog,
 			mroot:     nil,
 			pinclient: pinningservice.NewClient(purl, ptoken),
 			qchan:     make(chan chan<- error),
@@ -159,12 +166,6 @@ func NewMfs(purl, ptoken string, rcid, rpinid refresher) (mapi *MfsAPI, err erro
 			refpinid:  rpinid,
 		}
 		mapi.ctx, mapi.cancel = context.WithCancel(Ctx)
-		if mapi.refcid == nil {
-			mapi.refcid = emptyref{}
-		}
-		if mapi.refpinid == nil {
-			mapi.refpinid = emptyref{}
-		}
 	}
 	return
 }
@@ -254,6 +255,9 @@ func (mapi *MfsAPI) runPin() {
 							}
 							pinning = []chan<- error{}
 						}
+						mapi.log.Println(pinstatus.GetPin().GetCid(), pinstatus.GetStatus())
+					} else {
+						mapi.log.Println(err)
 					}
 				}
 				if len(queued) > 0 {
