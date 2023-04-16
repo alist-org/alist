@@ -15,17 +15,19 @@ import (
 // do others that not defined in Driver interface
 
 const (
-	API            = "https://www.123pan.com/b/api"
-	SignIn         = API + "/user/sign_in"
-	UserInfo       = API + "/user/info"
-	FileList       = API + "/file/list/new"
-	DownloadInfo   = API + "/file/download_info"
-	Mkdir          = API + "/file/upload_request"
-	Move           = API + "/file/mod_pid"
-	Rename         = API + "/file/rename"
-	Trash          = API + "/file/trash"
-	UploadRequest  = API + "/file/upload_request"
-	UploadComplete = API + "/file/upload_complete"
+	API             = "https://www.123pan.com/b/api"
+	SignIn          = API + "/user/sign_in"
+	UserInfo        = API + "/user/info"
+	FileList        = API + "/file/list/new"
+	DownloadInfo    = API + "/file/download_info"
+	Mkdir           = API + "/file/upload_request"
+	Move            = API + "/file/mod_pid"
+	Rename          = API + "/file/rename"
+	Trash           = API + "/file/trash"
+	UploadRequest   = API + "/file/upload_request"
+	UploadComplete  = API + "/file/upload_complete"
+	S3PreSignedUrls = API + "/file/s3_repare_upload_parts_batch"
+	S3Complete      = API + "/file/s3_complete_multipart_upload"
 )
 
 func (d *Pan123) login() error {
