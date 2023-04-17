@@ -77,10 +77,6 @@ func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.
 		if err != nil {
 			return err
 		}
-		// preset header
-		for h, val := range link.PresetHeader {
-			req.Header[h] = val
-		}
 		// client header
 		for h, val := range r.Header {
 			if utils.SliceContains(conf.SlicesMap[conf.ProxyIgnoreHeaders], strings.ToLower(h)) {
