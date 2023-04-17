@@ -72,17 +72,21 @@ func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.
 		w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"; filename*=UTF-8''%s`, filename, url.PathEscape(filename)))
 		http.ServeContent(w, r, file.GetName(), fileStat.ModTime(), f)
 		return nil
+	} else if link.Handle != nil {
+		return link.Handle(w, r)
 	} else {
 		req, err := http.NewRequest(r.Method, link.URL, nil)
 		if err != nil {
 			return err
 		}
+		// client header
 		for h, val := range r.Header {
 			if utils.SliceContains(conf.SlicesMap[conf.ProxyIgnoreHeaders], strings.ToLower(h)) {
 				continue
 			}
 			req.Header[h] = val
 		}
+		// needed header
 		for h, val := range link.Header {
 			req.Header[h] = val
 		}
