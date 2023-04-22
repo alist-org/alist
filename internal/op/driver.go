@@ -12,8 +12,44 @@ import (
 
 type New func() driver.Driver
 
+// yaegi use
+type PluginNew func() driver.DriverPlugin
+type PluginResultNew func() driver.DriverPluginResult
+
 var driverNewMap = map[string]New{}
 var driverInfoMap = map[string]driver.Info{}
+
+// yaegi use
+func RegisterPluginResultDriver(driverNew PluginResultNew) {
+	RegisterDriver(func() driver.Driver {
+		return driverNew()
+	})
+}
+
+func UnRegisterPluginResultDriver(driverNew PluginResultNew) {
+	UnRegisterDriver(func() driver.Driver {
+		return driverNew()
+	})
+}
+
+func RegisterPluginDriver(driverNew PluginNew) {
+	RegisterDriver(func() driver.Driver {
+		return driverNew()
+	})
+}
+
+func UnRegisterPluginDriver(driverNew PluginNew) {
+	UnRegisterDriver(func() driver.Driver {
+		return driverNew()
+	})
+}
+
+func UnRegisterDriver(driver New) {
+	tempDriver := driver()
+	tempConfig := tempDriver.Config()
+	delete(driverNewMap, tempConfig.Name)
+	delete(driverInfoMap, tempConfig.Name)
+}
 
 func RegisterDriver(driver New) {
 	// log.Infof("register driver: [%s]", config.Name)
@@ -43,13 +79,17 @@ func GetDriverInfoMap() map[string]driver.Info {
 	return driverInfoMap
 }
 
+func GetDriverNewMap() map[string]New {
+	return driverNewMap
+}
+
 func registerDriverItems(config driver.Config, addition driver.Additional) {
 	// log.Debugf("addition of %s: %+v", config.Name, addition)
 	tAddition := reflect.TypeOf(addition)
 	for tAddition.Kind() == reflect.Pointer {
 		tAddition = tAddition.Elem()
 	}
-	mainItems := getMainItems(config)
+	mainItems := GetMainItems(config)
 	additionalItems := getAdditionalItems(tAddition, config.DefaultRoot)
 	driverInfoMap[config.Name] = driver.Info{
 		Common:     mainItems,
@@ -58,7 +98,7 @@ func registerDriverItems(config driver.Config, addition driver.Additional) {
 	}
 }
 
-func getMainItems(config driver.Config) []driver.Item {
+func GetMainItems(config driver.Config) []driver.Item {
 	items := []driver.Item{{
 		Name:     "mount_path",
 		Type:     conf.TypeString,

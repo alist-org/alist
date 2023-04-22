@@ -10,7 +10,6 @@ import (
 	"github.com/pkg/errors"
 
 	plugin_manage "github.com/alist-org/alist/v3/internal/plugin/manage"
-	_ "github.com/alist-org/alist/v3/internal/plugin/wasi"
 	_ "github.com/alist-org/alist/v3/internal/plugin/yaegi"
 )
 
