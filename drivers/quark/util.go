@@ -14,7 +14,6 @@ import (
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/op"
-	"github.com/alist-org/alist/v3/pkg/cookie"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
@@ -44,9 +43,9 @@ func (d *Quark) request(pathname string, method string, callback base.ReqCallbac
 	if err != nil {
 		return nil, err
 	}
-	__puus := cookie.GetCookie(res.Cookies(), "__puus")
+	__puus := utils.GetCookie(res.Cookies(), "__puus")
 	if __puus != nil {
-		d.Cookie = cookie.SetStr(d.Cookie, "__puus", __puus.Value)
+		d.Cookie = utils.SetStr(d.Cookie, "__puus", __puus.Value)
 		op.MustSaveDriverStorage(d)
 	}
 	if e.Status >= 400 || e.Code != 0 {

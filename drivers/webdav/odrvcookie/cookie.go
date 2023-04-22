@@ -3,7 +3,7 @@ package odrvcookie
 import (
 	"net/http"
 
-	"github.com/alist-org/alist/v3/pkg/cookie"
+	"github.com/alist-org/alist/v3/pkg/utils"
 )
 
 //type SpCookie struct {
@@ -36,7 +36,7 @@ func GetCookie(username, password, siteUrl string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return cookie.ToString([]*http.Cookie{&tokenConf.RtFa, &tokenConf.FedAuth}), nil
+	return utils.ToString([]*http.Cookie{&tokenConf.RtFa, &tokenConf.FedAuth}), nil
 	//spCookie = &SpCookie{
 	//	Cookie: cookie.ToString([]*http.Cookie{&tokenConf.RtFa, &tokenConf.FedAuth}),
 	//	expire: time.Now().Add(time.Hour * 12),

@@ -10,7 +10,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/setting"
-	"github.com/alist-org/alist/v3/pkg/cookie"
+	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/go-resty/resty/v2"
 	json "github.com/json-iterator/go"
 	jsoniter "github.com/json-iterator/go"
@@ -58,7 +58,7 @@ func (d *Cloudreve) request(method string, path string, callback base.ReqCallbac
 
 		return errors.New(r.Msg)
 	}
-	sess := cookie.GetCookie(resp.Cookies(), "cloudreve-session")
+	sess := utils.GetCookie(resp.Cookies(), "cloudreve-session")
 	if sess != nil {
 		d.Cookie = sess.Value
 	}
