@@ -5,15 +5,18 @@ import (
 	"crypto/md5"
 	"crypto/sha1"
 	"encoding/hex"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/pkg/http_range"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
@@ -56,17 +59,66 @@ func (d *Quark) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 		"fids": []string{file.GetID()},
 	}
 	var resp DownResp
+	ua := "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) quark-cloud-drive/2.5.20 Chrome/100.0.4896.160 Electron/18.3.5.4-b478491100 Safari/537.36 Channel/pckk_other_ch"
 	_, err := d.request("/file/download", http.MethodPost, func(req *resty.Request) {
-		req.SetBody(data)
+		req.SetHeader("User-Agent", ua).
+			SetBody(data)
 	}, &resp)
 	if err != nil {
 		return nil, err
 	}
+	u := resp.Data[0].DownloadUrl
+	start, end := int64(0), file.GetSize()
 	return &model.Link{
-		URL: resp.Data[0].DownloadUrl,
-		Header: http.Header{
-			"Cookie":  []string{d.Cookie},
-			"Referer": []string{"https://pan.quark.cn"},
+		Handle: func(w http.ResponseWriter, r *http.Request) error {
+			if rg := r.Header.Get("Range"); rg != "" {
+				parseRange, err := http_range.ParseRange(rg, file.GetSize())
+				if err != nil {
+					return err
+				}
+				start, end = parseRange[0].Start, parseRange[0].Start+parseRange[0].Length
+				w.Header().Set("Content-Range", parseRange[0].ContentRange(file.GetSize()))
+				w.Header().Set("Content-Length", strconv.FormatInt(parseRange[0].Length, 10))
+				w.WriteHeader(http.StatusPartialContent)
+			} else {
+				w.Header().Set("Content-Length", strconv.FormatInt(file.GetSize(), 10))
+				w.WriteHeader(http.StatusOK)
+			}
+			// request 10 MB at a time
+			chunkSize := int64(10 * 1024 * 1024)
+			for start < end {
+				_end := start + chunkSize
+				if _end > end {
+					_end = end
+				}
+				_range := "bytes=" + strconv.FormatInt(start, 10) + "-" + strconv.FormatInt(_end-1, 10)
+				start = _end
+				err = func() error {
+					req, err := http.NewRequest(r.Method, u, nil)
+					if err != nil {
+						return err
+					}
+					req.Header.Set("Range", _range)
+					req.Header.Set("User-Agent", ua)
+					req.Header.Set("Cookie", d.Cookie)
+					req.Header.Set("Referer", "https://pan.quark.cn")
+					resp, err := http.DefaultClient.Do(req)
+					if err != nil {
+						return err
+					}
+					defer resp.Body.Close()
+					if resp.StatusCode != http.StatusPartialContent {
+						return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+					}
+					_, err = io.Copy(w, resp.Body)
+					return err
+				}()
+				if err != nil {
+					return err
+				}
+
+			}
+			return nil
 		},
 	}, nil
 }

@@ -74,5 +74,14 @@ type UploadResp struct {
 		SessionToken    string `json:"SessionToken"`
 		FileId          int64  `json:"FileId"`
 		Reuse           bool   `json:"Reuse"`
+		EndPoint        string `json:"EndPoint"`
+		StorageNode     string `json:"StorageNode"`
+		UploadId        string `json:"UploadId"`
+	} `json:"data"`
+}
+
+type S3PreSignedURLs struct {
+	Data struct {
+		PreSignedUrls map[string]string `json:"presignedUrls"`
 	} `json:"data"`
 }

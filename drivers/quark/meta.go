@@ -13,9 +13,9 @@ type Addition struct {
 }
 
 var config = driver.Config{
-	Name:        "Quark",
-	OnlyProxy:   true,
-	DefaultRoot: "0",
+	Name:              "Quark",
+	OnlyLocal:         true,
+	DefaultRoot:       "0",
 	NoOverwriteUpload: true,
 }
 
