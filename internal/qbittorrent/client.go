@@ -134,6 +134,7 @@ func (c *client) AddFromLink(link string, savePath string, id string) error {
 	addField("urls", link)
 	addField("savepath", savePath)
 	addField("tags", "alist-"+id)
+	addField("autoTMM", "false")
 	if err != nil {
 		return err
 	}
