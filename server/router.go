@@ -116,6 +116,13 @@ func admin(g *gin.RouterGroup) {
 	index.POST("/stop", middlewares.SearchIndex, handles.StopIndex)
 	index.POST("/clear", middlewares.SearchIndex, handles.ClearIndex)
 	index.GET("/progress", middlewares.SearchIndex, handles.GetProgress)
+
+	plugin := g.Group("/plugin")
+	plugin.GET("/list", handles.ListPlugin)
+	plugin.POST("/add", handles.AddPlugin)
+	plugin.POST("/delete", handles.DeletePlugin)
+	plugin.POST("/enable", handles.EnablePlugin)
+	plugin.POST("/disable", handles.DisablePlugin)
 }
 
 func _fs(g *gin.RouterGroup) {

@@ -6,6 +6,30 @@ import (
 	"github.com/alist-org/alist/v3/internal/model"
 )
 
+type DriverPluginResult interface {
+	Meta
+	Reader
+	GetRooter
+	MkdirResult
+	MoveResult
+	RenameResult
+	CopyResult
+	PutResult
+	Remove
+}
+
+type DriverPlugin interface {
+	Meta
+	Reader
+	GetRooter
+	Mkdir
+	Move
+	Rename
+	Copy
+	Put
+	Remove
+}
+
 type Driver interface {
 	Meta
 	Reader
@@ -80,14 +104,14 @@ type Put interface {
 	Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up UpdateProgress) error
 }
 
-//type WriteResult interface {
-//	MkdirResult
-//	MoveResult
-//	RenameResult
-//	CopyResult
-//	PutResult
-//	Remove
-//}
+// type WriteResult interface {
+// 	MkdirResult
+// 	MoveResult
+// 	RenameResult
+// 	CopyResult
+// 	PutResult
+// 	Remove
+// }
 
 type MkdirResult interface {
 	MakeDir(ctx context.Context, parentDir model.Obj, dirName string) (model.Obj, error)
