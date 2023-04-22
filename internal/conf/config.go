@@ -46,6 +46,7 @@ type Config struct {
 	Scheme                Scheme    `json:"scheme"`
 	TempDir               string    `json:"temp_dir" env:"TEMP_DIR"`
 	BleveDir              string    `json:"bleve_dir" env:"BLEVE_DIR"`
+	PluginDir             string    `json:"plugin_dir" env:"ALIST_PLUGIN_DIR"`
 	Log                   LogConfig `json:"log"`
 	MaxConnections        int       `json:"max_connections" env:"MAX_CONNECTIONS"`
 	TlsInsecureSkipVerify bool      `json:"tls_insecure_skip_verify" env:"TLS_INSECURE_SKIP_VERIFY"`
@@ -56,6 +57,7 @@ func DefaultConfig() *Config {
 	indexDir := filepath.Join(flags.DataDir, "bleve")
 	logPath := filepath.Join(flags.DataDir, "log/log.log")
 	dbPath := filepath.Join(flags.DataDir, "data.db")
+	pluginDir := filepath.Join(flags.DataDir, "plugin")
 	return &Config{
 		Address:        "0.0.0.0",
 		Port:           5244,
@@ -68,7 +70,8 @@ func DefaultConfig() *Config {
 			TablePrefix: "x_",
 			DBFile:      dbPath,
 		},
-		BleveDir: indexDir,
+		BleveDir:  indexDir,
+		PluginDir: pluginDir,
 		Log: LogConfig{
 			Enable:     true,
 			Name:       logPath,
