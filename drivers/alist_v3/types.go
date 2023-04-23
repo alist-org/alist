@@ -63,3 +63,19 @@ type RemoveReq struct {
 	Dir   string   `json:"dir"`
 	Names []string `json:"names"`
 }
+
+type LoginResp struct {
+	Token string `json:"token"`
+}
+
+type MeResp struct {
+	Id         int    `json:"id"`
+	Username   string `json:"username"`
+	Password   string `json:"password"`
+	BasePath   string `json:"base_path"`
+	Role       int    `json:"role"`
+	Disabled   bool   `json:"disabled"`
+	Permission int    `json:"permission"`
+	SsoId      string `json:"sso_id"`
+	Otp        bool   `json:"otp"`
+}

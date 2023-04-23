@@ -2,16 +2,15 @@ package alist_v3
 
 import (
 	"context"
-	"errors"
-	"io"
+	"net/http"
 	"path"
 	"strconv"
 	"strings"
 
-	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/server/common"
+	"github.com/go-resty/resty/v2"
 )
 
 type AListV3 struct {
@@ -29,9 +28,14 @@ func (d *AListV3) GetAddition() driver.Additional {
 
 func (d *AListV3) Init(ctx context.Context) error {
 	d.Addition.Address = strings.TrimSuffix(d.Addition.Address, "/")
-	// TODO login / refresh token
-	//op.MustSaveDriverStorage(d)
-	return nil
+	var resp common.Resp[MeResp]
+	_, err := d.request("/me", http.MethodGet, func(req *resty.Request) {
+		req.SetResult(&resp)
+	})
+	if d.Username != "" && d.Username != resp.Data.Username {
+		return d.login()
+	}
+	return err
 }
 
 func (d *AListV3) Drop(ctx context.Context) error {
@@ -39,12 +43,9 @@ func (d *AListV3) Drop(ctx context.Context) error {
 }
 
 func (d *AListV3) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
-	url := d.Address + "/api/fs/list"
 	var resp common.Resp[FsListResp]
-	_, err := base.RestyClient.R().
-		SetResult(&resp).
-		SetHeader("Authorization", d.AccessToken).
-		SetBody(ListReq{
+	_, err := d.request("/fs/list", http.MethodPost, func(req *resty.Request) {
+		req.SetResult(&resp).SetBody(ListReq{
 			PageReq: model.PageReq{
 				Page:    1,
 				PerPage: 0,
@@ -52,12 +53,10 @@ func (d *AListV3) List(ctx context.Context, dir model.Obj, args model.ListArgs) 
 			Path:     dir.GetPath(),
 			Password: d.Password,
 			Refresh:  false,
-		}).Post(url)
+		})
+	})
 	if err != nil {
 		return nil, err
-	}
-	if resp.Code != 200 {
-		return nil, errors.New(resp.Message)
 	}
 	var files []model.Obj
 	for _, f := range resp.Data.Content {
@@ -76,20 +75,15 @@ func (d *AListV3) List(ctx context.Context, dir model.Obj, args model.ListArgs) 
 }
 
 func (d *AListV3) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
-	url := d.Address + "/api/fs/get"
 	var resp common.Resp[FsGetResp]
-	_, err := base.RestyClient.R().
-		SetResult(&resp).
-		SetHeader("Authorization", d.AccessToken).
-		SetBody(FsGetReq{
+	_, err := d.request("/fs/get", http.MethodPost, func(req *resty.Request) {
+		req.SetResult(&resp).SetBody(FsGetReq{
 			Path:     file.GetPath(),
 			Password: d.Password,
-		}).Post(url)
+		})
+	})
 	if err != nil {
 		return nil, err
-	}
-	if resp.Code != 200 {
-		return nil, errors.New(resp.Message)
 	}
 	return &model.Link{
 		URL: resp.Data.RawURL,
@@ -97,86 +91,64 @@ func (d *AListV3) Link(ctx context.Context, file model.Obj, args model.LinkArgs)
 }
 
 func (d *AListV3) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
-	url := d.Address + "/api/fs/mkdir"
-	var resp common.Resp[interface{}]
-	_, err := base.RestyClient.R().
-		SetResult(&resp).
-		SetHeader("Authorization", d.AccessToken).
-		SetBody(MkdirOrLinkReq{
+	_, err := d.request("/fs/mkdir", http.MethodPost, func(req *resty.Request) {
+		req.SetBody(MkdirOrLinkReq{
 			Path: path.Join(parentDir.GetPath(), dirName),
-		}).Post(url)
-	return checkResp(resp, err)
+		})
+	})
+	return err
 }
 
 func (d *AListV3) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
-	url := d.Address + "/api/fs/move"
-	var resp common.Resp[interface{}]
-	_, err := base.RestyClient.R().
-		SetResult(&resp).
-		SetHeader("Authorization", d.AccessToken).
-		SetBody(MoveCopyReq{
+	_, err := d.request("/fs/move", http.MethodPost, func(req *resty.Request) {
+		req.SetBody(MoveCopyReq{
 			SrcDir: path.Dir(srcObj.GetPath()),
 			DstDir: dstDir.GetPath(),
 			Names:  []string{srcObj.GetName()},
-		}).Post(url)
-	return checkResp(resp, err)
+		})
+	})
+	return err
 }
 
 func (d *AListV3) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
-	url := d.Address + "/api/fs/rename"
-	var resp common.Resp[interface{}]
-	_, err := base.RestyClient.R().
-		SetResult(&resp).
-		SetHeader("Authorization", d.AccessToken).
-		SetBody(RenameReq{
+	_, err := d.request("/fs/rename", http.MethodPost, func(req *resty.Request) {
+		req.SetBody(RenameReq{
 			Path: srcObj.GetPath(),
 			Name: newName,
-		}).Post(url)
-	return checkResp(resp, err)
+		})
+	})
+	return err
 }
 
 func (d *AListV3) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
-	url := d.Address + "/api/fs/copy"
-	var resp common.Resp[interface{}]
-	_, err := base.RestyClient.R().
-		SetResult(&resp).
-		SetHeader("Authorization", d.AccessToken).
-		SetBody(MoveCopyReq{
+	_, err := d.request("/fs/copy", http.MethodPost, func(req *resty.Request) {
+		req.SetBody(MoveCopyReq{
 			SrcDir: path.Dir(srcObj.GetPath()),
 			DstDir: dstDir.GetPath(),
 			Names:  []string{srcObj.GetName()},
-		}).Post(url)
-	return checkResp(resp, err)
+		})
+	})
+	return err
 }
 
 func (d *AListV3) Remove(ctx context.Context, obj model.Obj) error {
-	url := d.Address + "/api/fs/remove"
-	var resp common.Resp[interface{}]
-	_, err := base.RestyClient.R().
-		SetResult(&resp).
-		SetHeader("Authorization", d.AccessToken).
-		SetBody(RemoveReq{
+	_, err := d.request("/fs/remove", http.MethodPost, func(req *resty.Request) {
+		req.SetBody(RemoveReq{
 			Dir:   path.Dir(obj.GetPath()),
 			Names: []string{obj.GetName()},
-		}).Post(url)
-	return checkResp(resp, err)
+		})
+	})
+	return err
 }
 
 func (d *AListV3) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
-	url := d.Address + "/api/fs/put"
-	var resp common.Resp[interface{}]
-	fileBytes, err := io.ReadAll(stream.GetReadCloser())
-	if err != nil {
-		return nil
-	}
-	_, err = base.RestyClient.R().SetContext(ctx).
-		SetResult(&resp).
-		SetHeader("Authorization", d.AccessToken).
-		SetHeader("File-Path", path.Join(dstDir.GetPath(), stream.GetName())).
-		SetHeader("Password", d.Password).
-		SetHeader("Content-Length", strconv.FormatInt(stream.GetSize(), 10)).
-		SetBody(fileBytes).Put(url)
-	return checkResp(resp, err)
+	_, err := d.request("/fs/put", http.MethodPut, func(req *resty.Request) {
+		req.SetHeader("File-Path", path.Join(dstDir.GetPath(), stream.GetName())).
+			SetHeader("Password", d.Password).
+			SetHeader("Content-Length", strconv.FormatInt(stream.GetSize(), 10)).
+			SetBody(stream.GetReadCloser())
+	})
+	return err
 }
 
 //func (d *AList) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
