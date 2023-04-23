@@ -15,60 +15,56 @@ func init() {
 		"NewProgress": reflect.ValueOf(driver.NewProgress),
 
 		// type definitions
-		"Additional":         reflect.ValueOf((*driver.Additional)(nil)),
-		"Config":             reflect.ValueOf((*driver.Config)(nil)),
-		"Copy":               reflect.ValueOf((*driver.Copy)(nil)),
-		"CopyResult":         reflect.ValueOf((*driver.CopyResult)(nil)),
-		"Driver":             reflect.ValueOf((*driver.Driver)(nil)),
-		"DriverPlugin":       reflect.ValueOf((*driver.DriverPlugin)(nil)),
-		"DriverPluginResult": reflect.ValueOf((*driver.DriverPluginResult)(nil)),
-		"GetRooter":          reflect.ValueOf((*driver.GetRooter)(nil)),
-		"Getter":             reflect.ValueOf((*driver.Getter)(nil)),
-		"IRootId":            reflect.ValueOf((*driver.IRootId)(nil)),
-		"IRootPath":          reflect.ValueOf((*driver.IRootPath)(nil)),
-		"Info":               reflect.ValueOf((*driver.Info)(nil)),
-		"Item":               reflect.ValueOf((*driver.Item)(nil)),
-		"Meta":               reflect.ValueOf((*driver.Meta)(nil)),
-		"Mkdir":              reflect.ValueOf((*driver.Mkdir)(nil)),
-		"MkdirResult":        reflect.ValueOf((*driver.MkdirResult)(nil)),
-		"Move":               reflect.ValueOf((*driver.Move)(nil)),
-		"MoveResult":         reflect.ValueOf((*driver.MoveResult)(nil)),
-		"Other":              reflect.ValueOf((*driver.Other)(nil)),
-		"Progress":           reflect.ValueOf((*driver.Progress)(nil)),
-		"Put":                reflect.ValueOf((*driver.Put)(nil)),
-		"PutResult":          reflect.ValueOf((*driver.PutResult)(nil)),
-		"Reader":             reflect.ValueOf((*driver.Reader)(nil)),
-		"Remove":             reflect.ValueOf((*driver.Remove)(nil)),
-		"Rename":             reflect.ValueOf((*driver.Rename)(nil)),
-		"RenameResult":       reflect.ValueOf((*driver.RenameResult)(nil)),
-		"RootID":             reflect.ValueOf((*driver.RootID)(nil)),
-		"RootPath":           reflect.ValueOf((*driver.RootPath)(nil)),
-		"Select":             reflect.ValueOf((*driver.Select)(nil)),
-		"UpdateProgress":     reflect.ValueOf((*driver.UpdateProgress)(nil)),
+		"Additional":     reflect.ValueOf((*driver.Additional)(nil)),
+		"Config":         reflect.ValueOf((*driver.Config)(nil)),
+		"Copy":           reflect.ValueOf((*driver.Copy)(nil)),
+		"CopyResult":     reflect.ValueOf((*driver.CopyResult)(nil)),
+		"Driver":         reflect.ValueOf((*driver.Driver)(nil)),
+		"GetRooter":      reflect.ValueOf((*driver.GetRooter)(nil)),
+		"Getter":         reflect.ValueOf((*driver.Getter)(nil)),
+		"IRootId":        reflect.ValueOf((*driver.IRootId)(nil)),
+		"IRootPath":      reflect.ValueOf((*driver.IRootPath)(nil)),
+		"Info":           reflect.ValueOf((*driver.Info)(nil)),
+		"Item":           reflect.ValueOf((*driver.Item)(nil)),
+		"Meta":           reflect.ValueOf((*driver.Meta)(nil)),
+		"Mkdir":          reflect.ValueOf((*driver.Mkdir)(nil)),
+		"MkdirResult":    reflect.ValueOf((*driver.MkdirResult)(nil)),
+		"Move":           reflect.ValueOf((*driver.Move)(nil)),
+		"MoveResult":     reflect.ValueOf((*driver.MoveResult)(nil)),
+		"Other":          reflect.ValueOf((*driver.Other)(nil)),
+		"Progress":       reflect.ValueOf((*driver.Progress)(nil)),
+		"Put":            reflect.ValueOf((*driver.Put)(nil)),
+		"PutResult":      reflect.ValueOf((*driver.PutResult)(nil)),
+		"Reader":         reflect.ValueOf((*driver.Reader)(nil)),
+		"Remove":         reflect.ValueOf((*driver.Remove)(nil)),
+		"Rename":         reflect.ValueOf((*driver.Rename)(nil)),
+		"RenameResult":   reflect.ValueOf((*driver.RenameResult)(nil)),
+		"RootID":         reflect.ValueOf((*driver.RootID)(nil)),
+		"RootPath":       reflect.ValueOf((*driver.RootPath)(nil)),
+		"Select":         reflect.ValueOf((*driver.Select)(nil)),
+		"UpdateProgress": reflect.ValueOf((*driver.UpdateProgress)(nil)),
 
 		// interface wrapper definitions
-		"_Additional":         reflect.ValueOf((*_github_com_alist_org_alist_v3_internal_driver_Additional)(nil)),
-		"_Copy":               reflect.ValueOf((*_github_com_alist_org_alist_v3_internal_driver_Copy)(nil)),
-		"_CopyResult":         reflect.ValueOf((*_github_com_alist_org_alist_v3_internal_driver_CopyResult)(nil)),
-		"_Driver":             reflect.ValueOf((*_github_com_alist_org_alist_v3_internal_driver_Driver)(nil)),
-		"_DriverPlugin":       reflect.ValueOf((*_github_com_alist_org_alist_v3_internal_driver_DriverPlugin)(nil)),
-		"_DriverPluginResult": reflect.ValueOf((*_github_com_alist_org_alist_v3_internal_driver_DriverPluginResult)(nil)),
-		"_GetRooter":          reflect.ValueOf((*_github_com_alist_org_alist_v3_internal_driver_GetRooter)(nil)),
-		"_Getter":             reflect.ValueOf((*_github_com_alist_org_alist_v3_internal_driver_Getter)(nil)),
-		"_IRootId":            reflect.ValueOf((*_github_com_alist_org_alist_v3_internal_driver_IRootId)(nil)),
-		"_IRootPath":          reflect.ValueOf((*_github_com_alist_org_alist_v3_internal_driver_IRootPath)(nil)),
-		"_Meta":               reflect.ValueOf((*_github_com_alist_org_alist_v3_internal_driver_Meta)(nil)),
-		"_Mkdir":              reflect.ValueOf((*_github_com_alist_org_alist_v3_internal_driver_Mkdir)(nil)),
-		"_MkdirResult":        reflect.ValueOf((*_github_com_alist_org_alist_v3_internal_driver_MkdirResult)(nil)),
-		"_Move":               reflect.ValueOf((*_github_com_alist_org_alist_v3_internal_driver_Move)(nil)),
-		"_MoveResult":         reflect.ValueOf((*_github_com_alist_org_alist_v3_internal_driver_MoveResult)(nil)),
-		"_Other":              reflect.ValueOf((*_github_com_alist_org_alist_v3_internal_driver_Other)(nil)),
-		"_Put":                reflect.ValueOf((*_github_com_alist_org_alist_v3_internal_driver_Put)(nil)),
-		"_PutResult":          reflect.ValueOf((*_github_com_alist_org_alist_v3_internal_driver_PutResult)(nil)),
-		"_Reader":             reflect.ValueOf((*_github_com_alist_org_alist_v3_internal_driver_Reader)(nil)),
-		"_Remove":             reflect.ValueOf((*_github_com_alist_org_alist_v3_internal_driver_Remove)(nil)),
-		"_Rename":             reflect.ValueOf((*_github_com_alist_org_alist_v3_internal_driver_Rename)(nil)),
-		"_RenameResult":       reflect.ValueOf((*_github_com_alist_org_alist_v3_internal_driver_RenameResult)(nil)),
+		"_Additional":   reflect.ValueOf((*_github_com_alist_org_alist_v3_internal_driver_Additional)(nil)),
+		"_Copy":         reflect.ValueOf((*_github_com_alist_org_alist_v3_internal_driver_Copy)(nil)),
+		"_CopyResult":   reflect.ValueOf((*_github_com_alist_org_alist_v3_internal_driver_CopyResult)(nil)),
+		"_Driver":       reflect.ValueOf((*_github_com_alist_org_alist_v3_internal_driver_Driver)(nil)),
+		"_GetRooter":    reflect.ValueOf((*_github_com_alist_org_alist_v3_internal_driver_GetRooter)(nil)),
+		"_Getter":       reflect.ValueOf((*_github_com_alist_org_alist_v3_internal_driver_Getter)(nil)),
+		"_IRootId":      reflect.ValueOf((*_github_com_alist_org_alist_v3_internal_driver_IRootId)(nil)),
+		"_IRootPath":    reflect.ValueOf((*_github_com_alist_org_alist_v3_internal_driver_IRootPath)(nil)),
+		"_Meta":         reflect.ValueOf((*_github_com_alist_org_alist_v3_internal_driver_Meta)(nil)),
+		"_Mkdir":        reflect.ValueOf((*_github_com_alist_org_alist_v3_internal_driver_Mkdir)(nil)),
+		"_MkdirResult":  reflect.ValueOf((*_github_com_alist_org_alist_v3_internal_driver_MkdirResult)(nil)),
+		"_Move":         reflect.ValueOf((*_github_com_alist_org_alist_v3_internal_driver_Move)(nil)),
+		"_MoveResult":   reflect.ValueOf((*_github_com_alist_org_alist_v3_internal_driver_MoveResult)(nil)),
+		"_Other":        reflect.ValueOf((*_github_com_alist_org_alist_v3_internal_driver_Other)(nil)),
+		"_Put":          reflect.ValueOf((*_github_com_alist_org_alist_v3_internal_driver_Put)(nil)),
+		"_PutResult":    reflect.ValueOf((*_github_com_alist_org_alist_v3_internal_driver_PutResult)(nil)),
+		"_Reader":       reflect.ValueOf((*_github_com_alist_org_alist_v3_internal_driver_Reader)(nil)),
+		"_Remove":       reflect.ValueOf((*_github_com_alist_org_alist_v3_internal_driver_Remove)(nil)),
+		"_Rename":       reflect.ValueOf((*_github_com_alist_org_alist_v3_internal_driver_Rename)(nil)),
+		"_RenameResult": reflect.ValueOf((*_github_com_alist_org_alist_v3_internal_driver_RenameResult)(nil)),
 	}
 }
 
@@ -132,138 +128,6 @@ func (W _github_com_alist_org_alist_v3_internal_driver_Driver) List(ctx context.
 	return W.WList(ctx, dir, args)
 }
 func (W _github_com_alist_org_alist_v3_internal_driver_Driver) SetStorage(a0 model.Storage) {
-	W.WSetStorage(a0)
-}
-
-// _github_com_alist_org_alist_v3_internal_driver_DriverPlugin is an interface wrapper for DriverPlugin type
-type _github_com_alist_org_alist_v3_internal_driver_DriverPlugin struct {
-	IValue       interface{}
-	WConfig      func() driver.Config
-	WCopy        func(ctx context.Context, srcObj model.Obj, dstDir model.Obj) error
-	WDrop        func(ctx context.Context) error
-	WGetAddition func() driver.Additional
-	WGetRoot     func(ctx context.Context) (model.Obj, error)
-	WGetStorage  func() *model.Storage
-	WInit        func(ctx context.Context) error
-	WLink        func(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error)
-	WList        func(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error)
-	WMakeDir     func(ctx context.Context, parentDir model.Obj, dirName string) error
-	WMove        func(ctx context.Context, srcObj model.Obj, dstDir model.Obj) error
-	WPut         func(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error
-	WRemove      func(ctx context.Context, obj model.Obj) error
-	WRename      func(ctx context.Context, srcObj model.Obj, newName string) error
-	WSetStorage  func(a0 model.Storage)
-}
-
-func (W _github_com_alist_org_alist_v3_internal_driver_DriverPlugin) Config() driver.Config {
-	return W.WConfig()
-}
-func (W _github_com_alist_org_alist_v3_internal_driver_DriverPlugin) Copy(ctx context.Context, srcObj model.Obj, dstDir model.Obj) error {
-	return W.WCopy(ctx, srcObj, dstDir)
-}
-func (W _github_com_alist_org_alist_v3_internal_driver_DriverPlugin) Drop(ctx context.Context) error {
-	return W.WDrop(ctx)
-}
-func (W _github_com_alist_org_alist_v3_internal_driver_DriverPlugin) GetAddition() driver.Additional {
-	return W.WGetAddition()
-}
-func (W _github_com_alist_org_alist_v3_internal_driver_DriverPlugin) GetRoot(ctx context.Context) (model.Obj, error) {
-	return W.WGetRoot(ctx)
-}
-func (W _github_com_alist_org_alist_v3_internal_driver_DriverPlugin) GetStorage() *model.Storage {
-	return W.WGetStorage()
-}
-func (W _github_com_alist_org_alist_v3_internal_driver_DriverPlugin) Init(ctx context.Context) error {
-	return W.WInit(ctx)
-}
-func (W _github_com_alist_org_alist_v3_internal_driver_DriverPlugin) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
-	return W.WLink(ctx, file, args)
-}
-func (W _github_com_alist_org_alist_v3_internal_driver_DriverPlugin) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
-	return W.WList(ctx, dir, args)
-}
-func (W _github_com_alist_org_alist_v3_internal_driver_DriverPlugin) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
-	return W.WMakeDir(ctx, parentDir, dirName)
-}
-func (W _github_com_alist_org_alist_v3_internal_driver_DriverPlugin) Move(ctx context.Context, srcObj model.Obj, dstDir model.Obj) error {
-	return W.WMove(ctx, srcObj, dstDir)
-}
-func (W _github_com_alist_org_alist_v3_internal_driver_DriverPlugin) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
-	return W.WPut(ctx, dstDir, stream, up)
-}
-func (W _github_com_alist_org_alist_v3_internal_driver_DriverPlugin) Remove(ctx context.Context, obj model.Obj) error {
-	return W.WRemove(ctx, obj)
-}
-func (W _github_com_alist_org_alist_v3_internal_driver_DriverPlugin) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
-	return W.WRename(ctx, srcObj, newName)
-}
-func (W _github_com_alist_org_alist_v3_internal_driver_DriverPlugin) SetStorage(a0 model.Storage) {
-	W.WSetStorage(a0)
-}
-
-// _github_com_alist_org_alist_v3_internal_driver_DriverPluginResult is an interface wrapper for DriverPluginResult type
-type _github_com_alist_org_alist_v3_internal_driver_DriverPluginResult struct {
-	IValue       interface{}
-	WConfig      func() driver.Config
-	WCopy        func(ctx context.Context, srcObj model.Obj, dstDir model.Obj) (model.Obj, error)
-	WDrop        func(ctx context.Context) error
-	WGetAddition func() driver.Additional
-	WGetRoot     func(ctx context.Context) (model.Obj, error)
-	WGetStorage  func() *model.Storage
-	WInit        func(ctx context.Context) error
-	WLink        func(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error)
-	WList        func(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error)
-	WMakeDir     func(ctx context.Context, parentDir model.Obj, dirName string) (model.Obj, error)
-	WMove        func(ctx context.Context, srcObj model.Obj, dstDir model.Obj) (model.Obj, error)
-	WPut         func(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) (model.Obj, error)
-	WRemove      func(ctx context.Context, obj model.Obj) error
-	WRename      func(ctx context.Context, srcObj model.Obj, newName string) (model.Obj, error)
-	WSetStorage  func(a0 model.Storage)
-}
-
-func (W _github_com_alist_org_alist_v3_internal_driver_DriverPluginResult) Config() driver.Config {
-	return W.WConfig()
-}
-func (W _github_com_alist_org_alist_v3_internal_driver_DriverPluginResult) Copy(ctx context.Context, srcObj model.Obj, dstDir model.Obj) (model.Obj, error) {
-	return W.WCopy(ctx, srcObj, dstDir)
-}
-func (W _github_com_alist_org_alist_v3_internal_driver_DriverPluginResult) Drop(ctx context.Context) error {
-	return W.WDrop(ctx)
-}
-func (W _github_com_alist_org_alist_v3_internal_driver_DriverPluginResult) GetAddition() driver.Additional {
-	return W.WGetAddition()
-}
-func (W _github_com_alist_org_alist_v3_internal_driver_DriverPluginResult) GetRoot(ctx context.Context) (model.Obj, error) {
-	return W.WGetRoot(ctx)
-}
-func (W _github_com_alist_org_alist_v3_internal_driver_DriverPluginResult) GetStorage() *model.Storage {
-	return W.WGetStorage()
-}
-func (W _github_com_alist_org_alist_v3_internal_driver_DriverPluginResult) Init(ctx context.Context) error {
-	return W.WInit(ctx)
-}
-func (W _github_com_alist_org_alist_v3_internal_driver_DriverPluginResult) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
-	return W.WLink(ctx, file, args)
-}
-func (W _github_com_alist_org_alist_v3_internal_driver_DriverPluginResult) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
-	return W.WList(ctx, dir, args)
-}
-func (W _github_com_alist_org_alist_v3_internal_driver_DriverPluginResult) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) (model.Obj, error) {
-	return W.WMakeDir(ctx, parentDir, dirName)
-}
-func (W _github_com_alist_org_alist_v3_internal_driver_DriverPluginResult) Move(ctx context.Context, srcObj model.Obj, dstDir model.Obj) (model.Obj, error) {
-	return W.WMove(ctx, srcObj, dstDir)
-}
-func (W _github_com_alist_org_alist_v3_internal_driver_DriverPluginResult) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) (model.Obj, error) {
-	return W.WPut(ctx, dstDir, stream, up)
-}
-func (W _github_com_alist_org_alist_v3_internal_driver_DriverPluginResult) Remove(ctx context.Context, obj model.Obj) error {
-	return W.WRemove(ctx, obj)
-}
-func (W _github_com_alist_org_alist_v3_internal_driver_DriverPluginResult) Rename(ctx context.Context, srcObj model.Obj, newName string) (model.Obj, error) {
-	return W.WRename(ctx, srcObj, newName)
-}
-func (W _github_com_alist_org_alist_v3_internal_driver_DriverPluginResult) SetStorage(a0 model.Storage) {
 	W.WSetStorage(a0)
 }
 

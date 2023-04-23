@@ -71,8 +71,6 @@ func init() {
 		"Put":                          reflect.ValueOf(op.Put),
 		"RegisterDriver":               reflect.ValueOf(op.RegisterDriver),
 		"RegisterObjsUpdateHook":       reflect.ValueOf(op.RegisterObjsUpdateHook),
-		"RegisterPluginDriver":         reflect.ValueOf(op.RegisterPluginDriver),
-		"RegisterPluginResultDriver":   reflect.ValueOf(op.RegisterPluginResultDriver),
 		"RegisterSettingItemHook":      reflect.ValueOf(op.RegisterSettingItemHook),
 		"RegisterStorageHook":          reflect.ValueOf(op.RegisterStorageHook),
 		"Remove":                       reflect.ValueOf(op.Remove),
@@ -81,8 +79,6 @@ func init() {
 		"SaveSettingItem":              reflect.ValueOf(op.SaveSettingItem),
 		"SaveSettingItems":             reflect.ValueOf(op.SaveSettingItems),
 		"UnRegisterDriver":             reflect.ValueOf(op.UnRegisterDriver),
-		"UnRegisterPluginDriver":       reflect.ValueOf(op.UnRegisterPluginDriver),
-		"UnRegisterPluginResultDriver": reflect.ValueOf(op.UnRegisterPluginResultDriver),
 		"UpdateMeta":                   reflect.ValueOf(op.UpdateMeta),
 		"UpdateStorage":                reflect.ValueOf(op.UpdateStorage),
 		"UpdateUser":                   reflect.ValueOf(op.UpdateUser),
@@ -91,8 +87,6 @@ func init() {
 		// type definitions
 		"New":             reflect.ValueOf((*op.New)(nil)),
 		"ObjsUpdateHook":  reflect.ValueOf((*op.ObjsUpdateHook)(nil)),
-		"PluginNew":       reflect.ValueOf((*op.PluginNew)(nil)),
-		"PluginResultNew": reflect.ValueOf((*op.PluginResultNew)(nil)),
 		"SettingItemHook": reflect.ValueOf((*op.SettingItemHook)(nil)),
 		"StorageHook":     reflect.ValueOf((*op.StorageHook)(nil)),
 	}

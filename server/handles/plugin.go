@@ -37,6 +37,7 @@ func AddPlugin(c *gin.Context) {
 
 	if err := plugin.AddPlugin(req); err != nil {
 		common.ErrorResp(c, err, 500, true)
+		return
 	}
 	common.SuccessResp(c)
 }

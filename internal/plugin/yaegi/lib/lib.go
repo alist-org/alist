@@ -24,4 +24,6 @@ import "reflect"
 //go:generate yaegi extract github.com/alist-org/alist/v3/pkg/utils/random"
 //go:generate yaegi extract github.com/alist-org/alist/v3/pkg/cron
 
+// adapter
+//go:generate yaegi extract github.com/alist-org/alist/v3/internal/plugin/yaegi/adapter/storage
 var Symbols = map[string]map[string]reflect.Value{}

@@ -14,7 +14,7 @@ func GetPlugins(pageIndex, pageSize int) ([]model.Plugin, int64, error) {
 		return nil, 0, errors.Wrapf(err, "failed get storages count")
 	}
 	var plugins []model.Plugin
-	if err := pluginDB.Order(columnName("order")).Offset((pageIndex - 1) * pageSize).Limit(pageSize).Find(&plugins).Error; err != nil {
+	if err := pluginDB.Offset((pageIndex - 1) * pageSize).Limit(pageSize).Find(&plugins).Error; err != nil {
 		return nil, 0, errors.WithStack(err)
 	}
 	return plugins, count, nil
