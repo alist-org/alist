@@ -1,6 +1,3 @@
-//go:build yaegi_mode
-// +build yaegi_mode
-
 package plugin_yaegi
 
 import (

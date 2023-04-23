@@ -13,6 +13,8 @@ import (
 func init() {
 	Symbols["github.com/alist-org/alist/v3/internal/plugin/yaegi/adapter/storage/yaegi_storage"] = map[string]reflect.Value{
 		// function, constant and variable definitions
+		"DropPluginStorage":            reflect.ValueOf(yaegi_storage.DropPluginStorage),
+		"LoadPluginStorage":            reflect.ValueOf(yaegi_storage.LoadPluginStorage),
 		"RegisterPluginDriver":         reflect.ValueOf(yaegi_storage.RegisterPluginDriver),
 		"RegisterPluginResultDriver":   reflect.ValueOf(yaegi_storage.RegisterPluginResultDriver),
 		"UnRegisterPluginDriver":       reflect.ValueOf(yaegi_storage.UnRegisterPluginDriver),
@@ -45,6 +47,7 @@ type _github_com_alist_org_alist_v3_internal_plugin_yaegi_adapter_storage_Driver
 	WList        func(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error)
 	WMakeDir     func(ctx context.Context, parentDir model.Obj, dirName string) error
 	WMove        func(ctx context.Context, srcObj model.Obj, dstDir model.Obj) error
+	WOther       func(ctx context.Context, args model.OtherArgs) (interface{}, error)
 	WPut         func(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error
 	WRemove      func(ctx context.Context, obj model.Obj) error
 	WRename      func(ctx context.Context, srcObj model.Obj, newName string) error
@@ -84,6 +87,9 @@ func (W _github_com_alist_org_alist_v3_internal_plugin_yaegi_adapter_storage_Dri
 func (W _github_com_alist_org_alist_v3_internal_plugin_yaegi_adapter_storage_DriverPlugin) Move(ctx context.Context, srcObj model.Obj, dstDir model.Obj) error {
 	return W.WMove(ctx, srcObj, dstDir)
 }
+func (W _github_com_alist_org_alist_v3_internal_plugin_yaegi_adapter_storage_DriverPlugin) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
+	return W.WOther(ctx, args)
+}
 func (W _github_com_alist_org_alist_v3_internal_plugin_yaegi_adapter_storage_DriverPlugin) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
 	return W.WPut(ctx, dstDir, stream, up)
 }
@@ -111,6 +117,7 @@ type _github_com_alist_org_alist_v3_internal_plugin_yaegi_adapter_storage_Driver
 	WList        func(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error)
 	WMakeDir     func(ctx context.Context, parentDir model.Obj, dirName string) (model.Obj, error)
 	WMove        func(ctx context.Context, srcObj model.Obj, dstDir model.Obj) (model.Obj, error)
+	WOther       func(ctx context.Context, args model.OtherArgs) (interface{}, error)
 	WPut         func(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) (model.Obj, error)
 	WRemove      func(ctx context.Context, obj model.Obj) error
 	WRename      func(ctx context.Context, srcObj model.Obj, newName string) (model.Obj, error)
@@ -149,6 +156,9 @@ func (W _github_com_alist_org_alist_v3_internal_plugin_yaegi_adapter_storage_Dri
 }
 func (W _github_com_alist_org_alist_v3_internal_plugin_yaegi_adapter_storage_DriverPluginResult) Move(ctx context.Context, srcObj model.Obj, dstDir model.Obj) (model.Obj, error) {
 	return W.WMove(ctx, srcObj, dstDir)
+}
+func (W _github_com_alist_org_alist_v3_internal_plugin_yaegi_adapter_storage_DriverPluginResult) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
+	return W.WOther(ctx, args)
 }
 func (W _github_com_alist_org_alist_v3_internal_plugin_yaegi_adapter_storage_DriverPluginResult) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) (model.Obj, error) {
 	return W.WPut(ctx, dstDir, stream, up)

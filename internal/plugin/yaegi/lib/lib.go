@@ -20,7 +20,7 @@ import "reflect"
 //go:generate yaegi extract github.com/alist-org/alist/v3/drivers/base
 
 // utils
-////go:generate yaegi extract github.com/alist-org/alist/v3/pkg/utils
+//go:generate yaegi extract github.com/alist-org/alist/v3/pkg/utils
 //go:generate yaegi extract github.com/alist-org/alist/v3/pkg/utils/random"
 //go:generate yaegi extract github.com/alist-org/alist/v3/pkg/cron
 

@@ -37,15 +37,22 @@ func AddPlugin(plugin model.Plugin) error {
 
 	pluginInfo, err := adp.Config()
 	if err != nil {
-		return utils.MergeErrors(err, UnRegisterPlugin(plugin))
+		if err2 := UnRegisterPlugin(plugin); err2 != nil {
+			return utils.MergeErrors(err, err2)
+		}
+		return err
 	}
 
+	plugin.Name = pluginInfo.GetName()
 	plugin.UUID = pluginInfo.GetUUID()
 	plugin.Type = strings.Join(pluginInfo.GetType(), ",")
 	plugin.Version = pluginInfo.GetVersion()
 	plugin.ApiVersion = strings.Join(pluginInfo.GetApiVersion(), ",")
 	if err = db.CreatePlugin(&plugin); err != nil {
-		return utils.MergeErrors(err, UnRegisterPlugin(plugin))
+		if err2 := UnRegisterPlugin(plugin); err2 != nil {
+			return utils.MergeErrors(err, err2)
+		}
+		return err
 	}
 	return nil
 }
@@ -55,12 +62,14 @@ func DeletePluginByID(id uint) error {
 	if err != nil {
 		return errors.WithMessage(err, "failed get plugin")
 	}
+	if err := UnRegisterPlugin(*dbPlugin); err != nil {
+		return err
+	}
 
-	err = db.DeleteStorageById(dbPlugin.ID)
-	if err != nil {
+	if err = db.DeletePluginByID(dbPlugin.ID); err != nil {
 		return errors.WithMessage(err, "failed delete storage in database")
 	}
-	return utils.MergeErrors(UnRegisterPlugin(*dbPlugin), err)
+	return nil
 }
 
 func DisablePluginByID(id uint) error {
@@ -68,9 +77,14 @@ func DisablePluginByID(id uint) error {
 	if err != nil {
 		return errors.WithMessage(err, "failed get plugin")
 	}
+	if !dbPlugin.Disabled {
+		if err := UnRegisterPlugin(*dbPlugin); err != nil {
+			return err
+		}
+	}
 
 	dbPlugin.Disabled = true
-	return utils.MergeErrors(UnRegisterPlugin(*dbPlugin), db.UpdatePlugin(dbPlugin))
+	return db.UpdatePlugin(dbPlugin)
 }
 
 func EnablePluginByID(id uint) error {
@@ -100,8 +114,7 @@ func RegisterPlugin(plugin model.Plugin) (model.PluginControl, error) {
 				return nil, err
 			}
 
-			_, err = p.Config()
-			if err != nil {
+			if _, err = p.Config(); err != nil {
 				return nil, errors.Errorf("unable to obtain plugin info, err: %w", err)
 			}
 
@@ -119,7 +132,14 @@ func RegisterPlugin(plugin model.Plugin) (model.PluginControl, error) {
 func UnRegisterPlugin(plugin model.Plugin) error {
 	if adp, ok := pluginControlMap.Load(plugin.UUID); ok {
 		pluginControlMap.Delete(plugin.UUID)
-		return utils.MergeErrors(adp.Unload(), adp.Release())
+		var errs []error
+		if err := adp.Unload(); err != nil {
+			errs = append(errs, err)
+		}
+		if err := adp.Release(); err != nil {
+			errs = append(errs, err)
+		}
+		return utils.MergeErrors(errs...)
 	}
 	return nil
 }

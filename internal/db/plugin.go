@@ -11,7 +11,7 @@ func GetPlugins(pageIndex, pageSize int) ([]model.Plugin, int64, error) {
 	pluginDB := db.Model(&model.Plugin{})
 	var count int64
 	if err := pluginDB.Count(&count).Error; err != nil {
-		return nil, 0, errors.Wrapf(err, "failed get storages count")
+		return nil, 0, errors.Wrapf(err, "failed get plugin count")
 	}
 	var plugins []model.Plugin
 	if err := pluginDB.Offset((pageIndex - 1) * pageSize).Limit(pageSize).Find(&plugins).Error; err != nil {
@@ -53,6 +53,6 @@ func UpdatePlugin(plugin *model.Plugin) error {
 	return errors.WithStack(db.Save(plugin).Error)
 }
 
-func DeleteStorageByPlugin(id uint) error {
+func DeletePluginByID(id uint) error {
 	return errors.WithStack(db.Delete(&model.Plugin{}, id).Error)
 }
