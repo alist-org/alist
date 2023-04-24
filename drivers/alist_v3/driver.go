@@ -51,7 +51,7 @@ func (d *AListV3) List(ctx context.Context, dir model.Obj, args model.ListArgs) 
 				PerPage: 0,
 			},
 			Path:     dir.GetPath(),
-			Password: d.Password,
+			Password: d.MetaPassword,
 			Refresh:  false,
 		})
 	})
@@ -79,7 +79,7 @@ func (d *AListV3) Link(ctx context.Context, file model.Obj, args model.LinkArgs)
 	_, err := d.request("/fs/get", http.MethodPost, func(req *resty.Request) {
 		req.SetResult(&resp).SetBody(FsGetReq{
 			Path:     file.GetPath(),
-			Password: d.Password,
+			Password: d.MetaPassword,
 		})
 	})
 	if err != nil {
@@ -144,7 +144,7 @@ func (d *AListV3) Remove(ctx context.Context, obj model.Obj) error {
 func (d *AListV3) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
 	_, err := d.request("/fs/put", http.MethodPut, func(req *resty.Request) {
 		req.SetHeader("File-Path", path.Join(dstDir.GetPath(), stream.GetName())).
-			SetHeader("Password", d.Password).
+			SetHeader("Password", d.MetaPassword).
 			SetHeader("Content-Length", strconv.FormatInt(stream.GetSize(), 10)).
 			SetBody(stream.GetReadCloser())
 	})
