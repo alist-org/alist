@@ -97,7 +97,8 @@ func (d *Pan123) Link(ctx context.Context, file model.Obj, args model.LinkArgs) 
 			}
 		}
 		u_ := u.String()
-		res, err := base.NoRedirectClient.R().SetQueryParamsFromValues(u.Query()).Head(u_)
+		log.Debug("download url: ", u_)
+		res, err := base.NoRedirectClient.R().Get(u_)
 		if err != nil {
 			return nil, err
 		}
@@ -108,6 +109,8 @@ func (d *Pan123) Link(ctx context.Context, file model.Obj, args model.LinkArgs) 
 		log.Debugln("res code: ", res.StatusCode())
 		if res.StatusCode() == 302 {
 			link.URL = res.Header().Get("location")
+		} else if res.StatusCode() == 200 {
+			link.URL = utils.Json.Get(res.Body(), "data", "redirect_url").ToString()
 		}
 		return &link, nil
 	} else {
