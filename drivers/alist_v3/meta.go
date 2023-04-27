@@ -18,6 +18,7 @@ var config = driver.Config{
 	Name:        "AList V3",
 	LocalSort:   true,
 	DefaultRoot: "/",
+	CheckStatus: true,
 }
 
 func init() {

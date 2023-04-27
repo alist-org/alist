@@ -14,6 +14,7 @@ const (
 	SiteTitle    = "site_title"
 	Announcement = "announcement"
 	AllowIndexed = "allow_indexed"
+	AllowMounted = "allow_mounted"
 
 	Logo      = "logo"
 	Favicon   = "favicon"
