@@ -23,7 +23,7 @@ type Link struct {
 	Status     int                                                // status maybe 200 or 206, etc
 	FilePath   *string                                            // local file, return the filepath
 	Expiration *time.Duration                                     // url expiration time
-	Handle     func(w http.ResponseWriter, r *http.Request) error // custom handler
+	Handle     func(w http.ResponseWriter, r *http.Request) error `json:"-"` // custom handler
 }
 
 type OtherArgs struct {
