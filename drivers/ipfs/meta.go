@@ -14,7 +14,6 @@ type Addition struct {
 
 var config = driver.Config{
 	Name:        "IPFS",
-	OnlyProxy:   true,
 	DefaultRoot: "root",
 	// NoUpload:    true,
 	LocalSort: true,
