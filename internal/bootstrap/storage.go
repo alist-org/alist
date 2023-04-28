@@ -26,5 +26,5 @@ func LoadStorages() {
 			}
 		}
 		conf.StoragesLoaded = true
-	}(storages)
+	}(storage)
 }
