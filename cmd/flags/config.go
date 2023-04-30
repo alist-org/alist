@@ -7,4 +7,5 @@ var (
 	Dev         bool
 	ForceBinDir bool
 	LogStd      bool
+	Port		string
 )

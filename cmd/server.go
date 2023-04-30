@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+	"strconv"
 
 	"github.com/alist-org/alist/v3/cmd/flags"
 	_ "github.com/alist-org/alist/v3/drivers"
@@ -37,7 +38,15 @@ the address is defined in config file`,
 		r := gin.New()
 		r.Use(gin.LoggerWithWriter(log.StandardLogger().Out), gin.RecoveryWithWriter(log.StandardLogger().Out))
 		server.Init(r)
-		base := fmt.Sprintf("%s:%d", conf.Conf.Address, conf.Conf.Port)
+
+		var port int
+		port = 5244
+		port, err := strconv.Atoi(flags.Port)
+		if err != nil {
+			fmt.Sprintf("error: port is invalid value")
+		}
+
+		base := fmt.Sprintf("%s:%d", conf.Conf.Address, port)
 		utils.Log.Infof("start server @ %s", base)
 		srv := &http.Server{Addr: base, Handler: r}
 		go func() {
