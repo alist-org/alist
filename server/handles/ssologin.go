@@ -51,7 +51,7 @@ func SSOLoginRedirect(c *gin.Context) {
 		case "Casdoor":
 			endpoint := strings.TrimSuffix(setting.GetStr(conf.SSOEndpointName), "/")
 			r_url = endpoint + "/login/oauth/authorize?"
-			urlValues.Add("scope", "read")
+			urlValues.Add("scope", "profile")
 			urlValues.Add("state", endpoint)
 		default:
 			common.ErrorStrResp(c, "invalid platform", 400)
@@ -103,8 +103,11 @@ func SSOLoginCallback(c *gin.Context) {
 		case "Casdoor":
 			endpoint := strings.TrimSuffix(setting.GetStr(conf.SSOEndpointName), "/")
 			url1 = endpoint + "/api/login/oauth/access_token"
-			url2 = endpoint + "/account"
+			url2 = endpoint + "/api/userinfo"
+			additionalbody = "&grant_type=authorization_code"
+			scope = "profile"
 			authstring = "code"
+			idstring = "preferred_username"
 		default:
 			common.ErrorStrResp(c, "invalid platform", 400)
 			return
