@@ -21,6 +21,9 @@ type AliyundriveOpen struct {
 	base string
 
 	DriveId string
+
+	limitList func(ctx context.Context, dir model.Obj) ([]model.Obj, error)
+	limitLink func(ctx context.Context, file model.Obj) (*model.Link, error)
 }
 
 func (d *AliyundriveOpen) Config() driver.Config {
@@ -37,6 +40,8 @@ func (d *AliyundriveOpen) Init(ctx context.Context) error {
 		return err
 	}
 	d.DriveId = utils.Json.Get(res, "default_drive_id").ToString()
+	d.limitList = utils.LimitRateCtx(d.list, time.Second/4)
+	d.limitLink = utils.LimitRateCtx(d.link, time.Second)
 	return nil
 }
 
@@ -44,7 +49,7 @@ func (d *AliyundriveOpen) Drop(ctx context.Context) error {
 	return nil
 }
 
-func (d *AliyundriveOpen) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
+func (d *AliyundriveOpen) list(ctx context.Context, dir model.Obj) ([]model.Obj, error) {
 	files, err := d.getFiles(dir.GetID())
 	if err != nil {
 		return nil, err
@@ -54,7 +59,11 @@ func (d *AliyundriveOpen) List(ctx context.Context, dir model.Obj, args model.Li
 	})
 }
 
-func (d *AliyundriveOpen) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
+func (d *AliyundriveOpen) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
+	return d.limitList(ctx, dir)
+}
+
+func (d *AliyundriveOpen) link(ctx context.Context, file model.Obj) (*model.Link, error) {
 	res, err := d.request("/adrive/v1.0/openFile/getDownloadUrl", http.MethodPost, func(req *resty.Request) {
 		req.SetBody(base.Json{
 			"drive_id":   d.DriveId,
@@ -71,6 +80,10 @@ func (d *AliyundriveOpen) Link(ctx context.Context, file model.Obj, args model.L
 		URL:        url,
 		Expiration: &exp,
 	}, nil
+}
+
+func (d *AliyundriveOpen) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
+	return d.limitLink(ctx, file)
 }
 
 func (d *AliyundriveOpen) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
