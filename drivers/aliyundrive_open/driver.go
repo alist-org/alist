@@ -66,8 +66,10 @@ func (d *AliyundriveOpen) Link(ctx context.Context, file model.Obj, args model.L
 		return nil, err
 	}
 	url := utils.Json.Get(res, "url").ToString()
+	exp := time.Hour
 	return &model.Link{
-		URL: url,
+		URL:        url,
+		Expiration: &exp,
 	}, nil
 }
 
