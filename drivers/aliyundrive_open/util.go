@@ -65,7 +65,7 @@ func (d *AliyundriveOpen) request(uri, method string, callback base.ReqCallback,
 	}
 	isRetry := len(retry) > 0 && retry[0]
 	if e.Code != "" {
-		if !isRetry && e.Code == "AccessTokenInvalid" {
+		if !isRetry && (utils.SliceContains([]string{"AccessTokenInvalid", "AccessTokenExpired", "I400JD"}, e.Code) || d.AccessToken == "") {
 			err = d.refreshToken()
 			if err != nil {
 				return nil, err

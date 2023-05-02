@@ -249,7 +249,7 @@ func (d *BaiduPhoto) Put(ctx context.Context, dstDir model.Obj, stream model.Fil
 		"isdir":       "0",
 		"rtype":       "1",
 		"ctype":       "11",
-		"path":        stream.GetName(),
+		"path":        fmt.Sprintf("/%s", stream.GetName()),
 		"size":        fmt.Sprint(stream.GetSize()),
 		"slice-md5":   slice_md5,
 		"content-md5": content_md5,

@@ -19,7 +19,7 @@ const (
 	SignIn          = API + "/user/sign_in"
 	UserInfo        = API + "/user/info"
 	FileList        = API + "/file/list/new"
-	DownloadInfo    = API + "/file/download_info"
+	DownloadInfo    = "https://www.123pan.com/a/api/file/download_info"
 	Mkdir           = API + "/file/upload_request"
 	Move            = API + "/file/mod_pid"
 	Rename          = API + "/file/rename"
