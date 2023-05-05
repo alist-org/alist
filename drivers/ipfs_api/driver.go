@@ -17,7 +17,7 @@ type IPFS struct {
 	model.Storage
 	Addition
 	sh      *shell.Shell
-	gateurl *url.URL
+	gateURL *url.URL
 }
 
 func (d *IPFS) Config() driver.Config {
@@ -30,7 +30,11 @@ func (d *IPFS) GetAddition() driver.Additional {
 
 func (d *IPFS) Init(ctx context.Context) error {
 	d.sh = shell.NewShell(d.Endpoint)
-	d.gateurl, _ = url.Parse(d.Gateway)
+	gateURL, err := url.Parse(d.Gateway)
+	if err != nil {
+		return err
+	}
+	d.gateURL = gateURL
 	return nil
 }
 
@@ -56,7 +60,7 @@ func (d *IPFS) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]
 
 	objlist := []model.Obj{}
 	for _, file := range dirs {
-		gateurl := *d.gateurl
+		gateurl := *d.gateURL
 		gateurl.Path = "ipfs/" + file.Hash
 		gateurl.RawQuery = "filename=" + file.Name
 		objlist = append(objlist, &model.ObjectURL{
