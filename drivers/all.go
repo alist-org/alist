@@ -19,6 +19,7 @@ import (
 	_ "github.com/alist-org/alist/v3/drivers/ftp"
 	_ "github.com/alist-org/alist/v3/drivers/google_drive"
 	_ "github.com/alist-org/alist/v3/drivers/google_photo"
+	_ "github.com/alist-org/alist/v3/drivers/ipfs_api"
 	_ "github.com/alist-org/alist/v3/drivers/lanzou"
 	_ "github.com/alist-org/alist/v3/drivers/local"
 	_ "github.com/alist-org/alist/v3/drivers/mediatrack"
