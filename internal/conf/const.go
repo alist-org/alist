@@ -63,6 +63,10 @@ const (
 	// qbittorrent
 	QbittorrentUrl      = "qbittorrent_url"
 	QbittorrentSeedtime = "qbittorrent_seedtime"
+
+	// plugin
+	PluginAutoUpdate = "plugin_auto_update"
+	PluginRepository = "plugin_repository"
 )
 
 const (

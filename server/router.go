@@ -119,10 +119,13 @@ func admin(g *gin.RouterGroup) {
 
 	plugin := g.Group("/plugin")
 	plugin.GET("/list", handles.ListPlugin)
-	plugin.POST("/add", handles.AddPlugin)
-	plugin.POST("/delete", handles.DeletePlugin)
+	plugin.POST("/install", handles.InstallPlugin)
+	plugin.POST("/uninstall", handles.UninstallPlugin)
 	plugin.POST("/enable", handles.EnablePlugin)
 	plugin.POST("/disable", handles.DisablePlugin)
+
+	plugin.GET("/repository", handles.GetPluginRepository)
+	plugin.POST("/repository", handles.UpdatePluginRepository)
 }
 
 func _fs(g *gin.RouterGroup) {

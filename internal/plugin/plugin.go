@@ -1,11 +1,14 @@
 package plugin
 
 import (
-	"strings"
+	"context"
+	"path/filepath"
 
+	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/db"
+	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/pkg/generic_sync"
+	"github.com/alist-org/alist/v3/pkg/singleflight"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
 
@@ -13,72 +16,42 @@ import (
 	_ "github.com/alist-org/alist/v3/internal/plugin/yaegi"
 )
 
-var pluginControlMap = generic_sync.MapOf[string, model.PluginControl]{}
+func InitPlugin() (err error) {
+	// abs
+	if !filepath.IsAbs(conf.Conf.PluginDir) {
+		conf.Conf.PluginDir, err = filepath.Abs(conf.Conf.PluginDir)
+		if err != nil {
+			return err
+		}
+	}
 
-func InitPlugin() error {
+	// scan add local plugin
+	if err := plugin_manage.AddLocalPluginToDB(); err != nil {
+		utils.Log.Warn(err)
+	}
+
+	// load
 	plugins, err := db.GetEnabledPlugin()
 	if err != nil {
 		return err
 	}
+
 	var errs []error
 	for _, plugin := range plugins {
-		if _, err := RegisterPlugin(plugin); err != nil {
+		if _, err := plugin_manage.RegisterPlugin(plugin); err != nil {
 			errs = append(errs, err)
 		}
 	}
 	return utils.MergeErrors(errs...)
 }
 
-func AddPlugin(plugin model.Plugin) error {
-	adp, err := RegisterPlugin(plugin)
-	if err != nil {
-		return err
-	}
-
-	pluginInfo, err := adp.Config()
-	if err != nil {
-		if err2 := UnRegisterPlugin(plugin); err2 != nil {
-			return utils.MergeErrors(err, err2)
-		}
-		return err
-	}
-
-	plugin.Name = pluginInfo.GetName()
-	plugin.UUID = pluginInfo.GetUUID()
-	plugin.Type = strings.Join(pluginInfo.GetType(), ",")
-	plugin.Version = pluginInfo.GetVersion()
-	plugin.ApiVersion = strings.Join(pluginInfo.GetApiVersion(), ",")
-	if err = db.CreatePlugin(&plugin); err != nil {
-		if err2 := UnRegisterPlugin(plugin); err2 != nil {
-			return utils.MergeErrors(err, err2)
-		}
-		return err
-	}
-	return nil
-}
-
-func DeletePluginByID(id uint) error {
-	dbPlugin, err := db.GetPluginById(id)
-	if err != nil {
-		return errors.WithMessage(err, "failed get plugin")
-	}
-	if err := UnRegisterPlugin(*dbPlugin); err != nil {
-		return err
-	}
-
-	if err = db.DeletePluginByID(dbPlugin.ID); err != nil {
-		return errors.WithMessage(err, "failed delete storage in database")
-	}
-	return nil
-}
-
-func DisablePluginByID(id uint) error {
+func DisablePluginByID(ctx context.Context, id uint) error {
 	dbPlugin, err := db.GetPluginById(id)
 	if err != nil {
 		return errors.WithMessage(err, "failed get plugin")
 	}
 	if !dbPlugin.Disabled {
-		if err := UnRegisterPlugin(*dbPlugin); err != nil {
+		if err := plugin_manage.UnRegisterPlugin(*dbPlugin); err != nil {
 			return err
 		}
 	}
@@ -87,13 +60,13 @@ func DisablePluginByID(id uint) error {
 	return db.UpdatePlugin(dbPlugin)
 }
 
-func EnablePluginByID(id uint) error {
+func EnablePluginByID(ctx context.Context, id uint) error {
 	dbPlugin, err := db.GetPluginById(id)
 	if err != nil {
 		return errors.WithMessage(err, "failed get plugin")
 	}
 	if dbPlugin.Disabled {
-		if _, err := RegisterPlugin(*dbPlugin); err != nil {
+		if _, err := plugin_manage.RegisterPlugin(*dbPlugin); err != nil {
 			return err
 		}
 	}
@@ -102,44 +75,47 @@ func EnablePluginByID(id uint) error {
 	return db.UpdatePlugin(dbPlugin)
 }
 
-func RegisterPlugin(plugin model.Plugin) (model.PluginControl, error) {
-	if !utils.SliceContains(strings.Split(plugin.ApiVersion, ","), "v1") {
-		return nil, errors.Errorf("only support plugin api version is v1")
-	}
-
-	if !pluginControlMap.Has(plugin.UUID) {
-		if new, ok := plugin_manage.GetPluginControlManage(plugin.Mode); ok {
-			p, err := new(plugin)
-			if err != nil {
-				return nil, err
-			}
-
-			if _, err = p.Config(); err != nil {
-				return nil, errors.Errorf("unable to obtain plugin info, err: %w", err)
-			}
-
-			if err = p.Load(); err != nil {
-				return nil, err
-			}
-			pluginControlMap.Store(plugin.UUID, p)
-			return p, nil
-		}
-		return nil, errors.Errorf("not support plugin mode: %s", plugin.Mode)
-	}
-	return nil, errors.New("the plugin has been loaded")
+func GetPluginRepository(ctx context.Context) []model.PluginInfo {
+	return plugin_manage.GetAllPluginRepository()
 }
 
-func UnRegisterPlugin(plugin model.Plugin) error {
-	if adp, ok := pluginControlMap.Load(plugin.UUID); ok {
-		pluginControlMap.Delete(plugin.UUID)
-		var errs []error
-		if err := adp.Unload(); err != nil {
-			errs = append(errs, err)
+func UpdatePluginRepository(ctx context.Context) error {
+	return plugin_manage.UpdatePluginRepository(ctx)
+}
+
+var installG singleflight.Group[*model.Plugin]
+
+func InstallPlugin(ctx context.Context, uuid string, version string) (*model.Plugin, error) {
+	plugin, err, _ := installG.Do(uuid, func() (*model.Plugin, error) {
+		plugin, err := plugin_manage.InstallPlugin(ctx, uuid, version)
+		if err != nil {
+			return nil, err
 		}
-		if err := adp.Release(); err != nil {
-			errs = append(errs, err)
-		}
-		return utils.MergeErrors(errs...)
+		_, err = plugin_manage.RegisterPlugin(*plugin)
+		return plugin, err
+	})
+	return plugin, err
+}
+
+func UninstallPlugin(ctx context.Context, id uint) error {
+	dbPlugin, err := db.GetPluginById(id)
+	if err != nil {
+		return errors.WithMessage(err, "failed get plugin")
 	}
-	return nil
+	if err := plugin_manage.UnRegisterPlugin(*dbPlugin); err != nil {
+		return err
+	}
+	return plugin_manage.UninstallPlugin(*dbPlugin)
+}
+
+func CheckPluginUpdate(ctx context.Context, id uint) (bool, error) {
+	dbPlugin, err := db.GetPluginById(id)
+	if err != nil {
+		return false, errors.WithMessage(err, "failed get plugin")
+	}
+	has, found := plugin_manage.CheckUpdate(dbPlugin.UUID, dbPlugin.Version)
+	if !found {
+		return false, errs.NotFoundPluginByRepository
+	}
+	return has, nil
 }

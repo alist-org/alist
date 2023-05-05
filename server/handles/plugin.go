@@ -28,35 +28,6 @@ func ListPlugin(c *gin.Context) {
 	})
 }
 
-func AddPlugin(c *gin.Context) {
-	var req model.Plugin
-	if err := c.ShouldBind(&req); err != nil {
-		common.ErrorResp(c, err, 400)
-		return
-	}
-
-	if err := plugin.AddPlugin(req); err != nil {
-		common.ErrorResp(c, err, 500, true)
-		return
-	}
-	common.SuccessResp(c)
-}
-
-func DeletePlugin(c *gin.Context) {
-	idStr := c.Query("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.ErrorResp(c, err, 400)
-		return
-	}
-
-	if err := plugin.DeletePluginByID(uint(id)); err != nil {
-		common.ErrorResp(c, err, 500, true)
-		return
-	}
-	common.SuccessResp(c)
-}
-
 func DisablePlugin(c *gin.Context) {
 	idStr := c.Query("id")
 	id, err := strconv.Atoi(idStr)
@@ -65,7 +36,7 @@ func DisablePlugin(c *gin.Context) {
 		return
 	}
 
-	if err := plugin.DisablePluginByID(uint(id)); err != nil {
+	if err := plugin.DisablePluginByID(c, uint(id)); err != nil {
 		common.ErrorResp(c, err, 500, true)
 		return
 	}
@@ -80,8 +51,55 @@ func EnablePlugin(c *gin.Context) {
 		return
 	}
 
-	if err := plugin.EnablePluginByID(uint(id)); err != nil {
+	if err := plugin.EnablePluginByID(c, uint(id)); err != nil {
 		common.ErrorResp(c, err, 500, true)
+		return
+	}
+	common.SuccessResp(c)
+}
+
+func GetPluginRepository(c *gin.Context) {
+	plugins := plugin.GetPluginRepository(c)
+	common.SuccessResp(c, plugins)
+}
+
+func UpdatePluginRepository(c *gin.Context) {
+	if err := plugin.UpdatePluginRepository(c); err != nil {
+		common.ErrorResp(c, err, 500)
+		return
+	}
+	plugins := plugin.GetPluginRepository(c)
+	common.SuccessResp(c, plugins)
+}
+
+type InstallReq struct {
+	UUID    string `json:"uuid"`
+	Version string `json:"version"`
+}
+
+func InstallPlugin(c *gin.Context) {
+	var req InstallReq
+	if err := c.BindJSON(&req); err != nil {
+		common.ErrorResp(c, err, 400)
+		return
+	}
+	plugin, err := plugin.InstallPlugin(c, req.UUID, req.Version)
+	if err != nil {
+		common.ErrorResp(c, err, 500)
+		return
+	}
+	common.SuccessResp(c, plugin)
+}
+
+func UninstallPlugin(c *gin.Context) {
+	idStr := c.Query("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.ErrorResp(c, err, 400)
+		return
+	}
+	if err := plugin.UninstallPlugin(c, uint(id)); err != nil {
+		common.ErrorResp(c, err, 500)
 		return
 	}
 	common.SuccessResp(c)

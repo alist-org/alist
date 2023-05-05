@@ -20,7 +20,6 @@ require (
 	github.com/hirochachacha/go-smb2 v1.1.0
 	github.com/jlaffaye/ftp v0.1.0
 	github.com/json-iterator/go v1.1.12
-	github.com/knqyf263/go-plugin v0.7.0
 	github.com/maruel/natural v1.1.0
 	github.com/modern-go/reflect2 v1.0.2
 	github.com/natefinch/lumberjack v2.0.0+incompatible
@@ -30,7 +29,6 @@ require (
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.7.0
 	github.com/t3rm1n4l/go-mega v0.0.0-20230228171823-a01a2cda13ca
-	github.com/tetratelabs/wazero v1.0.1
 	github.com/traefik/yaegi v0.15.1
 	github.com/u2takey/ffmpeg-go v0.4.1
 	github.com/upyun/go-sdk/v3 v3.0.4
@@ -107,7 +105,7 @@ require (
 	github.com/u2takey/go-utils v0.3.1 // indirect
 	github.com/ugorji/go/codec v1.2.9 // indirect
 	go.etcd.io/bbolt v1.3.5 // indirect
-	golang.org/x/arch v0.0.0-20210923205945-b76863e36670 // indirect
+	golang.org/x/arch v0.1.0 // indirect
 	golang.org/x/sys v0.7.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
 	golang.org/x/time v0.0.0-20220922220347-f3bd1da661af // indirect

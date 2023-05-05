@@ -159,6 +159,10 @@ func InitialSettings() []model.SettingItem {
 		// qbittorrent settings
 		{Key: conf.QbittorrentUrl, Value: "http://admin:adminadmin@localhost:8080/", Type: conf.TypeString, Group: model.SINGLE, Flag: model.PRIVATE},
 		{Key: conf.QbittorrentSeedtime, Value: "0", Type: conf.TypeNumber, Group: model.SINGLE, Flag: model.PRIVATE},
+
+		// plugin settings
+		{Key: conf.PluginAutoUpdate, Value: "false", Type: conf.TypeBool, Group: model.GLOBAL, Flag: model.PRIVATE},
+		{Key: conf.PluginRepository, Value: "", Type: conf.TypeText, Group: model.GLOBAL, Flag: model.PRIVATE},
 	}
 	if flags.Dev {
 		initialSettingItems = append(initialSettingItems, []model.SettingItem{

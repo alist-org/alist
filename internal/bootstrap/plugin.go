@@ -7,5 +7,10 @@ import (
 
 func InitPlugin() error {
 	utils.Log.Info("init Plugin")
-	return plugin.InitPlugin()
+	err := plugin.InitPlugin()
+	if err != nil {
+		utils.Log.Errorf("load plugin err: %s", err)
+		return err
+	}
+	return nil
 }

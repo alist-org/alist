@@ -45,6 +45,26 @@ func GetPluginById(id uint) (*model.Plugin, error) {
 	return &plugin, nil
 }
 
+func GetPluginByUUID(uuid string) (*model.Plugin, error) {
+	var plugin model.Plugin
+	if err := db.
+		Where(fmt.Sprintf("%s = ?", columnName("uuid")), uuid).
+		First(&plugin).Error; err != nil {
+		return nil, errors.WithStack(err)
+	}
+	return &plugin, nil
+}
+
+func GetPluginByModeAndPath(mode, path string) (*model.Plugin, error) {
+	var plugin model.Plugin
+	if err := db.
+		Where(fmt.Sprintf("%s = ? AND %s = ?", columnName("path"), columnName("mode")), path, mode).
+		First(&plugin).Error; err != nil {
+		return nil, errors.WithStack(err)
+	}
+	return &plugin, nil
+}
+
 func CreatePlugin(plugin *model.Plugin) error {
 	return errors.WithStack(db.Create(plugin).Error)
 }

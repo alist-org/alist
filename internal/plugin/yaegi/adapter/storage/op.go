@@ -9,33 +9,12 @@ import (
 	"github.com/alist-org/alist/v3/internal/op"
 )
 
-// yaegi use
-type PluginNew func() DriverPlugin
-type PluginResultNew func() DriverPluginResult
-
-// yaegi use
-func RegisterPluginResultDriver(driverNew PluginResultNew) {
-	op.RegisterDriver(func() driver.Driver {
-		return driverNew()
-	})
+func RegisterPluginDriver(driver op.New) {
+	op.RegisterDriver(driver)
 }
 
-func UnRegisterPluginResultDriver(driverNew PluginResultNew) {
-	op.UnRegisterDriver(func() driver.Driver {
-		return driverNew()
-	})
-}
-
-func RegisterPluginDriver(driverNew PluginNew) {
-	op.RegisterDriver(func() driver.Driver {
-		return driverNew()
-	})
-}
-
-func UnRegisterPluginDriver(driverNew PluginNew) {
-	op.UnRegisterDriver(func() driver.Driver {
-		return driverNew()
-	})
+func UnRegisterPluginDriver(driver op.New) {
+	op.UnRegisterDriver(driver)
 }
 
 func DropPluginStorage(driverName string) {
@@ -48,13 +27,15 @@ func DropPluginStorage(driverName string) {
 
 func LoadPluginStorage(driverName string) {
 	storages, _ := db.GetEnabledStorages()
-	if storages != nil {
-		for _, storage := range storages {
-			if storage.Driver == driverName {
-				go func(storage model.Storage) {
-					op.LoadStorage(context.TODO(), storage)
-				}(storage)
-			}
+	for _, storage := range storages {
+		if storage.Driver == driverName {
+			go func(storage model.Storage) {
+				op.LoadStorage(context.TODO(), storage)
+			}(storage)
 		}
 	}
+}
+
+func MustSaveDriverStorage(driver driver.Driver) {
+	op.MustSaveDriverStorage(driver)
 }

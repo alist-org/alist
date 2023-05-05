@@ -1,23 +1,44 @@
 package model
 
 const (
-	PLUGIN_MODE_WASI  = "wasi"
-	PLUGIN_MODE_DRPC  = "drpc"
-	PLUGIN_MODE_YAEGI = "yaegi"
+	PLUGIN_MODE_WASI    = "wasi"
+	PLUGIN_MODE_RPC     = "rpc"
+	PLUGIN_MODE_YAEGI   = "yaegi"
+	PLUGIN_MDOE_UNKNOWN = "unknown"
 )
 
 const (
 	PLUGIN_TYPE_STORAGE = "storage"
 )
 
+type PluginRepository struct {
+	Plugins []PluginInfo `json:"plugins"`
+}
+
+type PluginInfo struct {
+	Name      string           `json:"name"`
+	UUID      string           `json:"uuid"` // 插件唯一识别标识
+	Mode      string           `json:"mode"` // 插件加载模式
+	Type      []string         `json:"type"` // 插件类型
+	Downloads []PluginDownload `json:"downloads"`
+}
+
+type PluginDownload struct {
+	Version     string   `json:"version"`      // 插件版本
+	ApiVersion  []string `json:"api_version"`  // 插件使用的API版本
+	DownloadUrl string   `json:"download_url"` // 插件下载链接
+}
+
 type Plugin struct {
-	ID   uint   `json:"id"  gorm:"primaryKey"`
-	Type string `json:"type"` // 插件类型
+	ID uint `json:"id"  gorm:"primaryKey"`
+
+	UUID string `json:"uuid" gorm:"uniqueIndex"` // 插件唯一识别标识
+
+	Mode string `json:"mode"` // 插件加载模式
+	Path string `json:"path"` // 插件启动路径（或ip:port）(或包名)
 
 	Name       string `json:"name"`        // 插件名称
-	UUID       string `json:"uuid"`        // 插件唯一识别标识
-	Mode       string `json:"mode"`        // 插件加载模式
-	Path       string `json:"path"`        // 插件启动路径（或ip:port）(或包名)
+	Type       string `json:"type"`        // 插件类型
 	Version    string `json:"version"`     // 插件版本
 	ApiVersion string `json:"api_version"` // 插件使用的API版本
 
