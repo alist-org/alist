@@ -14,7 +14,7 @@ type Addition struct {
 
 var config = driver.Config{
 	Name:        "IPFS API",
-	DefaultRoot: "root",
+	DefaultRoot: "/",
 	LocalSort:   true,
 }
 
