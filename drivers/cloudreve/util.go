@@ -3,12 +3,14 @@ package cloudreve
 import (
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/internal/setting"
 	"github.com/alist-org/alist/v3/pkg/cookie"
 	"github.com/go-resty/resty/v2"
@@ -49,14 +51,19 @@ func (d *Cloudreve) request(method string, path string, callback base.ReqCallbac
 
 		// 刷新 cookie
 		if r.Code == http.StatusUnauthorized && path != loginPath {
-			err = d.login()
-			if err != nil {
-				return err
+			if d.Username != "" && d.Password != "" {
+				err = d.login()
+				if err != nil {
+					return err
+				}
+				return d.request(method, path, callback, out)
+			} else {
+				// 错误影响正常访问，下线该储存
+				d.GetStorage().SetStatus(fmt.Sprintf("%+v", err.Error()))
+				op.MustSaveDriverStorage(d)
+				return errors.New(r.Msg)
 			}
-			return d.request(method, path, callback, out)
 		}
-
-		return errors.New(r.Msg)
 	}
 	sess := cookie.GetCookie(resp.Cookies(), "cloudreve-session")
 	if sess != nil {
