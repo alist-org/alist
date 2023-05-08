@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/alist-org/alist/v3/drivers/webdav/odrvcookie"
+	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/gowebdav"
 )
 
@@ -28,4 +29,11 @@ func (d *WebDav) setClient() error {
 	}
 	d.client = c
 	return nil
+}
+
+func getPath(obj model.Obj) string {
+	if obj.IsDir() {
+		return obj.GetPath() + "/"
+	}
+	return obj.GetPath()
 }
