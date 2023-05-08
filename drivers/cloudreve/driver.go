@@ -27,6 +27,9 @@ func (d *Cloudreve) GetAddition() driver.Additional {
 }
 
 func (d *Cloudreve) Init(ctx context.Context) error {
+	if d.Cookie != "" {
+		return nil
+	}
 	return d.login()
 }
 
