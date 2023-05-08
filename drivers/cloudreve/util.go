@@ -57,12 +57,11 @@ func (d *Cloudreve) request(method string, path string, callback base.ReqCallbac
 					return err
 				}
 				return d.request(method, path, callback, out)
-			} else {
-				// 错误影响正常访问，下线该储存
-				d.GetStorage().SetStatus(fmt.Sprintf("%+v", err.Error()))
-				op.MustSaveDriverStorage(d)
-				return errors.New(r.Msg)
 			}
+			// 错误影响正常访问，下线该储存
+			d.GetStorage().SetStatus(fmt.Sprintf("%+v", err.Error()))
+			op.MustSaveDriverStorage(d)
+			return errors.New(r.Msg)
 		}
 	}
 	sess := cookie.GetCookie(resp.Cookies(), "cloudreve-session")
