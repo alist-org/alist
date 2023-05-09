@@ -23,7 +23,7 @@ const (
 )
 
 var (
-	ErrNotSupportName = errors.New("only chinese and english, numbers and underscores are supported, and the length is no more than 20")
+	ErrNotSupportName = errors.New("only chinese and english, numbers and underscores are supported, and the length is no more than 50")
 )
 
 func (d *BaiduPhoto) Request(furl string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
