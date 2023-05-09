@@ -58,20 +58,6 @@ func EnablePlugin(c *gin.Context) {
 	common.SuccessResp(c)
 }
 
-func GetPluginRepository(c *gin.Context) {
-	plugins := plugin.GetPluginRepository(c)
-	common.SuccessResp(c, plugins)
-}
-
-func UpdatePluginRepository(c *gin.Context) {
-	if err := plugin.UpdatePluginRepository(c); err != nil {
-		common.ErrorResp(c, err, 500)
-		return
-	}
-	plugins := plugin.GetPluginRepository(c)
-	common.SuccessResp(c, plugins)
-}
-
 type InstallReq struct {
 	UUID    string `json:"uuid"`
 	Version string `json:"version"`
@@ -122,4 +108,24 @@ func UpdatePlugin(c *gin.Context) {
 		return
 	}
 	common.SuccessResp(c, plugin)
+}
+
+func GetPluginRepository(c *gin.Context) {
+	plugins := plugin.GetPluginRepository(c)
+	common.SuccessResp(c, plugins)
+}
+
+func UpdatePluginRepository(c *gin.Context) {
+	if err := plugin.UpdatePluginRepository(c); err != nil {
+		common.ErrorResp(c, err, 500)
+		return
+	}
+	plugins := plugin.GetPluginRepository(c)
+	common.SuccessResp(c, plugins)
+}
+
+func GetPluginRepositoryVersions(c *gin.Context) {
+	uuid := c.Query("uuid")
+	vs := plugin.GetPluginVersions(c, uuid)
+	common.SuccessResp(c, vs)
 }

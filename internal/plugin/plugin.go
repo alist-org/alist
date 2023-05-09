@@ -76,7 +76,14 @@ func EnablePluginByID(ctx context.Context, id uint) error {
 }
 
 func GetPluginRepository(ctx context.Context) []model.PluginInfo {
-	return plugin_manage.GetAllPluginRepository()
+	plugins := plugin_manage.GetAllPluginRepository()
+	for i := range plugins {
+		// 仅返回最新版本
+		if len(plugins[i].Downloads) > 0 {
+			plugins[i].Downloads = plugins[i].Downloads[:1]
+		}
+	}
+	return plugins
 }
 
 func UpdatePluginRepository(ctx context.Context) error {
@@ -122,4 +129,8 @@ func CheckPluginUpdate(ctx context.Context, id uint) (bool, error) {
 
 func UpdatePlugin(ctx context.Context, uuid, version string) (*model.Plugin, error) {
 	return plugin_manage.UpdatePlugin(ctx, uuid, version)
+}
+
+func GetPluginVersions(ctx context.Context, uuid string) []string {
+	return plugin_manage.GetPluginVersions(uuid)
 }

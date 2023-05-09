@@ -127,6 +127,7 @@ func admin(g *gin.RouterGroup) {
 
 	plugin.GET("/repository", handles.GetPluginRepository)
 	plugin.POST("/repository", handles.UpdatePluginRepository)
+	plugin.GET("/versions", handles.GetPluginRepositoryVersions)
 }
 
 func _fs(g *gin.RouterGroup) {

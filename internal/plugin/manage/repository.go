@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
@@ -56,6 +57,17 @@ func UpdatePluginRepository(ctx context.Context) error {
 			continue
 		}
 		for _, plugin := range repository.Plugins {
+			// 去除不支持的版本
+			newDowns := make([]model.PluginDownload, 0, len(plugin.Downloads))
+			for _, down := range plugin.Downloads {
+				if IsSupportPlugin(strings.Join(down.ApiVersion, ",")) {
+					newDowns = append(newDowns, down)
+				}
+			}
+			sort.Slice(newDowns, func(i, j int) bool {
+				return CompareVersionStr(newDowns[i].Version, newDowns[j].Version) == VersionBig
+			})
+			plugin.Downloads = newDowns
 			newPluginRepository[plugin.UUID] = plugin
 		}
 	}
@@ -73,9 +85,14 @@ func GetAllPluginRepository() []model.PluginInfo {
 	return plugins
 }
 
-func GetPluginRepository(uuid string) (model.PluginInfo, bool) {
-	p, ok := pluginRepository[uuid]
-	return p, ok
+// 获取指定插件所有版本号
+func GetPluginVersions(uuid string) []string {
+	if p, ok := pluginRepository[uuid]; ok {
+		return utils.MustSliceConvert(p.Downloads, func(d model.PluginDownload) string {
+			return d.Version
+		})
+	}
+	return nil
 }
 
 // 检测是否存在更新
