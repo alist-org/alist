@@ -18,7 +18,7 @@ func getTid() string {
 
 // 检查名称
 func checkName(name string) bool {
-	return len(name) <= 20 && regexp.MustCompile("[\u4e00-\u9fa5A-Za-z0-9_-]").MatchString(name)
+	return len(name) <= 50 && regexp.MustCompile("[\u4e00-\u9fa5A-Za-z0-9_-]").MatchString(name)
 }
 
 func toTime(t int64) *time.Time {
