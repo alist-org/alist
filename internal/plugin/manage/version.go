@@ -7,6 +7,11 @@ import (
 	"strings"
 )
 
+// api版本规则
+// 大版本.增强版本.修补版本-描述
+//
+// 增强版本在原基础上增加接口时增长
+// 修补版本在依赖变化时增长
 var PLUGIN_API_VERSION = ParseVersion("v1.0.0-test")
 
 type Version struct {
@@ -40,16 +45,22 @@ func ParseVersion(version string) Version {
 }
 
 const (
-	VersionEqual uint8 = iota
-	VersionSmall
+	VersionSmall uint8 = iota
+	VersionEqual
 	VersionBig
+
 	VersionIncompatible
+	VersionCompatible
 )
 
 func CompareVersionStr(src, dest string) uint8 {
 	return CompareVersion(ParseVersion(src), ParseVersion(dest))
 }
 
+// 比较 Major Minor Patch
+// (src < dest) => VersionSmall
+// (src == dest) => VersionEqual
+// (src > dest) => VersionBig
 func CompareVersion(src, dest Version) uint8 {
 	if src.Major > dest.Major {
 		return VersionBig
@@ -71,7 +82,10 @@ func CompareVersion(src, dest Version) uint8 {
 	return VersionEqual
 }
 
-// 跳过 Patch 版本号
+// 比较 Major Minor 跳过 Patch
+// (src < dest) => VersionSmall
+// (src == dest) => VersionEqual
+// (src > dest) => VersionBig
 func CompareVersion2(src, dest Version) uint8 {
 	if src.Major > dest.Major {
 		return VersionBig
@@ -91,13 +105,19 @@ func ComparePluginApiVersion(pluginV Version) uint8 {
 	if pluginV.Major != PLUGIN_API_VERSION.Major {
 		return VersionIncompatible
 	}
-	return CompareVersion2(pluginV, PLUGIN_API_VERSION)
+	if pluginV.Minor > PLUGIN_API_VERSION.Minor {
+		return VersionIncompatible
+	}
+	if pluginV.Patch > PLUGIN_API_VERSION.Patch {
+		return VersionIncompatible
+	}
+	return VersionCompatible
 }
 
 func IsSupportPlugin(apiVersion string) bool {
 	apiVersions := strings.Split(apiVersion, ",")
 	for _, apiVersion := range apiVersions {
-		if ComparePluginApiVersion(ParseVersion(apiVersion)) < VersionBig {
+		if ComparePluginApiVersion(ParseVersion(apiVersion)) == VersionCompatible {
 			return true
 		}
 	}

@@ -119,3 +119,7 @@ func CheckPluginUpdate(ctx context.Context, id uint) (bool, error) {
 	}
 	return has, nil
 }
+
+func UpdatePlugin(ctx context.Context, uuid, version string) (*model.Plugin, error) {
+	return plugin_manage.UpdatePlugin(ctx, uuid, version)
+}

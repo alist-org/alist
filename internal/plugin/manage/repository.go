@@ -93,7 +93,7 @@ func CheckUpdate(uuid string, oldVersion string) (has bool, found bool) {
 	return false, false
 }
 
-// 下载插件
+// 下载插件（自动关闭并删除源文件）
 func DownloadPlugin(ctx context.Context, uuid string, version string, install func(*os.File, model.PluginInfo) error) error {
 	if plugin, found := pluginRepository[uuid]; found {
 		for _, downInfo := range plugin.Downloads {
@@ -128,7 +128,7 @@ func DownloadPlugin(ctx context.Context, uuid string, version string, install fu
 	return errs.NotFoundPluginByRepository
 }
 
-// 安装插件并写入数据库
+// 安装插件并写入数据库(不会加插件)
 func InstallPlugin(ctx context.Context, uuid string, version string) (*model.Plugin, error) {
 	if _, err := db.GetPluginByUUID(uuid); err == nil || !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, errs.PluginHasBeenInstalled
@@ -157,7 +157,7 @@ func InstallPlugin(ctx context.Context, uuid string, version string) (*model.Plu
 	return FixPluginConfigByModel(model.Plugin{Mode: mode, Path: path, Disabled: false})
 }
 
-// 删除插件文件并移除数据库
+// 删除插件文件并移除数据库（不会卸载插件）
 func UninstallPlugin(plugin model.Plugin) error {
 	switch plugin.Mode {
 	case model.PLUGIN_MODE_YAEGI:
@@ -166,4 +166,31 @@ func UninstallPlugin(plugin model.Plugin) error {
 		}
 	}
 	return db.DeletePluginByID(plugin.ID)
+}
+
+// 更新（降级，重新安装）插件
+func UpdatePlugin(ctx context.Context, uuid string, version string) (*model.Plugin, error) {
+	plugin, err := db.GetPluginByUUID(uuid)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = UninstallPlugin(*plugin); err != nil {
+		return nil, err
+	}
+
+	newPlugin, err := InstallPlugin(ctx, uuid, version)
+	if err != nil {
+		return nil, err
+	}
+
+	if !plugin.Disabled {
+		if err := UnRegisterPlugin(*plugin); err != nil {
+			return nil, err
+		}
+		if _, err := RegisterPlugin(*plugin); err != nil {
+			return nil, err
+		}
+	}
+	return newPlugin, err
 }

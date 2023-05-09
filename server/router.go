@@ -121,6 +121,7 @@ func admin(g *gin.RouterGroup) {
 	plugin.GET("/list", handles.ListPlugin)
 	plugin.POST("/install", handles.InstallPlugin)
 	plugin.POST("/uninstall", handles.UninstallPlugin)
+	plugin.POST("/update", handles.UpdatePlugin)
 	plugin.POST("/enable", handles.EnablePlugin)
 	plugin.POST("/disable", handles.DisablePlugin)
 

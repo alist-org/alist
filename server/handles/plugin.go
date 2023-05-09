@@ -104,3 +104,22 @@ func UninstallPlugin(c *gin.Context) {
 	}
 	common.SuccessResp(c)
 }
+
+type UpdateReq struct {
+	UUID    string `json:"uuid"`
+	Version string `json:"version"`
+}
+
+func UpdatePlugin(c *gin.Context) {
+	var req UpdateReq
+	if err := c.BindJSON(&req); err != nil {
+		common.ErrorResp(c, err, 400)
+		return
+	}
+	plugin, err := plugin.UpdatePlugin(c, req.UUID, req.Version)
+	if err != nil {
+		common.ErrorResp(c, err, 500)
+		return
+	}
+	common.SuccessResp(c, plugin)
+}
