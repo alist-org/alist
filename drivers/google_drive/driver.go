@@ -17,7 +17,9 @@ import (
 type GoogleDrive struct {
 	model.Storage
 	Addition
-	AccessToken string
+	AccessToken            string
+	ServiceAccountFile     int
+	ServiceAccountFileList []string
 }
 
 func (d *GoogleDrive) Config() driver.Config {
