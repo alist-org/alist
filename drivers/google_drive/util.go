@@ -128,10 +128,9 @@ func (d *GoogleDrive) refreshToken() error {
 		}
 		d.AccessToken = resp.AccessToken
 		return nil
-	} else {
-		if os.IsExist(gdsaFileErr) {
-			log.Error("You dont have permission to get the file or folder")
-		}
+	}
+	if gdsaFileErr != nil && os.IsExist(gdsaFileErr) {
+		log.Error("You dont have permission to get the Google Service Account file or folder")
 	}
 	url := "https://www.googleapis.com/oauth2/v4/token"
 	var resp base.TokenResp
