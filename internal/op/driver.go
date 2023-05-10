@@ -63,7 +63,7 @@ func getMainItems(config driver.Config) []driver.Item {
 		Name:     "mount_path",
 		Type:     conf.TypeString,
 		Required: true,
-		Help:     "",
+		Help:     "The name displayed externally on the front end",
 	}, {
 		Name: "order",
 		Type: conf.TypeNumber,
