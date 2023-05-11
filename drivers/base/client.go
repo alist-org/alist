@@ -1,9 +1,11 @@
 package base
 
 import (
+	"crypto/tls"
 	"net/http"
 	"time"
 
+	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/go-resty/resty/v2"
 )
 
@@ -27,5 +29,8 @@ func NewRestyClient() *resty.Client {
 		SetHeader("user-agent", UserAgent).
 		SetRetryCount(3).
 		SetTimeout(DefaultTimeout)
+	if conf.Conf.TlsInsecureSkipVerify {
+		client = client.SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
+	}
 	return client
 }
