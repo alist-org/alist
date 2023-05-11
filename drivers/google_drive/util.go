@@ -79,14 +79,14 @@ func (d *GoogleDrive) refreshToken() error {
 
 		gdsaFileThisContent, err := ioutil.ReadFile(gdsaFileThis)
 		if err != nil {
-			log.Fatal("Error when opening file: ", err)
+			return err 
 		}
 
 		// Now let's unmarshall the data into `payload`
 		var jsonData googleDriveServiceAccount
 		err = json.Unmarshal(gdsaFileThisContent, &jsonData)
 		if err != nil {
-			log.Fatal("Error during Unmarshal(): ", err)
+			return err 
 		}
 
 		gdsaScope := "https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata https://www.googleapis.com/auth/drive.metadata.readonly https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/drive.scripts"
@@ -109,7 +109,7 @@ func (d *GoogleDrive) refreshToken() error {
 			})
 		assertion, err := jwtToken.SignedString(privateKey)
 		if err != nil {
-			fmt.Println(err)
+			return err 
 		}
 
 		var resp base.TokenResp
@@ -120,7 +120,7 @@ func (d *GoogleDrive) refreshToken() error {
 				"grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
 			}).Post(jsonData.TokenURI)
 		if err != nil {
-			return err
+			return err 
 		}
 		log.Debug(res.String())
 		if e.Error != "" {
@@ -130,7 +130,7 @@ func (d *GoogleDrive) refreshToken() error {
 		return nil
 	}
 	if gdsaFileErr != nil && os.IsExist(gdsaFileErr) {
-		log.Error("You dont have permission to get the Google Service Account file or folder")
+		return gdsaFileErr 
 	}
 	url := "https://www.googleapis.com/oauth2/v4/token"
 	var resp base.TokenResp
