@@ -29,7 +29,7 @@ func NewRestyClient() *resty.Client {
 		SetHeader("user-agent", UserAgent).
 		SetRetryCount(3).
 		SetTimeout(DefaultTimeout)
-	if conf.Conf.TlsInsecureSkipVerify {
+	if conf.Conf != nil && conf.Conf.TlsInsecureSkipVerify {
 		client = client.SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
 	}
 	return client
