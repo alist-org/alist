@@ -12,7 +12,7 @@ import (
 func (c *Client) req(method, path string, body io.Reader, intercept func(*http.Request)) (req *http.Response, err error) {
 	var r *http.Request
 	var retryBuf io.Reader
-
+	canRetry := true
 	if body != nil {
 		// If the authorization fails, we will need to restart reading
 		// from the passed body stream.
@@ -25,6 +25,8 @@ func (c *Client) req(method, path string, body io.Reader, intercept func(*http.R
 				return
 			}
 			retryBuf = body
+		} else if method == http.MethodPut {
+			canRetry = false
 		} else {
 			buff := &bytes.Buffer{}
 			retryBuf = buff
@@ -83,7 +85,9 @@ func (c *Client) req(method, path string, body io.Reader, intercept func(*http.R
 
 		// retryBuf will be nil if body was nil initially so no check
 		// for body == nil is required here.
-		return c.req(method, path, retryBuf, intercept)
+		if canRetry {
+			return c.req(method, path, retryBuf, intercept)
+		}
 	} else if rs.StatusCode == 401 {
 		return rs, newPathError("Authorize", c.root, rs.StatusCode)
 	}
@@ -193,7 +197,7 @@ func (c *Client) copymove(method string, oldpath string, newpath string, overwri
 }
 
 func (c *Client) put(path string, stream io.Reader, callback func(r *http.Request)) (status int, err error) {
-	rs, err := c.req("PUT", path, stream, callback)
+	rs, err := c.req(http.MethodPut, path, stream, callback)
 	if err != nil {
 		return
 	}
