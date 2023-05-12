@@ -24,6 +24,9 @@ func Init(e *gin.Engine) {
 	g.Any("/ping", func(c *gin.Context) {
 		c.String(200, "pong")
 	})
+	g.GET("/favicon.ico", handles.Favicon)
+	g.GET("/robots.txt", handles.Robots)
+	g.GET("/i/:link_name", handles.Plist)
 	common.SecretKey = []byte(conf.Conf.JwtSecret)
 	g.Use(middlewares.StoragesLoaded)
 	if conf.Conf.MaxConnections > 0 {
@@ -31,8 +34,6 @@ func Init(e *gin.Engine) {
 	}
 	WebDav(g.Group("/dav"))
 
-	g.GET("/favicon.ico", handles.Favicon)
-	g.GET("/i/:link_name", handles.Plist)
 	g.GET("/d/*path", middlewares.Down, handles.Down)
 	g.GET("/p/*path", middlewares.Down, handles.Proxy)
 

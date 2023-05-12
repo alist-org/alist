@@ -16,6 +16,10 @@ func Favicon(c *gin.Context) {
 	c.Redirect(302, setting.GetStr(conf.Favicon))
 }
 
+func Robots(c *gin.Context) {
+	c.String(200, setting.GetStr(conf.RobotsTxt))
+}
+
 func Plist(c *gin.Context) {
 	linkNameB64 := strings.TrimSuffix(c.Param("link_name"), ".plist")
 	linkName, err := utils.SafeAtob(linkNameB64)
