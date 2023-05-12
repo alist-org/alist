@@ -6,7 +6,7 @@ require (
 	github.com/SheltonZhu/115driver v1.0.14
 	github.com/Xhofe/go-cache v0.0.0-20220723083548-714439c8af9a
 	github.com/aws/aws-sdk-go v1.44.262
-	github.com/blevesearch/bleve/v2 v2.3.7
+	github.com/blevesearch/bleve/v2 v2.3.8
 	github.com/caarlos0/env/v7 v7.1.0
 	github.com/deckarep/golang-set/v2 v2.3.0
 	github.com/disintegration/imaging v1.6.2
@@ -63,7 +63,7 @@ require (
 	github.com/blevesearch/zapx/v12 v12.3.7 // indirect
 	github.com/blevesearch/zapx/v13 v13.3.7 // indirect
 	github.com/blevesearch/zapx/v14 v14.3.7 // indirect
-	github.com/blevesearch/zapx/v15 v15.3.9 // indirect
+	github.com/blevesearch/zapx/v15 v15.3.10 // indirect
 	github.com/bluele/gcache v0.0.2 // indirect
 	github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc // indirect
 	github.com/bytedance/sonic v1.8.0 // indirect
