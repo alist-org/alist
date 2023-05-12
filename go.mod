@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/SheltonZhu/115driver v1.0.14
 	github.com/Xhofe/go-cache v0.0.0-20220723083548-714439c8af9a
-	github.com/aws/aws-sdk-go v1.44.194
+	github.com/aws/aws-sdk-go v1.44.262
 	github.com/blevesearch/bleve/v2 v2.3.7
 	github.com/caarlos0/env/v7 v7.1.0
 	github.com/deckarep/golang-set/v2 v2.3.0
