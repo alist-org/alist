@@ -23,6 +23,8 @@ github.com/bits-and-blooms/bitset v1.2.0 h1:Kn4yilvwNtMACtf1eYDlG8H77R07mZSPbMjL
 github.com/bits-and-blooms/bitset v1.2.0/go.mod h1:gIdJ4wp64HaoK2YrL1Q5/N7Y16edYb8uY+O0FJTyyDA=
 github.com/blevesearch/bleve/v2 v2.3.7 h1:nIfIrhv28tvgBpbVF8Dq7/U1zW/YiwSqg/PBgE3x8bo=
 github.com/blevesearch/bleve/v2 v2.3.7/go.mod h1:2tToYD6mDeseIA13jcZiEEqYrVLg6xdk0v6+F7dWquU=
+github.com/blevesearch/bleve/v2 v2.3.8 h1:IqFyMJ73n4gY8AmVqM8Sa6EtAZ5beE8yramVqCvs2kQ=
+github.com/blevesearch/bleve/v2 v2.3.8/go.mod h1:Lh9aZEHrLKxwPnW4z4lsBEGnflZQ1V/aWP/t+htsiDw=
 github.com/blevesearch/bleve_index_api v1.0.5 h1:Lc986kpC4Z0/n1g3gg8ul7H+lxgOQPcXb9SxvQGu+tw=
 github.com/blevesearch/bleve_index_api v1.0.5/go.mod h1:YXMDwaXFFXwncRS8UobWs7nvo0DmusriM1nztTlj1ms=
 github.com/blevesearch/geo v0.1.17 h1:AguzI6/5mHXapzB0gE9IKWo+wWPHZmXZoscHcjFgAFA=
@@ -53,6 +55,8 @@ github.com/blevesearch/zapx/v14 v14.3.7 h1:gfe+fbWslDWP/evHLtp/GOvmNM3sw1BbqD7Lh
 github.com/blevesearch/zapx/v14 v14.3.7/go.mod h1:9J/RbOkqZ1KSjmkOes03AkETX7hrXT0sFMpWH4ewC4w=
 github.com/blevesearch/zapx/v15 v15.3.9 h1:/s9zqKxFaZKQTTcMO2b/Tup0ch5MSztlvw+frVDfIBk=
 github.com/blevesearch/zapx/v15 v15.3.9/go.mod h1:m7Y6m8soYUvS7MjN9eKlz1xrLCcmqfFadmu7GhWIrLY=
+github.com/blevesearch/zapx/v15 v15.3.10 h1:bQ9ZxJCj6rKp873EuVJu2JPxQ+EWQZI1cjJGeroovaQ=
+github.com/blevesearch/zapx/v15 v15.3.10/go.mod h1:m7Y6m8soYUvS7MjN9eKlz1xrLCcmqfFadmu7GhWIrLY=
 github.com/bluele/gcache v0.0.2 h1:WcbfdXICg7G/DGBh1PFfcirkWOQV+v077yF1pSy3DGw=
 github.com/bluele/gcache v0.0.2/go.mod h1:m15KV+ECjptwSPxKhOhQoAFQVtUFjTVkc3H8o0t/fp0=
 github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc h1:biVzkmvwrH8WK8raXaxBx6fRVTlJILwEwQGL1I/ByEI=
