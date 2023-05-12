@@ -2,25 +2,23 @@ package google_drive
 
 import (
 	"context"
+	"crypto/x509"
+	"encoding/pem"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
+	"os"
+	"regexp"
 	"strconv"
+	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/go-resty/resty/v2"
-	log "github.com/sirupsen/logrus"
-
-	"crypto/x509"
-	"encoding/json"
-	"encoding/pem"
 	"github.com/golang-jwt/jwt/v4"
-	"io/ioutil"
-	"os"
-	"regexp"
-	"time"
+	log "github.com/sirupsen/logrus"
 )
 
 // do others that not defined in Driver interface
@@ -79,14 +77,14 @@ func (d *GoogleDrive) refreshToken() error {
 
 		gdsaFileThisContent, err := ioutil.ReadFile(gdsaFileThis)
 		if err != nil {
-			return err 
+			return err
 		}
 
-		// Now let's unmarshall the data into `payload`
+		// Now let's unmarshal the data into `payload`
 		var jsonData googleDriveServiceAccount
-		err = json.Unmarshal(gdsaFileThisContent, &jsonData)
+		err = utils.Json.Unmarshal(gdsaFileThisContent, &jsonData)
 		if err != nil {
-			return err 
+			return err
 		}
 
 		gdsaScope := "https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata https://www.googleapis.com/auth/drive.metadata.readonly https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/drive.scripts"
@@ -109,7 +107,7 @@ func (d *GoogleDrive) refreshToken() error {
 			})
 		assertion, err := jwtToken.SignedString(privateKey)
 		if err != nil {
-			return err 
+			return err
 		}
 
 		var resp base.TokenResp
@@ -120,7 +118,7 @@ func (d *GoogleDrive) refreshToken() error {
 				"grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
 			}).Post(jsonData.TokenURI)
 		if err != nil {
-			return err 
+			return err
 		}
 		log.Debug(res.String())
 		if e.Error != "" {
@@ -130,7 +128,7 @@ func (d *GoogleDrive) refreshToken() error {
 		return nil
 	}
 	if gdsaFileErr != nil && os.IsExist(gdsaFileErr) {
-		return gdsaFileErr 
+		return gdsaFileErr
 	}
 	url := "https://www.googleapis.com/oauth2/v4/token"
 	var resp base.TokenResp
