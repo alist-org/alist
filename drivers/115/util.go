@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/SheltonZhu/115driver/pkg/driver"
+	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/pkg/errors"
 )
 
@@ -15,6 +16,7 @@ func (d *Pan115) login() error {
 		driver.UA(UserAgent),
 	}
 	d.client = driver.New(opts...)
+	d.client.SetHttpClient(base.HttpClient)
 	cr := &driver.Credential{}
 	if d.Addition.QRCodeToken != "" {
 		s := &driver.QRCodeSession{
