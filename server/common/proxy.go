@@ -19,18 +19,16 @@ import (
 )
 
 func HttpClient() *http.Client {
-	if httpClient == nil {
-		once.Do(func() {
-			httpClient = base.NewHttpClient()
-			httpClient.CheckRedirect = func(req *http.Request, via []*http.Request) error {
-				if len(via) >= 10 {
-					return errors.New("stopped after 10 redirects")
-				}
-				req.Header.Del("Referer")
-				return nil
+	once.Do(func() {
+		httpClient = base.NewHttpClient()
+		httpClient.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+			if len(via) >= 10 {
+				return errors.New("stopped after 10 redirects")
 			}
-		})
-	}
+			req.Header.Del("Referer")
+			return nil
+		}
+	})
 	return httpClient
 }
 
