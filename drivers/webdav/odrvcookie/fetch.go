@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/alist-org/alist/v3/drivers/base"
 	"golang.org/x/net/publicsuffix"
 )
 
@@ -185,7 +186,7 @@ func (ca *CookieAuth) getSPToken() (*SuccessResponse, error) {
 		return nil, err
 	}
 
-	client := &http.Client{}
+	client := base.HttpClient
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err

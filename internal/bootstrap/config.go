@@ -1,7 +1,6 @@
 package bootstrap
 
 import (
-	"crypto/tls"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -78,9 +77,7 @@ func InitConfig() {
 		log.Fatalf("create temp dir error: %+v", err)
 	}
 	log.Debugf("config: %+v", conf.Conf)
-	if conf.Conf.TlsInsecureSkipVerify {
-		base.RestyClient = base.RestyClient.SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
-	}
+	base.InitClient()
 	initURL()
 }
 

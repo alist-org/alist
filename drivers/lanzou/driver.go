@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
-	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
@@ -14,8 +13,6 @@ import (
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/go-resty/resty/v2"
 )
-
-var upClient = base.NewRestyClient().SetTimeout(120 * time.Second)
 
 type LanZou struct {
 	Addition
@@ -209,11 +206,11 @@ func (d *LanZou) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 		var resp RespText[[]FileOrFolder]
 		_, err := d._post(d.BaseUrl+"/fileup.php", func(req *resty.Request) {
 			req.SetFormData(map[string]string{
-				"task":      "1",
-				"vie":       "2",
-				"ve":        "2",
-				"id":        "WU_FILE_0",
-				"name":      stream.GetName(),
+				"task":           "1",
+				"vie":            "2",
+				"ve":             "2",
+				"id":             "WU_FILE_0",
+				"name":           stream.GetName(),
 				"folder_id_bb_n": dstDir.GetID(),
 			}).SetFileReader("upload_file", stream.GetName(), stream).SetContext(ctx)
 		}, &resp, true)

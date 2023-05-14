@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
@@ -15,6 +16,9 @@ import (
 	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
 )
+
+var upClient *resty.Client
+var once sync.Once
 
 func (d *LanZou) doupload(callback base.ReqCallback, resp interface{}) ([]byte, error) {
 	return d.post(d.BaseUrl+"/doupload.php", func(req *resty.Request) {
@@ -64,6 +68,9 @@ func (d *LanZou) _post(url string, callback base.ReqCallback, resp interface{}, 
 func (d *LanZou) request(url string, method string, callback base.ReqCallback, up bool) ([]byte, error) {
 	var req *resty.Request
 	if up {
+		once.Do(func() {
+			upClient = base.NewRestyClient().SetTimeout(120 * time.Second)
+		})
 		req = upClient.R()
 	} else {
 		req = base.RestyClient.R()
