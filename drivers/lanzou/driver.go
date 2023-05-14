@@ -14,8 +14,6 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
-var upClient *resty.Client
-
 type LanZou struct {
 	Addition
 	model.Storage

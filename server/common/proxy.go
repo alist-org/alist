@@ -8,6 +8,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/conf"
@@ -19,18 +20,21 @@ import (
 
 func HttpClient() *http.Client {
 	if httpClient == nil {
-		httpClient = base.NewHttpClient()
-		httpClient.CheckRedirect = func(req *http.Request, via []*http.Request) error {
-			if len(via) >= 10 {
-				return errors.New("stopped after 10 redirects")
+		once.Do(func() {
+			httpClient = base.NewHttpClient()
+			httpClient.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+				if len(via) >= 10 {
+					return errors.New("stopped after 10 redirects")
+				}
+				req.Header.Del("Referer")
+				return nil
 			}
-			req.Header.Del("Referer")
-			return nil
-		}
+		})
 	}
 	return httpClient
 }
 
+var once sync.Once
 var httpClient *http.Client
 
 func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.Obj) error {
