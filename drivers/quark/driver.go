@@ -102,7 +102,7 @@ func (d *Quark) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 					req.Header.Set("User-Agent", ua)
 					req.Header.Set("Cookie", d.Cookie)
 					req.Header.Set("Referer", "https://pan.quark.cn")
-					resp, err := http.DefaultClient.Do(req)
+					resp, err := base.HttpClient.Do(req)
 					if err != nil {
 						return err
 					}

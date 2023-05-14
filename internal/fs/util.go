@@ -8,6 +8,7 @@ import (
 	stdpath "path"
 	"strings"
 
+	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/op"
@@ -32,8 +33,6 @@ func containsByName(files []model.Obj, file model.Obj) bool {
 	}
 	return false
 }
-
-var httpClient = &http.Client{}
 
 func getFileStreamFromLink(file model.Obj, link *model.Link) (*model.FileStream, error) {
 	var rc io.ReadCloser
@@ -60,7 +59,7 @@ func getFileStreamFromLink(file model.Obj, link *model.Link) (*model.FileStream,
 		for h, val := range link.Header {
 			req.Header[h] = val
 		}
-		res, err := httpClient.Do(req)
+		res, err := base.HttpClient.Do(req)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to get response for %s", link.URL)
 		}

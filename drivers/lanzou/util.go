@@ -64,6 +64,9 @@ func (d *LanZou) _post(url string, callback base.ReqCallback, resp interface{}, 
 func (d *LanZou) request(url string, method string, callback base.ReqCallback, up bool) ([]byte, error) {
 	var req *resty.Request
 	if up {
+		if upClient == nil {
+			upClient = base.NewRestyClient().SetTimeout(120 * time.Second)
+		}
 		req = upClient.R()
 	} else {
 		req = base.RestyClient.R()

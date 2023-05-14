@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/model"
 )
 
@@ -38,7 +39,7 @@ func get(url string, apiKey string, AUSHELLPORTAL string) (*http.Response, error
 		Value:  apiKey,
 		MaxAge: 2 * 60,
 	})
-	res, err := http.DefaultClient.Do(req)
+	res, err := base.HttpClient.Do(req)
 	return res, err
 }
 
@@ -65,7 +66,7 @@ func postForm(endpoint string, data url.Values, apiExpiredate string, apiKey str
 		Value:  apiKey,
 		MaxAge: 2 * 60,
 	})
-	res, err := http.DefaultClient.Do(req)
+	res, err := base.HttpClient.Do(req)
 	return res, err
 }
 
