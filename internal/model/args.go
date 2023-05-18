@@ -11,9 +11,10 @@ type ListArgs struct {
 }
 
 type LinkArgs struct {
-	IP     string
-	Header http.Header
-	Type   string
+	IP      string
+	Header  http.Header
+	Type    string
+	HttpReq *http.Request
 }
 
 type Link struct {
