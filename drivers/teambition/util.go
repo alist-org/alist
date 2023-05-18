@@ -7,13 +7,16 @@ import (
 	"io"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/utils"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
 )
@@ -210,17 +213,56 @@ func (d *Teambition) finishUpload(file *FileUpload, parentId string) error {
 	return err
 }
 
-func getBetweenStr(str, start, end string) string {
-	n := strings.Index(str, start)
-	if n == -1 {
-		return ""
+func (d *Teambition) newUpload(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
+	var uploadToken UploadToken
+	_, err := d.request("/api/awos/upload-token", http.MethodPost, func(req *resty.Request) {
+		req.SetBody(base.Json{
+			"category": "work",
+			"fileName": stream.GetName(),
+			"fileSize": stream.GetSize(),
+			"fileType": stream.GetMimetype(),
+			"payload": base.Json{
+				"involveMembers": []struct{}{},
+				"visible":        "members",
+			},
+			"scope": "project:" + d.ProjectID,
+		})
+	}, &uploadToken)
+	if err != nil {
+		return err
 	}
-	n = n + len(start)
-	str = string([]byte(str)[n:])
-	m := strings.Index(str, end)
-	if m == -1 {
-		return ""
+	cfg := &aws.Config{
+		Credentials: credentials.NewStaticCredentials(
+			uploadToken.Sdk.Credentials.AccessKeyId, uploadToken.Sdk.Credentials.SecretAccessKey, uploadToken.Sdk.Credentials.SessionToken),
+		Region:           &uploadToken.Sdk.Region,
+		Endpoint:         &uploadToken.Sdk.Endpoint,
+		S3ForcePathStyle: &uploadToken.Sdk.S3ForcePathStyle,
 	}
-	str = string([]byte(str)[:m])
-	return str
+	ss, err := session.NewSession(cfg)
+	if err != nil {
+		return err
+	}
+	uploader := s3manager.NewUploader(ss)
+	input := &s3manager.UploadInput{
+		Bucket:             &uploadToken.Upload.Bucket,
+		Key:                &uploadToken.Upload.Key,
+		ContentDisposition: &uploadToken.Upload.ContentDisposition,
+		ContentType:        &uploadToken.Upload.ContentType,
+		Body:               stream,
+	}
+	_, err = uploader.UploadWithContext(ctx, input)
+	if err != nil {
+		return err
+	}
+	// finish upload
+	_, err = d.request("/api/works", http.MethodPost, func(req *resty.Request) {
+		req.SetBody(base.Json{
+			"fileTokens":     []string{uploadToken.Token},
+			"involveMembers": []struct{}{},
+			"visible":        "members",
+			"works":          []struct{}{},
+			"_parentId":      dstDir.GetID(),
+		})
+	}, nil)
+	return err
 }
