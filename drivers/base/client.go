@@ -40,7 +40,7 @@ func NewRestyClient() *resty.Client {
 
 func NewHttpClient() *http.Client {
 	return &http.Client{
-		Timeout: DefaultTimeout,
+		Timeout: time.Hour * 48,
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: conf.Conf.TlsInsecureSkipVerify},
 		},

@@ -8,11 +8,11 @@ import (
 	stdpath "path"
 	"strings"
 
-	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/pkg/utils"
+	"github.com/alist-org/alist/v3/server/common"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 )
@@ -59,7 +59,7 @@ func getFileStreamFromLink(file model.Obj, link *model.Link) (*model.FileStream,
 		for h, val := range link.Header {
 			req.Header[h] = val
 		}
-		res, err := base.HttpClient.Do(req)
+		res, err := common.HttpClient().Do(req)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to get response for %s", link.URL)
 		}
