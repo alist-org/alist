@@ -186,7 +186,7 @@ func (y *Cloud189PC) getFiles(ctx context.Context, fileId string) ([]model.Obj, 
 
 func (y *Cloud189PC) login() (err error) {
 	// 初始化登陆所需参数
-	if y.loginParam == nil || !y.NoUseOcr {
+	if y.loginParam == nil {
 		if err = y.initLoginParam(); err != nil {
 			// 验证码也通过错误返回
 			return err
@@ -197,7 +197,7 @@ func (y *Cloud189PC) login() (err error) {
 		y.VCode = ""
 		// 销毁登陆参数
 		y.loginParam = nil
-		// 遇到错误，重新加载登陆参数
+		// 遇到错误，重新加载登陆参数(刷新验证码)
 		if err != nil && y.NoUseOcr {
 			if err1 := y.initLoginParam(); err1 != nil {
 				err = fmt.Errorf("err1: %s \nerr2: %s", err, err1)
@@ -304,6 +304,16 @@ func (y *Cloud189PC) initLoginParam() error {
 	param.RsaPassword = encryptConf.Data.Pre + RsaEncrypt(param.jRsaKey, y.Password)
 	y.loginParam = &param
 
+	// 判断是否需要验证码
+	resp, err := y.client.R().Get(AUTH_URL + "/api/logbox/oauth2/needcaptcha.do")
+	if err != nil {
+		return err
+	}
+	if resp.String() == "0" {
+		return nil
+	}
+
+	// 拉取验证码
 	imgRes, err := y.client.R().
 		SetQueryParams(map[string]string{
 			"token": param.CaptchaToken,
