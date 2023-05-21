@@ -317,7 +317,12 @@ func (y *Cloud189PC) initLoginParam() error {
 	y.loginParam = &param
 
 	// 判断是否需要验证码
-	resp, err := y.client.R().Get(AUTH_URL + "/api/logbox/oauth2/needcaptcha.do")
+	resp, err := y.client.R().
+		SetFormData(map[string]string{
+			"appKey":      APP_ID,
+			"accountType": ACCOUNT_TYPE,
+			"userName":    param.RsaUsername,
+		}).Post(AUTH_URL + "/api/logbox/oauth2/needcaptcha.do")
 	if err != nil {
 		return err
 	}
