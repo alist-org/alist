@@ -6,6 +6,7 @@ import (
 	"crypto/md5"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/xml"
 	"fmt"
 	"io"
 	"math"
@@ -47,7 +48,7 @@ const (
 	CHANNEL_ID = "web_cloud.189.cn"
 )
 
-func (y *Cloud189PC) request(url, method string, callback base.ReqCallback, params Params, resp interface{}) ([]byte, error) {
+func (y *Cloud189PC) request_(client *resty.Client, url, method string, callback base.ReqCallback, params Params, resp interface{}) ([]byte, error) {
 	dateOfGmt := getHttpDateStr()
 	sessionKey := y.tokenInfo.SessionKey
 	sessionSecret := y.tokenInfo.SessionSecret
@@ -56,7 +57,7 @@ func (y *Cloud189PC) request(url, method string, callback base.ReqCallback, para
 		sessionSecret = y.tokenInfo.FamilySessionSecret
 	}
 
-	req := y.client.R().SetQueryParams(clientSuffix()).SetHeaders(map[string]string{
+	req := client.R().SetQueryParams(clientSuffix()).SetHeaders(map[string]string{
 		"Date":         dateOfGmt,
 		"SessionKey":   sessionKey,
 		"X-Request-ID": uuid.NewString(),
@@ -80,8 +81,11 @@ func (y *Cloud189PC) request(url, method string, callback base.ReqCallback, para
 	if err != nil {
 		return nil, err
 	}
+
+	// 处理错误
 	var erron RespErr
 	utils.Json.Unmarshal(res.Body(), &erron)
+	xml.Unmarshal(res.Body(), &erron)
 
 	if erron.ResCode != "" {
 		return nil, fmt.Errorf("res_code: %s ,res_msg: %s", erron.ResCode, erron.ResMessage)
@@ -124,12 +128,20 @@ func (y *Cloud189PC) request(url, method string, callback base.ReqCallback, para
 	}
 }
 
+func (y *Cloud189PC) request(url, method string, callback base.ReqCallback, params Params, resp interface{}) ([]byte, error) {
+	return y.request_(y.client, url, method, callback, params, resp)
+}
+
 func (y *Cloud189PC) get(url string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
 	return y.request(url, http.MethodGet, callback, nil, resp)
 }
 
 func (y *Cloud189PC) post(url string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
 	return y.request(url, http.MethodPost, callback, nil, resp)
+}
+
+func (y *Cloud189PC) put(url string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+	return y.request_(y.putClient, url, http.MethodPut, callback, nil, resp)
 }
 
 func (y *Cloud189PC) getFiles(ctx context.Context, fileId string) ([]model.Obj, error) {
@@ -619,6 +631,129 @@ func (y *Cloud189PC) FastUpload(ctx context.Context, dstDir model.Obj, file mode
 			"isLog":        "0",
 			"opertype":     "3",
 		}, nil)
+	return err
+}
+
+func (y *Cloud189PC) BigFileUpload(ctx context.Context, dstDir model.Obj, file model.FileStreamer, up driver.UpdateProgress) (err error) {
+	// 需要获取完整文件md5,必须支持 io.Seek
+	tempFile, err := utils.CreateTempFile(file.GetReadCloser())
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = tempFile.Close()
+		_ = os.Remove(tempFile.Name())
+	}()
+
+	const DEFAULT int64 = 10485760
+	count := int(math.Ceil(float64(file.GetSize()) / float64(DEFAULT)))
+
+	// 计算md5
+	fileMd5 := md5.New()
+	if _, err := io.Copy(fileMd5, tempFile); err != nil {
+		return err
+	}
+	if _, err = tempFile.Seek(0, io.SeekStart); err != nil {
+		return err
+	}
+	fileMd5Hex := strings.ToUpper(hex.EncodeToString(fileMd5.Sum(nil)))
+
+	// 创建上传会话
+	var uploadInfo CreateUploadFileResp
+
+	if y.isFamily() {
+		_, err = y.get(API_URL+"/family/file/createFamilyFile.action", func(req *resty.Request) {
+			req.SetContext(ctx)
+			req.SetQueryParams(map[string]string{
+				"familyId":     y.FamilyID,
+				"fileMd5":      fileMd5Hex,
+				"fileName":     file.GetName(),
+				"fileSize":     fmt.Sprint(file.GetSize()),
+				"parentId":     dstDir.GetID(),
+				"resumePolicy": "1",
+			})
+		}, &uploadInfo)
+	} else {
+		_, err = y.post(API_URL+"/createUploadFile.action", func(req *resty.Request) {
+			req.SetContext(ctx)
+			req.SetFormData(map[string]string{
+				"parentFolderId": dstDir.GetID(),
+				"fileName":       file.GetName(),
+				"size":           fmt.Sprint(file.GetSize()),
+				"md5":            fileMd5Hex,
+				"opertype":       "3",
+				"flag":           "1",
+				"resumePolicy":   "1",
+				"isLog":          "0",
+				// "baseFileId":     "",
+				// "lastWrite":"",
+				// "localPath": strings.ReplaceAll(param.LocalPath, "\\", "/"),
+				// "fileExt": "",
+			})
+		}, &uploadInfo)
+	}
+
+	if err != nil {
+		return err
+	}
+
+	// 网盘中不存在该文件，开始上传
+	if uploadInfo.FileDataExists != 1 {
+		for i := 0; i < count; i++ {
+			start := int64(i) * DEFAULT
+			end := file.GetSize() - start
+			if end > DEFAULT {
+				end = DEFAULT
+			}
+
+			_, err = y.put(uploadInfo.FileUploadUrl, func(req *resty.Request) {
+				req.SetContext(ctx).
+					SetHeaders(map[string]string{
+						"ResumePolicy":           "1",
+						"Edrive-UploadFileRange": fmt.Sprintf("bytes=%d-%d", start, start+end-1),
+						"Expect":                 "100-continue",
+					}).
+					SetBody(io.LimitReader(tempFile, DEFAULT))
+
+				if y.isFamily() {
+					req.SetHeaders(map[string]string{
+						"FamilyId":     fmt.Sprint(y.FamilyID),
+						"UploadFileId": fmt.Sprint(uploadInfo.UploadFileId),
+					})
+				} else {
+					req.SetHeaders(map[string]string{
+						"Edrive-UploadFileId": fmt.Sprint(uploadInfo.UploadFileId),
+					})
+				}
+			}, nil)
+
+			if err != nil {
+				return err
+			}
+			up(int(i * 100 / count))
+		}
+	}
+
+	// 提交
+	var resp CommitUploadFileResp
+	if y.isFamily() {
+		_, err = y.get(uploadInfo.FileCommitUrl, func(req *resty.Request) {
+			req.SetContext(ctx).SetHeaders(map[string]string{
+				"ResumePolicy": "1",
+				"UploadFileId": fmt.Sprint(uploadInfo.UploadFileId),
+				"FamilyId":     fmt.Sprint(y.FamilyID),
+			})
+		}, &resp)
+	} else {
+		_, err = y.post(uploadInfo.FileCommitUrl, func(req *resty.Request) {
+			req.SetContext(ctx).SetFormData(map[string]string{
+				"opertype":     "3",
+				"ResumePolicy": "1",
+				"uploadFileId": fmt.Sprint(uploadInfo.UploadFileId),
+				"isLog":        "0",
+			})
+		}, &resp)
+	}
 	return err
 }
 

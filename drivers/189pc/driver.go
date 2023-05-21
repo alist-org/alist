@@ -266,8 +266,14 @@ func (y *Cloud189PC) Remove(ctx context.Context, obj model.Obj) error {
 }
 
 func (y *Cloud189PC) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
-	if y.RapidUpload {
+	switch y.UploadMethod {
+	case "stream":
+		return y.CommonUpload(ctx, dstDir, stream, up)
+	case "bigfile":
+		return y.BigFileUpload(ctx, dstDir, stream, up)
+	case "rapid":
 		return y.FastUpload(ctx, dstDir, stream, up)
+	default:
+		return y.CommonUpload(ctx, dstDir, stream, up)
 	}
-	return y.CommonUpload(ctx, dstDir, stream, up)
 }

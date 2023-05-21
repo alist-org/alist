@@ -218,6 +218,30 @@ type Part struct {
 	RequestHeader string `json:"requestHeader"`
 }
 
+/* 第二种上传方式 */
+type CreateUploadFileResp struct {
+	// 上传文件请求ID
+	UploadFileId int64 `json:"uploadFileId"`
+	// 上传文件数据的URL路径
+	FileUploadUrl string `json:"fileUploadUrl"`
+	// 上传文件完成后确认路径
+	FileCommitUrl string `json:"fileCommitUrl"`
+	// 文件是否已存在云盘中，0-未存在，1-已存在
+	FileDataExists int `json:"fileDataExists"`
+}
+
+type CommitUploadFileResp struct {
+	XMLName    xml.Name `xml:"file"`
+	Id         string   `xml:"id"`
+	Name       string   `xml:"name"`
+	Size       string   `xml:"size"`
+	Md5        string   `xml:"md5"`
+	CreateDate string   `xml:"createDate"`
+	Rev        string   `xml:"rev"`
+	UserId     string   `xml:"userId"`
+}
+
+/* query 加密参数*/
 type Params map[string]string
 
 func (p Params) Set(k, v string) {
