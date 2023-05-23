@@ -19,7 +19,7 @@
 #
 # Note: At this stage, only the compiled executable file is kept, 
 # and the metadata of the image will be set in the next stage.
-FROM golang:1-alpine AS builder
+FROM golang:1.20-alpine3.18 AS builder
 
 ENV WEBDIST_URL https://github.com/alist-org/alist-web/releases/latest/download/dist.tar.gz
 ENV WEBDIST_API_URL https://api.github.com/repos/alist-org/alist-web/releases/latest
@@ -29,7 +29,7 @@ COPY ./ /go/src/alist
 WORKDIR /go/src/alist
 
 RUN set -ex \
-    && apk add bash curl git jq gcc musl-dev \
+    && apk add --no-cache bash curl git jq gcc musl-dev \
     && export builtAt="$(date +'%F %T %z')" \
     && export goVersion="$(go version | sed 's/go version //')" \
     && export gitAuthor="Xhofe <i@nn.ci>" \
@@ -48,7 +48,7 @@ RUN set -ex \
 
 
 # Build the final Docker image.
-FROM alpine AS dist
+FROM alpine:3.18 AS dist
 
 LABEL maintainer="i@nn.ci"
 LABEL repository="https://github.com/alist-org/alist"
