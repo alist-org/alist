@@ -10,18 +10,54 @@ import (
 
 // 居然有四种返回方式
 type RespErr struct {
-	ResCode    string `json:"res_code"`
+	ResCode    any    `json:"res_code"` // int or string
 	ResMessage string `json:"res_message"`
 
 	XMLName xml.Name `xml:"error"`
 	Code    string   `json:"code" xml:"code"`
 	Message string   `json:"message" xml:"message"`
-
-	// Code    string `json:"code"`
-	Msg string `json:"msg"`
+	Msg     string   `json:"msg"`
 
 	ErrorCode string `json:"errorCode"`
 	ErrorMsg  string `json:"errorMsg"`
+}
+
+func (e *RespErr) HasError() bool {
+	switch v := e.ResCode.(type) {
+	case int, int64, int32:
+		return v != 0
+	case string:
+		return e.ResCode != ""
+	}
+	return (e.Code != "" && e.Code != "SUCCESS") || e.ErrorCode != ""
+}
+
+func (e *RespErr) Error() string {
+	switch v := e.ResCode.(type) {
+	case int, int64, int32:
+		if v != 0 {
+			return fmt.Sprintf("res_code: %d ,res_msg: %s", v, e.ResMessage)
+		}
+	case string:
+		if e.ResCode != "" {
+			return fmt.Sprintf("res_code: %s ,res_msg: %s", e.ResCode, e.ResMessage)
+		}
+	}
+
+	if e.Code != "" && e.Code != "SUCCESS" {
+		if e.Msg != "" {
+			return fmt.Sprintf("code: %s ,msg: %s", e.Code, e.Msg)
+		}
+		if e.Message != "" {
+			return fmt.Sprintf("code: %s ,msg: %s", e.Code, e.Message)
+		}
+		return "code: " + e.Code
+	}
+
+	if e.ErrorCode != "" {
+		return fmt.Sprintf("err_code: %s ,err_msg: %s", e.ErrorCode, e.ErrorMsg)
+	}
+	return ""
 }
 
 // 登陆需要的参数
@@ -228,6 +264,18 @@ type CreateUploadFileResp struct {
 	FileCommitUrl string `json:"fileCommitUrl"`
 	// 文件是否已存在云盘中，0-未存在，1-已存在
 	FileDataExists int `json:"fileDataExists"`
+}
+
+type GetUploadFileStatusResp struct {
+	CreateUploadFileResp
+
+	// 已上传的大小
+	DataSize int64 `json:"dataSize"`
+	Size     int64 `json:"size"`
+}
+
+func (r *GetUploadFileStatusResp) GetSize() int64 {
+	return r.DataSize + r.Size
 }
 
 type CommitUploadFileResp struct {

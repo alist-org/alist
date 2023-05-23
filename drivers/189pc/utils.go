@@ -6,7 +6,6 @@ import (
 	"crypto/md5"
 	"encoding/base64"
 	"encoding/hex"
-	"encoding/xml"
 	"fmt"
 	"io"
 	"math"
@@ -71,6 +70,9 @@ func (y *Cloud189PC) request_(client *resty.Client, url, method string, callback
 	}
 	req.SetHeader("Signature", signatureOfHmac(sessionSecret, sessionKey, method, url, dateOfGmt, paramsData))
 
+	var erron RespErr
+	req.SetError(&erron)
+
 	if callback != nil {
 		callback(req)
 	}
@@ -82,35 +84,6 @@ func (y *Cloud189PC) request_(client *resty.Client, url, method string, callback
 		return nil, err
 	}
 
-	// 处理错误
-	var erron RespErr
-	utils.Json.Unmarshal(res.Body(), &erron)
-	xml.Unmarshal(res.Body(), &erron)
-
-	if erron.ResCode != "" {
-		return nil, fmt.Errorf("res_code: %s ,res_msg: %s", erron.ResCode, erron.ResMessage)
-	}
-	if erron.Code != "" && erron.Code != "SUCCESS" {
-		if erron.Msg != "" {
-			return nil, fmt.Errorf("code: %s ,msg: %s", erron.Code, erron.Msg)
-		}
-		if erron.Message != "" {
-			return nil, fmt.Errorf("code: %s ,msg: %s", erron.Code, erron.Message)
-		}
-		return nil, fmt.Errorf(res.String())
-	}
-	switch erron.ErrorCode {
-	case "":
-		break
-	case "InvalidSessionKey":
-		if err = y.refreshSession(); err != nil {
-			return nil, err
-		}
-		return y.request(url, method, callback, params, resp)
-	default:
-		return nil, fmt.Errorf("err_code: %s ,err_msg: %s", erron.ErrorCode, erron.ErrorMsg)
-	}
-
 	if strings.Contains(res.String(), "userSessionBO is null") {
 		if err = y.refreshSession(); err != nil {
 			return nil, err
@@ -118,14 +91,17 @@ func (y *Cloud189PC) request_(client *resty.Client, url, method string, callback
 		return y.request(url, method, callback, params, resp)
 	}
 
-	resCode := utils.Json.Get(res.Body(), "res_code").ToInt64()
-	message := utils.Json.Get(res.Body(), "res_message").ToString()
-	switch resCode {
-	case 0:
-		return res.Body(), nil
-	default:
-		return nil, fmt.Errorf("res_code: %d ,res_msg: %s", resCode, message)
+	// 处理错误
+	if erron.HasError() {
+		if erron.ErrorCode == "InvalidSessionKey" {
+			if err = y.refreshSession(); err != nil {
+				return nil, err
+			}
+			return y.request(url, method, callback, params, resp)
+		}
+		return nil, &erron
 	}
+	return res.Body(), nil
 }
 
 func (y *Cloud189PC) request(url, method string, callback base.ReqCallback, params Params, resp interface{}) ([]byte, error) {
@@ -261,9 +237,8 @@ func (y *Cloud189PC) login() (err error) {
 		return
 	}
 
-	if erron.ResCode != "" {
-		err = fmt.Errorf(erron.ResMessage)
-		return
+	if erron.HasError() {
+		return &erron
 	}
 	if tokenInfo.ResCode != 0 {
 		err = fmt.Errorf(tokenInfo.ResMessage)
@@ -386,24 +361,15 @@ func (y *Cloud189PC) refreshSession() (err error) {
 		}
 	}()
 
-	switch erron.ResCode {
-	case "":
-		break
-	case "UserInvalidOpenToken":
-		if err = y.login(); err != nil {
-			return err
+	if erron.HasError() {
+		if erron.ResCode == "UserInvalidOpenToken" {
+			if err = y.login(); err != nil {
+				return err
+			}
 		}
-	default:
-		err = fmt.Errorf("res_code: %s ,res_msg: %s", erron.ResCode, erron.ResMessage)
-		return
+		return &erron
 	}
-
-	switch userSessionResp.ResCode {
-	case 0:
-		y.tokenInfo.UserSessionResp = userSessionResp
-	default:
-		err = fmt.Errorf("code: %d , msg: %s", userSessionResp.ResCode, userSessionResp.ResMessage)
-	}
+	y.tokenInfo.UserSessionResp = userSessionResp
 	return
 }
 
@@ -603,10 +569,8 @@ func (y *Cloud189PC) FastUpload(ctx context.Context, dstDir model.Obj, file mode
 		}
 
 		for i := 1; i <= count; i++ {
-			select {
-			case <-ctx.Done():
+			if utils.IsCanceled(ctx) {
 				return ctx.Err()
-			default:
 			}
 
 			uploadData := uploadUrls.UploadUrls[fmt.Sprint("partNumber_", i)]
@@ -650,8 +614,7 @@ func (y *Cloud189PC) BigFileUpload(ctx context.Context, dstDir model.Obj, file m
 		_ = os.Remove(tempFile.Name())
 	}()
 
-	const DEFAULT int64 = 10485760
-	count := int(math.Ceil(float64(file.GetSize()) / float64(DEFAULT)))
+	const DEFAULT int64 = 104857600 // 100MB
 
 	// 计算md5
 	fileMd5 := md5.New()
@@ -666,9 +629,13 @@ func (y *Cloud189PC) BigFileUpload(ctx context.Context, dstDir model.Obj, file m
 	// 创建上传会话
 	var uploadInfo CreateUploadFileResp
 
+	fullUrl := API_URL + "/createUploadFile.action"
 	if y.isFamily() {
-		_, err = y.get(API_URL+"/family/file/createFamilyFile.action", func(req *resty.Request) {
-			req.SetContext(ctx)
+		fullUrl = API_URL + "/family/file/createFamilyFile.action"
+	}
+	_, err = y.post(fullUrl, func(req *resty.Request) {
+		req.SetContext(ctx)
+		if y.isFamily() {
 			req.SetQueryParams(map[string]string{
 				"familyId":     y.FamilyID,
 				"fileMd5":      fileMd5Hex,
@@ -677,10 +644,7 @@ func (y *Cloud189PC) BigFileUpload(ctx context.Context, dstDir model.Obj, file m
 				"parentId":     dstDir.GetID(),
 				"resumePolicy": "1",
 			})
-		}, &uploadInfo)
-	} else {
-		_, err = y.post(API_URL+"/createUploadFile.action", func(req *resty.Request) {
-			req.SetContext(ctx)
+		} else {
 			req.SetFormData(map[string]string{
 				"parentFolderId": dstDir.GetID(),
 				"fileName":       file.GetName(),
@@ -695,70 +659,87 @@ func (y *Cloud189PC) BigFileUpload(ctx context.Context, dstDir model.Obj, file m
 				// "localPath": strings.ReplaceAll(param.LocalPath, "\\", "/"),
 				// "fileExt": "",
 			})
-		}, &uploadInfo)
-	}
+		}
+	}, &uploadInfo)
 
 	if err != nil {
 		return err
 	}
 
 	// 网盘中不存在该文件，开始上传
-	if uploadInfo.FileDataExists != 1 {
-		for i := 0; i < count; i++ {
-			start := int64(i) * DEFAULT
-			end := file.GetSize() - start
-			if end > DEFAULT {
-				end = DEFAULT
-			}
-
-			_, err = y.put(uploadInfo.FileUploadUrl, func(req *resty.Request) {
-				req.SetContext(ctx).
-					SetHeaders(map[string]string{
-						"ResumePolicy":           "1",
-						"Edrive-UploadFileRange": fmt.Sprintf("bytes=%d-%d", start, start+end-1),
-						"Expect":                 "100-continue",
-					}).
-					SetBody(io.LimitReader(tempFile, DEFAULT))
-
-				if y.isFamily() {
-					req.SetHeaders(map[string]string{
-						"FamilyId":     fmt.Sprint(y.FamilyID),
-						"UploadFileId": fmt.Sprint(uploadInfo.UploadFileId),
-					})
-				} else {
-					req.SetHeaders(map[string]string{
-						"Edrive-UploadFileId": fmt.Sprint(uploadInfo.UploadFileId),
-					})
-				}
-			}, nil)
-
-			if err != nil {
-				return err
-			}
-			up(int(i * 100 / count))
+	status := GetUploadFileStatusResp{CreateUploadFileResp: uploadInfo}
+	for status.Size < file.GetSize() && status.FileDataExists != 1 {
+		if utils.IsCanceled(ctx) {
+			return ctx.Err()
 		}
+
+		// 上传
+		_, err = y.put(status.FileUploadUrl, func(req *resty.Request) {
+			req.SetContext(ctx).
+				SetHeaders(map[string]string{
+					"ResumePolicy": "1",
+					"Expect":       "100-continue",
+				}).
+				SetBody(io.LimitReader(tempFile, DEFAULT))
+
+			if y.isFamily() {
+				req.SetHeaders(map[string]string{
+					"FamilyId":     fmt.Sprint(y.FamilyID),
+					"UploadFileId": fmt.Sprint(status.UploadFileId),
+				})
+			} else {
+				req.SetHeaders(map[string]string{
+					"Edrive-UploadFileId": fmt.Sprint(status.UploadFileId),
+				})
+			}
+		}, nil)
+		if err, ok := err.(*RespErr); ok && err.Code != "InputStreamReadError" {
+			return err
+		}
+
+		// 获取断点状态
+		fullUrl := API_URL + "/getUploadFileStatus.action"
+		if y.isFamily() {
+			fullUrl = API_URL + "/family/file/getFamilyFileStatus.action"
+		}
+		_, err = y.get(fullUrl, func(req *resty.Request) {
+			req.SetContext(ctx).SetQueryParams(map[string]string{
+				"uploadFileId": fmt.Sprint(status.UploadFileId),
+				"resumePolicy": "1",
+			})
+			if y.isFamily() {
+				req.SetQueryParam("familyId", fmt.Sprint(y.FamilyID))
+			}
+		}, &status)
+		if err != nil {
+			return err
+		}
+
+		if _, err := tempFile.Seek(status.GetSize(), io.SeekStart); err != nil {
+			return err
+		}
+		up(int(status.Size / file.GetSize()))
 	}
 
 	// 提交
 	var resp CommitUploadFileResp
-	if y.isFamily() {
-		_, err = y.get(uploadInfo.FileCommitUrl, func(req *resty.Request) {
-			req.SetContext(ctx).SetHeaders(map[string]string{
+	_, err = y.post(status.FileCommitUrl, func(req *resty.Request) {
+		req.SetContext(ctx)
+		if y.isFamily() {
+			req.SetHeaders(map[string]string{
 				"ResumePolicy": "1",
-				"UploadFileId": fmt.Sprint(uploadInfo.UploadFileId),
+				"UploadFileId": fmt.Sprint(status.UploadFileId),
 				"FamilyId":     fmt.Sprint(y.FamilyID),
 			})
-		}, &resp)
-	} else {
-		_, err = y.post(uploadInfo.FileCommitUrl, func(req *resty.Request) {
-			req.SetContext(ctx).SetFormData(map[string]string{
+		} else {
+			req.SetFormData(map[string]string{
 				"opertype":     "3",
-				"ResumePolicy": "1",
-				"uploadFileId": fmt.Sprint(uploadInfo.UploadFileId),
+				"resumePolicy": "1",
+				"uploadFileId": fmt.Sprint(status.UploadFileId),
 				"isLog":        "0",
 			})
-		}, &resp)
-	}
+		}
+	}, &resp)
 	return err
 }
 
