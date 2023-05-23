@@ -375,7 +375,7 @@ func (y *Cloud189PC) refreshSession() (err error) {
 
 // 普通上传
 func (y *Cloud189PC) CommonUpload(ctx context.Context, dstDir model.Obj, file model.FileStreamer, up driver.UpdateProgress) (err error) {
-	const DEFAULT int64 = 10485760
+	const DEFAULT int64 = 20971520 // 20M
 	var count = int64(math.Ceil(float64(file.GetSize()) / float64(DEFAULT)))
 
 	requestID := uuid.NewString()
@@ -493,7 +493,7 @@ func (y *Cloud189PC) FastUpload(ctx context.Context, dstDir model.Obj, file mode
 		_ = os.Remove(tempFile.Name())
 	}()
 
-	const DEFAULT int64 = 10485760
+	const DEFAULT int64 = 20971520 // 20M
 	count := int(math.Ceil(float64(file.GetSize()) / float64(DEFAULT)))
 
 	// 优先计算所需信息
@@ -614,7 +614,7 @@ func (y *Cloud189PC) BigFileUpload(ctx context.Context, dstDir model.Obj, file m
 		_ = os.Remove(tempFile.Name())
 	}()
 
-	const DEFAULT int64 = 104857600 // 100MB
+	const DEFAULT int64 = 104857600 // 100M
 
 	// 计算md5
 	fileMd5 := md5.New()
