@@ -61,6 +61,7 @@
     - [x] [和彩云](https://yun.139.com/) (个人云, 家庭云)
     - [x] [Yandex.Disk](https://disk.yandex.com/)
     - [x] [百度网盘](http://pan.baidu.com/)
+    - [x] [UC网盘](https://drive.uc.cn)
     - [x] [夸克网盘](https://pan.quark.cn)
     - [x] [迅雷网盘](https://pan.xunlei.com)
     - [x] [蓝奏云](https://www.lanzou.com/)
