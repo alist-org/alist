@@ -136,11 +136,13 @@ func (d *S3) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreame
 		uploader.PartSize = stream.GetSize() / (s3manager.MaxUploadParts - 1)
 	}
 	key := getKey(stdpath.Join(dstDir.GetPath(), stream.GetName()), false)
+	contentType := stream.GetMimetype()
 	log.Debugln("key:", key)
 	input := &s3manager.UploadInput{
-		Bucket: &d.Bucket,
-		Key:    &key,
-		Body:   stream,
+		Bucket:      &d.Bucket,
+		Key:         &key,
+		Body:        stream,
+		ContentType: &contentType,
 	}
 	_, err := uploader.UploadWithContext(ctx, input)
 	return err
