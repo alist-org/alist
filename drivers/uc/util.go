@@ -1,4 +1,4 @@
-package quark
+package uc
 
 import (
 	"context"
@@ -22,15 +22,15 @@ import (
 
 // do others that not defined in Driver interface
 
-func (d *Quark) request(pathname string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
-	u := "https://drive.quark.cn/1/clouddrive" + pathname
+func (d *UC) request(pathname string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+	u := "https://pc-api.uc.cn/1/clouddrive" + pathname
 	req := base.RestyClient.R()
 	req.SetHeaders(map[string]string{
 		"Cookie":  d.Cookie,
 		"Accept":  "application/json, text/plain, */*",
-		"Referer": "https://pan.quark.cn/",
+		"Referer": "https://drive.uc.cn/",
 	})
-	req.SetQueryParam("pr", "ucpro")
+	req.SetQueryParam("pr", "UCBrowser")
 	req.SetQueryParam("fr", "pc")
 	if callback != nil {
 		callback(req)
@@ -55,7 +55,7 @@ func (d *Quark) request(pathname string, method string, callback base.ReqCallbac
 	return res.Body(), nil
 }
 
-func (d *Quark) GetFiles(parent string) ([]File, error) {
+func (d *UC) GetFiles(parent string) ([]File, error) {
 	files := make([]File, 0)
 	page := 1
 	size := 100
@@ -85,7 +85,7 @@ func (d *Quark) GetFiles(parent string) ([]File, error) {
 	return files, nil
 }
 
-func (d *Quark) upPre(file model.FileStreamer, parentId string) (UpPreResp, error) {
+func (d *UC) upPre(file model.FileStreamer, parentId string) (UpPreResp, error) {
 	now := time.Now()
 	data := base.Json{
 		"ccp_hash_update": true,
@@ -105,7 +105,7 @@ func (d *Quark) upPre(file model.FileStreamer, parentId string) (UpPreResp, erro
 	return resp, err
 }
 
-func (d *Quark) upHash(md5, sha1, taskId string) (bool, error) {
+func (d *UC) upHash(md5, sha1, taskId string) (bool, error) {
 	data := base.Json{
 		"md5":     md5,
 		"sha1":    sha1,
@@ -119,8 +119,8 @@ func (d *Quark) upHash(md5, sha1, taskId string) (bool, error) {
 	return resp.Data.Finish, err
 }
 
-func (d *Quark) upPart(ctx context.Context, pre UpPreResp, mineType string, partNumber int, bytes []byte) (string, error) {
-	//func (driver Quark) UpPart(pre UpPreResp, mineType string, partNumber int, bytes []byte, account *model.Account, md5Str, sha1Str string) (string, error) {
+func (d *UC) upPart(ctx context.Context, pre UpPreResp, mineType string, partNumber int, bytes []byte) (string, error) {
+	//func (driver UC) UpPart(pre UpPreResp, mineType string, partNumber int, bytes []byte, account *model.Account, md5Str, sha1Str string) (string, error) {
 	timeStr := time.Now().UTC().Format(http.TimeFormat)
 	data := base.Json{
 		"auth_info": pre.Data.AuthInfo,
@@ -155,7 +155,7 @@ x-oss-user-agent:aliyun-sdk-js/6.6.1 Chrome 98.0.4758.80 on Windows 10 64-bit
 		SetHeaders(map[string]string{
 			"Authorization":    resp.Data.AuthKey,
 			"Content-Type":     mineType,
-			"Referer":          "https://pan.quark.cn/",
+			"Referer":          "https://drive.uc.cn/",
 			"x-oss-date":       timeStr,
 			"x-oss-user-agent": "aliyun-sdk-js/6.6.1 Chrome 98.0.4758.80 on Windows 10 64-bit",
 		}).
@@ -169,7 +169,7 @@ x-oss-user-agent:aliyun-sdk-js/6.6.1 Chrome 98.0.4758.80 on Windows 10 64-bit
 	return res.Header().Get("ETag"), nil
 }
 
-func (d *Quark) upCommit(pre UpPreResp, md5s []string) error {
+func (d *UC) upCommit(pre UpPreResp, md5s []string) error {
 	timeStr := time.Now().UTC().Format(http.TimeFormat)
 	log.Debugf("md5s: %+v", md5s)
 	bodyBuilder := strings.Builder{}
@@ -222,7 +222,7 @@ x-oss-user-agent:aliyun-sdk-js/6.6.1 Chrome 98.0.4758.80 on Windows 10 64-bit
 			"Authorization":    resp.Data.AuthKey,
 			"Content-MD5":      contentMd5,
 			"Content-Type":     "application/xml",
-			"Referer":          "https://pan.quark.cn/",
+			"Referer":          "https://drive.uc.cn/",
 			"x-oss-callback":   callbackBase64,
 			"x-oss-date":       timeStr,
 			"x-oss-user-agent": "aliyun-sdk-js/6.6.1 Chrome 98.0.4758.80 on Windows 10 64-bit",
@@ -236,7 +236,7 @@ x-oss-user-agent:aliyun-sdk-js/6.6.1 Chrome 98.0.4758.80 on Windows 10 64-bit
 	return nil
 }
 
-func (d *Quark) upFinish(pre UpPreResp) error {
+func (d *UC) upFinish(pre UpPreResp) error {
 	data := base.Json{
 		"obj_key": pre.Data.ObjKey,
 		"task_id": pre.Data.TaskId,

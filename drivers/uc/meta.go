@@ -1,4 +1,4 @@
-package quark
+package uc
 
 import (
 	"github.com/alist-org/alist/v3/internal/driver"
@@ -13,7 +13,7 @@ type Addition struct {
 }
 
 var config = driver.Config{
-	Name:              "Quark",
+	Name:              "UC",
 	OnlyLocal:         true,
 	DefaultRoot:       "0",
 	NoOverwriteUpload: true,
@@ -21,6 +21,6 @@ var config = driver.Config{
 
 func init() {
 	op.RegisterDriver(func() driver.Driver {
-		return &Quark{}
+		return &UC{}
 	})
 }

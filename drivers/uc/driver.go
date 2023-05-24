@@ -1,4 +1,4 @@
-package quark
+package uc
 
 import (
 	"context"
@@ -22,29 +22,29 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type Quark struct {
+type UC struct {
 	model.Storage
 	Addition
 }
 
-func (d *Quark) Config() driver.Config {
+func (d *UC) Config() driver.Config {
 	return config
 }
 
-func (d *Quark) GetAddition() driver.Additional {
+func (d *UC) GetAddition() driver.Additional {
 	return &d.Addition
 }
 
-func (d *Quark) Init(ctx context.Context) error {
+func (d *UC) Init(ctx context.Context) error {
 	_, err := d.request("/config", http.MethodGet, nil, nil)
 	return err
 }
 
-func (d *Quark) Drop(ctx context.Context) error {
+func (d *UC) Drop(ctx context.Context) error {
 	return nil
 }
 
-func (d *Quark) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
+func (d *UC) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
 	files, err := d.GetFiles(dir.GetID())
 	if err != nil {
 		return nil, err
@@ -54,12 +54,12 @@ func (d *Quark) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([
 	})
 }
 
-func (d *Quark) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
+func (d *UC) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	data := base.Json{
 		"fids": []string{file.GetID()},
 	}
 	var resp DownResp
-	ua := "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) quark-cloud-drive/2.5.20 Chrome/100.0.4896.160 Electron/18.3.5.4-b478491100 Safari/537.36 Channel/pckk_other_ch"
+	ua := "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) uc-cloud-drive/2.5.20 Chrome/100.0.4896.160 Electron/18.3.5.4-b478491100 Safari/537.36 Channel/pckk_other_ch"
 	_, err := d.request("/file/download", http.MethodPost, func(req *resty.Request) {
 		req.SetHeader("User-Agent", ua).
 			SetBody(data)
@@ -101,7 +101,7 @@ func (d *Quark) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 					req.Header.Set("Range", _range)
 					req.Header.Set("User-Agent", ua)
 					req.Header.Set("Cookie", d.Cookie)
-					req.Header.Set("Referer", "https://pan.quark.cn")
+					req.Header.Set("Referer", "https://drive.uc.cn")
 					resp, err := base.HttpClient.Do(req)
 					if err != nil {
 						return err
@@ -123,7 +123,7 @@ func (d *Quark) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 	}, nil
 }
 
-func (d *Quark) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
+func (d *UC) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
 	data := base.Json{
 		"dir_init_lock": false,
 		"dir_path":      "",
@@ -139,7 +139,7 @@ func (d *Quark) MakeDir(ctx context.Context, parentDir model.Obj, dirName string
 	return err
 }
 
-func (d *Quark) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
+func (d *UC) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 	data := base.Json{
 		"action_type":  1,
 		"exclude_fids": []string{},
@@ -152,7 +152,7 @@ func (d *Quark) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 	return err
 }
 
-func (d *Quark) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
+func (d *UC) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
 	data := base.Json{
 		"fid":       srcObj.GetID(),
 		"file_name": newName,
@@ -163,11 +163,11 @@ func (d *Quark) Rename(ctx context.Context, srcObj model.Obj, newName string) er
 	return err
 }
 
-func (d *Quark) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
+func (d *UC) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 	return errs.NotSupport
 }
 
-func (d *Quark) Remove(ctx context.Context, obj model.Obj) error {
+func (d *UC) Remove(ctx context.Context, obj model.Obj) error {
 	data := base.Json{
 		"action_type":  1,
 		"exclude_fids": []string{},
@@ -179,7 +179,7 @@ func (d *Quark) Remove(ctx context.Context, obj model.Obj) error {
 	return err
 }
 
-func (d *Quark) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
+func (d *UC) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
 	tempFile, err := utils.CreateTempFile(stream.GetReadCloser())
 	if err != nil {
 		return err
@@ -264,4 +264,4 @@ func (d *Quark) Put(ctx context.Context, dstDir model.Obj, stream model.FileStre
 	return d.upFinish(pre)
 }
 
-var _ driver.Driver = (*Quark)(nil)
+var _ driver.Driver = (*UC)(nil)
