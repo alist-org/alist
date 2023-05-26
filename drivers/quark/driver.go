@@ -69,58 +69,60 @@ func (d *Quark) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 	}
 	u := resp.Data[0].DownloadUrl
 	start, end := int64(0), file.GetSize()
-	return &model.Link{
-		Handle: func(w http.ResponseWriter, r *http.Request) error {
-			if rg := r.Header.Get("Range"); rg != "" {
-				parseRange, err := http_range.ParseRange(rg, file.GetSize())
-				if err != nil {
-					return err
-				}
-				start, end = parseRange[0].Start, parseRange[0].Start+parseRange[0].Length
-				w.Header().Set("Content-Range", parseRange[0].ContentRange(file.GetSize()))
-				w.Header().Set("Content-Length", strconv.FormatInt(parseRange[0].Length, 10))
-				w.WriteHeader(http.StatusPartialContent)
-			} else {
-				w.Header().Set("Content-Length", strconv.FormatInt(file.GetSize(), 10))
-				w.WriteHeader(http.StatusOK)
+	link := model.Link{
+		Header: http.Header{},
+	}
+	if rg := args.Header.Get("Range"); rg != "" {
+		parseRange, err := http_range.ParseRange(rg, file.GetSize())
+		if err != nil {
+			return nil, err
+		}
+		start, end = parseRange[0].Start, parseRange[0].Start+parseRange[0].Length
+		link.Header.Set("Content-Range", parseRange[0].ContentRange(file.GetSize()))
+		link.Header.Set("Content-Length", strconv.FormatInt(parseRange[0].Length, 10))
+		link.Status = http.StatusPartialContent
+	} else {
+		link.Header.Set("Content-Length", strconv.FormatInt(file.GetSize(), 10))
+		link.Status = http.StatusOK
+	}
+	link.Writer = func(w io.Writer) error {
+		// request 10 MB at a time
+		chunkSize := int64(10 * 1024 * 1024)
+		for start < end {
+			_end := start + chunkSize
+			if _end > end {
+				_end = end
 			}
-			// request 10 MB at a time
-			chunkSize := int64(10 * 1024 * 1024)
-			for start < end {
-				_end := start + chunkSize
-				if _end > end {
-					_end = end
-				}
-				_range := "bytes=" + strconv.FormatInt(start, 10) + "-" + strconv.FormatInt(_end-1, 10)
-				start = _end
-				err = func() error {
-					req, err := http.NewRequest(r.Method, u, nil)
-					if err != nil {
-						return err
-					}
-					req.Header.Set("Range", _range)
-					req.Header.Set("User-Agent", ua)
-					req.Header.Set("Cookie", d.Cookie)
-					req.Header.Set("Referer", "https://pan.quark.cn")
-					resp, err := base.HttpClient.Do(req)
-					if err != nil {
-						return err
-					}
-					defer resp.Body.Close()
-					if resp.StatusCode != http.StatusPartialContent {
-						return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
-					}
-					_, err = io.Copy(w, resp.Body)
-					return err
-				}()
+			_range := "bytes=" + strconv.FormatInt(start, 10) + "-" + strconv.FormatInt(_end-1, 10)
+			start = _end
+			err = func() error {
+				req, err := http.NewRequest(http.MethodGet, u, nil)
 				if err != nil {
 					return err
 				}
+				req.Header.Set("Range", _range)
+				req.Header.Set("User-Agent", ua)
+				req.Header.Set("Cookie", d.Cookie)
+				req.Header.Set("Referer", "https://pan.quark.cn")
+				resp, err := base.HttpClient.Do(req)
+				if err != nil {
+					return err
+				}
+				defer resp.Body.Close()
+				if resp.StatusCode != http.StatusPartialContent {
+					return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+				}
+				_, err = io.Copy(w, resp.Body)
+				return err
+			}()
+			if err != nil {
+				return err
+			}
 
-			}
-			return nil
-		},
-	}, nil
+		}
+		return nil
+	}
+	return &link, nil
 }
 
 func (d *Quark) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
