@@ -19,7 +19,7 @@ type LinkArgs struct {
 
 type Link struct {
 	URL        string         `json:"url"`
-	Header     http.Header    `json:"header"` // needed header
+	Header     http.Header    `json:"header"` // needed header (for url) or response header(for data or writer)
 	Data       io.ReadCloser  // return file reader directly
 	Status     int            // status maybe 200 or 206, etc
 	FilePath   *string        // local file, return the filepath
