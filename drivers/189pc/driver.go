@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
@@ -19,8 +18,7 @@ type Cloud189PC struct {
 
 	identity string
 
-	client    *resty.Client
-	putClient *resty.Client
+	client *resty.Client
 
 	loginParam *LoginParam
 	tokenInfo  *AppSessionResp
@@ -50,9 +48,6 @@ func (y *Cloud189PC) Init(ctx context.Context) (err error) {
 			"Accept":  "application/json;charset=UTF-8",
 			"Referer": WEB_URL,
 		})
-	}
-	if y.putClient == nil {
-		y.putClient = base.NewRestyClient().SetTimeout(120 * time.Second)
 	}
 
 	// 避免重复登陆
@@ -266,8 +261,14 @@ func (y *Cloud189PC) Remove(ctx context.Context, obj model.Obj) error {
 }
 
 func (y *Cloud189PC) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
-	if y.RapidUpload {
+	switch y.UploadMethod {
+	case "stream":
+		return y.CommonUpload(ctx, dstDir, stream, up)
+	case "old":
+		return y.OldUpload(ctx, dstDir, stream, up)
+	case "rapid":
 		return y.FastUpload(ctx, dstDir, stream, up)
+	default:
+		return y.CommonUpload(ctx, dstDir, stream, up)
 	}
-	return y.CommonUpload(ctx, dstDir, stream, up)
 }

@@ -14,13 +14,14 @@ type Addition struct {
 	OrderDirection string `json:"order_direction" type:"select" options:"asc,desc" default:"asc"`
 	Type           string `json:"type" type:"select" options:"personal,family" default:"personal"`
 	FamilyID       string `json:"family_id"`
-	RapidUpload    bool   `json:"rapid_upload"`
+	UploadMethod   string `json:"upload_method" type:"select" options:"stream,rapid,old" default:"stream"`
 	NoUseOcr       bool   `json:"no_use_ocr"`
 }
 
 var config = driver.Config{
 	Name:        "189CloudPC",
 	DefaultRoot: "-11",
+	CheckStatus: true,
 }
 
 func init() {
