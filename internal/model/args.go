@@ -18,13 +18,14 @@ type LinkArgs struct {
 }
 
 type Link struct {
-	URL        string                                             `json:"url"`
-	Header     http.Header                                        `json:"header"` // needed header
-	Data       io.ReadCloser                                      // return file reader directly
-	Status     int                                                // status maybe 200 or 206, etc
-	FilePath   *string                                            // local file, return the filepath
-	Expiration *time.Duration                                     // url expiration time
-	Handle     func(w http.ResponseWriter, r *http.Request) error `json:"-"` // custom handler
+	URL        string         `json:"url"`
+	Header     http.Header    `json:"header"` // needed header
+	Data       io.ReadCloser  // return file reader directly
+	Status     int            // status maybe 200 or 206, etc
+	FilePath   *string        // local file, return the filepath
+	Expiration *time.Duration // url expiration time
+	//Handle     func(w http.ResponseWriter, r *http.Request) error `json:"-"` // custom handler
+	Writer WriterFunc `json:"-"` // custom writer
 }
 
 type OtherArgs struct {
@@ -38,3 +39,5 @@ type FsOtherArgs struct {
 	Method string      `json:"method" form:"method"`
 	Data   interface{} `json:"data" form:"data"`
 }
+
+type WriterFunc func(w io.Writer) error

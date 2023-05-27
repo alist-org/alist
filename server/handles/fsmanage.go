@@ -476,7 +476,7 @@ func Link(c *gin.Context) {
 		})
 		return
 	}
-	link, _, err := fs.Link(c, rawPath, model.LinkArgs{IP: c.ClientIP(), HttpReq: c.Request})
+	link, _, err := fs.Link(c, rawPath, model.LinkArgs{IP: c.ClientIP(), Header: c.Request.Header, HttpReq: c.Request})
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return

@@ -18,6 +18,7 @@ type LanZou struct {
 	Addition
 	model.Storage
 	uid string
+	vei string
 }
 
 func (d *LanZou) Config() driver.Config {
@@ -28,7 +29,7 @@ func (d *LanZou) GetAddition() driver.Additional {
 	return &d.Addition
 }
 
-func (d *LanZou) Init(ctx context.Context) error {
+func (d *LanZou) Init(ctx context.Context) (err error) {
 	if d.IsCookie() {
 		if d.RootFolderID == "" {
 			d.RootFolderID = "-1"
@@ -38,8 +39,9 @@ func (d *LanZou) Init(ctx context.Context) error {
 			return fmt.Errorf("cookie does not contain ylogin")
 		}
 		d.uid = ylogin[1]
+		d.vei, err = d.getVei()
 	}
-	return nil
+	return
 }
 
 func (d *LanZou) Drop(ctx context.Context) error {
