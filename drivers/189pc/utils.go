@@ -6,6 +6,7 @@ import (
 	"crypto/md5"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/xml"
 	"fmt"
 	"io"
 	"math"
@@ -15,6 +16,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/conf"
@@ -23,9 +25,12 @@ import (
 	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/internal/setting"
 	"github.com/alist-org/alist/v3/pkg/utils"
+
+	"github.com/avast/retry-go"
 	"github.com/go-resty/resty/v2"
 	"github.com/google/uuid"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -47,7 +52,7 @@ const (
 	CHANNEL_ID = "web_cloud.189.cn"
 )
 
-func (y *Cloud189PC) request_(client *resty.Client, url, method string, callback base.ReqCallback, params Params, resp interface{}) ([]byte, error) {
+func (y *Cloud189PC) SignatureHeader(url, method, params string) map[string]string {
 	dateOfGmt := getHttpDateStr()
 	sessionKey := y.tokenInfo.SessionKey
 	sessionSecret := y.tokenInfo.SessionSecret
@@ -56,19 +61,37 @@ func (y *Cloud189PC) request_(client *resty.Client, url, method string, callback
 		sessionSecret = y.tokenInfo.FamilySessionSecret
 	}
 
-	req := client.R().SetQueryParams(clientSuffix()).SetHeaders(map[string]string{
+	header := map[string]string{
 		"Date":         dateOfGmt,
 		"SessionKey":   sessionKey,
 		"X-Request-ID": uuid.NewString(),
-	})
+		"Signature":    signatureOfHmac(sessionSecret, sessionKey, method, url, dateOfGmt, params),
+	}
+	return header
+}
+
+func (y *Cloud189PC) EncryptParams(params Params) string {
+	sessionSecret := y.tokenInfo.SessionSecret
+	if y.isFamily() {
+		sessionSecret = y.tokenInfo.FamilySessionSecret
+	}
+	if params != nil {
+		return AesECBEncrypt(params.Encode(), sessionSecret[:16])
+	}
+	return ""
+}
+
+func (y *Cloud189PC) request(url, method string, callback base.ReqCallback, params Params, resp interface{}) ([]byte, error) {
+	req := y.client.R().SetQueryParams(clientSuffix())
 
 	// 设置params
-	var paramsData string
-	if params != nil {
-		paramsData = AesECBEncrypt(params.Encode(), sessionSecret[:16])
+	paramsData := y.EncryptParams(params)
+	if paramsData != "" {
 		req.SetQueryParam("params", paramsData)
 	}
-	req.SetHeader("Signature", signatureOfHmac(sessionSecret, sessionKey, method, url, dateOfGmt, paramsData))
+
+	// Signature
+	req.SetHeaders(y.SignatureHeader(url, method, paramsData))
 
 	var erron RespErr
 	req.SetError(&erron)
@@ -104,10 +127,6 @@ func (y *Cloud189PC) request_(client *resty.Client, url, method string, callback
 	return res.Body(), nil
 }
 
-func (y *Cloud189PC) request(url, method string, callback base.ReqCallback, params Params, resp interface{}) ([]byte, error) {
-	return y.request_(y.client, url, method, callback, params, resp)
-}
-
 func (y *Cloud189PC) get(url string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
 	return y.request(url, http.MethodGet, callback, nil, resp)
 }
@@ -116,10 +135,50 @@ func (y *Cloud189PC) post(url string, callback base.ReqCallback, resp interface{
 	return y.request(url, http.MethodPost, callback, nil, resp)
 }
 
-func (y *Cloud189PC) put(url string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
-	return y.request_(y.putClient, url, http.MethodPut, callback, nil, resp)
-}
+func (y *Cloud189PC) put(ctx context.Context, url string, headers map[string]string, sign bool, file io.Reader) ([]byte, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, url, file)
+	if err != nil {
+		return nil, err
+	}
 
+	query := req.URL.Query()
+	for key, value := range clientSuffix() {
+		query.Add(key, value)
+	}
+	req.URL.RawQuery = query.Encode()
+
+	for key, value := range headers {
+		req.Header.Add(key, value)
+	}
+
+	if sign {
+		for key, value := range y.SignatureHeader(url, http.MethodPut, "") {
+			req.Header.Add(key, value)
+		}
+	}
+
+	resp, err := base.HttpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var erron RespErr
+	jsoniter.Unmarshal(body, &erron)
+	xml.Unmarshal(body, &erron)
+	if erron.HasError() {
+		return nil, &erron
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, errors.Errorf("put fail,err:%s", string(body))
+	}
+	return body, nil
+}
 func (y *Cloud189PC) getFiles(ctx context.Context, fileId string) ([]model.Obj, error) {
 	fullUrl := API_URL
 	if y.isFamily() {
@@ -375,10 +434,9 @@ func (y *Cloud189PC) refreshSession() (err error) {
 
 // 普通上传
 func (y *Cloud189PC) CommonUpload(ctx context.Context, dstDir model.Obj, file model.FileStreamer, up driver.UpdateProgress) (err error) {
-	const DEFAULT int64 = 20971520 // 20M
-	var count = int64(math.Ceil(float64(file.GetSize()) / float64(DEFAULT)))
+	var DEFAULT = partSize(file.GetSize())
+	var count = int(math.Ceil(float64(file.GetSize()) / float64(DEFAULT)))
 
-	requestID := uuid.NewString()
 	params := Params{
 		"parentFolderId": dstDir.GetID(),
 		"fileName":       url.QueryEscape(file.GetName()),
@@ -400,7 +458,6 @@ func (y *Cloud189PC) CommonUpload(ctx context.Context, dstDir model.Obj, file mo
 	var initMultiUpload InitMultiUploadResp
 	_, err = y.request(fullUrl+"/initMultiUpload", http.MethodGet, func(req *resty.Request) {
 		req.SetContext(ctx)
-		req.SetHeader("X-Request-ID", requestID)
 	}, params, &initMultiUpload)
 	if err != nil {
 		return err
@@ -410,7 +467,7 @@ func (y *Cloud189PC) CommonUpload(ctx context.Context, dstDir model.Obj, file mo
 	silceMd5 := md5.New()
 	silceMd5Hexs := make([]string, 0, count)
 	byteData := bytes.NewBuffer(make([]byte, DEFAULT))
-	for i := int64(1); i <= count; i++ {
+	for i := 1; i <= count; i++ {
 		if utils.IsCanceled(ctx) {
 			return ctx.Err()
 		}
@@ -433,7 +490,6 @@ func (y *Cloud189PC) CommonUpload(ctx context.Context, dstDir model.Obj, file mo
 		_, err = y.request(fullUrl+"/getMultiUploadUrls", http.MethodGet,
 			func(req *resty.Request) {
 				req.SetContext(ctx)
-				req.SetHeader("X-Request-ID", requestID)
 			}, Params{
 				"partInfo":     fmt.Sprintf("%d-%s", i, silceMd5Base64),
 				"uploadFileId": initMultiUpload.Data.UploadFileID,
@@ -444,17 +500,17 @@ func (y *Cloud189PC) CommonUpload(ctx context.Context, dstDir model.Obj, file mo
 
 		// 开始上传
 		uploadData := uploadUrl.UploadUrls[fmt.Sprint("partNumber_", i)]
-		res, err := y.putClient.R().
-			SetContext(ctx).
-			SetQueryParams(clientSuffix()).
-			SetHeaders(ParseHttpHeader(uploadData.RequestHeader)).
-			SetBody(byteData).
-			Put(uploadData.RequestURL)
+
+		err = retry.Do(func() error {
+			_, err := y.put(ctx, uploadData.RequestURL, ParseHttpHeader(uploadData.RequestHeader), false, bytes.NewReader(byteData.Bytes()))
+			return err
+		},
+			retry.Context(ctx),
+			retry.Attempts(3),
+			retry.Delay(time.Second),
+			retry.MaxDelay(5*time.Second))
 		if err != nil {
 			return err
-		}
-		if res.StatusCode() != http.StatusOK {
-			return fmt.Errorf("updload fail,msg: %s", res.String())
 		}
 		up(int(i * 100 / count))
 	}
@@ -469,7 +525,6 @@ func (y *Cloud189PC) CommonUpload(ctx context.Context, dstDir model.Obj, file mo
 	_, err = y.request(fullUrl+"/commitMultiUploadFile", http.MethodGet,
 		func(req *resty.Request) {
 			req.SetContext(ctx)
-			req.SetHeader("X-Request-ID", requestID)
 		}, Params{
 			"uploadFileId": initMultiUpload.Data.UploadFileID,
 			"fileMd5":      fileMd5Hex,
@@ -493,7 +548,7 @@ func (y *Cloud189PC) FastUpload(ctx context.Context, dstDir model.Obj, file mode
 		_ = os.Remove(tempFile.Name())
 	}()
 
-	const DEFAULT int64 = 20971520 // 20M
+	var DEFAULT = partSize(file.GetSize())
 	count := int(math.Ceil(float64(file.GetSize()) / float64(DEFAULT)))
 
 	// 优先计算所需信息
@@ -524,7 +579,6 @@ func (y *Cloud189PC) FastUpload(ctx context.Context, dstDir model.Obj, file mode
 		sliceMd5Hex = strings.ToUpper(utils.GetMD5Encode(strings.Join(silceMd5Hexs, "\n")))
 	}
 
-	requestID := uuid.NewString()
 	// 检测是否支持快传
 	params := Params{
 		"parentFolderId": dstDir.GetID(),
@@ -547,7 +601,6 @@ func (y *Cloud189PC) FastUpload(ctx context.Context, dstDir model.Obj, file mode
 	var uploadInfo InitMultiUploadResp
 	_, err = y.request(fullUrl+"/initMultiUpload", http.MethodGet, func(req *resty.Request) {
 		req.SetContext(ctx)
-		req.SetHeader("X-Request-ID", requestID)
 	}, params, &uploadInfo)
 	if err != nil {
 		return err
@@ -559,7 +612,6 @@ func (y *Cloud189PC) FastUpload(ctx context.Context, dstDir model.Obj, file mode
 		_, err = y.request(fullUrl+"/getMultiUploadUrls", http.MethodGet,
 			func(req *resty.Request) {
 				req.SetContext(ctx)
-				req.SetHeader("X-Request-ID", requestID)
 			}, Params{
 				"uploadFileId": uploadInfo.Data.UploadFileID,
 				"partInfo":     strings.Join(silceMd5Base64s, ","),
@@ -568,24 +620,29 @@ func (y *Cloud189PC) FastUpload(ctx context.Context, dstDir model.Obj, file mode
 			return err
 		}
 
+		buf := make([]byte, DEFAULT)
 		for i := 1; i <= count; i++ {
 			if utils.IsCanceled(ctx) {
 				return ctx.Err()
 			}
 
+			n, err := io.ReadFull(tempFile, buf)
+			if err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
+				return err
+			}
 			uploadData := uploadUrls.UploadUrls[fmt.Sprint("partNumber_", i)]
-			res, err := y.putClient.R().
-				SetContext(ctx).
-				SetQueryParams(clientSuffix()).
-				SetHeaders(ParseHttpHeader(uploadData.RequestHeader)).
-				SetBody(io.LimitReader(tempFile, DEFAULT)).
-				Put(uploadData.RequestURL)
+			err = retry.Do(func() error {
+				_, err := y.put(ctx, uploadData.RequestURL, ParseHttpHeader(uploadData.RequestHeader), false, bytes.NewReader(buf[:n]))
+				return err
+			},
+				retry.Context(ctx),
+				retry.Attempts(3),
+				retry.Delay(time.Second),
+				retry.MaxDelay(5*time.Second))
 			if err != nil {
 				return err
 			}
-			if res.StatusCode() != http.StatusOK {
-				return fmt.Errorf("updload fail,msg: %s", res.String())
-			}
+
 			up(int(i * 100 / count))
 		}
 	}
@@ -594,7 +651,6 @@ func (y *Cloud189PC) FastUpload(ctx context.Context, dstDir model.Obj, file mode
 	_, err = y.request(fullUrl+"/commitMultiUploadFile", http.MethodGet,
 		func(req *resty.Request) {
 			req.SetContext(ctx)
-			req.SetHeader("X-Request-ID", requestID)
 		}, Params{
 			"uploadFileId": uploadInfo.Data.UploadFileID,
 			"isLog":        "0",
@@ -603,7 +659,7 @@ func (y *Cloud189PC) FastUpload(ctx context.Context, dstDir model.Obj, file mode
 	return err
 }
 
-func (y *Cloud189PC) BigFileUpload(ctx context.Context, dstDir model.Obj, file model.FileStreamer, up driver.UpdateProgress) (err error) {
+func (y *Cloud189PC) OldUpload(ctx context.Context, dstDir model.Obj, file model.FileStreamer, up driver.UpdateProgress) (err error) {
 	// 需要获取完整文件md5,必须支持 io.Seek
 	tempFile, err := utils.CreateTempFile(file.GetReadCloser())
 	if err != nil {
@@ -613,8 +669,6 @@ func (y *Cloud189PC) BigFileUpload(ctx context.Context, dstDir model.Obj, file m
 		_ = tempFile.Close()
 		_ = os.Remove(tempFile.Name())
 	}()
-
-	const DEFAULT int64 = 104857600 // 100M
 
 	// 计算md5
 	fileMd5 := md5.New()
@@ -673,26 +727,19 @@ func (y *Cloud189PC) BigFileUpload(ctx context.Context, dstDir model.Obj, file m
 			return ctx.Err()
 		}
 
-		// 上传
-		_, err = y.put(status.FileUploadUrl, func(req *resty.Request) {
-			req.SetContext(ctx).
-				SetHeaders(map[string]string{
-					"ResumePolicy": "1",
-					"Expect":       "100-continue",
-				}).
-				SetBody(io.LimitReader(tempFile, DEFAULT))
+		header := map[string]string{
+			"ResumePolicy": "1",
+			"Expect":       "100-continue",
+		}
 
-			if y.isFamily() {
-				req.SetHeaders(map[string]string{
-					"FamilyId":     fmt.Sprint(y.FamilyID),
-					"UploadFileId": fmt.Sprint(status.UploadFileId),
-				})
-			} else {
-				req.SetHeaders(map[string]string{
-					"Edrive-UploadFileId": fmt.Sprint(status.UploadFileId),
-				})
-			}
-		}, nil)
+		if y.isFamily() {
+			header["FamilyId"] = fmt.Sprint(y.FamilyID)
+			header["UploadFileId"] = fmt.Sprint(status.UploadFileId)
+		} else {
+			header["Edrive-UploadFileId"] = fmt.Sprint(status.UploadFileId)
+		}
+
+		_, err := y.put(ctx, status.FileUploadUrl, header, true, io.NopCloser(tempFile))
 		if err, ok := err.(*RespErr); ok && err.Code != "InputStreamReadError" {
 			return err
 		}

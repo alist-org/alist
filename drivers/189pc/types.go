@@ -13,6 +13,8 @@ type RespErr struct {
 	ResCode    any    `json:"res_code"` // int or string
 	ResMessage string `json:"res_message"`
 
+	Error_ string `json:"error"`
+
 	XMLName xml.Name `xml:"error"`
 	Code    string   `json:"code" xml:"code"`
 	Message string   `json:"message" xml:"message"`
@@ -29,7 +31,7 @@ func (e *RespErr) HasError() bool {
 	case string:
 		return e.ResCode != ""
 	}
-	return (e.Code != "" && e.Code != "SUCCESS") || e.ErrorCode != ""
+	return (e.Code != "" && e.Code != "SUCCESS") || e.ErrorCode != "" || e.Error_ != ""
 }
 
 func (e *RespErr) Error() string {
@@ -56,6 +58,10 @@ func (e *RespErr) Error() string {
 
 	if e.ErrorCode != "" {
 		return fmt.Sprintf("err_code: %s ,err_msg: %s", e.ErrorCode, e.ErrorMsg)
+	}
+
+	if e.Error_ != "" {
+		return fmt.Sprintf("error: %s ,message: %s", e.ErrorCode, e.Message)
 	}
 	return ""
 }

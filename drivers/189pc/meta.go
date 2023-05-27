@@ -14,7 +14,7 @@ type Addition struct {
 	OrderDirection string `json:"order_direction" type:"select" options:"asc,desc" default:"asc"`
 	Type           string `json:"type" type:"select" options:"personal,family" default:"personal"`
 	FamilyID       string `json:"family_id"`
-	UploadMethod   string `json:"upload_method" type:"select" options:"stream,rapid,bigfile" default:"stream"`
+	UploadMethod   string `json:"upload_method" type:"select" options:"stream,rapid,old" default:"stream"`
 	NoUseOcr       bool   `json:"no_use_ocr"`
 }
 
