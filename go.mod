@@ -9,6 +9,7 @@ require (
 	github.com/aws/aws-sdk-go v1.44.262
 	github.com/blevesearch/bleve/v2 v2.3.8
 	github.com/caarlos0/env/v7 v7.1.0
+	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/deckarep/golang-set/v2 v2.3.0
 	github.com/disintegration/imaging v1.6.2
 	github.com/dustinxie/ecc v0.0.0-20210511000915-959544187564
@@ -36,6 +37,7 @@ require (
 	golang.org/x/crypto v0.9.0
 	golang.org/x/image v0.7.0
 	golang.org/x/net v0.10.0
+	golang.org/x/oauth2 v0.4.0
 	gorm.io/driver/mysql v1.4.7
 	gorm.io/driver/postgres v1.4.8
 	gorm.io/driver/sqlite v1.4.4
@@ -118,6 +120,7 @@ require (
 	github.com/orzogc/fake115uploader v0.3.3-0.20221009101310-08b764073b77 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.6 // indirect
 	github.com/pierrec/lz4/v4 v4.1.17 // indirect
+	github.com/pquerna/cachecontrol v0.1.0 // indirect
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
@@ -130,8 +133,10 @@ require (
 	golang.org/x/sys v0.8.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
 	golang.org/x/time v0.0.0-20220922220347-f3bd1da661af // indirect
+	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
+	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	lukechampine.com/blake3 v1.1.7 // indirect
 )
