@@ -55,11 +55,6 @@ LABEL repository="https://github.com/alist-org/alist"
 LABEL description="A file list program that supports multiple storage, powered by Gin and Solidjs."
 LABEL licenses="AGPL-3.0"
 
-LABEL org.opencontainers.image.authors="i@nn.ci"
-LABEL org.opencontainers.image.source="https://github.com/alist-org/alist"
-LABEL org.opencontainers.image.description="A file list program that supports multiple storage, powered by Gin and Solidjs."
-LABEL org.opencontainers.image.licenses="AGPL-3.0"
-
 # Multiple ENV instructions do not take up extra space;
 # instead, they can increase readability.
 ENV PUID=0
