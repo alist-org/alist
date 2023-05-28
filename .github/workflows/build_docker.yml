@@ -16,9 +16,6 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           images: xhofe/alist
-      - name: Replace release with dev
-        run: |
-          sed -i 's/release/dev/g' Dockerfile
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
@@ -34,6 +31,8 @@ jobs:
         with:
           context: .
           push: true
+          build-args: |
+            "BUILD_TARGET=dev"
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64,linux/arm64

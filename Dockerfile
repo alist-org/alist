@@ -21,8 +21,11 @@
 # and the metadata of the image will be set in the next stage.
 FROM golang:1.20-alpine3.18 AS builder
 
-ENV WEBDIST_URL https://github.com/alist-org/alist-web/releases/latest/download/dist.tar.gz
-ENV WEBDIST_API_URL https://api.github.com/repos/alist-org/alist-web/releases/latest
+ARG BUILD_TARGET
+
+ENV WEBDIST_DEV_URL https://codeload.github.com/alist-org/web-dist/tar.gz/refs/heads/dev
+ENV WEBDIST_RELEASE_URL https://github.com/alist-org/alist-web/releases/latest/download/dist.tar.gz
+ENV WEBDIST_RELEASE_VERSION_URL https://api.github.com/repos/alist-org/alist-web/releases/latest
 
 COPY ./ /go/src/alist
 
@@ -35,9 +38,16 @@ RUN set -ex \
     && export gitAuthor="Xhofe <i@nn.ci>" \
     && export gitCommit=$(git rev-parse HEAD) \
     && export version=$(git describe --tags --always --dirty) \
-    && export webVersion=$(curl -sSL "${WEBDIST_API_URL}" | jq -r '.tag_name') \
-    && curl -fsSL ${WEBDIST_URL} > /tmp/dist.tar.gz \
-    && rm -rf public/dist && tar -C public/ -xvf /tmp/dist.tar.gz \
+    && rm -rf public/dist \
+    && if [ "${BUILD_TARGET}" == "dev" ]; then \
+           export webVersion="dev"; \
+           curl -fsSL ${WEBDIST_DEV_URL} > /tmp/dist.tar.gz; \
+           tar -C public/ --strip-components=1 -xvf /tmp/dist.tar.gz; \
+       else \
+           export webVersion=$(curl -sSL "${WEBDIST_RELEASE_VERSION_URL}" | jq -r '.tag_name'); \
+           curl -fsSL ${WEBDIST_RELEASE_URL} > /tmp/dist.tar.gz; \
+           tar -C public/ -xvf /tmp/dist.tar.gz; \
+       fi \
     && go install -trimpath -tags=jsoniter -ldflags="-w -s \
             -X 'github.com/alist-org/alist/v3/internal/conf.BuiltAt=${builtAt}' \
             -X 'github.com/alist-org/alist/v3/internal/conf.GoVersion=${goVersion}' \
