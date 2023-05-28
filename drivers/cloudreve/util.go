@@ -57,7 +57,7 @@ func (d *Cloudreve) request(method string, path string, callback base.ReqCallbac
 				return d.request(method, path, callback, out)
 			}
 		}
-		
+
 		return errors.New(r.Msg)
 	}
 	sess := cookie.GetCookie(resp.Cookies(), "cloudreve-session")

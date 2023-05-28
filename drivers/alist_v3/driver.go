@@ -175,6 +175,7 @@ func (d *AListV3) Put(ctx context.Context, dstDir model.Obj, stream model.FileSt
 		req.SetHeader("File-Path", path.Join(dstDir.GetPath(), stream.GetName())).
 			SetHeader("Password", d.MetaPassword).
 			SetHeader("Content-Length", strconv.FormatInt(stream.GetSize(), 10)).
+			SetContentLength(true).
 			SetBody(stream.GetReadCloser())
 	})
 	return err
