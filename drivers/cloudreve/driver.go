@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
@@ -30,6 +31,8 @@ func (d *Cloudreve) Init(ctx context.Context) error {
 	if d.Cookie != "" {
 		return nil
 	}
+	// removing trailing slash
+	d.Address = strings.TrimSuffix(d.Address, "/")
 	return d.login()
 }
 
