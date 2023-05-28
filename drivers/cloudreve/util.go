@@ -21,12 +21,7 @@ import (
 const loginPath = "/user/session"
 
 func (d *Cloudreve) request(method string, path string, callback base.ReqCallback, out interface{}) error {
-	baseUrl := d.Address
-	// removing trailing slash
-	if strings.HasSuffix(baseUrl, "/") {
-		baseUrl = baseUrl[:len(baseUrl)-1]
-	}
-	u := baseUrl + "/api/v3" + path
+	u := d.Address + "/api/v3" + path
 	req := base.RestyClient.R()
 	req.SetHeaders(map[string]string{
 		"Cookie":     "cloudreve-session=" + d.Cookie,
