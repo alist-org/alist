@@ -40,7 +40,8 @@ func (d *Seafile) request(method string, pathname string, callback base.ReqCallb
 	for i := 0; i < 2; i++ {
 		req.SetHeader("Authorization", d.authorization)
 		callback(req)
-		res, err := req.Execute(method, full)
+		localRes, err := req.Execute(method, full)
+		res = *localRes
 		if err != nil {
 			return nil, err
 		}
