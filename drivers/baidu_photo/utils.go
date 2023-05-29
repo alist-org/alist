@@ -2,7 +2,6 @@ package baiduphoto
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 
@@ -20,10 +19,6 @@ const (
 	ALBUM_API_URL   = API_URL + "/album/v1"
 	FILE_API_URL_V1 = API_URL + "/file/v1"
 	FILE_API_URL_V2 = API_URL + "/file/v2"
-)
-
-var (
-	ErrNotSupportName = errors.New("only chinese and english, numbers and underscores are supported, and the length is no more than 20")
 )
 
 func (d *BaiduPhoto) Request(furl string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
@@ -48,6 +43,8 @@ func (d *BaiduPhoto) Request(furl string, method string, callback base.ReqCallba
 		return nil, fmt.Errorf("you have joined album")
 	case 50820:
 		return nil, fmt.Errorf("no shared albums found")
+	case 50100:
+		return nil, fmt.Errorf("illegal title, only supports 50 characters")
 	case -6:
 		if err = d.refreshToken(); err != nil {
 			return nil, err
@@ -188,9 +185,6 @@ func (d *BaiduPhoto) GetAllAlbumFile(ctx context.Context, album *Album, passwd s
 
 // 创建相册
 func (d *BaiduPhoto) CreateAlbum(ctx context.Context, name string) (*Album, error) {
-	if !checkName(name) {
-		return nil, ErrNotSupportName
-	}
 	var resp JoinOrCreateAlbumResp
 	_, err := d.Post(ALBUM_API_URL+"/create", func(r *resty.Request) {
 		r.SetContext(ctx).SetResult(&resp)
@@ -208,10 +202,6 @@ func (d *BaiduPhoto) CreateAlbum(ctx context.Context, name string) (*Album, erro
 
 // 相册改名
 func (d *BaiduPhoto) SetAlbumName(ctx context.Context, album *Album, name string) (*Album, error) {
-	if !checkName(name) {
-		return nil, ErrNotSupportName
-	}
-
 	_, err := d.Post(ALBUM_API_URL+"/settitle", func(r *resty.Request) {
 		r.SetContext(ctx)
 		r.SetFormData(map[string]string{

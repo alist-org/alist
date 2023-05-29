@@ -49,11 +49,13 @@ func (d *Cloudreve) request(method string, path string, callback base.ReqCallbac
 
 		// 刷新 cookie
 		if r.Code == http.StatusUnauthorized && path != loginPath {
-			err = d.login()
-			if err != nil {
-				return err
+			if d.Username != "" && d.Password != "" {
+				err = d.login()
+				if err != nil {
+					return err
+				}
+				return d.request(method, path, callback, out)
 			}
-			return d.request(method, path, callback, out)
 		}
 
 		return errors.New(r.Msg)

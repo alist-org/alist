@@ -8,7 +8,9 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 
+	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/utils"
@@ -16,15 +18,22 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-var HttpClient = &http.Client{
-	CheckRedirect: func(req *http.Request, via []*http.Request) error {
-		if len(via) >= 10 {
-			return errors.New("stopped after 10 redirects")
+func HttpClient() *http.Client {
+	once.Do(func() {
+		httpClient = base.NewHttpClient()
+		httpClient.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+			if len(via) >= 10 {
+				return errors.New("stopped after 10 redirects")
+			}
+			req.Header.Del("Referer")
+			return nil
 		}
-		req.Header.Del("Referer")
-		return nil
-	},
+	})
+	return httpClient
 }
+
+var once sync.Once
+var httpClient *http.Client
 
 func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.Obj) error {
 	// read data with native
@@ -72,8 +81,21 @@ func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.
 		w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"; filename*=UTF-8''%s`, filename, url.PathEscape(filename)))
 		http.ServeContent(w, r, file.GetName(), fileStat.ModTime(), f)
 		return nil
-	} else if link.Handle != nil {
-		return link.Handle(w, r)
+	} else if link.Writer != nil {
+		if link.Header != nil {
+			for h, v := range link.Header {
+				w.Header()[h] = v
+			}
+		}
+		if cd := w.Header().Get("Content-Disposition"); cd == "" {
+			w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"; filename*=UTF-8''%s`, file.GetName(), url.PathEscape(file.GetName())))
+		}
+		if link.Status == 0 {
+			w.WriteHeader(http.StatusOK)
+		} else {
+			w.WriteHeader(link.Status)
+		}
+		return link.Writer(w)
 	} else {
 		req, err := http.NewRequest(r.Method, link.URL, nil)
 		if err != nil {
@@ -90,7 +112,7 @@ func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.
 		for h, val := range link.Header {
 			req.Header[h] = val
 		}
-		res, err := HttpClient.Do(req)
+		res, err := HttpClient().Do(req)
 		if err != nil {
 			return err
 		}

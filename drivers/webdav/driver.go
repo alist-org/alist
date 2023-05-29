@@ -78,19 +78,19 @@ func (d *WebDav) MakeDir(ctx context.Context, parentDir model.Obj, dirName strin
 }
 
 func (d *WebDav) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
-	return d.client.Rename(srcObj.GetPath(), path.Join(dstDir.GetPath(), srcObj.GetName()), true)
+	return d.client.Rename(getPath(srcObj), path.Join(dstDir.GetPath(), srcObj.GetName()), true)
 }
 
 func (d *WebDav) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
-	return d.client.Rename(srcObj.GetPath(), path.Join(path.Dir(srcObj.GetPath()), newName), true)
+	return d.client.Rename(getPath(srcObj), path.Join(path.Dir(srcObj.GetPath()), newName), true)
 }
 
 func (d *WebDav) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
-	return d.client.Copy(srcObj.GetPath(), path.Join(dstDir.GetPath(), srcObj.GetName()), true)
+	return d.client.Copy(getPath(srcObj), path.Join(dstDir.GetPath(), srcObj.GetName()), true)
 }
 
 func (d *WebDav) Remove(ctx context.Context, obj model.Obj) error {
-	return d.client.RemoveAll(obj.GetPath())
+	return d.client.RemoveAll(getPath(obj))
 }
 
 func (d *WebDav) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {

@@ -15,6 +15,7 @@ const (
 	Announcement = "announcement"
 	AllowIndexed = "allow_indexed"
 	AllowMounted = "allow_mounted"
+	RobotsTxt    = "robots_txt"
 
 	Logo      = "logo"
 	Favicon   = "favicon"

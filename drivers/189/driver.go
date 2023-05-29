@@ -30,12 +30,9 @@ func (d *Cloud189) GetAddition() driver.Additional {
 }
 
 func (d *Cloud189) Init(ctx context.Context) error {
-	d.client = resty.New().
-		SetTimeout(base.DefaultTimeout).
-		SetRetryCount(3).
-		SetHeader("Referer", "https://cloud.189.cn/").
-		SetHeader("User-Agent", base.UserAgent)
-	return d.login()
+	d.client = base.NewRestyClient().
+		SetHeader("Referer", "https://cloud.189.cn/")
+	return d.newLogin()
 }
 
 func (d *Cloud189) Drop(ctx context.Context) error {

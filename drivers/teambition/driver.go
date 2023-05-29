@@ -125,6 +125,9 @@ func (d *Teambition) Remove(ctx context.Context, obj model.Obj) error {
 }
 
 func (d *Teambition) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
+	if d.UseS3UploadMethod {
+		return d.newUpload(ctx, dstDir, stream, up)
+	}
 	res, err := d.request("/api/v2/users/me", http.MethodGet, nil, nil)
 	if err != nil {
 		return err

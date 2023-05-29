@@ -9,6 +9,7 @@ import (
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/go-resty/resty/v2"
+	log "github.com/sirupsen/logrus"
 )
 
 func (d *AListV3) login() error {
@@ -38,6 +39,7 @@ func (d *AListV3) request(api, method string, callback base.ReqCallback, retry .
 	if err != nil {
 		return nil, err
 	}
+	log.Debugf("[alist_v3] response body: %s", res.String())
 	if res.StatusCode() >= 400 {
 		return nil, fmt.Errorf("request failed, status: %s", res.Status())
 	}

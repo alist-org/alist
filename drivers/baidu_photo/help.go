@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
-	"regexp"
 	"strings"
 	"time"
 
@@ -14,11 +13,6 @@ import (
 // Tid生成
 func getTid() string {
 	return fmt.Sprintf("3%d%.0f", time.Now().Unix(), math.Floor(9000000*rand.Float64()+1000000))
-}
-
-// 检查名称
-func checkName(name string) bool {
-	return len(name) <= 20 && regexp.MustCompile("[\u4e00-\u9fa5A-Za-z0-9_-]").MatchString(name)
 }
 
 func toTime(t int64) *time.Time {

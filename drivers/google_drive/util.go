@@ -2,21 +2,134 @@ package google_drive
 
 import (
 	"context"
+	"crypto/x509"
+	"encoding/pem"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
+	"os"
+	"regexp"
 	"strconv"
+	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/go-resty/resty/v2"
+	"github.com/golang-jwt/jwt/v4"
 	log "github.com/sirupsen/logrus"
 )
 
 // do others that not defined in Driver interface
 
+type googleDriveServiceAccount struct {
+	//Type                    string `json:"type"`
+	//ProjectID               string `json:"project_id"`
+	//PrivateKeyID            string `json:"private_key_id"`
+	PrivateKey  string `json:"private_key"`
+	ClientEMail string `json:"client_email"`
+	//ClientID                string `json:"client_id"`
+	//AuthURI                 string `json:"auth_uri"`
+	TokenURI string `json:"token_uri"`
+	//AuthProviderX509CertURL string `json:"auth_provider_x509_cert_url"`
+	//ClientX509CertURL       string `json:"client_x509_cert_url"`
+}
+
 func (d *GoogleDrive) refreshToken() error {
+	// googleDriveServiceAccountFile gdsaFile
+	gdsaFile, gdsaFileErr := os.Stat(d.RefreshToken)
+	if gdsaFileErr == nil {
+		gdsaFileThis := d.RefreshToken
+		if gdsaFile.IsDir() {
+			if len(d.ServiceAccountFileList) <= 0 {
+				gdsaReadDir, gdsaDirErr := ioutil.ReadDir(d.RefreshToken)
+				if gdsaDirErr != nil {
+					log.Error("read dir fail")
+					return gdsaDirErr
+				}
+				var gdsaFileList []string
+				for _, fi := range gdsaReadDir {
+					if !fi.IsDir() {
+						match, _ := regexp.MatchString("^.*\\.json$", fi.Name())
+						if !match {
+							continue
+						}
+						gdsaDirText := d.RefreshToken
+						if d.RefreshToken[len(d.RefreshToken)-1:] != "/" {
+							gdsaDirText = d.RefreshToken + "/"
+						}
+						gdsaFileList = append(gdsaFileList, gdsaDirText+fi.Name())
+					}
+				}
+				d.ServiceAccountFileList = gdsaFileList
+				gdsaFileThis = d.ServiceAccountFileList[d.ServiceAccountFile]
+				d.ServiceAccountFile++
+			} else {
+				if d.ServiceAccountFile < len(d.ServiceAccountFileList) {
+					d.ServiceAccountFile++
+				} else {
+					d.ServiceAccountFile = 0
+				}
+				gdsaFileThis = d.ServiceAccountFileList[d.ServiceAccountFile]
+			}
+		}
+
+		gdsaFileThisContent, err := ioutil.ReadFile(gdsaFileThis)
+		if err != nil {
+			return err
+		}
+
+		// Now let's unmarshal the data into `payload`
+		var jsonData googleDriveServiceAccount
+		err = utils.Json.Unmarshal(gdsaFileThisContent, &jsonData)
+		if err != nil {
+			return err
+		}
+
+		gdsaScope := "https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata https://www.googleapis.com/auth/drive.metadata.readonly https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/drive.scripts"
+
+		timeNow := time.Now()
+		var timeStart int64 = timeNow.Unix()
+		var timeEnd int64 = timeNow.Add(time.Minute * 60).Unix()
+
+		// load private key from string
+		privateKeyPem, _ := pem.Decode([]byte(jsonData.PrivateKey))
+		privateKey, _ := x509.ParsePKCS8PrivateKey(privateKeyPem.Bytes)
+
+		jwtToken := jwt.NewWithClaims(jwt.SigningMethodRS256,
+			jwt.MapClaims{
+				"iss":   jsonData.ClientEMail,
+				"scope": gdsaScope,
+				"aud":   jsonData.TokenURI,
+				"exp":   timeEnd,
+				"iat":   timeStart,
+			})
+		assertion, err := jwtToken.SignedString(privateKey)
+		if err != nil {
+			return err
+		}
+
+		var resp base.TokenResp
+		var e TokenError
+		res, err := base.RestyClient.R().SetResult(&resp).SetError(&e).
+			SetFormData(map[string]string{
+				"assertion":  assertion,
+				"grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
+			}).Post(jsonData.TokenURI)
+		if err != nil {
+			return err
+		}
+		log.Debug(res.String())
+		if e.Error != "" {
+			return fmt.Errorf(e.Error)
+		}
+		d.AccessToken = resp.AccessToken
+		return nil
+	}
+	if gdsaFileErr != nil && os.IsExist(gdsaFileErr) {
+		return gdsaFileErr
+	}
 	url := "https://www.googleapis.com/oauth2/v4/token"
 	var resp base.TokenResp
 	var e TokenError

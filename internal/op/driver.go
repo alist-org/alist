@@ -63,7 +63,7 @@ func getMainItems(config driver.Config) []driver.Item {
 		Name:     "mount_path",
 		Type:     conf.TypeString,
 		Required: true,
-		Help:     "",
+		Help:     "The path you want to mount to, it is unique and cannot be repeated",
 	}, {
 		Name: "order",
 		Type: conf.TypeNumber,

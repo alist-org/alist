@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
-	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
@@ -15,12 +14,11 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
-var upClient = base.NewRestyClient().SetTimeout(120 * time.Second)
-
 type LanZou struct {
 	Addition
 	model.Storage
 	uid string
+	vei string
 }
 
 func (d *LanZou) Config() driver.Config {
@@ -31,7 +29,7 @@ func (d *LanZou) GetAddition() driver.Additional {
 	return &d.Addition
 }
 
-func (d *LanZou) Init(ctx context.Context) error {
+func (d *LanZou) Init(ctx context.Context) (err error) {
 	if d.IsCookie() {
 		if d.RootFolderID == "" {
 			d.RootFolderID = "-1"
@@ -41,8 +39,9 @@ func (d *LanZou) Init(ctx context.Context) error {
 			return fmt.Errorf("cookie does not contain ylogin")
 		}
 		d.uid = ylogin[1]
+		d.vei, err = d.getVei()
 	}
-	return nil
+	return
 }
 
 func (d *LanZou) Drop(ctx context.Context) error {
@@ -209,11 +208,11 @@ func (d *LanZou) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 		var resp RespText[[]FileOrFolder]
 		_, err := d._post(d.BaseUrl+"/fileup.php", func(req *resty.Request) {
 			req.SetFormData(map[string]string{
-				"task":      "1",
-				"vie":       "2",
-				"ve":        "2",
-				"id":        "WU_FILE_0",
-				"name":      stream.GetName(),
+				"task":           "1",
+				"vie":            "2",
+				"ve":             "2",
+				"id":             "WU_FILE_0",
+				"name":           stream.GetName(),
 				"folder_id_bb_n": dstDir.GetID(),
 			}).SetFileReader("upload_file", stream.GetName(), stream).SetContext(ctx)
 		}, &resp, true)

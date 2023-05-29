@@ -1,4 +1,4 @@
-package cloudreve
+package ipfs
 
 import (
 	"github.com/alist-org/alist/v3/internal/driver"
@@ -8,20 +8,18 @@ import (
 type Addition struct {
 	// Usually one of two
 	driver.RootPath
-	// define other
-	Address  string `json:"address" required:"true"`
-	Username string `json:"username"`
-	Password string `json:"password"`
-	Cookie   string `json:"cookie"`
+	Endpoint string `json:"endpoint" default:"http://127.0.0.1:5001"`
+	Gateway  string `json:"gateway" default:"https://ipfs.io"`
 }
 
 var config = driver.Config{
-	Name:        "Cloudreve",
+	Name:        "IPFS API",
 	DefaultRoot: "/",
+	LocalSort:   true,
 }
 
 func init() {
 	op.RegisterDriver(func() driver.Driver {
-		return &Cloudreve{}
+		return &IPFS{}
 	})
 }

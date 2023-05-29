@@ -10,30 +10,12 @@ import (
 
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/pkg/utils"
+	"github.com/alist-org/alist/v3/server/common"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 )
-
-func ClearCache(path string) {
-	storage, actualPath, err := op.GetStorageAndActualPath(path)
-	if err != nil {
-		return
-	}
-	op.ClearCache(storage, actualPath)
-}
-
-func containsByName(files []model.Obj, file model.Obj) bool {
-	for _, f := range files {
-		if f.GetName() == file.GetName() {
-			return true
-		}
-	}
-	return false
-}
-
-var httpClient = &http.Client{}
 
 func getFileStreamFromLink(file model.Obj, link *model.Link) (*model.FileStream, error) {
 	var rc io.ReadCloser
@@ -52,6 +34,16 @@ func getFileStreamFromLink(file model.Obj, link *model.Link) (*model.FileStream,
 			return nil, errors.Wrapf(err, "failed to open file %s", *link.FilePath)
 		}
 		rc = f
+	} else if link.Writer != nil {
+		r, w := io.Pipe()
+		go func() {
+			err := link.Writer(w)
+			err = w.CloseWithError(err)
+			if err != nil {
+				log.Errorf("[getFileStreamFromLink] failed to write: %v", err)
+			}
+		}()
+		rc = r
 	} else {
 		req, err := http.NewRequest(http.MethodGet, link.URL, nil)
 		if err != nil {
@@ -60,7 +52,7 @@ func getFileStreamFromLink(file model.Obj, link *model.Link) (*model.FileStream,
 		for h, val := range link.Header {
 			req.Header[h] = val
 		}
-		res, err := httpClient.Do(req)
+		res, err := common.HttpClient().Do(req)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to get response for %s", link.URL)
 		}

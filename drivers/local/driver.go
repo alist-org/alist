@@ -1,7 +1,6 @@
 package local
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -20,7 +19,6 @@ import (
 	"github.com/alist-org/alist/v3/internal/sign"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/server/common"
-	"github.com/disintegration/imaging"
 	_ "golang.org/x/image/webp"
 )
 
@@ -53,6 +51,12 @@ func (d *Local) Init(ctx context.Context) error {
 			return err
 		}
 		d.Addition.RootFolderPath = abs
+	}
+	if d.ThumbCacheFolder != "" && !utils.Exists(d.ThumbCacheFolder) {
+		err := os.MkdirAll(d.ThumbCacheFolder, os.FileMode(d.mkdirPerm))
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -135,36 +139,18 @@ func (d *Local) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 	fullPath := file.GetPath()
 	var link model.Link
 	if args.Type == "thumb" && utils.Ext(file.GetName()) != "svg" {
-		var srcBuf *bytes.Buffer
-		if utils.GetFileType(file.GetName()) == conf.VIDEO {
-			videoBuf, err := GetSnapshot(fullPath, 10)
-			if err != nil {
-				return nil, err
-			}
-			srcBuf = videoBuf
-		} else {
-			imgData, err := os.ReadFile(fullPath)
-			if err != nil {
-				return nil, err
-			}
-			imgBuf := bytes.NewBuffer(imgData)
-			srcBuf = imgBuf
-		}
-
-		image, err := imaging.Decode(srcBuf)
+		buf, thumbPath, err := d.getThumb(file)
 		if err != nil {
 			return nil, err
 		}
-		thumbImg := imaging.Resize(image, 144, 0, imaging.Lanczos)
-		var buf bytes.Buffer
-		err = imaging.Encode(&buf, thumbImg, imaging.PNG)
-		if err != nil {
-			return nil, err
-		}
-		size := buf.Len()
-		link.Data = io.NopCloser(&buf)
 		link.Header = http.Header{
-			"Content-Length": []string{strconv.Itoa(size)},
+			"Content-Type": []string{"image/png"},
+		}
+		if thumbPath != nil {
+			link.FilePath = thumbPath
+		} else {
+			link.Data = io.NopCloser(buf)
+			link.Header.Set("Content-Length", strconv.Itoa(buf.Len()))
 		}
 	} else {
 		link.FilePath = &fullPath

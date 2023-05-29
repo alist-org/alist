@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
@@ -16,14 +17,22 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+var upClient *resty.Client
+var once sync.Once
+
 func (d *LanZou) doupload(callback base.ReqCallback, resp interface{}) ([]byte, error) {
 	return d.post(d.BaseUrl+"/doupload.php", func(req *resty.Request) {
-		req.SetQueryParam("uid", d.uid)
-		callback(req)
+		req.SetQueryParams(map[string]string{
+			"uid": d.uid,
+			"vei": d.vei,
+		})
+		if callback != nil {
+			callback(req)
+		}
 	}, resp)
 }
 
-func (d *LanZou) get(url string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+func (d *LanZou) get(url string, callback base.ReqCallback) ([]byte, error) {
 	return d.request(url, http.MethodGet, callback, false)
 }
 
@@ -64,6 +73,9 @@ func (d *LanZou) _post(url string, callback base.ReqCallback, resp interface{}, 
 func (d *LanZou) request(url string, method string, callback base.ReqCallback, up bool) ([]byte, error) {
 	var req *resty.Request
 	if up {
+		once.Do(func() {
+			upClient = base.NewRestyClient().SetTimeout(120 * time.Second)
+		})
 		req = upClient.R()
 	} else {
 		req = base.RestyClient.R()
@@ -217,7 +229,7 @@ func (d *LanZou) getShareUrlHtml(shareID string) (string, error) {
 						Value: vs,
 					})
 				}
-			}, nil)
+			})
 		if err != nil {
 			return "", err
 		}
@@ -308,7 +320,7 @@ func (d *LanZou) getFilesByShareUrl(shareID, pwd string, sharePageData string) (
 			log.Errorf("lanzou: err => not find file page param ,data => %s\n", sharePageData)
 			return nil, fmt.Errorf("not find file page param")
 		}
-		data, err := d.get(fmt.Sprint(d.ShareUrl, urlpaths[1]), nil, nil)
+		data, err := d.get(fmt.Sprint(d.ShareUrl, urlpaths[1]), nil)
 		if err != nil {
 			return nil, err
 		}
@@ -437,4 +449,23 @@ func (d *LanZou) getFileRealInfo(downURL string) (*int64, *time.Time) {
 	time, _ := http.ParseTime(res.Header().Get("Last-Modified"))
 	size, _ := strconv.ParseInt(res.Header().Get("Content-Length"), 10, 64)
 	return &size, &time
+}
+
+func (d *LanZou) getVei() (string, error) {
+	resp, err := d.get("https://pc.woozooo.com/mydisk.php", func(req *resty.Request) {
+		req.SetQueryParams(map[string]string{
+			"item":   "files",
+			"action": "index",
+			"u":      d.uid,
+		})
+	})
+	if err != nil {
+		return "", err
+	}
+	html := RemoveNotes(string(resp))
+	data, err := htmlJsonToMap(html)
+	if err != nil {
+		return "", err
+	}
+	return data["vei"], nil
 }

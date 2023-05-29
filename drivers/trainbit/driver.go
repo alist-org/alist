@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
@@ -31,7 +32,7 @@ func (d *Trainbit) GetAddition() driver.Additional {
 }
 
 func (d *Trainbit) Init(ctx context.Context) error {
-	http.DefaultClient.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+	base.HttpClient.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 		return http.ErrUseLastResponse
 	}
 	var err error
@@ -119,7 +120,7 @@ func (d *Trainbit) Put(ctx context.Context, dstDir model.Obj, stream model.FileS
 	query := &url.Values{}
 	query.Add("q", strings.Split(dstDir.GetID(), "_")[1])
 	query.Add("guid", guid)
-	query.Add("name", url.QueryEscape(local2provider(stream.GetName(), false) + "."))
+	query.Add("name", url.QueryEscape(local2provider(stream.GetName(), false)+"."))
 	endpoint.RawQuery = query.Encode()
 	var total int64
 	total = 0
@@ -135,7 +136,7 @@ func (d *Trainbit) Put(ctx context.Context, dstDir model.Obj, stream model.FileS
 		return err
 	}
 	req.Header.Set("Content-Type", "text/json; charset=UTF-8")
-	_, err = http.DefaultClient.Do(req)
+	_, err = base.HttpClient.Do(req)
 	return err
 }
 
