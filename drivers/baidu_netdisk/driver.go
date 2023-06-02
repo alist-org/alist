@@ -23,7 +23,6 @@ import (
 type BaiduNetdisk struct {
 	model.Storage
 	Addition
-	AccessToken string
 }
 
 func (d *BaiduNetdisk) Config() driver.Config {
@@ -35,7 +34,11 @@ func (d *BaiduNetdisk) GetAddition() driver.Additional {
 }
 
 func (d *BaiduNetdisk) Init(ctx context.Context) error {
-	return d.refreshToken()
+	res, err := d.get("/xpan/nas", map[string]string{
+		"method": "uinfo",
+	}, nil)
+	log.Debugf("[baidu] get uinfo: %s", string(res))
+	return err
 }
 
 func (d *BaiduNetdisk) Drop(ctx context.Context) error {
