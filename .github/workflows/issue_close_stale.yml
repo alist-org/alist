@@ -18,4 +18,4 @@ jobs:
           inactive-day: 8
           close-reason: 'not_planned'
           body: |
-            Hello @${{ github.event.issue.user.login }}, this issue was closed due to inactive more than 52 days. You can reopen or recreate it if you think it should continue.
+            Hello @${{ github.event.issue.user.login }}, this issue was closed due to inactive more than 52 days. You can reopen or recreate it if you think it should continue. Thank you for your contributions again.
