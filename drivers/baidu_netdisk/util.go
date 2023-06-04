@@ -165,7 +165,7 @@ func (d *BaiduNetdisk) linkCrack(file model.Obj, args model.LinkArgs) (*model.Li
 	return &model.Link{
 		URL: resp.Info[0].Dlink,
 		Header: http.Header{
-			"User-Agent": []string{"netdisk"},
+			"User-Agent": []string{d.CustomCrackUA},
 		},
 	}, nil
 }
