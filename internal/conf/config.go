@@ -47,6 +47,7 @@ type Config struct {
 	TempDir               string    `json:"temp_dir" env:"TEMP_DIR"`
 	BleveDir              string    `json:"bleve_dir" env:"BLEVE_DIR"`
 	Log                   LogConfig `json:"log"`
+	DelayedStart          int       `json:"delayed_start" env:"DELAYED_START"`
 	MaxConnections        int       `json:"max_connections" env:"MAX_CONNECTIONS"`
 	TlsInsecureSkipVerify bool      `json:"tls_insecure_skip_verify" env:"TLS_INSECURE_SKIP_VERIFY"`
 }
