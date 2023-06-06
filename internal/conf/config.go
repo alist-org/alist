@@ -62,7 +62,7 @@ func DefaultConfig() *Config {
 	return &Config{
 		Address:        "0.0.0.0",
 		Port:           5244,
-		HttpsPort:      5245,
+		HttpsPort:      0,
 		JwtSecret:      random.String(16),
 		TokenExpiresIn: 48,
 		TempDir:        tempDir,

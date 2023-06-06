@@ -42,6 +42,10 @@ the address is defined in config file`,
 		r := gin.New()
 		r.Use(gin.LoggerWithWriter(log.StandardLogger().Out), gin.RecoveryWithWriter(log.StandardLogger().Out))
 		server.Init(r)
+		if conf.Conf.HttpsPort == 0 && conf.Conf.Scheme.Https {
+			conf.Conf.Scheme.DisableHttp = true
+			conf.Conf.HttpsPort = conf.Conf.Port
+		}
 		var httpSrv, httpsSrv *http.Server
 		if !conf.Conf.Scheme.DisableHttp {
 			httpBase := fmt.Sprintf("%s:%d", conf.Conf.Address, conf.Conf.Port)
