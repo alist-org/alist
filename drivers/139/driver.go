@@ -32,12 +32,19 @@ func (d *Yun139) GetAddition() driver.Additional {
 }
 
 func (d *Yun139) Init(ctx context.Context) error {
+	if d.Authorization == "" {
+		return fmt.Errorf("authorization is empty")
+	}
 	decode, err := base64.StdEncoding.DecodeString(d.Authorization)
 	if err != nil {
 		return err
 	}
 	decodeStr := string(decode)
-	d.Account = strings.Split(decodeStr, ":")[1]
+	splits := strings.Split(decodeStr, ":")
+	if len(splits) < 2 {
+		return fmt.Errorf("authorization is invalid, splits < 2")
+	}
+	d.Account = splits[1]
 	_, err = d.post("/orchestration/personalCloud/user/v1.0/qryUserExternInfo", base.Json{
 		"qryUserExternInfoReq": base.Json{
 			"commonAccountInfo": base.Json{
