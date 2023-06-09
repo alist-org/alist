@@ -6,7 +6,7 @@ import (
 )
 
 type Addition struct {
-	Account       string `json:"account" required:"true"`
+	//Account       string `json:"account" required:"true"`
 	Authorization string `json:"authorization" type:"text" required:"true"`
 	driver.RootID
 	Type    string `json:"type" type:"select" options:"personal,family" default:"personal"`
