@@ -352,6 +352,7 @@ func (y *Cloud189PC) initLoginParam() error {
 
 	// 判断是否需要验证码
 	resp, err := y.client.R().
+		SetHeader("REQID", param.ReqId).
 		SetFormData(map[string]string{
 			"appKey":      APP_ID,
 			"accountType": ACCOUNT_TYPE,
