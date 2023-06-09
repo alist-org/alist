@@ -74,7 +74,7 @@ func SearchNode(req model.SearchReq, useFullText bool) ([]model.SearchNode, int6
 	}
 	var count int64
 	if err := searchDB.Count(&count).Error; err != nil {
-		return nil, 0, errors.Wrapf(err, "failed get users count")
+		return nil, 0, errors.Wrapf(err, "failed get search items count")
 	}
 	var files []model.SearchNode
 	if err := searchDB.Offset((req.Page - 1) * req.PerPage).Limit(req.PerPage).Find(&files).Error; err != nil {
