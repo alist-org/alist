@@ -21,6 +21,9 @@ func Init(e *gin.Engine) {
 	}
 	Cors(e)
 	g := e.Group(conf.URL.Path)
+	if conf.Conf.Scheme.Https && conf.Conf.Scheme.ForceHttps && !conf.Conf.Scheme.DisableHttp {
+		g.Use(middlewares.ForceHttps)
+	}
 	g.Any("/ping", func(c *gin.Context) {
 		c.String(200, "pong")
 	})
