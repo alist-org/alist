@@ -54,11 +54,30 @@ BuildWinArm64() {
 
 BuildDev() {
   rm -rf .git/
-  xgo -targets=linux/amd64,windows/amd64,darwin/amd64 -out "$appName" -ldflags="$ldflags" -tags=jsoniter .
   mkdir -p "dist"
+  muslflags="--extldflags '-static -fpic' $ldflags"
+  BASE="https://musl.nn.ci/"
+  FILES=(x86_64-linux-musl-cross aarch64-linux-musl-cross)
+  for i in "${FILES[@]}"; do
+    url="${BASE}${i}.tgz"
+    curl -L -o "${i}.tgz" "${url}"
+    sudo tar xf "${i}.tgz" --strip-components 1 -C /usr/local
+  done
+  OS_ARCHES=(linux-musl-amd64 linux-musl-arm64)
+  CGO_ARGS=(x86_64-linux-musl-gcc aarch64-linux-musl-gcc)
+  for i in "${!OS_ARCHES[@]}"; do
+    os_arch=${OS_ARCHES[$i]}
+    cgo_cc=${CGO_ARGS[$i]}
+    echo building for ${os_arch}
+    export GOOS=${os_arch%%-*}
+    export GOARCH=${os_arch##*-}
+    export CC=${cgo_cc}
+    export CGO_ENABLED=1
+    go build -o ./dist/$appName-$os_arch -ldflags="$muslflags" -tags=jsoniter .
+  done
+  xgo -targets=windows/amd64,darwin/amd64 -out "$appName" -ldflags="$ldflags" -tags=jsoniter .
   mv alist-* dist
   cd dist
-  upx -9 ./alist-linux*
   cp ./alist-windows-amd64.exe ./alist-windows-amd64-upx.exe
   upx -9 ./alist-windows-amd64-upx.exe
   find . -type f -print0 | xargs -0 md5sum >md5.txt
