@@ -22,6 +22,7 @@ type Database struct {
 type Scheme struct {
 	DisableHttp bool   `json:"disable_http" env:"DISABLE_HTTP"`
 	Https       bool   `json:"https" env:"HTTPS"`
+	ForceHttps  bool   `json:"force_https" env:"FORCE_HTTPS"`
 	CertFile    string `json:"cert_file" env:"CERT_FILE"`
 	KeyFile     string `json:"key_file" env:"KEY_FILE"`
 }
