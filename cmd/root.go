@@ -24,7 +24,7 @@ func Execute() {
 }
 
 func init() {
-	RootCmd.PersistentFlags().StringVar(&flags.DataDir, "data", "data", "config file")
+	RootCmd.PersistentFlags().StringVar(&flags.DataDir, "data", "data", "data folder")
 	RootCmd.PersistentFlags().BoolVar(&flags.Debug, "debug", false, "start with debug mode")
 	RootCmd.PersistentFlags().BoolVar(&flags.NoPrefix, "no-prefix", false, "disable env prefix")
 	RootCmd.PersistentFlags().BoolVar(&flags.Dev, "dev", false, "start with dev mode")
