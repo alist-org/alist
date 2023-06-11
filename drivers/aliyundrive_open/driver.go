@@ -22,7 +22,7 @@ type AliyundriveOpen struct {
 
 	DriveId string
 
-	limitList func(ctx context.Context, dir model.Obj) ([]model.Obj, error)
+	limitList func(ctx context.Context, data base.Json) (*Files, error)
 	limitLink func(ctx context.Context, file model.Obj) (*model.Link, error)
 }
 
@@ -49,18 +49,14 @@ func (d *AliyundriveOpen) Drop(ctx context.Context) error {
 	return nil
 }
 
-func (d *AliyundriveOpen) list(ctx context.Context, dir model.Obj) ([]model.Obj, error) {
-	files, err := d.getFiles(dir.GetID())
+func (d *AliyundriveOpen) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
+	files, err := d.getFiles(ctx, dir.GetID())
 	if err != nil {
 		return nil, err
 	}
 	return utils.SliceConvert(files, func(src File) (model.Obj, error) {
 		return fileToObj(src), nil
 	})
-}
-
-func (d *AliyundriveOpen) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
-	return d.limitList(ctx, dir)
 }
 
 func (d *AliyundriveOpen) link(ctx context.Context, file model.Obj) (*model.Link, error) {

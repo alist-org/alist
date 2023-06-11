@@ -77,14 +77,24 @@ func (d *AliyundriveOpen) request(uri, method string, callback base.ReqCallback,
 	return res.Body(), nil
 }
 
-func (d *AliyundriveOpen) getFiles(fileId string) ([]File, error) {
+func (d *AliyundriveOpen) list(ctx context.Context, data base.Json) (*Files, error) {
+	var resp Files
+	_, err := d.request("/adrive/v1.0/openFile/list", http.MethodPost, func(req *resty.Request) {
+		req.SetBody(data).SetResult(&resp)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &resp, nil
+}
+
+func (d *AliyundriveOpen) getFiles(ctx context.Context, fileId string) ([]File, error) {
 	marker := "first"
 	res := make([]File, 0)
 	for marker != "" {
 		if marker == "first" {
 			marker = ""
 		}
-		var resp Files
 		data := base.Json{
 			"drive_id":        d.DriveId,
 			"limit":           200,
@@ -98,9 +108,7 @@ func (d *AliyundriveOpen) getFiles(fileId string) ([]File, error) {
 			//"video_thumbnail_width": 480,
 			//"image_thumbnail_width": 480,
 		}
-		_, err := d.request("/adrive/v1.0/openFile/list", http.MethodPost, func(req *resty.Request) {
-			req.SetBody(data).SetResult(&resp)
-		})
+		resp, err := d.limitList(ctx, data)
 		if err != nil {
 			return nil, err
 		}
