@@ -22,6 +22,9 @@ type AliyundriveShare struct {
 	ShareToken  string
 	DriveId     string
 	cron        *cron.Cron
+
+	limitList func(ctx context.Context, dir model.Obj) ([]model.Obj, error)
+	limitLink func(ctx context.Context, file model.Obj) (*model.Link, error)
 }
 
 func (d *AliyundriveShare) Config() driver.Config {
@@ -48,6 +51,8 @@ func (d *AliyundriveShare) Init(ctx context.Context) error {
 			log.Errorf("%+v", err)
 		}
 	})
+	d.limitList = utils.LimitRateCtx(d.list, time.Second/4)
+	d.limitLink = utils.LimitRateCtx(d.link, time.Second)
 	return nil
 }
 
@@ -60,6 +65,10 @@ func (d *AliyundriveShare) Drop(ctx context.Context) error {
 }
 
 func (d *AliyundriveShare) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
+	return d.limitList(ctx, dir)
+}
+
+func (d *AliyundriveShare) list(ctx context.Context, dir model.Obj) ([]model.Obj, error) {
 	files, err := d.getFiles(dir.GetID())
 	if err != nil {
 		return nil, err
@@ -70,6 +79,10 @@ func (d *AliyundriveShare) List(ctx context.Context, dir model.Obj, args model.L
 }
 
 func (d *AliyundriveShare) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
+	return d.limitLink(ctx, file)
+}
+
+func (d *AliyundriveShare) link(ctx context.Context, file model.Obj) (*model.Link, error) {
 	data := base.Json{
 		"drive_id": d.DriveId,
 		"file_id":  file.GetID(),
@@ -79,7 +92,7 @@ func (d *AliyundriveShare) Link(ctx context.Context, file model.Obj, args model.
 	}
 	var resp ShareLinkResp
 	_, err := d.request("https://api.aliyundrive.com/v2/file/get_share_link_download_url", http.MethodPost, func(req *resty.Request) {
-		req.SetBody(data).SetResult(&resp)
+		req.SetHeader(CanaryHeaderKey, CanaryHeaderValue).SetBody(data).SetResult(&resp)
 	})
 	if err != nil {
 		return nil, err
