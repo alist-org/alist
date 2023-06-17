@@ -81,8 +81,21 @@ func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.
 		w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"; filename*=UTF-8''%s`, filename, url.PathEscape(filename)))
 		http.ServeContent(w, r, file.GetName(), fileStat.ModTime(), f)
 		return nil
-	} else if link.Handle != nil {
-		return link.Handle(w, r)
+	} else if link.Writer != nil {
+		if link.Header != nil {
+			for h, v := range link.Header {
+				w.Header()[h] = v
+			}
+		}
+		if cd := w.Header().Get("Content-Disposition"); cd == "" {
+			w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"; filename*=UTF-8''%s`, file.GetName(), url.PathEscape(file.GetName())))
+		}
+		if link.Status == 0 {
+			w.WriteHeader(http.StatusOK)
+		} else {
+			w.WriteHeader(link.Status)
+		}
+		return link.Writer(w)
 	} else {
 		req, err := http.NewRequest(r.Method, link.URL, nil)
 		if err != nil {

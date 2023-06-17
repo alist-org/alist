@@ -72,7 +72,7 @@ func (d *Yun139) request(pathname string, method string, callback base.ReqCallba
 	req.SetHeaders(map[string]string{
 		"Accept":         "application/json, text/plain, */*",
 		"CMS-DEVICE":     "default",
-		"Cookie":         d.Cookie,
+		"Authorization":  "Basic " + d.Authorization,
 		"mcloud-channel": "1000101",
 		"mcloud-client":  "10701",
 		//"mcloud-route": "001",

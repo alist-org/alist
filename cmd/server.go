@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
@@ -28,6 +29,10 @@ var ServerCmd = &cobra.Command{
 the address is defined in config file`,
 	Run: func(cmd *cobra.Command, args []string) {
 		Init()
+		if conf.Conf.DelayedStart != 0 {
+			utils.Log.Infof("delayed start for %d seconds", conf.Conf.DelayedStart)
+			time.Sleep(time.Duration(conf.Conf.DelayedStart) * time.Second)
+		}
 		bootstrap.InitAria2()
 		bootstrap.InitQbittorrent()
 		bootstrap.LoadStorages()
@@ -37,42 +42,62 @@ the address is defined in config file`,
 		r := gin.New()
 		r.Use(gin.LoggerWithWriter(log.StandardLogger().Out), gin.RecoveryWithWriter(log.StandardLogger().Out))
 		server.Init(r)
-		base := fmt.Sprintf("%s:%d", conf.Conf.Address, conf.Conf.Port)
-		utils.Log.Infof("start server @ %s", base)
-		srv := &http.Server{Addr: base, Handler: r}
-		go func() {
-			var err error
-			if conf.Conf.Scheme.Https {
-				//err = r.RunTLS(base, conf.Conf.Scheme.CertFile, conf.Conf.Scheme.KeyFile)
-				err = srv.ListenAndServeTLS(conf.Conf.Scheme.CertFile, conf.Conf.Scheme.KeyFile)
-			} else {
-				err = srv.ListenAndServe()
-			}
-			if err != nil && err != http.ErrServerClosed {
-				utils.Log.Fatalf("failed to start: %s", err.Error())
-			}
-		}()
+		var httpSrv, httpsSrv *http.Server
+		if !conf.Conf.Scheme.DisableHttp {
+			httpBase := fmt.Sprintf("%s:%d", conf.Conf.Address, conf.Conf.Port)
+			utils.Log.Infof("start HTTP server @ %s", httpBase)
+			httpSrv = &http.Server{Addr: httpBase, Handler: r}
+			go func() {
+				err := httpSrv.ListenAndServe()
+				if err != nil && err != http.ErrServerClosed {
+					utils.Log.Fatalf("failed to start: %s", err.Error())
+				}
+			}()
+		}
+		if conf.Conf.Scheme.Https {
+			httpsBase := fmt.Sprintf("%s:%d", conf.Conf.Address, conf.Conf.HttpsPort)
+			utils.Log.Infof("start HTTPS server @ %s", httpsBase)
+			httpsSrv = &http.Server{Addr: httpsBase, Handler: r}
+			go func() {
+				err := httpsSrv.ListenAndServeTLS(conf.Conf.Scheme.CertFile, conf.Conf.Scheme.KeyFile)
+				if err != nil && err != http.ErrServerClosed {
+					utils.Log.Fatalf("failed to start: %s", err.Error())
+				}
+			}()
+		}
 		// Wait for interrupt signal to gracefully shutdown the server with
-		// a timeout of 5 seconds.
-		quit := make(chan os.Signal)
+		// a timeout of 1 second.
+		quit := make(chan os.Signal, 1)
 		// kill (no param) default send syscanll.SIGTERM
 		// kill -2 is syscall.SIGINT
 		// kill -9 is syscall. SIGKILL but can"t be catch, so don't need add it
 		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 		<-quit
-		utils.Log.Println("Shutdown Server ...")
+		utils.Log.Println("Shutdown server...")
 
 		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 		defer cancel()
-		if err := srv.Shutdown(ctx); err != nil {
-			utils.Log.Fatal("Server Shutdown:", err)
+		var wg sync.WaitGroup
+		if !conf.Conf.Scheme.DisableHttp {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				if err := httpSrv.Shutdown(ctx); err != nil {
+					utils.Log.Fatal("HTTP server shutdown:", err)
+				}
+			}()
 		}
-		// catching ctx.Done(). timeout of 3 seconds.
-		select {
-		case <-ctx.Done():
-			utils.Log.Println("timeout of 1 seconds.")
+		if conf.Conf.Scheme.Https {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				if err := httpsSrv.Shutdown(ctx); err != nil {
+					utils.Log.Fatal("HTTPS server shutdown:", err)
+				}
+			}()
 		}
-		utils.Log.Println("Server exiting")
+		wg.Wait()
+		utils.Log.Println("Server exit")
 	},
 }
 

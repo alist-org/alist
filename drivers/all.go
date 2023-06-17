@@ -28,7 +28,7 @@ import (
 	_ "github.com/alist-org/alist/v3/drivers/onedrive_app"
 	_ "github.com/alist-org/alist/v3/drivers/pikpak"
 	_ "github.com/alist-org/alist/v3/drivers/pikpak_share"
-	_ "github.com/alist-org/alist/v3/drivers/quark"
+	_ "github.com/alist-org/alist/v3/drivers/quark_uc"
 	_ "github.com/alist-org/alist/v3/drivers/s3"
 	_ "github.com/alist-org/alist/v3/drivers/seafile"
 	_ "github.com/alist-org/alist/v3/drivers/sftp"
@@ -41,6 +41,7 @@ import (
 	_ "github.com/alist-org/alist/v3/drivers/uss"
 	_ "github.com/alist-org/alist/v3/drivers/virtual"
 	_ "github.com/alist-org/alist/v3/drivers/webdav"
+	_ "github.com/alist-org/alist/v3/drivers/wopan"
 	_ "github.com/alist-org/alist/v3/drivers/yandex_disk"
 )
 

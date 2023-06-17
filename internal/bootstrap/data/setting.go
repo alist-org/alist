@@ -154,7 +154,7 @@ func InitialSettings() []model.SettingItem {
 
 		// SSO settings
 		{Key: conf.SSOLoginEnabled, Value: "false", Type: conf.TypeBool, Group: model.SSO, Flag: model.PUBLIC},
-		{Key: conf.SSOLoginplatform, Type: conf.TypeSelect, Options: "Casdoor,Github,Microsoft,Google,Dingtalk", Group: model.SSO, Flag: model.PUBLIC},
+		{Key: conf.SSOLoginplatform, Type: conf.TypeSelect, Options: "Casdoor,Github,Microsoft,Google,Dingtalk,OIDC", Group: model.SSO, Flag: model.PUBLIC},
 		{Key: conf.SSOClientId, Value: "", Type: conf.TypeString, Group: model.SSO, Flag: model.PRIVATE},
 		{Key: conf.SSOClientSecret, Value: "", Type: conf.TypeString, Group: model.SSO, Flag: model.PRIVATE},
 		{Key: conf.SSOOrganizationName, Value: "", Type: conf.TypeString, Group: model.SSO, Flag: model.PRIVATE},

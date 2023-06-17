@@ -3,6 +3,7 @@ package fs
 import (
 	"context"
 	"fmt"
+	"net/http"
 	stdpath "path"
 	"sync/atomic"
 
@@ -87,7 +88,9 @@ func copyFileBetween2Storages(tsk *task.Task[uint64], srcStorage, dstStorage dri
 	if err != nil {
 		return errors.WithMessagef(err, "failed get src [%s] file", srcFilePath)
 	}
-	link, _, err := op.Link(tsk.Ctx, srcStorage, srcFilePath, model.LinkArgs{})
+	link, _, err := op.Link(tsk.Ctx, srcStorage, srcFilePath, model.LinkArgs{
+		Header: http.Header{},
+	})
 	if err != nil {
 		return errors.WithMessagef(err, "failed get [%s] link", srcFilePath)
 	}

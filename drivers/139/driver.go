@@ -2,10 +2,12 @@ package _139
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
@@ -18,6 +20,7 @@ import (
 type Yun139 struct {
 	model.Storage
 	Addition
+	Account string
 }
 
 func (d *Yun139) Config() driver.Config {
@@ -29,7 +32,20 @@ func (d *Yun139) GetAddition() driver.Additional {
 }
 
 func (d *Yun139) Init(ctx context.Context) error {
-	_, err := d.post("/orchestration/personalCloud/user/v1.0/qryUserExternInfo", base.Json{
+	if d.Authorization == "" {
+		return fmt.Errorf("authorization is empty")
+	}
+	decode, err := base64.StdEncoding.DecodeString(d.Authorization)
+	if err != nil {
+		return err
+	}
+	decodeStr := string(decode)
+	splits := strings.Split(decodeStr, ":")
+	if len(splits) < 2 {
+		return fmt.Errorf("authorization is invalid, splits < 2")
+	}
+	d.Account = splits[1]
+	_, err = d.post("/orchestration/personalCloud/user/v1.0/qryUserExternInfo", base.Json{
 		"qryUserExternInfoReq": base.Json{
 			"commonAccountInfo": base.Json{
 				"account":     d.Account,

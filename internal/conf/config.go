@@ -20,9 +20,11 @@ type Database struct {
 }
 
 type Scheme struct {
-	Https    bool   `json:"https" env:"HTTPS"`
-	CertFile string `json:"cert_file" env:"CERT_FILE"`
-	KeyFile  string `json:"key_file" env:"KEY_FILE"`
+	DisableHttp bool   `json:"disable_http" env:"DISABLE_HTTP"`
+	Https       bool   `json:"https" env:"HTTPS"`
+	ForceHttps  bool   `json:"force_https" env:"FORCE_HTTPS"`
+	CertFile    string `json:"cert_file" env:"CERT_FILE"`
+	KeyFile     string `json:"key_file" env:"KEY_FILE"`
 }
 
 type LogConfig struct {
@@ -38,6 +40,7 @@ type Config struct {
 	Force                 bool      `json:"force" env:"FORCE"`
 	Address               string    `json:"address" env:"ADDR"`
 	Port                  int       `json:"port" env:"PORT"`
+	HttpsPort             int       `json:"https_port" env:"HTTPS_PORT"`
 	SiteURL               string    `json:"site_url" env:"SITE_URL"`
 	Cdn                   string    `json:"cdn" env:"CDN"`
 	JwtSecret             string    `json:"jwt_secret" env:"JWT_SECRET"`
@@ -47,6 +50,7 @@ type Config struct {
 	TempDir               string    `json:"temp_dir" env:"TEMP_DIR"`
 	BleveDir              string    `json:"bleve_dir" env:"BLEVE_DIR"`
 	Log                   LogConfig `json:"log"`
+	DelayedStart          int       `json:"delayed_start" env:"DELAYED_START"`
 	MaxConnections        int       `json:"max_connections" env:"MAX_CONNECTIONS"`
 	TlsInsecureSkipVerify bool      `json:"tls_insecure_skip_verify" env:"TLS_INSECURE_SKIP_VERIFY"`
 }
@@ -59,6 +63,7 @@ func DefaultConfig() *Config {
 	return &Config{
 		Address:        "0.0.0.0",
 		Port:           5244,
+		HttpsPort:      5245,
 		JwtSecret:      random.String(16),
 		TokenExpiresIn: 48,
 		TempDir:        tempDir,

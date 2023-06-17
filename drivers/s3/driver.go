@@ -61,7 +61,10 @@ func (d *S3) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]mo
 func (d *S3) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	path := getKey(file.GetPath(), false)
 	filename := stdpath.Base(path)
-	disposition := fmt.Sprintf(`attachment; filename="%s"; filename*=UTF-8''%s`, filename, url.PathEscape(filename))
+	disposition := fmt.Sprintf(`attachment; filename*=UTF-8''%s`, url.PathEscape(filename))
+	if d.AddFilenameToDisposition {
+		disposition = fmt.Sprintf(`attachment; filename="%s"; filename*=UTF-8''%s`, filename, url.PathEscape(filename))
+	}
 	input := &s3.GetObjectInput{
 		Bucket: &d.Bucket,
 		Key:    &path,
@@ -136,11 +139,13 @@ func (d *S3) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreame
 		uploader.PartSize = stream.GetSize() / (s3manager.MaxUploadParts - 1)
 	}
 	key := getKey(stdpath.Join(dstDir.GetPath(), stream.GetName()), false)
+	contentType := stream.GetMimetype()
 	log.Debugln("key:", key)
 	input := &s3manager.UploadInput{
-		Bucket: &d.Bucket,
-		Key:    &key,
-		Body:   stream,
+		Bucket:      &d.Bucket,
+		Key:         &key,
+		Body:        stream,
+		ContentType: &contentType,
 	}
 	_, err := uploader.UploadWithContext(ctx, input)
 	return err
