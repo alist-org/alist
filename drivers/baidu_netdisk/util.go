@@ -154,7 +154,7 @@ func (d *BaiduNetdisk) linkCrack(file model.Obj, args model.LinkArgs) (*model.Li
 		"target": fmt.Sprintf("[\"%s\"]", file.GetPath()),
 		"dlink":  "1",
 		"web":    "5",
-		//"origin": "dlna",
+		"origin": "dlna",
 	}
 	_, err := d.request("https://pan.baidu.com/api/filemetas", http.MethodGet, func(req *resty.Request) {
 		req.SetQueryParams(param)
