@@ -73,6 +73,7 @@ English | [中文](./README_cn.md) | [Contributing](./CONTRIBUTING.md) | [CODE_O
     - [x] SMB
     - [x] [115](https://115.com/)
     - [X] Cloudreve
+    - [x] [Dropbox](https://www.dropbox.com/)
 - [x] Easy to deploy and out-of-the-box
 - [x] File preview (PDF, markdown, code, plain text, ...)
 - [x] Image preview in gallery mode

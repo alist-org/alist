@@ -60,3 +60,12 @@ func MergeErrors(errs ...error) error {
 	}
 	return nil
 }
+
+func SliceMeet[T1, T2 any](arr []T1, v T2, meet func(item T1, v T2) bool) bool {
+	for _, item := range arr {
+		if meet(item, v) {
+			return true
+		}
+	}
+	return false
+}
