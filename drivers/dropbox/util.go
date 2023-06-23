@@ -3,34 +3,43 @@ package dropbox
 import (
 	"context"
 	"fmt"
+	"io"
+	"net/http"
+	"strings"
+
 	"github.com/alist-org/alist/v3/drivers/base"
+	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
-	"io"
-	"net/http"
 )
 
 func (d *Dropbox) refreshToken() error {
 	url := d.base + "/oauth2/token"
-
+	if utils.SliceContains([]string{"", DefaultClientID}, d.ClientID) {
+		url = d.OauthTokenURL
+	}
 	var tokenResp TokenResp
 	resp, err := base.RestyClient.R().
-		ForceContentType("application/x-www-form-urlencoded").
-		SetBasicAuth(d.ClientId, d.ClientSecret).
+		//ForceContentType("application/x-www-form-urlencoded").
+		//SetBasicAuth(d.ClientID, d.ClientSecret).
 		SetFormData(map[string]string{
 			"grant_type":    "refresh_token",
 			"refresh_token": d.RefreshToken,
+			"client_id":     d.ClientID,
+			"client_secret": d.ClientSecret,
 		}).
 		Post(url)
 	if err != nil {
 		return err
 	}
+	log.Debugf("[dropbox] refresh token response: %s", resp.String())
 	if resp.StatusCode() != 200 {
 		return fmt.Errorf("failed to refresh token: %s", resp.String())
 	}
 	_ = utils.Json.UnmarshalFromString(resp.String(), &tokenResp)
 	d.AccessToken = tokenResp.AccessToken
+	op.MustSaveDriverStorage(d)
 	return nil
 }
 
@@ -49,10 +58,14 @@ func (d *Dropbox) request(uri, method string, callback base.ReqCallback, retry .
 	if err != nil {
 		return nil, err
 	}
+	log.Debugf("[dropbox] request (%s) response: %s", uri, res.String())
 	isRetry := len(retry) > 0 && retry[0]
 	if res.StatusCode() != 200 {
-		body := string(res.Body())
-		if !isRetry && (utils.SliceContains([]string{"expired_access_token", "invalid_access_token", "authorization"}, body) || d.AccessToken == "") {
+		body := res.String()
+		if !isRetry && (utils.SliceMeet([]string{"expired_access_token", "invalid_access_token", "authorization"}, body,
+			func(item string, v string) bool {
+				return strings.Contains(v, item)
+			}) || d.AccessToken == "") {
 			err = d.refreshToken()
 			if err != nil {
 				return nil, err
@@ -146,8 +159,10 @@ func (d *Dropbox) finishUploadSession(ctx context.Context, toPath string, offset
 		},
 	}
 
-	argsJson, _ := utils.Json.MarshalToString(uploadFinishArgs)
-
+	argsJson, err := utils.Json.MarshalToString(uploadFinishArgs)
+	if err != nil {
+		return err
+	}
 	req.Header.Set("Dropbox-API-Arg", argsJson)
 
 	res, err := base.HttpClient.Do(req)

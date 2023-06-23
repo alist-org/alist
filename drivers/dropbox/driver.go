@@ -2,16 +2,18 @@ package dropbox
 
 import (
 	"context"
+	"fmt"
+	"io"
+	"math"
+	"net/http"
+	"time"
+
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
-	"io"
-	"math"
-	"net/http"
-	"time"
 )
 
 type Dropbox struct {
@@ -19,7 +21,6 @@ type Dropbox struct {
 	Addition
 	base        string
 	contentBase string
-	AccessToken string
 }
 
 func (d *Dropbox) Config() driver.Config {
@@ -31,6 +32,19 @@ func (d *Dropbox) GetAddition() driver.Additional {
 }
 
 func (d *Dropbox) Init(ctx context.Context) error {
+	query := "foo"
+	res, err := d.request("/2/check/user", http.MethodPost, func(req *resty.Request) {
+		req.SetBody(base.Json{
+			"query": query,
+		})
+	})
+	if err != nil {
+		return err
+	}
+	result := utils.Json.Get(res, "result").ToString()
+	if result != query {
+		return fmt.Errorf("failed to check user: %s", string(res))
+	}
 	return nil
 }
 
