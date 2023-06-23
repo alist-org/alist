@@ -148,7 +148,9 @@ func (d *AliyundriveOpen) Remove(ctx context.Context, obj model.Obj) error {
 func (d *AliyundriveOpen) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
 	// rapid_upload is not currently supported
 	// 1. create
-	const DEFAULT int64 = 20971520
+	// Part Size Unit: Bytes, Default: 20MB, 
+	// Maximum number of slices 10,000, ≈195.3125GB 
+	var partSize int64 = 20*1024*1024 
 	createData := base.Json{
 		"drive_id":        d.DriveId,
 		"parent_file_id":  dstDir.GetID(),
@@ -157,8 +159,21 @@ func (d *AliyundriveOpen) Put(ctx context.Context, dstDir model.Obj, stream mode
 		"check_name_mode": "ignore",
 	}
 	count := 1
-	if stream.GetSize() > DEFAULT {
-		count = int(math.Ceil(float64(stream.GetSize()) / float64(DEFAULT)))
+	if stream.GetSize() > partSize {
+		if stream.GetSize() > 1*1024*1024*1024*1024 { // file Size over 1TB 
+			partSize = 5*1024*1024*1024 // file part size 5GB 
+		} else if stream.GetSize() > 768*1024*1024*1024 { // over 768GB 
+			partSize = 109951163 // ≈ 104.8576MB, split 1TB into 10,000 part 
+		} else if stream.GetSize() > 512*1024*1024*1024 { // over 512GB 
+			partSize = 82463373 // ≈ 78.6432MB 
+		} else if stream.GetSize() > 384*1024*1024*1024 { // over 384GB 
+			partSize = 54975582 // ≈ 52.4288MB 
+		} else if stream.GetSize() > 256*1024*1024*1024 { // over 256GB 
+			partSize = 41231687 // ≈ 39.3216MB 
+		} else if stream.GetSize() > 128*1024*1024*1024 { // over 128GB 
+			partSize = 27487791 // ≈ 26.2144MB 
+		} 
+		count = int(math.Ceil(float64(stream.GetSize()) / float64(partSize)))
 		createData["part_info_list"] = makePartInfos(count)
 	}
 	var createResp CreateResp
@@ -174,7 +189,7 @@ func (d *AliyundriveOpen) Put(ctx context.Context, dstDir model.Obj, stream mode
 		if utils.IsCanceled(ctx) {
 			return ctx.Err()
 		}
-		err = d.uploadPart(ctx, i, count, utils.NewMultiReadable(io.LimitReader(stream, DEFAULT)), &createResp, true)
+		err = d.uploadPart(ctx, i, count, utils.NewMultiReadable(io.LimitReader(stream, partSize)), &createResp, true)
 		if err != nil {
 			return err
 		}
