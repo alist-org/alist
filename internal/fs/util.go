@@ -86,16 +86,22 @@ func isFileCached(path string) bool {
 func syncCache(main driver.Driver, path string, cache driver.Driver) uint64 {
 	//using CopyTaskManager but should have it own taskManager, I dont know web
 	return CopyTaskManager.Submit(task.WithCancelCtx(&task.Task[uint64]{
-		Name: fmt.Sprintf("copy [%s](%s) to [%s](%s)", main.GetStorage().MountPath, path, cache.GetStorage().MountPath, path),
+		Name: fmt.Sprintf("cache [%s](%s) to [%s](%s)", main.GetStorage().MountPath, path, cache.GetStorage().MountPath, path),
 		Func: func(t *task.Task[uint64]) error {
 			actualPath := op.GetAndActualWithStorage(path, main)
-			err := op.Remove(t.Ctx, cache, actualPath)
-			if err != nil {
-				return err
-			}
-			err = copyFileBetween2Storages(t, main, cache, actualPath, stdpath.Dir(actualPath))
-			if err == nil {
-				fifoCache(t.Ctx, cache, path)
+
+			srcFile, err := op.Get(t.Ctx, main, actualPath)
+			// only cache file exclude dir
+			if (err == nil) && !(srcFile.IsDir()) {
+
+				err = op.Remove(t.Ctx, cache, actualPath)
+				if err != nil {
+					return err
+				}
+				err = copyFileBetween2Storages(t, main, cache, actualPath, stdpath.Dir(actualPath))
+				if err == nil {
+					fifoCache(t.Ctx, cache, path)
+				}
 			}
 			log.Debugf("copy file between storages: %+v", err)
 			return err
