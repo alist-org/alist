@@ -157,7 +157,7 @@ func List(ctx context.Context, storage driver.Driver, path string, args model.Li
 // Get object from list of files
 func Get(ctx context.Context, storage driver.Driver, path string) (model.Obj, error) {
 	path = utils.FixAndCleanPath(path)
-	log.Debugf("op.Get %s", path)
+	log.Debugf("op.Get %s from %s", path, storage.GetStorage().MountPath)
 
 	// get the obj directly without list so that we can reduce the io
 	if g, ok := storage.(driver.Getter); ok {

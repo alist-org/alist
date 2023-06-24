@@ -346,12 +346,12 @@ func recordCache(storages []driver.Driver, path string) driver.Driver {
 	if strings.Contains(storages[0].GetStorage().MountPath, ".cache") {
 		main = storages[1]
 		cache = storages[0]
-		cachePair.Store(path, cache)
+		cachePair.Store(main.GetStorage().MountPath, cache)
 		return main
 	} else if strings.Contains(storages[1].GetStorage().MountPath, ".cache") {
 		main = storages[0]
 		cache = storages[1]
-		cachePair.Store(path, cache)
+		cachePair.Store(main.GetStorage().MountPath, cache)
 		return main
 	}
 	return nil

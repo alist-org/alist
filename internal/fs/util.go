@@ -79,9 +79,22 @@ func getFileStreamFromLink(file model.Obj, link *model.Link) (*model.FileStream,
 
 var cachedFiles []string
 
+func chooseCache(storage driver.Driver, path string) driver.Driver {
+	cacheStorage, has := op.HasCacheStorage(storage.GetStorage().MountPath)
+	if has {
+		if isFileCached(path) {
+			storage = cacheStorage
+		} else {
+			syncCache(storage, path, cacheStorage)
+		}
+	}
+	return storage
+}
 func isFileCached(path string) bool {
-	log.Debugf("isFileCached %s", path)
-	return utils.SliceContains(cachedFiles, path)
+	ret := utils.SliceContains(cachedFiles, path)
+	log.Debugf("isFileCached %s: %t", path, ret)
+	return ret
+
 }
 func syncCache(main driver.Driver, path string, cache driver.Driver) uint64 {
 	//using CopyTaskManager but should have it own taskManager, I dont know web
