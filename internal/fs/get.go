@@ -23,6 +23,7 @@ func get(ctx context.Context, path string) (model.Obj, error) {
 		}
 	}
 	storage, actualPath, err := op.GetStorageAndActualPath(path)
+
 	if err != nil {
 		// if there are no storage prefix with path, maybe root folder
 		if path == "/" {
@@ -34,6 +35,16 @@ func get(ctx context.Context, path string) (model.Obj, error) {
 			}, nil
 		}
 		return nil, errors.WithMessage(err, "failed get storage")
+	}
+	//sync(copy) is high-level op, that why those thing are here
+	//otherwise cycle import will fuck you
+	cacheStorage, has := op.HasCacheStorage(storage.GetStorage().MountPath)
+	if has {
+		if isFileCached(path) {
+			storage = cacheStorage
+		} else {
+			syncCache(storage, path, cacheStorage)
+		}
 	}
 	return op.Get(ctx, storage, actualPath)
 }

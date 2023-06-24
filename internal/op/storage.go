@@ -307,6 +307,7 @@ var balanceMap generic_sync.MapOf[string, int]
 // GetBalancedStorage get storage by path
 func GetBalancedStorage(path string) driver.Driver {
 	path = utils.FixAndCleanPath(path)
+
 	storages := getStoragesByPath(path)
 	storageNum := len(storages)
 	switch storageNum {
@@ -315,10 +316,54 @@ func GetBalancedStorage(path string) driver.Driver {
 	case 1:
 		return storages[0]
 	default:
-		virtualPath := utils.GetActualMountPath(storages[0].GetStorage().MountPath)
-		i, _ := balanceMap.LoadOrStore(virtualPath, 0)
-		i = (i + 1) % storageNum
-		balanceMap.Store(virtualPath, i)
-		return storages[i]
+
+		ret := recordCache(storages, path)
+		if ret == nil {
+			ret = chooseBalance(storages, storageNum)
+		}
+		return ret
 	}
 }
+
+func chooseBalance(storages []driver.Driver, storageNum int) driver.Driver {
+	virtualPath := utils.GetActualMountPath(storages[0].GetStorage().MountPath)
+	i, _ := balanceMap.LoadOrStore(virtualPath, 0)
+	i = (i + 1) % storageNum
+	balanceMap.Store(virtualPath, i)
+	return storages[i]
+}
+
+var cachePair generic_sync.MapOf[string, driver.Driver]
+
+// When the length is greater than 2, no one knows what will happen
+// too dirty, must remake
+// this methon wont remove but just add
+// and the name is ....
+// I'm out of my mind
+func recordCache(storages []driver.Driver, path string) driver.Driver {
+	var main, cache driver.Driver
+
+	if strings.Contains(storages[0].GetStorage().MountPath, ".cache") {
+		main = storages[1]
+		cache = storages[0]
+		cachePair.Store(path, cache)
+		return main
+	} else if strings.Contains(storages[1].GetStorage().MountPath, ".cache") {
+		main = storages[0]
+		cache = storages[1]
+		cachePair.Store(path, cache)
+		return main
+	}
+	return nil
+
+}
+
+// HasCacheStorage
+// this method should live with storageManager in the neighborhood
+// I cant find out, maybe just here?
+func HasCacheStorage(virtualPath string) (driver.Driver, bool) {
+	ret, ok := cachePair.Load(virtualPath)
+	return ret, ok
+}
+
+// copy from fs because of cycle import
