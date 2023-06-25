@@ -2,10 +2,6 @@ package handles
 
 import (
 	"fmt"
-	"io"
-	stdpath "path"
-	"regexp"
-
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/fs"
 	"github.com/alist-org/alist/v3/internal/model"
@@ -17,6 +13,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+	"io"
+	stdpath "path"
 )
 
 type MkdirOrLinkReq struct {
@@ -256,12 +254,14 @@ func FsRename(c *gin.Context) {
 }
 
 type RegexRenameReq struct {
-	SrcDir       string `json:"src_dir"`
-	SrcNameRegex string `json:"src_name_regex"`
-	NewNameRegex string `json:"new_name_regex"`
+	SrcDir        string `json:"src_dir"`
+	RenameObjects []struct {
+		SrcName string `json:"src_name"`
+		NewName string `json:"new_name"`
+	} `json:"rename_objects"`
 }
 
-func FsRegexRename(c *gin.Context) {
+func FsBatchRename(c *gin.Context) {
 	var req RegexRenameReq
 	if err := c.ShouldBind(&req); err != nil {
 		common.ErrorResp(c, err, 400)
@@ -288,27 +288,16 @@ func FsRegexRename(c *gin.Context) {
 	}
 	c.Set("meta", meta)
 
-	srcRegexp, err := regexp.Compile(req.SrcNameRegex)
-	if err != nil {
-		common.ErrorResp(c, err, 500)
-		return
-	}
+	for _, renameObject := range req.RenameObjects {
 
-	files, err := fs.List(c, reqPath, &fs.ListArgs{})
-	if err != nil {
-		common.ErrorResp(c, err, 500)
-		return
-	}
+		if renameObject.SrcName == "" || renameObject.NewName == "" {
+			continue
+		}
 
-	for _, file := range files {
-
-		if srcRegexp.MatchString(file.GetName()) {
-			filePath := fmt.Sprintf("%s/%s", reqPath, file.GetName())
-			newFileName := srcRegexp.ReplaceAllString(file.GetName(), req.NewNameRegex)
-			if err := fs.Rename(c, filePath, newFileName); err != nil {
-				common.ErrorResp(c, err, 500)
-				return
-			}
+		filePath := fmt.Sprintf("%s/%s", reqPath, renameObject.SrcName)
+		if err := fs.Rename(c, filePath, renameObject.NewName); err != nil {
+			common.ErrorResp(c, err, 500)
+			return
 		}
 
 	}
