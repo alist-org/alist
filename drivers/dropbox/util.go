@@ -84,7 +84,7 @@ func (d *Dropbox) list(ctx context.Context, data base.Json, isContinue bool) (*L
 		uri += "/continue"
 	}
 	_, err := d.request(uri, http.MethodPost, func(req *resty.Request) {
-		req.SetBody(data).SetResult(&resp)
+		req.SetContext(ctx).SetBody(data).SetResult(&resp)
 	})
 	if err != nil {
 		return nil, err

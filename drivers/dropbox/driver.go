@@ -62,10 +62,10 @@ func (d *Dropbox) List(ctx context.Context, dir model.Obj, args model.ListArgs) 
 	})
 }
 
-func (d *Dropbox) link(ctx context.Context, file model.Obj) (*model.Link, error) {
+func (d *Dropbox) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	res, err := d.request("/2/files/get_temporary_link", http.MethodPost, func(req *resty.Request) {
-		req.SetBody(base.Json{
-			"path": file.GetID(),
+		req.SetContext(ctx).SetBody(base.Json{
+			"path": file.GetPath(),
 		})
 	})
 	if err != nil {
@@ -79,13 +79,9 @@ func (d *Dropbox) link(ctx context.Context, file model.Obj) (*model.Link, error)
 	}, nil
 }
 
-func (d *Dropbox) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
-	return d.link(ctx, file)
-}
-
 func (d *Dropbox) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
 	_, err := d.request("/2/files/create_folder_v2", http.MethodPost, func(req *resty.Request) {
-		req.SetBody(base.Json{
+		req.SetContext(ctx).SetBody(base.Json{
 			"autorename": false,
 			"path":       parentDir.GetPath() + "/" + dirName,
 		})
@@ -97,7 +93,7 @@ func (d *Dropbox) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 	toPath := dstDir.GetPath() + "/" + srcObj.GetName()
 
 	_, err := d.request("/2/files/move_v2", http.MethodPost, func(req *resty.Request) {
-		req.SetBody(base.Json{
+		req.SetContext(ctx).SetBody(base.Json{
 			"allow_ownership_transfer": false,
 			"allow_shared_folder":      false,
 			"autorename":               false,
@@ -114,7 +110,7 @@ func (d *Dropbox) Rename(ctx context.Context, srcObj model.Obj, newName string) 
 	toPath := path[:len(path)-len(fileName)] + newName
 
 	_, err := d.request("/2/files/move_v2", http.MethodPost, func(req *resty.Request) {
-		req.SetBody(base.Json{
+		req.SetContext(ctx).SetBody(base.Json{
 			"allow_ownership_transfer": false,
 			"allow_shared_folder":      false,
 			"autorename":               false,
@@ -128,7 +124,7 @@ func (d *Dropbox) Rename(ctx context.Context, srcObj model.Obj, newName string) 
 func (d *Dropbox) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 	toPath := dstDir.GetPath() + "/" + srcObj.GetName()
 	_, err := d.request("/2/files/copy_v2", http.MethodPost, func(req *resty.Request) {
-		req.SetBody(base.Json{
+		req.SetContext(ctx).SetBody(base.Json{
 			"allow_ownership_transfer": false,
 			"allow_shared_folder":      false,
 			"autorename":               false,
@@ -142,7 +138,7 @@ func (d *Dropbox) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 func (d *Dropbox) Remove(ctx context.Context, obj model.Obj) error {
 	uri := "/2/files/delete_v2"
 	_, err := d.request(uri, http.MethodPost, func(req *resty.Request) {
-		req.SetBody(base.Json{
+		req.SetContext(ctx).SetBody(base.Json{
 			"path": obj.GetID(),
 		})
 	})
@@ -194,15 +190,17 @@ func (d *Dropbox) Put(ctx context.Context, dstDir model.Obj, stream model.FileSt
 				SessionID: sessionId,
 			},
 		}
-		argsJson, _ := utils.Json.MarshalToString(args)
-		req.Header.Set("Dropbox-API-Arg", argsJson)
-
-		res, err := base.HttpClient.Do(req)
-		_ = res.Body.Close()
-
+		argsJson, err := utils.Json.MarshalToString(args)
 		if err != nil {
 			return err
 		}
+		req.Header.Set("Dropbox-API-Arg", argsJson)
+
+		res, err := base.HttpClient.Do(req)
+		if err != nil {
+			return err
+		}
+		_ = res.Body.Close()
 
 		if count > 0 {
 			up((i + 1) * 100 / count)
