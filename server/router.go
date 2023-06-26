@@ -131,6 +131,7 @@ func _fs(g *gin.RouterGroup) {
 	g.POST("/mkdir", handles.FsMkdir)
 	g.POST("/rename", handles.FsRename)
 	g.POST("/batch_rename", handles.FsBatchRename)
+	g.POST("/regex_rename", handles.FsRegexRename)
 	g.POST("/move", handles.FsMove)
 	g.POST("/recursive_move", handles.FsRecursiveMove)
 	g.POST("/copy", handles.FsCopy)
