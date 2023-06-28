@@ -24,8 +24,8 @@ func (a *Addition) GetRootId() string {
 }
 
 var config = driver.Config{
-	Name:        "mopan",
-	DefaultRoot: "root, / or other",
+	Name:        "MoPan",
+	// DefaultRoot: "root, / or other",
 	CheckStatus: true,
 	Alert:       "warning|This network disk may store your password in clear text. Please set your password carefully",
 }
