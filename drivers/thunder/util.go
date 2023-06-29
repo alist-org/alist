@@ -1,7 +1,10 @@
 package thunder
 
 import (
+	"crypto/sha1"
+	"encoding/hex"
 	"fmt"
+	"io"
 	"net/http"
 	"regexp"
 	"time"
@@ -170,4 +173,30 @@ func (c *Common) Request(url, method string, callback base.ReqCallback, resp int
 	}
 
 	return res.Body(), nil
+}
+
+// 计算文件Gcid
+func getGcid(r io.Reader, size int64) (string, error) {
+	calcBlockSize := func(j int64) int64 {
+		var psize int64 = 0x40000
+		for float64(j)/float64(psize) > 0x200 && psize < 0x200000 {
+			psize = psize << 1
+		}
+		return psize
+	}
+
+	hash1 := sha1.New()
+	hash2 := sha1.New()
+	readSize := calcBlockSize(size)
+	for {
+		hash2.Reset()
+		if n, err := io.CopyN(hash2, r, readSize); err != nil && n == 0 {
+			if err != io.EOF {
+				return "", err
+			}
+			break
+		}
+		hash1.Write(hash2.Sum(nil))
+	}
+	return hex.EncodeToString(hash1.Sum(nil)), nil
 }

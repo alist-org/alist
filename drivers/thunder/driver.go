@@ -3,7 +3,9 @@ package thunder
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/alist-org/alist/v3/drivers/base"
@@ -331,15 +333,32 @@ func (xc *XunLeiCommon) Remove(ctx context.Context, obj model.Obj) error {
 }
 
 func (xc *XunLeiCommon) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
+	tempFile, err := utils.CreateTempFile(stream.GetReadCloser())
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = tempFile.Close()
+		_ = os.Remove(tempFile.Name())
+	}()
+
+	gcid, err := getGcid(tempFile, stream.GetSize())
+	if err != nil {
+		return err
+	}
+	if _, err := tempFile.Seek(0, io.SeekStart); err != nil {
+		return err
+	}
+
 	var resp UploadTaskResponse
-	_, err := xc.Request(FILE_API_URL, http.MethodPost, func(r *resty.Request) {
+	_, err = xc.Request(FILE_API_URL, http.MethodPost, func(r *resty.Request) {
 		r.SetContext(ctx)
 		r.SetBody(&base.Json{
 			"kind":        FILE,
 			"parent_id":   dstDir.GetID(),
 			"name":        stream.GetName(),
 			"size":        stream.GetSize(),
-			"hash":        "1CF254FBC456E1B012CD45C546636AA62CF8350E",
+			"hash":        gcid,
 			"upload_type": UPLOAD_TYPE_RESUMABLE,
 		})
 	}, &resp)
@@ -362,7 +381,7 @@ func (xc *XunLeiCommon) Put(ctx context.Context, dstDir model.Obj, stream model.
 			Bucket:  aws.String(param.Bucket),
 			Key:     aws.String(param.Key),
 			Expires: aws.Time(param.Expiration),
-			Body:    stream,
+			Body:    tempFile,
 		})
 		return err
 	}
