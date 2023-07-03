@@ -4,6 +4,8 @@ import (
 	"encoding/base32"
 	"errors"
 	"fmt"
+	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/pkg/utils/random"
 	"net/http"
 	"net/url"
 	"strings"
@@ -25,9 +27,9 @@ import (
 var opts = totp.ValidateOpts{
 	// state verify won't expire in 30 secs, which is quite enough for the callback
 	Period: 30,
-	Skew: 1,
+	Skew:   1,
 	// in some OIDC providers(such as Authelia), state parameter must be at least 8 characters
-	Digits: otp.DigitsEight,
+	Digits:    otp.DigitsEight,
 	Algorithm: otp.AlgorithmSHA1,
 }
 
@@ -76,7 +78,7 @@ func SSOLoginRedirect(c *gin.Context) {
 				return
 			}
 			// generate state parameter
-			state,err := totp.GenerateCodeCustom(base32.StdEncoding.EncodeToString([]byte(oauth2Config.ClientSecret)), time.Now(), opts)
+			state, err := totp.GenerateCodeCustom(base32.StdEncoding.EncodeToString([]byte(oauth2Config.ClientSecret)), time.Now(), opts)
 			if err != nil {
 				common.ErrorStrResp(c, err.Error(), 400)
 				return
@@ -250,7 +252,7 @@ func SSOLoginCallback(c *gin.Context) {
 			additionalbody = "&grant_type=authorization_code"
 			scope = "profile"
 			authstring = "code"
-			idstring = "preferred_username"
+			idstring = "sub"
 		case "OIDC":
 			OIDCLoginCallback(c)
 			return
@@ -317,7 +319,35 @@ func SSOLoginCallback(c *gin.Context) {
 			if argument == "sso_get_token" {
 				user, err := db.GetUserBySSOID(UserID)
 				if err != nil {
-					common.ErrorResp(c, err, 400)
+					if setting.GetBool(conf.SSOAutoRegister) && platform == "Casdoor" {
+						ssoGroup := setting.GetStr(conf.SSOUserGroup)
+						var groups []string
+						utils.Json.Get(resp.Body(), "groups").ToVal(&groups)
+						if ssoGroup != "" && !utils.SliceContains(groups, ssoGroup) {
+							common.ErrorResp(c, errors.New("user group not allow to register"), 400)
+							return
+						}
+
+						var name string
+						utils.Json.Get(resp.Body(), "preferred_username").ToVal(&name)
+						user = &model.User{
+							ID:         0,
+							Username:   name,
+							Password:   random.String(16),
+							Permission: int32(setting.GetInt(conf.SSODefaultPermission, 0)),
+							BasePath:   setting.GetStr(conf.SSODefaultDir),
+							Role:       0,
+							Disabled:   false,
+							SsoID:      UserID,
+						}
+
+						if err = db.CreateUser(user); err != nil {
+							common.ErrorResp(c, err, 400)
+							return
+						}
+					} else {
+						common.ErrorResp(c, err, 400)
+					}
 				}
 				token, err := common.GenerateToken(user.Username)
 				if err != nil {
