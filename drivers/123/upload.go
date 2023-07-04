@@ -34,14 +34,17 @@ func (d *Pan123) getS3PreSignedUrls(ctx context.Context, upReq *UploadResp, star
 	return &s3PreSignedUrls, nil
 }
 
-func (d *Pan123) completeS3(ctx context.Context, upReq *UploadResp) error {
+func (d *Pan123) completeS3(ctx context.Context, upReq *UploadResp, file model.FileStreamer, isMultipart bool) error {
 	data := base.Json{
+		"StorageNode": upReq.Data.StorageNode,
 		"bucket":      upReq.Data.Bucket,
+		"fileId":      upReq.Data.FileId,
+		"fileSize":    file.GetSize(),
+		"isMultipart": isMultipart,
 		"key":         upReq.Data.Key,
 		"uploadId":    upReq.Data.UploadId,
-		"StorageNode": upReq.Data.StorageNode,
 	}
-	_, err := d.request(S3Complete, http.MethodPost, func(req *resty.Request) {
+	_, err := d.request(UploadCompleteV2, http.MethodPost, func(req *resty.Request) {
 		req.SetBody(data).SetContext(ctx)
 	}, nil)
 	return err
@@ -83,7 +86,7 @@ func (d *Pan123) newUpload(ctx context.Context, upReq *UploadResp, file model.Fi
 		}
 	}
 	// complete s3 upload
-	return d.completeS3(ctx, upReq)
+	return d.completeS3(ctx, upReq, file, chunkCount > 1)
 }
 
 func (d *Pan123) uploadS3Chunk(ctx context.Context, upReq *UploadResp, s3PreSignedUrls *S3PreSignedURLs, cur, end int, reader io.Reader, curSize int64, retry bool) error {
