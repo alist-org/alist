@@ -321,18 +321,21 @@ func SSOLoginCallback(c *gin.Context) {
 				if err != nil {
 					if setting.GetBool(conf.SSOAutoRegister) && platform == "Casdoor" {
 						ssoGroup := setting.GetStr(conf.SSOUserGroup)
-						var groups []string
-						utils.Json.Get(resp.Body(), "groups").ToVal(&groups)
-						if ssoGroup != "" && !utils.SliceContains(groups, ssoGroup) {
+						ssoResp := struct {
+							Groups []string `json:"groups"`
+							Name   string   `json:"preferred_username"`
+						}{}
+
+						utils.Json.Unmarshal(resp.Body(), &ssoResp)
+
+						if ssoGroup != "" && !utils.SliceContains(ssoResp.Groups, ssoGroup) {
 							common.ErrorResp(c, errors.New("user group not allow to register"), 400)
 							return
 						}
 
-						var name string
-						utils.Json.Get(resp.Body(), "preferred_username").ToVal(&name)
 						user = &model.User{
 							ID:         0,
-							Username:   name,
+							Username:   ssoResp.Name,
 							Password:   random.String(16),
 							Permission: int32(setting.GetInt(conf.SSODefaultPermission, 0)),
 							BasePath:   setting.GetStr(conf.SSODefaultDir),
@@ -354,13 +357,13 @@ func SSOLoginCallback(c *gin.Context) {
 					common.ErrorResp(c, err, 400)
 				}
 				html := fmt.Sprintf(`<!DOCTYPE html>
-				<head></head>
-				<body>
-				<script>
-				window.opener.postMessage({"token":"%s"}, "*")
-				window.close()
-				</script>
-				</body>`, token)
+							<head></head>
+							<body>
+							<script>
+							window.opener.postMessage({"token":"%s"}, "*")
+							window.close()
+							</script>
+							</body>`, token)
 				c.Data(200, "text/html; charset=utf-8", []byte(html))
 				return
 			}
