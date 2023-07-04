@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -42,26 +43,40 @@ the address is defined in config file`,
 		r := gin.New()
 		r.Use(gin.LoggerWithWriter(log.StandardLogger().Out), gin.RecoveryWithWriter(log.StandardLogger().Out))
 		server.Init(r)
-		var httpSrv, httpsSrv *http.Server
-		if !conf.Conf.Scheme.DisableHttp {
-			httpBase := fmt.Sprintf("%s:%d", conf.Conf.Address, conf.Conf.Port)
+		var httpSrv, httpsSrv, unixSrv *http.Server
+		if conf.Conf.Scheme.HttpPort != -1 {
+			httpBase := fmt.Sprintf("%s:%d", conf.Conf.Scheme.Address, conf.Conf.Scheme.HttpPort)
 			utils.Log.Infof("start HTTP server @ %s", httpBase)
 			httpSrv = &http.Server{Addr: httpBase, Handler: r}
 			go func() {
 				err := httpSrv.ListenAndServe()
 				if err != nil && err != http.ErrServerClosed {
-					utils.Log.Fatalf("failed to start: %s", err.Error())
+					utils.Log.Fatalf("failed to start http: %s", err.Error())
 				}
 			}()
 		}
-		if conf.Conf.Scheme.Https {
-			httpsBase := fmt.Sprintf("%s:%d", conf.Conf.Address, conf.Conf.HttpsPort)
+		if conf.Conf.Scheme.HttpsPort != -1 {
+			httpsBase := fmt.Sprintf("%s:%d", conf.Conf.Scheme.Address, conf.Conf.Scheme.HttpPort)
 			utils.Log.Infof("start HTTPS server @ %s", httpsBase)
 			httpsSrv = &http.Server{Addr: httpsBase, Handler: r}
 			go func() {
 				err := httpsSrv.ListenAndServeTLS(conf.Conf.Scheme.CertFile, conf.Conf.Scheme.KeyFile)
 				if err != nil && err != http.ErrServerClosed {
-					utils.Log.Fatalf("failed to start: %s", err.Error())
+					utils.Log.Fatalf("failed to start https: %s", err.Error())
+				}
+			}()
+		}
+		if conf.Conf.Scheme.UnixFile != "" {
+			utils.Log.Infof("start unix server @ %s", conf.Conf.Scheme.UnixFile)
+			unixSrv = &http.Server{Handler: r}
+			go func() {
+				listener, err := net.Listen("unix", conf.Conf.Scheme.UnixFile)
+				if err != nil {
+					utils.Log.Fatalf("failed to listen unix: %+v", err)
+				}
+				err = unixSrv.Serve(listener)
+				if err != nil && err != http.ErrServerClosed {
+					utils.Log.Fatalf("failed to start unix: %s", err.Error())
 				}
 			}()
 		}
@@ -78,21 +93,30 @@ the address is defined in config file`,
 		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 		defer cancel()
 		var wg sync.WaitGroup
-		if !conf.Conf.Scheme.DisableHttp {
+		if conf.Conf.Scheme.HttpPort != -1 {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
 				if err := httpSrv.Shutdown(ctx); err != nil {
-					utils.Log.Fatal("HTTP server shutdown:", err)
+					utils.Log.Fatal("HTTP server shutdown err: ", err)
 				}
 			}()
 		}
-		if conf.Conf.Scheme.Https {
+		if conf.Conf.Scheme.HttpsPort != -1 {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
 				if err := httpsSrv.Shutdown(ctx); err != nil {
-					utils.Log.Fatal("HTTPS server shutdown:", err)
+					utils.Log.Fatal("HTTPS server shutdown err: ", err)
+				}
+			}()
+		}
+		if conf.Conf.Scheme.UnixFile != "" {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				if err := unixSrv.Shutdown(ctx); err != nil {
+					utils.Log.Fatal("Unix server shutdown err: ", err)
 				}
 			}()
 		}

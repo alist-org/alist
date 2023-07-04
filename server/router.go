@@ -21,7 +21,7 @@ func Init(e *gin.Engine) {
 	}
 	Cors(e)
 	g := e.Group(conf.URL.Path)
-	if conf.Conf.Scheme.Https && conf.Conf.Scheme.ForceHttps && !conf.Conf.Scheme.DisableHttp {
+	if conf.Conf.Scheme.HttpPort != -1 && conf.Conf.Scheme.HttpsPort != -1 && conf.Conf.Scheme.ForceHttps {
 		g.Use(middlewares.ForceHttps)
 	}
 	g.Any("/ping", func(c *gin.Context) {
