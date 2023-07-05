@@ -2,6 +2,7 @@ package aliyundrive_open
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"math"
 	"net/http"
@@ -50,6 +51,9 @@ func (d *AliyundriveOpen) Drop(ctx context.Context) error {
 }
 
 func (d *AliyundriveOpen) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
+	if d.limitList == nil {
+		return nil, fmt.Errorf("driver not init")
+	}
 	files, err := d.getFiles(ctx, dir.GetID())
 	if err != nil {
 		return nil, err
@@ -79,6 +83,9 @@ func (d *AliyundriveOpen) link(ctx context.Context, file model.Obj) (*model.Link
 }
 
 func (d *AliyundriveOpen) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
+	if d.limitLink == nil {
+		return nil, fmt.Errorf("driver not init")
+	}
 	return d.limitLink(ctx, file)
 }
 
@@ -148,9 +155,9 @@ func (d *AliyundriveOpen) Remove(ctx context.Context, obj model.Obj) error {
 func (d *AliyundriveOpen) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
 	// rapid_upload is not currently supported
 	// 1. create
-	// Part Size Unit: Bytes, Default: 20MB, 
-	// Maximum number of slices 10,000, ≈195.3125GB 
-	var partSize int64 = 20*1024*1024 
+	// Part Size Unit: Bytes, Default: 20MB,
+	// Maximum number of slices 10,000, ≈195.3125GB
+	var partSize int64 = 20 * 1024 * 1024
 	createData := base.Json{
 		"drive_id":        d.DriveId,
 		"parent_file_id":  dstDir.GetID(),
@@ -160,19 +167,19 @@ func (d *AliyundriveOpen) Put(ctx context.Context, dstDir model.Obj, stream mode
 	}
 	count := 1
 	if stream.GetSize() > partSize {
-		if stream.GetSize() > 1*1024*1024*1024*1024 { // file Size over 1TB 
-			partSize = 5*1024*1024*1024 // file part size 5GB 
-		} else if stream.GetSize() > 768*1024*1024*1024 { // over 768GB 
-			partSize = 109951163 // ≈ 104.8576MB, split 1TB into 10,000 part 
-		} else if stream.GetSize() > 512*1024*1024*1024 { // over 512GB 
-			partSize = 82463373 // ≈ 78.6432MB 
-		} else if stream.GetSize() > 384*1024*1024*1024 { // over 384GB 
-			partSize = 54975582 // ≈ 52.4288MB 
-		} else if stream.GetSize() > 256*1024*1024*1024 { // over 256GB 
-			partSize = 41231687 // ≈ 39.3216MB 
-		} else if stream.GetSize() > 128*1024*1024*1024 { // over 128GB 
-			partSize = 27487791 // ≈ 26.2144MB 
-		} 
+		if stream.GetSize() > 1*1024*1024*1024*1024 { // file Size over 1TB
+			partSize = 5 * 1024 * 1024 * 1024 // file part size 5GB
+		} else if stream.GetSize() > 768*1024*1024*1024 { // over 768GB
+			partSize = 109951163 // ≈ 104.8576MB, split 1TB into 10,000 part
+		} else if stream.GetSize() > 512*1024*1024*1024 { // over 512GB
+			partSize = 82463373 // ≈ 78.6432MB
+		} else if stream.GetSize() > 384*1024*1024*1024 { // over 384GB
+			partSize = 54975582 // ≈ 52.4288MB
+		} else if stream.GetSize() > 256*1024*1024*1024 { // over 256GB
+			partSize = 41231687 // ≈ 39.3216MB
+		} else if stream.GetSize() > 128*1024*1024*1024 { // over 128GB
+			partSize = 27487791 // ≈ 26.2144MB
+		}
 		count = int(math.Ceil(float64(stream.GetSize()) / float64(partSize)))
 		createData["part_info_list"] = makePartInfos(count)
 	}
