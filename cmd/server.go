@@ -56,7 +56,7 @@ the address is defined in config file`,
 			}()
 		}
 		if conf.Conf.Scheme.HttpsPort != -1 {
-			httpsBase := fmt.Sprintf("%s:%d", conf.Conf.Scheme.Address, conf.Conf.Scheme.HttpPort)
+			httpsBase := fmt.Sprintf("%s:%d", conf.Conf.Scheme.Address, conf.Conf.Scheme.HttpsPort)
 			utils.Log.Infof("start HTTPS server @ %s", httpsBase)
 			httpsSrv = &http.Server{Addr: httpsBase, Handler: r}
 			go func() {
