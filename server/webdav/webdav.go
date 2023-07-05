@@ -71,6 +71,10 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			status, err = h.handleUnlock(brw, r)
 		case "PROPFIND":
 			status, err = h.handlePropfind(brw, r)
+			// if there is a error for PROPFIND, we should be as an empty folder to the client
+			if err != nil {
+				status = http.StatusNotFound
+			}
 		case "PROPPATCH":
 			status, err = h.handleProppatch(brw, r)
 		}
