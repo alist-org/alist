@@ -20,13 +20,14 @@ type Database struct {
 }
 
 type Scheme struct {
-	Address    string `json:"address" env:"ADDR"`
-	HttpPort   int    `json:"http_port" env:"HTTP_PORT"`
-	HttpsPort  int    `json:"https_port" env:"HTTPS_PORT"`
-	ForceHttps bool   `json:"force_https" env:"FORCE_HTTPS"`
-	CertFile   string `json:"cert_file" env:"CERT_FILE"`
-	KeyFile    string `json:"key_file" env:"KEY_FILE"`
-	UnixFile   string `json:"unix_file" env:"UNIX_FILE"`
+	Address      string `json:"address" env:"ADDR"`
+	HttpPort     int    `json:"http_port" env:"HTTP_PORT"`
+	HttpsPort    int    `json:"https_port" env:"HTTPS_PORT"`
+	ForceHttps   bool   `json:"force_https" env:"FORCE_HTTPS"`
+	CertFile     string `json:"cert_file" env:"CERT_FILE"`
+	KeyFile      string `json:"key_file" env:"KEY_FILE"`
+	UnixFile     string `json:"unix_file" env:"UNIX_FILE"`
+	UnixFilePerm string `json:"unix_file_perm" env:"UNIX_FILE_PERM"`
 }
 
 type LogConfig struct {

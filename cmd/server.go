@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"sync"
 	"syscall"
 	"time"
@@ -73,6 +74,16 @@ the address is defined in config file`,
 				listener, err := net.Listen("unix", conf.Conf.Scheme.UnixFile)
 				if err != nil {
 					utils.Log.Fatalf("failed to listen unix: %+v", err)
+				}
+				// set socket file permission
+				mode, err := strconv.ParseUint(conf.Conf.Scheme.UnixFilePerm, 8, 32)
+				if err != nil {
+					utils.Log.Errorf("failed to parse socket file permission: %+v", err)
+				} else {
+					err = os.Chmod(conf.Conf.Scheme.UnixFile, os.FileMode(mode))
+					if err != nil {
+						utils.Log.Errorf("failed to chmod socket file: %+v", err)
+					}
 				}
 				err = unixSrv.Serve(listener)
 				if err != nil && err != http.ErrServerClosed {
