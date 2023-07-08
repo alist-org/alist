@@ -37,7 +37,7 @@ require (
 	github.com/upyun/go-sdk/v3 v3.0.4
 	github.com/winfsp/cgofuse v1.5.0
 	golang.org/x/crypto v0.11.0
-	golang.org/x/image v0.7.0
+	golang.org/x/image v0.9.0
 	golang.org/x/net v0.12.0
 	golang.org/x/oauth2 v0.10.0
 	gorm.io/driver/mysql v1.4.7
