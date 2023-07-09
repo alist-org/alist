@@ -11,6 +11,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/sftp"
+	log "github.com/sirupsen/logrus"
 )
 
 type SFTP struct {
@@ -39,13 +40,15 @@ func (d *SFTP) Drop(ctx context.Context) error {
 }
 
 func (d *SFTP) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
+	log.Debugf("[sftp] list dir: %s", dir.GetPath())
 	files, err := d.client.ReadDir(dir.GetPath())
 	if err != nil {
 		return nil, err
 	}
-	return utils.SliceConvert(files, func(src os.FileInfo) (model.Obj, error) {
-		return fileToObj(src), nil
+	objs, err := utils.SliceConvert(files, func(src os.FileInfo) (model.Obj, error) {
+		return d.fileToObj(src, dir.GetPath())
 	})
+	return objs, err
 }
 
 func (d *SFTP) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
