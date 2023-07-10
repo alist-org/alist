@@ -12,7 +12,7 @@ func fileToObj(f mopan.File) model.Obj {
 		Object: model.Object{
 			ID:       string(f.ID),
 			Name:     f.Name,
-			Size:     f.Size,
+			Size:     int64(f.Size),
 			Modified: time.Time(f.LastOpTime),
 		},
 		Thumbnail: model.Thumbnail{
