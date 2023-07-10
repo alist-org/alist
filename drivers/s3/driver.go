@@ -53,9 +53,9 @@ func (d *S3) Drop(ctx context.Context) error {
 
 func (d *S3) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
 	if d.ListObjectVersion == "v2" {
-		return d.listV2(dir.GetPath())
+		return d.listV2(dir.GetPath(), args)
 	}
-	return d.listV1(dir.GetPath())
+	return d.listV1(dir.GetPath(), args)
 }
 
 func (d *S3) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {

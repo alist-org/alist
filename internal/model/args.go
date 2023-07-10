@@ -7,7 +7,8 @@ import (
 )
 
 type ListArgs struct {
-	ReqPath string
+	ReqPath           string
+	S3ShowPlaceholder bool
 }
 
 type LinkArgs struct {
