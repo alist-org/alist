@@ -9,7 +9,6 @@ require (
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/aws/aws-sdk-go v1.44.262
 	github.com/blevesearch/bleve/v2 v2.3.8
-	github.com/caarlos0/env/v7 v7.1.0
 	github.com/caarlos0/env/v9 v9.0.0
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/deckarep/golang-set/v2 v2.3.0
