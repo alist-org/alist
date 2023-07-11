@@ -58,6 +58,9 @@ func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.
 		} else {
 			w.WriteHeader(link.Status)
 		}
+		if r.Method == http.MethodHead {
+			return nil
+		}
 		_, err = io.Copy(w, link.Data)
 		if err != nil {
 			return err
@@ -95,6 +98,9 @@ func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.
 		} else {
 			w.WriteHeader(link.Status)
 		}
+		if r.Method == http.MethodHead {
+			return nil
+		}
 		return link.Writer(w)
 	} else {
 		req, err := http.NewRequest(r.Method, link.URL, nil)
@@ -131,6 +137,9 @@ func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.
 			msg := string(all)
 			log.Debugln(msg)
 			return errors.New(msg)
+		}
+		if r.Method == http.MethodHead {
+			return nil
 		}
 		_, err = io.Copy(w, res.Body)
 		if err != nil {

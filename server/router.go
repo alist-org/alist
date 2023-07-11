@@ -39,6 +39,8 @@ func Init(e *gin.Engine) {
 
 	g.GET("/d/*path", middlewares.Down, handles.Down)
 	g.GET("/p/*path", middlewares.Down, handles.Proxy)
+	g.HEAD("/d/*path", middlewares.Down, handles.Down)
+	g.HEAD("/p/*path", middlewares.Down, handles.Proxy)
 
 	api := g.Group("/api")
 	auth := api.Group("", middlewares.Auth)
