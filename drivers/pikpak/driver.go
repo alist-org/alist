@@ -66,7 +66,7 @@ func (d *PikPak) Link(ctx context.Context, file model.Obj, args model.LinkArgs) 
 	link := model.Link{
 		URL: resp.WebContentLink,
 	}
-	if len(resp.Medias) > 0 && resp.Medias[0].Link.Url != "" {
+	if !d.DisableMediaLink && len(resp.Medias) > 0 && resp.Medias[0].Link.Url != "" {
 		log.Debugln("use media link")
 		link.URL = resp.Medias[0].Link.Url
 	}
