@@ -22,7 +22,7 @@ import (
 
 func (d *S3) initSession() error {
 	cfg := &aws.Config{
-		Credentials:      credentials.NewStaticCredentials(d.AccessKeyID, d.SecretAccessKey, ""),
+		Credentials:      credentials.NewStaticCredentials(d.AccessKeyID, d.SecretAccessKey, d.SessionToken),
 		Region:           &d.Region,
 		Endpoint:         &d.Endpoint,
 		S3ForcePathStyle: aws.Bool(d.ForcePathStyle),
