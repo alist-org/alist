@@ -1,11 +1,9 @@
 package _123
 
 import (
-	"bytes"
 	"context"
 	"crypto/md5"
 	"encoding/base64"
-	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	"io"
@@ -183,40 +181,23 @@ func (d *Pan123) Remove(ctx context.Context, obj model.Obj) error {
 }
 
 func (d *Pan123) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
-	const DEFAULT int64 = 10485760
-	var uploadFile io.Reader
+	// const DEFAULT int64 = 10485760
 	h := md5.New()
-	if d.StreamUpload && stream.GetSize() > DEFAULT {
-		// 只计算前10MIB
-		buf := bytes.NewBuffer(make([]byte, 0, DEFAULT))
-		if n, err := io.CopyN(io.MultiWriter(buf, h), stream, DEFAULT); err != io.EOF && n == 0 {
-			return err
-		}
-		// 增加额外参数防止MD5碰撞
-		h.Write([]byte(stream.GetName()))
-		num := make([]byte, 8)
-		binary.BigEndian.PutUint64(num, uint64(stream.GetSize()))
-		h.Write(num)
-		// 拼装
-		uploadFile = io.MultiReader(buf, stream)
-	} else {
-		// 计算完整文件MD5
-		tempFile, err := utils.CreateTempFile(stream.GetReadCloser())
-		if err != nil {
-			return err
-		}
-		defer func() {
-			_ = tempFile.Close()
-			_ = os.Remove(tempFile.Name())
-		}()
-		if _, err = io.Copy(h, tempFile); err != nil {
-			return err
-		}
-		_, err = tempFile.Seek(0, io.SeekStart)
-		if err != nil {
-			return err
-		}
-		uploadFile = tempFile
+	// need to calculate md5 of the full content
+	tempFile, err := utils.CreateTempFile(stream.GetReadCloser())
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = tempFile.Close()
+		_ = os.Remove(tempFile.Name())
+	}()
+	if _, err = io.Copy(h, tempFile); err != nil {
+		return err
+	}
+	_, err = tempFile.Seek(0, io.SeekStart)
+	if err != nil {
+		return err
 	}
 	etag := hex.EncodeToString(h.Sum(nil))
 	data := base.Json{
@@ -240,7 +221,7 @@ func (d *Pan123) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 		return nil
 	}
 	if resp.Data.AccessKeyId == "" || resp.Data.SecretAccessKey == "" || resp.Data.SessionToken == "" {
-		err = d.newUpload(ctx, &resp, stream, uploadFile, up)
+		err = d.newUpload(ctx, &resp, stream, tempFile, up)
 		return err
 	} else {
 		cfg := &aws.Config{
@@ -257,7 +238,7 @@ func (d *Pan123) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 		input := &s3manager.UploadInput{
 			Bucket: &resp.Data.Bucket,
 			Key:    &resp.Data.Key,
-			Body:   uploadFile,
+			Body:   tempFile,
 		}
 		_, err = uploader.UploadWithContext(ctx, input)
 	}
