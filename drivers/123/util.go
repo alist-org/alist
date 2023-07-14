@@ -69,7 +69,7 @@ func (d *Pan123) request(url string, method string, callback base.ReqCallback, r
 		"referer":       "https://www.123pan.com/",
 		"authorization": "Bearer " + d.AccessToken,
 		"platform":      "web",
-		"app-version":   "1.2",
+		"app-version":   "3.0",
 	})
 	if callback != nil {
 		callback(req)
