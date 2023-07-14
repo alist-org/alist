@@ -45,6 +45,9 @@ func (d *Pan123) Init(ctx context.Context) error {
 }
 
 func (d *Pan123) Drop(ctx context.Context) error {
+	_, _ = d.request(Logout, http.MethodPost, func(req *resty.Request) {
+		req.SetBody(base.Json{})
+	}, nil)
 	return nil
 }
 

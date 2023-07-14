@@ -19,6 +19,7 @@ const (
 	BApi             = "https://www.123pan.com/b/api"
 	MainApi          = AApi
 	SignIn           = MainApi + "/user/sign_in"
+	Logout           = MainApi + "/user/logout"
 	UserInfo         = MainApi + "/user/info"
 	FileList         = MainApi + "/file/list/new"
 	DownloadInfo     = MainApi + "/file/download_info"
@@ -50,6 +51,13 @@ func (d *Pan123) login() error {
 		}
 	}
 	res, err := base.RestyClient.R().
+		SetHeaders(map[string]string{
+			"origin":      "https://www.123pan.com",
+			"referer":     "https://www.123pan.com/",
+			"platform":    "web",
+			"app-version": "3",
+			"user-agent":  base.UserAgent,
+		}).
 		SetBody(body).Post(SignIn)
 	if err != nil {
 		return err
@@ -69,7 +77,8 @@ func (d *Pan123) request(url string, method string, callback base.ReqCallback, r
 		"referer":       "https://www.123pan.com/",
 		"authorization": "Bearer " + d.AccessToken,
 		"platform":      "web",
-		"app-version":   "1.2",
+		"app-version":   "3",
+		"user-agent":    base.UserAgent,
 	})
 	if callback != nil {
 		callback(req)
