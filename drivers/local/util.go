@@ -64,7 +64,7 @@ func readDir(dirname string) ([]fs.FileInfo, error) {
 func (d *Local) getThumb(file model.Obj) (*bytes.Buffer, *string, error) {
 	fullPath := file.GetPath()
 	thumbPrefix := "alist_thumb_"
-	thumbName := thumbPrefix + utils.GetMD5Encode(fullPath) + ".png"
+	thumbName := thumbPrefix + utils.GetMD5EncodeStr(fullPath) + ".png"
 	if d.ThumbCacheFolder != "" {
 		// skip if the file is a thumbnail
 		if strings.HasPrefix(file.GetName(), thumbPrefix) {

@@ -100,7 +100,7 @@ func (c *Common) GetCaptchaSign() (timestamp, sign string) {
 	timestamp = fmt.Sprint(time.Now().UnixMilli())
 	str := fmt.Sprint(c.ClientID, c.ClientVersion, c.PackageName, c.DeviceID, timestamp)
 	for _, algorithm := range c.Algorithms {
-		str = utils.GetMD5Encode(str + algorithm)
+		str = utils.GetMD5EncodeStr(str + algorithm)
 	}
 	sign = "1." + str
 	return

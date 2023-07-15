@@ -51,7 +51,7 @@ func (y *Cloud189PC) Init(ctx context.Context) (err error) {
 	}
 
 	// 避免重复登陆
-	identity := utils.GetMD5Encode(y.Username + y.Password)
+	identity := utils.GetMD5EncodeStr(y.Username + y.Password)
 	if !y.isLogin() || y.identity != identity {
 		y.identity = identity
 		if err = y.login(); err != nil {

@@ -519,7 +519,7 @@ func (y *Cloud189PC) CommonUpload(ctx context.Context, dstDir model.Obj, file mo
 	fileMd5Hex := strings.ToUpper(hex.EncodeToString(fileMd5.Sum(nil)))
 	sliceMd5Hex := fileMd5Hex
 	if file.GetSize() > DEFAULT {
-		sliceMd5Hex = strings.ToUpper(utils.GetMD5Encode(strings.Join(silceMd5Hexs, "\n")))
+		sliceMd5Hex = strings.ToUpper(utils.GetMD5EncodeStr(strings.Join(silceMd5Hexs, "\n")))
 	}
 
 	// 提交上传
@@ -577,7 +577,7 @@ func (y *Cloud189PC) FastUpload(ctx context.Context, dstDir model.Obj, file mode
 	fileMd5Hex := strings.ToUpper(hex.EncodeToString(fileMd5.Sum(nil)))
 	sliceMd5Hex := fileMd5Hex
 	if file.GetSize() > DEFAULT {
-		sliceMd5Hex = strings.ToUpper(utils.GetMD5Encode(strings.Join(silceMd5Hexs, "\n")))
+		sliceMd5Hex = strings.ToUpper(utils.GetMD5EncodeStr(strings.Join(silceMd5Hexs, "\n")))
 	}
 
 	// 检测是否支持快传

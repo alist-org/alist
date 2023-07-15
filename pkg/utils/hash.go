@@ -9,22 +9,26 @@ import (
 	"strings"
 )
 
-func GetSHA1Encode(data string) string {
+func GetSHA1Encode(data []byte) string {
 	h := sha1.New()
-	h.Write([]byte(data))
+	h.Write(data)
 	return hex.EncodeToString(h.Sum(nil))
 }
 
-func GetSHA256Encode(data string) string {
+func GetSHA256Encode(data []byte) string {
 	h := sha256.New()
-	h.Write([]byte(data))
+	h.Write(data)
 	return hex.EncodeToString(h.Sum(nil))
 }
 
-func GetMD5Encode(data string) string {
+func GetMD5Encode(data []byte) string {
 	h := md5.New()
-	h.Write([]byte(data))
+	h.Write(data)
 	return hex.EncodeToString(h.Sum(nil))
+}
+
+func GetMD5EncodeStr(data string) string {
+	return GetMD5Encode([]byte(data))
 }
 
 var DEC = map[string]string{

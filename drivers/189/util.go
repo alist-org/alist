@@ -385,7 +385,7 @@ func (d *Cloud189) newUpload(ctx context.Context, dstDir model.Obj, file model.F
 	fileMd5 := hex.EncodeToString(md5Sum.Sum(nil))
 	sliceMd5 := fileMd5
 	if file.GetSize() > DEFAULT {
-		sliceMd5 = utils.GetMD5Encode(strings.Join(md5s, "\n"))
+		sliceMd5 = utils.GetMD5EncodeStr(strings.Join(md5s, "\n"))
 	}
 	res, err = d.uploadRequest("/person/commitMultiUploadFile", map[string]string{
 		"uploadFileId": uploadFileId,

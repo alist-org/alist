@@ -56,7 +56,7 @@ func (x *Thunder) Init(ctx context.Context) (err error) {
 					"j",
 					"4scKJNdd7F27Hv7tbt",
 				},
-				DeviceID:          utils.GetMD5Encode(x.Username + x.Password),
+				DeviceID:          utils.GetMD5EncodeStr(x.Username + x.Password),
 				ClientID:          "Xp6vsxz_7IYVw2BB",
 				ClientSecret:      "Xp6vsy4tN9toTVdMSpomVdXpRmES",
 				ClientVersion:     "7.51.0.8196",
@@ -137,7 +137,7 @@ func (x *ThunderExpert) Init(ctx context.Context) (err error) {
 
 				DeviceID: func() string {
 					if len(x.DeviceID) != 32 {
-						return utils.GetMD5Encode(x.DeviceID)
+						return utils.GetMD5EncodeStr(x.DeviceID)
 					}
 					return x.DeviceID
 				}(),
