@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/op"
@@ -48,6 +47,11 @@ func (d *AliyundriveOpen) refreshToken() error {
 }
 
 func (d *AliyundriveOpen) request(uri, method string, callback base.ReqCallback, retry ...bool) ([]byte, error) {
+	b, err, _ := d.requestReturnErrResp(uri, method, callback, retry...)
+	return b, err
+}
+
+func (d *AliyundriveOpen) requestReturnErrResp(uri, method string, callback base.ReqCallback, retry ...bool) ([]byte, error, *ErrResp) {
 	req := base.RestyClient.R()
 	// TODO check whether access_token is expired
 	req.SetHeader("Authorization", "Bearer "+d.AccessToken)
@@ -61,20 +65,20 @@ func (d *AliyundriveOpen) request(uri, method string, callback base.ReqCallback,
 	req.SetError(&e)
 	res, err := req.Execute(method, d.base+uri)
 	if err != nil {
-		return nil, err
+		return nil, err, nil
 	}
 	isRetry := len(retry) > 0 && retry[0]
 	if e.Code != "" {
 		if !isRetry && (utils.SliceContains([]string{"AccessTokenInvalid", "AccessTokenExpired", "I400JD"}, e.Code) || d.AccessToken == "") {
 			err = d.refreshToken()
 			if err != nil {
-				return nil, err
+				return nil, err, nil
 			}
-			return d.request(uri, method, callback, true)
+			return d.requestReturnErrResp(uri, method, callback, true)
 		}
-		return nil, fmt.Errorf("%s:%s", e.Code, e.Message)
+		return nil, fmt.Errorf("%s:%s", e.Code, e.Message), &e
 	}
-	return res.Body(), nil
+	return res.Body(), nil, nil
 }
 
 func (d *AliyundriveOpen) list(ctx context.Context, data base.Json) (*Files, error) {
@@ -116,60 +120,4 @@ func (d *AliyundriveOpen) getFiles(ctx context.Context, fileId string) ([]File, 
 		res = append(res, resp.Items...)
 	}
 	return res, nil
-}
-
-func makePartInfos(size int) []base.Json {
-	partInfoList := make([]base.Json, size)
-	for i := 0; i < size; i++ {
-		partInfoList[i] = base.Json{"part_number": 1 + i}
-	}
-	return partInfoList
-}
-
-func (d *AliyundriveOpen) getUploadUrl(count int, fileId, uploadId string) ([]PartInfo, error) {
-	partInfoList := makePartInfos(count)
-	var resp CreateResp
-	_, err := d.request("/adrive/v1.0/openFile/getUploadUrl", http.MethodPost, func(req *resty.Request) {
-		req.SetBody(base.Json{
-			"drive_id":       d.DriveId,
-			"file_id":        fileId,
-			"part_info_list": partInfoList,
-			"upload_id":      uploadId,
-		}).SetResult(&resp)
-	})
-	return resp.PartInfoList, err
-}
-
-func (d *AliyundriveOpen) uploadPart(ctx context.Context, i, count int, reader *utils.MultiReadable, resp *CreateResp, retry bool) error {
-	partInfo := resp.PartInfoList[i-1]
-	uploadUrl := partInfo.UploadUrl
-	if d.InternalUpload {
-		uploadUrl = strings.ReplaceAll(uploadUrl, "https://cn-beijing-data.aliyundrive.net/", "http://ccp-bj29-bj-1592982087.oss-cn-beijing-internal.aliyuncs.com/")
-	}
-	req, err := http.NewRequest("PUT", uploadUrl, reader)
-	if err != nil {
-		return err
-	}
-	req = req.WithContext(ctx)
-	res, err := base.HttpClient.Do(req)
-	if err != nil {
-		if retry {
-			reader.Reset()
-			return d.uploadPart(ctx, i, count, reader, resp, false)
-		}
-		return err
-	}
-	res.Body.Close()
-	if retry && res.StatusCode == http.StatusForbidden {
-		resp.PartInfoList, err = d.getUploadUrl(count, resp.FileId, resp.UploadId)
-		if err != nil {
-			return err
-		}
-		reader.Reset()
-		return d.uploadPart(ctx, i, count, reader, resp, false)
-	}
-	if res.StatusCode != http.StatusOK && res.StatusCode != http.StatusConflict {
-		return fmt.Errorf("upload status: %d", res.StatusCode)
-	}
-	return nil
 }

@@ -3,8 +3,6 @@ package aliyundrive_open
 import (
 	"context"
 	"fmt"
-	"io"
-	"math"
 	"net/http"
 	"time"
 
@@ -153,74 +151,7 @@ func (d *AliyundriveOpen) Remove(ctx context.Context, obj model.Obj) error {
 }
 
 func (d *AliyundriveOpen) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
-	// rapid_upload is not currently supported
-	// 1. create
-	// Part Size Unit: Bytes, Default: 20MB,
-	// Maximum number of slices 10,000, ≈195.3125GB
-	var partSize int64 = 20 * 1024 * 1024
-	createData := base.Json{
-		"drive_id":        d.DriveId,
-		"parent_file_id":  dstDir.GetID(),
-		"name":            stream.GetName(),
-		"type":            "file",
-		"check_name_mode": "ignore",
-	}
-	count := 1
-	if stream.GetSize() > partSize {
-		if stream.GetSize() > 1*1024*1024*1024*1024 { // file Size over 1TB
-			partSize = 5 * 1024 * 1024 * 1024 // file part size 5GB
-		} else if stream.GetSize() > 768*1024*1024*1024 { // over 768GB
-			partSize = 109951163 // ≈ 104.8576MB, split 1TB into 10,000 part
-		} else if stream.GetSize() > 512*1024*1024*1024 { // over 512GB
-			partSize = 82463373 // ≈ 78.6432MB
-		} else if stream.GetSize() > 384*1024*1024*1024 { // over 384GB
-			partSize = 54975582 // ≈ 52.4288MB
-		} else if stream.GetSize() > 256*1024*1024*1024 { // over 256GB
-			partSize = 41231687 // ≈ 39.3216MB
-		} else if stream.GetSize() > 128*1024*1024*1024 { // over 128GB
-			partSize = 27487791 // ≈ 26.2144MB
-		}
-		count = int(math.Ceil(float64(stream.GetSize()) / float64(partSize)))
-		createData["part_info_list"] = makePartInfos(count)
-	}
-	var createResp CreateResp
-	_, err := d.request("/adrive/v1.0/openFile/create", http.MethodPost, func(req *resty.Request) {
-		req.SetBody(createData).SetResult(&createResp)
-	})
-	if err != nil {
-		return err
-	}
-	// 2. upload
-	preTime := time.Now()
-	for i := 1; i <= len(createResp.PartInfoList); i++ {
-		if utils.IsCanceled(ctx) {
-			return ctx.Err()
-		}
-		err = d.uploadPart(ctx, i, count, utils.NewMultiReadable(io.LimitReader(stream, partSize)), &createResp, true)
-		if err != nil {
-			return err
-		}
-		if count > 0 {
-			up(i * 100 / count)
-		}
-		// refresh upload url if 50 minutes passed
-		if time.Since(preTime) > 50*time.Minute {
-			createResp.PartInfoList, err = d.getUploadUrl(count, createResp.FileId, createResp.UploadId)
-			if err != nil {
-				return err
-			}
-			preTime = time.Now()
-		}
-	}
-	// 3. complete
-	_, err = d.request("/adrive/v1.0/openFile/complete", http.MethodPost, func(req *resty.Request) {
-		req.SetBody(base.Json{
-			"drive_id":  d.DriveId,
-			"file_id":   createResp.FileId,
-			"upload_id": createResp.UploadId,
-		})
-	})
-	return err
+	return d.upload(ctx, dstDir, stream, up)
 }
 
 func (d *AliyundriveOpen) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
