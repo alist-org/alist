@@ -91,7 +91,7 @@ func (d *Local) getThumb(file model.Obj) (*bytes.Buffer, *string, error) {
 		srcBuf = imgBuf
 	}
 
-	image, err := imaging.Decode(srcBuf)
+	image, err := imaging.Decode(srcBuf, imaging.AutoOrientation(true))
 	if err != nil {
 		return nil, nil, err
 	}
