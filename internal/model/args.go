@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/alist-org/alist/v3/pkg/http_range"
 	"io"
 	"net/http"
 	"time"
@@ -19,14 +20,17 @@ type LinkArgs struct {
 }
 
 type Link struct {
-	URL        string         `json:"url"`
-	Header     http.Header    `json:"header"` // needed header (for url) or response header(for data or writer)
-	Data       io.ReadCloser  // return file reader directly
-	Status     int            // status maybe 200 or 206, etc
-	FilePath   *string        // local file, return the filepath
+	URL    string        `json:"url"`
+	Header http.Header   `json:"header"` // needed header (for url) or response header(for data or writer)
+	Data   io.ReadCloser // return file reader directly
+
+	RangeReader RangeReaderFunc // recommended way
+	ReadSeeker  io.ReadSeeker   // best for local/smb file system, which exposes ReadSeeker
+
+	Status     int            // TODO: remove
 	Expiration *time.Duration // url expiration time
 	//Handle     func(w http.ResponseWriter, r *http.Request) error `json:"-"` // custom handler
-	Writer WriterFunc `json:"-"` // custom writer
+	Writer WriterFunc `json:"-"` // TODO: remove
 }
 
 type OtherArgs struct {
@@ -42,3 +46,4 @@ type FsOtherArgs struct {
 }
 
 type WriterFunc func(w io.Writer) error
+type RangeReaderFunc func(httpRange http_range.Range) (io.ReadCloser, error)

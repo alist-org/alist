@@ -22,7 +22,7 @@ func (r Range) ContentRange(size int64) string {
 
 var (
 	// ErrNoOverlap is returned by ParseRange if first-byte-pos of
-	// all of the byte-range-spec values is greater than the content size.
+	// all the byte-range-spec values is greater than the content size.
 	ErrNoOverlap = errors.New("invalid range: failed to overlap")
 
 	// ErrInvalid is returned by ParseRange on invalid input.
@@ -104,4 +104,15 @@ func ParseRange(s string, size int64) ([]Range, error) { // nolint:gocognit
 		return nil, ErrNoOverlap
 	}
 	return ranges, nil
+}
+
+func (r Range) MimeHeader(contentType string, size int64) textproto.MIMEHeader {
+	return textproto.MIMEHeader{
+		"Content-Range": {r.contentRange(size)},
+		"Content-Type":  {contentType},
+	}
+}
+
+func (r Range) contentRange(size int64) string {
+	return fmt.Sprintf("bytes %d-%d/%d", r.Start, r.Start+r.Length-1, size)
 }

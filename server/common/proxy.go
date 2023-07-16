@@ -2,20 +2,16 @@ package common
 
 import (
 	"fmt"
+	"github.com/alist-org/alist/v3/internal/net"
 	"io"
 	"net/http"
 	"net/url"
-	"os"
 	"strconv"
-	"strings"
 	"sync"
 
 	"github.com/alist-org/alist/v3/drivers/base"
-	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
 )
 
 func HttpClient() *http.Client {
@@ -67,22 +63,13 @@ func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.
 		}
 		return nil
 	}
-	// local file
-	if link.FilePath != nil && *link.FilePath != "" {
-		f, err := os.Open(*link.FilePath)
-		if err != nil {
-			return err
-		}
-		defer func() {
-			_ = f.Close()
-		}()
-		fileStat, err := os.Stat(*link.FilePath)
-		if err != nil {
-			return err
-		}
+	if link.ReadSeeker != nil {
 		filename := file.GetName()
 		w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"; filename*=UTF-8''%s`, filename, url.PathEscape(filename)))
-		http.ServeContent(w, r, file.GetName(), fileStat.ModTime(), f)
+		http.ServeContent(w, r, file.GetName(), file.ModTime(), link.ReadSeeker)
+		return nil
+	} else if link.RangeReader != nil {
+		net.ServeHTTP(w, r, file.GetName(), file.ModTime(), file.GetSize(), link.RangeReader)
 		return nil
 	} else if link.Writer != nil {
 		if link.Header != nil {
@@ -103,41 +90,19 @@ func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.
 		}
 		return link.Writer(w)
 	} else {
-		req, err := http.NewRequest(r.Method, link.URL, nil)
-		if err != nil {
-			return err
-		}
-		// client header
-		for h, val := range r.Header {
-			if utils.SliceContains(conf.SlicesMap[conf.ProxyIgnoreHeaders], strings.ToLower(h)) {
-				continue
-			}
-			req.Header[h] = val
-		}
-		// needed header
-		for h, val := range link.Header {
-			req.Header[h] = val
-		}
-		res, err := HttpClient().Do(req)
+		//transparent proxy
+		res, err := net.RequestHttp(r, link)
 		if err != nil {
 			return err
 		}
 		defer func() {
 			_ = res.Body.Close()
 		}()
-		log.Debugf("proxy status: %d", res.StatusCode)
-		// TODO clean header with blacklist or whitelist
-		res.Header.Del("set-cookie")
+
 		for h, v := range res.Header {
 			w.Header()[h] = v
 		}
 		w.WriteHeader(res.StatusCode)
-		if res.StatusCode >= 400 {
-			all, _ := io.ReadAll(res.Body)
-			msg := string(all)
-			log.Debugln(msg)
-			return errors.New(msg)
-		}
 		if r.Method == http.MethodHead {
 			return nil
 		}

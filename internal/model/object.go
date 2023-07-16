@@ -29,6 +29,8 @@ type Object struct {
 	Size     int64
 	Modified time.Time
 	IsFolder bool
+	Hash     string
+	HashType string
 }
 
 func (o *Object) GetName() string {
@@ -55,8 +57,17 @@ func (o *Object) GetPath() string {
 	return o.Path
 }
 
-func (o *Object) SetPath(id string) {
-	o.Path = id
+func (o *Object) SetPath(path string) {
+	o.Path = path
+}
+
+func (o *Object) SetHash(hash string, hashType string) {
+	o.Hash = hash
+	o.HashType = hashType
+}
+
+func (o *Object) GetHash() (string, string) {
+	return o.Hash, o.HashType
 }
 
 type Thumbnail struct {

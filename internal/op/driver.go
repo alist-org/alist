@@ -10,21 +10,21 @@ import (
 	"github.com/pkg/errors"
 )
 
-type New func() driver.Driver
+type DriverConstructor func() driver.Driver
 
-var driverNewMap = map[string]New{}
+var driverMap = map[string]DriverConstructor{}
 var driverInfoMap = map[string]driver.Info{}
 
-func RegisterDriver(driver New) {
+func RegisterDriver(driver DriverConstructor) {
 	// log.Infof("register driver: [%s]", config.Name)
 	tempDriver := driver()
 	tempConfig := tempDriver.Config()
 	registerDriverItems(tempConfig, tempDriver.GetAddition())
-	driverNewMap[tempConfig.Name] = driver
+	driverMap[tempConfig.Name] = driver
 }
 
-func GetDriverNew(name string) (New, error) {
-	n, ok := driverNewMap[name]
+func GetDriver(name string) (DriverConstructor, error) {
+	n, ok := driverMap[name]
 	if !ok {
 		return nil, errors.Errorf("no driver named: %s", name)
 	}
