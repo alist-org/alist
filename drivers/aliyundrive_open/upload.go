@@ -228,6 +228,8 @@ func (d *AliyundriveOpen) upload(ctx context.Context, dstDir model.Obj, stream m
 		if err != nil {
 			return err
 		}
+		_ = stream.GetReadCloser().Close()
+		stream.SetReadCloser(file)
 		// calculate full hash
 		h := sha1.New()
 		_, err = io.Copy(h, file)
@@ -260,7 +262,6 @@ func (d *AliyundriveOpen) upload(ctx context.Context, dstDir model.Obj, stream m
 		if _, err = file.Seek(0, io.SeekStart); err != nil {
 			return err
 		}
-		stream.SetReadCloser(file)
 	}
 	log.Debugf("[aliyundrive_open] create file success, resp: %+v", createResp)
 	return d.normalUpload(ctx, stream, up, createResp, count, partSize)
