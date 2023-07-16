@@ -23,7 +23,7 @@ require (
 	github.com/gorilla/websocket v1.5.0
 	github.com/hirochachacha/go-smb2 v1.1.0
 	github.com/ipfs/go-ipfs-api v0.6.0
-	github.com/jlaffaye/ftp v0.1.0
+	github.com/jlaffaye/ftp v0.2.0
 	github.com/json-iterator/go v1.1.12
 	github.com/maruel/natural v1.1.0
 	github.com/natefinch/lumberjack v2.0.0+incompatible
