@@ -15,8 +15,12 @@ Alist is currently the best Cloud Data Utilising Tool on Market in China. To use
 - [x] obfuscate sensitive information in config files
 - [x] server-side encryption mode (server encrypt & decrypt all data)
 - [ ] client side encryption mode (client browser request data from supported cloud drive then decrypt data on-the-fly )
-
+- [ ] auto retry in background Task: Move, Copy operations.
+  - Task resume from last failed point
+  - Task auto retry on failure
+  - Task size validates on finish
 Other features please refer to [Alist](https://github.com/alist-org/alist)
+- [ ] rapid-upload support move between local/smb and net drive with SHA1 hash return
 
 ## License
 
