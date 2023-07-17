@@ -228,6 +228,9 @@ func RequestHttp(r *http.Request, link *model.Link) (*http.Response, error) {
 }
 
 func RequestRangedHttp(r *http.Request, link *model.Link, offset, length int64) (*http.Response, error) {
+	if link.Header == nil {
+		link.Header = http.Header{}
+	}
 	if offset == 0 && length == -1 {
 		link.Header.Del("Range")
 	} else {
