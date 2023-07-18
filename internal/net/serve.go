@@ -22,12 +22,12 @@ import (
 
 //this file is inspired by GO_SDK net.http.ServeContent
 
-//type RangeReader struct {
+//type RangeReadCloser struct {
 //	GetReaderForRange RangeReaderFunc
 //}
 
 // ServeHTTP replies to the request using the content in the
-// provided RangeReader. The main benefit of ServeHTTP over io.Copy
+// provided RangeReadCloser. The main benefit of ServeHTTP over io.Copy
 // is that it handles Range requests properly, sets the MIME type, and
 // handles If-Match, If-Unmodified-Since, If-None-Match, If-Modified-Since,
 // and If-Range requests.
@@ -44,12 +44,12 @@ import (
 // request includes an If-Modified-Since header, ServeHTTP uses
 // modtime to decide whether the content needs to be sent at all.
 //
-// The content's RangeReader method must work: ServeHTTP gives a range,
+// The content's RangeReadCloser method must work: ServeHTTP gives a range,
 // caller will give the reader for that Range.
 //
 // If the caller has set w's ETag header formatted per RFC 7232, section 2.3,
 // ServeHTTP uses it to handle requests using If-Match, If-None-Match, or If-Range.
-func ServeHTTP(w http.ResponseWriter, r *http.Request, name string, modTime time.Time, size int64, RangeReaderFunc func(httpRange http_range.Range) (io.ReadCloser, error)) {
+func ServeHTTP(w http.ResponseWriter, r *http.Request, name string, modTime time.Time, size int64, RangeReaderFunc model.RangeReaderFunc) {
 	setLastModified(w, modTime)
 	done, rangeReq := checkPreconditions(w, r, modTime)
 	if done {
@@ -160,12 +160,11 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request, name string, modTime time
 					pw.CloseWithError(err)
 					return
 				}
-				defer reader.Close()
 				if _, err := io.CopyN(part, reader, ra.Length); err != nil {
-
 					pw.CloseWithError(err)
 					return
 				}
+				//defer reader.Close()
 			}
 
 			mw.Close()
@@ -179,7 +178,6 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request, name string, modTime time
 	}
 
 	w.WriteHeader(code)
-	defer sendContent.Close()
 
 	if r.Method != "HEAD" {
 		written, err := io.CopyN(w, sendContent, sendSize)
@@ -191,30 +189,39 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request, name string, modTime time
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}
+	//defer sendContent.Close()
 }
-
-// RequestHttp deal with Header properly then send the request
-func RequestHttp(r *http.Request, link *model.Link) (*http.Response, error) {
-	req, err := http.NewRequest(r.Method, link.URL, nil)
-	if err != nil {
-		return nil, err
-	}
+func ProcessHeader(origin, override *http.Header) *http.Header {
+	result := http.Header{}
 	// client header
-	for h, val := range r.Header {
+	for h, val := range *origin {
 		if utils.SliceContains(conf.SlicesMap[conf.ProxyIgnoreHeaders], strings.ToLower(h)) {
 			continue
 		}
-		req.Header[h] = val
+		result[h] = val
 	}
 	// needed header
-	for h, val := range link.Header {
-		req.Header[h] = val
+	for h, val := range *override {
+		result[h] = val
 	}
+	return &result
+}
+
+// RequestHttp deal with Header properly then send the request
+func RequestHttp(httpMethod string, headerOverride *http.Header, URL string) (*http.Response, error) {
+	req, err := http.NewRequest(httpMethod, URL, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header = *headerOverride
+	log.Debugln("request Header: ", req.Header)
+	log.Debugln("request URL: ", URL)
 	res, err := HttpClient().Do(req)
 	if err != nil {
 		return nil, err
 	}
-	log.Debugf("proxy status: %d", res.StatusCode)
+	log.Debugf("response status: %d", res.StatusCode)
+	log.Debugln("response Header: ", res.Header)
 	// TODO clean header with blacklist or whitelist
 	res.Header.Del("set-cookie")
 	if res.StatusCode >= 400 {
@@ -225,18 +232,6 @@ func RequestHttp(r *http.Request, link *model.Link) (*http.Response, error) {
 	}
 
 	return res, nil
-}
-
-func RequestRangedHttp(r *http.Request, link *model.Link, offset, length int64) (*http.Response, error) {
-	if link.Header == nil {
-		link.Header = http.Header{}
-	}
-	if offset == 0 && length == -1 {
-		link.Header.Del("Range")
-	} else {
-		link.Header.Set("Range", fmt.Sprintf("bytes=%v-%v", offset, offset+length-1))
-	}
-	return RequestHttp(r, link)
 }
 
 var once sync.Once

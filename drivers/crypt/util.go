@@ -2,10 +2,14 @@ package crypt
 
 import (
 	"context"
+	"fmt"
 	"github.com/alist-org/alist/v3/internal/fs"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/net"
 	"github.com/alist-org/alist/v3/pkg/utils"
+	"net/http"
 	stdpath "path"
+	"strconv"
 )
 
 func (d *Crypt) list(ctx context.Context, dst, sub string) ([]model.Obj, error) {
@@ -33,4 +37,19 @@ func (d *Crypt) list(ctx context.Context, dst, sub string) ([]model.Obj, error) 
 			},
 		}, nil
 	})
+}
+
+func RequestRangedHttp(r *http.Request, link *model.Link, offset, length int64) (*http.Response, error) {
+	header := net.ProcessHeader(&http.Header{}, &link.Header)
+	if offset == 0 && length < 0 {
+		header.Del("Range")
+	} else {
+		end := ""
+		if length >= 0 {
+			end = strconv.FormatInt(offset+length-1, 10)
+		}
+		header.Set("Range", fmt.Sprintf("bytes=%v-%v", offset, end))
+	}
+
+	return net.RequestHttp("GET", header, link.URL)
 }

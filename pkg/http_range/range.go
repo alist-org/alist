@@ -12,7 +12,7 @@ import (
 // Range specifies the byte range to be sent to the client.
 type Range struct {
 	Start  int64
-	Length int64
+	Length int64 // limit of bytes to read, -1 for unlimited
 }
 
 // ContentRange returns Content-Range header value.

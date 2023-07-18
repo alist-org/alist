@@ -63,13 +63,19 @@ func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.
 		}
 		return nil
 	}
-	if link.ReadSeeker != nil {
+	if link.ReadSeekCloser != nil {
 		filename := file.GetName()
 		w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"; filename*=UTF-8''%s`, filename, url.PathEscape(filename)))
-		http.ServeContent(w, r, file.GetName(), file.ModTime(), link.ReadSeeker)
+		http.ServeContent(w, r, file.GetName(), file.ModTime(), link.ReadSeekCloser)
+		defer link.ReadSeekCloser.Close()
 		return nil
-	} else if link.RangeReader != nil {
-		net.ServeHTTP(w, r, file.GetName(), file.ModTime(), file.GetSize(), link.RangeReader)
+	} else if link.RangeReadCloser.RangeReader != nil {
+		net.ServeHTTP(w, r, file.GetName(), file.ModTime(), file.GetSize(), link.RangeReadCloser.RangeReader)
+		defer func() {
+			if link.RangeReadCloser.Closer != nil {
+				link.RangeReadCloser.Closer.Close()
+			}
+		}()
 		return nil
 	} else if link.Writer != nil {
 		if link.Header != nil {
@@ -91,13 +97,12 @@ func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.
 		return link.Writer(w)
 	} else {
 		//transparent proxy
-		res, err := net.RequestHttp(r, link)
+		header := net.ProcessHeader(&r.Header, &link.Header)
+		res, err := net.RequestHttp(r.Method, header, link.URL)
 		if err != nil {
 			return err
 		}
-		defer func() {
-			_ = res.Body.Close()
-		}()
+		defer res.Body.Close()
 
 		for h, v := range res.Header {
 			w.Header()[h] = v

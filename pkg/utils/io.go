@@ -135,3 +135,13 @@ func (mr *MultiReadable) Close() error {
 	}
 	return nil
 }
+
+type nopCloser struct {
+	io.ReadSeeker
+}
+
+func (nopCloser) Close() error { return nil }
+
+func ReadSeekerNopCloser(r io.ReadSeeker) io.ReadSeekCloser {
+	return nopCloser{r}
+}

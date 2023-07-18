@@ -16,7 +16,6 @@ import (
 	"github.com/rclone/rclone/fs/config/obscure"
 	log "github.com/sirupsen/logrus"
 	"io"
-	"net/http"
 	stdpath "path"
 	"path/filepath"
 	"regexp"
@@ -198,47 +197,28 @@ func (d *Crypt) Get(ctx context.Context, path string) (model.Obj, error) {
 	remoteFullPath := ""
 	var remoteObj model.Obj
 	var err, err2 error
-	if !strings.HasSuffix(path, d.EncryptedSuffix) {
-		//most likely it's a folder
-		remoteFullPath = d.getPathForRemote(path, true)
-		remoteObj, err = fs.Get(ctx, remoteFullPath, &fs.GetArgs{NoLog: true})
-		if err != nil {
-			if errs.IsObjectNotFound(err) {
-				//treat path as a file and try again
-				remoteFullPath = d.getPathForRemote(path, false)
-				remoteObj, err2 = fs.Get(ctx, remoteFullPath, &fs.GetArgs{NoLog: true})
-				if err2 != nil {
-					return nil, err2
-				}
-			} else {
-				return nil, err
+	firstTryIsFolder, secondTry := guessPath(path)
+	remoteFullPath = d.getPathForRemote(path, firstTryIsFolder)
+	remoteObj, err = fs.Get(ctx, remoteFullPath, &fs.GetArgs{NoLog: true})
+	if err != nil {
+		if errs.IsObjectNotFound(err) && secondTry {
+			//try the opposite
+			remoteFullPath = d.getPathForRemote(path, !firstTryIsFolder)
+			remoteObj, err2 = fs.Get(ctx, remoteFullPath, &fs.GetArgs{NoLog: true})
+			if err2 != nil {
+				return nil, err2
 			}
-		}
-
-	} else {
-		//most likely it's a file
-		remoteFullPath = d.getPathForRemote(path, false)
-		remoteObj, err = fs.Get(ctx, remoteFullPath, &fs.GetArgs{NoLog: true})
-		if err != nil {
-			if errs.IsObjectNotFound(err) {
-				//treat path as a folder and try again
-				remoteFullPath = d.getPathForRemote(path, true)
-				remoteObj, err2 = fs.Get(ctx, remoteFullPath, &fs.GetArgs{NoLog: true})
-				if err2 != nil {
-					return nil, err2
-				}
-			} else {
-				return nil, err
-			}
+		} else {
+			return nil, err
 		}
 	}
-	var remoteSize int64 = 0
+	var size int64 = 0
 	name := ""
 	if !remoteObj.IsDir() {
-		remoteSize, err = d.cipher.DecryptedSize(remoteObj.GetSize())
+		size, err = d.cipher.DecryptedSize(remoteObj.GetSize())
 		if err != nil {
 			log.Warnf("DecryptedSize failed for %s ,will use original size, err:%s", path, err)
-			remoteSize = remoteObj.GetSize()
+			size = remoteObj.GetSize()
 		}
 		name, err = d.cipher.DecryptFileName(remoteObj.GetName())
 		if err != nil {
@@ -255,12 +235,27 @@ func (d *Crypt) Get(ctx context.Context, path string) (model.Obj, error) {
 	obj := &model.Object{
 		Path:     path,
 		Name:     name,
-		Size:     remoteSize,
+		Size:     size,
 		Modified: remoteObj.ModTime(),
 		IsFolder: remoteObj.IsDir(),
 	}
 	return obj, nil
 	//return nil, errs.ObjectNotFound
+}
+
+// will give the best guessing based on path
+func guessPath(path string) (isFolder, secondTry bool) {
+	if strings.HasSuffix(path, "/") {
+		//confirmed only try folder
+		return true, false
+	}
+	lastSlash := strings.LastIndex(path, "/")
+	if strings.Index(path[lastSlash:], ".") < 0 {
+		//try folder then try file
+		return true, true
+	} else {
+		return false, true
+	}
 }
 
 func (d *Crypt) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
@@ -292,53 +287,61 @@ func (d *Crypt) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 			return nil, err
 		}*/
 
-	if remoteLink.RangeReader == nil && remoteLink.ReadSeeker == nil && len(remoteLink.URL) == 0 && remoteLink.Data == nil {
+	if remoteLink.RangeReadCloser.RangeReader == nil && remoteLink.ReadSeekCloser == nil && len(remoteLink.URL) == 0 && remoteLink.Data == nil {
 		return nil, fmt.Errorf("the remote storage driver need to be enhanced to support encrytion")
 	}
 	remoteFileSize := remoteFile.GetSize()
+	var remoteCloser io.Closer
 	rangeReaderFunc := func(ctx context.Context, underlyingOffset, underlyingLength int64) (io.ReadCloser, error) {
 		length := underlyingLength
-		if underlyingLength >= 0 && underlyingOffset+underlyingLength > remoteFileSize {
+		if underlyingLength >= 0 && underlyingOffset+underlyingLength >= remoteFileSize {
 			length = -1
 		}
-		if remoteLink.RangeReader != nil {
+		if remoteLink.RangeReadCloser.RangeReader != nil {
 			//remoteRangeReader, err :=
-			remoteReader, err := remoteLink.RangeReader(http_range.Range{Start: underlyingOffset, Length: length})
+			remoteReader, err := remoteLink.RangeReadCloser.RangeReader(http_range.Range{Start: underlyingOffset, Length: length})
 			if err != nil {
 				return nil, err
 			}
-			return io.NopCloser(remoteReader), nil
+			return remoteReader, nil
 		}
-		if remoteLink.ReadSeeker != nil {
-			_, err := remoteLink.ReadSeeker.Seek(underlyingOffset, io.SeekStart)
+		if remoteLink.ReadSeekCloser != nil {
+			_, err := remoteLink.ReadSeekCloser.Seek(underlyingOffset, io.SeekStart)
 			if err != nil {
 				return nil, err
 			}
-			return io.NopCloser(remoteLink.ReadSeeker), nil
+			//keep reuse same ReadSeekCloser and close at last.
+			remoteCloser = remoteLink.ReadSeekCloser
+			return io.NopCloser(remoteLink.ReadSeekCloser), nil
 		}
 		if len(remoteLink.URL) > 0 {
 			rangedRemoteLink := &model.Link{
 				URL:    remoteLink.URL,
 				Header: remoteLink.Header,
 			}
-			response, err := net.RequestRangedHttp(args.HttpReq, rangedRemoteLink, underlyingOffset, underlyingLength)
+			response, err := RequestRangedHttp(args.HttpReq, rangedRemoteLink, underlyingOffset, length)
 			if err != nil {
-				_ = response.Body.Close()
 				return nil, fmt.Errorf("remote storage http request failure,status: %d err:%s", response.StatusCode, err)
 			}
-			if response.StatusCode == http.StatusPartialContent {
-				// server supported partial content, return as-is.
+			/*if underlyingOffset == 0 && underlyingLength == -1 || response.StatusCode == http.StatusPartialContent {
 				return response.Body, nil
-			}
+			} else if response.StatusCode == http.StatusOK {
+				readCloser, err := net.GetRangedHttpReader(remoteLink.Data, underlyingOffset, underlyingLength)
+				if err != nil {
+					return nil, err
+				}
+				return readCloser, nil
+			}*/
 
 			return response.Body, nil
 		}
 		if remoteLink.Data != nil {
-			readCloser, err := net.GetRangedHttpReader(remoteLink.Data, underlyingOffset, underlyingLength)
+			readCloser, err := net.GetRangedHttpReader(remoteLink.Data, underlyingOffset, length)
 			if err != nil {
 				remoteLink.Data.Close()
 				return nil, err
 			}
+			remoteCloser = remoteLink.Data
 			return readCloser, nil
 		}
 		return nil, errs.NotSupport
@@ -351,13 +354,19 @@ func (d *Crypt) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 		}
 		return readSeeker, nil
 	}
+
+	resultRangeReadCloser := &model.RangeReadCloser{RangeReader: resultRangeReader, Closer: remoteCloser}
 	resultLink := &model.Link{
-		Header:      remoteLink.Header,
-		RangeReader: resultRangeReader,
-		Expiration:  remoteLink.Expiration,
+		Header:          remoteLink.Header,
+		RangeReadCloser: *resultRangeReadCloser,
+		Expiration:      remoteLink.Expiration,
 	}
 
 	return resultLink, nil
+
+}
+
+func Closer() {
 
 }
 
@@ -429,7 +438,7 @@ func (d *Crypt) Put(ctx context.Context, dstDir model.Obj, stream model.FileStre
 		WebPutAsTask: stream.NeedStore(),
 		Old:          stream.GetOld(),
 	}
-	err = op.Put(ctx, d.remoteStorage, dstDirActualPath, streamOut, up)
+	err = op.Put(ctx, d.remoteStorage, dstDirActualPath, streamOut, up, false)
 	if err != nil {
 		return err
 	}

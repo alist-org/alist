@@ -22,10 +22,10 @@ type LinkArgs struct {
 type Link struct {
 	URL    string        `json:"url"`
 	Header http.Header   `json:"header"` // needed header (for url) or response header(for data or writer)
-	Data   io.ReadCloser // return file reader directly
+	Data   io.ReadCloser // will remove later
 
-	RangeReader RangeReaderFunc // recommended way
-	ReadSeeker  io.ReadSeeker   // best for local/smb file system, which exposes ReadSeeker
+	RangeReadCloser RangeReadCloser   // recommended way
+	ReadSeekCloser  io.ReadSeekCloser // best for local,smb.. file system, which exposes ReadSeekCloser
 
 	Status     int            // TODO: remove
 	Expiration *time.Duration // url expiration time
@@ -43,6 +43,10 @@ type FsOtherArgs struct {
 	Path   string      `json:"path" form:"path"`
 	Method string      `json:"method" form:"method"`
 	Data   interface{} `json:"data" form:"data"`
+}
+type RangeReadCloser struct {
+	RangeReader RangeReaderFunc
+	Closer      io.Closer
 }
 
 type WriterFunc func(w io.Writer) error

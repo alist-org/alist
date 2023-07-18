@@ -170,9 +170,9 @@ func (d *Local) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 			if err != nil {
 				return nil, err
 			}
-			link.ReadSeeker = open
+			link.ReadSeekCloser = open
 		} else {
-			link.ReadSeeker = bytes.NewReader(buf.Bytes())
+			link.ReadSeekCloser = utils.ReadSeekerNopCloser(bytes.NewReader(buf.Bytes()))
 			//link.Header.Set("Content-Length", strconv.Itoa(buf.Len()))
 		}
 	} else {
@@ -180,7 +180,7 @@ func (d *Local) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 		if err != nil {
 			return nil, err
 		}
-		link.ReadSeeker = open
+		link.ReadSeekCloser = open
 	}
 	return &link, nil
 }
