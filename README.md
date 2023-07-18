@@ -112,8 +112,7 @@ https://alist.nn.ci/guide/sponsor.html
 ### Special sponsors
 
 - [亚洲云 - 高防服务器|服务器租用|福州高防|广东电信|香港服务器|美国服务器|海外服务器 - 国内靠谱的企业级云计算服务提供商](https://www.asiayun.com/aff/QQCOOQKZ) (sponsored Chinese API server)
-- [找资源 - 阿里云盘资源搜索引擎](https://zhaoziyuan.la/)
-- [KinhDown 百度云盘不限速下载！永久免费！已稳定运行3年！非常可靠！Q群 -> 786799372](https://kinhdown.com)
+- [找资源 - 阿里云盘资源搜索引擎](https://zhaoziyuan.pw/)
 - [JetBrains: Essential tools for software developers and teams](https://www.jetbrains.com/)
 
 ## Contributors
