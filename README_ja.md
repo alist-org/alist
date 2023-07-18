@@ -1,6 +1,6 @@
 <div align="center">
   <a href="https://alist.nn.ci"><img height="100px" alt="logo" src="https://cdn.jsdelivr.net/gh/alist-org/logo@main/logo.svg"/></a>
-  <p><em>🗂️A file list program that supports multiple storages, powered by Gin and Solidjs.</em></p>
+  <p><em>🗂️Gin と Solidjs による、複数のストレージをサポートするファイルリストプログラム。</em></p>
 <div>
   <a href="https://goreportcard.com/report/github.com/alist-org/alist/v3">
     <img src="https://goreportcard.com/badge/github.com/alist-org/alist/v3" alt="latest version" />
@@ -39,14 +39,14 @@
 
 ---
 
-English | [中文](./README_cn.md)| [日本語](./README_ja.md) | [Contributing](./CONTRIBUTING.md) | [CODE_OF_CONDUCT](./CODE_OF_CONDUCT.md)
+[English](./README.md) | [中文](./README_cn.md) | 日本語 | [Contributing](./CONTRIBUTING.md) | [CODE_OF_CONDUCT](./CODE_OF_CONDUCT.md)
 
-## Features
+## 特徴
 
-- [x] Multiple storage
-    - [x] Local storage
+- [x] マルチストレージ
+    - [x] ローカルストレージ
     - [x] [Aliyundrive](https://www.aliyundrive.com/)
-    - [x] OneDrive / Sharepoint ([global](https://www.office.com/), [cn](https://portal.partner.microsoftonline.cn),de,us)
+    - [x] OneDrive / Sharepoint ([グローバル](https://www.office.com/), [cn](https://portal.partner.microsoftonline.cn),de,us)
     - [x] [189cloud](https://cloud.189.cn) (Personal, Family)
     - [x] [GoogleDrive](https://drive.google.com/)
     - [x] [123pan](https://www.123pan.com/)
@@ -74,63 +74,63 @@ English | [中文](./README_cn.md)| [日本語](./README_ja.md) | [Contributing]
     - [x] [115](https://115.com/)
     - [X] Cloudreve
     - [x] [Dropbox](https://www.dropbox.com/)
-- [x] Easy to deploy and out-of-the-box
-- [x] File preview (PDF, markdown, code, plain text, ...)
-- [x] Image preview in gallery mode
-- [x] Video and audio preview, support lyrics and subtitles
-- [x] Office documents preview (docx, pptx, xlsx, ...)
-- [x] `README.md` preview rendering
-- [x] File permalink copy and direct file download
-- [x] Dark mode
-- [x] I18n
-- [x] Protected routes (password protection and authentication)
-- [x] WebDav (see https://alist.nn.ci/guide/webdav.html for details)
-- [x] [Docker Deploy](https://hub.docker.com/r/xhofe/alist)
-- [x] Cloudflare workers proxy
-- [x] File/Folder package download
-- [x] Web upload(Can allow visitors to upload), delete, mkdir, rename, move and copy
-- [x] Offline download
-- [x] Copy files between two storage
+- [x] デプロイが簡単で、すぐに使える
+- [x] ファイルプレビュー (PDF, マークダウン, コード, プレーンテキスト, ...)
+- [x] ギャラリーモードでの画像プレビュー
+- [x] ビデオとオーディオのプレビュー、歌詞と字幕のサポート
+- [x] Office ドキュメントのプレビュー (docx, pptx, xlsx, ...)
+- [x] `README.md` のプレビューレンダリング
+- [x] ファイルのパーマリンクコピーと直接ダウンロード
+- [x] ダークモード
+- [x] 国際化
+- [x] 保護されたルート (パスワード保護と認証)
+- [x] WebDav (詳細は https://alist.nn.ci/guide/webdav.html を参照)
+- [x] [Docker デプロイ](https://hub.docker.com/r/xhofe/alist)
+- [x] Cloudflare ワーカープロキシ
+- [x] ファイル/フォルダパッケージのダウンロード
+- [x] ウェブアップロード(訪問者にアップロードを許可できる), 削除, mkdir, 名前変更, 移動, コピー
+- [x] オフラインダウンロード
+- [x] 二つのストレージ間でファイルをコピー
 
-## Document
+## ドキュメント
 
 <https://alist.nn.ci/>
 
-## Demo
+## デモ
 
 <https://al.nn.ci>
 
-## Discussion
+## ディスカッション
 
-Please go to our [discussion forum](https://github.com/Xhofe/alist/discussions) for general questions, **issues are for bug reports and feature request only.**
+一般的なご質問は[ディスカッションフォーラム](https://github.com/Xhofe/alist/discussions)をご利用ください。**問題はバグレポートと機能リクエストのみです。**
 
-## Sponsor
+## スポンサー
 
-AList is an open-source software, if you happen to like this project and want me to keep going, please consider sponsoring me or providing a single donation! Thanks for all the love and support:
+AList はオープンソースのソフトウェアです。もしあなたがこのプロジェクトを気に入ってくださり、続けて欲しいと思ってくださるなら、ぜひスポンサーになってくださるか、1口でも寄付をしてくださるようご検討ください！すべての愛とサポートに感謝します:
 https://alist.nn.ci/guide/sponsor.html
 
-### Special sponsors
+### スペシャルスポンサー
 
 - [亚洲云 - 高防服务器|服务器租用|福州高防|广东电信|香港服务器|美国服务器|海外服务器 - 国内靠谱的企业级云计算服务提供商](https://www.asiayun.com/aff/QQCOOQKZ) (sponsored Chinese API server)
 - [找资源 - 阿里云盘资源搜索引擎](https://zhaoziyuan.pw/)
 - [JetBrains: Essential tools for software developers and teams](https://www.jetbrains.com/)
 
-## Contributors
+## コントリビューター
 
-Thanks goes to these wonderful people:
+これらの素晴らしい人々に感謝します:
 
 [![Contributors](http://contributors.nn.ci/api?repo=alist-org/alist&repo=alist-org/alist-web&repo=alist-org/docs)](https://github.com/alist-org/alist/graphs/contributors)
 
-## License
+## ライセンス
 
-The `AList` is open-source software licensed under the AGPL-3.0 license.
+`AList` は AGPL-3.0 ライセンスの下でライセンスされたオープンソースソフトウェアです。
 
-## Disclaimer
-- This program is a free and open source project. It is designed to share files on the network disk, which is convenient for downloading and learning golang. Please abide by relevant laws and regulations when using it, and do not abuse it;
-- This program is implemented by calling the official sdk/interface, without destroying the official interface behavior;
-- This program only does 302 redirect/traffic forwarding, and does not intercept, store, or tamper with any user data;
-- Before using this program, you should understand and bear the corresponding risks, including but not limited to account ban, download speed limit, etc., which is none of this program's business;
-- If there is any infringement, please contact me by [email](mailto:i@nn.ci), and it will be dealt with in time.
+## 免責事項
+- このプログラムはフリーでオープンソースのプロジェクトです。ネットワークディスク上でファイルを共有するように設計されており、golang のダウンロードや学習に便利です。利用にあたっては関連法規を遵守し、悪用しないようお願いします;
+- このプログラムは、公式インターフェースの動作を破壊することなく、公式 sdk/インターフェースを呼び出すことで実装されています;
+- このプログラムは、302リダイレクト/トラフィック転送のみを行い、いかなるユーザーデータも傍受、保存、改ざんしません;
+- このプログラムを使用する前に、アカウントの禁止、ダウンロード速度の制限など、対応するリスクを理解し、負担する必要があります;
+- もし侵害があれば、[メール](mailto:i@nn.ci)で私に連絡してください。
 
 ---
 
