@@ -16,8 +16,8 @@ import (
 	"github.com/rclone/rclone/fs/config/obscure"
 	log "github.com/sirupsen/logrus"
 	"io"
+	"net/http"
 	stdpath "path"
-	"path/filepath"
 	"regexp"
 	"strings"
 )
@@ -165,27 +165,6 @@ func (d *Crypt) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([
 	return result, nil
 }
 
-func (d *Crypt) getPathForRemote(path string, isFolder bool) (remoteFullPath string) {
-	if isFolder && !strings.HasSuffix(path, "/") {
-		path = path + "/"
-	}
-	dir, fileName := filepath.Split(path)
-
-	remoteDir := d.cipher.EncryptDirName(dir)
-	remoteFileName := ""
-	if len(strings.TrimSpace(fileName)) > 0 {
-		remoteFileName = d.cipher.EncryptFileName(fileName)
-	}
-	return stdpath.Join(d.RemotePath, remoteDir, remoteFileName)
-
-}
-
-// actual path is used for internal only. any link for user should come from remoteFullPath
-func (d *Crypt) getActualPathForRemote(path string, isFolder bool) (string, error) {
-	_, remoteActualPath, err := op.GetStorageAndActualPath(d.getPathForRemote(path, isFolder))
-	return remoteActualPath, err
-}
-
 func (d *Crypt) Get(ctx context.Context, path string) (model.Obj, error) {
 	if utils.PathEqual(path, "/") {
 		return &model.Object{
@@ -243,21 +222,6 @@ func (d *Crypt) Get(ctx context.Context, path string) (model.Obj, error) {
 	//return nil, errs.ObjectNotFound
 }
 
-// will give the best guessing based on path
-func guessPath(path string) (isFolder, secondTry bool) {
-	if strings.HasSuffix(path, "/") {
-		//confirmed only try folder
-		return true, false
-	}
-	lastSlash := strings.LastIndex(path, "/")
-	if strings.Index(path[lastSlash:], ".") < 0 {
-		//try folder then try file
-		return true, true
-	} else {
-		return false, true
-	}
-}
-
 func (d *Crypt) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	dstDirActualPath, err := d.getActualPathForRemote(file.GetPath(), false)
 	if err != nil {
@@ -267,25 +231,6 @@ func (d *Crypt) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 	if err != nil {
 		return nil, err
 	}
-
-	/*_, err = fs.Get(ctx, dstDirActualPath, &fs.GetArgs{NoLog: true})
-	if err != nil {
-		return nil, err
-	}
-	if common.ShouldProxy(d.remoteStorage, stdpath.Base(file.GetPath())) {
-		return &model.Link{
-			URL: fmt.Sprintf("%s/p%s?sign=%s",
-				common.GetApiUrl(args.HttpReq),
-				utils.EncodePath(dstDirActualPath, true),
-				sign.Sign(dstDirActualPath)),
-		}, nil
-	}
-	link, _, err := fs.Link(ctx, dstDirActualPath, args)*/
-
-	/*	link, err := d.link(ctx, d.RemotePath, file.GetPath(), args)
-		if err != nil {
-			return nil, err
-		}*/
 
 	if remoteLink.RangeReadCloser.RangeReader == nil && remoteLink.ReadSeekCloser == nil && len(remoteLink.URL) == 0 && remoteLink.Data == nil {
 		return nil, fmt.Errorf("the remote storage driver need to be enhanced to support encrytion")
@@ -323,25 +268,26 @@ func (d *Crypt) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 			if err != nil {
 				return nil, fmt.Errorf("remote storage http request failure,status: %d err:%s", response.StatusCode, err)
 			}
-			/*if underlyingOffset == 0 && underlyingLength == -1 || response.StatusCode == http.StatusPartialContent {
+			if underlyingOffset == 0 && length == -1 || response.StatusCode == http.StatusPartialContent {
 				return response.Body, nil
 			} else if response.StatusCode == http.StatusOK {
-				readCloser, err := net.GetRangedHttpReader(remoteLink.Data, underlyingOffset, underlyingLength)
+				log.Warnf("remote http server not supporting range request, expect low perfromace!")
+				readCloser, err := net.GetRangedHttpReader(response.Body, underlyingOffset, length)
 				if err != nil {
 					return nil, err
 				}
 				return readCloser, nil
-			}*/
+			}
 
 			return response.Body, nil
 		}
 		if remoteLink.Data != nil {
+			log.Warnf("remote storage not supporting range request, expect low perfromace!")
 			readCloser, err := net.GetRangedHttpReader(remoteLink.Data, underlyingOffset, length)
+			remoteCloser = remoteLink.Data
 			if err != nil {
-				remoteLink.Data.Close()
 				return nil, err
 			}
-			remoteCloser = remoteLink.Data
 			return readCloser, nil
 		}
 		return nil, errs.NotSupport
@@ -366,10 +312,6 @@ func (d *Crypt) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 
 }
 
-func Closer() {
-
-}
-
 func (d *Crypt) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
 	dstDirActualPath, err := d.getActualPathForRemote(parentDir.GetPath(), true)
 	if err != nil {
@@ -380,12 +322,19 @@ func (d *Crypt) MakeDir(ctx context.Context, parentDir model.Obj, dirName string
 }
 
 func (d *Crypt) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
-	// TODO move obj, optional
-	return errs.NotImplement
+	srcRemoteActualPath, err := d.getActualPathForRemote(srcObj.GetPath(), srcObj.IsDir())
+	if err != nil {
+		return fmt.Errorf("failed to convert path to remote path: %w", err)
+	}
+	dstRemoteActualPath, err := d.getActualPathForRemote(dstDir.GetPath(), dstDir.IsDir())
+	if err != nil {
+		return fmt.Errorf("failed to convert path to remote path: %w", err)
+	}
+	return op.Move(ctx, d.remoteStorage, srcRemoteActualPath, dstRemoteActualPath)
 }
 
 func (d *Crypt) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
-	dstDirActualPath, err := d.getActualPathForRemote(srcObj.GetPath(), srcObj.IsDir())
+	remoteActualPath, err := d.getActualPathForRemote(srcObj.GetPath(), srcObj.IsDir())
 	if err != nil {
 		return fmt.Errorf("failed to convert path to remote path: %w", err)
 	}
@@ -395,24 +344,32 @@ func (d *Crypt) Rename(ctx context.Context, srcObj model.Obj, newName string) er
 	} else {
 		newEncryptedName = d.cipher.EncryptFileName(newName)
 	}
-	return op.Rename(ctx, d.remoteStorage, dstDirActualPath, newEncryptedName)
+	return op.Rename(ctx, d.remoteStorage, remoteActualPath, newEncryptedName)
 }
 
 func (d *Crypt) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
-	// TODO copy obj, optional
-	return errs.NotImplement
-}
-
-func (d *Crypt) Remove(ctx context.Context, obj model.Obj) error {
-	dstDirActualPath, err := d.getActualPathForRemote(obj.GetPath(), obj.IsDir())
+	srcRemoteActualPath, err := d.getActualPathForRemote(srcObj.GetPath(), srcObj.IsDir())
 	if err != nil {
 		return fmt.Errorf("failed to convert path to remote path: %w", err)
 	}
-	return op.Remove(ctx, d.remoteStorage, dstDirActualPath)
+	dstRemoteActualPath, err := d.getActualPathForRemote(dstDir.GetPath(), dstDir.IsDir())
+	if err != nil {
+		return fmt.Errorf("failed to convert path to remote path: %w", err)
+	}
+	return op.Copy(ctx, d.remoteStorage, srcRemoteActualPath, dstRemoteActualPath)
+
+}
+
+func (d *Crypt) Remove(ctx context.Context, obj model.Obj) error {
+	remoteActualPath, err := d.getActualPathForRemote(obj.GetPath(), obj.IsDir())
+	if err != nil {
+		return fmt.Errorf("failed to convert path to remote path: %w", err)
+	}
+	return op.Remove(ctx, d.remoteStorage, remoteActualPath)
 }
 
 func (d *Crypt) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
-	dstDirActualPath, err := d.getActualPathForRemote(dstDir.GetPath(), false)
+	dstDirActualPath, err := d.getActualPathForRemote(dstDir.GetPath(), true)
 	if err != nil {
 		return fmt.Errorf("failed to convert path to remote path: %w", err)
 	}
