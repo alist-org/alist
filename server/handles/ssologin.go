@@ -139,7 +139,14 @@ func autoRegister(username, userID string, err error) (*model.User, error) {
 		SsoID:      userID,
 	}
 	if err = db.CreateUser(user); err != nil {
-		return nil, err
+		if strings.HasPrefix(err.Error(), "UNIQUE constraint failed") && strings.HasSuffix(err.Error(), "username") {
+			user.Username = user.Username + "_" + userID
+			if err = db.CreateUser(user); err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, err
+		}
 	}
 	return user, nil
 }
