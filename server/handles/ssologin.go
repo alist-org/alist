@@ -4,12 +4,13 @@ import (
 	"encoding/base32"
 	"errors"
 	"fmt"
-	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/pkg/utils/random"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/pkg/utils/random"
 
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/db"
@@ -37,7 +38,7 @@ func SSOLoginRedirect(c *gin.Context) {
 	method := c.Query("method")
 	enabled := setting.GetBool(conf.SSOLoginEnabled)
 	clientId := setting.GetStr(conf.SSOClientId)
-	platform := setting.GetStr(conf.SSOLoginplatform)
+	platform := setting.GetStr(conf.SSOLoginPlatform)
 	var r_url string
 	var redirect_uri string
 	if enabled {
@@ -211,101 +212,105 @@ func OIDCLoginCallback(c *gin.Context) {
 }
 
 func SSOLoginCallback(c *gin.Context) {
+	enabled := setting.GetBool(conf.SSOLoginEnabled)
+	if !enabled {
+		common.ErrorResp(c, errors.New("sso login is disabled"), 500)
+	}
 	argument := c.Query("method")
-	if argument == "get_sso_id" || argument == "sso_get_token" {
-		enabled := setting.GetBool(conf.SSOLoginEnabled)
-		clientId := setting.GetStr(conf.SSOClientId)
-		platform := setting.GetStr(conf.SSOLoginplatform)
-		clientSecret := setting.GetStr(conf.SSOClientSecret)
-		var url1, url2, additionalbody, scope, authstring, idstring string
-		switch platform {
-		case "Github":
-			url1 = "https://github.com/login/oauth/access_token"
-			url2 = "https://api.github.com/user"
-			additionalbody = ""
-			authstring = "code"
-			scope = "read:user"
-			idstring = "id"
-		case "Microsoft":
-			url1 = "https://login.microsoftonline.com/common/oauth2/v2.0/token"
-			url2 = "https://graph.microsoft.com/v1.0/me"
-			additionalbody = "&grant_type=authorization_code"
-			scope = "user.read"
-			authstring = "code"
-			idstring = "id"
-		case "Google":
-			url1 = "https://oauth2.googleapis.com/token"
-			url2 = "https://www.googleapis.com/oauth2/v1/userinfo"
-			additionalbody = "&grant_type=authorization_code"
-			scope = "https://www.googleapis.com/auth/userinfo.profile"
-			authstring = "code"
-			idstring = "id"
-		case "Dingtalk":
-			url1 = "https://api.dingtalk.com/v1.0/oauth2/userAccessToken"
-			url2 = "https://api.dingtalk.com/v1.0/contact/users/me"
-			authstring = "authCode"
-			idstring = "unionId"
-		case "Casdoor":
-			endpoint := strings.TrimSuffix(setting.GetStr(conf.SSOEndpointName), "/")
-			url1 = endpoint + "/api/login/oauth/access_token"
-			url2 = endpoint + "/api/userinfo"
-			additionalbody = "&grant_type=authorization_code"
-			scope = "profile"
-			authstring = "code"
-			idstring = "sub"
-		case "OIDC":
-			OIDCLoginCallback(c)
-			return
-		default:
-			common.ErrorStrResp(c, "invalid platform", 400)
-			return
-		}
-		if enabled {
-			callbackCode := c.Query(authstring)
-			if callbackCode == "" {
-				common.ErrorStrResp(c, "No code provided", 400)
-				return
-			}
-			var resp *resty.Response
-			var err error
-			if platform == "Dingtalk" {
-				resp, err = ssoClient.R().SetHeader("content-type", "application/json").SetHeader("Accept", "application/json").
-					SetBody(map[string]string{
-						"clientId":     clientId,
-						"clientSecret": clientSecret,
-						"code":         callbackCode,
-						"grantType":    "authorization_code",
-					}).
-					Post(url1)
-			} else {
-				resp, err = ssoClient.R().SetHeader("content-type", "application/x-www-form-urlencoded").SetHeader("Accept", "application/json").
-					SetBody("client_id=" + clientId + "&client_secret=" + clientSecret + "&code=" + callbackCode + "&redirect_uri=" + common.GetApiUrl(c.Request) + "/api/auth/sso_callback?method=" + argument + "&scope=" + scope + additionalbody).
-					Post(url1)
-			}
-			if err != nil {
-				common.ErrorResp(c, err, 400)
-				return
-			}
-			if platform == "Dingtalk" {
-				accessToken := utils.Json.Get(resp.Body(), "accessToken").ToString()
-				resp, err = ssoClient.R().SetHeader("x-acs-dingtalk-access-token", accessToken).
-					Get(url2)
-			} else {
-				accessToken := utils.Json.Get(resp.Body(), "access_token").ToString()
-				resp, err = ssoClient.R().SetHeader("Authorization", "Bearer "+accessToken).
-					Get(url2)
-			}
-			if err != nil {
-				common.ErrorResp(c, err, 400)
-				return
-			}
-			UserID := utils.Json.Get(resp.Body(), idstring).ToString()
-			if UserID == "0" {
-				common.ErrorResp(c, errors.New("error occured"), 400)
-				return
-			}
-			if argument == "get_sso_id" {
-				html := fmt.Sprintf(`<!DOCTYPE html>
+	if !utils.SliceContains([]string{"get_sso_id", "sso_get_token"}, argument) {
+		common.ErrorResp(c, errors.New("invalid request"), 500)
+	}
+	clientId := setting.GetStr(conf.SSOClientId)
+	platform := setting.GetStr(conf.SSOLoginPlatform)
+	clientSecret := setting.GetStr(conf.SSOClientSecret)
+	var url1, url2, additionalbody, scope, authstring, idstring string
+	switch platform {
+	case "Github":
+		url1 = "https://github.com/login/oauth/access_token"
+		url2 = "https://api.github.com/user"
+		additionalbody = ""
+		authstring = "code"
+		scope = "read:user"
+		idstring = "id"
+	case "Microsoft":
+		url1 = "https://login.microsoftonline.com/common/oauth2/v2.0/token"
+		url2 = "https://graph.microsoft.com/v1.0/me"
+		additionalbody = "&grant_type=authorization_code"
+		scope = "user.read"
+		authstring = "code"
+		idstring = "id"
+	case "Google":
+		url1 = "https://oauth2.googleapis.com/token"
+		url2 = "https://www.googleapis.com/oauth2/v1/userinfo"
+		additionalbody = "&grant_type=authorization_code"
+		scope = "https://www.googleapis.com/auth/userinfo.profile"
+		authstring = "code"
+		idstring = "id"
+	case "Dingtalk":
+		url1 = "https://api.dingtalk.com/v1.0/oauth2/userAccessToken"
+		url2 = "https://api.dingtalk.com/v1.0/contact/users/me"
+		authstring = "authCode"
+		idstring = "unionId"
+	case "Casdoor":
+		endpoint := strings.TrimSuffix(setting.GetStr(conf.SSOEndpointName), "/")
+		url1 = endpoint + "/api/login/oauth/access_token"
+		url2 = endpoint + "/api/userinfo"
+		additionalbody = "&grant_type=authorization_code"
+		scope = "profile"
+		authstring = "code"
+		idstring = "sub"
+	case "OIDC":
+		OIDCLoginCallback(c)
+		return
+	default:
+		common.ErrorStrResp(c, "invalid platform", 400)
+		return
+	}
+	callbackCode := c.Query(authstring)
+	if callbackCode == "" {
+		common.ErrorStrResp(c, "No code provided", 400)
+		return
+	}
+	var resp *resty.Response
+	var err error
+	if platform == "Dingtalk" {
+		resp, err = ssoClient.R().SetHeader("content-type", "application/json").SetHeader("Accept", "application/json").
+			SetBody(map[string]string{
+				"clientId":     clientId,
+				"clientSecret": clientSecret,
+				"code":         callbackCode,
+				"grantType":    "authorization_code",
+			}).
+			Post(url1)
+	} else {
+		resp, err = ssoClient.R().SetHeader("content-type", "application/x-www-form-urlencoded").SetHeader("Accept", "application/json").
+			SetBody("client_id=" + clientId + "&client_secret=" + clientSecret + "&code=" + callbackCode + "&redirect_uri=" + common.GetApiUrl(c.Request) + "/api/auth/sso_callback?method=" + argument + "&scope=" + scope + additionalbody).
+			Post(url1)
+	}
+	if err != nil {
+		common.ErrorResp(c, err, 400)
+		return
+	}
+	if platform == "Dingtalk" {
+		accessToken := utils.Json.Get(resp.Body(), "accessToken").ToString()
+		resp, err = ssoClient.R().SetHeader("x-acs-dingtalk-access-token", accessToken).
+			Get(url2)
+	} else {
+		accessToken := utils.Json.Get(resp.Body(), "access_token").ToString()
+		resp, err = ssoClient.R().SetHeader("Authorization", "Bearer "+accessToken).
+			Get(url2)
+	}
+	if err != nil {
+		common.ErrorResp(c, err, 400)
+		return
+	}
+	UserID := utils.Json.Get(resp.Body(), idstring).ToString()
+	if UserID == "0" {
+		common.ErrorResp(c, errors.New("error occured"), 400)
+		return
+	}
+	if argument == "get_sso_id" {
+		html := fmt.Sprintf(`<!DOCTYPE html>
 				<head></head>
 				<body>
 				<script>
@@ -313,50 +318,49 @@ func SSOLoginCallback(c *gin.Context) {
 				window.close()
 				</script>
 				</body>`, UserID)
-				c.Data(200, "text/html; charset=utf-8", []byte(html))
-				return
-			}
-			if argument == "sso_get_token" {
-				user, err := db.GetUserBySSOID(UserID)
-				if err != nil {
-					if setting.GetBool(conf.SSOAutoRegister) && platform == "Casdoor" {
-						ssoGroup := setting.GetStr(conf.SSOUserGroup)
-						ssoResp := struct {
-							Groups []string `json:"groups"`
-							Name   string   `json:"preferred_username"`
-						}{}
+		c.Data(200, "text/html; charset=utf-8", []byte(html))
+		return
+	}
+	if argument == "sso_get_token" {
+		user, err := db.GetUserBySSOID(UserID)
+		if err != nil {
+			if setting.GetBool(conf.SSOAutoRegister) && platform == "Casdoor" {
+				ssoGroup := setting.GetStr(conf.SSOUserGroup)
+				ssoResp := struct {
+					Groups []string `json:"groups"`
+					Name   string   `json:"preferred_username"`
+				}{}
 
-						utils.Json.Unmarshal(resp.Body(), &ssoResp)
+				utils.Json.Unmarshal(resp.Body(), &ssoResp)
 
-						if ssoGroup != "" && !utils.SliceContains(ssoResp.Groups, ssoGroup) {
-							common.ErrorResp(c, errors.New("user group not allow to register"), 400)
-							return
-						}
-
-						user = &model.User{
-							ID:         0,
-							Username:   ssoResp.Name,
-							Password:   random.String(16),
-							Permission: int32(setting.GetInt(conf.SSODefaultPermission, 0)),
-							BasePath:   setting.GetStr(conf.SSODefaultDir),
-							Role:       0,
-							Disabled:   false,
-							SsoID:      UserID,
-						}
-
-						if err = db.CreateUser(user); err != nil {
-							common.ErrorResp(c, err, 400)
-							return
-						}
-					} else {
-						common.ErrorResp(c, err, 400)
-					}
+				if ssoGroup != "" && !utils.SliceContains(ssoResp.Groups, ssoGroup) {
+					common.ErrorResp(c, errors.New("user group not allow to register"), 400)
+					return
 				}
-				token, err := common.GenerateToken(user.Username)
-				if err != nil {
+
+				user = &model.User{
+					ID:         0,
+					Username:   ssoResp.Name,
+					Password:   random.String(16),
+					Permission: int32(setting.GetInt(conf.SSODefaultPermission, 0)),
+					BasePath:   setting.GetStr(conf.SSODefaultDir),
+					Role:       0,
+					Disabled:   false,
+					SsoID:      UserID,
+				}
+				if err = db.CreateUser(user); err != nil {
 					common.ErrorResp(c, err, 400)
+					return
 				}
-				html := fmt.Sprintf(`<!DOCTYPE html>
+			} else {
+				common.ErrorResp(c, err, 400)
+			}
+		}
+		token, err := common.GenerateToken(user.Username)
+		if err != nil {
+			common.ErrorResp(c, err, 400)
+		}
+		html := fmt.Sprintf(`<!DOCTYPE html>
 							<head></head>
 							<body>
 							<script>
@@ -364,11 +368,7 @@ func SSOLoginCallback(c *gin.Context) {
 							window.close()
 							</script>
 							</body>`, token)
-				c.Data(200, "text/html; charset=utf-8", []byte(html))
-				return
-			}
-		} else {
-			common.ErrorResp(c, errors.New("invalid request"), 500)
-		}
+		c.Data(200, "text/html; charset=utf-8", []byte(html))
+		return
 	}
 }
