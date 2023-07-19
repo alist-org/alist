@@ -125,7 +125,9 @@ func autoRegister(username, userID string, err error) (*model.User, error) {
 	if !errors.Is(err, gorm.ErrRecordNotFound) || !setting.GetBool(conf.SSOAutoRegister) {
 		return nil, err
 	}
-
+	if username == "" {
+		return nil, errors.New("cannot get username from SSO provider")
+	}
 	user := &model.User{
 		ID:         0,
 		Username:   username,
@@ -283,6 +285,7 @@ func SSOLoginCallback(c *gin.Context) {
 		scope = "profile"
 		authField = "code"
 		idField = "sub"
+		usernameField = "preferred_username"
 	case "OIDC":
 		OIDCLoginCallback(c)
 		return
