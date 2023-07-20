@@ -7,6 +7,7 @@ import (
 	"math"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
@@ -25,7 +26,8 @@ func (d *Pan123) getS3PreSignedUrls(ctx context.Context, upReq *UploadResp, star
 		"StorageNode":     upReq.Data.StorageNode,
 	}
 	var s3PreSignedUrls S3PreSignedURLs
-	_, err := d.request(S3PreSignedUrls, http.MethodPost, func(req *resty.Request) {
+	authKeyS3 := d.getAuthKey(strings.Replace(S3Auth, "https://www.123pan.com", "", 1))
+	_, err := d.request(S3Auth+"?auth-key="+authKeyS3, http.MethodPost, func(req *resty.Request) {
 		req.SetBody(data).SetContext(ctx)
 	}, &s3PreSignedUrls)
 	if err != nil {
@@ -44,7 +46,8 @@ func (d *Pan123) completeS3(ctx context.Context, upReq *UploadResp, file model.F
 		"key":         upReq.Data.Key,
 		"uploadId":    upReq.Data.UploadId,
 	}
-	_, err := d.request(UploadCompleteV2, http.MethodPost, func(req *resty.Request) {
+	authKeyCompleteV2 := d.getAuthKey(strings.Replace(UploadCompleteV2, "https://www.123pan.com", "", 1))
+	_, err := d.request(UploadCompleteV2+"?auth-key="+authKeyCompleteV2, http.MethodPost, func(req *resty.Request) {
 		req.SetBody(data).SetContext(ctx)
 	}, nil)
 	return err

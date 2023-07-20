@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
@@ -61,6 +62,7 @@ func (d *Pan123) List(ctx context.Context, dir model.Obj, args model.ListArgs) (
 
 func (d *Pan123) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	if f, ok := file.(File); ok {
+		authKey := d.getAuthKey(strings.Replace(DownloadInfo, "https://www.123pan.com", "", 1))
 		//var resp DownResp
 		var headers map[string]string
 		if !utils.IsLocalIPAddr(args.IP) {
@@ -78,7 +80,7 @@ func (d *Pan123) Link(ctx context.Context, file model.Obj, args model.LinkArgs) 
 			"size":      f.Size,
 			"type":      f.Type,
 		}
-		resp, err := d.request(DownloadInfo, http.MethodPost, func(req *resty.Request) {
+		resp, err := d.request(DownloadInfo+"?auth-key="+authKey, http.MethodPost, func(req *resty.Request) {
 			req.SetBody(data).SetHeaders(headers)
 		}, nil)
 		if err != nil {
@@ -123,6 +125,7 @@ func (d *Pan123) Link(ctx context.Context, file model.Obj, args model.LinkArgs) 
 }
 
 func (d *Pan123) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
+	authKey := d.getAuthKey(strings.Replace(Mkdir, "https://www.123pan.com", "", 1))
 	data := base.Json{
 		"driveId":      0,
 		"etag":         "",
@@ -131,30 +134,32 @@ func (d *Pan123) MakeDir(ctx context.Context, parentDir model.Obj, dirName strin
 		"size":         0,
 		"type":         1,
 	}
-	_, err := d.request(Mkdir, http.MethodPost, func(req *resty.Request) {
+	_, err := d.request(Mkdir+"?auth-key="+authKey, http.MethodPost, func(req *resty.Request) {
 		req.SetBody(data)
 	}, nil)
 	return err
 }
 
 func (d *Pan123) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
+	authKey := d.getAuthKey(strings.Replace(Move, "https://www.123pan.com", "", 1))
 	data := base.Json{
 		"fileIdList":   []base.Json{{"FileId": srcObj.GetID()}},
 		"parentFileId": dstDir.GetID(),
 	}
-	_, err := d.request(Move, http.MethodPost, func(req *resty.Request) {
+	_, err := d.request(Move+"?auth-key="+authKey, http.MethodPost, func(req *resty.Request) {
 		req.SetBody(data)
 	}, nil)
 	return err
 }
 
 func (d *Pan123) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
+	authKey := d.getAuthKey(strings.Replace(Rename, "https://www.123pan.com", "", 1))
 	data := base.Json{
 		"driveId":  0,
 		"fileId":   srcObj.GetID(),
 		"fileName": newName,
 	}
-	_, err := d.request(Rename, http.MethodPost, func(req *resty.Request) {
+	_, err := d.request(Rename+"?auth-key="+authKey, http.MethodPost, func(req *resty.Request) {
 		req.SetBody(data)
 	}, nil)
 	return err
@@ -165,13 +170,14 @@ func (d *Pan123) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 }
 
 func (d *Pan123) Remove(ctx context.Context, obj model.Obj) error {
+	authKey := d.getAuthKey(strings.Replace(Trash, "https://www.123pan.com", "", 1))
 	if f, ok := obj.(File); ok {
 		data := base.Json{
 			"driveId":           0,
 			"operation":         true,
 			"fileTrashInfoList": []File{f},
 		}
-		_, err := d.request(Trash, http.MethodPost, func(req *resty.Request) {
+		_, err := d.request(Trash+"?auth-key="+authKey, http.MethodPost, func(req *resty.Request) {
 			req.SetBody(data)
 		}, nil)
 		return err
@@ -181,6 +187,7 @@ func (d *Pan123) Remove(ctx context.Context, obj model.Obj) error {
 }
 
 func (d *Pan123) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
+	authKeyReq := d.getAuthKey(strings.Replace(UploadRequest, "https://www.123pan.com", "", 1))
 	// const DEFAULT int64 = 10485760
 	h := md5.New()
 	// need to calculate md5 of the full content
@@ -210,7 +217,7 @@ func (d *Pan123) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 		"type":         0,
 	}
 	var resp UploadResp
-	res, err := d.request(UploadRequest, http.MethodPost, func(req *resty.Request) {
+	res, err := d.request(UploadRequest+"?auth-key="+authKeyReq, http.MethodPost, func(req *resty.Request) {
 		req.SetBody(data).SetContext(ctx)
 	}, &resp)
 	if err != nil {
@@ -245,6 +252,7 @@ func (d *Pan123) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 	if err != nil {
 		return err
 	}
+	// authKeyComplete := d.getAuthKey(strings.Replace(UploadComplete, "https://www.123pan.com", "", 1))
 	_, err = d.request(UploadComplete, http.MethodPost, func(req *resty.Request) {
 		req.SetBody(base.Json{
 			"fileId": resp.Data.FileId,

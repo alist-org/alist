@@ -1,10 +1,15 @@
 package _123
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"errors"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/pkg/utils"
@@ -70,6 +75,16 @@ func (d *Pan123) login() error {
 	return err
 }
 
+func (d *Pan123) getAuthKey(path string) string {
+	md5Key := "8-8D$sL8gPjom7bk#cY"
+	//get timestamp(UTC+8)
+	random := rand.Intn(0x989680)
+	time := time.Now().UnixNano() / int64(time.Millisecond)
+	str := fmt.Sprintf("%d|%d|%s|web|3|%s", time, random, path, md5Key)
+	hash := md5.Sum([]byte(str))
+	return fmt.Sprintf("%d-%d-%s", time, random, hex.EncodeToString(hash[:]))
+}
+
 func (d *Pan123) request(url string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
 	req := base.RestyClient.R()
 	req.SetHeaders(map[string]string{
@@ -108,6 +123,7 @@ func (d *Pan123) request(url string, method string, callback base.ReqCallback, r
 func (d *Pan123) getFiles(parentId string) ([]File, error) {
 	page := 1
 	res := make([]File, 0)
+	authKey := d.getAuthKey(strings.Replace(FileList, "https://www.123pan.com", "", 1))
 	for {
 		var resp Files
 		query := map[string]string{
@@ -118,6 +134,7 @@ func (d *Pan123) getFiles(parentId string) ([]File, error) {
 			"orderDirection": d.OrderDirection,
 			"parentFileId":   parentId,
 			"trashed":        "false",
+			"auth-key":       authKey,
 			"Page":           strconv.Itoa(page),
 		}
 		_, err := d.request(FileList, http.MethodGet, func(req *resty.Request) {
