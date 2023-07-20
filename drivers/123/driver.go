@@ -252,8 +252,8 @@ func (d *Pan123) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 	if err != nil {
 		return err
 	}
-	// authKeyComplete := d.getAuthKey(strings.Replace(UploadComplete, "https://www.123pan.com", "", 1))
-	_, err = d.request(UploadComplete, http.MethodPost, func(req *resty.Request) {
+	authKeyComplete := d.getAuthKey(strings.Replace(UploadComplete, "https://www.123pan.com", "", 1))
+	_, err = d.request(UploadComplete+"?auth-key="+authKeyComplete, http.MethodPost, func(req *resty.Request) {
 		req.SetBody(base.Json{
 			"fileId": resp.Data.FileId,
 		}).SetContext(ctx)
