@@ -33,7 +33,7 @@ type User struct {
 	//  10: can add qbittorrent tasks
 	Permission int32  `json:"permission"`
 	OtpSecret  string `json:"-"`
-	SsoID      string `json:"sso_id"`
+	SsoID      string `json:"sso_id"` // unique by sso platform
 }
 
 func (u User) IsGuest() bool {
