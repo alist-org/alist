@@ -57,14 +57,17 @@ const (
 	IndexProgress = "index_progress"
 
 	//SSO
-	SSOClientId         = "sso_client_id"
-	SSOClientSecret     = "sso_client_secret"
-	SSOLoginEnabled     = "sso_login_enabled"
-	SSOLoginplatform    = "sso_login_platform"
-	SSOOrganizationName = "sso_organization_name"
-	SSOApplicationName  = "sso_application_name"
-	SSOEndpointName     = "sso_endpoint_name"
-	SSOJwtPublicKey     = "sso_jwt_public_key"
+	SSOClientId          = "sso_client_id"
+	SSOClientSecret      = "sso_client_secret"
+	SSOLoginEnabled      = "sso_login_enabled"
+	SSOLoginPlatform     = "sso_login_platform"
+	SSOOrganizationName  = "sso_organization_name"
+	SSOApplicationName   = "sso_application_name"
+	SSOEndpointName      = "sso_endpoint_name"
+	SSOJwtPublicKey      = "sso_jwt_public_key"
+	SSOAutoRegister      = "sso_auto_register"
+	SSODefaultDir        = "sso_default_dir"
+	SSODefaultPermission = "sso_default_permission"
 
 	// qbittorrent
 	QbittorrentUrl      = "qbittorrent_url"
