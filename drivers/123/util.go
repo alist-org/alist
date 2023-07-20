@@ -77,7 +77,6 @@ func (d *Pan123) login() error {
 
 func (d *Pan123) getAuthKey(path string) string {
 	md5Key := "8-8D$sL8gPjom7bk#cY"
-	//get timestamp(UTC+8)
 	random := rand.Intn(0x989680)
 	time := time.Now().UnixNano() / int64(time.Millisecond)
 	str := fmt.Sprintf("%d|%d|%s|web|3|%s", time, random, path, md5Key)
