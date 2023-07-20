@@ -6,6 +6,8 @@
 
 ---
 
+English | [中文](./README_cn.md)| [日本語](./README_ja.md) | [Contributing](./CONTRIBUTING.md) | [CODE_OF_CONDUCT](./CODE_OF_CONDUCT.md)
+
 ## Features
 
 Alist is currently the best Cloud Storage Utilising Tool on the market in China.
@@ -19,7 +21,7 @@ So this project should have below extra features:
 - [x] server-side encryption mode (server encrypt & decrypt all data, all data flows thru server)
 - [ ] client side encryption mode (client browser request data from remote storage cloud then decrypt data in client)
   - [ ] IOS/Mac: Quantumult X/Surge/ShadowRocket Box.js script. Hijack access to all Cloud Storage, also alist server will always return 302 redirect, so when app accessing alist, redirecting to storage Provider, and the header is changed by the script. any app will work with the webdav.
-  - [ ] Android/Mac/Windows/Linux/Docker : Mini local proxy for Alist server, so any app/client with in the lan/device will directly access 
+  - [ ] Android/Mac/Windows/Linux/Docker : Mini local proxy for Alist server, so any app/client with in the lan/device will directly access
 - [ ] auto retry in background Task: Move, Copy operations.
   - Task resume from last failed point
   - Task auto retry on failure
@@ -28,7 +30,7 @@ So this project should have below extra features:
 
 Other features please refer to [Alist](https://github.com/alist-org/alist)
 
-## Client Workflow
+## Client Development Plan
 
 |                                       |                         |                                            |                        |                                   |                    |
 | ------------------------------------- | ----------------------- | ------------------------------------------ | ---------------------- | --------------------------------- | ------------------ |
@@ -45,7 +47,7 @@ Other features please refer to [Alist](https://github.com/alist-org/alist)
 The `AList-Private-Cloud` is open-source software licensed under the AGPL-3.0 license.
 
 ## Last but not least
-- This fork is a free and open source project. 
-- 
+- This fork is a free and open source project.
+-
 
 ---
