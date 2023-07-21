@@ -1,10 +1,14 @@
 package _123
 
 import (
+	"crypto/md5"
 	"errors"
 	"fmt"
+	"math/rand"
 	"net/http"
+	"net/url"
 	"strconv"
+	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/pkg/utils"
@@ -17,7 +21,7 @@ import (
 const (
 	AApi             = "https://www.123pan.com/a/api"
 	BApi             = "https://www.123pan.com/b/api"
-	MainApi          = AApi
+	MainApi          = BApi
 	SignIn           = MainApi + "/user/sign_in"
 	Logout           = MainApi + "/user/logout"
 	UserInfo         = MainApi + "/user/info"
@@ -33,6 +37,7 @@ const (
 	S3Auth           = MainApi + "/file/s3_upload_object/auth"
 	UploadCompleteV2 = MainApi + "/file/upload_complete/v2"
 	S3Complete       = MainApi + "/file/s3_complete_multipart_upload"
+	AuthKeySalt      = "8-8D$sL8gPjom7bk#cY"
 )
 
 func (d *Pan123) login() error {
@@ -70,6 +75,20 @@ func (d *Pan123) login() error {
 	return err
 }
 
+func authKey(reqUrl string) (*string, error) {
+	reqURL, err := url.Parse(reqUrl)
+	if err != nil {
+		return nil, err
+	}
+
+	nowUnix := time.Now().Unix()
+	random := rand.Intn(0x989680)
+
+	p4 := fmt.Sprintf("%d|%d|%s|%s|%s|%s", nowUnix, random, reqURL.Path, "web", "3", AuthKeySalt)
+	authKey := fmt.Sprintf("%d-%d-%x", nowUnix, random, md5.Sum([]byte(p4)))
+	return &authKey, nil
+}
+
 func (d *Pan123) request(url string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
 	req := base.RestyClient.R()
 	req.SetHeaders(map[string]string{
@@ -86,6 +105,11 @@ func (d *Pan123) request(url string, method string, callback base.ReqCallback, r
 	if resp != nil {
 		req.SetResult(resp)
 	}
+	authKey, err := authKey(url)
+	if err != nil {
+		return nil, err
+	}
+	req.SetQueryParam("auth-key", *authKey)
 	res, err := req.Execute(method, url)
 	if err != nil {
 		return nil, err
