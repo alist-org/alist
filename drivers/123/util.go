@@ -4,15 +4,16 @@ import (
 	"crypto/md5"
 	"errors"
 	"fmt"
-	"github.com/alist-org/alist/v3/drivers/base"
-	"github.com/alist-org/alist/v3/pkg/utils"
-	"github.com/go-resty/resty/v2"
-	jsoniter "github.com/json-iterator/go"
 	"math/rand"
 	"net/http"
 	"net/url"
 	"strconv"
 	"time"
+
+	"github.com/alist-org/alist/v3/drivers/base"
+	"github.com/alist-org/alist/v3/pkg/utils"
+	"github.com/go-resty/resty/v2"
+	jsoniter "github.com/json-iterator/go"
 )
 
 // do others that not defined in Driver interface
@@ -98,13 +99,15 @@ func (d *Pan123) request(url string, method string, callback base.ReqCallback, r
 		"app-version":   "3",
 		"user-agent":    base.UserAgent,
 	})
-	authKey, err := authKey(url)
-
 	if callback != nil {
 		callback(req)
 	}
 	if resp != nil {
 		req.SetResult(resp)
+	}
+	authKey, err := authKey(url)
+	if err != nil {
+		return nil, err
 	}
 	req.SetQueryParam("auth-key", *authKey)
 	res, err := req.Execute(method, url)
