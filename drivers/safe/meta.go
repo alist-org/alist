@@ -1,4 +1,4 @@
-package crypt
+package safe
 
 import (
 	"github.com/alist-org/alist/v3/internal/driver"
@@ -15,8 +15,8 @@ type Addition struct {
 	DirNameEnc  string `json:"directory_name_encryption" type:"select" required:"true" options:"false,true" default:"false"`
 	RemotePath  string `json:"remotePath" required:"true" help:"This is where the encrypted data stores"`
 
-	Password        string `json:"password" required:"true" confidential:"true" help:"same password as Rclone Crypt"`
-	Salt            string `json:"salt" confidential:"true"  help:"Password or pass phrase for salt. Optional but recommended"`
+	Password        string `json:"password" required:"true" confidential:"true" help:"the main password"`
+	Salt            string `json:"salt" confidential:"true"  help:"If you don't know what is salt, treat it as a second password'. Optional but recommended"`
 	EncryptedSuffix string `json:"encryptedSuffix" required:"true" default:".bin" help:"encrypted files will have this suffix"`
 }
 
@@ -27,7 +27,7 @@ type inMemory struct {
 }*/
 
 var config = driver.Config{
-	Name:              "RcloneCrypt",
+	Name:              "Safe",
 	LocalSort:         true,
 	OnlyLocal:         false,
 	OnlyProxy:         true,
@@ -42,6 +42,6 @@ var config = driver.Config{
 
 func init() {
 	op.RegisterDriver(func() driver.Driver {
-		return &Crypt{}
+		return &Safe{}
 	})
 }

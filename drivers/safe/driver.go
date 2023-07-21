@@ -1,4 +1,4 @@
-package crypt
+package safe
 
 import (
 	"context"
@@ -22,7 +22,7 @@ import (
 	"strings"
 )
 
-type Crypt struct {
+type Safe struct {
 	model.Storage
 	Addition
 	cipher        *rcCrypt.Cipher
@@ -31,15 +31,15 @@ type Crypt struct {
 
 const obfuscatedPrefix = "___Obfuscated___"
 
-func (d *Crypt) Config() driver.Config {
+func (d *Safe) Config() driver.Config {
 	return config
 }
 
-func (d *Crypt) GetAddition() driver.Additional {
+func (d *Safe) GetAddition() driver.Additional {
 	return &d.Addition
 }
 
-func (d *Crypt) Init(ctx context.Context) error {
+func (d *Safe) Init(ctx context.Context) error {
 	//obfuscate credentials if it's updated or just created
 	err := d.updateObfusParm(&d.Password)
 	if err != nil {
@@ -85,7 +85,7 @@ func (d *Crypt) Init(ctx context.Context) error {
 	return nil
 }
 
-func (d *Crypt) updateObfusParm(str *string) error {
+func (d *Safe) updateObfusParm(str *string) error {
 	temp := *str
 	if !strings.HasPrefix(temp, obfuscatedPrefix) {
 		temp, err := obscure.Obscure(temp)
@@ -98,11 +98,11 @@ func (d *Crypt) updateObfusParm(str *string) error {
 	return nil
 }
 
-func (d *Crypt) Drop(ctx context.Context) error {
+func (d *Safe) Drop(ctx context.Context) error {
 	return nil
 }
 
-func (d *Crypt) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
+func (d *Safe) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
 	path := dir.GetPath()
 	//return d.list(ctx, d.RemotePath, path)
 	//remoteFull
@@ -165,7 +165,7 @@ func (d *Crypt) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([
 	return result, nil
 }
 
-func (d *Crypt) Get(ctx context.Context, path string) (model.Obj, error) {
+func (d *Safe) Get(ctx context.Context, path string) (model.Obj, error) {
 	if utils.PathEqual(path, "/") {
 		return &model.Object{
 			Name:     "Root",
@@ -222,7 +222,7 @@ func (d *Crypt) Get(ctx context.Context, path string) (model.Obj, error) {
 	//return nil, errs.ObjectNotFound
 }
 
-func (d *Crypt) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
+func (d *Safe) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	dstDirActualPath, err := d.getActualPathForRemote(file.GetPath(), false)
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert path to remote path: %w", err)
@@ -312,7 +312,7 @@ func (d *Crypt) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 
 }
 
-func (d *Crypt) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
+func (d *Safe) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
 	dstDirActualPath, err := d.getActualPathForRemote(parentDir.GetPath(), true)
 	if err != nil {
 		return fmt.Errorf("failed to convert path to remote path: %w", err)
@@ -321,7 +321,7 @@ func (d *Crypt) MakeDir(ctx context.Context, parentDir model.Obj, dirName string
 	return op.MakeDir(ctx, d.remoteStorage, stdpath.Join(dstDirActualPath, dir))
 }
 
-func (d *Crypt) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
+func (d *Safe) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 	srcRemoteActualPath, err := d.getActualPathForRemote(srcObj.GetPath(), srcObj.IsDir())
 	if err != nil {
 		return fmt.Errorf("failed to convert path to remote path: %w", err)
@@ -333,7 +333,7 @@ func (d *Crypt) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 	return op.Move(ctx, d.remoteStorage, srcRemoteActualPath, dstRemoteActualPath)
 }
 
-func (d *Crypt) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
+func (d *Safe) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
 	remoteActualPath, err := d.getActualPathForRemote(srcObj.GetPath(), srcObj.IsDir())
 	if err != nil {
 		return fmt.Errorf("failed to convert path to remote path: %w", err)
@@ -347,7 +347,7 @@ func (d *Crypt) Rename(ctx context.Context, srcObj model.Obj, newName string) er
 	return op.Rename(ctx, d.remoteStorage, remoteActualPath, newEncryptedName)
 }
 
-func (d *Crypt) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
+func (d *Safe) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 	srcRemoteActualPath, err := d.getActualPathForRemote(srcObj.GetPath(), srcObj.IsDir())
 	if err != nil {
 		return fmt.Errorf("failed to convert path to remote path: %w", err)
@@ -360,7 +360,7 @@ func (d *Crypt) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 
 }
 
-func (d *Crypt) Remove(ctx context.Context, obj model.Obj) error {
+func (d *Safe) Remove(ctx context.Context, obj model.Obj) error {
 	remoteActualPath, err := d.getActualPathForRemote(obj.GetPath(), obj.IsDir())
 	if err != nil {
 		return fmt.Errorf("failed to convert path to remote path: %w", err)
@@ -368,7 +368,7 @@ func (d *Crypt) Remove(ctx context.Context, obj model.Obj) error {
 	return op.Remove(ctx, d.remoteStorage, remoteActualPath)
 }
 
-func (d *Crypt) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
+func (d *Safe) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
 	dstDirActualPath, err := d.getActualPathForRemote(dstDir.GetPath(), true)
 	if err != nil {
 		return fmt.Errorf("failed to convert path to remote path: %w", err)
@@ -402,8 +402,8 @@ func (d *Crypt) Put(ctx context.Context, dstDir model.Obj, stream model.FileStre
 	return nil
 }
 
-//func (d *Crypt) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
+//func (d *Safe) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
 //	return nil, errs.NotSupport
 //}
 
-var _ driver.Driver = (*Crypt)(nil)
+var _ driver.Driver = (*Safe)(nil)
