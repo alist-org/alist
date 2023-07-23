@@ -1,28 +1,19 @@
 package safe
 
 import (
-	"fmt"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/net"
 	"github.com/alist-org/alist/v3/internal/op"
+	"github.com/alist-org/alist/v3/pkg/http_range"
 	"net/http"
 	stdpath "path"
 	"path/filepath"
-	"strconv"
 	"strings"
 )
 
 func RequestRangedHttp(r *http.Request, link *model.Link, offset, length int64) (*http.Response, error) {
 	header := net.ProcessHeader(&http.Header{}, &link.Header)
-	if offset == 0 && length < 0 {
-		header.Del("Range")
-	} else {
-		end := ""
-		if length >= 0 {
-			end = strconv.FormatInt(offset+length-1, 10)
-		}
-		header.Set("Range", fmt.Sprintf("bytes=%v-%v", offset, end))
-	}
+	header = http_range.ApplyRangeToHttpHeader(http_range.Range{Start: offset, Length: length}, header)
 
 	return net.RequestHttp("GET", header, link.URL)
 }

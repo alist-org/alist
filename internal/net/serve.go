@@ -222,7 +222,7 @@ func RequestHttp(httpMethod string, headerOverride *http.Header, URL string) (*h
 	}
 	log.Debugf("response status: %d", res.StatusCode)
 	log.Debugln("response Header: ", res.Header)
-	// TODO clean header with blacklist or whitelist
+	// TODO clean header with blocklist or passlist
 	res.Header.Del("set-cookie")
 	if res.StatusCode >= 400 {
 		all, _ := io.ReadAll(res.Body)

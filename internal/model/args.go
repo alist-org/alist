@@ -20,17 +20,15 @@ type LinkArgs struct {
 }
 
 type Link struct {
-	URL    string        `json:"url"`
-	Header http.Header   `json:"header"` // needed header (for url) or response header(for data or writer)
-	Data   io.ReadCloser // will remove later
-
+	URL             string            `json:"url"`
+	Header          http.Header       `json:"header"` // needed header (for url) or response header(for data or writer)
 	RangeReadCloser RangeReadCloser   // recommended way
 	ReadSeekCloser  io.ReadSeekCloser // best for local,smb.. file system, which exposes ReadSeekCloser
 
-	Status     int            // TODO: remove
-	Expiration *time.Duration // url expiration time
-	//Handle     func(w http.ResponseWriter, r *http.Request) error `json:"-"` // custom handler
-	Writer WriterFunc `json:"-"` // TODO: remove
+	Expiration *time.Duration // local cache expire Duration
+	//for accelerating request, use multi-thread downloading
+	Concurrency int
+	PartSize    int64
 }
 
 type OtherArgs struct {
@@ -47,6 +45,22 @@ type FsOtherArgs struct {
 type RangeReadCloser struct {
 	RangeReader RangeReaderFunc
 	Closer      io.Closer
+}
+
+type Closers struct {
+	closers []io.Closer
+}
+
+func (c *Closers) Close() (err error) {
+	for _, closer := range c.closers {
+		if closer != nil {
+			_ = closer.Close()
+		}
+	}
+	return nil
+}
+func (c *Closers) Add(closer io.Closer) {
+	c.closers = append(c.closers, closer)
 }
 
 type WriterFunc func(w io.Writer) error

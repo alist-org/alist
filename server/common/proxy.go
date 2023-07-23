@@ -1,17 +1,19 @@
 package common
 
 import (
+	"bytes"
+	"context"
 	"fmt"
+	"github.com/alist-org/alist/v3/drivers/base"
+	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/net"
+	"github.com/alist-org/alist/v3/pkg/http_range"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/pkg/errors"
 	"io"
 	"net/http"
 	"net/url"
-	"strconv"
 	"sync"
-
-	"github.com/alist-org/alist/v3/drivers/base"
-	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/pkg/errors"
 )
 
 func HttpClient() *http.Client {
@@ -32,37 +34,6 @@ var once sync.Once
 var httpClient *http.Client
 
 func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.Obj) error {
-	// read data with native
-	var err error
-	if link.Data != nil {
-		defer func() {
-			_ = link.Data.Close()
-		}()
-		filename := file.GetName()
-		w.Header().Set("Content-Type", "application/octet-stream")
-		w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"; filename*=UTF-8''%s`, filename, url.PathEscape(filename)))
-		w.Header().Set("Content-Length", strconv.FormatInt(file.GetSize(), 10))
-		if link.Header != nil {
-			// TODO clean header with blocklist or passlist
-			link.Header.Del("set-cookie")
-			for h, val := range link.Header {
-				w.Header()[h] = val
-			}
-		}
-		if link.Status == 0 {
-			w.WriteHeader(http.StatusOK)
-		} else {
-			w.WriteHeader(link.Status)
-		}
-		if r.Method == http.MethodHead {
-			return nil
-		}
-		_, err = io.Copy(w, link.Data)
-		if err != nil {
-			return err
-		}
-		return nil
-	}
 	if link.ReadSeekCloser != nil {
 		filename := file.GetName()
 		w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"; filename*=UTF-8''%s`, filename, url.PathEscape(filename)))
@@ -77,24 +48,30 @@ func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.
 			}
 		}()
 		return nil
-	} else if link.Writer != nil {
-		if link.Header != nil {
-			for h, v := range link.Header {
-				w.Header()[h] = v
+	} else if link.Concurrency != 0 || link.PartSize != 0 {
+		size := file.GetSize()
+		//var finalClosers model.Closers
+		header := net.ProcessHeader(&r.Header, &link.Header)
+		rangeReader := func(httpRange http_range.Range) (io.ReadCloser, error) {
+			down := net.NewDownloader(func(d *net.Downloader) {
+				d.Concurrency = link.Concurrency
+				d.PartSize = link.PartSize
+			})
+			req := &net.HttpRequestParams{
+				URL:       link.URL,
+				Range:     httpRange,
+				Size:      size,
+				HeaderRef: header,
 			}
+			buf := aws.NewWriteAtBuffer([]byte{})
+			_, err := down.Download(context.Background(), buf, req)
+			if err != nil {
+				return nil, err
+			}
+			return io.NopCloser(bytes.NewReader(buf.Bytes())), nil
 		}
-		if cd := w.Header().Get("Content-Disposition"); cd == "" {
-			w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"; filename*=UTF-8''%s`, file.GetName(), url.PathEscape(file.GetName())))
-		}
-		if link.Status == 0 {
-			w.WriteHeader(http.StatusOK)
-		} else {
-			w.WriteHeader(link.Status)
-		}
-		if r.Method == http.MethodHead {
-			return nil
-		}
-		return link.Writer(w)
+		net.ServeHTTP(w, r, file.GetName(), file.ModTime(), file.GetSize(), rangeReader)
+		return nil
 	} else {
 		//transparent proxy
 		header := net.ProcessHeader(&r.Header, &link.Header)

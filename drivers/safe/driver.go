@@ -232,7 +232,7 @@ func (d *Safe) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*
 		return nil, err
 	}
 
-	if remoteLink.RangeReadCloser.RangeReader == nil && remoteLink.ReadSeekCloser == nil && len(remoteLink.URL) == 0 && remoteLink.Data == nil {
+	if remoteLink.RangeReadCloser.RangeReader == nil && remoteLink.ReadSeekCloser == nil && len(remoteLink.URL) == 0 {
 		return nil, fmt.Errorf("the remote storage driver need to be enhanced to support encrytion")
 	}
 	remoteFileSize := remoteFile.GetSize()
@@ -281,15 +281,15 @@ func (d *Safe) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*
 
 			return response.Body, nil
 		}
-		if remoteLink.Data != nil {
-			log.Warnf("remote storage not supporting range request, expect low perfromace!")
-			readCloser, err := net.GetRangedHttpReader(remoteLink.Data, underlyingOffset, length)
-			remoteCloser = remoteLink.Data
-			if err != nil {
-				return nil, err
-			}
-			return readCloser, nil
-		}
+		//if remoteLink.Data != nil {
+		//	log.Warnf("remote storage not supporting range request, expect low perfromace!")
+		//	readCloser, err := net.GetRangedHttpReader(remoteLink.Data, underlyingOffset, length)
+		//	remoteCloser = remoteLink.Data
+		//	if err != nil {
+		//		return nil, err
+		//	}
+		//	return readCloser, nil
+		//}
 		return nil, errs.NotSupport
 
 	}

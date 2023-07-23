@@ -4,6 +4,7 @@ package http_range
 import (
 	"errors"
 	"fmt"
+	"net/http"
 	"net/textproto"
 	"strconv"
 	"strings"
@@ -113,6 +114,25 @@ func (r Range) MimeHeader(contentType string, size int64) textproto.MIMEHeader {
 	}
 }
 
+// for http response header
 func (r Range) contentRange(size int64) string {
 	return fmt.Sprintf("bytes %d-%d/%d", r.Start, r.Start+r.Length-1, size)
+}
+
+// ApplyRangeToHttpHeader for http request header
+func ApplyRangeToHttpHeader(p Range, headerRef *http.Header) *http.Header {
+	header := headerRef
+	if header == nil {
+		header = &http.Header{}
+	}
+	if p.Start == 0 && p.Length < 0 {
+		header.Del("Range")
+	} else {
+		end := ""
+		if p.Length >= 0 {
+			end = strconv.FormatInt(p.Start+p.Length-1, 10)
+		}
+		header.Set("Range", fmt.Sprintf("bytes=%v-%v", p.Start, end))
+	}
+	return header
 }

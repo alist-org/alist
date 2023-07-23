@@ -1,6 +1,7 @@
 package fs
 
 import (
+	"github.com/alist-org/alist/v3/pkg/http_range"
 	"io"
 	"net/http"
 	"strings"
@@ -9,25 +10,21 @@ import (
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
 )
 
 func getFileStreamFromLink(file model.Obj, link *model.Link) (*model.FileStream, error) {
 	var rc io.ReadCloser
+	var err error
 	mimetype := utils.GetMimeType(file.GetName())
-	if link.Data != nil {
-		rc = link.Data
-	} else if link.Writer != nil {
-		r, w := io.Pipe()
-		go func() {
-			err := link.Writer(w)
-			err = w.CloseWithError(err)
-			if err != nil {
-				log.Errorf("[getFileStreamFromLink] failed to write: %v", err)
-			}
-		}()
-		rc = r
+	if link.RangeReadCloser.RangeReader != nil {
+		rc, err = link.RangeReadCloser.RangeReader(http_range.Range{Length: -1})
+		if err != nil {
+			return nil, err
+		}
+	} else if link.ReadSeekCloser != nil {
+		rc = link.ReadSeekCloser
 	} else {
+		//TODO: add accelerator
 		req, err := http.NewRequest(http.MethodGet, link.URL, nil)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to create request for %s", link.URL)
