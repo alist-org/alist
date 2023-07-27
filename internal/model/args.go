@@ -25,6 +25,7 @@ type Link struct {
 	Status     int            // status maybe 200 or 206, etc
 	FilePath   *string        // local file, return the filepath
 	Expiration *time.Duration // url expiration time
+	IPCacheKey bool           // add ip to cache key
 	//Handle     func(w http.ResponseWriter, r *http.Request) error `json:"-"` // custom handler
 	Writer WriterFunc `json:"-"` // custom writer
 }
