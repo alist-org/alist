@@ -1,14 +1,10 @@
 package _123
 
 import (
-	"crypto/md5"
 	"errors"
 	"fmt"
-	"math/rand"
 	"net/http"
-	"net/url"
 	"strconv"
-	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/pkg/utils"
