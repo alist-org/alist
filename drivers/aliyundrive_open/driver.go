@@ -39,8 +39,8 @@ func (d *AliyundriveOpen) Init(ctx context.Context) error {
 		return err
 	}
 	d.DriveId = utils.Json.Get(res, "default_drive_id").ToString()
-	d.limitList = utils.LimitRateCtx(d.list, time.Second/4)
-	d.limitLink = utils.LimitRateCtx(d.link, time.Second)
+	d.limitList = utils.LimitRateCtx(d.list, time.Second/3)
+	d.limitLink = utils.LimitRateCtx(d.link, time.Second+time.Millisecond*2)
 	return nil
 }
 
