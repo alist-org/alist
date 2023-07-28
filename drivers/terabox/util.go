@@ -3,15 +3,16 @@ package terbox
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/alist-org/alist/v3/drivers/base"
-	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/pkg/utils"
-	"github.com/go-resty/resty/v2"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/alist-org/alist/v3/drivers/base"
+	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/pkg/utils"
+	"github.com/go-resty/resty/v2"
 )
 
 func (d *Terabox) request(furl string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
@@ -139,6 +140,11 @@ func (d *Terabox) linkOfficial(file model.Obj, args model.LinkArgs) (*model.Link
 	if err != nil {
 		return nil, err
 	}
+
+	if len(resp.Dlink) == 0 {
+		return nil, fmt.Errorf("fid %s no dlink found, errno: %d", file.GetID(), resp.Errno)
+	}
+
 	res, err := base.NoRedirectClient.R().SetHeader("Cookie", d.Cookie).SetHeader("User-Agent", base.UserAgent).Get(resp.Dlink[0].Dlink)
 	if err != nil {
 		return nil, err
