@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Xhofe/rateg"
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
@@ -39,8 +40,14 @@ func (d *AliyundriveOpen) Init(ctx context.Context) error {
 		return err
 	}
 	d.DriveId = utils.Json.Get(res, "default_drive_id").ToString()
-	d.limitList = utils.LimitRateCtx(d.list, time.Second/3)
-	d.limitLink = utils.LimitRateCtx(d.link, time.Second+time.Millisecond*2)
+	d.limitList = rateg.LimitFnCtx(d.list, rateg.LimitFnOption{
+		Limit:  4,
+		Bucket: 1,
+	})
+	d.limitLink = rateg.LimitFnCtx(d.link, rateg.LimitFnOption{
+		Limit:  1,
+		Bucket: 1,
+	})
 	return nil
 }
 
