@@ -7,7 +7,7 @@
 Prerequisites:
 
 - [git](https://git-scm.com)
-- [Go 1.19+](https://golang.org/doc/install)
+- [Go 1.20+](https://golang.org/doc/install)
 - [gcc](https://gcc.gnu.org/)
 - [nodejs](https://nodejs.org/)
 

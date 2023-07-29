@@ -29,6 +29,7 @@ type Link struct {
 
 	Status     int            // TODO: remove
 	Expiration *time.Duration // url expiration time
+	IPCacheKey bool           // add ip to cache key
 	//Handle     func(w http.ResponseWriter, r *http.Request) error `json:"-"` // custom handler
 	Writer WriterFunc `json:"-"` // TODO: remove
 }

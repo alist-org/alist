@@ -300,6 +300,9 @@ func (d *Yun139) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 
 	var partSize = getPartSize(stream.GetSize())
 	part := (stream.GetSize() + partSize - 1) / partSize
+	if part == 0 {
+		part = 1
+	}
 	for i := int64(0); i < part; i++ {
 		if utils.IsCanceled(ctx) {
 			return ctx.Err()
@@ -331,13 +334,11 @@ func (d *Yun139) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 		if err != nil {
 			return err
 		}
+		_ = res.Body.Close()
 		log.Debugf("%+v", res)
-
 		if res.StatusCode != http.StatusOK {
 			return fmt.Errorf("unexpected status code: %d", res.StatusCode)
 		}
-
-		res.Body.Close()
 	}
 
 	return nil
