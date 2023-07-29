@@ -13,6 +13,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/go-resty/resty/v2"
+	log "github.com/sirupsen/logrus"
 )
 
 // do others that not defined in Driver interface
@@ -62,16 +63,17 @@ func (d *BaiduNetdisk) request(furl string, method string, callback base.ReqCall
 	if err != nil {
 		return nil, err
 	}
+	log.Debugf("[baidu_netdisk] req: %s, resp: %s", furl, res.String())
 	errno := utils.Json.Get(res.Body(), "errno").ToInt()
 	if errno != 0 {
-		if errno == -6 {
+		if utils.SliceContains([]int{111, -6}, errno) {
 			err = d.refreshToken()
 			if err != nil {
 				return nil, err
 			}
 			return d.request(furl, method, callback, resp)
 		}
-		return nil, fmt.Errorf("errno: %d, refer to https://pan.baidu.com/union/doc/", errno)
+		return nil, fmt.Errorf("req: [%s] ,errno: %d, refer to https://pan.baidu.com/union/doc/", furl, errno)
 	}
 	return res.Body(), nil
 }
