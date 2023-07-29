@@ -28,7 +28,7 @@ type Link struct {
 	Expiration *time.Duration // local cache expire Duration
 	//for accelerating request, use multi-thread downloading
 	Concurrency int
-	PartSize    int64
+	PartSize    int
 }
 
 type OtherArgs struct {

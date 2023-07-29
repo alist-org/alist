@@ -184,7 +184,7 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request, name string, modTime time
 		if err != nil {
 			log.Warnf("ServeHttp error. err: %s ", err)
 			if written != sendSize {
-				log.Warnf("Maybe size incorrect or reader not giving correct/full data. written bytes: %d ,sendSize:%d, ", written, sendSize)
+				log.Warnf("Maybe size incorrect or reader not giving correct/full data, or connection closed before finish. written bytes: %d ,sendSize:%d, ", written, sendSize)
 			}
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}

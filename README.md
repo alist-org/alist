@@ -22,6 +22,7 @@ So this project should have below extra features:
 - [ ] client side encryption mode (client browser request data from remote storage cloud then decrypt data in client)
   - [ ] IOS/Mac: Quantumult X/Surge/ShadowRocket Box.js script. Hijack access to all Cloud Storage, also alist server will always return 302 redirect, so when app accessing alist, redirecting to storage Provider, and the header is changed by the script. any app will work with the webdav.
   - [ ] Android/Mac/Windows/Linux/Docker : Mini local proxy for Alist server, so any app/client with in the lan/device will directly access
+- [x] multi-thread downloading for [Quark] Drive, will add option of enable for other slow drivers. (high-memory usage but better experience in non-multithreading download tools, e.g. playing media in any media player)
 - [ ] auto retry in background Task: Move, Copy operations.
   - Task resume from last failed point
   - Task auto retry on failure

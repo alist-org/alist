@@ -337,5 +337,4 @@ func GetRangedHttpReader(readCloser io.ReadCloser, offset, length int64) (io.Rea
 
 	// return an io.ReadCloser that is limited to `length` bytes.
 	return &LimitedReadCloser{readCloser, length_int}, nil
-
 }

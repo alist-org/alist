@@ -1,14 +1,12 @@
 package common
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/net"
 	"github.com/alist-org/alist/v3/pkg/http_range"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/pkg/errors"
 	"io"
 	"net/http"
@@ -63,12 +61,8 @@ func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.
 				Size:      size,
 				HeaderRef: header,
 			}
-			buf := aws.NewWriteAtBuffer([]byte{})
-			_, err := down.Download(context.Background(), buf, req)
-			if err != nil {
-				return nil, err
-			}
-			return io.NopCloser(bytes.NewReader(buf.Bytes())), nil
+			rc, err := down.Download(context.Background(), req)
+			return *rc, err
 		}
 		net.ServeHTTP(w, r, file.GetName(), file.ModTime(), file.GetSize(), rangeReader)
 		return nil
