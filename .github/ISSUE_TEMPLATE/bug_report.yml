@@ -21,7 +21,7 @@ body:
     attributes:
       label: Alist Version / Alist 版本
       description: What version of our software are you running?
-      placeholder: v2.0.0
+      placeholder: v3.xx.xx
     validations:
       required: true
   - type: input

@@ -10,6 +10,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/go-resty/resty/v2"
+	log "github.com/sirupsen/logrus"
 )
 
 // do others that not defined in Driver interface
@@ -19,9 +20,9 @@ func (d *AliyundriveOpen) refreshToken() error {
 	if d.OauthTokenURL != "" && d.ClientID == "" {
 		url = d.OauthTokenURL
 	}
-	var resp base.TokenResp
+	//var resp base.TokenResp
 	var e ErrResp
-	_, err := base.RestyClient.R().
+	res, err := base.RestyClient.R().
 		ForceContentType("application/json").
 		SetBody(base.Json{
 			"client_id":     d.ClientID,
@@ -29,19 +30,21 @@ func (d *AliyundriveOpen) refreshToken() error {
 			"grant_type":    "refresh_token",
 			"refresh_token": d.RefreshToken,
 		}).
-		SetResult(&resp).
+		//SetResult(&resp).
 		SetError(&e).
 		Post(url)
 	if err != nil {
 		return err
 	}
+	log.Debugf("[ali_open] refresh token response: %s", res.String())
 	if e.Code != "" {
 		return fmt.Errorf("failed to refresh token: %s", e.Message)
 	}
-	if resp.RefreshToken == "" {
+	refresh, access := utils.Json.Get(res.Body(), "refresh_token").ToString(), utils.Json.Get(res.Body(), "access_token").ToString()
+	if refresh == "" {
 		return errors.New("failed to refresh token: refresh token is empty")
 	}
-	d.RefreshToken, d.AccessToken = resp.RefreshToken, resp.AccessToken
+	d.RefreshToken, d.AccessToken = refresh, access
 	op.MustSaveDriverStorage(d)
 	return nil
 }
@@ -65,6 +68,9 @@ func (d *AliyundriveOpen) requestReturnErrResp(uri, method string, callback base
 	req.SetError(&e)
 	res, err := req.Execute(method, d.base+uri)
 	if err != nil {
+		if res != nil {
+			log.Errorf("[aliyundrive_open] request error: %s", res.String())
+		}
 		return nil, err, nil
 	}
 	isRetry := len(retry) > 0 && retry[0]

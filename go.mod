@@ -51,8 +51,10 @@ require (
 
 require (
 	github.com/Max-Sum/base32768 v0.0.0-20230304063302-18e6ce5945fd // indirect
+	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/RoaringBitmap/roaring v1.2.3 // indirect
 	github.com/abbot/go-http-auth v0.4.0 // indirect
+	github.com/Xhofe/rateg v0.0.0-20230728072201-251a4e1adad4 // indirect
 	github.com/aead/ecdh v0.2.0 // indirect
 	github.com/aliyun/aliyun-oss-go-sdk v2.2.5+incompatible // indirect
 	github.com/andreburgaud/crypt2go v1.1.0 // indirect

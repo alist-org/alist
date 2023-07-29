@@ -26,6 +26,7 @@ type Link struct {
 	ReadSeekCloser  io.ReadSeekCloser // best for local,smb.. file system, which exposes ReadSeekCloser
 
 	Expiration *time.Duration // local cache expire Duration
+	IPCacheKey bool           // add ip to cache key
 	//for accelerating request, use multi-thread downloading
 	Concurrency int
 	PartSize    int

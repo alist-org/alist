@@ -243,7 +243,7 @@ func Link(ctx context.Context, storage driver.Driver, path string, args model.Li
 	if file.IsDir() {
 		return nil, nil, errors.WithStack(errs.NotFile)
 	}
-	key := Key(storage, path) + ":" + args.IP
+	key := Key(storage, path)
 	if link, ok := linkCache.Get(key); ok {
 		return link, file, nil
 	}
@@ -253,6 +253,9 @@ func Link(ctx context.Context, storage driver.Driver, path string, args model.Li
 			return nil, errors.Wrapf(err, "failed get link")
 		}
 		if link.Expiration != nil {
+			if link.IPCacheKey {
+				key = key + ":" + args.IP
+			}
 			linkCache.Set(key, link, cache.WithEx[*model.Link](*link.Expiration))
 		}
 		return link, nil
@@ -563,6 +566,9 @@ func Put(ctx context.Context, storage driver.Driver, dstDirPath string, file *mo
 			err := Remove(ctx, storage, tempPath)
 			if err != nil {
 				return err
+			} else {
+				key := Key(storage, stdpath.Join(dstDirPath, file.GetName()))
+				linkCache.Del(key)
 			}
 		}
 	}
