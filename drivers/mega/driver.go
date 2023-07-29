@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/pkg/http_range"
 	"github.com/rclone/rclone/lib/readers"
 	"io"
@@ -74,7 +75,7 @@ func (d *Mega) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*
 		//}
 
 		size := file.GetSize()
-		var finalClosers model.Closers
+		var finalClosers base.Closers
 		resultRangeReader := func(httpRange http_range.Range) (io.ReadCloser, error) {
 			length := httpRange.Length
 			if httpRange.Length >= 0 && httpRange.Start+httpRange.Length >= size {

@@ -324,9 +324,9 @@ func GetRangedHttpReader(readCloser io.ReadCloser, offset, length int64) (io.Rea
 	var length_int int
 	if length > math.MaxInt {
 		return nil, fmt.Errorf("doesnot support length bigger than int32 max ")
-	} else {
-		length_int = int(length)
 	}
+	length_int = int(length)
+
 	if offset > 100*1024*1024 {
 		log.Warnf("offset is more than 100MB, if loading data from internet, high-latency and wasting of bandwith is expected")
 	}
