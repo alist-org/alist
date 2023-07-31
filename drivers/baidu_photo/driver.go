@@ -126,7 +126,13 @@ func (d *BaiduPhoto) Link(ctx context.Context, file model.Obj, args model.LinkAr
 	case *File:
 		return d.linkFile(ctx, file, args)
 	case *AlbumFile:
-		return d.linkAlbum(ctx, file, args)
+		f, err := d.CopyAlbumFile(ctx, file)
+		if err != nil {
+			return nil, err
+		}
+		return d.linkFile(ctx, f, args)
+		// 有概率无法获取到链接
+		//return d.linkAlbum(ctx, file, args)
 	}
 	return nil, errs.NotFile
 }
