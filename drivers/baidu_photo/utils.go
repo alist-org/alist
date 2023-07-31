@@ -22,7 +22,7 @@ const (
 	FILE_API_URL_V2 = API_URL + "/file/v2"
 )
 
-func (d *BaiduPhoto) Request(furl string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+func (d *BaiduPhoto) Request(furl string, method string, callback base.ReqCallback, resp interface{}) (*resty.Response, error) {
 	req := base.RestyClient.R().
 		SetQueryParam("access_token", d.AccessToken)
 	if callback != nil {
@@ -53,8 +53,16 @@ func (d *BaiduPhoto) Request(furl string, method string, callback base.ReqCallba
 	default:
 		return nil, fmt.Errorf("errno: %d, refer to https://photo.baidu.com/union/doc", erron)
 	}
-	return res.Body(), nil
+	return res, nil
 }
+
+//func (d *BaiduPhoto) Request(furl string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+//	res, err := d.request(furl, method, callback, resp)
+//	if err != nil {
+//		return nil, err
+//	}
+//	return res.Body(), nil
+//}
 
 func (d *BaiduPhoto) refreshToken() error {
 	u := "https://openapi.baidu.com/oauth/2.0/token"
@@ -80,11 +88,11 @@ func (d *BaiduPhoto) refreshToken() error {
 	return nil
 }
 
-func (d *BaiduPhoto) Get(furl string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+func (d *BaiduPhoto) Get(furl string, callback base.ReqCallback, resp interface{}) (*resty.Response, error) {
 	return d.Request(furl, http.MethodGet, callback, resp)
 }
 
-func (d *BaiduPhoto) Post(furl string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+func (d *BaiduPhoto) Post(furl string, callback base.ReqCallback, resp interface{}) (*resty.Response, error) {
 	return d.Request(furl, http.MethodPost, callback, resp)
 }
 
@@ -393,41 +401,43 @@ func (d *BaiduPhoto) linkFile(ctx context.Context, file *File, args model.LinkAr
 }
 
 func (d *BaiduPhoto) linkStreamAlbum(ctx context.Context, file *AlbumFile) (*model.Link, error) {
-	body, err := d.Get(ALBUM_API_URL+"/streaming", func(r *resty.Request) {
-		r.SetContext(ctx)
-		r.SetQueryParams(map[string]string{
-			"fsid":     fmt.Sprint(file.Fsid),
-			"album_id": file.AlbumID,
-			"tid":      fmt.Sprint(file.Tid),
-			"uk":       fmt.Sprint(file.Uk),
-		})
-	}, nil)
-	if err != nil {
-		return nil, err
-	}
 	return &model.Link{
 		Header: http.Header{},
 		Writer: func(w io.Writer) error {
-			_, err := w.Write(body)
+			res, err := d.Get(ALBUM_API_URL+"/streaming", func(r *resty.Request) {
+				r.SetContext(ctx)
+				r.SetQueryParams(map[string]string{
+					"fsid":     fmt.Sprint(file.Fsid),
+					"album_id": file.AlbumID,
+					"tid":      fmt.Sprint(file.Tid),
+					"uk":       fmt.Sprint(file.Uk),
+				}).SetDoNotParseResponse(true)
+			}, nil)
+			if err != nil {
+				return err
+			}
+			defer res.RawBody().Close()
+			_, err = io.Copy(w, res.RawBody())
 			return err
 		},
 	}, nil
 }
 
 func (d *BaiduPhoto) linkStream(ctx context.Context, file *File) (*model.Link, error) {
-	body, err := d.Get(FILE_API_URL_V1+"/streaming", func(r *resty.Request) {
-		r.SetContext(ctx)
-		r.SetQueryParams(map[string]string{
-			"fsid": fmt.Sprint(file.Fsid),
-		})
-	}, nil)
-	if err != nil {
-		return nil, err
-	}
 	return &model.Link{
 		Header: http.Header{},
 		Writer: func(w io.Writer) error {
-			_, err := w.Write(body)
+			res, err := d.Get(FILE_API_URL_V1+"/streaming", func(r *resty.Request) {
+				r.SetContext(ctx)
+				r.SetQueryParams(map[string]string{
+					"fsid": fmt.Sprint(file.Fsid),
+				}).SetDoNotParseResponse(true)
+			}, nil)
+			if err != nil {
+				return err
+			}
+			defer res.RawBody().Close()
+			_, err = io.Copy(w, res.RawBody())
 			return err
 		},
 	}, nil
