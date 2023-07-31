@@ -1,7 +1,40 @@
-<div style="text-align: center;">
-  <a href="https://alist.nn.ci"><img height="100px" alt="logo" src="https://is2-ssl.mzstatic.com/image/thumb/Purple116/v4/01/45/3b/01453b82-4c0b-5140-54a3-cd60b7946f68/AppIcon-0-0-85-220-0-0-0-0-4-0-0-0-2x-sRGB-0-0-0-0-0.png/460x0w.webp"/></a>
-  <p><em>Alist as a Self-hosted Private Hybrid Cloud Platform</em></p>
-
+<div align="center">
+  <a href="https://alist.nn.ci"><img height="100px" alt="logo" src="https://cdn.jsdelivr.net/gh/alist-org/logo@main/logo.svg"/></a>
+  <p><em>🗂️A file list program that supports multiple storages, powered by Gin and Solidjs.</em></p>
+<div>
+  <a href="https://goreportcard.com/report/github.com/alist-org/alist/v3">
+    <img src="https://goreportcard.com/badge/github.com/alist-org/alist/v3" alt="latest version" />
+  </a>
+  <a href="https://github.com/Xhofe/alist/blob/main/LICENSE">
+    <img src="https://img.shields.io/github/license/Xhofe/alist" alt="License" />
+  </a>
+  <a href="https://github.com/Xhofe/alist/actions?query=workflow%3ABuild">
+    <img src="https://img.shields.io/github/actions/workflow/status/Xhofe/alist/build.yml?branch=main" alt="Build status" />
+  </a>
+  <a href="https://github.com/Xhofe/alist/releases">
+    <img src="https://img.shields.io/github/release/Xhofe/alist" alt="latest version" />
+  </a>
+  <a title="Crowdin" target="_blank" href="https://crwd.in/alist">
+    <img src="https://badges.crowdin.net/alist/localized.svg">
+  </a>
+</div>
+<div>
+  <a href="https://github.com/Xhofe/alist/discussions">
+    <img src="https://img.shields.io/github/discussions/Xhofe/alist?color=%23ED8936" alt="discussions" />
+  </a>
+  <a href="https://discord.gg/F4ymsH4xv2">
+    <img src="https://img.shields.io/discord/1018870125102895134?logo=discord" alt="discussions" />
+  </a>
+  <a href="https://github.com/Xhofe/alist/releases">
+    <img src="https://img.shields.io/github/downloads/Xhofe/alist/total?color=%239F7AEA&logo=github" alt="Downloads" />
+  </a>
+  <a href="https://hub.docker.com/r/xhofe/alist">
+    <img src="https://img.shields.io/docker/pulls/xhofe/alist?color=%2348BB78&logo=docker&label=pulls" alt="Downloads" />
+  </a>
+  <a href="https://alist.nn.ci/guide/sponsor.html">
+    <img src="https://img.shields.io/badge/%24-sponsor-F87171.svg" alt="sponsor" />
+  </a>
+</div>
 </div>
 
 ---
@@ -10,62 +43,96 @@ English | [中文](./README_cn.md)| [日本語](./README_ja.md) | [Contributing]
 
 ## Features
 
-Alist is currently the best Cloud Storage Utilising Tool on the market in China.
-To use it as a private cloud platform, privacy, security and confidentiality is a basic.
-So this project should have below extra features:
+- [x] Multiple storage
+  - [x] Local storage
+  - [x] [Aliyundrive](https://www.aliyundrive.com/)
+  - [x] OneDrive / Sharepoint ([global](https://www.office.com/), [cn](https://portal.partner.microsoftonline.cn),de,us)
+  - [x] [189cloud](https://cloud.189.cn) (Personal, Family)
+  - [x] [GoogleDrive](https://drive.google.com/)
+  - [x] [123pan](https://www.123pan.com/)
+  - [x] FTP / SFTP
+  - [x] [PikPak](https://www.mypikpak.com/)
+  - [x] [S3](https://aws.amazon.com/s3/)
+  - [x] [Seafile](https://seafile.com/)
+  - [x] [UPYUN Storage Service](https://www.upyun.com/products/file-storage)
+  - [x] WebDav(Support OneDrive/SharePoint without API)
+  - [x] Teambition([China](https://www.teambition.com/ ),[International](https://us.teambition.com/ ))
+  - [x] [Mediatrack](https://www.mediatrack.cn/)
+  - [x] [139yun](https://yun.139.com/) (Personal, Family)
+  - [x] [YandexDisk](https://disk.yandex.com/)
+  - [x] [BaiduNetdisk](http://pan.baidu.com/)
+  - [x] [Terabox](https://www.terabox.com/main)
+  - [x] [UC](https://drive.uc.cn)
+  - [x] [Quark](https://pan.quark.cn)
+  - [x] [Thunder](https://pan.xunlei.com)
+  - [x] [Lanzou](https://www.lanzou.com/)
+  - [x] [Aliyundrive share](https://www.aliyundrive.com/)
+  - [x] [Google photo](https://photos.google.com/)
+  - [x] [Mega.nz](https://mega.nz)
+  - [x] [Baidu photo](https://photo.baidu.com/)
+  - [x] SMB
+  - [x] [115](https://115.com/)
+  - [X] Cloudreve
+  - [x] [Dropbox](https://www.dropbox.com/)
+- [x] Easy to deploy and out-of-the-box
+- [x] File preview (PDF, markdown, code, plain text, ...)
+- [x] Image preview in gallery mode
+- [x] Video and audio preview, support lyrics and subtitles
+- [x] Office documents preview (docx, pptx, xlsx, ...)
+- [x] `README.md` preview rendering
+- [x] File permalink copy and direct file download
+- [x] Dark mode
+- [x] I18n
+- [x] Protected routes (password protection and authentication)
+- [x] WebDav (see https://alist.nn.ci/guide/webdav.html for details)
+- [x] [Docker Deploy](https://hub.docker.com/r/xhofe/alist)
+- [x] Cloudflare workers proxy
+- [x] File/Folder package download
+- [x] Web upload(Can allow visitors to upload), delete, mkdir, rename, move and copy
+- [x] Offline download
+- [x] Copy files between two storage
+- [x] Multi-thread downloading acceleration for single-thread download/stream
 
-- [x] Safe: a transparent encryption driver. Anyone can easily, safely store encrypted data on the remote storage provider.  Consider your data is safely stored in the safe, and storage provider can only see the safe, but not your data.
-  - [x] Optional: compatible with [Rclone Crypt](https://rclone.org/crypt/). More ways to manipulate the encrypted data.
-  - [x] directory and filename encryption
-- [x] obfuscate sensitive information in config files
-- [x] server-side encryption mode (server encrypt & decrypt all data, all data flows thru server)
-- [ ] client side encryption mode (client browser request data from remote storage cloud then decrypt data in client)
-  - [ ] IOS/Mac: Quantumult X/Surge/ShadowRocket Box.js script. Hijack access to all Cloud Storage, also alist server will always return 302 redirect, so when app accessing alist, redirecting to storage Provider, and the header is changed by the script. any app will work with the webdav.
-  - [ ] Android/Mac/Windows/Linux/Docker : Mini local proxy for Alist server, so any app/client with in the lan/device will directly access
-- [x] multi-thread downloading for [Quark] Drive, will add option of enable for other slow drivers. (high-memory usage but better experience in non-multithreading download tools, e.g. playing media in any media player)
-- [ ] auto retry in background Task: Move, Copy operations.
-  - Task resume from last failed point
-  - Task auto retry on failure
-  - Task size validates on finish
-- [ ] rapid-upload support move between local/smb and cloud storage with SHA1 hash return. 
+## Document
 
-Other features please refer to [Alist](https://github.com/alist-org/alist)
+<https://alist.nn.ci/>
 
-## Client Development Plan
+## Demo
 
-| Client Platform               | Speed*                  | Dependency                                 | Compatibility                     | Comment                     | Available?                                                                                        |
-|-------------------------------|-------------------------|--------------------------------------------|-----------------------------------|-----------------------------|---------------------------------------------------------------------------------------------------|
-| IOS/Mac                       | Max                     | Quantumult X/Surge/ShadowRocket [Paid App] | Browser, Any app work with webdav | data hijack for some url    | work in progress*                                                                                 |
-| Android                       | Max                     | Client App running in the background       | Browser, Any app work with webdav | client proxy data           |                                                                                                   |
-| Mac/Windows/Linux/Docker      | Max                     | Application running in the background      | Browser, Any app work with webdav | client proxy data           |                                                                                                   |
-| Web access                    | Limited by server       |                                            | Browser,Any app work with webdav  |                             | Yes                                                                                               |
-| Web access[Alist Hybrid mode] | Max                     |                                            | Browser                           | use JS to make http request |                                                                                                   |
-| Web access with alist-proxy   | Limited by proxy server | server with high bandwidth, domain         | Browser, Any app work with webdav | another server proxy data   | Yes with no Vault support                                                                         |
-| Native IOS/Android App        | Limited by server       |                                            | app internal function             | app has limited function    | [xlist](https://github.com/xlist-io/xlist) [AlistClient](https://github.com/BFWXKJGS/AlistClient) |
+<https://al.nn.ci>
 
-* 1 Assume client & cloud storage provider has unlimited bandwidth.
-* 2 Details on the one I'm working on: after configured the rule in those apps, when accessing the alist server, the rule will get the 302 redirect url ,then apply the necessary header, and request the url from the device.
+## Discussion
 
+Please go to our [discussion forum](https://github.com/Xhofe/alist/discussions) for general questions, **issues are for bug reports and feature request only.**
 
-| 客户端平台                    | 速度*      | 依赖性                                    | 兼容性                | 其他               | 可用的？                                                                                                |
-|--------------------------|----------|----------------------------------------|--------------------|------------------|-----------------------------------------------------------------------------------------------------|
-| IOS/Mac                  | 最大       | Quantumult X/Surge/Shadowrocket [付费应用] | 浏览器，WebDav兼容的任何app | 特定url数据劫持        | 正在开发*                                                                                               |
-| Android                  | 最大       | 客户端后台运行                                | 浏览器，WebDav兼容的任何app | 客户端代理数据          |                                                                                                     |
-| Mac/Windows/Linux/Docker | 最大       | 后台运行的应用程序                              | 浏览器，WebDav兼容的任何app | 客户端代理数据          |                                                                                                     |
-| Web访问                    | 受服务器限制   |                                        | 浏览器，WebDav兼容的任何app |                  | 是                                                                                                   |
-| Web访问[Alist Hybrid模式]    | 最大       |                                        | 浏览器                | 使用浏览器脚本js来下载远程数据 |                                                                                                     |
-| Web访问Alist-Proxy         | 受代理服务器限制 | 大带宽服务器，域名                              | 浏览器，WebDav兼容的任何app | 另一个服务器代理数据       | 是，但没有加密支持                                                                                           |
-| 原生IOS/Mac 应用             | 受服务器限制   |                                        | 应用程序内部功能           | 应用功能有限           | [xlist](https://github.com/xlist-io/xlist)   [AlistClient](https://github.com/BFWXKJGS/AlistClient) |
+## Sponsor
 
-* 1 假设客户端和云存储提供商具有无限的带宽。
-* 2 我正在开发的流量劫持规则：在这些vpn app中配置规则后，在访问ALIST服务器时，该规则将获得302重定向URL，然后修改数据包(header)后直接从设备请求URL。
+AList is an open-source software, if you happen to like this project and want me to keep going, please consider sponsoring me or providing a single donation! Thanks for all the love and support:
+https://alist.nn.ci/guide/sponsor.html
+
+### Special sponsors
+
+- [亚洲云 - 高防服务器|服务器租用|福州高防|广东电信|香港服务器|美国服务器|海外服务器 - 国内靠谱的企业级云计算服务提供商](https://www.asiayun.com/aff/QQCOOQKZ) (sponsored Chinese API server)
+- [找资源 - 阿里云盘资源搜索引擎](https://zhaoziyuan.pw/)
+- [JetBrains: Essential tools for software developers and teams](https://www.jetbrains.com/)
+
+## Contributors
+
+Thanks goes to these wonderful people:
+
+[![Contributors](http://contributors.nn.ci/api?repo=alist-org/alist&repo=alist-org/alist-web&repo=alist-org/docs)](https://github.com/alist-org/alist/graphs/contributors)
 
 ## License
 
-The `AList-Private-Cloud` is open-source software licensed under the AGPL-3.0 license.
+The `AList` is open-source software licensed under the AGPL-3.0 license.
 
-## Last but not least
-- This fork is a free and open source project.
--
+## Disclaimer
+- This program is a free and open source project. It is designed to share files on the network disk, which is convenient for downloading and learning golang. Please abide by relevant laws and regulations when using it, and do not abuse it;
+- This program is implemented by calling the official sdk/interface, without destroying the official interface behavior;
+- This program only does 302 redirect/traffic forwarding, and does not intercept, store, or tamper with any user data;
+- Before using this program, you should understand and bear the corresponding risks, including but not limited to account ban, download speed limit, etc., which is none of this program's business;
+- If there is any infringement, please contact me by [email](mailto:i@nn.ci), and it will be dealt with in time.
 
 ---
+
+> [@Blog](https://nn.ci/) · [@GitHub](https://github.com/Xhofe) · [@TelegramGroup](https://t.me/alist_chat) · [@Discord](https://discord.gg/F4ymsH4xv2)
