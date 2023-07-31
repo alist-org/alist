@@ -336,8 +336,9 @@ func (d *WeiYun) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 						return
 					}
 					for {
+						channel.Len = int(math.Min(float64(stream.GetSize()-channel.Offset), float64(channel.Len)))
 						upData, err := d.client.UploadFile(upCtx, channel, preData.UploadAuthData,
-							io.NewSectionReader(file, channel.Offset, int64(math.Min(float64(stream.GetSize()-channel.Offset), float64(channel.Len)))))
+							io.NewSectionReader(file, channel.Offset, int64(channel.Len)))
 						if err != nil {
 							cancel(err)
 							return
