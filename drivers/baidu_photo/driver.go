@@ -175,9 +175,9 @@ func (d *BaiduPhoto) Copy(ctx context.Context, srcObj, dstDir model.Obj) (model.
 }
 
 func (d *BaiduPhoto) Move(ctx context.Context, srcObj, dstDir model.Obj) (model.Obj, error) {
-	// 仅支持相册之间移动
 	if file, ok := srcObj.(*AlbumFile); ok {
-		if _, ok := dstDir.(*Album); ok {
+		switch dstDir.(type) {
+		case *Album, *Root: // albumfile -> root -> album or albumfile -> root
 			newObj, err := d.Copy(ctx, srcObj, dstDir)
 			if err != nil {
 				return nil, err

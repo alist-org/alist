@@ -232,7 +232,7 @@ func (d *BaiduPhoto) DeleteAlbum(ctx context.Context, album *Album) error {
 		r.SetFormData(map[string]string{
 			"album_id":            album.AlbumID,
 			"tid":                 fmt.Sprint(album.Tid),
-			"delete_origin_image": "0", // 是否删除原图 0 不删除 1 删除
+			"delete_origin_image": BoolToIntStr(d.DeleteOrigin), // 是否删除原图 0 不删除 1 删除
 		})
 	}, nil)
 	return err
@@ -246,7 +246,7 @@ func (d *BaiduPhoto) DeleteAlbumFile(ctx context.Context, file *AlbumFile) error
 			"album_id":   fmt.Sprint(file.AlbumID),
 			"tid":        fmt.Sprint(file.Tid),
 			"list":       fmt.Sprintf(`[{"fsid":%d,"uk":%d}]`, file.Fsid, file.Uk),
-			"del_origin": "0", // 是否删除原图 0 不删除 1 删除
+			"del_origin": BoolToIntStr(d.DeleteOrigin), // 是否删除原图 0 不删除 1 删除
 		})
 	}, nil)
 	return err
