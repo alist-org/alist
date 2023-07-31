@@ -44,36 +44,36 @@ English | [中文](./README_cn.md)| [日本語](./README_ja.md) | [Contributing]
 ## Features
 
 - [x] Multiple storage
-  - [x] Local storage
-  - [x] [Aliyundrive](https://www.aliyundrive.com/)
-  - [x] OneDrive / Sharepoint ([global](https://www.office.com/), [cn](https://portal.partner.microsoftonline.cn),de,us)
-  - [x] [189cloud](https://cloud.189.cn) (Personal, Family)
-  - [x] [GoogleDrive](https://drive.google.com/)
-  - [x] [123pan](https://www.123pan.com/)
-  - [x] FTP / SFTP
-  - [x] [PikPak](https://www.mypikpak.com/)
-  - [x] [S3](https://aws.amazon.com/s3/)
-  - [x] [Seafile](https://seafile.com/)
-  - [x] [UPYUN Storage Service](https://www.upyun.com/products/file-storage)
-  - [x] WebDav(Support OneDrive/SharePoint without API)
-  - [x] Teambition([China](https://www.teambition.com/ ),[International](https://us.teambition.com/ ))
-  - [x] [Mediatrack](https://www.mediatrack.cn/)
-  - [x] [139yun](https://yun.139.com/) (Personal, Family)
-  - [x] [YandexDisk](https://disk.yandex.com/)
-  - [x] [BaiduNetdisk](http://pan.baidu.com/)
-  - [x] [Terabox](https://www.terabox.com/main)
-  - [x] [UC](https://drive.uc.cn)
-  - [x] [Quark](https://pan.quark.cn)
-  - [x] [Thunder](https://pan.xunlei.com)
-  - [x] [Lanzou](https://www.lanzou.com/)
-  - [x] [Aliyundrive share](https://www.aliyundrive.com/)
-  - [x] [Google photo](https://photos.google.com/)
-  - [x] [Mega.nz](https://mega.nz)
-  - [x] [Baidu photo](https://photo.baidu.com/)
-  - [x] SMB
-  - [x] [115](https://115.com/)
-  - [X] Cloudreve
-  - [x] [Dropbox](https://www.dropbox.com/)
+    - [x] Local storage
+    - [x] [Aliyundrive](https://www.aliyundrive.com/)
+    - [x] OneDrive / Sharepoint ([global](https://www.office.com/), [cn](https://portal.partner.microsoftonline.cn),de,us)
+    - [x] [189cloud](https://cloud.189.cn) (Personal, Family)
+    - [x] [GoogleDrive](https://drive.google.com/)
+    - [x] [123pan](https://www.123pan.com/)
+    - [x] FTP / SFTP
+    - [x] [PikPak](https://www.mypikpak.com/)
+    - [x] [S3](https://aws.amazon.com/s3/)
+    - [x] [Seafile](https://seafile.com/)
+    - [x] [UPYUN Storage Service](https://www.upyun.com/products/file-storage)
+    - [x] WebDav(Support OneDrive/SharePoint without API)
+    - [x] Teambition([China](https://www.teambition.com/ ),[International](https://us.teambition.com/ ))
+    - [x] [Mediatrack](https://www.mediatrack.cn/)
+    - [x] [139yun](https://yun.139.com/) (Personal, Family)
+    - [x] [YandexDisk](https://disk.yandex.com/)
+    - [x] [BaiduNetdisk](http://pan.baidu.com/)
+    - [x] [Terabox](https://www.terabox.com/main)
+    - [x] [UC](https://drive.uc.cn)
+    - [x] [Quark](https://pan.quark.cn)
+    - [x] [Thunder](https://pan.xunlei.com)
+    - [x] [Lanzou](https://www.lanzou.com/)
+    - [x] [Aliyundrive share](https://www.aliyundrive.com/)
+    - [x] [Google photo](https://photos.google.com/)
+    - [x] [Mega.nz](https://mega.nz)
+    - [x] [Baidu photo](https://photo.baidu.com/)
+    - [x] SMB
+    - [x] [115](https://115.com/)
+    - [X] Cloudreve
+    - [x] [Dropbox](https://www.dropbox.com/)
 - [x] Easy to deploy and out-of-the-box
 - [x] File preview (PDF, markdown, code, plain text, ...)
 - [x] Image preview in gallery mode
