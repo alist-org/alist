@@ -126,7 +126,13 @@ func (d *BaiduPhoto) Link(ctx context.Context, file model.Obj, args model.LinkAr
 	case *File:
 		return d.linkFile(ctx, file, args)
 	case *AlbumFile:
-		return d.linkAlbum(ctx, file, args)
+		f, err := d.CopyAlbumFile(ctx, file)
+		if err != nil {
+			return nil, err
+		}
+		return d.linkFile(ctx, f, args)
+		// 有概率无法获取到链接
+		//return d.linkAlbum(ctx, file, args)
 	}
 	return nil, errs.NotFile
 }
@@ -169,9 +175,9 @@ func (d *BaiduPhoto) Copy(ctx context.Context, srcObj, dstDir model.Obj) (model.
 }
 
 func (d *BaiduPhoto) Move(ctx context.Context, srcObj, dstDir model.Obj) (model.Obj, error) {
-	// 仅支持相册之间移动
 	if file, ok := srcObj.(*AlbumFile); ok {
-		if _, ok := dstDir.(*Album); ok {
+		switch dstDir.(type) {
+		case *Album, *Root: // albumfile -> root -> album or albumfile -> root
 			newObj, err := d.Copy(ctx, srcObj, dstDir)
 			if err != nil {
 				return nil, err
