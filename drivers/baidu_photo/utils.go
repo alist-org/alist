@@ -3,6 +3,7 @@ package baiduphoto
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/alist-org/alist/v3/drivers/base"
@@ -389,6 +390,47 @@ func (d *BaiduPhoto) linkFile(ctx context.Context, file *File, args model.LinkAr
 		},
 	}
 	return link, nil
+}
+
+func (d *BaiduPhoto) linkStreamAlbum(ctx context.Context, file *AlbumFile) (*model.Link, error) {
+	body, err := d.Get(ALBUM_API_URL+"/streaming", func(r *resty.Request) {
+		r.SetContext(ctx)
+		r.SetQueryParams(map[string]string{
+			"fsid":     fmt.Sprint(file.Fsid),
+			"album_id": file.AlbumID,
+			"tid":      fmt.Sprint(file.Tid),
+			"uk":       fmt.Sprint(file.Uk),
+		})
+	}, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &model.Link{
+		Header: http.Header{},
+		Writer: func(w io.Writer) error {
+			_, err := w.Write(body)
+			return err
+		},
+	}, nil
+}
+
+func (d *BaiduPhoto) linkStream(ctx context.Context, file *File) (*model.Link, error) {
+	body, err := d.Get(FILE_API_URL_V1+"/streaming", func(r *resty.Request) {
+		r.SetContext(ctx)
+		r.SetQueryParams(map[string]string{
+			"fsid": fmt.Sprint(file.Fsid),
+		})
+	}, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &model.Link{
+		Header: http.Header{},
+		Writer: func(w io.Writer) error {
+			_, err := w.Write(body)
+			return err
+		},
+	}, nil
 }
 
 // 获取uk
