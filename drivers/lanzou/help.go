@@ -3,6 +3,7 @@ package lanzou
 import (
 	"bytes"
 	"fmt"
+	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
@@ -189,4 +190,15 @@ func GetExpirationTime(url string) (etime time.Duration) {
 	}
 	etime = time.Duration(timestamp-time.Now().Unix()) * time.Second
 	return
+}
+
+func CookieToString(cookies []*http.Cookie) string {
+	if cookies == nil {
+		return ""
+	}
+	cookieStrings := make([]string, len(cookies))
+	for i, cookie := range cookies {
+		cookieStrings[i] = cookie.Name + "=" + cookie.Value
+	}
+	return strings.Join(cookieStrings, ";")
 }

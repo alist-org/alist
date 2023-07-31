@@ -6,8 +6,13 @@ import (
 )
 
 type Addition struct {
-	Type   string `json:"type" type:"select" options:"cookie,url" default:"cookie"`
-	Cookie string `json:"cookie" required:"true" help:"about 15 days valid, ignore if shareUrl is used"`
+	Type string `json:"type" type:"select" options:"account,cookie,url" default:"cookie"`
+
+	Account  string `json:"account"`
+	Password string `json:"password"`
+
+	Cookie string `json:"cookie" help:"about 15 days valid, ignore if shareUrl is used"`
+
 	driver.RootID
 	SharePassword  string `json:"share_password"`
 	BaseUrl        string `json:"baseUrl" required:"true" default:"https://pc.woozooo.com" help:"basic URL for file operation"`
@@ -17,6 +22,10 @@ type Addition struct {
 
 func (a *Addition) IsCookie() bool {
 	return a.Type == "cookie"
+}
+
+func (a *Addition) IsAccount() bool {
+	return a.Type == "account"
 }
 
 var config = driver.Config{
