@@ -206,7 +206,7 @@ func (d *LanZou) Remove(ctx context.Context, obj model.Obj) error {
 func (d *LanZou) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) (model.Obj, error) {
 	if d.IsCookie() {
 		var resp RespText[[]FileOrFolder]
-		_, err := d._post(d.BaseUrl+"/fileup.php", func(req *resty.Request) {
+		_, err := d._post(d.BaseUrl+"/html5up.php", func(req *resty.Request) {
 			req.SetFormData(map[string]string{
 				"task":           "1",
 				"vie":            "2",
