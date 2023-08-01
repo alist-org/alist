@@ -1,14 +1,15 @@
 package safe
 
 import (
-	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/internal/net"
-	"github.com/alist-org/alist/v3/internal/op"
-	"github.com/alist-org/alist/v3/pkg/http_range"
 	"net/http"
 	stdpath "path"
 	"path/filepath"
 	"strings"
+
+	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/net"
+	"github.com/alist-org/alist/v3/internal/op"
+	"github.com/alist-org/alist/v3/pkg/http_range"
 )
 
 func RequestRangedHttp(r *http.Request, link *model.Link, offset, length int64) (*http.Response, error) {
@@ -28,9 +29,8 @@ func guessPath(path string) (isFolder, secondTry bool) {
 	if strings.Index(path[lastSlash:], ".") < 0 {
 		//no dot, try folder then try file
 		return true, true
-	} else {
-		return false, true
 	}
+	return false, true
 }
 
 func (d *Safe) getPathForRemote(path string, isFolder bool) (remoteFullPath string) {
