@@ -74,7 +74,7 @@ func (d *Pan123Share) Link(ctx context.Context, file model.Obj, args model.LinkA
 		if err != nil {
 			return nil, err
 		}
-		downloadUrl := utils.Json.Get(resp, "data", "DownloadUrl").ToString()
+		downloadUrl := utils.Json.Get(resp, "data", "DownloadURL").ToString()
 		u, err := url.Parse(downloadUrl)
 		if err != nil {
 			return nil, err
