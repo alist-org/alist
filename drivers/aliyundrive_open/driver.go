@@ -2,6 +2,7 @@ package aliyundrive_open
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -35,6 +36,9 @@ func (d *AliyundriveOpen) GetAddition() driver.Additional {
 }
 
 func (d *AliyundriveOpen) Init(ctx context.Context) error {
+	if d.LIVPDownloadFormat == "" {
+		d.LIVPDownloadFormat = "jpeg"
+	}
 	res, err := d.request("/adrive/v1.0/user/getDriveInfo", http.MethodPost, nil)
 	if err != nil {
 		return err
@@ -80,6 +84,12 @@ func (d *AliyundriveOpen) link(ctx context.Context, file model.Obj) (*model.Link
 		return nil, err
 	}
 	url := utils.Json.Get(res, "url").ToString()
+	if url == "" {
+		if utils.Ext(file.GetName()) != "livp" {
+			return nil, errors.New("get download url failed: " + string(res))
+		}
+		url = utils.Json.Get(res, "streamsUrl", d.LIVPDownloadFormat).ToString()
+	}
 	exp := time.Hour
 	return &model.Link{
 		URL:        url,
