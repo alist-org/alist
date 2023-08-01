@@ -8,6 +8,7 @@ import (
 
 var ErrFileShareCancel = errors.New("file sharing cancellation")
 var ErrFileNotExist = errors.New("file does not exist")
+var ErrCookieExpiration = errors.New("cookie expiration")
 
 type RespText[T any] struct {
 	Text T `json:"text"`
