@@ -41,7 +41,7 @@ require (
 	github.com/winfsp/cgofuse v1.5.1-0.20221118130120-84c0898ad2e0
 	golang.org/x/crypto v0.11.0
 	golang.org/x/exp v0.0.0-20230213192124-5e25df0256eb
-	golang.org/x/image v0.9.0
+	golang.org/x/image v0.10.0
 	golang.org/x/net v0.13.0
 	golang.org/x/oauth2 v0.10.0
 	gorm.io/driver/mysql v1.4.7
