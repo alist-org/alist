@@ -316,7 +316,7 @@ func (h *Handler) handlePut(w http.ResponseWriter, r *http.Request) (status int,
 	user := ctx.Value("user").(*model.User)
 	reqPath, err = user.JoinPath(reqPath)
 	if err != nil {
-		return 403, err
+		return http.StatusForbidden, err
 	}
 	obj := model.Object{
 		Name:     path.Base(reqPath),
@@ -332,6 +332,9 @@ func (h *Handler) handlePut(w http.ResponseWriter, r *http.Request) (status int,
 		stream.Mimetype = utils.GetMimeType(reqPath)
 	}
 	err = fs.PutDirectly(ctx, path.Dir(reqPath), stream)
+	if errs.IsNotFoundError(err) {
+		return http.StatusNotFound, err
+	}
 
 	// TODO(rost): Returning 405 Method Not Allowed might not be appropriate.
 	if err != nil {
@@ -599,7 +602,7 @@ func (h *Handler) handlePropfind(w http.ResponseWriter, r *http.Request) (status
 	}
 	fi, err := fs.Get(ctx, reqPath, &fs.GetArgs{})
 	if err != nil {
-		if errs.IsObjectNotFound(err) {
+		if errs.IsNotFoundError(err) {
 			return http.StatusNotFound, err
 		}
 		return http.StatusMethodNotAllowed, err

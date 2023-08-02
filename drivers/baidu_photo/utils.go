@@ -21,7 +21,7 @@ const (
 	FILE_API_URL_V2 = API_URL + "/file/v2"
 )
 
-func (d *BaiduPhoto) Request(furl string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+func (d *BaiduPhoto) Request(furl string, method string, callback base.ReqCallback, resp interface{}) (*resty.Response, error) {
 	req := base.RestyClient.R().
 		SetQueryParam("access_token", d.AccessToken)
 	if callback != nil {
@@ -52,8 +52,16 @@ func (d *BaiduPhoto) Request(furl string, method string, callback base.ReqCallba
 	default:
 		return nil, fmt.Errorf("errno: %d, refer to https://photo.baidu.com/union/doc", erron)
 	}
-	return res.Body(), nil
+	return res, nil
 }
+
+//func (d *BaiduPhoto) Request(furl string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+//	res, err := d.request(furl, method, callback, resp)
+//	if err != nil {
+//		return nil, err
+//	}
+//	return res.Body(), nil
+//}
 
 func (d *BaiduPhoto) refreshToken() error {
 	u := "https://openapi.baidu.com/oauth/2.0/token"
@@ -79,11 +87,11 @@ func (d *BaiduPhoto) refreshToken() error {
 	return nil
 }
 
-func (d *BaiduPhoto) Get(furl string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+func (d *BaiduPhoto) Get(furl string, callback base.ReqCallback, resp interface{}) (*resty.Response, error) {
 	return d.Request(furl, http.MethodGet, callback, resp)
 }
 
-func (d *BaiduPhoto) Post(furl string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+func (d *BaiduPhoto) Post(furl string, callback base.ReqCallback, resp interface{}) (*resty.Response, error) {
 	return d.Request(furl, http.MethodPost, callback, resp)
 }
 
@@ -223,7 +231,7 @@ func (d *BaiduPhoto) DeleteAlbum(ctx context.Context, album *Album) error {
 		r.SetFormData(map[string]string{
 			"album_id":            album.AlbumID,
 			"tid":                 fmt.Sprint(album.Tid),
-			"delete_origin_image": "0", // 是否删除原图 0 不删除 1 删除
+			"delete_origin_image": BoolToIntStr(d.DeleteOrigin), // 是否删除原图 0 不删除 1 删除
 		})
 	}, nil)
 	return err
@@ -237,7 +245,7 @@ func (d *BaiduPhoto) DeleteAlbumFile(ctx context.Context, file *AlbumFile) error
 			"album_id":   fmt.Sprint(file.AlbumID),
 			"tid":        fmt.Sprint(file.Tid),
 			"list":       fmt.Sprintf(`[{"fsid":%d,"uk":%d}]`, file.Fsid, file.Uk),
-			"del_origin": "0", // 是否删除原图 0 不删除 1 删除
+			"del_origin": BoolToIntStr(d.DeleteOrigin), // 是否删除原图 0 不删除 1 删除
 		})
 	}, nil)
 	return err
@@ -390,6 +398,49 @@ func (d *BaiduPhoto) linkFile(ctx context.Context, file *File, args model.LinkAr
 	}
 	return link, nil
 }
+
+/*func (d *BaiduPhoto) linkStreamAlbum(ctx context.Context, file *AlbumFile) (*model.Link, error) {
+	return &model.Link{
+		Header: http.Header{},
+		Writer: func(w io.Writer) error {
+			res, err := d.Get(ALBUM_API_URL+"/streaming", func(r *resty.Request) {
+				r.SetContext(ctx)
+				r.SetQueryParams(map[string]string{
+					"fsid":     fmt.Sprint(file.Fsid),
+					"album_id": file.AlbumID,
+					"tid":      fmt.Sprint(file.Tid),
+					"uk":       fmt.Sprint(file.Uk),
+				}).SetDoNotParseResponse(true)
+			}, nil)
+			if err != nil {
+				return err
+			}
+			defer res.RawBody().Close()
+			_, err = io.Copy(w, res.RawBody())
+			return err
+		},
+	}, nil
+}*/
+
+/*func (d *BaiduPhoto) linkStream(ctx context.Context, file *File) (*model.Link, error) {
+	return &model.Link{
+		Header: http.Header{},
+		Writer: func(w io.Writer) error {
+			res, err := d.Get(FILE_API_URL_V1+"/streaming", func(r *resty.Request) {
+				r.SetContext(ctx)
+				r.SetQueryParams(map[string]string{
+					"fsid": fmt.Sprint(file.Fsid),
+				}).SetDoNotParseResponse(true)
+			}, nil)
+			if err != nil {
+				return err
+			}
+			defer res.RawBody().Close()
+			_, err = io.Copy(w, res.RawBody())
+			return err
+		},
+	}, nil
+}*/
 
 // 获取uk
 func (d *BaiduPhoto) uInfo() (*UInfo, error) {

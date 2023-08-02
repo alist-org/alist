@@ -331,13 +331,13 @@ func Link(c *gin.Context) {
 		common.ErrorResp(c, err, 500)
 		return
 	}
-	if link.Data != nil {
-		defer func(Data io.ReadCloser) {
-			err := Data.Close()
+	if link.ReadSeekCloser != nil {
+		defer func(ReadSeekCloser io.ReadCloser) {
+			err := ReadSeekCloser.Close()
 			if err != nil {
 				log.Errorf("close link data error: %v", err)
 			}
-		}(link.Data)
+		}(link.ReadSeekCloser)
 	}
 	common.SuccessResp(c, link)
 	return

@@ -91,6 +91,7 @@ English | [中文](./README_cn.md)| [日本語](./README_ja.md) | [Contributing]
 - [x] Web upload(Can allow visitors to upload), delete, mkdir, rename, move and copy
 - [x] Offline download
 - [x] Copy files between two storage
+- [x] Multi-thread downloading acceleration for single-thread download/stream
 
 ## Document
 

@@ -1,30 +1,19 @@
 package base
 
-import (
-	"io"
-	"net/http"
-	"strconv"
+import "io"
 
-	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/pkg/http_range"
-	"github.com/alist-org/alist/v3/pkg/utils"
-)
+type Closers struct {
+	closers []io.Closer
+}
 
-func HandleRange(link *model.Link, file io.ReadSeekCloser, header http.Header, size int64) {
-	if header.Get("Range") != "" {
-		r, err := http_range.ParseRange(header.Get("Range"), size)
-		if err == nil && len(r) > 0 {
-			_, err := file.Seek(r[0].Start, io.SeekStart)
-			if err == nil {
-				link.Data = utils.NewLimitReadCloser(file, func() error {
-					return file.Close()
-				}, r[0].Length)
-				link.Status = http.StatusPartialContent
-				link.Header = http.Header{
-					"Content-Range":  []string{r[0].ContentRange(size)},
-					"Content-Length": []string{strconv.FormatInt(r[0].Length, 10)},
-				}
-			}
+func (c *Closers) Close() (err error) {
+	for _, closer := range c.closers {
+		if closer != nil {
+			_ = closer.Close()
 		}
 	}
+	return nil
+}
+func (c *Closers) Add(closer io.Closer) {
+	c.closers = append(c.closers, closer)
 }
