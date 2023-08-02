@@ -1,4 +1,4 @@
-package safe
+package crypt
 
 import (
 	"github.com/alist-org/alist/v3/internal/driver"
@@ -13,11 +13,11 @@ type Addition struct {
 
 	FileNameEnc string `json:"filename_encryption" type:"select" required:"true" options:"off,standard,obfuscate" default:"off"`
 	DirNameEnc  string `json:"directory_name_encryption" type:"select" required:"true" options:"false,true" default:"false"`
-	RemotePath  string `json:"remotePath" required:"true" help:"This is where the encrypted data stores"`
+	RemotePath  string `json:"remote_path" required:"true" help:"This is where the encrypted data stores"`
 
 	Password        string `json:"password" required:"true" confidential:"true" help:"the main password"`
 	Salt            string `json:"salt" confidential:"true"  help:"If you don't know what is salt, treat it as a second password'. Optional but recommended"`
-	EncryptedSuffix string `json:"encryptedSuffix" required:"true" default:".bin" help:"encrypted files will have this suffix"`
+	EncryptedSuffix string `json:"encrypted_suffix" required:"true" default:".bin" help:"encrypted files will have this suffix"`
 }
 
 /*// inMemory contains decrypted confidential info and other temp data. will not persist these info anywhere
@@ -27,7 +27,7 @@ type inMemory struct {
 }*/
 
 var config = driver.Config{
-	Name:              "Safe",
+	Name:              "Crypt",
 	LocalSort:         true,
 	OnlyLocal:         false,
 	OnlyProxy:         true,
@@ -42,6 +42,6 @@ var config = driver.Config{
 
 func init() {
 	op.RegisterDriver(func() driver.Driver {
-		return &Safe{}
+		return &Crypt{}
 	})
 }

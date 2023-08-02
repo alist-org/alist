@@ -1,4 +1,4 @@
-package safe
+package crypt
 
 import (
 	"net/http"
@@ -33,7 +33,7 @@ func guessPath(path string) (isFolder, secondTry bool) {
 	return false, true
 }
 
-func (d *Safe) getPathForRemote(path string, isFolder bool) (remoteFullPath string) {
+func (d *Crypt) getPathForRemote(path string, isFolder bool) (remoteFullPath string) {
 	if isFolder && !strings.HasSuffix(path, "/") {
 		path = path + "/"
 	}
@@ -49,7 +49,7 @@ func (d *Safe) getPathForRemote(path string, isFolder bool) (remoteFullPath stri
 }
 
 // actual path is used for internal only. any link for user should come from remoteFullPath
-func (d *Safe) getActualPathForRemote(path string, isFolder bool) (string, error) {
+func (d *Crypt) getActualPathForRemote(path string, isFolder bool) (string, error) {
 	_, remoteActualPath, err := op.GetStorageAndActualPath(d.getPathForRemote(path, isFolder))
 	return remoteActualPath, err
 }

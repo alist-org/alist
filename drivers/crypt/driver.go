@@ -1,8 +1,14 @@
-package safe
+package crypt
 
 import (
 	"context"
 	"fmt"
+	"io"
+	"net/http"
+	stdpath "path"
+	"regexp"
+	"strings"
+
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/fs"
@@ -15,14 +21,9 @@ import (
 	"github.com/rclone/rclone/fs/config/configmap"
 	"github.com/rclone/rclone/fs/config/obscure"
 	log "github.com/sirupsen/logrus"
-	"io"
-	"net/http"
-	stdpath "path"
-	"regexp"
-	"strings"
 )
 
-type Safe struct {
+type Crypt struct {
 	model.Storage
 	Addition
 	cipher        *rcCrypt.Cipher
@@ -31,15 +32,15 @@ type Safe struct {
 
 const obfuscatedPrefix = "___Obfuscated___"
 
-func (d *Safe) Config() driver.Config {
+func (d *Crypt) Config() driver.Config {
 	return config
 }
 
-func (d *Safe) GetAddition() driver.Additional {
+func (d *Crypt) GetAddition() driver.Additional {
 	return &d.Addition
 }
 
-func (d *Safe) Init(ctx context.Context) error {
+func (d *Crypt) Init(ctx context.Context) error {
 	//obfuscate credentials if it's updated or just created
 	err := d.updateObfusParm(&d.Password)
 	if err != nil {
@@ -50,8 +51,8 @@ func (d *Safe) Init(ctx context.Context) error {
 		return fmt.Errorf("failed to obfuscate salt: %w", err)
 	}
 
-	isSafeExt := regexp.MustCompile(`^[.][A-Za-z0-9-_]{2,}$`).MatchString
-	if !isSafeExt(d.EncryptedSuffix) {
+	isCryptExt := regexp.MustCompile(`^[.][A-Za-z0-9-_]{2,}$`).MatchString
+	if !isCryptExt(d.EncryptedSuffix) {
 		return fmt.Errorf("EncryptedSuffix is Illegal")
 	}
 
@@ -85,7 +86,7 @@ func (d *Safe) Init(ctx context.Context) error {
 	return nil
 }
 
-func (d *Safe) updateObfusParm(str *string) error {
+func (d *Crypt) updateObfusParm(str *string) error {
 	temp := *str
 	if !strings.HasPrefix(temp, obfuscatedPrefix) {
 		temp, err := obscure.Obscure(temp)
@@ -98,11 +99,11 @@ func (d *Safe) updateObfusParm(str *string) error {
 	return nil
 }
 
-func (d *Safe) Drop(ctx context.Context) error {
+func (d *Crypt) Drop(ctx context.Context) error {
 	return nil
 }
 
-func (d *Safe) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
+func (d *Crypt) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
 	path := dir.GetPath()
 	//return d.list(ctx, d.RemotePath, path)
 	//remoteFull
@@ -158,14 +159,13 @@ func (d *Safe) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]
 				}
 				result = append(result, &objWithThumb)
 			}
-
 		}
 	}
 
 	return result, nil
 }
 
-func (d *Safe) Get(ctx context.Context, path string) (model.Obj, error) {
+func (d *Crypt) Get(ctx context.Context, path string) (model.Obj, error) {
 	if utils.PathEqual(path, "/") {
 		return &model.Object{
 			Name:     "Root",
@@ -222,7 +222,7 @@ func (d *Safe) Get(ctx context.Context, path string) (model.Obj, error) {
 	//return nil, errs.ObjectNotFound
 }
 
-func (d *Safe) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
+func (d *Crypt) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	dstDirActualPath, err := d.getActualPathForRemote(file.GetPath(), false)
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert path to remote path: %w", err)
@@ -312,7 +312,7 @@ func (d *Safe) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*
 
 }
 
-func (d *Safe) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
+func (d *Crypt) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
 	dstDirActualPath, err := d.getActualPathForRemote(parentDir.GetPath(), true)
 	if err != nil {
 		return fmt.Errorf("failed to convert path to remote path: %w", err)
@@ -321,7 +321,7 @@ func (d *Safe) MakeDir(ctx context.Context, parentDir model.Obj, dirName string)
 	return op.MakeDir(ctx, d.remoteStorage, stdpath.Join(dstDirActualPath, dir))
 }
 
-func (d *Safe) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
+func (d *Crypt) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 	srcRemoteActualPath, err := d.getActualPathForRemote(srcObj.GetPath(), srcObj.IsDir())
 	if err != nil {
 		return fmt.Errorf("failed to convert path to remote path: %w", err)
@@ -333,7 +333,7 @@ func (d *Safe) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 	return op.Move(ctx, d.remoteStorage, srcRemoteActualPath, dstRemoteActualPath)
 }
 
-func (d *Safe) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
+func (d *Crypt) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
 	remoteActualPath, err := d.getActualPathForRemote(srcObj.GetPath(), srcObj.IsDir())
 	if err != nil {
 		return fmt.Errorf("failed to convert path to remote path: %w", err)
@@ -347,7 +347,7 @@ func (d *Safe) Rename(ctx context.Context, srcObj model.Obj, newName string) err
 	return op.Rename(ctx, d.remoteStorage, remoteActualPath, newEncryptedName)
 }
 
-func (d *Safe) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
+func (d *Crypt) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 	srcRemoteActualPath, err := d.getActualPathForRemote(srcObj.GetPath(), srcObj.IsDir())
 	if err != nil {
 		return fmt.Errorf("failed to convert path to remote path: %w", err)
@@ -360,7 +360,7 @@ func (d *Safe) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 
 }
 
-func (d *Safe) Remove(ctx context.Context, obj model.Obj) error {
+func (d *Crypt) Remove(ctx context.Context, obj model.Obj) error {
 	remoteActualPath, err := d.getActualPathForRemote(obj.GetPath(), obj.IsDir())
 	if err != nil {
 		return fmt.Errorf("failed to convert path to remote path: %w", err)
@@ -368,7 +368,7 @@ func (d *Safe) Remove(ctx context.Context, obj model.Obj) error {
 	return op.Remove(ctx, d.remoteStorage, remoteActualPath)
 }
 
-func (d *Safe) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
+func (d *Crypt) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
 	dstDirActualPath, err := d.getActualPathForRemote(dstDir.GetPath(), true)
 	if err != nil {
 		return fmt.Errorf("failed to convert path to remote path: %w", err)
@@ -406,4 +406,4 @@ func (d *Safe) Put(ctx context.Context, dstDir model.Obj, stream model.FileStrea
 //	return nil, errs.NotSupport
 //}
 
-var _ driver.Driver = (*Safe)(nil)
+var _ driver.Driver = (*Crypt)(nil)
