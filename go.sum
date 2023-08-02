@@ -195,6 +195,8 @@ github.com/envoyproxy/go-control-plane v0.9.4/go.mod h1:6rpuAdCZL397s3pYoYcLgu1m
 github.com/envoyproxy/protoc-gen-validate v0.1.0/go.mod h1:iSmxcyjqTsJpI2R4NaDN7+kN2VEUnK/pcBlmesArF7c=
 github.com/foxxorcat/mopan-sdk-go v0.1.1 h1:JYMeCu4PFpqgHapvOz4jPMT7CxR6Yebu3aWkgGMDeIU=
 github.com/foxxorcat/mopan-sdk-go v0.1.1/go.mod h1:LpBPmwezjQNyhaNo3HGzgFtQbhvxmF5ZybSVuKi7OVA=
+github.com/foxxorcat/weiyun-sdk-go v0.1.1 h1:m4qcJk0adr+bpM4es2zCqP3jhMEwEPyTMGICsamygEQ=
+github.com/foxxorcat/weiyun-sdk-go v0.1.1/go.mod h1:AKsLFuWhWlClpGrg1zxTdMejugZEZtmhIuElAk3W83s=
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
 github.com/gabriel-vasile/mimetype v1.4.2 h1:w5qFW6JKBz9Y393Y4q372O9A7cUSequkh1Q7OhCmWKU=
 github.com/gabriel-vasile/mimetype v1.4.2/go.mod h1:zApsH/mKG4w07erKIaJPFiX0Tsq9BFQgN3qGY5GnNgA=
