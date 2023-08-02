@@ -151,8 +151,13 @@ type FamilyInfoResp struct {
 /*文件部分*/
 // 文件
 type Cloud189File struct {
-	CreateDate string `json:"createDate"`
-	FileCata   int64  `json:"fileCata"`
+	ID   String `json:"id"`
+	Name string `json:"name"`
+	Size int64  `json:"size"`
+	Md5  string `json:"md5"`
+
+	LastOpTime Time `json:"lastOpTime"`
+	CreateDate Time `json:"createDate"`
 	Icon       struct {
 		//iconOption 5
 		SmallUrl string `json:"smallUrl"`
@@ -162,62 +167,44 @@ type Cloud189File struct {
 		Max600    string `json:"max600"`
 		MediumURL string `json:"mediumUrl"`
 	} `json:"icon"`
-	ID          int64  `json:"id"`
-	LastOpTime  string `json:"lastOpTime"`
-	Md5         string `json:"md5"`
-	MediaType   int    `json:"mediaType"`
-	Name        string `json:"name"`
-	Orientation int64  `json:"orientation"`
-	Rev         string `json:"rev"`
-	Size        int64  `json:"size"`
-	StarLabel   int64  `json:"starLabel"`
 
-	parseTime *time.Time
+	// Orientation int64  `json:"orientation"`
+	// FileCata   int64  `json:"fileCata"`
+	// MediaType   int    `json:"mediaType"`
+	// Rev         string `json:"rev"`
+	// StarLabel   int64  `json:"starLabel"`
 }
 
-func (c *Cloud189File) GetSize() int64  { return c.Size }
-func (c *Cloud189File) GetName() string { return c.Name }
-func (c *Cloud189File) ModTime() time.Time {
-	if c.parseTime == nil {
-		c.parseTime = MustParseTime(c.LastOpTime)
-	}
-	return *c.parseTime
-}
-func (c *Cloud189File) IsDir() bool     { return false }
-func (c *Cloud189File) GetID() string   { return fmt.Sprint(c.ID) }
-func (c *Cloud189File) GetPath() string { return "" }
-func (c *Cloud189File) Thumb() string   { return c.Icon.SmallUrl }
+func (c *Cloud189File) GetSize() int64     { return c.Size }
+func (c *Cloud189File) GetName() string    { return c.Name }
+func (c *Cloud189File) ModTime() time.Time { return time.Time(c.LastOpTime) }
+func (c *Cloud189File) IsDir() bool        { return false }
+func (c *Cloud189File) GetID() string      { return string(c.ID) }
+func (c *Cloud189File) GetPath() string    { return "" }
+func (c *Cloud189File) Thumb() string      { return c.Icon.SmallUrl }
 
 // 文件夹
 type Cloud189Folder struct {
-	ID       int64  `json:"id"`
+	ID       String `json:"id"`
 	ParentID int64  `json:"parentId"`
 	Name     string `json:"name"`
 
-	FileCata  int64 `json:"fileCata"`
-	FileCount int64 `json:"fileCount"`
+	LastOpTime Time `json:"lastOpTime"`
+	CreateDate Time `json:"createDate"`
 
-	LastOpTime string `json:"lastOpTime"`
-	CreateDate string `json:"createDate"`
-
-	FileListSize int64  `json:"fileListSize"`
-	Rev          string `json:"rev"`
-	StarLabel    int64  `json:"starLabel"`
-
-	parseTime *time.Time
+	// FileListSize int64 `json:"fileListSize"`
+	// FileCount int64 `json:"fileCount"`
+	// FileCata  int64 `json:"fileCata"`
+	// Rev          string `json:"rev"`
+	// StarLabel    int64  `json:"starLabel"`
 }
 
-func (c *Cloud189Folder) GetSize() int64  { return 0 }
-func (c *Cloud189Folder) GetName() string { return c.Name }
-func (c *Cloud189Folder) ModTime() time.Time {
-	if c.parseTime == nil {
-		c.parseTime = MustParseTime(c.LastOpTime)
-	}
-	return *c.parseTime
-}
-func (c *Cloud189Folder) IsDir() bool     { return true }
-func (c *Cloud189Folder) GetID() string   { return fmt.Sprint(c.ID) }
-func (c *Cloud189Folder) GetPath() string { return "" }
+func (c *Cloud189Folder) GetSize() int64     { return 0 }
+func (c *Cloud189Folder) GetName() string    { return c.Name }
+func (c *Cloud189Folder) ModTime() time.Time { return time.Time(c.LastOpTime) }
+func (c *Cloud189Folder) IsDir() bool        { return true }
+func (c *Cloud189Folder) GetID() string      { return string(c.ID) }
+func (c *Cloud189Folder) GetPath() string    { return "" }
 
 type Cloud189FilesResp struct {
 	//ResCode    int    `json:"res_code"`
@@ -284,15 +271,60 @@ func (r *GetUploadFileStatusResp) GetSize() int64 {
 	return r.DataSize + r.Size
 }
 
-type CommitUploadFileResp struct {
+type CommitMultiUploadFileResp struct {
+	File struct {
+		UserFileID String `json:"userFileId"`
+		FileName   string `json:"fileName"`
+		FileSize   int64  `json:"fileSize"`
+		FileMd5    string `json:"fileMd5"`
+		CreateDate Time   `json:"createDate"`
+	} `json:"file"`
+}
+
+func (f *CommitMultiUploadFileResp) toFile() *Cloud189File {
+	return &Cloud189File{
+		ID:         f.File.UserFileID,
+		Name:       f.File.FileName,
+		Size:       f.File.FileSize,
+		Md5:        f.File.FileMd5,
+		LastOpTime: f.File.CreateDate,
+		CreateDate: f.File.CreateDate,
+	}
+}
+
+type OldCommitUploadFileResp struct {
 	XMLName    xml.Name `xml:"file"`
-	Id         string   `xml:"id"`
+	ID         String   `xml:"id"`
 	Name       string   `xml:"name"`
-	Size       string   `xml:"size"`
+	Size       int64    `xml:"size"`
 	Md5        string   `xml:"md5"`
-	CreateDate string   `xml:"createDate"`
-	Rev        string   `xml:"rev"`
-	UserId     string   `xml:"userId"`
+	CreateDate Time     `xml:"createDate"`
+}
+
+func (f *OldCommitUploadFileResp) toFile() *Cloud189File {
+	return &Cloud189File{
+		ID:         f.ID,
+		Name:       f.Name,
+		Size:       f.Size,
+		Md5:        f.Md5,
+		CreateDate: f.CreateDate,
+		LastOpTime: f.CreateDate,
+	}
+}
+
+type CreateBatchTaskResp struct {
+	TaskID string `json:"taskId"`
+}
+
+type BatchTaskStateResp struct {
+	FailedCount         int     `json:"failedCount"`
+	Process             int     `json:"process"`
+	SkipCount           int     `json:"skipCount"`
+	SubTaskCount        int     `json:"subTaskCount"`
+	SuccessedCount      int     `json:"successedCount"`
+	SuccessedFileIDList []int64 `json:"successedFileIdList"`
+	TaskID              string  `json:"taskId"`
+	TaskStatus          int     `json:"taskStatus"` //1 初始化 2 存在冲突 3 执行中，4 完成
 }
 
 /* query 加密参数*/
