@@ -6,6 +6,7 @@ import (
 )
 
 type Addition struct {
+	DriveType string `json:"drive_type" type:"select" options:"default,resource,backup" default:"default"`
 	driver.RootID
 	RefreshToken       string `json:"refresh_token" required:"true"`
 	OrderBy            string `json:"order_by" type:"select" options:"name,size,updated_at,created_at"`

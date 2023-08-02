@@ -2,8 +2,6 @@ package net
 
 import (
 	"fmt"
-	"github.com/alist-org/alist/v3/pkg/http_range"
-	log "github.com/sirupsen/logrus"
 	"io"
 	"math"
 	"mime/multipart"
@@ -11,6 +9,9 @@ import (
 	"net/textproto"
 	"strings"
 	"time"
+
+	"github.com/alist-org/alist/v3/pkg/http_range"
+	log "github.com/sirupsen/logrus"
 )
 
 // scanETag determines if a syntactically valid ETag is present at s. If so,
@@ -175,9 +176,8 @@ func checkIfRange(w http.ResponseWriter, r *http.Request, modtime time.Time) con
 	if etag != "" {
 		if etagStrongMatch(etag, w.Header().Get("Etag")) {
 			return condTrue
-		} else {
-			return condFalse
 		}
+		return condFalse
 	}
 	// The If-Range value is typically the ETag value, but it may also be
 	// the modtime date. See golang.org/issue/8367.
@@ -240,10 +240,9 @@ func checkPreconditions(w http.ResponseWriter, r *http.Request, modtime time.Tim
 		if r.Method == "GET" || r.Method == "HEAD" {
 			writeNotModified(w)
 			return true, ""
-		} else {
-			w.WriteHeader(http.StatusPreconditionFailed)
-			return true, ""
 		}
+		w.WriteHeader(http.StatusPreconditionFailed)
+		return true, ""
 	case condNone:
 		if checkIfModifiedSince(r, modtime) == condFalse {
 			writeNotModified(w)

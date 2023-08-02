@@ -39,11 +39,14 @@ func (d *AliyundriveOpen) Init(ctx context.Context) error {
 	if d.LIVPDownloadFormat == "" {
 		d.LIVPDownloadFormat = "jpeg"
 	}
+	if d.DriveType == "" {
+		d.DriveType = "default"
+	}
 	res, err := d.request("/adrive/v1.0/user/getDriveInfo", http.MethodPost, nil)
 	if err != nil {
 		return err
 	}
-	d.DriveId = utils.Json.Get(res, "default_drive_id").ToString()
+	d.DriveId = utils.Json.Get(res, d.DriveType+"_drive_id").ToString()
 	d.limitList = rateg.LimitFnCtx(d.list, rateg.LimitFnOption{
 		Limit:  4,
 		Bucket: 1,
