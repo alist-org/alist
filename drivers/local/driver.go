@@ -1,10 +1,11 @@
 package local
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
-	"io"
+	"io/fs"
 	"net/http"
 	"os"
 	stdpath "path"
@@ -80,35 +81,53 @@ func (d *Local) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([
 		if !d.ShowHidden && strings.HasPrefix(f.Name(), ".") {
 			continue
 		}
-		thumb := ""
-		if d.Thumbnail {
-			typeName := utils.GetFileType(f.Name())
-			if typeName == conf.IMAGE || typeName == conf.VIDEO {
-				thumb = common.GetApiUrl(nil) + stdpath.Join("/d", args.ReqPath, f.Name())
-				thumb = utils.EncodePath(thumb, true)
-				thumb += "?type=thumb&sign=" + sign.Sign(stdpath.Join(args.ReqPath, f.Name()))
-			}
-		}
-		isFolder := f.IsDir() || isSymlinkDir(f, fullPath)
-		var size int64
-		if !isFolder {
-			size = f.Size()
-		}
-		file := model.ObjThumb{
-			Object: model.Object{
-				Path:     filepath.Join(dir.GetPath(), f.Name()),
-				Name:     f.Name(),
-				Modified: f.ModTime(),
-				Size:     size,
-				IsFolder: isFolder,
-			},
-			Thumbnail: model.Thumbnail{
-				Thumbnail: thumb,
-			},
-		}
-		files = append(files, &file)
+		file := d.FileInfoToObj(f, args.ReqPath, fullPath)
+		files = append(files, file)
 	}
 	return files, nil
+}
+func (d *Local) FileInfoToObj(f fs.FileInfo, reqPath string, fullPath string) model.Obj {
+	thumb := ""
+	if d.Thumbnail {
+		typeName := utils.GetFileType(f.Name())
+		if typeName == conf.IMAGE || typeName == conf.VIDEO {
+			thumb = common.GetApiUrl(nil) + stdpath.Join("/d", reqPath, f.Name())
+			thumb = utils.EncodePath(thumb, true)
+			thumb += "?type=thumb&sign=" + sign.Sign(stdpath.Join(reqPath, f.Name()))
+		}
+	}
+	isFolder := f.IsDir() || isSymlinkDir(f, fullPath)
+	var size int64
+	if !isFolder {
+		size = f.Size()
+	}
+	file := model.ObjThumb{
+		Object: model.Object{
+			Path:     filepath.Join(fullPath, f.Name()),
+			Name:     f.Name(),
+			Modified: f.ModTime(),
+			Size:     size,
+			IsFolder: isFolder,
+		},
+		Thumbnail: model.Thumbnail{
+			Thumbnail: thumb,
+		},
+	}
+	return &file
+
+}
+func (d *Local) GetMeta(ctx context.Context, path string) (model.Obj, error) {
+	f, err := os.Stat(path)
+	if err != nil {
+		return nil, err
+	}
+	file := d.FileInfoToObj(f, path, path)
+	//h := "123123"
+	//if s, ok := f.(model.SetHash); ok && file.GetHash() == ("","")  {
+	//	s.SetHash(h,"SHA1")
+	//}
+	return file, nil
+
 }
 
 func (d *Local) Get(ctx context.Context, path string) (model.Obj, error) {
@@ -147,13 +166,21 @@ func (d *Local) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 			"Content-Type": []string{"image/png"},
 		}
 		if thumbPath != nil {
-			link.FilePath = thumbPath
+			open, err := os.Open(*thumbPath)
+			if err != nil {
+				return nil, err
+			}
+			link.ReadSeekCloser = open
 		} else {
-			link.Data = io.NopCloser(buf)
-			link.Header.Set("Content-Length", strconv.Itoa(buf.Len()))
+			link.ReadSeekCloser = utils.ReadSeekerNopCloser(bytes.NewReader(buf.Bytes()))
+			//link.Header.Set("Content-Length", strconv.Itoa(buf.Len()))
 		}
 	} else {
-		link.FilePath = &fullPath
+		open, err := os.Open(fullPath)
+		if err != nil {
+			return nil, err
+		}
+		link.ReadSeekCloser = open
 	}
 	return &link, nil
 }

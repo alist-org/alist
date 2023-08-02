@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/utils"
@@ -80,9 +79,8 @@ func (d *SMB) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*m
 		return nil, err
 	}
 	link := &model.Link{
-		Data: remoteFile,
+		ReadSeekCloser: remoteFile,
 	}
-	base.HandleRange(link, remoteFile, args.Header, file.GetSize())
 	d.updateLastConnTime()
 	return link, nil
 }

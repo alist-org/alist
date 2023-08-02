@@ -3,7 +3,6 @@ package baiduphoto
 import (
 	"context"
 	"fmt"
-	"io"
 	"net/http"
 
 	"github.com/alist-org/alist/v3/drivers/base"
@@ -400,7 +399,7 @@ func (d *BaiduPhoto) linkFile(ctx context.Context, file *File, args model.LinkAr
 	return link, nil
 }
 
-func (d *BaiduPhoto) linkStreamAlbum(ctx context.Context, file *AlbumFile) (*model.Link, error) {
+/*func (d *BaiduPhoto) linkStreamAlbum(ctx context.Context, file *AlbumFile) (*model.Link, error) {
 	return &model.Link{
 		Header: http.Header{},
 		Writer: func(w io.Writer) error {
@@ -421,9 +420,9 @@ func (d *BaiduPhoto) linkStreamAlbum(ctx context.Context, file *AlbumFile) (*mod
 			return err
 		},
 	}, nil
-}
+}*/
 
-func (d *BaiduPhoto) linkStream(ctx context.Context, file *File) (*model.Link, error) {
+/*func (d *BaiduPhoto) linkStream(ctx context.Context, file *File) (*model.Link, error) {
 	return &model.Link{
 		Header: http.Header{},
 		Writer: func(w io.Writer) error {
@@ -441,7 +440,7 @@ func (d *BaiduPhoto) linkStream(ctx context.Context, file *File) (*model.Link, e
 			return err
 		},
 	}, nil
-}
+}*/
 
 // 获取uk
 func (d *BaiduPhoto) uInfo() (*UInfo, error) {
