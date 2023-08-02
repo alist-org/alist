@@ -268,7 +268,7 @@ func (y *Cloud189PC) login() (err error) {
 			"validateCode": y.VCode,
 			"captchaToken": param.CaptchaToken,
 			"returnUrl":    RETURN_URL,
-			"mailSuffix":   "@189.cn",
+			// "mailSuffix":   "@189.cn",
 			"dynamicCheck": "FALSE",
 			"clientType":   CLIENT_TYPE,
 			"cb_SaveName":  "1",
