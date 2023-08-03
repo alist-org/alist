@@ -107,9 +107,8 @@ func (d *Pan123Share) Link(ctx context.Context, file model.Obj, args model.LinkA
 			"Referer": []string{"https://www.123pan.com/"},
 		}
 		return &link, nil
-	} else {
-		return nil, fmt.Errorf("can't convert obj")
 	}
+	return nil, fmt.Errorf("can't convert obj")
 }
 
 func (d *Pan123Share) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
