@@ -236,7 +236,7 @@ func (d *Crypt) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 		return nil, fmt.Errorf("the remote storage driver need to be enhanced to support encrytion")
 	}
 	remoteFileSize := remoteFile.GetSize()
-	var remoteCloser io.Closer
+	remoteClosers := utils.NewClosers()
 	rangeReaderFunc := func(ctx context.Context, underlyingOffset, underlyingLength int64) (io.ReadCloser, error) {
 		length := underlyingLength
 		if underlyingLength >= 0 && underlyingOffset+underlyingLength >= remoteFileSize {
@@ -245,6 +245,7 @@ func (d *Crypt) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 		if remoteLink.RangeReadCloser.RangeReader != nil {
 			//remoteRangeReader, err :=
 			remoteReader, err := remoteLink.RangeReadCloser.RangeReader(http_range.Range{Start: underlyingOffset, Length: length})
+			remoteClosers.Add(remoteLink.RangeReadCloser.Closers)
 			if err != nil {
 				return nil, err
 			}
@@ -255,8 +256,8 @@ func (d *Crypt) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 			if err != nil {
 				return nil, err
 			}
+			//remoteClosers.Add(remoteLink.ReadSeekCloser)
 			//keep reuse same ReadSeekCloser and close at last.
-			remoteCloser = remoteLink.ReadSeekCloser
 			return io.NopCloser(remoteLink.ReadSeekCloser), nil
 		}
 		if len(remoteLink.URL) > 0 {
@@ -265,6 +266,7 @@ func (d *Crypt) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 				Header: remoteLink.Header,
 			}
 			response, err := RequestRangedHttp(args.HttpReq, rangedRemoteLink, underlyingOffset, length)
+			//remoteClosers.Add(response.Body)
 			if err != nil {
 				return nil, fmt.Errorf("remote storage http request failure,status: %d err:%s", response.StatusCode, err)
 			}
@@ -301,7 +303,7 @@ func (d *Crypt) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 		return readSeeker, nil
 	}
 
-	resultRangeReadCloser := &model.RangeReadCloser{RangeReader: resultRangeReader, Closer: remoteCloser}
+	resultRangeReadCloser := &model.RangeReadCloser{RangeReader: resultRangeReader, Closers: remoteClosers}
 	resultLink := &model.Link{
 		Header:          remoteLink.Header,
 		RangeReadCloser: *resultRangeReadCloser,
