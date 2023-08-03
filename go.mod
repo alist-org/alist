@@ -5,6 +5,7 @@ go 1.20
 require (
 	github.com/SheltonZhu/115driver v1.0.14
 	github.com/Xhofe/go-cache v0.0.0-20220723083548-714439c8af9a
+	github.com/Xhofe/rateg v0.0.0-20230728072201-251a4e1adad4
 	github.com/Xhofe/wopan-sdk-go v0.1.1
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/aws/aws-sdk-go v1.44.262
@@ -16,6 +17,7 @@ require (
 	github.com/disintegration/imaging v1.6.2
 	github.com/dustinxie/ecc v0.0.0-20210511000915-959544187564
 	github.com/foxxorcat/mopan-sdk-go v0.1.1
+	github.com/foxxorcat/weiyun-sdk-go v0.1.1
 	github.com/gin-contrib/cors v1.4.0
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-resty/resty/v2 v2.7.0
@@ -23,7 +25,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/websocket v1.5.0
 	github.com/hirochachacha/go-smb2 v1.1.0
-	github.com/ipfs/go-ipfs-api v0.6.0
+	github.com/ipfs/go-ipfs-api v0.6.1
 	github.com/jlaffaye/ftp v0.2.0
 	github.com/json-iterator/go v1.1.12
 	github.com/maruel/natural v1.1.0
@@ -40,8 +42,8 @@ require (
 	github.com/winfsp/cgofuse v1.5.1-0.20221118130120-84c0898ad2e0
 	golang.org/x/crypto v0.11.0
 	golang.org/x/exp v0.0.0-20230213192124-5e25df0256eb
-	golang.org/x/image v0.9.0
-	golang.org/x/net v0.12.0
+	golang.org/x/image v0.10.0
+	golang.org/x/net v0.13.0
 	golang.org/x/oauth2 v0.10.0
 	gorm.io/driver/mysql v1.4.7
 	gorm.io/driver/postgres v1.4.8
@@ -50,11 +52,10 @@ require (
 )
 
 require (
-	github.com/Max-Sum/base32768 v0.0.0-20230304063302-18e6ce5945fd // indirect
 	github.com/BurntSushi/toml v0.3.1 // indirect
+	github.com/Max-Sum/base32768 v0.0.0-20230304063302-18e6ce5945fd // indirect
 	github.com/RoaringBitmap/roaring v1.2.3 // indirect
 	github.com/abbot/go-http-auth v0.4.0 // indirect
-	github.com/Xhofe/rateg v0.0.0-20230728072201-251a4e1adad4 // indirect
 	github.com/aead/ecdh v0.2.0 // indirect
 	github.com/aliyun/aliyun-oss-go-sdk v2.2.5+incompatible // indirect
 	github.com/andreburgaud/crypt2go v1.1.0 // indirect
