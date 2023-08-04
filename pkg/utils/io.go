@@ -164,3 +164,24 @@ func Retry(attempts int, sleep time.Duration, f func() error) (err error) {
 	}
 	return fmt.Errorf("after %d attempts, last error: %s", attempts, err)
 }
+
+type Closers struct {
+	closers []*io.Closer
+}
+
+func (c *Closers) Close() (err error) {
+	for _, closer := range c.closers {
+		if closer != nil {
+			_ = (*closer).Close()
+		}
+	}
+	return nil
+}
+func (c *Closers) Add(closer io.Closer) {
+	if closer != nil {
+		c.closers = append(c.closers, &closer)
+	}
+}
+func NewClosers() *Closers {
+	return &Closers{[]*io.Closer{}}
+}

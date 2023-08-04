@@ -86,8 +86,9 @@ func (d Downloader) Download(ctx context.Context, p *HttpRequestParams) (readClo
 
 // downloader is the implementation structure used internally by Downloader.
 type downloader struct {
-	ctx context.Context
-	cfg Downloader
+	ctx    context.Context
+	cancel context.CancelFunc
+	cfg    Downloader
 
 	params       *HttpRequestParams //http request params
 	chunkChannel chan chunk         //chunk chanel
@@ -107,6 +108,7 @@ type downloader struct {
 
 // download performs the implementation of the object download across ranged GETs.
 func (d *downloader) download() (*io.ReadCloser, error) {
+	d.ctx, d.cancel = context.WithCancel(d.ctx)
 
 	pos := d.params.Range.Start
 	maxPos := d.params.Range.Start + d.params.Range.Length
@@ -138,7 +140,7 @@ func (d *downloader) download() (*io.ReadCloser, error) {
 	d.chunkChannel = make(chan chunk, d.cfg.Concurrency)
 
 	for i := 0; i < d.cfg.Concurrency; i++ {
-		buf := NewBuf(d.cfg.PartSize, i)
+		buf := NewBuf(d.ctx, d.cfg.PartSize, i)
 		d.bufs = append(d.bufs, buf)
 		go d.downloadPart()
 	}
@@ -163,6 +165,7 @@ func (d *downloader) sendChunkTask() *chunk {
 
 // when the final reader Close, we interrupt
 func (d *downloader) interrupt() error {
+	d.cancel()
 	if d.written != d.params.Range.Length {
 		log.Debugf("Downloader interrupt before finish")
 		if d.getErr() == nil {
@@ -520,15 +523,16 @@ func (buf *Buffer) waitTillNewWrite(pos int) error {
 type Buf struct {
 	buffer *Buffer // Buffer we read from
 	size   int     //expected size
+	ctx    context.Context
 }
 
 // NewBuf is a buffer that can have 1 read & 1 write at the same time.
 // when read is faster write, immediately feed data to read after written
-func NewBuf(maxSize int, id int) *Buf {
+func NewBuf(ctx context.Context, maxSize int, id int) *Buf {
 	d := make([]byte, maxSize)
 	buffer := &Buffer{data: d, id: id, notify: make(chan int)}
 	buffer.reset()
-	return &Buf{buffer: buffer, size: maxSize}
+	return &Buf{ctx: ctx, buffer: buffer, size: maxSize}
 
 }
 func (br *Buf) Reset(size int) {
@@ -540,6 +544,9 @@ func (br *Buf) GetId() int {
 }
 
 func (br *Buf) Read(p []byte) (n int, err error) {
+	if err := br.ctx.Err(); err != nil {
+		return 0, err
+	}
 	if len(p) == 0 {
 		return 0, nil
 	}
@@ -580,6 +587,9 @@ func (br *Buf) waitTillNewWrite(pos int) error {
 }
 
 func (br *Buf) Write(p []byte) (n int, err error) {
+	if err := br.ctx.Err(); err != nil {
+		return 0, err
+	}
 	return br.buffer.Write(p)
 }
 func (br *Buf) Close() {
