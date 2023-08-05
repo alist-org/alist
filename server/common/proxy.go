@@ -7,6 +7,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/net"
 	"github.com/alist-org/alist/v3/pkg/http_range"
+	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
 	"io"
 	"net/http"
@@ -33,22 +34,24 @@ var httpClient *http.Client
 
 func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.Obj) error {
 	if link.ReadSeekCloser != nil {
-		filename := file.GetName()
-		w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"; filename*=UTF-8''%s`, filename, url.PathEscape(filename)))
+		attachFileName(w, file)
 		http.ServeContent(w, r, file.GetName(), file.ModTime(), link.ReadSeekCloser)
 		defer link.ReadSeekCloser.Close()
 		return nil
 	} else if link.RangeReadCloser.RangeReader != nil {
+		attachFileName(w, file)
 		net.ServeHTTP(w, r, file.GetName(), file.ModTime(), file.GetSize(), link.RangeReadCloser.RangeReader)
 		defer func() {
-			if link.RangeReadCloser.Closer != nil {
-				link.RangeReadCloser.Closer.Close()
+			if link.RangeReadCloser.Closers != nil {
+				link.RangeReadCloser.Closers.Close()
 			}
 		}()
 		return nil
 	} else if link.Concurrency != 0 || link.PartSize != 0 {
+		attachFileName(w, file)
 		size := file.GetSize()
 		//var finalClosers model.Closers
+		finalClosers := utils.NewClosers()
 		header := net.ProcessHeader(&r.Header, &link.Header)
 		rangeReader := func(httpRange http_range.Range) (io.ReadCloser, error) {
 			down := net.NewDownloader(func(d *net.Downloader) {
@@ -62,9 +65,11 @@ func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.
 				HeaderRef: header,
 			}
 			rc, err := down.Download(context.Background(), req)
+			finalClosers.Add(*rc)
 			return *rc, err
 		}
 		net.ServeHTTP(w, r, file.GetName(), file.ModTime(), file.GetSize(), rangeReader)
+		defer finalClosers.Close()
 		return nil
 	} else {
 		//transparent proxy
@@ -88,4 +93,8 @@ func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.
 		}
 		return nil
 	}
+}
+func attachFileName(w http.ResponseWriter, file model.Obj) {
+	fileName := file.GetName()
+	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"; filename*=UTF-8''%s`, fileName, url.PathEscape(fileName)))
 }

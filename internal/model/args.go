@@ -2,6 +2,7 @@ package model
 
 import (
 	"github.com/alist-org/alist/v3/pkg/http_range"
+	"github.com/alist-org/alist/v3/pkg/utils"
 	"io"
 	"net/http"
 	"time"
@@ -45,7 +46,7 @@ type FsOtherArgs struct {
 }
 type RangeReadCloser struct {
 	RangeReader RangeReaderFunc
-	Closer      io.Closer
+	Closers     *utils.Closers
 }
 
 type WriterFunc func(w io.Writer) error
