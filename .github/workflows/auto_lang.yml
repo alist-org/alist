@@ -53,8 +53,8 @@ jobs:
         run: |
           cd alist-web
           git add .
-          git config --local user.email "i@nn.ci"
-          git config --local user.name "Andy Hsu"
+          git config --local user.email "bot@nn.ci"
+          git config --local user.name "IlaBot"
           git commit -m "chore: auto update i18n file" -a 2>/dev/null || :
           cd ..
 
