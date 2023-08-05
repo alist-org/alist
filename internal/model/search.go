@@ -15,6 +15,7 @@ type IndexProgress struct {
 type SearchReq struct {
 	Parent   string `json:"parent"`
 	Keywords string `json:"keywords"`
+	IsDir    int    `json:"is_dir"`
 	PageReq
 }
 
