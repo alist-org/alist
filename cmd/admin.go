@@ -15,7 +15,7 @@ import (
 var PasswordCmd = &cobra.Command{
 	Use:     "admin",
 	Aliases: []string{"password"},
-	Short:   "Show admin user's info",
+	Short:   "Show admin user's info and some operations about admin user's password",
 	Run: func(cmd *cobra.Command, args []string) {
 		Init()
 		admin, err := op.GetAdmin()
@@ -24,8 +24,8 @@ var PasswordCmd = &cobra.Command{
 		} else {
 			utils.Log.Infof("Admin user's username: %s", admin.Username)
 			utils.Log.Infof("The password can only be output at the first startup, and then stored as a hash value, which cannot be reversed")
-			utils.Log.Infof("You can reset the password by running 'alist password random' to generate a random password")
-			utils.Log.Infof("You can also set the password by running 'alist password set NEW_PASSWORD' to set a new password")
+			utils.Log.Infof("You can reset the password with a random string by running [alist admin random]")
+			utils.Log.Infof("You can also set a new password by running [alist admin set NEW_PASSWORD]")
 		}
 	},
 }

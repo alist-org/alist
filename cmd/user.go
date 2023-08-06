@@ -22,7 +22,7 @@ func DelAdminCacheOnline() {
 }
 
 func DelUserCacheOnline(username string) {
-	client := resty.New().SetTimeout(3 * time.Second).SetTLSClientConfig(&tls.Config{InsecureSkipVerify: conf.Conf.TlsInsecureSkipVerify})
+	client := resty.New().SetTimeout(1 * time.Second).SetTLSClientConfig(&tls.Config{InsecureSkipVerify: conf.Conf.TlsInsecureSkipVerify})
 	token := setting.GetStr(conf.Token)
 	port := conf.Conf.Scheme.HttpPort
 	u := fmt.Sprintf("http://localhost:%d/api/admin/user/del_cache", port)
@@ -35,18 +35,18 @@ func DelUserCacheOnline(username string) {
 	}
 	res, err := client.R().SetHeader("Authorization", token).SetQueryParam("username", username).Post(u)
 	if err != nil {
-		utils.Log.Errorf("[del_user_cache] del cache error: %+v", err)
+		utils.Log.Warnf("[del_user_cache_online] failed: %+v", err)
 		return
 	}
 	if res.StatusCode() != 200 {
-		utils.Log.Errorf("[del_user_cache] del cache error: %+v", res.String())
+		utils.Log.Warnf("[del_user_cache_online] failed: %+v", res.String())
 		return
 	}
 	code := utils.Json.Get(res.Body(), "code").ToInt()
 	msg := utils.Json.Get(res.Body(), "message").ToString()
 	if code != 200 {
-		utils.Log.Errorf("[del_user_cache] del cache error: %s", msg)
+		utils.Log.Errorf("[del_user_cache_online] error: %s", msg)
 		return
 	}
-	utils.Log.Debugf("[del_user_cache] del user [%s] cache success", username)
+	utils.Log.Debugf("[del_user_cache_online] del user [%s] cache success", username)
 }
