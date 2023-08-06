@@ -298,7 +298,7 @@ func (d *WeiYun) Remove(ctx context.Context, obj model.Obj) error {
 
 func (d *WeiYun) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) (model.Obj, error) {
 	if folder, ok := dstDir.(*Folder); ok {
-		file, err := utils.CreateTempFile(stream)
+		file, err := utils.CreateTempFile(stream, stream.GetSize())
 		if err != nil {
 			return nil, err
 		}

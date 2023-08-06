@@ -333,7 +333,7 @@ func (xc *XunLeiCommon) Remove(ctx context.Context, obj model.Obj) error {
 }
 
 func (xc *XunLeiCommon) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
-	tempFile, err := utils.CreateTempFile(stream.GetReadCloser())
+	tempFile, err := utils.CreateTempFile(stream.GetReadCloser(), stream.GetSize())
 	if err != nil {
 		return err
 	}

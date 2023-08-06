@@ -14,8 +14,9 @@ var (
 	MoveBetweenTwoStorages = errors.New("can't move files between two storages, try to copy")
 	UploadNotSupported     = errors.New("upload not supported")
 
-	MetaNotFound    = errors.New("meta not found")
-	StorageNotFound = errors.New("storage not found")
+	MetaNotFound     = errors.New("meta not found")
+	StorageNotFound  = errors.New("storage not found")
+	StreamIncomplete = errors.New("upload/download stream incomplete, possible network issue")
 )
 
 // NewErr wrap constant error with an extra message

@@ -545,7 +545,7 @@ func (y *Cloud189PC) StreamUpload(ctx context.Context, dstDir model.Obj, file mo
 // 快传
 func (y *Cloud189PC) FastUpload(ctx context.Context, dstDir model.Obj, file model.FileStreamer, up driver.UpdateProgress) (model.Obj, error) {
 	// 需要获取完整文件md5,必须支持 io.Seek
-	tempFile, err := utils.CreateTempFile(file.GetReadCloser())
+	tempFile, err := utils.CreateTempFile(file.GetReadCloser(), file.GetSize())
 	if err != nil {
 		return nil, err
 	}
@@ -672,7 +672,7 @@ func (y *Cloud189PC) FastUpload(ctx context.Context, dstDir model.Obj, file mode
 // 旧版本上传，家庭云不支持覆盖
 func (y *Cloud189PC) OldUpload(ctx context.Context, dstDir model.Obj, file model.FileStreamer, up driver.UpdateProgress) (model.Obj, error) {
 	// 需要获取完整文件md5,必须支持 io.Seek
-	tempFile, err := utils.CreateTempFile(file.GetReadCloser())
+	tempFile, err := utils.CreateTempFile(file.GetReadCloser(), file.GetSize())
 	if err != nil {
 		return nil, err
 	}

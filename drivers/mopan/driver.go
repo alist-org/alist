@@ -212,7 +212,7 @@ func (d *MoPan) Remove(ctx context.Context, obj model.Obj) error {
 }
 
 func (d *MoPan) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) (model.Obj, error) {
-	file, err := utils.CreateTempFile(stream)
+	file, err := utils.CreateTempFile(stream, stream.GetSize())
 	if err != nil {
 		return nil, err
 	}

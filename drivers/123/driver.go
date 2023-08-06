@@ -184,7 +184,7 @@ func (d *Pan123) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 	// const DEFAULT int64 = 10485760
 	h := md5.New()
 	// need to calculate md5 of the full content
-	tempFile, err := utils.CreateTempFile(stream.GetReadCloser())
+	tempFile, err := utils.CreateTempFile(stream.GetReadCloser(), stream.GetSize())
 	if err != nil {
 		return err
 	}
