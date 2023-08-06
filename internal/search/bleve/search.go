@@ -2,8 +2,9 @@ package bleve
 
 import (
 	"context"
-	query2 "github.com/blevesearch/bleve/v2/search/query"
 	"os"
+
+	query2 "github.com/blevesearch/bleve/v2/search/query"
 
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/errs"
@@ -29,11 +30,8 @@ func (b *Bleve) Search(ctx context.Context, req model.SearchReq) ([]model.Search
 	query := bleve.NewMatchQuery(req.Keywords)
 	query.SetField("name")
 	queries = append(queries, query)
-	if req.IsDir != 0 {
-		var isDir bool
-		if req.IsDir == 1 {
-			isDir = true
-		}
+	if req.Scope != 0 {
+		isDir := req.Scope == 1
 		isDirQuery := bleve.NewBoolFieldQuery(isDir)
 		queries = append(queries, isDirQuery)
 	}

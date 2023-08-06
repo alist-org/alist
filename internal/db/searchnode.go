@@ -73,11 +73,8 @@ func SearchNode(req model.SearchReq, useFullText bool) ([]model.SearchNode, int6
 		}
 	}
 
-	if req.IsDir != 0 {
-		var isDir bool
-		if req.IsDir == 1 {
-			isDir = true
-		}
+	if req.Scope != 0 {
+		isDir := req.Scope == 1
 		searchDB.Where(db.Where("is_dir = ?", isDir))
 	}
 
