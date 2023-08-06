@@ -26,17 +26,17 @@ func initUser() {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			admin = &model.User{
 				Username: "admin",
-				Password: adminPassword,
+				PwdHash:  model.HashPwd(adminPassword),
 				Role:     model.ADMIN,
 				BasePath: "/",
 			}
 			if err := op.CreateUser(admin); err != nil {
 				panic(err)
 			} else {
-				utils.Log.Infof("Successfully created the admin user and the initial password is: %s", admin.Password)
+				utils.Log.Infof("Successfully created the admin user and the initial password is: %s", adminPassword)
 			}
 		} else {
-			panic(err)
+			utils.Log.Fatalf("[init user] Failed to get admin user: %v", err)
 		}
 	}
 	guest, err := op.GetGuest()
@@ -44,17 +44,34 @@ func initUser() {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			guest = &model.User{
 				Username:   "guest",
-				Password:   "guest",
+				PwdHash:    model.HashPwd("guest"),
 				Role:       model.GUEST,
 				BasePath:   "/",
 				Permission: 0,
 				Disabled:   true,
 			}
 			if err := db.CreateUser(guest); err != nil {
-				panic(err)
+				utils.Log.Fatalf("[init user] Failed to create guest user: %v", err)
 			}
 		} else {
-			panic(err)
+			utils.Log.Fatalf("[init user] Failed to get guest user: %v", err)
+		}
+	}
+	hashPwdForOldVersion()
+}
+
+func hashPwdForOldVersion() {
+	users, _, err := op.GetUsers(1, -1)
+	if err != nil {
+		utils.Log.Fatalf("[hash pwd for old version] failed get users: %v", err)
+	}
+	for i := range users {
+		user := users[i]
+		if user.PwdHash == "" {
+			user.PwdHash = model.HashPwd(user.Password)
+			if err := db.UpdateUser(&user); err != nil {
+				utils.Log.Fatalf("[hash pwd for old version] failed update user: %v", err)
+			}
 		}
 	}
 }
