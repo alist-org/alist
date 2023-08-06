@@ -54,7 +54,7 @@ func (b *Bleve) Search(ctx context.Context, req model.SearchReq) ([]model.Search
 			Size:   int64(src.Fields["size"].(float64)),
 		}, nil
 	})
-	return res, int64(len(res)), nil
+	return res, int64(searchResults.Total), nil
 }
 
 func (b *Bleve) Index(ctx context.Context, node model.SearchNode) error {
