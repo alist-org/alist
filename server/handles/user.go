@@ -120,3 +120,13 @@ func Cancel2FAById(c *gin.Context) {
 	}
 	common.SuccessResp(c)
 }
+
+func DelUserCache(c *gin.Context) {
+	username := c.Query("username")
+	err := op.DelUserCache(username)
+	if err != nil {
+		common.ErrorResp(c, err, 500)
+		return
+	}
+	common.SuccessResp(c)
+}

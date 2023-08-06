@@ -26,6 +26,7 @@ type LoginReq struct {
 	OtpCode  string `json:"otp_code"`
 }
 
+// Login Deprecated
 func Login(c *gin.Context) {
 	// check count of login
 	ip := c.ClientIP()
