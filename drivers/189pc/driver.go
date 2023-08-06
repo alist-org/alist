@@ -292,6 +292,32 @@ func (y *Cloud189PC) Remove(ctx context.Context, obj model.Obj) error {
 	return y.WaitBatchTask("DELETE", resp.TaskID, time.Millisecond*200)
 }
 
+func (y *Cloud189PC) RemoveRecycle(ctx context.Context) error { //empty recycle，回收站
+	var resp CreateBatchTaskResp
+	//fmt.Println("recycle，回收站")
+	_, err := y.post(API_URL+"/batch/createBatchTask.action", func(req *resty.Request) {
+		req.SetContext(ctx)
+		req.SetFormData(map[string]string{
+			//"familyId": "741749180",
+			"groupId":        "null",
+			"targetFolderId": "null",
+			"shareId":        "null",
+			"type":           "EMPTY_RECYCLE",
+		})
+
+		if y.isFamily() {
+			req.SetFormData(map[string]string{
+				"familyId": y.FamilyID,
+			})
+		}
+	}, &resp)
+	if err != nil {
+		return err
+	}
+	// 批量任务数量限制，过快会导致无法删除
+	return y.WaitBatchTask("EMPTY_RECYCLE", resp.TaskID, time.Millisecond*200)
+}
+
 func (y *Cloud189PC) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) (model.Obj, error) {
 	switch y.UploadMethod {
 	case "old":
