@@ -28,7 +28,7 @@ func DelUserCacheOnline(username string) {
 	u := fmt.Sprintf("http://localhost:%d/api/admin/user/del_cache", port)
 	if port == -1 {
 		if conf.Conf.Scheme.HttpsPort == -1 {
-			utils.Log.Infof("[del_user_cache] no open port")
+			utils.Log.Warnf("[del_user_cache] no open port")
 			return
 		}
 		u = fmt.Sprintf("https://localhost:%d/api/admin/user/del_cache", conf.Conf.Scheme.HttpsPort)
@@ -48,5 +48,5 @@ func DelUserCacheOnline(username string) {
 		utils.Log.Errorf("[del_user_cache] del cache error: %s", msg)
 		return
 	}
-	utils.Log.Infof("[del_user_cache] del user [%s] cache success", username)
+	utils.Log.Debugf("[del_user_cache] del user [%s] cache success", username)
 }
