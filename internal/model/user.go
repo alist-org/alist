@@ -22,7 +22,7 @@ type User struct {
 	Username string `json:"username" gorm:"unique" binding:"required"` // username
 	PwdHash  string `json:"-"`                                         // password hash
 	Salt     string // unique salt
-	Password string `json:"-"`         // Deprecated password
+	Password string `json:"password"`  // password
 	BasePath string `json:"base_path"` // base path
 	Role     int    `json:"role"`      // user's role
 	Disabled bool   `json:"disabled"`

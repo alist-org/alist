@@ -115,7 +115,7 @@ func UpdateCurrent(c *gin.Context) {
 	user := c.MustGet("user").(*model.User)
 	user.Username = req.Username
 	if req.Password != "" {
-		user.Password = req.Password
+		user.SetPassword(req.Password)
 	}
 	user.SsoID = req.SsoID
 	if err := op.UpdateUser(user); err != nil {
