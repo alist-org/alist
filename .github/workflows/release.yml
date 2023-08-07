@@ -41,17 +41,11 @@ jobs:
         run: |
           bash build.sh release
 
-      - name: Release latest
-        uses: irongut/EditRelease@v1.2.0
-        with:
-          token: ${{ secrets.MY_TOKEN }}
-          id: ${{ github.event.release.id }}
-          prerelease: false
-
       - name: Upload assets
         uses: softprops/action-gh-release@v1
         with:
           files: build/compress/*
+          prerelease: false
 
   release_desktop:
     needs: release
