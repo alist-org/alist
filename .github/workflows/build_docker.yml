@@ -53,8 +53,8 @@ jobs:
 
       - name: Commit
         run: |
-          git config --local user.email "i@nn.ci"
-          git config --local user.name "Noah Hsu"
+          git config --local user.email "bot@nn.ci"
+          git config --local user.name "IlaBot"
           git commit --allow-empty -m "Trigger build for ${{ github.sha }}"
 
       - name: Push commit

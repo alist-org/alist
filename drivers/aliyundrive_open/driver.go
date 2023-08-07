@@ -2,10 +2,12 @@ package aliyundrive_open
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
 
+	"github.com/Xhofe/rateg"
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
@@ -34,13 +36,25 @@ func (d *AliyundriveOpen) GetAddition() driver.Additional {
 }
 
 func (d *AliyundriveOpen) Init(ctx context.Context) error {
+	if d.LIVPDownloadFormat == "" {
+		d.LIVPDownloadFormat = "jpeg"
+	}
+	if d.DriveType == "" {
+		d.DriveType = "default"
+	}
 	res, err := d.request("/adrive/v1.0/user/getDriveInfo", http.MethodPost, nil)
 	if err != nil {
 		return err
 	}
-	d.DriveId = utils.Json.Get(res, "default_drive_id").ToString()
-	d.limitList = utils.LimitRateCtx(d.list, time.Second/4)
-	d.limitLink = utils.LimitRateCtx(d.link, time.Second)
+	d.DriveId = utils.Json.Get(res, d.DriveType+"_drive_id").ToString()
+	d.limitList = rateg.LimitFnCtx(d.list, rateg.LimitFnOption{
+		Limit:  4,
+		Bucket: 1,
+	})
+	d.limitLink = rateg.LimitFnCtx(d.link, rateg.LimitFnOption{
+		Limit:  1,
+		Bucket: 1,
+	})
 	return nil
 }
 
@@ -73,6 +87,12 @@ func (d *AliyundriveOpen) link(ctx context.Context, file model.Obj) (*model.Link
 		return nil, err
 	}
 	url := utils.Json.Get(res, "url").ToString()
+	if url == "" {
+		if utils.Ext(file.GetName()) != "livp" {
+			return nil, errors.New("get download url failed: " + string(res))
+		}
+		url = utils.Json.Get(res, "streamsUrl", d.LIVPDownloadFormat).ToString()
+	}
 	exp := time.Hour
 	return &model.Link{
 		URL:        url,

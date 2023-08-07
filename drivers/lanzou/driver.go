@@ -2,9 +2,7 @@ package lanzou
 
 import (
 	"context"
-	"fmt"
 	"net/http"
-	"regexp"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
@@ -19,6 +17,8 @@ type LanZou struct {
 	model.Storage
 	uid string
 	vei string
+
+	flag int32
 }
 
 func (d *LanZou) Config() driver.Config {
@@ -30,16 +30,18 @@ func (d *LanZou) GetAddition() driver.Additional {
 }
 
 func (d *LanZou) Init(ctx context.Context) (err error) {
-	if d.IsCookie() {
+	switch d.Type {
+	case "account":
+		_, err := d.Login()
+		if err != nil {
+			return err
+		}
+		fallthrough
+	case "cookie":
 		if d.RootFolderID == "" {
 			d.RootFolderID = "-1"
 		}
-		ylogin := regexp.MustCompile("ylogin=(.*?);").FindStringSubmatch(d.Cookie)
-		if len(ylogin) < 2 {
-			return fmt.Errorf("cookie does not contain ylogin")
-		}
-		d.uid = ylogin[1]
-		d.vei, err = d.getVei()
+		d.vei, d.uid, err = d.getVeiAndUid()
 	}
 	return
 }
@@ -51,7 +53,7 @@ func (d *LanZou) Drop(ctx context.Context) error {
 
 // 获取的大小和时间不准确
 func (d *LanZou) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
-	if d.IsCookie() {
+	if d.IsCookie() || d.IsAccount() {
 		return d.GetAllFiles(dir.GetID())
 	} else {
 		return d.GetFileOrFolderByShareUrl(dir.GetID(), d.SharePassword)
@@ -119,7 +121,7 @@ func (d *LanZou) Link(ctx context.Context, file model.Obj, args model.LinkArgs) 
 }
 
 func (d *LanZou) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) (model.Obj, error) {
-	if d.IsCookie() {
+	if d.IsCookie() || d.IsAccount() {
 		data, err := d.doupload(func(req *resty.Request) {
 			req.SetContext(ctx)
 			req.SetFormData(map[string]string{
@@ -137,11 +139,11 @@ func (d *LanZou) MakeDir(ctx context.Context, parentDir model.Obj, dirName strin
 			FolID: utils.Json.Get(data, "text").ToString(),
 		}, nil
 	}
-	return nil, errs.NotImplement
+	return nil, errs.NotSupport
 }
 
 func (d *LanZou) Move(ctx context.Context, srcObj, dstDir model.Obj) (model.Obj, error) {
-	if d.IsCookie() {
+	if d.IsCookie() || d.IsAccount() {
 		if !srcObj.IsDir() {
 			_, err := d.doupload(func(req *resty.Request) {
 				req.SetContext(ctx)
@@ -157,11 +159,11 @@ func (d *LanZou) Move(ctx context.Context, srcObj, dstDir model.Obj) (model.Obj,
 			return srcObj, nil
 		}
 	}
-	return nil, errs.NotImplement
+	return nil, errs.NotSupport
 }
 
 func (d *LanZou) Rename(ctx context.Context, srcObj model.Obj, newName string) (model.Obj, error) {
-	if d.IsCookie() {
+	if d.IsCookie() || d.IsAccount() {
 		if !srcObj.IsDir() {
 			_, err := d.doupload(func(req *resty.Request) {
 				req.SetContext(ctx)
@@ -179,11 +181,11 @@ func (d *LanZou) Rename(ctx context.Context, srcObj model.Obj, newName string) (
 			return srcObj, nil
 		}
 	}
-	return nil, errs.NotImplement
+	return nil, errs.NotSupport
 }
 
 func (d *LanZou) Remove(ctx context.Context, obj model.Obj) error {
-	if d.IsCookie() {
+	if d.IsCookie() || d.IsAccount() {
 		_, err := d.doupload(func(req *resty.Request) {
 			req.SetContext(ctx)
 			if obj.IsDir() {
@@ -200,13 +202,13 @@ func (d *LanZou) Remove(ctx context.Context, obj model.Obj) error {
 		}, nil)
 		return err
 	}
-	return errs.NotImplement
+	return errs.NotSupport
 }
 
 func (d *LanZou) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) (model.Obj, error) {
-	if d.IsCookie() {
+	if d.IsCookie() || d.IsAccount() {
 		var resp RespText[[]FileOrFolder]
-		_, err := d._post(d.BaseUrl+"/fileup.php", func(req *resty.Request) {
+		_, err := d._post(d.BaseUrl+"/html5up.php", func(req *resty.Request) {
 			req.SetFormData(map[string]string{
 				"task":           "1",
 				"vie":            "2",
@@ -221,5 +223,5 @@ func (d *LanZou) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 		}
 		return &resp.Text[0], nil
 	}
-	return nil, errs.NotImplement
+	return nil, errs.NotSupport
 }

@@ -1,6 +1,8 @@
 package model
 
 import (
+	"github.com/alist-org/alist/v3/pkg/http_range"
+	"github.com/alist-org/alist/v3/pkg/utils"
 	"io"
 	"net/http"
 	"time"
@@ -19,14 +21,16 @@ type LinkArgs struct {
 }
 
 type Link struct {
-	URL        string         `json:"url"`
-	Header     http.Header    `json:"header"` // needed header (for url) or response header(for data or writer)
-	Data       io.ReadCloser  // return file reader directly
-	Status     int            // status maybe 200 or 206, etc
-	FilePath   *string        // local file, return the filepath
-	Expiration *time.Duration // url expiration time
-	//Handle     func(w http.ResponseWriter, r *http.Request) error `json:"-"` // custom handler
-	Writer WriterFunc `json:"-"` // custom writer
+	URL             string            `json:"url"`
+	Header          http.Header       `json:"header"` // needed header (for url) or response header(for data or writer)
+	RangeReadCloser RangeReadCloser   // recommended way
+	ReadSeekCloser  io.ReadSeekCloser // best for local,smb.. file system, which exposes ReadSeekCloser
+
+	Expiration *time.Duration // local cache expire Duration
+	IPCacheKey bool           // add ip to cache key
+	//for accelerating request, use multi-thread downloading
+	Concurrency int
+	PartSize    int
 }
 
 type OtherArgs struct {
@@ -40,5 +44,10 @@ type FsOtherArgs struct {
 	Method string      `json:"method" form:"method"`
 	Data   interface{} `json:"data" form:"data"`
 }
+type RangeReadCloser struct {
+	RangeReader RangeReaderFunc
+	Closers     *utils.Closers
+}
 
 type WriterFunc func(w io.Writer) error
+type RangeReaderFunc func(httpRange http_range.Range) (io.ReadCloser, error)

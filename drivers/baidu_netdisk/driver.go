@@ -1,7 +1,6 @@
 package baidu_netdisk
 
 import (
-	"bytes"
 	"context"
 	"crypto/md5"
 	"encoding/hex"
@@ -118,7 +117,6 @@ func (d *BaiduNetdisk) Put(ctx context.Context, dstDir model.Obj, stream model.F
 		_ = os.Remove(tempFile.Name())
 	}()
 	var Default int64 = 4 * 1024 * 1024
-	defaultByteData := make([]byte, Default)
 	count := int(math.Ceil(float64(stream.GetSize()) / float64(Default)))
 	var SliceSize int64 = 256 * 1024
 	// cal md5
@@ -130,20 +128,14 @@ func (d *BaiduNetdisk) Put(ctx context.Context, dstDir model.Obj, stream model.F
 	left := stream.GetSize()
 	for i := 0; i < count; i++ {
 		byteSize := Default
-		var byteData []byte
 		if left < Default {
 			byteSize = left
-			byteData = make([]byte, byteSize)
-		} else {
-			byteData = defaultByteData
 		}
 		left -= byteSize
-		_, err = io.ReadFull(tempFile, byteData)
+		_, err = io.Copy(io.MultiWriter(h1, h2), io.LimitReader(tempFile, byteSize))
 		if err != nil {
 			return err
 		}
-		h1.Write(byteData)
-		h2.Write(byteData)
 		block_list = append(block_list, fmt.Sprintf("\"%s\"", hex.EncodeToString(h2.Sum(nil))))
 		h2.Reset()
 	}
@@ -177,6 +169,7 @@ func (d *BaiduNetdisk) Put(ctx context.Context, dstDir model.Obj, stream model.F
 	params := map[string]string{
 		"method": "precreate",
 	}
+	log.Debugf("[baidu_netdisk] precreate data: %s", data)
 	var precreateResp PrecreateResp
 	_, err = d.post("/xpan/file", params, data, &precreateResp)
 	if err != nil {
@@ -199,24 +192,16 @@ func (d *BaiduNetdisk) Put(ctx context.Context, dstDir model.Obj, stream model.F
 			return ctx.Err()
 		}
 		byteSize := Default
-		var byteData []byte
 		if left < Default {
 			byteSize = left
-			byteData = make([]byte, byteSize)
-		} else {
-			byteData = defaultByteData
 		}
 		left -= byteSize
-		_, err = io.ReadFull(tempFile, byteData)
-		if err != nil {
-			return err
-		}
 		u := "https://d.pcs.baidu.com/rest/2.0/pcs/superfile2"
 		params["partseq"] = strconv.Itoa(partseq)
 		res, err := base.RestyClient.R().
 			SetContext(ctx).
 			SetQueryParams(params).
-			SetFileReader("file", stream.GetName(), bytes.NewReader(byteData)).
+			SetFileReader("file", stream.GetName(), io.LimitReader(tempFile, byteSize)).
 			Post(u)
 		if err != nil {
 			return err

@@ -21,6 +21,7 @@ type Obj interface {
 	GetName() string
 	ModTime() time.Time
 	IsDir() bool
+	//GetHash() (string, string)
 
 	// The internal information of the driver.
 	// If you want to use it, please understand what it means
@@ -48,6 +49,9 @@ type Thumb interface {
 
 type SetPath interface {
 	SetPath(path string)
+}
+type SetHash interface {
+	SetHash(hash string, hashType string)
 }
 
 func SortFiles(objs []Obj, orderBy, orderDirection string) {

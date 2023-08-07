@@ -47,6 +47,7 @@ func Init(e *gin.Engine) {
 	webauthn := api.Group("/authn", middlewares.Authn)
 
 	api.POST("/auth/login", handles.Login)
+	api.POST("/auth/login/hash", handles.LoginHash)
 	auth.GET("/me", handles.CurrentUser)
 	auth.POST("/me/update", handles.UpdateCurrent)
 	auth.POST("/auth/2fa/generate", handles.Generate2FA)
@@ -93,6 +94,7 @@ func admin(g *gin.RouterGroup) {
 	user.POST("/update", handles.UpdateUser)
 	user.POST("/cancel_2fa", handles.Cancel2FAById)
 	user.POST("/delete", handles.DeleteUser)
+	user.POST("/del_cache", handles.DelUserCache)
 
 	storage := g.Group("/storage")
 	storage.GET("/list", handles.ListStorages)

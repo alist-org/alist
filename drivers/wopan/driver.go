@@ -3,6 +3,7 @@ package template
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/Xhofe/wopan-sdk-go"
 	"github.com/alist-org/alist/v3/internal/driver"
@@ -15,7 +16,8 @@ import (
 type Wopan struct {
 	model.Storage
 	Addition
-	client *wopan.WoClient
+	client          *wopan.WoClient
+	defaultFamilyID string
 }
 
 func (d *Wopan) Config() driver.Config {
@@ -34,6 +36,11 @@ func (d *Wopan) Init(ctx context.Context) error {
 		d.RefreshToken = refreshToken
 		op.MustSaveDriverStorage(d)
 	})
+	fml, err := d.client.FamilyUserCurrentEncode()
+	if err != nil {
+		return err
+	}
+	d.defaultFamilyID = strconv.Itoa(fml.DefaultHomeId)
 	return d.client.InitData()
 }
 
@@ -81,7 +88,11 @@ func (d *Wopan) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 }
 
 func (d *Wopan) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
-	_, err := d.client.CreateDirectory(d.getSpaceType(), parentDir.GetID(), dirName, d.FamilyID, func(req *resty.Request) {
+	familyID := d.FamilyID
+	if familyID == "" {
+		familyID = d.defaultFamilyID
+	}
+	_, err := d.client.CreateDirectory(d.getSpaceType(), parentDir.GetID(), dirName, familyID, func(req *resty.Request) {
 		req.SetContext(ctx)
 	})
 	return err

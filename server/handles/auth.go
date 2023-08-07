@@ -26,7 +26,28 @@ type LoginReq struct {
 	OtpCode  string `json:"otp_code"`
 }
 
+// Login Deprecated
 func Login(c *gin.Context) {
+	var req LoginReq
+	if err := c.ShouldBind(&req); err != nil {
+		common.ErrorResp(c, err, 400)
+		return
+	}
+	req.Password = model.HashPwd(req.Password)
+	loginHash(c, &req)
+}
+
+// LoginHash login with password hashed by sha256
+func LoginHash(c *gin.Context) {
+	var req LoginReq
+	if err := c.ShouldBind(&req); err != nil {
+		common.ErrorResp(c, err, 400)
+		return
+	}
+	loginHash(c, &req)
+}
+
+func loginHash(c *gin.Context, req *LoginReq) {
 	// check count of login
 	ip := c.ClientIP()
 	count, ok := loginCache.Get(ip)
@@ -36,19 +57,14 @@ func Login(c *gin.Context) {
 		return
 	}
 	// check username
-	var req LoginReq
-	if err := c.ShouldBind(&req); err != nil {
-		common.ErrorResp(c, err, 400)
-		return
-	}
 	user, err := op.GetUserByName(req.Username)
 	if err != nil {
 		common.ErrorResp(c, err, 400)
 		loginCache.Set(ip, count+1)
 		return
 	}
-	// validate password
-	if err := user.ValidatePassword(req.Password); err != nil {
+	// validate password hash
+	if err := user.ValidatePwdHash(req.Password); err != nil {
 		common.ErrorResp(c, err, 400)
 		loginCache.Set(ip, count+1)
 		return

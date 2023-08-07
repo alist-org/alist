@@ -4,9 +4,11 @@ import (
 	"context"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
+	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/go-resty/resty/v2"
@@ -135,13 +137,14 @@ func (y *Cloud189PC) Link(ctx context.Context, file model.Obj, args model.LinkAr
 	return like, nil
 }
 
-func (y *Cloud189PC) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
+func (y *Cloud189PC) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) (model.Obj, error) {
 	fullUrl := API_URL
 	if y.isFamily() {
 		fullUrl += "/family/file"
 	}
 	fullUrl += "/createFolder.action"
 
+	var newFolder Cloud189Folder
 	_, err := y.post(fullUrl, func(req *resty.Request) {
 		req.SetContext(ctx)
 		req.SetQueryParams(map[string]string{
@@ -158,11 +161,15 @@ func (y *Cloud189PC) MakeDir(ctx context.Context, parentDir model.Obj, dirName s
 				"parentFolderId": parentDir.GetID(),
 			})
 		}
-	}, nil)
-	return err
+	}, &newFolder)
+	if err != nil {
+		return nil, err
+	}
+	return &newFolder, nil
 }
 
-func (y *Cloud189PC) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
+func (y *Cloud189PC) Move(ctx context.Context, srcObj, dstDir model.Obj) (model.Obj, error) {
+	var resp CreateBatchTaskResp
 	_, err := y.post(API_URL+"/batch/createBatchTask.action", func(req *resty.Request) {
 		req.SetContext(ctx)
 		req.SetFormData(map[string]string{
@@ -182,11 +189,17 @@ func (y *Cloud189PC) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 				"familyId": y.FamilyID,
 			})
 		}
-	}, nil)
-	return err
+	}, &resp)
+	if err != nil {
+		return nil, err
+	}
+	if err = y.WaitBatchTask("MOVE", resp.TaskID, time.Millisecond*400); err != nil {
+		return nil, err
+	}
+	return srcObj, nil
 }
 
-func (y *Cloud189PC) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
+func (y *Cloud189PC) Rename(ctx context.Context, srcObj model.Obj, newName string) (model.Obj, error) {
 	queryParam := make(map[string]string)
 	fullUrl := API_URL
 	method := http.MethodPost
@@ -195,23 +208,34 @@ func (y *Cloud189PC) Rename(ctx context.Context, srcObj model.Obj, newName strin
 		method = http.MethodGet
 		queryParam["familyId"] = y.FamilyID
 	}
-	if srcObj.IsDir() {
-		fullUrl += "/renameFolder.action"
-		queryParam["folderId"] = srcObj.GetID()
-		queryParam["destFolderName"] = newName
-	} else {
+
+	var newObj model.Obj
+	switch f := srcObj.(type) {
+	case *Cloud189File:
 		fullUrl += "/renameFile.action"
 		queryParam["fileId"] = srcObj.GetID()
 		queryParam["destFileName"] = newName
+		newObj = &Cloud189File{Icon: f.Icon} // 复用预览
+	case *Cloud189Folder:
+		fullUrl += "/renameFolder.action"
+		queryParam["folderId"] = srcObj.GetID()
+		queryParam["destFolderName"] = newName
+		newObj = &Cloud189Folder{}
+	default:
+		return nil, errs.NotSupport
 	}
+
 	_, err := y.request(fullUrl, method, func(req *resty.Request) {
-		req.SetContext(ctx)
-		req.SetQueryParams(queryParam)
-	}, nil, nil)
-	return err
+		req.SetContext(ctx).SetQueryParams(queryParam)
+	}, nil, newObj)
+	if err != nil {
+		return nil, err
+	}
+	return newObj, nil
 }
 
 func (y *Cloud189PC) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
+	var resp CreateBatchTaskResp
 	_, err := y.post(API_URL+"/batch/createBatchTask.action", func(req *resty.Request) {
 		req.SetContext(ctx)
 		req.SetFormData(map[string]string{
@@ -232,11 +256,15 @@ func (y *Cloud189PC) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 				"familyId": y.FamilyID,
 			})
 		}
-	}, nil)
-	return err
+	}, &resp)
+	if err != nil {
+		return err
+	}
+	return y.WaitBatchTask("COPY", resp.TaskID, time.Second)
 }
 
 func (y *Cloud189PC) Remove(ctx context.Context, obj model.Obj) error {
+	var resp CreateBatchTaskResp
 	_, err := y.post(API_URL+"/batch/createBatchTask.action", func(req *resty.Request) {
 		req.SetContext(ctx)
 		req.SetFormData(map[string]string{
@@ -256,19 +284,26 @@ func (y *Cloud189PC) Remove(ctx context.Context, obj model.Obj) error {
 				"familyId": y.FamilyID,
 			})
 		}
-	}, nil)
-	return err
+	}, &resp)
+	if err != nil {
+		return err
+	}
+	// 批量任务数量限制，过快会导致无法删除
+	return y.WaitBatchTask("DELETE", resp.TaskID, time.Millisecond*200)
 }
 
-func (y *Cloud189PC) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
+func (y *Cloud189PC) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) (model.Obj, error) {
 	switch y.UploadMethod {
-	case "stream":
-		return y.CommonUpload(ctx, dstDir, stream, up)
 	case "old":
 		return y.OldUpload(ctx, dstDir, stream, up)
 	case "rapid":
 		return y.FastUpload(ctx, dstDir, stream, up)
+	case "stream":
+		if stream.GetSize() == 0 {
+			return y.FastUpload(ctx, dstDir, stream, up)
+		}
+		fallthrough
 	default:
-		return y.CommonUpload(ctx, dstDir, stream, up)
+		return y.StreamUpload(ctx, dstDir, stream, up)
 	}
 }

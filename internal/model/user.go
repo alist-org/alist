@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/pkg/authninterface"
 	"github.com/alist-org/alist/v3/pkg/utils"
@@ -19,10 +18,13 @@ const (
 	ADMIN
 )
 
+const HashSalt = "https://github.com/alist-org/alist"
+
 type User struct {
 	ID       uint   `json:"id" gorm:"primaryKey"`                      // unique key
 	Username string `json:"username" gorm:"unique" binding:"required"` // username
-	Password string `json:"password"`                                  // password
+	PwdHash  string `json:"-"`                                         // password hash
+	Password string `json:"-"`                                         // password
 	BasePath string `json:"base_path"`                                 // base path
 	Role     int    `json:"role"`                                      // user's role
 	Disabled bool   `json:"disabled"`
@@ -53,10 +55,14 @@ func (u User) IsAdmin() bool {
 }
 
 func (u User) ValidatePassword(password string) error {
-	if password == "" {
+	return u.ValidatePwdHash(HashPwd(password))
+}
+
+func (u User) ValidatePwdHash(pwdHash string) error {
+	if pwdHash == "" {
 		return errors.WithStack(errs.EmptyPassword)
 	}
-	if u.Password != password {
+	if u.PwdHash != pwdHash {
 		return errors.WithStack(errs.WrongPassword)
 	}
 	return nil
@@ -165,4 +171,8 @@ func (u *User) RemoveAuthn(id string, dbi authninterface.AuthnInterface) {
 
 	res, _ := json.Marshal(exists)
 	dbi.UpdateAuthn(u.ID, string(res))
+}
+
+func HashPwd(password string) string {
+	return utils.GetSHA256Encode([]byte(fmt.Sprintf("%s-%s", password, HashSalt)))
 }

@@ -268,7 +268,7 @@ func (y *Cloud189PC) login() (err error) {
 			"validateCode": y.VCode,
 			"captchaToken": param.CaptchaToken,
 			"returnUrl":    RETURN_URL,
-			"mailSuffix":   "@189.cn",
+			// "mailSuffix":   "@189.cn",
 			"dynamicCheck": "FALSE",
 			"clientType":   CLIENT_TYPE,
 			"cb_SaveName":  "1",
@@ -434,7 +434,8 @@ func (y *Cloud189PC) refreshSession() (err error) {
 }
 
 // 普通上传
-func (y *Cloud189PC) CommonUpload(ctx context.Context, dstDir model.Obj, file model.FileStreamer, up driver.UpdateProgress) (err error) {
+// 无法上传大小为0的文件
+func (y *Cloud189PC) StreamUpload(ctx context.Context, dstDir model.Obj, file model.FileStreamer, up driver.UpdateProgress) (model.Obj, error) {
 	var DEFAULT = partSize(file.GetSize())
 	var count = int(math.Ceil(float64(file.GetSize()) / float64(DEFAULT)))
 
@@ -457,11 +458,11 @@ func (y *Cloud189PC) CommonUpload(ctx context.Context, dstDir model.Obj, file mo
 
 	// 初始化上传
 	var initMultiUpload InitMultiUploadResp
-	_, err = y.request(fullUrl+"/initMultiUpload", http.MethodGet, func(req *resty.Request) {
+	_, err := y.request(fullUrl+"/initMultiUpload", http.MethodGet, func(req *resty.Request) {
 		req.SetContext(ctx)
 	}, params, &initMultiUpload)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	fileMd5 := md5.New()
@@ -470,7 +471,7 @@ func (y *Cloud189PC) CommonUpload(ctx context.Context, dstDir model.Obj, file mo
 	byteData := bytes.NewBuffer(make([]byte, DEFAULT))
 	for i := 1; i <= count; i++ {
 		if utils.IsCanceled(ctx) {
-			return ctx.Err()
+			return nil, ctx.Err()
 		}
 
 		// 读取块
@@ -478,7 +479,7 @@ func (y *Cloud189PC) CommonUpload(ctx context.Context, dstDir model.Obj, file mo
 		silceMd5.Reset()
 		_, err := io.CopyN(io.MultiWriter(fileMd5, silceMd5, byteData), file, DEFAULT)
 		if err != io.EOF && err != io.ErrUnexpectedEOF && err != nil {
-			return err
+			return nil, err
 		}
 
 		// 计算块md5并进行hex和base64编码
@@ -496,7 +497,7 @@ func (y *Cloud189PC) CommonUpload(ctx context.Context, dstDir model.Obj, file mo
 				"uploadFileId": initMultiUpload.Data.UploadFileID,
 			}, &uploadUrl)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		// 开始上传
@@ -511,7 +512,7 @@ func (y *Cloud189PC) CommonUpload(ctx context.Context, dstDir model.Obj, file mo
 			retry.Delay(time.Second),
 			retry.MaxDelay(5*time.Second))
 		if err != nil {
-			return err
+			return nil, err
 		}
 		up(int(i * 100 / count))
 	}
@@ -523,6 +524,7 @@ func (y *Cloud189PC) CommonUpload(ctx context.Context, dstDir model.Obj, file mo
 	}
 
 	// 提交上传
+	var resp CommitMultiUploadFileResp
 	_, err = y.request(fullUrl+"/commitMultiUploadFile", http.MethodGet,
 		func(req *resty.Request) {
 			req.SetContext(ctx)
@@ -533,16 +535,19 @@ func (y *Cloud189PC) CommonUpload(ctx context.Context, dstDir model.Obj, file mo
 			"lazyCheck":    "1",
 			"isLog":        "0",
 			"opertype":     "3",
-		}, nil)
-	return err
+		}, &resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp.toFile(), nil
 }
 
 // 快传
-func (y *Cloud189PC) FastUpload(ctx context.Context, dstDir model.Obj, file model.FileStreamer, up driver.UpdateProgress) (err error) {
+func (y *Cloud189PC) FastUpload(ctx context.Context, dstDir model.Obj, file model.FileStreamer, up driver.UpdateProgress) (model.Obj, error) {
 	// 需要获取完整文件md5,必须支持 io.Seek
 	tempFile, err := utils.CreateTempFile(file.GetReadCloser())
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer func() {
 		_ = tempFile.Close()
@@ -559,19 +564,19 @@ func (y *Cloud189PC) FastUpload(ctx context.Context, dstDir model.Obj, file mode
 	silceMd5Base64s := make([]string, 0, count)
 	for i := 1; i <= count; i++ {
 		if utils.IsCanceled(ctx) {
-			return ctx.Err()
+			return nil, ctx.Err()
 		}
 
 		silceMd5.Reset()
 		if _, err := io.CopyN(io.MultiWriter(fileMd5, silceMd5), tempFile, DEFAULT); err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
-			return err
+			return nil, err
 		}
 		md5Byte := silceMd5.Sum(nil)
 		silceMd5Hexs = append(silceMd5Hexs, strings.ToUpper(hex.EncodeToString(md5Byte)))
 		silceMd5Base64s = append(silceMd5Base64s, fmt.Sprint(i, "-", base64.StdEncoding.EncodeToString(md5Byte)))
 	}
 	if _, err = tempFile.Seek(0, io.SeekStart); err != nil {
-		return err
+		return nil, err
 	}
 
 	fileMd5Hex := strings.ToUpper(hex.EncodeToString(fileMd5.Sum(nil)))
@@ -604,7 +609,7 @@ func (y *Cloud189PC) FastUpload(ctx context.Context, dstDir model.Obj, file mode
 		req.SetContext(ctx)
 	}, params, &uploadInfo)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// 网盘中不存在该文件，开始上传
@@ -618,18 +623,18 @@ func (y *Cloud189PC) FastUpload(ctx context.Context, dstDir model.Obj, file mode
 				"partInfo":     strings.Join(silceMd5Base64s, ","),
 			}, &uploadUrls)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		buf := make([]byte, DEFAULT)
 		for i := 1; i <= count; i++ {
 			if utils.IsCanceled(ctx) {
-				return ctx.Err()
+				return nil, ctx.Err()
 			}
 
 			n, err := io.ReadFull(tempFile, buf)
 			if err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
-				return err
+				return nil, err
 			}
 			uploadData := uploadUrls.UploadUrls[fmt.Sprint("partNumber_", i)]
 			err = retry.Do(func() error {
@@ -641,7 +646,7 @@ func (y *Cloud189PC) FastUpload(ctx context.Context, dstDir model.Obj, file mode
 				retry.Delay(time.Second),
 				retry.MaxDelay(5*time.Second))
 			if err != nil {
-				return err
+				return nil, err
 			}
 
 			up(int(i * 100 / count))
@@ -649,6 +654,7 @@ func (y *Cloud189PC) FastUpload(ctx context.Context, dstDir model.Obj, file mode
 	}
 
 	// 提交
+	var resp CommitMultiUploadFileResp
 	_, err = y.request(fullUrl+"/commitMultiUploadFile", http.MethodGet,
 		func(req *resty.Request) {
 			req.SetContext(ctx)
@@ -656,15 +662,19 @@ func (y *Cloud189PC) FastUpload(ctx context.Context, dstDir model.Obj, file mode
 			"uploadFileId": uploadInfo.Data.UploadFileID,
 			"isLog":        "0",
 			"opertype":     "3",
-		}, nil)
-	return err
+		}, &resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp.toFile(), nil
 }
 
-func (y *Cloud189PC) OldUpload(ctx context.Context, dstDir model.Obj, file model.FileStreamer, up driver.UpdateProgress) (err error) {
+// 旧版本上传，家庭云不支持覆盖
+func (y *Cloud189PC) OldUpload(ctx context.Context, dstDir model.Obj, file model.FileStreamer, up driver.UpdateProgress) (model.Obj, error) {
 	// 需要获取完整文件md5,必须支持 io.Seek
 	tempFile, err := utils.CreateTempFile(file.GetReadCloser())
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer func() {
 		_ = tempFile.Close()
@@ -674,10 +684,10 @@ func (y *Cloud189PC) OldUpload(ctx context.Context, dstDir model.Obj, file model
 	// 计算md5
 	fileMd5 := md5.New()
 	if _, err := io.Copy(fileMd5, tempFile); err != nil {
-		return err
+		return nil, err
 	}
 	if _, err = tempFile.Seek(0, io.SeekStart); err != nil {
-		return err
+		return nil, err
 	}
 	fileMd5Hex := strings.ToUpper(hex.EncodeToString(fileMd5.Sum(nil)))
 
@@ -718,14 +728,14 @@ func (y *Cloud189PC) OldUpload(ctx context.Context, dstDir model.Obj, file model
 	}, &uploadInfo)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// 网盘中不存在该文件，开始上传
 	status := GetUploadFileStatusResp{CreateUploadFileResp: uploadInfo}
 	for status.Size < file.GetSize() && status.FileDataExists != 1 {
 		if utils.IsCanceled(ctx) {
-			return ctx.Err()
+			return nil, ctx.Err()
 		}
 
 		header := map[string]string{
@@ -742,7 +752,7 @@ func (y *Cloud189PC) OldUpload(ctx context.Context, dstDir model.Obj, file model
 
 		_, err := y.put(ctx, status.FileUploadUrl, header, true, io.NopCloser(tempFile))
 		if err, ok := err.(*RespErr); ok && err.Code != "InputStreamReadError" {
-			return err
+			return nil, err
 		}
 
 		// 获取断点状态
@@ -760,17 +770,17 @@ func (y *Cloud189PC) OldUpload(ctx context.Context, dstDir model.Obj, file model
 			}
 		}, &status)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		if _, err := tempFile.Seek(status.GetSize(), io.SeekStart); err != nil {
-			return err
+			return nil, err
 		}
 		up(int(status.Size / file.GetSize()))
 	}
 
 	// 提交
-	var resp CommitUploadFileResp
+	var resp OldCommitUploadFileResp
 	_, err = y.post(status.FileCommitUrl, func(req *resty.Request) {
 		req.SetContext(ctx)
 		if y.isFamily() {
@@ -788,7 +798,10 @@ func (y *Cloud189PC) OldUpload(ctx context.Context, dstDir model.Obj, file model
 			})
 		}
 	}, &resp)
-	return err
+	if err != nil {
+		return nil, err
+	}
+	return resp.toFile(), nil
 }
 
 func (y *Cloud189PC) isFamily() bool {
@@ -828,4 +841,34 @@ func (y *Cloud189PC) getFamilyID() (string, error) {
 		}
 	}
 	return fmt.Sprint(infos[0].FamilyID), nil
+}
+
+func (y *Cloud189PC) CheckBatchTask(aType string, taskID string) (*BatchTaskStateResp, error) {
+	var resp BatchTaskStateResp
+	_, err := y.post(API_URL+"/batch/checkBatchTask.action", func(req *resty.Request) {
+		req.SetFormData(map[string]string{
+			"type":   aType,
+			"taskId": taskID,
+		})
+	}, &resp)
+	if err != nil {
+		return nil, err
+	}
+	return &resp, nil
+}
+
+func (y *Cloud189PC) WaitBatchTask(aType string, taskID string, t time.Duration) error {
+	for {
+		state, err := y.CheckBatchTask(aType, taskID)
+		if err != nil {
+			return err
+		}
+		switch state.TaskStatus {
+		case 2:
+			return errors.New("there is a conflict with the target object")
+		case 4:
+			return nil
+		}
+		time.Sleep(t)
+	}
 }

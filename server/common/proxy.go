@@ -1,21 +1,18 @@
 package common
 
 import (
+	"context"
 	"fmt"
+	"github.com/alist-org/alist/v3/drivers/base"
+	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/net"
+	"github.com/alist-org/alist/v3/pkg/http_range"
+	"github.com/alist-org/alist/v3/pkg/utils"
+	"github.com/pkg/errors"
 	"io"
 	"net/http"
 	"net/url"
-	"os"
-	"strconv"
-	"strings"
 	"sync"
-
-	"github.com/alist-org/alist/v3/drivers/base"
-	"github.com/alist-org/alist/v3/internal/conf"
-	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/pkg/utils"
-	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
 )
 
 func HttpClient() *http.Client {
@@ -36,108 +33,57 @@ var once sync.Once
 var httpClient *http.Client
 
 func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.Obj) error {
-	// read data with native
-	var err error
-	if link.Data != nil {
-		defer func() {
-			_ = link.Data.Close()
-		}()
-		filename := file.GetName()
-		w.Header().Set("Content-Type", "application/octet-stream")
-		w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"; filename*=UTF-8''%s`, filename, url.PathEscape(filename)))
-		w.Header().Set("Content-Length", strconv.FormatInt(file.GetSize(), 10))
-		if link.Header != nil {
-			// TODO clean header with blacklist or whitelist
-			link.Header.Del("set-cookie")
-			for h, val := range link.Header {
-				w.Header()[h] = val
-			}
-		}
-		if link.Status == 0 {
-			w.WriteHeader(http.StatusOK)
-		} else {
-			w.WriteHeader(link.Status)
-		}
-		if r.Method == http.MethodHead {
-			return nil
-		}
-		_, err = io.Copy(w, link.Data)
-		if err != nil {
-			return err
-		}
+	if link.ReadSeekCloser != nil {
+		attachFileName(w, file)
+		http.ServeContent(w, r, file.GetName(), file.ModTime(), link.ReadSeekCloser)
+		defer link.ReadSeekCloser.Close()
 		return nil
-	}
-	// local file
-	if link.FilePath != nil && *link.FilePath != "" {
-		f, err := os.Open(*link.FilePath)
-		if err != nil {
-			return err
-		}
+	} else if link.RangeReadCloser.RangeReader != nil {
+		attachFileName(w, file)
+		net.ServeHTTP(w, r, file.GetName(), file.ModTime(), file.GetSize(), link.RangeReadCloser.RangeReader)
 		defer func() {
-			_ = f.Close()
-		}()
-		fileStat, err := os.Stat(*link.FilePath)
-		if err != nil {
-			return err
-		}
-		filename := file.GetName()
-		w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"; filename*=UTF-8''%s`, filename, url.PathEscape(filename)))
-		http.ServeContent(w, r, file.GetName(), fileStat.ModTime(), f)
-		return nil
-	} else if link.Writer != nil {
-		if link.Header != nil {
-			for h, v := range link.Header {
-				w.Header()[h] = v
+			if link.RangeReadCloser.Closers != nil {
+				link.RangeReadCloser.Closers.Close()
 			}
+		}()
+		return nil
+	} else if link.Concurrency != 0 || link.PartSize != 0 {
+		attachFileName(w, file)
+		size := file.GetSize()
+		//var finalClosers model.Closers
+		finalClosers := utils.NewClosers()
+		header := net.ProcessHeader(&r.Header, &link.Header)
+		rangeReader := func(httpRange http_range.Range) (io.ReadCloser, error) {
+			down := net.NewDownloader(func(d *net.Downloader) {
+				d.Concurrency = link.Concurrency
+				d.PartSize = link.PartSize
+			})
+			req := &net.HttpRequestParams{
+				URL:       link.URL,
+				Range:     httpRange,
+				Size:      size,
+				HeaderRef: header,
+			}
+			rc, err := down.Download(context.Background(), req)
+			finalClosers.Add(*rc)
+			return *rc, err
 		}
-		if cd := w.Header().Get("Content-Disposition"); cd == "" {
-			w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"; filename*=UTF-8''%s`, file.GetName(), url.PathEscape(file.GetName())))
-		}
-		if link.Status == 0 {
-			w.WriteHeader(http.StatusOK)
-		} else {
-			w.WriteHeader(link.Status)
-		}
-		if r.Method == http.MethodHead {
-			return nil
-		}
-		return link.Writer(w)
+		net.ServeHTTP(w, r, file.GetName(), file.ModTime(), file.GetSize(), rangeReader)
+		defer finalClosers.Close()
+		return nil
 	} else {
-		req, err := http.NewRequest(r.Method, link.URL, nil)
+		//transparent proxy
+		header := net.ProcessHeader(&r.Header, &link.Header)
+		res, err := net.RequestHttp(r.Method, header, link.URL)
 		if err != nil {
 			return err
 		}
-		// client header
-		for h, val := range r.Header {
-			if utils.SliceContains(conf.SlicesMap[conf.ProxyIgnoreHeaders], strings.ToLower(h)) {
-				continue
-			}
-			req.Header[h] = val
-		}
-		// needed header
-		for h, val := range link.Header {
-			req.Header[h] = val
-		}
-		res, err := HttpClient().Do(req)
-		if err != nil {
-			return err
-		}
-		defer func() {
-			_ = res.Body.Close()
-		}()
-		log.Debugf("proxy status: %d", res.StatusCode)
-		// TODO clean header with blacklist or whitelist
-		res.Header.Del("set-cookie")
+		defer res.Body.Close()
+
 		for h, v := range res.Header {
 			w.Header()[h] = v
 		}
 		w.WriteHeader(res.StatusCode)
-		if res.StatusCode >= 400 {
-			all, _ := io.ReadAll(res.Body)
-			msg := string(all)
-			log.Debugln(msg)
-			return errors.New(msg)
-		}
 		if r.Method == http.MethodHead {
 			return nil
 		}
@@ -147,4 +93,8 @@ func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.
 		}
 		return nil
 	}
+}
+func attachFileName(w http.ResponseWriter, file model.Obj) {
+	fileName := file.GetName()
+	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"; filename*=UTF-8''%s`, fileName, url.PathEscape(fileName)))
 }

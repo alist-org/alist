@@ -68,8 +68,8 @@ jobs:
 
       - name: Add tag
         run: |
-          git config --local user.email "i@nn.ci"
-          git config --local user.name "Andy Hsu"
+          git config --local user.email "bot@nn.ci"
+          git config --local user.name "IlaBot"
           version=$(wget -qO- -t1 -T2 "https://api.github.com/repos/alist-org/alist/releases/latest" | grep "tag_name" | head -n 1 | awk -F ":" '{print $2}' | sed 's/\"//g;s/,//g;s/ //g')
           git tag -a $version -m "release $version"
 

@@ -5,7 +5,6 @@ import (
 	"os"
 	"path"
 
-	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
@@ -57,9 +56,8 @@ func (d *SFTP) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*
 		return nil, err
 	}
 	link := &model.Link{
-		Data: remoteFile,
+		ReadSeekCloser: remoteFile,
 	}
-	base.HandleRange(link, remoteFile, args.Header, file.GetSize())
 	return link, nil
 }
 

@@ -3,12 +3,13 @@ package qbittorrent
 import (
 	"bytes"
 	"errors"
-	"github.com/alist-org/alist/v3/pkg/utils"
 	"io"
 	"mime/multipart"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+
+	"github.com/alist-org/alist/v3/pkg/utils"
 )
 
 type Client interface {
@@ -213,7 +214,7 @@ type TorrentInfo struct {
 	Hash              string        `json:"hash"`               //
 	LastActivity      int           `json:"last_activity"`      // 上次活跃的时间（Unix Epoch）
 	MagnetURI         string        `json:"magnet_uri"`         // 与此 torrent 对应的 Magnet URI
-	MaxRatio          int           `json:"max_ratio"`          // 种子/上传停止种子前的最大共享比率
+	MaxRatio          float64       `json:"max_ratio"`          // 种子/上传停止种子前的最大共享比率
 	MaxSeedingTime    int           `json:"max_seeding_time"`   // 停止种子种子前的最长种子时间（秒）
 	Name              string        `json:"name"`               //
 	NumComplete       int           `json:"num_complete"`       //

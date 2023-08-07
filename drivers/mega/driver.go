@@ -4,7 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/alist-org/alist/v3/pkg/http_range"
+	"github.com/rclone/rclone/lib/readers"
 	"io"
+	"time"
 
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
@@ -64,51 +67,41 @@ func (d *Mega) GetRoot(ctx context.Context) (model.Obj, error) {
 
 func (d *Mega) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	if node, ok := file.(*MegaNode); ok {
-		//link, err := d.c.Link(node.Node, true)
+
+		//down, err := d.c.NewDownload(node.Node)
 		//if err != nil {
-		//	return nil, err
+		//	return nil, fmt.Errorf("open download file failed: %w", err)
 		//}
-		//return &model.Link{URL: link}, nil
-		down, err := d.c.NewDownload(node.Node)
-		if err != nil {
-			return nil, err
-		}
-		//u := down.GetResourceUrl()
-		//u = strings.Replace(u, "http", "https", 1)
-		//return &model.Link{URL: u}, nil
-		r, w := io.Pipe()
-		go func() {
-			defer func() {
-				_ = recover()
-			}()
-			log.Debugf("chunk size: %d", down.Chunks())
-			var (
-				chunk []byte
-				err   error
-			)
-			for id := 0; id < down.Chunks(); id++ {
-				chunk, err = down.DownloadChunk(id)
-				if err != nil {
-					log.Errorf("mega down: %+v", err)
-					break
-				}
-				log.Debugf("id: %d,len: %d", id, len(chunk))
-				//_, _, err = down.ChunkLocation(id)
-				//if err != nil {
-				//	log.Errorf("mega down: %+v", err)
-				//	return
-				//}
-				//_, err = c.Write(chunk)
-				if _, err = w.Write(chunk); err != nil {
-					break
-				}
+
+		size := file.GetSize()
+		var finalClosers utils.Closers
+		resultRangeReader := func(httpRange http_range.Range) (io.ReadCloser, error) {
+			length := httpRange.Length
+			if httpRange.Length >= 0 && httpRange.Start+httpRange.Length >= size {
+				length = -1
 			}
-			err = w.CloseWithError(err)
+			var down *mega.Download
+			err := utils.Retry(3, time.Second, func() (err error) {
+				down, err = d.c.NewDownload(node.Node)
+				return err
+			})
 			if err != nil {
-				log.Errorf("mega down: %+v", err)
+				return nil, fmt.Errorf("open download file failed: %w", err)
 			}
-		}()
-		return &model.Link{Data: r}, nil
+			oo := &openObject{
+				ctx:  ctx,
+				d:    down,
+				skip: httpRange.Start,
+			}
+			finalClosers.Add(oo)
+
+			return readers.NewLimitedReadCloser(oo, length), nil
+		}
+		resultRangeReadCloser := &model.RangeReadCloser{RangeReader: resultRangeReader, Closers: &finalClosers}
+		resultLink := &model.Link{
+			RangeReadCloser: *resultRangeReadCloser,
+		}
+		return resultLink, nil
 	}
 	return nil, fmt.Errorf("unable to convert dir to mega node")
 }

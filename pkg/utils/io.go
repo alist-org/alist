@@ -3,7 +3,10 @@ package utils
 import (
 	"bytes"
 	"context"
+	"fmt"
+	log "github.com/sirupsen/logrus"
 	"io"
+	"time"
 )
 
 // here is some syntaxic sugar inspired by the Tomas Senart's video,
@@ -134,4 +137,51 @@ func (mr *MultiReadable) Close() error {
 		return closer.Close()
 	}
 	return nil
+}
+
+type nopCloser struct {
+	io.ReadSeeker
+}
+
+func (nopCloser) Close() error { return nil }
+
+func ReadSeekerNopCloser(r io.ReadSeeker) io.ReadSeekCloser {
+	return nopCloser{r}
+}
+
+func Retry(attempts int, sleep time.Duration, f func() error) (err error) {
+	for i := 0; i < attempts; i++ {
+		fmt.Println("This is attempt number", i)
+		if i > 0 {
+			log.Println("retrying after error:", err)
+			time.Sleep(sleep)
+			sleep *= 2
+		}
+		err = f()
+		if err == nil {
+			return nil
+		}
+	}
+	return fmt.Errorf("after %d attempts, last error: %s", attempts, err)
+}
+
+type Closers struct {
+	closers []*io.Closer
+}
+
+func (c *Closers) Close() (err error) {
+	for _, closer := range c.closers {
+		if closer != nil {
+			_ = (*closer).Close()
+		}
+	}
+	return nil
+}
+func (c *Closers) Add(closer io.Closer) {
+	if closer != nil {
+		c.closers = append(c.closers, &closer)
+	}
+}
+func NewClosers() *Closers {
+	return &Closers{[]*io.Closer{}}
 }
