@@ -1,8 +1,15 @@
 package model
 
 import (
+	"encoding/base64"
+	"encoding/binary"
+	"encoding/json"
+	"fmt"
+
 	"github.com/alist-org/alist/v3/internal/errs"
+	"github.com/alist-org/alist/v3/pkg/authninterface"
 	"github.com/alist-org/alist/v3/pkg/utils"
+	"github.com/go-webauthn/webauthn/webauthn"
 	"github.com/pkg/errors"
 )
 
@@ -34,6 +41,7 @@ type User struct {
 	Permission int32  `json:"permission"`
 	OtpSecret  string `json:"-"`
 	SsoID      string `json:"sso_id"` // unique by sso platform
+	Authn      string `gorm:"size:4294967295" json:"-"`
 }
 
 func (u User) IsGuest() bool {
@@ -100,4 +108,61 @@ func (u User) CanAddQbittorrentTasks() bool {
 
 func (u User) JoinPath(reqPath string) (string, error) {
 	return utils.JoinBasePath(u.BasePath, reqPath)
+}
+
+func (u User) WebAuthnID() []byte {
+	bs := make([]byte, 8)
+	binary.LittleEndian.PutUint64(bs, uint64(u.ID))
+	return bs
+}
+
+func (u User) WebAuthnName() string {
+	return u.Username
+}
+
+func (u User) WebAuthnDisplayName() string {
+	return u.Username
+}
+
+func (u User) WebAuthnCredentials() []webauthn.Credential {
+	var res []webauthn.Credential
+	err := json.Unmarshal([]byte(u.Authn), &res)
+	if err != nil {
+		fmt.Println(err)
+	}
+	return res
+}
+
+func (user User) WebAuthnIcon() string {
+	return "https://alist.nn.ci/logo.svg"
+}
+
+func (u *User) RegisterAuthn(credential *webauthn.Credential, dbi authninterface.AuthnInterface) error {
+	if u == nil {
+		return errors.New("user is nil")
+	}
+	exists := u.WebAuthnCredentials()
+	if credential != nil {
+		exists = append(exists, *credential)
+	}
+	res, err := json.Marshal(exists)
+	if err != nil {
+		return err
+	}
+	return dbi.UpdateAuthn(u.ID, string(res))
+}
+
+func (u *User) RemoveAuthn(id string, dbi authninterface.AuthnInterface) {
+	exists := u.WebAuthnCredentials()
+	for i := 0; i < len(exists); i++ {
+		idEncoded := base64.StdEncoding.EncodeToString(exists[i].ID)
+		if idEncoded == id {
+			exists[len(exists)-1], exists[i] = exists[i], exists[len(exists)-1]
+			exists = exists[:len(exists)-1]
+			break
+		}
+	}
+
+	res, _ := json.Marshal(exists)
+	dbi.UpdateAuthn(u.ID, string(res))
 }

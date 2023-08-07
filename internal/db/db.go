@@ -29,5 +29,9 @@ func AutoMigrate(dst ...interface{}) error {
 }
 
 func GetDb() *gorm.DB {
-	return db;
+	return db
+}
+
+func UpdateAuthn(userID uint, authn string) error {
+	return db.Model(&model.User{ID: userID}).Update("authn", authn).Error
 }
