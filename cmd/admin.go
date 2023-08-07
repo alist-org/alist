@@ -5,7 +5,6 @@ package cmd
 
 import (
 	"github.com/alist-org/alist/v3/internal/conf"
-	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/internal/setting"
 	"github.com/alist-org/alist/v3/pkg/utils"
@@ -70,7 +69,7 @@ func setAdminPassword(pwd string) {
 		utils.Log.Errorf("failed get admin user: %+v", err)
 		return
 	}
-	admin.PwdHash = model.HashPwd(pwd)
+	admin.SetPassword(pwd)
 	if err := op.UpdateUser(admin); err != nil {
 		utils.Log.Errorf("failed update admin user: %+v", err)
 		return
