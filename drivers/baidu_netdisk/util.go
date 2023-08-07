@@ -2,6 +2,7 @@ package baidu_netdisk
 
 import (
 	"fmt"
+	"github.com/avast/retry-go"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -51,31 +52,37 @@ func (d *BaiduNetdisk) _refreshToken() error {
 }
 
 func (d *BaiduNetdisk) request(furl string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
-	req := base.RestyClient.R()
-	req.SetQueryParam("access_token", d.AccessToken)
-	if callback != nil {
-		callback(req)
-	}
-	if resp != nil {
-		req.SetResult(resp)
-	}
-	res, err := req.Execute(method, furl)
-	if err != nil {
-		return nil, err
-	}
-	log.Debugf("[baidu_netdisk] req: %s, resp: %s", furl, res.String())
-	errno := utils.Json.Get(res.Body(), "errno").ToInt()
-	if errno != 0 {
-		if utils.SliceContains([]int{111, -6}, errno) {
-			err = d.refreshToken()
-			if err != nil {
-				return nil, err
-			}
-			return d.request(furl, method, callback, resp)
+	var result []byte
+	err := retry.Do(func() error {
+		req := base.RestyClient.R()
+		req.SetQueryParam("access_token", d.AccessToken)
+		if callback != nil {
+			callback(req)
 		}
-		return nil, fmt.Errorf("req: [%s] ,errno: %d, refer to https://pan.baidu.com/union/doc/", furl, errno)
-	}
-	return res.Body(), nil
+		if resp != nil {
+			req.SetResult(resp)
+		}
+		res, err := req.Execute(method, furl)
+		if err != nil {
+			return err
+		}
+		log.Debugf("[baidu_netdisk] req: %s, resp: %s", furl, res.String())
+		errno := utils.Json.Get(res.Body(), "errno").ToInt()
+		if errno != 0 {
+			if utils.SliceContains([]int{111, -6}, errno) {
+				log.Info("refreshing baidu_netdisk token.")
+				err2 := d.refreshToken()
+				if err2 != nil {
+					return err2
+				}
+			}
+			return fmt.Errorf("req: [%s] ,errno: %d, refer to https://pan.baidu.com/union/doc/", furl, errno)
+		}
+		result = res.Body()
+		return nil
+	},
+		retry.Attempts(3))
+	return result, err
 }
 
 func (d *BaiduNetdisk) get(pathname string, params map[string]string, resp interface{}) ([]byte, error) {

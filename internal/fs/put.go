@@ -27,7 +27,7 @@ func putAsTask(dstDirPath string, file *model.FileStream) error {
 		return errors.WithStack(errs.UploadNotSupported)
 	}
 	if file.NeedStore() {
-		tempFile, err := utils.CreateTempFile(file)
+		tempFile, err := utils.CreateTempFile(file, file.GetSize())
 		if err != nil {
 			return errors.Wrapf(err, "failed to create temp file")
 		}
