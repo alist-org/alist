@@ -212,7 +212,7 @@ func (d *BaiduPhoto) Remove(ctx context.Context, obj model.Obj) error {
 
 func (d *BaiduPhoto) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) (model.Obj, error) {
 	// 需要获取完整文件md5,必须支持 io.Seek
-	tempFile, err := utils.CreateTempFile(stream.GetReadCloser())
+	tempFile, err := utils.CreateTempFile(stream.GetReadCloser(), stream.GetSize())
 	if err != nil {
 		return nil, err
 	}

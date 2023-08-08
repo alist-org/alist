@@ -224,7 +224,7 @@ func (d *AliyundriveOpen) upload(ctx context.Context, dstDir model.Obj, stream m
 		}
 		log.Debugf("[aliyundrive_open] pre_hash matched, start rapid upload")
 		// convert to local file
-		file, err := utils.CreateTempFile(stream)
+		file, err := utils.CreateTempFile(stream, stream.GetSize())
 		if err != nil {
 			return err
 		}

@@ -24,9 +24,11 @@ func initUser() {
 	}
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
+			salt := random.String(16)
 			admin = &model.User{
 				Username: "admin",
-				PwdHash:  model.HashPwd(adminPassword),
+				Salt:     salt,
+				PwdHash:  model.TwoHashPwd(adminPassword, salt),
 				Role:     model.ADMIN,
 				BasePath: "/",
 			}
@@ -42,9 +44,10 @@ func initUser() {
 	guest, err := op.GetGuest()
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
+			salt := random.String(16)
 			guest = &model.User{
 				Username:   "guest",
-				PwdHash:    model.HashPwd("guest"),
+				PwdHash:    model.TwoHashPwd("guest", salt),
 				Role:       model.GUEST,
 				BasePath:   "/",
 				Permission: 0,
@@ -68,7 +71,8 @@ func hashPwdForOldVersion() {
 	for i := range users {
 		user := users[i]
 		if user.PwdHash == "" {
-			user.PwdHash = model.HashPwd(user.Password)
+			user.SetPassword(user.Password)
+			user.Password = ""
 			if err := db.UpdateUser(&user); err != nil {
 				utils.Log.Fatalf("[hash pwd for old version] failed update user: %v", err)
 			}

@@ -39,6 +39,8 @@ func CreateUser(c *gin.Context) {
 		common.ErrorStrResp(c, "admin or guest user can not be created", 400, true)
 		return
 	}
+	req.SetPassword(req.Password)
+	req.Password = ""
 	if err := op.CreateUser(&req); err != nil {
 		common.ErrorResp(c, err, 500, true)
 	} else {
@@ -62,7 +64,11 @@ func UpdateUser(c *gin.Context) {
 		return
 	}
 	if req.Password == "" {
-		req.Password = user.Password
+		req.PwdHash = user.PwdHash
+		req.Salt = user.Salt
+	} else {
+		req.SetPassword(req.Password)
+		req.Password = ""
 	}
 	if req.OtpSecret == "" {
 		req.OtpSecret = user.OtpSecret

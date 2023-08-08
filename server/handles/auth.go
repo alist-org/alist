@@ -33,7 +33,7 @@ func Login(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	req.Password = model.HashPwd(req.Password)
+	req.Password = model.StaticHash(req.Password)
 	loginHash(c, &req)
 }
 
@@ -64,7 +64,7 @@ func loginHash(c *gin.Context, req *LoginReq) {
 		return
 	}
 	// validate password hash
-	if err := user.ValidatePwdHash(req.Password); err != nil {
+	if err := user.ValidatePwdStaticHash(req.Password); err != nil {
 		common.ErrorResp(c, err, 400)
 		loginCache.Set(ip, count+1)
 		return
@@ -115,7 +115,7 @@ func UpdateCurrent(c *gin.Context) {
 	user := c.MustGet("user").(*model.User)
 	user.Username = req.Username
 	if req.Password != "" {
-		user.Password = req.Password
+		user.SetPassword(req.Password)
 	}
 	user.SsoID = req.SsoID
 	if err := op.UpdateUser(user); err != nil {
