@@ -44,6 +44,7 @@ func (d *AliyundriveOpen) refreshToken() error {
 	if refresh == "" {
 		return errors.New("failed to refresh token: refresh token is empty")
 	}
+	log.Infof("[ali_open] toekn exchange: %s -> %s", d.RefreshToken, refresh)
 	d.RefreshToken, d.AccessToken = refresh, access
 	op.MustSaveDriverStorage(d)
 	return nil
