@@ -8,16 +8,15 @@ import (
 	"io"
 	"math"
 	"os"
-	"path"
 	stdpath "path"
 	"strconv"
-	"sync/atomic"
 	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/pkg/errgroup"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/avast/retry-go"
 	log "github.com/sirupsen/logrus"
@@ -26,6 +25,8 @@ import (
 type BaiduNetdisk struct {
 	model.Storage
 	Addition
+
+	uploadThread int
 }
 
 const BaiduFileAPI = "https://d.pcs.baidu.com/rest/2.0/pcs/superfile2"
@@ -40,6 +41,10 @@ func (d *BaiduNetdisk) GetAddition() driver.Additional {
 }
 
 func (d *BaiduNetdisk) Init(ctx context.Context) error {
+	d.uploadThread, _ = strconv.Atoi(d.UploadThread)
+	if d.uploadThread < 1 || d.uploadThread > 32 {
+		d.uploadThread, d.UploadThread = 3, "3"
+	}
 	res, err := d.get("/xpan/nas", map[string]string{
 		"method": "uinfo",
 	}, nil)
@@ -90,7 +95,7 @@ func (d *BaiduNetdisk) Move(ctx context.Context, srcObj, dstDir model.Obj) (mode
 		return nil, err
 	}
 	if srcObj, ok := srcObj.(*model.ObjThumb); ok {
-		srcObj.SetPath(path.Join(dstDir.GetPath(), srcObj.GetName()))
+		srcObj.SetPath(stdpath.Join(dstDir.GetPath(), srcObj.GetName()))
 		return srcObj, nil
 	}
 	return nil, nil
@@ -109,7 +114,7 @@ func (d *BaiduNetdisk) Rename(ctx context.Context, srcObj model.Obj, newName str
 	}
 
 	if srcObj, ok := srcObj.(*model.ObjThumb); ok {
-		srcObj.SetPath(path.Join(path.Dir(srcObj.GetPath()), newName))
+		srcObj.SetPath(stdpath.Join(stdpath.Dir(srcObj.GetPath()), newName))
 		srcObj.Name = newName
 		return srcObj, nil
 	}
@@ -206,23 +211,20 @@ func (d *BaiduNetdisk) Put(ctx context.Context, dstDir model.Obj, stream model.F
 	}
 
 	// step.2 上传分片
-	threadNum := 3
-	upCtx, cancel := context.WithCancelCause(ctx)
-	thread := make(chan struct{}, threadNum)
-	progress := int32(0)
-	byteSize = DefaultSliceSize
+	threadG, upCtx := errgroup.NewGroupWithContext(ctx, d.uploadThread,
+		retry.Attempts(3),
+		retry.Delay(time.Second),
+		retry.DelayType(retry.BackOffDelay))
 	for _, partseq := range precreateResp.BlockList {
 		if utils.IsCanceled(upCtx) {
-			return nil, ctx.Err()
+			break
 		}
 
-		thread <- struct{}{}
+		partseq, offset, byteSize := partseq, int64(partseq)*DefaultSliceSize, byteSize
 		if partseq+1 == count {
 			byteSize = lastBlockSize
 		}
-
-		go func(partseq int, offset, byteSize int64) {
-			defer func() { <-thread }()
+		threadG.Go(func(ctx context.Context) error {
 			params := map[string]string{
 				"method":       "upload",
 				"access_token": d.AccessToken,
@@ -231,31 +233,16 @@ func (d *BaiduNetdisk) Put(ctx context.Context, dstDir model.Obj, stream model.F
 				"uploadid":     precreateResp.Uploadid,
 				"partseq":      strconv.Itoa(partseq),
 			}
-			err := retry.Do(func() error {
-				return d.uploadSlice(upCtx, params, stream.GetName(), io.NewSectionReader(tempFile, offset, byteSize))
-			},
-				retry.Context(upCtx),
-				retry.Attempts(3),
-				retry.Delay(time.Second),
-				retry.DelayType(retry.BackOffDelay))
+			err := d.uploadSlice(ctx, params, stream.GetName(), io.NewSectionReader(tempFile, offset, byteSize))
 			if err != nil {
-				cancel(err)
-				return
+				return err
 			}
-
-			progress := int(atomic.AddInt32(&progress, 1))
-			if len(precreateResp.BlockList) > 0 {
-				up(progress * 100 / len(precreateResp.BlockList))
-			}
-		}(partseq, int64(partseq)*DefaultSliceSize, byteSize)
+			up(int(threadG.Success()) * 100 / len(precreateResp.BlockList))
+			return nil
+		})
 	}
-	// wait thread
-	for i := 0; i < threadNum; i++ {
-		thread <- struct{}{}
-	}
-	// has error
-	if utils.IsCanceled(upCtx) {
-		return nil, context.Cause(upCtx)
+	if err = threadG.Wait(); err != nil {
+		return nil, err
 	}
 
 	// step.3 创建文件
