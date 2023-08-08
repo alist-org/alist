@@ -4,15 +4,16 @@ Copyright © 2022 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/op"
+	"github.com/alist-org/alist/v3/internal/setting"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/pkg/utils/random"
 	"github.com/spf13/cobra"
 )
 
-// PasswordCmd represents the password command
-var PasswordCmd = &cobra.Command{
+// AdminCmd represents the password command
+var AdminCmd = &cobra.Command{
 	Use:     "admin",
 	Aliases: []string{"password"},
 	Short:   "Show admin user's info and some operations about admin user's password",
@@ -51,6 +52,16 @@ var SetPasswordCmd = &cobra.Command{
 	},
 }
 
+var ShowTokenCmd = &cobra.Command{
+	Use:   "token",
+	Short: "Show admin token",
+	Run: func(cmd *cobra.Command, args []string) {
+		Init()
+		token := setting.GetStr(conf.Token)
+		utils.Log.Infof("Admin token: %s", token)
+	},
+}
+
 func setAdminPassword(pwd string) {
 	Init()
 	admin, err := op.GetAdmin()
@@ -58,7 +69,7 @@ func setAdminPassword(pwd string) {
 		utils.Log.Errorf("failed get admin user: %+v", err)
 		return
 	}
-	admin.PwdHash = model.HashPwd(pwd)
+	admin.SetPassword(pwd)
 	if err := op.UpdateUser(admin); err != nil {
 		utils.Log.Errorf("failed update admin user: %+v", err)
 		return
@@ -70,9 +81,10 @@ func setAdminPassword(pwd string) {
 }
 
 func init() {
-	RootCmd.AddCommand(PasswordCmd)
-	PasswordCmd.AddCommand(RandomPasswordCmd)
-	PasswordCmd.AddCommand(SetPasswordCmd)
+	RootCmd.AddCommand(AdminCmd)
+	AdminCmd.AddCommand(RandomPasswordCmd)
+	AdminCmd.AddCommand(SetPasswordCmd)
+	AdminCmd.AddCommand(ShowTokenCmd)
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command

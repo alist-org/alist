@@ -5,6 +5,7 @@ import (
 
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/pkg/utils"
+	"github.com/alist-org/alist/v3/pkg/utils/random"
 	"github.com/pkg/errors"
 )
 
@@ -14,15 +15,16 @@ const (
 	ADMIN
 )
 
-const HashSalt = "https://github.com/alist-org/alist"
+const StaticHashSalt = "https://github.com/alist-org/alist"
 
 type User struct {
 	ID       uint   `json:"id" gorm:"primaryKey"`                      // unique key
 	Username string `json:"username" gorm:"unique" binding:"required"` // username
 	PwdHash  string `json:"-"`                                         // password hash
-	Password string `json:"-"`                                         // password
-	BasePath string `json:"base_path"`                                 // base path
-	Role     int    `json:"role"`                                      // user's role
+	Salt     string // unique salt
+	Password string `json:"password"`  // password
+	BasePath string `json:"base_path"` // base path
+	Role     int    `json:"role"`      // user's role
 	Disabled bool   `json:"disabled"`
 	// Determine permissions by bit
 	//   0: can see hidden files
@@ -41,76 +43,90 @@ type User struct {
 	SsoID      string `json:"sso_id"` // unique by sso platform
 }
 
-func (u User) IsGuest() bool {
+func (u *User) IsGuest() bool {
 	return u.Role == GUEST
 }
 
-func (u User) IsAdmin() bool {
+func (u *User) IsAdmin() bool {
 	return u.Role == ADMIN
 }
 
-func (u User) ValidatePassword(password string) error {
-	return u.ValidatePwdHash(HashPwd(password))
+func (u *User) ValidateRawPassword(password string) error {
+	return u.ValidatePwdStaticHash(StaticHash(password))
 }
 
-func (u User) ValidatePwdHash(pwdHash string) error {
-	if pwdHash == "" {
+func (u *User) ValidatePwdStaticHash(pwdStaticHash string) error {
+	if pwdStaticHash == "" {
 		return errors.WithStack(errs.EmptyPassword)
 	}
-	if u.PwdHash != pwdHash {
+	if u.PwdHash != HashPwd(pwdStaticHash, u.Salt) {
 		return errors.WithStack(errs.WrongPassword)
 	}
 	return nil
 }
 
-func (u User) CanSeeHides() bool {
+func (u *User) SetPassword(pwd string) *User {
+	u.Salt = random.String(16)
+	u.PwdHash = TwoHashPwd(pwd, u.Salt)
+	return u
+}
+
+func (u *User) CanSeeHides() bool {
 	return u.IsAdmin() || u.Permission&1 == 1
 }
 
-func (u User) CanAccessWithoutPassword() bool {
+func (u *User) CanAccessWithoutPassword() bool {
 	return u.IsAdmin() || (u.Permission>>1)&1 == 1
 }
 
-func (u User) CanAddAria2Tasks() bool {
+func (u *User) CanAddAria2Tasks() bool {
 	return u.IsAdmin() || (u.Permission>>2)&1 == 1
 }
 
-func (u User) CanWrite() bool {
+func (u *User) CanWrite() bool {
 	return u.IsAdmin() || (u.Permission>>3)&1 == 1
 }
 
-func (u User) CanRename() bool {
+func (u *User) CanRename() bool {
 	return u.IsAdmin() || (u.Permission>>4)&1 == 1
 }
 
-func (u User) CanMove() bool {
+func (u *User) CanMove() bool {
 	return u.IsAdmin() || (u.Permission>>5)&1 == 1
 }
 
-func (u User) CanCopy() bool {
+func (u *User) CanCopy() bool {
 	return u.IsAdmin() || (u.Permission>>6)&1 == 1
 }
 
-func (u User) CanRemove() bool {
+func (u *User) CanRemove() bool {
 	return u.IsAdmin() || (u.Permission>>7)&1 == 1
 }
 
-func (u User) CanWebdavRead() bool {
+func (u *User) CanWebdavRead() bool {
 	return u.IsAdmin() || (u.Permission>>8)&1 == 1
 }
 
-func (u User) CanWebdavManage() bool {
+func (u *User) CanWebdavManage() bool {
 	return u.IsAdmin() || (u.Permission>>9)&1 == 1
 }
 
-func (u User) CanAddQbittorrentTasks() bool {
+func (u *User) CanAddQbittorrentTasks() bool {
 	return u.IsAdmin() || (u.Permission>>10)&1 == 1
 }
 
-func (u User) JoinPath(reqPath string) (string, error) {
+func (u *User) JoinPath(reqPath string) (string, error) {
 	return utils.JoinBasePath(u.BasePath, reqPath)
 }
 
-func HashPwd(password string) string {
-	return utils.GetSHA256Encode([]byte(fmt.Sprintf("%s-%s", password, HashSalt)))
+func StaticHash(password string) string {
+	return utils.GetSHA256Encode([]byte(fmt.Sprintf("%s-%s", password, StaticHashSalt)))
+}
+
+func HashPwd(static string, salt string) string {
+	return utils.GetSHA256Encode([]byte(fmt.Sprintf("%s-%s", static, salt)))
+}
+
+func TwoHashPwd(password string, salt string) string {
+	return HashPwd(StaticHash(password), salt)
 }
