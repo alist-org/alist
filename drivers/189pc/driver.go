@@ -3,6 +3,7 @@ package _189pc
 import (
 	"context"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -24,6 +25,8 @@ type Cloud189PC struct {
 
 	loginParam *LoginParam
 	tokenInfo  *AppSessionResp
+
+	uploadThread int
 }
 
 func (y *Cloud189PC) Config() driver.Config {
@@ -42,6 +45,12 @@ func (y *Cloud189PC) Init(ctx context.Context) (err error) {
 	if !y.isFamily() && y.RootFolderID == "" {
 		y.RootFolderID = "-11"
 		y.FamilyID = ""
+	}
+
+	// 限制上传线程数
+	y.uploadThread, _ = strconv.Atoi(y.UploadThread)
+	if y.uploadThread < 1 || y.uploadThread > 32 {
+		y.uploadThread, y.UploadThread = 3, "3"
 	}
 
 	// 初始化请求客户端
