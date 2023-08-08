@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"io"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // here is some syntaxic sugar inspired by the Tomas Senart's video,
@@ -47,31 +48,23 @@ func CopyWithCtx(ctx context.Context, out io.Writer, in io.Reader, size int64, p
 
 type limitWriter struct {
 	w     io.Writer
-	count int64
 	limit int64
 }
 
-func (l limitWriter) Write(p []byte) (n int, err error) {
-	wn := int(l.limit - l.count)
-	if wn > len(p) {
-		wn = len(p)
-	}
-	if wn > 0 {
-		if n, err = l.w.Write(p[:wn]); err != nil {
-			return
+func (l *limitWriter) Write(p []byte) (n int, err error) {
+	if l.limit > 0 {
+		if int64(len(p)) > l.limit {
+			p = p[:l.limit]
 		}
-		if n < wn {
-			err = io.ErrShortWrite
-		}
+		n, err = l.w.Write(p)
+		l.limit -= int64(n)
+		return n, err
 	}
-	if err == nil {
-		n = len(p)
-	}
-	return
+	return len(p), nil
 }
 
-func LimitWriter(w io.Writer, size int64) io.Writer {
-	return &limitWriter{w: w, limit: size}
+func LimitWriter(w io.Writer, limit int64) io.Writer {
+	return &limitWriter{w: w, limit: limit}
 }
 
 type ReadCloser struct {
