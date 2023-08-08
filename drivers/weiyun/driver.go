@@ -37,7 +37,7 @@ func (d *WeiYun) GetAddition() driver.Additional {
 }
 
 func (d *WeiYun) Init(ctx context.Context) error {
-	d.client = weiyunsdkgo.NewWeiYunClientWithRestyClient(base.RestyClient)
+	d.client = weiyunsdkgo.NewWeiYunClientWithRestyClient(base.NewRestyClient())
 	err := d.client.SetCookiesStr(d.Cookies).RefreshCtoken()
 	if err != nil {
 		return err
