@@ -2,6 +2,7 @@ package weiyun
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"math"
 	"net/http"
@@ -87,6 +88,10 @@ func (d *WeiYun) Init(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	if len(folders) == 0 {
+		return fmt.Errorf("invalid directory ID")
+	}
+
 	folder := folders[len(folders)-1]
 	d.rootFolder = &Folder{
 		PFolder: &Folder{
