@@ -11,12 +11,14 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"sync/atomic"
+	"time"
 
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/pkg/errgroup"
 	"github.com/alist-org/alist/v3/pkg/utils"
+	"github.com/avast/retry-go"
 	"github.com/go-resty/resty/v2"
 )
 
@@ -27,6 +29,8 @@ type BaiduPhoto struct {
 	AccessToken string
 	Uk          int64
 	root        model.Obj
+
+	uploadThread int
 }
 
 func (d *BaiduPhoto) Config() driver.Config {
@@ -38,6 +42,11 @@ func (d *BaiduPhoto) GetAddition() driver.Additional {
 }
 
 func (d *BaiduPhoto) Init(ctx context.Context) error {
+	d.uploadThread, _ = strconv.Atoi(d.UploadThread)
+	if d.uploadThread < 1 || d.uploadThread > 32 {
+		d.uploadThread, d.UploadThread = 3, "3"
+	}
+
 	if err := d.refreshToken(); err != nil {
 		return err
 	}
@@ -287,23 +296,21 @@ func (d *BaiduPhoto) Put(ctx context.Context, dstDir model.Obj, stream model.Fil
 
 	switch precreateResp.ReturnType {
 	case 1: //step.3 上传文件切片
-		threadNum := 3
-		upCtx, cancel := context.WithCancelCause(ctx)
-		thread := make(chan struct{}, threadNum)
-		progress := int32(0)
-		byteSize = DEFAULT
+		threadG, upCtx := errgroup.NewGroupWithContext(ctx, d.uploadThread,
+			retry.Attempts(3),
+			retry.Delay(time.Second),
+			retry.DelayType(retry.BackOffDelay))
 		for _, partseq := range precreateResp.BlockList {
 			if utils.IsCanceled(upCtx) {
-				return nil, ctx.Err()
+				break
 			}
 
-			thread <- struct{}{}
+			partseq, offset, byteSize := partseq, int64(partseq)*DEFAULT, byteSize
 			if partseq+1 == count {
 				byteSize = lastBlockSize
 			}
 
-			go func(partseq int, offset, byteSize int64) {
-				defer func() { <-thread }()
+			threadG.Go(func(ctx context.Context) error {
 				uploadParams := map[string]string{
 					"method":   "upload",
 					"path":     params["path"],
@@ -317,23 +324,14 @@ func (d *BaiduPhoto) Put(ctx context.Context, dstDir model.Obj, stream model.Fil
 					r.SetFileReader("file", stream.GetName(), io.NewSectionReader(tempFile, offset, byteSize))
 				}, nil)
 				if err != nil {
-					cancel(err)
-					return
+					return err
 				}
-				progress := int(atomic.AddInt32(&progress, 1))
-				if len(precreateResp.BlockList) > 0 {
-					up(progress * 100 / len(precreateResp.BlockList))
-				}
-			}(partseq, int64(partseq)*DEFAULT, byteSize)
+				up(int(threadG.Success()) * 100 / len(precreateResp.BlockList))
+				return nil
+			})
 		}
-
-		// wait thread
-		for i := 0; i < threadNum; i++ {
-			thread <- struct{}{}
-		}
-		// has error
-		if utils.IsCanceled(upCtx) {
-			return nil, context.Cause(upCtx)
+		if err = threadG.Wait(); err != nil {
+			return nil, err
 		}
 		fallthrough
 	case 2: //step.4 创建文件
