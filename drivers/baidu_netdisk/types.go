@@ -1,6 +1,7 @@
 package baidu_netdisk
 
 import (
+	"path"
 	"strconv"
 	"time"
 
@@ -37,16 +38,20 @@ type File struct {
 	//Pl             int    `json:"pl"`
 	//LocalCtime     int    `json:"local_ctime"`
 	ServerFilename string `json:"server_filename"`
-	//Md5            string `json:"md5"`
+	Md5            string `json:"md5"`
 	//OwnerId        int    `json:"owner_id"`
 	//Unlist int `json:"unlist"`
 	Isdir int `json:"isdir"`
 }
 
 func fileToObj(f File) *model.ObjThumb {
+	if f.ServerFilename == "" {
+		f.ServerFilename = path.Base(f.Path)
+	}
 	return &model.ObjThumb{
 		Object: model.Object{
 			ID:       strconv.FormatInt(f.FsId, 10),
+			Path:     f.Path,
 			Name:     f.ServerFilename,
 			Size:     f.Size,
 			Modified: time.Unix(f.ServerMtime, 0),
@@ -154,10 +159,15 @@ type DownloadResp2 struct {
 }
 
 type PrecreateResp struct {
-	Path       string `json:"path"`
-	Uploadid   string `json:"uploadid"`
-	ReturnType int    `json:"return_type"`
-	BlockList  []int  `json:"block_list"`
-	Errno      int    `json:"errno"`
-	RequestId  int64  `json:"request_id"`
+	Errno      int   `json:"errno"`
+	RequestId  int64 `json:"request_id"`
+	ReturnType int   `json:"return_type"`
+
+	// return_type=1
+	Path      string `json:"path"`
+	Uploadid  string `json:"uploadid"`
+	BlockList []int  `json:"block_list"`
+
+	// return_type=2
+	File File `json:"info"`
 }

@@ -5,6 +5,15 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
+	"io"
+	"math"
+	"os"
+	"path"
+	stdpath "path"
+	"strconv"
+	"sync/atomic"
+	"time"
+
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
@@ -12,12 +21,6 @@ import (
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/avast/retry-go"
 	log "github.com/sirupsen/logrus"
-	"io"
-	"math"
-	"os"
-	stdpath "path"
-	"strconv"
-	"strings"
 )
 
 type BaiduNetdisk struct {
@@ -65,12 +68,16 @@ func (d *BaiduNetdisk) Link(ctx context.Context, file model.Obj, args model.Link
 	return d.linkOfficial(file, args)
 }
 
-func (d *BaiduNetdisk) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
-	_, err := d.create(stdpath.Join(parentDir.GetPath(), dirName), 0, 1, "", "")
-	return err
+func (d *BaiduNetdisk) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) (model.Obj, error) {
+	var newDir File
+	_, err := d.create(stdpath.Join(parentDir.GetPath(), dirName), 0, 1, "", "", &newDir)
+	if err != nil {
+		return nil, err
+	}
+	return fileToObj(newDir), nil
 }
 
-func (d *BaiduNetdisk) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
+func (d *BaiduNetdisk) Move(ctx context.Context, srcObj, dstDir model.Obj) (model.Obj, error) {
 	data := []base.Json{
 		{
 			"path":    srcObj.GetPath(),
@@ -79,10 +86,17 @@ func (d *BaiduNetdisk) Move(ctx context.Context, srcObj, dstDir model.Obj) error
 		},
 	}
 	_, err := d.manage("move", data)
-	return err
+	if err != nil {
+		return nil, err
+	}
+	if srcObj, ok := srcObj.(*model.ObjThumb); ok {
+		srcObj.SetPath(path.Join(dstDir.GetPath(), srcObj.GetName()))
+		return srcObj, nil
+	}
+	return nil, nil
 }
 
-func (d *BaiduNetdisk) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
+func (d *BaiduNetdisk) Rename(ctx context.Context, srcObj model.Obj, newName string) (model.Obj, error) {
 	data := []base.Json{
 		{
 			"path":    srcObj.GetPath(),
@@ -90,7 +104,16 @@ func (d *BaiduNetdisk) Rename(ctx context.Context, srcObj model.Obj, newName str
 		},
 	}
 	_, err := d.manage("rename", data)
-	return err
+	if err != nil {
+		return nil, err
+	}
+
+	if srcObj, ok := srcObj.(*model.ObjThumb); ok {
+		srcObj.SetPath(path.Join(path.Dir(srcObj.GetPath()), newName))
+		srcObj.Name = newName
+		return srcObj, nil
+	}
+	return nil, nil
 }
 
 func (d *BaiduNetdisk) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
@@ -111,63 +134,58 @@ func (d *BaiduNetdisk) Remove(ctx context.Context, obj model.Obj) error {
 	return err
 }
 
-func (d *BaiduNetdisk) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
-	streamSize := stream.GetSize()
-
+func (d *BaiduNetdisk) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) (model.Obj, error) {
 	tempFile, err := utils.CreateTempFile(stream.GetReadCloser(), stream.GetSize())
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer func() {
 		_ = tempFile.Close()
 		_ = os.Remove(tempFile.Name())
 	}()
 
-	count := int(math.Ceil(float64(streamSize) / float64(DefaultSliceSize)))
+	streamSize := stream.GetSize()
+	count := int(math.Max(math.Ceil(float64(streamSize)/float64(DefaultSliceSize)), 1))
+	lastBlockSize := streamSize % DefaultSliceSize
+	if streamSize > 0 && lastBlockSize == 0 {
+		lastBlockSize = DefaultSliceSize
+	}
+
 	//cal md5 for first 256k data
 	const SliceSize int64 = 256 * 1024
 	// cal md5
-	h1 := md5.New()
-	h2 := md5.New()
-	blockList := make([]string, 0)
-	contentMd5 := ""
-	sliceMd5 := ""
-	left := streamSize
-	for i := 0; i < count; i++ {
-		byteSize := DefaultSliceSize
-		if left < DefaultSliceSize {
-			byteSize = left
+	blockList := make([]string, 0, count)
+	byteSize := DefaultSliceSize
+	fileMd5H := md5.New()
+	sliceMd5H := md5.New()
+	sliceMd5H2 := md5.New()
+	slicemd5H2Write := utils.LimitWriter(sliceMd5H2, SliceSize)
+
+	for i := 1; i <= count; i++ {
+		if utils.IsCanceled(ctx) {
+			return nil, ctx.Err()
 		}
-		left -= byteSize
-		_, err = io.Copy(io.MultiWriter(h1, h2), io.LimitReader(tempFile, byteSize))
-		if err != nil {
-			return err
+		if i == count {
+			byteSize = lastBlockSize
 		}
-		blockList = append(blockList, fmt.Sprintf("\"%s\"", hex.EncodeToString(h2.Sum(nil))))
-		h2.Reset()
-	}
-	contentMd5 = hex.EncodeToString(h1.Sum(nil))
-	_, err = tempFile.Seek(0, io.SeekStart)
-	if err != nil {
-		return err
-	}
-	if streamSize <= SliceSize {
-		sliceMd5 = contentMd5
-	} else {
-		sliceData := make([]byte, SliceSize)
-		_, err = io.ReadFull(tempFile, sliceData)
-		if err != nil {
-			return err
+		_, err := io.CopyN(io.MultiWriter(fileMd5H, sliceMd5H, slicemd5H2Write), tempFile, byteSize)
+		if err != nil && err != io.EOF {
+			return nil, err
 		}
-		h2.Write(sliceData)
-		sliceMd5 = hex.EncodeToString(h2.Sum(nil))
+		blockList = append(blockList, hex.EncodeToString(sliceMd5H.Sum(nil)))
+		sliceMd5H.Reset()
 	}
+	contentMd5 := hex.EncodeToString(fileMd5H.Sum(nil))
+	sliceMd5 := hex.EncodeToString(sliceMd5H2.Sum(nil))
+	blockListStr, _ := utils.Json.MarshalToString(blockList)
+
+	// step.1 预上传
 	rawPath := stdpath.Join(dstDir.GetPath(), stream.GetName())
 	path := encodeURIComponent(rawPath)
-	block_list_str := fmt.Sprintf("[%s]", strings.Join(blockList, ","))
-	data := fmt.Sprintf("path=%s&size=%d&isdir=0&autoinit=1&block_list=%s&content-md5=%s&slice-md5=%s",
+
+	data := fmt.Sprintf("path=%s&size=%d&isdir=0&autoinit=1&rtype=3&block_list=%s&content-md5=%s&slice-md5=%s",
 		path, streamSize,
-		block_list_str,
+		blockListStr,
 		contentMd5, sliceMd5)
 	params := map[string]string{
 		"method": "precreate",
@@ -176,52 +194,83 @@ func (d *BaiduNetdisk) Put(ctx context.Context, dstDir model.Obj, stream model.F
 	var precreateResp PrecreateResp
 	_, err = d.post("/xpan/file", params, data, &precreateResp)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	log.Debugf("%+v", precreateResp)
 	if precreateResp.ReturnType == 2 {
 		//rapid upload, since got md5 match from baidu server
-		return nil
-	}
-	params = map[string]string{
-		"method":       "upload",
-		"access_token": d.AccessToken,
-		"type":         "tmpfile",
-		"path":         path,
-		"uploadid":     precreateResp.Uploadid,
-	}
-
-	var offset int64 = 0
-	for i, partseq := range precreateResp.BlockList {
-		params["partseq"] = strconv.Itoa(partseq)
-		byteSize := int64(math.Min(float64(streamSize-offset), float64(DefaultSliceSize)))
-		err := retry.Do(func() error {
-			return d.uploadSlice(ctx, &params, stream.GetName(), tempFile, offset, byteSize)
-		},
-			retry.Context(ctx),
-			retry.Attempts(3))
 		if err != nil {
-			return err
+			return nil, err
 		}
-		offset += byteSize
-
-		if len(precreateResp.BlockList) > 0 {
-			up(i * 100 / len(precreateResp.BlockList))
-		}
+		return fileToObj(precreateResp.File), nil
 	}
-	_, err = d.create(rawPath, streamSize, 0, precreateResp.Uploadid, block_list_str)
-	return err
-}
-func (d *BaiduNetdisk) uploadSlice(ctx context.Context, params *map[string]string, fileName string, file *os.File, offset int64, byteSize int64) error {
-	_, err := file.Seek(offset, io.SeekStart)
+
+	// step.2 上传分片
+	threadNum := 3
+	upCtx, cancel := context.WithCancelCause(ctx)
+	thread := make(chan struct{}, threadNum)
+	progress := int32(0)
+	byteSize = DefaultSliceSize
+	for _, partseq := range precreateResp.BlockList {
+		if utils.IsCanceled(upCtx) {
+			return nil, ctx.Err()
+		}
+
+		thread <- struct{}{}
+		if partseq+1 == count {
+			byteSize = lastBlockSize
+		}
+
+		go func(partseq int, offset, byteSize int64) {
+			defer func() { <-thread }()
+			params := map[string]string{
+				"method":       "upload",
+				"access_token": d.AccessToken,
+				"type":         "tmpfile",
+				"path":         path,
+				"uploadid":     precreateResp.Uploadid,
+				"partseq":      strconv.Itoa(partseq),
+			}
+			err := retry.Do(func() error {
+				return d.uploadSlice(upCtx, params, stream.GetName(), io.NewSectionReader(tempFile, offset, byteSize))
+			},
+				retry.Context(upCtx),
+				retry.Attempts(3),
+				retry.Delay(time.Second),
+				retry.DelayType(retry.BackOffDelay))
+			if err != nil {
+				cancel(err)
+				return
+			}
+
+			progress := int(atomic.AddInt32(&progress, 1))
+			if len(precreateResp.BlockList) > 0 {
+				up(progress * 100 / len(precreateResp.BlockList))
+			}
+		}(partseq, int64(partseq)*DefaultSliceSize, byteSize)
+	}
+	// wait thread
+	for i := 0; i < threadNum; i++ {
+		thread <- struct{}{}
+	}
+	// has error
+	if utils.IsCanceled(upCtx) {
+		return nil, context.Cause(upCtx)
+	}
+
+	// step.3 创建文件
+	var newFile File
+	_, err = d.create(rawPath, streamSize, 0, precreateResp.Uploadid, blockListStr, &newFile)
 	if err != nil {
-		return err
+		return nil, err
 	}
-
+	return fileToObj(newFile), nil
+}
+func (d *BaiduNetdisk) uploadSlice(ctx context.Context, params map[string]string, fileName string, file io.Reader) error {
 	res, err := base.RestyClient.R().
 		SetContext(ctx).
-		SetQueryParams(*params).
-		SetFileReader("file", fileName, io.LimitReader(file, byteSize)).
+		SetQueryParams(params).
+		SetFileReader("file", fileName, file).
 		Post(BaiduFileAPI)
 	if err != nil {
 		return err
