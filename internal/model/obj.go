@@ -20,8 +20,9 @@ type Obj interface {
 	GetSize() int64
 	GetName() string
 	ModTime() time.Time
+	CreateTime() time.Time
 	IsDir() bool
-	//GetHash() (string, string)
+	GetHash() (hash string, hashType string)
 
 	// The internal information of the driver.
 	// If you want to use it, please understand what it means
@@ -36,7 +37,9 @@ type FileStreamer interface {
 	SetReadCloser(io.ReadCloser)
 	NeedStore() bool
 	GetReadCloser() io.ReadCloser
+	//GetReadSeekCloser() io.ReadSeekCloser
 	GetOld() Obj
+	GetObj() Obj
 }
 
 type URL interface {

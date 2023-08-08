@@ -28,16 +28,16 @@ type File struct {
 		//Url1 string `json:"url1"`
 	} `json:"thumbs"`
 	//Wpfile         int    `json:"wpfile"`
-	//LocalMtime     int    `json:"local_mtime"`
-	Size int64 `json:"size"`
+	LocalMtime int64 `json:"local_mtime"`
+	Size       int64 `json:"size"`
 	//ExtentTinyint7 int    `json:"extent_tinyint7"`
 	Path string `json:"path"`
 	//Share          int    `json:"share"`
 	//ServerAtime    int    `json:"server_atime"`
 	//Pl             int    `json:"pl"`
-	//LocalCtime     int    `json:"local_ctime"`
+	LocalCtime     int64  `json:"local_ctime"`
 	ServerFilename string `json:"server_filename"`
-	//Md5            string `json:"md5"`
+	Md5            string `json:"md5"`
 	//OwnerId        int    `json:"owner_id"`
 	//Unlist int `json:"unlist"`
 	Isdir int `json:"isdir"`
@@ -49,8 +49,11 @@ func fileToObj(f File) *model.ObjThumb {
 			ID:       strconv.FormatInt(f.FsId, 10),
 			Name:     f.ServerFilename,
 			Size:     f.Size,
-			Modified: time.Unix(f.ServerMtime, 0),
+			Modified: time.Unix(f.LocalMtime, 0),
+			Ctime:    time.Unix(f.LocalCtime, 0),
 			IsFolder: f.Isdir == 1,
+			Hash:     f.Md5,
+			HashType: model.MD5,
 		},
 		Thumbnail: model.Thumbnail{Thumbnail: f.Thumbs.Url3},
 	}

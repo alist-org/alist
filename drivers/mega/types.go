@@ -8,29 +8,36 @@ import (
 )
 
 type MegaNode struct {
-	*mega.Node
+	n *mega.Node
 }
 
-//func (m *MegaNode) GetSize() int64 {
-//	//TODO implement me
-//	panic("implement me")
-//}
-//
-//func (m *MegaNode) GetName() string {
-//	//TODO implement me
-//	panic("implement me")
-//}
+func (m *MegaNode) GetSize() int64 {
+	return m.n.GetSize()
+}
+
+func (m *MegaNode) GetName() string {
+	return m.n.GetName()
+}
+
+func (m *MegaNode) CreateTime() time.Time {
+	return m.n.GetTimeStamp()
+}
+
+func (m *MegaNode) GetHash() (string, string) {
+	//Meganz use md5, but can't get the original file hash, due to it's encrypted in the cloud
+	return "", ""
+}
 
 func (m *MegaNode) ModTime() time.Time {
-	return m.GetTimeStamp()
+	return m.n.GetTimeStamp()
 }
 
 func (m *MegaNode) IsDir() bool {
-	return m.GetType() == mega.FOLDER || m.GetType() == mega.ROOT
+	return m.n.GetType() == mega.FOLDER || m.n.GetType() == mega.ROOT
 }
 
 func (m *MegaNode) GetID() string {
-	return m.GetHash()
+	return m.n.GetHash()
 }
 
 func (m *MegaNode) GetPath() string {

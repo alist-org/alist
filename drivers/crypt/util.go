@@ -1,6 +1,7 @@
 package crypt
 
 import (
+	log "github.com/sirupsen/logrus"
 	"net/http"
 	stdpath "path"
 	"path/filepath"
@@ -52,4 +53,16 @@ func (d *Crypt) getPathForRemote(path string, isFolder bool) (remoteFullPath str
 func (d *Crypt) getActualPathForRemote(path string, isFolder bool) (string, error) {
 	_, remoteActualPath, err := op.GetStorageAndActualPath(d.getPathForRemote(path, isFolder))
 	return remoteActualPath, err
+}
+
+// 139 cloud does not properly return 206 http status code, add a hack here
+func checkContentRange(header *http.Header, size, offset int64) bool {
+	r, err2 := http_range.ParseRange(header.Get("Content-Range"), size)
+	if err2 != nil {
+		log.Warnf("Crypt got exception when trying to parse Content-Range, will ignore,err=%s", err2)
+	}
+	if len(r) == 1 && r[0].Start == offset {
+		return true
+	}
+	return false
 }

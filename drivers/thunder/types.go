@@ -2,6 +2,7 @@ package thunder
 
 import (
 	"fmt"
+	"github.com/alist-org/alist/v3/internal/model"
 	"strconv"
 	"time"
 )
@@ -84,6 +85,8 @@ type Link struct {
 	Type   string    `json:"type"`
 }
 
+var _ model.Obj = (*Files)(nil)
+
 type Files struct {
 	Kind     string `json:"kind"`
 	ID       string `json:"id"`
@@ -144,6 +147,14 @@ type Files struct {
 	//Writable   bool   `json:"writable"`
 	//FolderType string `json:"folder_type"`
 	//Collection interface{} `json:"collection"`
+}
+
+func (c *Files) CreateTime() time.Time {
+	return c.CreatedTime
+}
+
+func (c *Files) GetHash() (string, string) {
+	return "", ""
 }
 
 func (c *Files) GetSize() int64     { size, _ := strconv.ParseInt(c.Size, 10, 64); return size }

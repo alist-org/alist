@@ -28,6 +28,7 @@ type Object struct {
 	Name     string
 	Size     int64
 	Modified time.Time
+	Ctime    time.Time // file create time
 	IsFolder bool
 	Hash     string
 	HashType string
@@ -43,6 +44,12 @@ func (o *Object) GetSize() int64 {
 
 func (o *Object) ModTime() time.Time {
 	return o.Modified
+}
+func (o *Object) CreateTime() time.Time {
+	if o.Ctime.IsZero() {
+		return o.ModTime()
+	}
+	return o.Ctime
 }
 
 func (o *Object) IsDir() bool {

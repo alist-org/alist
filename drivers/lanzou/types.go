@@ -3,6 +3,7 @@ package lanzou
 import (
 	"errors"
 	"fmt"
+	"github.com/alist-org/alist/v3/internal/model"
 	"time"
 )
 
@@ -17,6 +18,9 @@ type RespText[T any] struct {
 type RespInfo[T any] struct {
 	Info T `json:"info"`
 }
+
+var _ model.Obj = (*FileOrFolder)(nil)
+var _ model.Obj = (*FileOrFolderByShareUrl)(nil)
 
 type FileOrFolder struct {
 	Name string `json:"name"`
@@ -47,6 +51,14 @@ type FileOrFolder struct {
 	time       *time.Time `json:"-"`
 	repairFlag bool       `json:"-"`
 	shareInfo  *FileShare `json:"-"`
+}
+
+func (f *FileOrFolder) CreateTime() time.Time {
+	return f.ModTime()
+}
+
+func (f *FileOrFolder) GetHash() (string, string) {
+	return "", ""
 }
 
 func (f *FileOrFolder) GetID() string {
@@ -128,6 +140,14 @@ type FileOrFolderByShareUrl struct {
 	size       *int64     `json:"-"`
 	time       *time.Time `json:"-"`
 	repairFlag bool       `json:"-"`
+}
+
+func (f *FileOrFolderByShareUrl) CreateTime() time.Time {
+	return f.ModTime()
+}
+
+func (f *FileOrFolderByShareUrl) GetHash() (string, string) {
+	return "", ""
 }
 
 func (f *FileOrFolderByShareUrl) GetID() string   { return f.ID }

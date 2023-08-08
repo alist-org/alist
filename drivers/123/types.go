@@ -21,6 +21,14 @@ type File struct {
 	DownloadUrl string    `json:"DownloadUrl"`
 }
 
+func (f File) CreateTime() time.Time {
+	return f.UpdateAt
+}
+
+func (f File) GetHash() (string, string) {
+	return "", ""
+}
+
 func (f File) GetPath() string {
 	return ""
 }

@@ -14,7 +14,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io"
 	"math"
-	"os"
 	stdpath "path"
 	"strconv"
 	"strings"
@@ -111,16 +110,16 @@ func (d *BaiduNetdisk) Remove(ctx context.Context, obj model.Obj) error {
 	return err
 }
 
+// Put impl according to https://pan.baidu.com/union/doc/nksg0s9vi https://pan.baidu.com/union/doc/3ksg0s9r7
 func (d *BaiduNetdisk) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
 	streamSize := stream.GetSize()
-
-	tempFile, err := utils.CreateTempFile(stream.GetReadCloser(), stream.GetSize())
+	tempFile, err := utils.NewBufferedReadSeekCloser(stream.GetReadCloser(), stream.GetSize())
 	if err != nil {
 		return err
 	}
 	defer func() {
 		_ = tempFile.Close()
-		_ = os.Remove(tempFile.Name())
+
 	}()
 
 	count := int(math.Ceil(float64(streamSize) / float64(DefaultSliceSize)))
@@ -165,10 +164,11 @@ func (d *BaiduNetdisk) Put(ctx context.Context, dstDir model.Obj, stream model.F
 	rawPath := stdpath.Join(dstDir.GetPath(), stream.GetName())
 	path := encodeURIComponent(rawPath)
 	block_list_str := fmt.Sprintf("[%s]", strings.Join(blockList, ","))
-	data := fmt.Sprintf("path=%s&size=%d&isdir=0&autoinit=1&block_list=%s&content-md5=%s&slice-md5=%s",
-		path, streamSize,
-		block_list_str,
-		contentMd5, sliceMd5)
+	mtimeStr := stream.ModTime().Unix()
+	ctimeStr := stream.CreateTime().Unix()
+
+	data := fmt.Sprintf("path=%s&size=%d&isdir=0&autoinit=1&block_list=%s&content-md5=%s&slice-md5=%s&local_mtime=%d&local_ctime=%d",
+		path, streamSize, block_list_str, contentMd5, sliceMd5, mtimeStr, ctimeStr)
 	params := map[string]string{
 		"method": "precreate",
 	}
@@ -212,8 +212,8 @@ func (d *BaiduNetdisk) Put(ctx context.Context, dstDir model.Obj, stream model.F
 	_, err = d.create(rawPath, streamSize, 0, precreateResp.Uploadid, block_list_str)
 	return err
 }
-func (d *BaiduNetdisk) uploadSlice(ctx context.Context, params *map[string]string, fileName string, file *os.File, offset int64, byteSize int64) error {
-	_, err := file.Seek(offset, io.SeekStart)
+func (d *BaiduNetdisk) uploadSlice(ctx context.Context, params *map[string]string, fileName string, readSeekCloser io.ReadSeekCloser, offset int64, byteSize int64) error {
+	_, err := readSeekCloser.Seek(offset, io.SeekStart)
 	if err != nil {
 		return err
 	}
@@ -221,7 +221,7 @@ func (d *BaiduNetdisk) uploadSlice(ctx context.Context, params *map[string]strin
 	res, err := base.RestyClient.R().
 		SetContext(ctx).
 		SetQueryParams(*params).
-		SetFileReader("file", fileName, io.LimitReader(file, byteSize)).
+		SetFileReader("file", fileName, io.LimitReader(readSeekCloser, byteSize)).
 		Post(BaiduFileAPI)
 	if err != nil {
 		return err

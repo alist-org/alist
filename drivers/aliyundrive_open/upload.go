@@ -10,7 +10,6 @@ import (
 	"io"
 	"math"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -159,17 +158,21 @@ func getProofRange(input string, size int64) (*ProofRange, error) {
 	return pr, nil
 }
 
-func (d *AliyundriveOpen) calProofCode(file *os.File, fileSize int64) (string, error) {
+// io.ReadSeekCloser
+func (d *AliyundriveOpen) calProofCode(readSeekCloser io.ReadSeekCloser, fileSize int64) (string, error) {
 	proofRange, err := getProofRange(d.AccessToken, fileSize)
 	if err != nil {
 		return "", err
 	}
-	buf := make([]byte, proofRange.End-proofRange.Start)
-	_, err = file.ReadAt(buf, proofRange.Start)
+	length := proofRange.End - proofRange.Start
+	buf := bytes.NewBuffer(make([]byte, length))
+	_, err = readSeekCloser.Seek(proofRange.Start, io.SeekStart)
+	io.CopyN(buf, readSeekCloser, length)
+
 	if err != nil {
 		return "", err
 	}
-	return base64.StdEncoding.EncodeToString(buf), nil
+	return base64.StdEncoding.EncodeToString(buf.Bytes()), nil
 }
 
 func (d *AliyundriveOpen) upload(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
@@ -177,12 +180,23 @@ func (d *AliyundriveOpen) upload(ctx context.Context, dstDir model.Obj, stream m
 	// Part Size Unit: Bytes, Default: 20MB,
 	// Maximum number of slices 10,000, ≈195.3125GB
 	var partSize = calPartSize(stream.GetSize())
+	const dateFormat = "2019-08-20T06:51:27.292Z"
+	mtime := stream.ModTime()
+	mtimeStr := mtime.UTC().Format(dateFormat)
+	ctimeStr := mtimeStr
+	ct, ok := stream.GetObj().(*model.Object)
+	if ok {
+		ctimeStr = ct.CreateTime().UTC().Format(dateFormat)
+	}
+
 	createData := base.Json{
-		"drive_id":        d.DriveId,
-		"parent_file_id":  dstDir.GetID(),
-		"name":            stream.GetName(),
-		"type":            "file",
-		"check_name_mode": "ignore",
+		"drive_id":          d.DriveId,
+		"parent_file_id":    dstDir.GetID(),
+		"name":              stream.GetName(),
+		"type":              "file",
+		"check_name_mode":   "ignore",
+		"local_modified_at": mtimeStr,
+		"local_created_at":  ctimeStr,
 	}
 	count := int(math.Ceil(float64(stream.GetSize()) / float64(partSize)))
 	createData["part_info_list"] = makePartInfos(count)
@@ -224,7 +238,7 @@ func (d *AliyundriveOpen) upload(ctx context.Context, dstDir model.Obj, stream m
 		}
 		log.Debugf("[aliyundrive_open] pre_hash matched, start rapid upload")
 		// convert to local file
-		file, err := utils.CreateTempFile(stream, stream.GetSize())
+		file, err := utils.NewBufferedReadSeekCloser(stream, stream.GetSize())
 		if err != nil {
 			return err
 		}

@@ -38,15 +38,15 @@ func (d *Pan115) List(ctx context.Context, dir model.Obj, args model.ListArgs) (
 	if err != nil && !errors.Is(err, driver115.ErrNotExist) {
 		return nil, err
 	}
-	return utils.SliceConvert(files, func(src driver115.File) (model.Obj, error) {
-		return src, nil
+	return utils.SliceConvert(files, func(src FileObj) (model.Obj, error) {
+		return &src, nil
 	})
 }
 
 func (d *Pan115) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	downloadInfo, err := d.client.
 		SetUserAgent(driver115.UA115Browser).
-		Download(file.(driver115.File).PickCode)
+		Download(file.(*FileObj).PickCode)
 	// recover for upload
 	d.client.SetUserAgent(driver115.UA115Desktop)
 	if err != nil {

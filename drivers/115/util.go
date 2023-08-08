@@ -41,8 +41,8 @@ func (d *Pan115) login() error {
 	return d.client.LoginCheck()
 }
 
-func (d *Pan115) getFiles(fileId string) ([]driver.File, error) {
-	res := make([]driver.File, 0)
+func (d *Pan115) getFiles(fileId string) ([]FileObj, error) {
+	res := make([]FileObj, 0)
 	if d.PageSize <= 0 {
 		d.PageSize = driver.FileListLimit
 	}
@@ -51,7 +51,7 @@ func (d *Pan115) getFiles(fileId string) ([]driver.File, error) {
 		return nil, err
 	}
 	for _, file := range *files {
-		res = append(res, file)
+		res = append(res, FileObj{file})
 	}
 	return res, nil
 }

@@ -12,6 +12,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"syscall"
+	"time"
 
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/driver"
@@ -101,6 +103,8 @@ func (d *Local) FileInfoToObj(f fs.FileInfo, reqPath string, fullPath string) mo
 	if !isFolder {
 		size = f.Size()
 	}
+	stat := f.Sys().(*syscall.Stat_t)
+
 	file := model.ObjThumb{
 		Object: model.Object{
 			Path:     filepath.Join(fullPath, f.Name()),
@@ -108,6 +112,7 @@ func (d *Local) FileInfoToObj(f fs.FileInfo, reqPath string, fullPath string) mo
 			Modified: f.ModTime(),
 			Size:     size,
 			IsFolder: isFolder,
+			Ctime:    time.Unix(stat.Birthtimespec.Sec, stat.Birthtimespec.Sec),
 		},
 		Thumbnail: model.Thumbnail{
 			Thumbnail: thumb,

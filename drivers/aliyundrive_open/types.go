@@ -17,19 +17,19 @@ type Files struct {
 }
 
 type File struct {
-	DriveId       string     `json:"drive_id"`
-	FileId        string     `json:"file_id"`
-	ParentFileId  string     `json:"parent_file_id"`
-	Name          string     `json:"name"`
-	Size          int64      `json:"size"`
-	FileExtension string     `json:"file_extension"`
-	ContentHash   string     `json:"content_hash"`
-	Category      string     `json:"category"`
-	Type          string     `json:"type"`
-	Thumbnail     string     `json:"thumbnail"`
-	Url           string     `json:"url"`
-	CreatedAt     *time.Time `json:"created_at"`
-	UpdatedAt     time.Time  `json:"updated_at"`
+	DriveId       string    `json:"drive_id"`
+	FileId        string    `json:"file_id"`
+	ParentFileId  string    `json:"parent_file_id"`
+	Name          string    `json:"name"`
+	Size          int64     `json:"size"`
+	FileExtension string    `json:"file_extension"`
+	ContentHash   string    `json:"content_hash"`
+	Category      string    `json:"category"`
+	Type          string    `json:"type"`
+	Thumbnail     string    `json:"thumbnail"`
+	Url           string    `json:"url"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
 }
 
 func fileToObj(f File) *model.ObjThumb {
@@ -40,6 +40,9 @@ func fileToObj(f File) *model.ObjThumb {
 			Size:     f.Size,
 			Modified: f.UpdatedAt,
 			IsFolder: f.Type == "folder",
+			Ctime:    f.CreatedAt,
+			Hash:     f.ContentHash,
+			HashType: model.SHA1,
 		},
 		Thumbnail: model.Thumbnail{Thumbnail: f.Thumbnail},
 	}

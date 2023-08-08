@@ -128,6 +128,8 @@ func (d *Crypt) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([
 				Size:     0,
 				Modified: obj.ModTime(),
 				IsFolder: obj.IsDir(),
+				Ctime:    obj.CreateTime(),
+				// discarding hash as it's encrypted
 			}
 			result = append(result, &objRes)
 		} else {
@@ -147,6 +149,8 @@ func (d *Crypt) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([
 				Size:     size,
 				Modified: obj.ModTime(),
 				IsFolder: obj.IsDir(),
+				Ctime:    obj.CreateTime(),
+				// discarding hash as it's encrypted
 			}
 			if !ok {
 				result = append(result, &objRes)
@@ -270,7 +274,8 @@ func (d *Crypt) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 			if err != nil {
 				return nil, fmt.Errorf("remote storage http request failure,status: %d err:%s", response.StatusCode, err)
 			}
-			if underlyingOffset == 0 && length == -1 || response.StatusCode == http.StatusPartialContent {
+			if underlyingOffset == 0 && length == -1 || response.StatusCode == http.StatusPartialContent ||
+				checkContentRange(&response.Header, file.GetSize(), underlyingOffset) {
 				return response.Body, nil
 			} else if response.StatusCode == http.StatusOK {
 				log.Warnf("remote http server not supporting range request, expect low perfromace!")
@@ -279,19 +284,12 @@ func (d *Crypt) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 					return nil, err
 				}
 				return readCloser, nil
+
 			}
 
 			return response.Body, nil
 		}
-		//if remoteLink.Data != nil {
-		//	log.Warnf("remote storage not supporting range request, expect low perfromace!")
-		//	readCloser, err := net.GetRangedHttpReader(remoteLink.Data, underlyingOffset, length)
-		//	remoteCloser = remoteLink.Data
-		//	if err != nil {
-		//		return nil, err
-		//	}
-		//	return readCloser, nil
-		//}
+
 		return nil, errs.NotSupport
 
 	}
