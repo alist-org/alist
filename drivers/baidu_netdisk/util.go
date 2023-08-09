@@ -77,7 +77,12 @@ func (d *BaiduNetdisk) request(furl string, method string, callback base.ReqCall
 					return err2
 				}
 			}
-			return fmt.Errorf("req: [%s] ,errno: %d, refer to https://pan.baidu.com/union/doc/", furl, errno)
+
+			err2 := fmt.Errorf("req: [%s] ,errno: %d, refer to https://pan.baidu.com/union/doc/", furl, errno)
+			if !utils.SliceContains([]int{2}, errno) {
+				err2 = retry.Unrecoverable(err2)
+			}
+			return err2
 		}
 		result = res.Body()
 		return nil
