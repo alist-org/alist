@@ -82,7 +82,8 @@ func (d *BaiduNetdisk) request(furl string, method string, callback base.ReqCall
 		result = res.Body()
 		return nil
 	},
-		retry.Attempts(3),
+		retry.LastErrorOnly(true),
+		retry.Attempts(5),
 		retry.Delay(time.Second),
 		retry.DelayType(retry.BackOffDelay))
 	return result, err

@@ -96,6 +96,7 @@ func (d *BaiduNetdisk) Move(ctx context.Context, srcObj, dstDir model.Obj) (mode
 	}
 	if srcObj, ok := srcObj.(*model.ObjThumb); ok {
 		srcObj.SetPath(stdpath.Join(dstDir.GetPath(), srcObj.GetName()))
+		srcObj.Modified = time.Now()
 		return srcObj, nil
 	}
 	return nil, nil
@@ -116,6 +117,7 @@ func (d *BaiduNetdisk) Rename(ctx context.Context, srcObj model.Obj, newName str
 	if srcObj, ok := srcObj.(*model.ObjThumb); ok {
 		srcObj.SetPath(stdpath.Join(stdpath.Dir(srcObj.GetPath()), newName))
 		srcObj.Name = newName
+		srcObj.Modified = time.Now()
 		return srcObj, nil
 	}
 	return nil, nil

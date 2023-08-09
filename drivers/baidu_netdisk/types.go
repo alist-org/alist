@@ -18,10 +18,8 @@ type File struct {
 	//OwnerType    int    `json:"owner_type"`
 	//Category     int    `json:"category"`
 	//RealCategory string `json:"real_category"`
-	FsId        int64 `json:"fs_id"`
-	ServerMtime int64 `json:"server_mtime"`
+	FsId int64 `json:"fs_id"`
 	//OperId      int   `json:"oper_id"`
-	//ServerCtime int   `json:"server_ctime"`
 	Thumbs struct {
 		//Icon string `json:"icon"`
 		Url3 string `json:"url3"`
@@ -29,24 +27,36 @@ type File struct {
 		//Url1 string `json:"url1"`
 	} `json:"thumbs"`
 	//Wpfile         int    `json:"wpfile"`
-	//LocalMtime     int    `json:"local_mtime"`
+
 	Size int64 `json:"size"`
 	//ExtentTinyint7 int    `json:"extent_tinyint7"`
 	Path string `json:"path"`
 	//Share          int    `json:"share"`
-	//ServerAtime    int    `json:"server_atime"`
 	//Pl             int    `json:"pl"`
-	//LocalCtime     int    `json:"local_ctime"`
 	ServerFilename string `json:"server_filename"`
 	Md5            string `json:"md5"`
 	//OwnerId        int    `json:"owner_id"`
 	//Unlist int `json:"unlist"`
 	Isdir int `json:"isdir"`
+
+	// list resp
+	//ServerCtime int64   `json:"server_ctime"`
+	ServerMtime int64 `json:"server_mtime"`
+	//ServerAtime    int64    `json:"server_atime"`
+	//LocalCtime     int64    `json:"local_ctime"`
+	//LocalMtime     int64    `json:"local_mtime"`
+
+	// only create and precreate resp
+	Ctime int64 `json:"ctime"`
+	Mtime int64 `json:"mtime"`
 }
 
 func fileToObj(f File) *model.ObjThumb {
 	if f.ServerFilename == "" {
 		f.ServerFilename = path.Base(f.Path)
+	}
+	if f.ServerMtime == 0 {
+		f.ServerMtime = int64(f.Mtime)
 	}
 	return &model.ObjThumb{
 		Object: model.Object{
