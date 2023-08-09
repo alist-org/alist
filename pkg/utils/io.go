@@ -56,11 +56,10 @@ func (l *limitWriter) Write(p []byte) (n int, err error) {
 		if int64(len(p)) > l.limit {
 			p = p[:l.limit]
 		}
-		n, err = l.w.Write(p)
-		l.limit -= int64(n)
-		return n, err
+		l.limit -= int64(len(p))
+		_, err = l.w.Write(p)
 	}
-	return len(p), nil
+	return len(p), err
 }
 
 func LimitWriter(w io.Writer, limit int64) io.Writer {
