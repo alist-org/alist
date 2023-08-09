@@ -222,7 +222,7 @@ func (d *BaiduNetdisk) Put(ctx context.Context, dstDir model.Obj, stream model.F
 			break
 		}
 
-		partseq, offset, byteSize := partseq, int64(partseq)*DefaultSliceSize, byteSize
+		partseq, offset, byteSize := partseq, int64(partseq)*DefaultSliceSize, DefaultSliceSize
 		if partseq+1 == count {
 			byteSize = lastBlockSize
 		}

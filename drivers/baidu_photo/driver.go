@@ -236,8 +236,8 @@ func (d *BaiduPhoto) Put(ctx context.Context, dstDir model.Obj, stream model.Fil
 		_ = os.Remove(tempFile.Name())
 	}()
 
-	const DEFAULT = 1 << 22
-	const SliceSize = 1 << 18
+	const DEFAULT int64 = 1 << 22
+	const SliceSize int64 = 1 << 18
 
 	// 计算需要的数据
 	streamSize := stream.GetSize()
@@ -305,7 +305,7 @@ func (d *BaiduPhoto) Put(ctx context.Context, dstDir model.Obj, stream model.Fil
 				break
 			}
 
-			partseq, offset, byteSize := partseq, int64(partseq)*DEFAULT, byteSize
+			partseq, offset, byteSize := partseq, int64(partseq)*DEFAULT, DEFAULT
 			if partseq+1 == count {
 				byteSize = lastBlockSize
 			}
