@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/op"
@@ -168,4 +169,10 @@ func (d *AliyundriveOpen) getFiles(ctx context.Context, fileId string) ([]File, 
 		res = append(res, resp.Items...)
 	}
 	return res, nil
+}
+
+func getNowTime() (time.Time, string) {
+	nowTime := time.Now()
+	nowTimeStr := nowTime.Format("2006-01-02T15:04:05.000Z")
+	return nowTime, nowTimeStr
 }

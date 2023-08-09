@@ -160,9 +160,9 @@ type (
 		CreateFileResp
 
 		//不存在返回
-		Path      string  `json:"path"`
-		UploadID  string  `json:"uploadid"`
-		Blocklist []int64 `json:"block_list"`
+		Path      string `json:"path"`
+		UploadID  string `json:"uploadid"`
+		BlockList []int  `json:"block_list"`
 	}
 )
 

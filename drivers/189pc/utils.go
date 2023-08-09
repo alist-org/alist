@@ -15,6 +15,7 @@ import (
 	"net/url"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -24,6 +25,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/internal/setting"
+	"github.com/alist-org/alist/v3/pkg/errgroup"
 	"github.com/alist-org/alist/v3/pkg/utils"
 
 	"github.com/avast/retry-go"
@@ -436,14 +438,18 @@ func (y *Cloud189PC) refreshSession() (err error) {
 // 普通上传
 // 无法上传大小为0的文件
 func (y *Cloud189PC) StreamUpload(ctx context.Context, dstDir model.Obj, file model.FileStreamer, up driver.UpdateProgress) (model.Obj, error) {
-	var DEFAULT = partSize(file.GetSize())
-	var count = int(math.Ceil(float64(file.GetSize()) / float64(DEFAULT)))
+	var sliceSize = partSize(file.GetSize())
+	count := int(math.Ceil(float64(file.GetSize()) / float64(sliceSize)))
+	lastPartSize := file.GetSize() % sliceSize
+	if file.GetSize() > 0 && lastPartSize == 0 {
+		lastPartSize = sliceSize
+	}
 
 	params := Params{
 		"parentFolderId": dstDir.GetID(),
 		"fileName":       url.QueryEscape(file.GetName()),
 		"fileSize":       fmt.Sprint(file.GetSize()),
-		"sliceSize":      fmt.Sprint(DEFAULT),
+		"sliceSize":      fmt.Sprint(sliceSize),
 		"lazyCheck":      "1",
 	}
 
@@ -468,17 +474,19 @@ func (y *Cloud189PC) StreamUpload(ctx context.Context, dstDir model.Obj, file mo
 	fileMd5 := md5.New()
 	silceMd5 := md5.New()
 	silceMd5Hexs := make([]string, 0, count)
-	byteData := bytes.NewBuffer(make([]byte, DEFAULT))
+	byteData := make([]byte, sliceSize)
 	for i := 1; i <= count; i++ {
 		if utils.IsCanceled(ctx) {
 			return nil, ctx.Err()
 		}
 
+		if i == count {
+			byteData = byteData[:lastPartSize]
+		}
+
 		// 读取块
-		byteData.Reset()
 		silceMd5.Reset()
-		_, err := io.CopyN(io.MultiWriter(fileMd5, silceMd5, byteData), file, DEFAULT)
-		if err != io.EOF && err != io.ErrUnexpectedEOF && err != nil {
+		if _, err := io.ReadFull(io.TeeReader(file, io.MultiWriter(fileMd5, silceMd5)), byteData); err != io.EOF && err != nil {
 			return nil, err
 		}
 
@@ -504,13 +512,13 @@ func (y *Cloud189PC) StreamUpload(ctx context.Context, dstDir model.Obj, file mo
 		uploadData := uploadUrl.UploadUrls[fmt.Sprint("partNumber_", i)]
 
 		err = retry.Do(func() error {
-			_, err := y.put(ctx, uploadData.RequestURL, ParseHttpHeader(uploadData.RequestHeader), false, bytes.NewReader(byteData.Bytes()))
+			_, err := y.put(ctx, uploadData.RequestURL, ParseHttpHeader(uploadData.RequestHeader), false, bytes.NewReader(byteData))
 			return err
 		},
 			retry.Context(ctx),
 			retry.Attempts(3),
 			retry.Delay(time.Second),
-			retry.MaxDelay(5*time.Second))
+			retry.DelayType(retry.BackOffDelay))
 		if err != nil {
 			return nil, err
 		}
@@ -519,7 +527,7 @@ func (y *Cloud189PC) StreamUpload(ctx context.Context, dstDir model.Obj, file mo
 
 	fileMd5Hex := strings.ToUpper(hex.EncodeToString(fileMd5.Sum(nil)))
 	sliceMd5Hex := fileMd5Hex
-	if file.GetSize() > DEFAULT {
+	if file.GetSize() > sliceSize {
 		sliceMd5Hex = strings.ToUpper(utils.GetMD5EncodeStr(strings.Join(silceMd5Hexs, "\n")))
 	}
 
@@ -554,10 +562,15 @@ func (y *Cloud189PC) FastUpload(ctx context.Context, dstDir model.Obj, file mode
 		_ = os.Remove(tempFile.Name())
 	}()
 
-	var DEFAULT = partSize(file.GetSize())
-	count := int(math.Ceil(float64(file.GetSize()) / float64(DEFAULT)))
+	var sliceSize = partSize(file.GetSize())
+	count := int(math.Ceil(float64(file.GetSize()) / float64(sliceSize)))
+	lastPartSize := file.GetSize() % sliceSize
+	if file.GetSize() > 0 && lastPartSize == 0 {
+		lastPartSize = sliceSize
+	}
 
-	// 优先计算所需信息
+	//step.1 优先计算所需信息
+	byteSize := sliceSize
 	fileMd5 := md5.New()
 	silceMd5 := md5.New()
 	silceMd5Hexs := make([]string, 0, count)
@@ -567,31 +580,32 @@ func (y *Cloud189PC) FastUpload(ctx context.Context, dstDir model.Obj, file mode
 			return nil, ctx.Err()
 		}
 
+		if i == count {
+			byteSize = lastPartSize
+		}
+
 		silceMd5.Reset()
-		if _, err := io.CopyN(io.MultiWriter(fileMd5, silceMd5), tempFile, DEFAULT); err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
+		if _, err := io.CopyN(io.MultiWriter(fileMd5, silceMd5), tempFile, byteSize); err != nil && err != io.EOF {
 			return nil, err
 		}
 		md5Byte := silceMd5.Sum(nil)
 		silceMd5Hexs = append(silceMd5Hexs, strings.ToUpper(hex.EncodeToString(md5Byte)))
 		silceMd5Base64s = append(silceMd5Base64s, fmt.Sprint(i, "-", base64.StdEncoding.EncodeToString(md5Byte)))
 	}
-	if _, err = tempFile.Seek(0, io.SeekStart); err != nil {
-		return nil, err
-	}
 
 	fileMd5Hex := strings.ToUpper(hex.EncodeToString(fileMd5.Sum(nil)))
 	sliceMd5Hex := fileMd5Hex
-	if file.GetSize() > DEFAULT {
+	if file.GetSize() > sliceSize {
 		sliceMd5Hex = strings.ToUpper(utils.GetMD5EncodeStr(strings.Join(silceMd5Hexs, "\n")))
 	}
 
-	// 检测是否支持快传
+	//step.2 预上传
 	params := Params{
 		"parentFolderId": dstDir.GetID(),
 		"fileName":       url.QueryEscape(file.GetName()),
 		"fileSize":       fmt.Sprint(file.GetSize()),
 		"fileMd5":        fileMd5Hex,
-		"sliceSize":      fmt.Sprint(DEFAULT),
+		"sliceSize":      fmt.Sprint(sliceSize),
 		"sliceMd5":       sliceMd5Hex,
 	}
 
@@ -614,6 +628,7 @@ func (y *Cloud189PC) FastUpload(ctx context.Context, dstDir model.Obj, file mode
 
 	// 网盘中不存在该文件，开始上传
 	if uploadInfo.Data.FileDataExists != 1 {
+		// step.3 获取上传切片信息
 		var uploadUrls UploadUrlsResp
 		_, err = y.request(fullUrl+"/getMultiUploadUrls", http.MethodGet,
 			func(req *resty.Request) {
@@ -626,30 +641,36 @@ func (y *Cloud189PC) FastUpload(ctx context.Context, dstDir model.Obj, file mode
 			return nil, err
 		}
 
-		buf := make([]byte, DEFAULT)
-		for i := 1; i <= count; i++ {
-			if utils.IsCanceled(ctx) {
-				return nil, ctx.Err()
+		// step.4 上传切片
+		threadG, upCtx := errgroup.NewGroupWithContext(ctx, y.uploadThread,
+			retry.Attempts(3),
+			retry.Delay(time.Second),
+			retry.DelayType(retry.BackOffDelay))
+		for k, part := range uploadUrls.UploadUrls {
+			if utils.IsCanceled(upCtx) {
+				break
 			}
-
-			n, err := io.ReadFull(tempFile, buf)
-			if err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
-				return nil, err
-			}
-			uploadData := uploadUrls.UploadUrls[fmt.Sprint("partNumber_", i)]
-			err = retry.Do(func() error {
-				_, err := y.put(ctx, uploadData.RequestURL, ParseHttpHeader(uploadData.RequestHeader), false, bytes.NewReader(buf[:n]))
-				return err
-			},
-				retry.Context(ctx),
-				retry.Attempts(3),
-				retry.Delay(time.Second),
-				retry.MaxDelay(5*time.Second))
+			partNumber, err := strconv.Atoi(strings.TrimPrefix(k, "partNumber_"))
 			if err != nil {
 				return nil, err
 			}
 
-			up(int(i * 100 / count))
+			part, byteSize, offset := part, sliceSize, int64(partNumber-1)*sliceSize
+			if partNumber == count {
+				byteSize = lastPartSize
+			}
+
+			threadG.Go(func(ctx context.Context) error {
+				_, err := y.put(ctx, part.RequestURL, ParseHttpHeader(part.RequestHeader), false, io.NewSectionReader(tempFile, offset, byteSize))
+				if err != nil {
+					return err
+				}
+				up(int(threadG.Success()) * 100 / len(uploadUrls.UploadUrls))
+				return nil
+			})
+		}
+		if err = threadG.Wait(); err != nil {
+			return nil, err
 		}
 	}
 

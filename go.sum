@@ -114,10 +114,10 @@ github.com/disintegration/imaging v1.6.2 h1:w1LecBlG2Lnp8B3jk5zSuNqd7b4DXhcjwek1
 github.com/disintegration/imaging v1.6.2/go.mod h1:44/5580QXChDfwIclfc/PCwrr44amcmDAg8hxG0Ewe4=
 github.com/dustinxie/ecc v0.0.0-20210511000915-959544187564 h1:I6KUy4CI6hHjqnyJLNCEi7YHVMkwwtfSr2k9splgdSM=
 github.com/dustinxie/ecc v0.0.0-20210511000915-959544187564/go.mod h1:yekO+3ZShy19S+bsmnERmznGy9Rfg6dWWWpiGJjNAz8=
-github.com/foxxorcat/mopan-sdk-go v0.1.1 h1:JYMeCu4PFpqgHapvOz4jPMT7CxR6Yebu3aWkgGMDeIU=
-github.com/foxxorcat/mopan-sdk-go v0.1.1/go.mod h1:LpBPmwezjQNyhaNo3HGzgFtQbhvxmF5ZybSVuKi7OVA=
-github.com/foxxorcat/weiyun-sdk-go v0.1.1 h1:m4qcJk0adr+bpM4es2zCqP3jhMEwEPyTMGICsamygEQ=
-github.com/foxxorcat/weiyun-sdk-go v0.1.1/go.mod h1:AKsLFuWhWlClpGrg1zxTdMejugZEZtmhIuElAk3W83s=
+github.com/foxxorcat/mopan-sdk-go v0.1.2 h1:1QM/JUWQpjbu53pVvbMfp3PLz09duGY5Mid3Qlc9WOk=
+github.com/foxxorcat/mopan-sdk-go v0.1.2/go.mod h1:iWHA2JFhzmKR28ySp1ON0g6DjLaYtvb5jhTqPVTDW9A=
+github.com/foxxorcat/weiyun-sdk-go v0.1.2 h1:waRWIBmjL9GCcndJ8HvOYrrVB4hhoPYzRrn3I/Cnzqw=
+github.com/foxxorcat/weiyun-sdk-go v0.1.2/go.mod h1:AKsLFuWhWlClpGrg1zxTdMejugZEZtmhIuElAk3W83s=
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
 github.com/gabriel-vasile/mimetype v1.4.2 h1:w5qFW6JKBz9Y393Y4q372O9A7cUSequkh1Q7OhCmWKU=
 github.com/gabriel-vasile/mimetype v1.4.2/go.mod h1:zApsH/mKG4w07erKIaJPFiX0Tsq9BFQgN3qGY5GnNgA=

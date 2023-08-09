@@ -15,8 +15,8 @@ require (
 	github.com/deckarep/golang-set/v2 v2.3.0
 	github.com/disintegration/imaging v1.6.2
 	github.com/dustinxie/ecc v0.0.0-20210511000915-959544187564
-	github.com/foxxorcat/mopan-sdk-go v0.1.1
-	github.com/foxxorcat/weiyun-sdk-go v0.1.1
+	github.com/foxxorcat/mopan-sdk-go v0.1.2
+	github.com/foxxorcat/weiyun-sdk-go v0.1.2
 	github.com/gin-contrib/cors v1.4.0
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-resty/resty/v2 v2.7.0

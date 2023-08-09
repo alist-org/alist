@@ -15,6 +15,7 @@ type Addition struct {
 	ClientSecret   string `json:"client_secret" required:"true" default:"jXiFMOPVPCWlO2M5CwWQzffpNPaGTRBG"`
 	CustomCrackUA  string `json:"custom_crack_ua" required:"true" default:"netdisk"`
 	AccessToken    string
+	UploadThread   string `json:"upload_thread" default:"3" help:"1<=thread<=32"`
 }
 
 var config = driver.Config{

@@ -2,17 +2,18 @@ package baidu_netdisk
 
 import (
 	"fmt"
-	"github.com/avast/retry-go"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/pkg/utils"
+	"github.com/avast/retry-go"
 	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
 )
@@ -76,12 +77,20 @@ func (d *BaiduNetdisk) request(furl string, method string, callback base.ReqCall
 					return err2
 				}
 			}
-			return fmt.Errorf("req: [%s] ,errno: %d, refer to https://pan.baidu.com/union/doc/", furl, errno)
+
+			err2 := fmt.Errorf("req: [%s] ,errno: %d, refer to https://pan.baidu.com/union/doc/", furl, errno)
+			if !utils.SliceContains([]int{2}, errno) {
+				err2 = retry.Unrecoverable(err2)
+			}
+			return err2
 		}
 		result = res.Body()
 		return nil
 	},
-		retry.Attempts(3))
+		retry.LastErrorOnly(true),
+		retry.Attempts(5),
+		retry.Delay(time.Second),
+		retry.DelayType(retry.BackOffDelay))
 	return result, err
 }
 
@@ -179,20 +188,17 @@ func (d *BaiduNetdisk) linkCrack(file model.Obj, args model.LinkArgs) (*model.Li
 	}, nil
 }
 
-func (d *BaiduNetdisk) manage(opera string, filelist interface{}) ([]byte, error) {
+func (d *BaiduNetdisk) manage(opera string, filelist any) ([]byte, error) {
 	params := map[string]string{
 		"method": "filemanager",
 		"opera":  opera,
 	}
-	marshal, err := utils.Json.Marshal(filelist)
-	if err != nil {
-		return nil, err
-	}
-	data := fmt.Sprintf("async=0&filelist=%s&ondup=newcopy", string(marshal))
+	marshal, _ := utils.Json.MarshalToString(filelist)
+	data := fmt.Sprintf("async=0&filelist=%s&ondup=fail", marshal)
 	return d.post("/xpan/file", params, data, nil)
 }
 
-func (d *BaiduNetdisk) create(path string, size int64, isdir int, uploadid, block_list string) ([]byte, error) {
+func (d *BaiduNetdisk) create(path string, size int64, isdir int, uploadid, block_list string, resp any) ([]byte, error) {
 	params := map[string]string{
 		"method": "create",
 	}
@@ -200,7 +206,7 @@ func (d *BaiduNetdisk) create(path string, size int64, isdir int, uploadid, bloc
 	if uploadid != "" {
 		data += fmt.Sprintf("&uploadid=%s&block_list=%s", uploadid, block_list)
 	}
-	return d.post("/xpan/file", params, data, nil)
+	return d.post("/xpan/file", params, data, resp)
 }
 
 func encodeURIComponent(str string) string {
