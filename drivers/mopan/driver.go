@@ -7,12 +7,14 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/op"
+	"github.com/alist-org/alist/v3/pkg/errgroup"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/avast/retry-go"
 	"github.com/foxxorcat/mopan-sdk-go"
@@ -23,7 +25,8 @@ type MoPan struct {
 	Addition
 	client *mopan.MoClient
 
-	userID string
+	userID       string
+	uploadThread int
 }
 
 func (d *MoPan) Config() driver.Config {
@@ -35,6 +38,10 @@ func (d *MoPan) GetAddition() driver.Additional {
 }
 
 func (d *MoPan) Init(ctx context.Context) error {
+	d.uploadThread, _ = strconv.Atoi(d.UploadThread)
+	if d.uploadThread < 1 || d.uploadThread > 32 {
+		d.uploadThread, d.UploadThread = 3, "3"
+	}
 	login := func() error {
 		data, err := d.client.Login(d.Phone, d.Password)
 		if err != nil {
@@ -49,7 +56,7 @@ func (d *MoPan) Init(ctx context.Context) error {
 		d.userID = info.UserID
 		return nil
 	}
-	d.client = mopan.NewMoClient().
+	d.client = mopan.NewMoClientWithRestyClient(base.NewRestyClient()).
 		SetRestyClient(base.RestyClient).
 		SetOnAuthorizationExpired(func(_ error) error {
 			err := login()
@@ -221,6 +228,7 @@ func (d *MoPan) Put(ctx context.Context, dstDir model.Obj, stream model.FileStre
 		_ = os.Remove(file.Name())
 	}()
 
+	// step.1
 	initUpdload, err := d.client.InitMultiUpload(ctx, mopan.UpdloadFileParam{
 		ParentFolderId: dstDir.GetID(),
 		FileName:       stream.GetName(),
@@ -234,46 +242,50 @@ func (d *MoPan) Put(ctx context.Context, dstDir model.Obj, stream model.FileStre
 	}
 
 	if !initUpdload.FileDataExists {
+		// step.2
 		parts, err := d.client.GetAllMultiUploadUrls(initUpdload.UploadFileID, initUpdload.PartInfo)
 		if err != nil {
 			return nil, err
 		}
 		d.client.CloudDiskStartBusiness()
-		for i, part := range parts {
-			if utils.IsCanceled(ctx) {
-				return nil, ctx.Err()
+
+		// step.3
+		threadG, upCtx := errgroup.NewGroupWithContext(ctx, d.uploadThread,
+			retry.Attempts(3),
+			retry.Delay(time.Second),
+			retry.DelayType(retry.BackOffDelay))
+		for _, part := range parts {
+			if utils.IsCanceled(upCtx) {
+				break
 			}
 
-			err := retry.Do(func() error {
-				if _, err := file.Seek(int64(part.PartNumber-1)*int64(initUpdload.PartSize), io.SeekStart); err != nil {
-					return retry.Unrecoverable(err)
-				}
+			part, byteSize := part, initUpdload.PartSize
+			if part.PartNumber == len(initUpdload.PartInfo) {
+				byteSize = initUpdload.LastPartSize
+			}
 
-				req, err := part.NewRequest(ctx, io.LimitReader(file, int64(initUpdload.PartSize)))
+			threadG.Go(func(ctx context.Context) error {
+				req, err := part.NewRequest(ctx, io.NewSectionReader(file, int64(part.PartNumber-1)*initUpdload.PartSize, byteSize))
 				if err != nil {
 					return err
 				}
-
 				resp, err := base.HttpClient.Do(req)
 				if err != nil {
 					return err
 				}
-
+				resp.Body.Close()
 				if resp.StatusCode != http.StatusOK {
 					return fmt.Errorf("upload err,code=%d", resp.StatusCode)
 				}
+				up(100 * int(threadG.Success()) / len(parts))
 				return nil
-			},
-				retry.Context(ctx),
-				retry.Attempts(3),
-				retry.Delay(time.Second),
-				retry.MaxDelay(5*time.Second))
-			if err != nil {
-				return nil, err
-			}
-			up(100 * (i + 1) / len(parts))
+			})
+		}
+		if err = threadG.Wait(); err != nil {
+			return nil, err
 		}
 	}
+	//step.4
 	uFile, err := d.client.CommitMultiUploadFile(initUpdload.UploadFileID, nil)
 	if err != nil {
 		return nil, err
