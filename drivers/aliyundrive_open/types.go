@@ -36,10 +36,13 @@ type File struct {
 }
 
 func fileToObj(f File) *model.ObjThumb {
+	if f.Name == "" {
+		f.Name = f.FileName
+	}
 	return &model.ObjThumb{
 		Object: model.Object{
 			ID:       f.FileId,
-			Name:     f.Name + f.FileName,
+			Name:     f.Name,
 			Size:     f.Size,
 			Modified: f.UpdatedAt,
 			IsFolder: f.Type == "folder",
