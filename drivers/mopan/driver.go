@@ -229,41 +229,52 @@ func (d *MoPan) Put(ctx context.Context, dstDir model.Obj, stream model.FileStre
 	}()
 
 	// step.1
-	initUpdload, err := d.client.InitMultiUpload(ctx, mopan.UpdloadFileParam{
+	uploadPartData, err := mopan.InitUploadPartData(ctx, mopan.UpdloadFileParam{
 		ParentFolderId: dstDir.GetID(),
 		FileName:       stream.GetName(),
 		FileSize:       stream.GetSize(),
 		File:           file,
-	}, mopan.WarpParamOption(
-		mopan.ParamOptionShareFile(d.CloudID),
-	))
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	if !initUpdload.FileDataExists {
+	// 尝试恢复进度
+	initUpdload, ok := base.GetUploadProgress[*mopan.InitMultiUploadData](d, d.client.Authorization, uploadPartData.FileMd5)
+	if !ok {
 		// step.2
-		parts, err := d.client.GetAllMultiUploadUrls(initUpdload.UploadFileID, initUpdload.PartInfo)
+		initUpdload, err = d.client.InitMultiUpload(ctx, *uploadPartData, mopan.WarpParamOption(
+			mopan.ParamOptionShareFile(d.CloudID),
+		))
 		if err != nil {
 			return nil, err
 		}
-		d.client.CloudDiskStartBusiness()
+	}
 
-		// step.3
+	if !initUpdload.FileDataExists {
+		fmt.Println(d.client.CloudDiskStartBusiness())
+
 		threadG, upCtx := errgroup.NewGroupWithContext(ctx, d.uploadThread,
 			retry.Attempts(3),
 			retry.Delay(time.Second),
 			retry.DelayType(retry.BackOffDelay))
-		for _, part := range parts {
+
+		// step.3
+		parts, err := d.client.GetAllMultiUploadUrls(initUpdload.UploadFileID, initUpdload.PartInfos)
+		if err != nil {
+			return nil, err
+		}
+
+		for i, part := range parts {
 			if utils.IsCanceled(upCtx) {
 				break
 			}
-
-			part, byteSize := part, initUpdload.PartSize
-			if part.PartNumber == len(initUpdload.PartInfo) {
+			i, part, byteSize := i, part, initUpdload.PartSize
+			if part.PartNumber == uploadPartData.PartTotal {
 				byteSize = initUpdload.LastPartSize
 			}
 
+			// step.4
 			threadG.Go(func(ctx context.Context) error {
 				req, err := part.NewRequest(ctx, io.NewSectionReader(file, int64(part.PartNumber-1)*initUpdload.PartSize, byteSize))
 				if err != nil {
@@ -278,14 +289,19 @@ func (d *MoPan) Put(ctx context.Context, dstDir model.Obj, stream model.FileStre
 					return fmt.Errorf("upload err,code=%d", resp.StatusCode)
 				}
 				up(100 * int(threadG.Success()) / len(parts))
+				initUpdload.PartInfos[i] = ""
 				return nil
 			})
 		}
 		if err = threadG.Wait(); err != nil {
+			if errors.Is(err, context.Canceled) {
+				initUpdload.PartInfos = utils.SliceFilter(initUpdload.PartInfos, func(s string) bool { return s != "" })
+				base.SaveUploadProgress(d, initUpdload, d.client.Authorization, uploadPartData.FileMd5)
+			}
 			return nil, err
 		}
 	}
-	//step.4
+	//step.5
 	uFile, err := d.client.CommitMultiUploadFile(initUpdload.UploadFileID, nil)
 	if err != nil {
 		return nil, err
