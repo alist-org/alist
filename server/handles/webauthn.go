@@ -8,6 +8,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/internal/setting"
 	"github.com/alist-org/alist/v3/pkg/authn"
 	"github.com/alist-org/alist/v3/server/common"
@@ -171,6 +172,11 @@ func FinishAuthnRegistration(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
+	err = op.DelUserCache(user.Username)
+	if err != nil {
+		common.ErrorResp(c, err, 400)
+		return
+	}
 	common.SuccessResp(c, "Registered Successfully")
 }
 
@@ -180,12 +186,18 @@ func DeleteAuthnLogin(c *gin.Context) {
 		ID string `json:"id"`
 	}
 	var req DeleteauthnReq
-	if err := c.ShouldBind(&req); err != nil {
+	err := c.ShouldBind(&req)
+	if err != nil {
 		common.ErrorResp(c, err, 400)
 		return
 	}
 	authn := &authn.Authn{}
 	user.RemoveAuthn(req.ID, authn)
+	err = op.DelUserCache(user.Username)
+	if err != nil {
+		common.ErrorResp(c, err, 400)
+		return
+	}
 	common.SuccessResp(c, "Deleted Successfully")
 }
 
