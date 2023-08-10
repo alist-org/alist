@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
 	"net/http"
 	"os"
@@ -180,7 +181,15 @@ func (d *Local) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 		if err != nil {
 			return nil, err
 		}
-		link.ReadSeekCloser = open
+		link.ReadSeekCloser = struct {
+			io.Reader
+			io.Seeker
+			io.Closer
+		}{
+			Reader: open,
+			Seeker: open,
+			Closer: open,
+		}
 	}
 	return &link, nil
 }
