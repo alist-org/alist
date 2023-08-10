@@ -52,14 +52,15 @@ type limitWriter struct {
 }
 
 func (l *limitWriter) Write(p []byte) (n int, err error) {
+	lp := len(p)
 	if l.limit > 0 {
-		if int64(len(p)) > l.limit {
+		if int64(lp) > l.limit {
 			p = p[:l.limit]
 		}
 		l.limit -= int64(len(p))
 		_, err = l.w.Write(p)
 	}
-	return len(p), err
+	return lp, err
 }
 
 func LimitWriter(w io.Writer, limit int64) io.Writer {

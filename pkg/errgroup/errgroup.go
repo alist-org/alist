@@ -23,7 +23,7 @@ type Group struct {
 
 func NewGroupWithContext(ctx context.Context, limit int, retryOpts ...retry.Option) (*Group, context.Context) {
 	ctx, cancel := context.WithCancelCause(ctx)
-	return (&Group{cancel: cancel, ctx: ctx, opts: retryOpts}).SetLimit(limit), ctx
+	return (&Group{cancel: cancel, ctx: ctx, opts: append(retryOpts, retry.Context(ctx))}).SetLimit(limit), ctx
 }
 
 func (g *Group) done() {

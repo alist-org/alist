@@ -2,13 +2,14 @@ package utils
 
 import (
 	"fmt"
-	"github.com/alist-org/alist/v3/internal/errs"
 	"io"
 	"mime"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
+
+	"github.com/alist-org/alist/v3/internal/errs"
 
 	"github.com/alist-org/alist/v3/internal/conf"
 	log "github.com/sirupsen/logrus"
@@ -127,7 +128,7 @@ func CreateTempFile(r io.ReadCloser, size int64) (*os.File, error) {
 	}
 	if size != 0 && readBytes != size {
 		_ = os.Remove(f.Name())
-		return nil, errs.NewErr(err, "CreateTempFile failed, incoming stream actual size= %s, expect = %s ", readBytes, size)
+		return nil, errs.NewErr(err, "CreateTempFile failed, incoming stream actual size= %d, expect = %d ", readBytes, size)
 	}
 	_, err = f.Seek(0, io.SeekStart)
 	if err != nil {
