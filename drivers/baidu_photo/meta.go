@@ -13,6 +13,7 @@ type Addition struct {
 	DeleteOrigin bool   `json:"delete_origin"`
 	ClientID     string `json:"client_id" required:"true" default:"iYCeC9g08h5vuP9UqvPHKKSVrKFXGa1v"`
 	ClientSecret string `json:"client_secret" required:"true" default:"jXiFMOPVPCWlO2M5CwWQzffpNPaGTRBG"`
+	UploadThread string `json:"upload_thread" default:"3" help:"1<=thread<=32"`
 }
 
 var config = driver.Config{

@@ -1,11 +1,12 @@
 package model
 
 import (
-	"github.com/alist-org/alist/v3/pkg/http_range"
-	"github.com/alist-org/alist/v3/pkg/utils"
 	"io"
 	"net/http"
 	"time"
+
+	"github.com/alist-org/alist/v3/pkg/http_range"
+	"github.com/alist-org/alist/v3/pkg/utils"
 )
 
 type ListArgs struct {
@@ -23,14 +24,14 @@ type LinkArgs struct {
 type Link struct {
 	URL             string            `json:"url"`
 	Header          http.Header       `json:"header"` // needed header (for url) or response header(for data or writer)
-	RangeReadCloser RangeReadCloser   // recommended way
-	ReadSeekCloser  io.ReadSeekCloser // best for local,smb.. file system, which exposes ReadSeekCloser
+	RangeReadCloser RangeReadCloser   `json:"-"`      // recommended way
+	ReadSeekCloser  io.ReadSeekCloser `json:"-"`      // best for local,smb... file system, which exposes ReadSeekCloser
 
 	Expiration *time.Duration // local cache expire Duration
-	IPCacheKey bool           // add ip to cache key
+	IPCacheKey bool           `json:"-"` // add ip to cache key
 	//for accelerating request, use multi-thread downloading
-	Concurrency int
-	PartSize    int
+	Concurrency int `json:"concurrency"`
+	PartSize    int `json:"part_size"`
 }
 
 type OtherArgs struct {

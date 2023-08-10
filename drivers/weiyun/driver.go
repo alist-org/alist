@@ -2,11 +2,12 @@ package weiyun
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"math"
 	"net/http"
 	"os"
-	"sync"
+	"strconv"
 	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
@@ -15,7 +16,9 @@ import (
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/pkg/cron"
+	"github.com/alist-org/alist/v3/pkg/errgroup"
 	"github.com/alist-org/alist/v3/pkg/utils"
+	"github.com/avast/retry-go"
 	weiyunsdkgo "github.com/foxxorcat/weiyun-sdk-go"
 )
 
@@ -26,6 +29,8 @@ type WeiYun struct {
 	client     *weiyunsdkgo.WeiYunClient
 	cron       *cron.Cron
 	rootFolder *Folder
+
+	uploadThread int
 }
 
 func (d *WeiYun) Config() driver.Config {
@@ -37,7 +42,13 @@ func (d *WeiYun) GetAddition() driver.Additional {
 }
 
 func (d *WeiYun) Init(ctx context.Context) error {
-	d.client = weiyunsdkgo.NewWeiYunClientWithRestyClient(base.RestyClient)
+	// 限制上传线程数
+	d.uploadThread, _ = strconv.Atoi(d.UploadThread)
+	if d.uploadThread < 4 || d.uploadThread > 32 {
+		d.uploadThread, d.UploadThread = 4, "4"
+	}
+
+	d.client = weiyunsdkgo.NewWeiYunClientWithRestyClient(base.NewRestyClient())
 	err := d.client.SetCookiesStr(d.Cookies).RefreshCtoken()
 	if err != nil {
 		return err
@@ -77,6 +88,10 @@ func (d *WeiYun) Init(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	if len(folders) == 0 {
+		return fmt.Errorf("invalid directory ID")
+	}
+
 	folder := folders[len(folders)-1]
 	d.rootFolder = &Folder{
 		PFolder: &Folder{
@@ -187,6 +202,7 @@ func (d *WeiYun) MakeDir(ctx context.Context, parentDir model.Obj, dirName strin
 }
 
 func (d *WeiYun) Move(ctx context.Context, srcObj, dstDir model.Obj) (model.Obj, error) {
+	// TODO: 默认策略为重命名，使用缓存可能出现冲突。微云app也有这个冲突，不知道腾讯怎么搞的
 	if dstDir, ok := dstDir.(*Folder); ok {
 		dstParam := weiyunsdkgo.FolderParam{
 			PdirKey: dstDir.GetPKey(),
@@ -204,7 +220,6 @@ func (d *WeiYun) Move(ctx context.Context, srcObj, dstDir model.Obj) (model.Obj,
 			if err != nil {
 				return nil, err
 			}
-
 			return &File{
 				PFolder: dstDir,
 				File:    srcObj.File,
@@ -219,7 +234,6 @@ func (d *WeiYun) Move(ctx context.Context, srcObj, dstDir model.Obj) (model.Obj,
 			if err != nil {
 				return nil, err
 			}
-
 			return &Folder{
 				PFolder: dstDir,
 				Folder:  srcObj.Folder,
@@ -271,7 +285,6 @@ func (d *WeiYun) Rename(ctx context.Context, srcObj model.Obj, newName string) (
 }
 
 func (d *WeiYun) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
-	// TODO copy obj, optional
 	return errs.NotImplement
 }
 
@@ -292,7 +305,6 @@ func (d *WeiYun) Remove(ctx context.Context, obj model.Obj) error {
 			DirName:  obj.GetName(),
 		})
 	}
-	// TODO remove obj, optional
 	return errs.NotSupport
 }
 
@@ -325,35 +337,44 @@ func (d *WeiYun) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 
 		// fast upload
 		if !preData.FileExist {
-			// step 2.
-			upCtx, cancel := context.WithCancelCause(ctx)
-			var wg sync.WaitGroup
+			// step.2 增加上传通道
+			if len(preData.ChannelList) < d.uploadThread {
+				newCh, err := d.client.AddUploadChannel(len(preData.ChannelList), d.uploadThread, preData.UploadAuthData)
+				if err != nil {
+					return nil, err
+				}
+				preData.ChannelList = append(preData.ChannelList, newCh.AddChannels...)
+			}
+			// step.3 上传
+			threadG, upCtx := errgroup.NewGroupWithContext(ctx, len(preData.ChannelList),
+				retry.Attempts(3),
+				retry.Delay(time.Second),
+				retry.DelayType(retry.BackOffDelay))
+
 			for _, channel := range preData.ChannelList {
-				wg.Add(1)
-				go func(channel weiyunsdkgo.UploadChannelData) {
-					defer wg.Done()
-					if utils.IsCanceled(upCtx) {
-						return
-					}
+				if utils.IsCanceled(upCtx) {
+					break
+				}
+
+				var channel = channel
+				threadG.Go(func(ctx context.Context) error {
 					for {
 						channel.Len = int(math.Min(float64(stream.GetSize()-channel.Offset), float64(channel.Len)))
 						upData, err := d.client.UploadFile(upCtx, channel, preData.UploadAuthData,
 							io.NewSectionReader(file, channel.Offset, int64(channel.Len)))
 						if err != nil {
-							cancel(err)
-							return
+							return err
 						}
 						// 上传完成
 						if upData.UploadState != 1 {
-							return
+							return nil
 						}
 						channel = upData.Channel
 					}
-				}(channel)
+				})
 			}
-			wg.Wait()
-			if utils.IsCanceled(upCtx) {
-				return nil, context.Cause(upCtx)
+			if err = threadG.Wait(); err != nil {
+				return nil, err
 			}
 		}
 
