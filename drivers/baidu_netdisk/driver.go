@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"net/url"
 	"os"
 	stdpath "path"
 	"strconv"
@@ -30,7 +31,6 @@ type BaiduNetdisk struct {
 	uploadThread int
 }
 
-const BaiduFileAPI = "https://d.pcs.baidu.com/rest/2.0/pcs/superfile2"
 const DefaultSliceSize int64 = 4 * 1024 * 1024
 
 func (d *BaiduNetdisk) Config() driver.Config {
@@ -46,6 +46,11 @@ func (d *BaiduNetdisk) Init(ctx context.Context) error {
 	if d.uploadThread < 1 || d.uploadThread > 32 {
 		d.uploadThread, d.UploadThread = 3, "3"
 	}
+
+	if _, err := url.Parse(d.UploadAPI); d.UploadAPI == "" || err != nil {
+		d.UploadAPI = "https://d.pcs.baidu.com"
+	}
+
 	res, err := d.get("/xpan/nas", map[string]string{
 		"method": "uinfo",
 	}, nil)
@@ -269,7 +274,7 @@ func (d *BaiduNetdisk) uploadSlice(ctx context.Context, params map[string]string
 		SetContext(ctx).
 		SetQueryParams(params).
 		SetFileReader("file", fileName, file).
-		Post(BaiduFileAPI)
+		Post(d.UploadAPI + "/rest/2.0/pcs/superfile2")
 	if err != nil {
 		return err
 	}

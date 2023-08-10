@@ -16,6 +16,7 @@ type Addition struct {
 	CustomCrackUA  string `json:"custom_crack_ua" required:"true" default:"netdisk"`
 	AccessToken    string
 	UploadThread   string `json:"upload_thread" default:"3" help:"1<=thread<=32"`
+	UploadAPI      string `json:"upload_api" default:"https://d.pcs.baidu.com"`
 }
 
 var config = driver.Config{
