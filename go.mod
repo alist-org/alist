@@ -11,6 +11,9 @@ require (
 	github.com/aws/aws-sdk-go v1.44.316
 	github.com/blevesearch/bleve/v2 v2.3.9
 	github.com/caarlos0/env/v9 v9.0.0
+	github.com/charmbracelet/bubbles v0.16.1
+	github.com/charmbracelet/bubbletea v0.24.2
+	github.com/charmbracelet/lipgloss v0.7.1
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/deckarep/golang-set/v2 v2.3.0
 	github.com/disintegration/imaging v1.6.2
@@ -30,7 +33,7 @@ require (
 	github.com/maruel/natural v1.1.0
 	github.com/natefinch/lumberjack v2.0.0+incompatible
 	github.com/pkg/errors v0.9.1
-	github.com/pkg/sftp v1.13.6-0.20230213180117-971c283182b6
+	github.com/pkg/sftp v1.13.6-0.20230714145805-ec1c8caca60e
 	github.com/pquerna/otp v1.4.0
 	github.com/rclone/rclone v1.63.1
 	github.com/sirupsen/logrus v1.9.3
@@ -82,9 +85,6 @@ require (
 	github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc // indirect
 	github.com/bytedance/sonic v1.9.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
-	github.com/charmbracelet/bubbles v0.16.1 // indirect
-	github.com/charmbracelet/bubbletea v0.24.2 // indirect
-	github.com/charmbracelet/lipgloss v0.7.1 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20221115062448-fe3a3abad311 // indirect
 	github.com/containerd/console v1.0.4-0.20230313162750-1ae8d489ac81 // indirect
 	github.com/coreos/go-semver v0.3.1 // indirect
