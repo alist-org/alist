@@ -4,9 +4,11 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"math"
+	"net/url"
 	"os"
 	stdpath "path"
 	"strconv"
@@ -29,7 +31,6 @@ type BaiduNetdisk struct {
 	uploadThread int
 }
 
-const BaiduFileAPI = "https://d.pcs.baidu.com/rest/2.0/pcs/superfile2"
 const DefaultSliceSize int64 = 4 * 1024 * 1024
 
 func (d *BaiduNetdisk) Config() driver.Config {
@@ -45,6 +46,11 @@ func (d *BaiduNetdisk) Init(ctx context.Context) error {
 	if d.uploadThread < 1 || d.uploadThread > 32 {
 		d.uploadThread, d.UploadThread = 3, "3"
 	}
+
+	if _, err := url.Parse(d.UploadAPI); d.UploadAPI == "" || err != nil {
+		d.UploadAPI = "https://d.pcs.baidu.com"
+	}
+
 	res, err := d.get("/xpan/nas", map[string]string{
 		"method": "uinfo",
 	}, nil)
@@ -186,43 +192,45 @@ func (d *BaiduNetdisk) Put(ctx context.Context, dstDir model.Obj, stream model.F
 	sliceMd5 := hex.EncodeToString(sliceMd5H2.Sum(nil))
 	blockListStr, _ := utils.Json.MarshalToString(blockList)
 
-	// step.1 预上传
 	rawPath := stdpath.Join(dstDir.GetPath(), stream.GetName())
 	path := encodeURIComponent(rawPath)
 
-	data := fmt.Sprintf("path=%s&size=%d&isdir=0&autoinit=1&rtype=3&block_list=%s&content-md5=%s&slice-md5=%s",
-		path, streamSize,
-		blockListStr,
-		contentMd5, sliceMd5)
-	params := map[string]string{
-		"method": "precreate",
-	}
-	log.Debugf("[baidu_netdisk] precreate data: %s", data)
-	var precreateResp PrecreateResp
-	_, err = d.post("/xpan/file", params, data, &precreateResp)
-	if err != nil {
-		return nil, err
-	}
-	log.Debugf("%+v", precreateResp)
-	if precreateResp.ReturnType == 2 {
-		//rapid upload, since got md5 match from baidu server
+	// step.1 预上传
+	// 尝试获取之前的进度
+	precreateResp, ok := base.GetUploadProgress[*PrecreateResp](d, d.AccessToken, contentMd5)
+	if !ok {
+		data := fmt.Sprintf("path=%s&size=%d&isdir=0&autoinit=1&rtype=3&block_list=%s&content-md5=%s&slice-md5=%s",
+			path, streamSize,
+			blockListStr,
+			contentMd5, sliceMd5)
+		params := map[string]string{
+			"method": "precreate",
+		}
+		log.Debugf("[baidu_netdisk] precreate data: %s", data)
+		_, err = d.post("/xpan/file", params, data, &precreateResp)
 		if err != nil {
 			return nil, err
 		}
-		return fileToObj(precreateResp.File), nil
+		log.Debugf("%+v", precreateResp)
+		if precreateResp.ReturnType == 2 {
+			//rapid upload, since got md5 match from baidu server
+			if err != nil {
+				return nil, err
+			}
+			return fileToObj(precreateResp.File), nil
+		}
 	}
-
 	// step.2 上传分片
 	threadG, upCtx := errgroup.NewGroupWithContext(ctx, d.uploadThread,
 		retry.Attempts(3),
 		retry.Delay(time.Second),
 		retry.DelayType(retry.BackOffDelay))
-	for _, partseq := range precreateResp.BlockList {
+	for i, partseq := range precreateResp.BlockList {
 		if utils.IsCanceled(upCtx) {
 			break
 		}
 
-		partseq, offset, byteSize := partseq, int64(partseq)*DefaultSliceSize, DefaultSliceSize
+		i, partseq, offset, byteSize := i, partseq, int64(partseq)*DefaultSliceSize, DefaultSliceSize
 		if partseq+1 == count {
 			byteSize = lastBlockSize
 		}
@@ -240,10 +248,16 @@ func (d *BaiduNetdisk) Put(ctx context.Context, dstDir model.Obj, stream model.F
 				return err
 			}
 			up(int(threadG.Success()) * 100 / len(precreateResp.BlockList))
+			precreateResp.BlockList[i] = -1
 			return nil
 		})
 	}
 	if err = threadG.Wait(); err != nil {
+		// 如果属于用户主动取消，则保存上传进度
+		if errors.Is(err, context.Canceled) {
+			precreateResp.BlockList = utils.SliceFilter(precreateResp.BlockList, func(s int) bool { return s >= 0 })
+			base.SaveUploadProgress(d, precreateResp, d.AccessToken, contentMd5)
+		}
 		return nil, err
 	}
 
@@ -260,7 +274,7 @@ func (d *BaiduNetdisk) uploadSlice(ctx context.Context, params map[string]string
 		SetContext(ctx).
 		SetQueryParams(params).
 		SetFileReader("file", fileName, file).
-		Post(BaiduFileAPI)
+		Post(d.UploadAPI + "/rest/2.0/pcs/superfile2")
 	if err != nil {
 		return err
 	}

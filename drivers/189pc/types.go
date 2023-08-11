@@ -239,12 +239,23 @@ type InitMultiUploadResp struct {
 	} `json:"data"`
 }
 type UploadUrlsResp struct {
-	Code       string          `json:"code"`
-	UploadUrls map[string]Part `json:"uploadUrls"`
+	Code string                    `json:"code"`
+	Data map[string]UploadUrlsData `json:"uploadUrls"`
 }
-type Part struct {
+type UploadUrlsData struct {
 	RequestURL    string `json:"requestURL"`
 	RequestHeader string `json:"requestHeader"`
+}
+
+type UploadUrlInfo struct {
+	PartNumber int
+	Headers    map[string]string
+	UploadUrlsData
+}
+
+type UploadProgress struct {
+	UploadInfo  InitMultiUploadResp
+	UploadParts []string
 }
 
 /* 第二种上传方式 */

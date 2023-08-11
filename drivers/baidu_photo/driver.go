@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"math"
@@ -13,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
@@ -285,13 +287,16 @@ func (d *BaiduPhoto) Put(ctx context.Context, dstDir model.Obj, stream model.Fil
 		"block_list":  blockListStr,
 	}
 
-	var precreateResp PrecreateResp
-	_, err = d.Post(FILE_API_URL_V1+"/precreate", func(r *resty.Request) {
-		r.SetContext(ctx)
-		r.SetFormData(params)
-	}, &precreateResp)
-	if err != nil {
-		return nil, err
+	// 尝试获取之前的进度
+	precreateResp, ok := base.GetUploadProgress[*PrecreateResp](d, d.AccessToken, contentMd5)
+	if !ok {
+		_, err = d.Post(FILE_API_URL_V1+"/precreate", func(r *resty.Request) {
+			r.SetContext(ctx)
+			r.SetFormData(params)
+		}, &precreateResp)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	switch precreateResp.ReturnType {
@@ -300,12 +305,12 @@ func (d *BaiduPhoto) Put(ctx context.Context, dstDir model.Obj, stream model.Fil
 			retry.Attempts(3),
 			retry.Delay(time.Second),
 			retry.DelayType(retry.BackOffDelay))
-		for _, partseq := range precreateResp.BlockList {
+		for i, partseq := range precreateResp.BlockList {
 			if utils.IsCanceled(upCtx) {
 				break
 			}
 
-			partseq, offset, byteSize := partseq, int64(partseq)*DEFAULT, DEFAULT
+			i, partseq, offset, byteSize := i, partseq, int64(partseq)*DEFAULT, DEFAULT
 			if partseq+1 == count {
 				byteSize = lastBlockSize
 			}
@@ -327,10 +332,15 @@ func (d *BaiduPhoto) Put(ctx context.Context, dstDir model.Obj, stream model.Fil
 					return err
 				}
 				up(int(threadG.Success()) * 100 / len(precreateResp.BlockList))
+				precreateResp.BlockList[i] = -1
 				return nil
 			})
 		}
 		if err = threadG.Wait(); err != nil {
+			if errors.Is(err, context.Canceled) {
+				precreateResp.BlockList = utils.SliceFilter(precreateResp.BlockList, func(s int) bool { return s >= 0 })
+				base.SaveUploadProgress(d, precreateResp, d.AccessToken, contentMd5)
+			}
 			return nil, err
 		}
 		fallthrough
