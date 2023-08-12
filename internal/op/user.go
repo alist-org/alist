@@ -113,3 +113,18 @@ func Cancel2FAById(id uint) error {
 	}
 	return Cancel2FAByUser(user)
 }
+
+func DelUserCache(username string) error {
+	user, err := GetUserByName(username)
+	if err != nil {
+		return err
+	}
+	if user.IsAdmin() {
+		adminUser = nil
+	}
+	if user.IsGuest() {
+		guestUser = nil
+	}
+	userCache.Del(username)
+	return nil
+}

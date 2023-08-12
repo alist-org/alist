@@ -73,3 +73,23 @@ type Media struct {
 	IsVisible      bool          `json:"is_visible"`
 	Category       string        `json:"category"`
 }
+
+type UploadTaskData struct {
+	UploadType string `json:"upload_type"`
+	//UPLOAD_TYPE_RESUMABLE
+	Resumable *struct {
+		Kind   string `json:"kind"`
+		Params struct {
+			AccessKeyID     string    `json:"access_key_id"`
+			AccessKeySecret string    `json:"access_key_secret"`
+			Bucket          string    `json:"bucket"`
+			Endpoint        string    `json:"endpoint"`
+			Expiration      time.Time `json:"expiration"`
+			Key             string    `json:"key"`
+			SecurityToken   string    `json:"security_token"`
+		} `json:"params"`
+		Provider string `json:"provider"`
+	} `json:"resumable"`
+
+	File File `json:"file"`
+}

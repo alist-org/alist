@@ -3,7 +3,11 @@ package utils
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
+	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // here is some syntaxic sugar inspired by the Tomas Senart's video,
@@ -44,31 +48,23 @@ func CopyWithCtx(ctx context.Context, out io.Writer, in io.Reader, size int64, p
 
 type limitWriter struct {
 	w     io.Writer
-	count int64
 	limit int64
 }
 
-func (l limitWriter) Write(p []byte) (n int, err error) {
-	wn := int(l.limit - l.count)
-	if wn > len(p) {
-		wn = len(p)
-	}
-	if wn > 0 {
-		if n, err = l.w.Write(p[:wn]); err != nil {
-			return
+func (l *limitWriter) Write(p []byte) (n int, err error) {
+	lp := len(p)
+	if l.limit > 0 {
+		if int64(lp) > l.limit {
+			p = p[:l.limit]
 		}
-		if n < wn {
-			err = io.ErrShortWrite
-		}
+		l.limit -= int64(len(p))
+		_, err = l.w.Write(p)
 	}
-	if err == nil {
-		n = len(p)
-	}
-	return
+	return lp, err
 }
 
-func LimitWriter(w io.Writer, size int64) io.Writer {
-	return &limitWriter{w: w, limit: size}
+func LimitWriter(w io.Writer, limit int64) io.Writer {
+	return &limitWriter{w: w, limit: limit}
 }
 
 type ReadCloser struct {
@@ -134,4 +130,51 @@ func (mr *MultiReadable) Close() error {
 		return closer.Close()
 	}
 	return nil
+}
+
+type nopCloser struct {
+	io.ReadSeeker
+}
+
+func (nopCloser) Close() error { return nil }
+
+func ReadSeekerNopCloser(r io.ReadSeeker) io.ReadSeekCloser {
+	return nopCloser{r}
+}
+
+func Retry(attempts int, sleep time.Duration, f func() error) (err error) {
+	for i := 0; i < attempts; i++ {
+		fmt.Println("This is attempt number", i)
+		if i > 0 {
+			log.Println("retrying after error:", err)
+			time.Sleep(sleep)
+			sleep *= 2
+		}
+		err = f()
+		if err == nil {
+			return nil
+		}
+	}
+	return fmt.Errorf("after %d attempts, last error: %s", attempts, err)
+}
+
+type Closers struct {
+	closers []*io.Closer
+}
+
+func (c *Closers) Close() (err error) {
+	for _, closer := range c.closers {
+		if closer != nil {
+			_ = (*closer).Close()
+		}
+	}
+	return nil
+}
+func (c *Closers) Add(closer io.Closer) {
+	if closer != nil {
+		c.closers = append(c.closers, &closer)
+	}
+}
+func NewClosers() *Closers {
+	return &Closers{[]*io.Closer{}}
 }

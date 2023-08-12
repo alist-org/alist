@@ -15,19 +15,26 @@ import (
 // do others that not defined in Driver interface
 
 const (
-	API             = "https://www.123pan.com/b/api"
-	SignIn          = API + "/user/sign_in"
-	UserInfo        = API + "/user/info"
-	FileList        = API + "/file/list/new"
-	DownloadInfo    = "https://www.123pan.com/a/api/file/download_info"
-	Mkdir           = API + "/file/upload_request"
-	Move            = API + "/file/mod_pid"
-	Rename          = API + "/file/rename"
-	Trash           = API + "/file/trash"
-	UploadRequest   = API + "/file/upload_request"
-	UploadComplete  = API + "/file/upload_complete"
-	S3PreSignedUrls = API + "/file/s3_repare_upload_parts_batch"
-	S3Complete      = API + "/file/s3_complete_multipart_upload"
+	Api              = "https://www.123pan.com/api"
+	AApi             = "https://www.123pan.com/a/api"
+	BApi             = "https://www.123pan.com/b/api"
+	MainApi          = Api
+	SignIn           = MainApi + "/user/sign_in"
+	Logout           = MainApi + "/user/logout"
+	UserInfo         = MainApi + "/user/info"
+	FileList         = MainApi + "/file/list/new"
+	DownloadInfo     = MainApi + "/file/download_info"
+	Mkdir            = MainApi + "/file/upload_request"
+	Move             = MainApi + "/file/mod_pid"
+	Rename           = MainApi + "/file/rename"
+	Trash            = MainApi + "/file/trash"
+	UploadRequest    = MainApi + "/file/upload_request"
+	UploadComplete   = MainApi + "/file/upload_complete"
+	S3PreSignedUrls  = MainApi + "/file/s3_repare_upload_parts_batch"
+	S3Auth           = MainApi + "/file/s3_upload_object/auth"
+	UploadCompleteV2 = MainApi + "/file/upload_complete/v2"
+	S3Complete       = MainApi + "/file/s3_complete_multipart_upload"
+	//AuthKeySalt      = "8-8D$sL8gPjom7bk#cY"
 )
 
 func (d *Pan123) login() error {
@@ -42,9 +49,18 @@ func (d *Pan123) login() error {
 		body = base.Json{
 			"passport": d.Username,
 			"password": d.Password,
+			"remember": true,
 		}
 	}
 	res, err := base.RestyClient.R().
+		SetHeaders(map[string]string{
+			"origin":      "https://www.123pan.com",
+			"referer":     "https://www.123pan.com/",
+			"user-agent":  "Dart/2.19(dart:io)",
+			"platform":    "android",
+			"app-version": "36",
+			//"user-agent":  base.UserAgent,
+		}).
 		SetBody(body).Post(SignIn)
 	if err != nil {
 		return err
@@ -57,13 +73,30 @@ func (d *Pan123) login() error {
 	return err
 }
 
+//func authKey(reqUrl string) (*string, error) {
+//	reqURL, err := url.Parse(reqUrl)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	nowUnix := time.Now().Unix()
+//	random := rand.Intn(0x989680)
+//
+//	p4 := fmt.Sprintf("%d|%d|%s|%s|%s|%s", nowUnix, random, reqURL.Path, "web", "3", AuthKeySalt)
+//	authKey := fmt.Sprintf("%d-%d-%x", nowUnix, random, md5.Sum([]byte(p4)))
+//	return &authKey, nil
+//}
+
 func (d *Pan123) request(url string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
 	req := base.RestyClient.R()
 	req.SetHeaders(map[string]string{
 		"origin":        "https://www.123pan.com",
+		"referer":       "https://www.123pan.com/",
 		"authorization": "Bearer " + d.AccessToken,
-		"platform":      "web",
-		"app-version":   "1.2",
+		"user-agent":    "Dart/2.19(dart:io)",
+		"platform":      "android",
+		"app-version":   "36",
+		//"user-agent":    base.UserAgent,
 	})
 	if callback != nil {
 		callback(req)
@@ -71,6 +104,11 @@ func (d *Pan123) request(url string, method string, callback base.ReqCallback, r
 	if resp != nil {
 		req.SetResult(resp)
 	}
+	//authKey, err := authKey(url)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//req.SetQueryParam("auth-key", *authKey)
 	res, err := req.Execute(method, url)
 	if err != nil {
 		return nil, err

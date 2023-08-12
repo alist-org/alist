@@ -42,8 +42,8 @@ func calSign(body, ts, randStr string) string {
 	sort.Strings(strs)
 	body = strings.Join(strs, "")
 	body = base64.StdEncoding.EncodeToString([]byte(body))
-	res := utils.GetMD5Encode(body) + utils.GetMD5Encode(ts+":"+randStr)
-	res = strings.ToUpper(utils.GetMD5Encode(res))
+	res := utils.GetMD5EncodeStr(body) + utils.GetMD5EncodeStr(ts+":"+randStr)
+	res = strings.ToUpper(utils.GetMD5EncodeStr(res))
 	return res
 }
 

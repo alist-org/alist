@@ -2,27 +2,30 @@ package aliyundrive_open
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/go-resty/resty/v2"
+	log "github.com/sirupsen/logrus"
 )
 
 // do others that not defined in Driver interface
 
-func (d *AliyundriveOpen) refreshToken() error {
+func (d *AliyundriveOpen) _refreshToken() (string, string, error) {
 	url := d.base + "/oauth/access_token"
 	if d.OauthTokenURL != "" && d.ClientID == "" {
 		url = d.OauthTokenURL
 	}
-	var resp base.TokenResp
+	//var resp base.TokenResp
 	var e ErrResp
-	_, err := base.RestyClient.R().
+	res, err := base.RestyClient.R().
 		ForceContentType("application/json").
 		SetBody(base.Json{
 			"client_id":     d.ClientID,
@@ -30,24 +33,71 @@ func (d *AliyundriveOpen) refreshToken() error {
 			"grant_type":    "refresh_token",
 			"refresh_token": d.RefreshToken,
 		}).
-		SetResult(&resp).
+		//SetResult(&resp).
 		SetError(&e).
 		Post(url)
 	if err != nil {
+		return "", "", err
+	}
+	log.Debugf("[ali_open] refresh token response: %s", res.String())
+	if e.Code != "" {
+		return "", "", fmt.Errorf("failed to refresh token: %s", e.Message)
+	}
+	refresh, access := utils.Json.Get(res.Body(), "refresh_token").ToString(), utils.Json.Get(res.Body(), "access_token").ToString()
+	if refresh == "" {
+		return "", "", errors.New("failed to refresh token: refresh token is empty")
+	}
+	curSub, err := getSub(d.RefreshToken)
+	if err != nil {
+		return "", "", err
+	}
+	newSub, err := getSub(refresh)
+	if err != nil {
+		return "", "", err
+	}
+	if curSub != newSub {
+		return "", "", errors.New("failed to refresh token: sub not match")
+	}
+	return refresh, access, nil
+}
+
+func getSub(token string) (string, error) {
+	segments := strings.Split(token, ".")
+	if len(segments) != 3 {
+		return "", errors.New("not a jwt token because of invalid segments")
+	}
+	bs, err := base64.StdEncoding.DecodeString(segments[1])
+	if err != nil {
+		return "", errors.New("failed to decode jwt token")
+	}
+	return utils.Json.Get(bs, "sub").ToString(), nil
+}
+
+func (d *AliyundriveOpen) refreshToken() error {
+	refresh, access, err := d._refreshToken()
+	for i := 0; i < 3; i++ {
+		if err == nil {
+			break
+		} else {
+			log.Errorf("[ali_open] failed to refresh token: %s", err)
+		}
+		refresh, access, err = d._refreshToken()
+	}
+	if err != nil {
 		return err
 	}
-	if e.Code != "" {
-		return fmt.Errorf("failed to refresh token: %s", e.Message)
-	}
-	if resp.RefreshToken == "" {
-		return errors.New("failed to refresh token: refresh token is empty")
-	}
-	d.RefreshToken, d.AccessToken = resp.RefreshToken, resp.AccessToken
+	log.Infof("[ali_open] toekn exchange: %s -> %s", d.RefreshToken, refresh)
+	d.RefreshToken, d.AccessToken = refresh, access
 	op.MustSaveDriverStorage(d)
 	return nil
 }
 
 func (d *AliyundriveOpen) request(uri, method string, callback base.ReqCallback, retry ...bool) ([]byte, error) {
+	b, err, _ := d.requestReturnErrResp(uri, method, callback, retry...)
+	return b, err
+}
+
+func (d *AliyundriveOpen) requestReturnErrResp(uri, method string, callback base.ReqCallback, retry ...bool) ([]byte, error, *ErrResp) {
 	req := base.RestyClient.R()
 	// TODO check whether access_token is expired
 	req.SetHeader("Authorization", "Bearer "+d.AccessToken)
@@ -61,20 +111,23 @@ func (d *AliyundriveOpen) request(uri, method string, callback base.ReqCallback,
 	req.SetError(&e)
 	res, err := req.Execute(method, d.base+uri)
 	if err != nil {
-		return nil, err
+		if res != nil {
+			log.Errorf("[aliyundrive_open] request error: %s", res.String())
+		}
+		return nil, err, nil
 	}
 	isRetry := len(retry) > 0 && retry[0]
 	if e.Code != "" {
 		if !isRetry && (utils.SliceContains([]string{"AccessTokenInvalid", "AccessTokenExpired", "I400JD"}, e.Code) || d.AccessToken == "") {
 			err = d.refreshToken()
 			if err != nil {
-				return nil, err
+				return nil, err, nil
 			}
-			return d.request(uri, method, callback, true)
+			return d.requestReturnErrResp(uri, method, callback, true)
 		}
-		return nil, fmt.Errorf("%s:%s", e.Code, e.Message)
+		return nil, fmt.Errorf("%s:%s", e.Code, e.Message), &e
 	}
-	return res.Body(), nil
+	return res.Body(), nil, nil
 }
 
 func (d *AliyundriveOpen) list(ctx context.Context, data base.Json) (*Files, error) {
@@ -118,58 +171,8 @@ func (d *AliyundriveOpen) getFiles(ctx context.Context, fileId string) ([]File, 
 	return res, nil
 }
 
-func makePartInfos(size int) []base.Json {
-	partInfoList := make([]base.Json, size)
-	for i := 0; i < size; i++ {
-		partInfoList[i] = base.Json{"part_number": 1 + i}
-	}
-	return partInfoList
-}
-
-func (d *AliyundriveOpen) getUploadUrl(count int, fileId, uploadId string) ([]PartInfo, error) {
-	partInfoList := makePartInfos(count)
-	var resp CreateResp
-	_, err := d.request("/adrive/v1.0/openFile/getUploadUrl", http.MethodPost, func(req *resty.Request) {
-		req.SetBody(base.Json{
-			"drive_id":       d.DriveId,
-			"file_id":        fileId,
-			"part_info_list": partInfoList,
-			"upload_id":      uploadId,
-		}).SetResult(&resp)
-	})
-	return resp.PartInfoList, err
-}
-
-func (d *AliyundriveOpen) uploadPart(ctx context.Context, i, count int, reader *utils.MultiReadable, resp *CreateResp, retry bool) error {
-	partInfo := resp.PartInfoList[i-1]
-	uploadUrl := partInfo.UploadUrl
-	if d.InternalUpload {
-		uploadUrl = strings.ReplaceAll(uploadUrl, "https://cn-beijing-data.aliyundrive.net/", "http://ccp-bj29-bj-1592982087.oss-cn-beijing-internal.aliyuncs.com/")
-	}
-	req, err := http.NewRequest("PUT", uploadUrl, reader)
-	if err != nil {
-		return err
-	}
-	req = req.WithContext(ctx)
-	res, err := base.HttpClient.Do(req)
-	if err != nil {
-		if retry {
-			reader.Reset()
-			return d.uploadPart(ctx, i, count, reader, resp, false)
-		}
-		return err
-	}
-	res.Body.Close()
-	if retry && res.StatusCode == http.StatusForbidden {
-		resp.PartInfoList, err = d.getUploadUrl(count, resp.FileId, resp.UploadId)
-		if err != nil {
-			return err
-		}
-		reader.Reset()
-		return d.uploadPart(ctx, i, count, reader, resp, false)
-	}
-	if res.StatusCode != http.StatusOK && res.StatusCode != http.StatusConflict {
-		return fmt.Errorf("upload status: %d", res.StatusCode)
-	}
-	return nil
+func getNowTime() (time.Time, string) {
+	nowTime := time.Now()
+	nowTimeStr := nowTime.Format("2006-01-02T15:04:05.000Z")
+	return nowTime, nowTimeStr
 }

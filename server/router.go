@@ -21,7 +21,7 @@ func Init(e *gin.Engine) {
 	}
 	Cors(e)
 	g := e.Group(conf.URL.Path)
-	if conf.Conf.Scheme.Https && conf.Conf.Scheme.ForceHttps && !conf.Conf.Scheme.DisableHttp {
+	if conf.Conf.Scheme.HttpPort != -1 && conf.Conf.Scheme.HttpsPort != -1 && conf.Conf.Scheme.ForceHttps {
 		g.Use(middlewares.ForceHttps)
 	}
 	g.Any("/ping", func(c *gin.Context) {
@@ -39,11 +39,14 @@ func Init(e *gin.Engine) {
 
 	g.GET("/d/*path", middlewares.Down, handles.Down)
 	g.GET("/p/*path", middlewares.Down, handles.Proxy)
+	g.HEAD("/d/*path", middlewares.Down, handles.Down)
+	g.HEAD("/p/*path", middlewares.Down, handles.Proxy)
 
 	api := g.Group("/api")
 	auth := api.Group("", middlewares.Auth)
 
 	api.POST("/auth/login", handles.Login)
+	api.POST("/auth/login/hash", handles.LoginHash)
 	auth.GET("/me", handles.CurrentUser)
 	auth.POST("/me/update", handles.UpdateCurrent)
 	auth.POST("/auth/2fa/generate", handles.Generate2FA)
@@ -82,6 +85,7 @@ func admin(g *gin.RouterGroup) {
 	user.POST("/update", handles.UpdateUser)
 	user.POST("/cancel_2fa", handles.Cancel2FAById)
 	user.POST("/delete", handles.DeleteUser)
+	user.POST("/del_cache", handles.DelUserCache)
 
 	storage := g.Group("/storage")
 	storage.GET("/list", handles.ListStorages)
@@ -130,6 +134,7 @@ func _fs(g *gin.RouterGroup) {
 	g.Any("/dirs", handles.FsDirs)
 	g.POST("/mkdir", handles.FsMkdir)
 	g.POST("/rename", handles.FsRename)
+	g.POST("/batch_rename", handles.FsBatchRename)
 	g.POST("/regex_rename", handles.FsRegexRename)
 	g.POST("/move", handles.FsMove)
 	g.POST("/recursive_move", handles.FsRecursiveMove)

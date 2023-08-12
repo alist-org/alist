@@ -46,9 +46,9 @@ func IsSubPath(path string, subPath string) bool {
 func Ext(path string) string {
 	ext := stdpath.Ext(path)
 	if strings.HasPrefix(ext, ".") {
-		return ext[1:]
+		ext = ext[1:]
 	}
-	return ext
+	return strings.ToLower(ext)
 }
 
 func EncodePath(path string, all ...bool) string {

@@ -67,7 +67,7 @@ func (d *AliDrive) Init(ctx context.Context) error {
 		return nil
 	}
 	// init deviceID
-	deviceID := utils.GetSHA256Encode(d.UserID)
+	deviceID := utils.GetSHA256Encode([]byte(d.UserID))
 	// init privateKey
 	privateKey, _ := NewPrivateKeyFromHex(deviceID)
 	state := State{
@@ -193,7 +193,7 @@ func (d *AliDrive) Put(ctx context.Context, dstDir model.Obj, stream model.FileS
 	if d.RapidUpload {
 		buf := bytes.NewBuffer(make([]byte, 0, 1024))
 		io.CopyN(buf, file, 1024)
-		reqBody["pre_hash"] = utils.GetSHA1Encode(buf.String())
+		reqBody["pre_hash"] = utils.GetSHA1Encode(buf.Bytes())
 		if localFile != nil {
 			if _, err := localFile.Seek(0, io.SeekStart); err != nil {
 				return err
@@ -259,7 +259,7 @@ func (d *AliDrive) Put(ctx context.Context, dstDir model.Obj, stream model.FileS
 			(t.file.slice(o.toNumber(), Math.min(o.plus(8).toNumber(), t.file.size)))
 		*/
 		buf := make([]byte, 8)
-		r, _ := new(big.Int).SetString(utils.GetMD5Encode(d.AccessToken)[:16], 16)
+		r, _ := new(big.Int).SetString(utils.GetMD5EncodeStr(d.AccessToken)[:16], 16)
 		i := new(big.Int).SetInt64(file.GetSize())
 		o := new(big.Int).SetInt64(0)
 		if file.GetSize() > 0 {

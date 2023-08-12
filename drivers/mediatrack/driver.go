@@ -181,7 +181,7 @@ func (d *MediaTrack) Put(ctx context.Context, dstDir model.Obj, stream model.Fil
 	if err != nil {
 		return err
 	}
-	tempFile, err := utils.CreateTempFile(stream.GetReadCloser())
+	tempFile, err := utils.CreateTempFile(stream.GetReadCloser(), stream.GetSize())
 	if err != nil {
 		return err
 	}

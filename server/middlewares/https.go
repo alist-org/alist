@@ -12,7 +12,7 @@ func ForceHttps(c *gin.Context) {
 	if c.Request.TLS == nil {
 		host := c.Request.Host
 		// change port to https port
-		host = strings.Replace(host, fmt.Sprintf(":%d", conf.Conf.Port), fmt.Sprintf(":%d", conf.Conf.HttpsPort), 1)
+		host = strings.Replace(host, fmt.Sprintf(":%d", conf.Conf.Scheme.HttpPort), fmt.Sprintf(":%d", conf.Conf.Scheme.HttpsPort), 1)
 		c.Redirect(302, "https://"+host+c.Request.RequestURI)
 		c.Abort()
 		return

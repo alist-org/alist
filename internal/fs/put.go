@@ -27,7 +27,7 @@ func putAsTask(dstDirPath string, file *model.FileStream) error {
 		return errors.WithStack(errs.UploadNotSupported)
 	}
 	if file.NeedStore() {
-		tempFile, err := utils.CreateTempFile(file)
+		tempFile, err := utils.CreateTempFile(file, file.GetSize())
 		if err != nil {
 			return errors.Wrapf(err, "failed to create temp file")
 		}
@@ -36,7 +36,7 @@ func putAsTask(dstDirPath string, file *model.FileStream) error {
 	UploadTaskManager.Submit(task.WithCancelCtx(&task.Task[uint64]{
 		Name: fmt.Sprintf("upload %s to [%s](%s)", file.GetName(), storage.GetStorage().MountPath, dstDirActualPath),
 		Func: func(task *task.Task[uint64]) error {
-			return op.Put(task.Ctx, storage, dstDirActualPath, file, nil, true)
+			return op.Put(task.Ctx, storage, dstDirActualPath, file, task.SetProgress, true)
 		},
 	}))
 	return nil

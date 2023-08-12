@@ -1,10 +1,11 @@
 package _115
 
 import (
+	"crypto/tls"
 	"fmt"
 
 	"github.com/SheltonZhu/115driver/pkg/driver"
-	"github.com/alist-org/alist/v3/drivers/base"
+	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/pkg/errors"
 )
 
@@ -14,9 +15,11 @@ func (d *Pan115) login() error {
 	var err error
 	opts := []driver.Option{
 		driver.UA(UserAgent),
+		func(c *driver.Pan115Client) {
+			c.Client.SetTLSClientConfig(&tls.Config{InsecureSkipVerify: conf.Conf.TlsInsecureSkipVerify})
+		},
 	}
 	d.client = driver.New(opts...)
-	d.client.SetHttpClient(base.HttpClient)
 	cr := &driver.Credential{}
 	if d.Addition.QRCodeToken != "" {
 		s := &driver.QRCodeSession{

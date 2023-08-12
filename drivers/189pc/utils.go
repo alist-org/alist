@@ -15,6 +15,8 @@ import (
 	"net/url"
 	"os"
 	"regexp"
+	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -24,6 +26,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/internal/setting"
+	"github.com/alist-org/alist/v3/pkg/errgroup"
 	"github.com/alist-org/alist/v3/pkg/utils"
 
 	"github.com/avast/retry-go"
@@ -268,7 +271,7 @@ func (y *Cloud189PC) login() (err error) {
 			"validateCode": y.VCode,
 			"captchaToken": param.CaptchaToken,
 			"returnUrl":    RETURN_URL,
-			"mailSuffix":   "@189.cn",
+			// "mailSuffix":   "@189.cn",
 			"dynamicCheck": "FALSE",
 			"clientType":   CLIENT_TYPE,
 			"cb_SaveName":  "1",
@@ -434,15 +437,20 @@ func (y *Cloud189PC) refreshSession() (err error) {
 }
 
 // 普通上传
-func (y *Cloud189PC) CommonUpload(ctx context.Context, dstDir model.Obj, file model.FileStreamer, up driver.UpdateProgress) (err error) {
-	var DEFAULT = partSize(file.GetSize())
-	var count = int(math.Ceil(float64(file.GetSize()) / float64(DEFAULT)))
+// 无法上传大小为0的文件
+func (y *Cloud189PC) StreamUpload(ctx context.Context, dstDir model.Obj, file model.FileStreamer, up driver.UpdateProgress) (model.Obj, error) {
+	var sliceSize = partSize(file.GetSize())
+	count := int(math.Ceil(float64(file.GetSize()) / float64(sliceSize)))
+	lastPartSize := file.GetSize() % sliceSize
+	if file.GetSize() > 0 && lastPartSize == 0 {
+		lastPartSize = sliceSize
+	}
 
 	params := Params{
 		"parentFolderId": dstDir.GetID(),
 		"fileName":       url.QueryEscape(file.GetName()),
 		"fileSize":       fmt.Sprint(file.GetSize()),
-		"sliceSize":      fmt.Sprint(DEFAULT),
+		"sliceSize":      fmt.Sprint(sliceSize),
 		"lazyCheck":      "1",
 	}
 
@@ -457,72 +465,71 @@ func (y *Cloud189PC) CommonUpload(ctx context.Context, dstDir model.Obj, file mo
 
 	// 初始化上传
 	var initMultiUpload InitMultiUploadResp
-	_, err = y.request(fullUrl+"/initMultiUpload", http.MethodGet, func(req *resty.Request) {
+	_, err := y.request(fullUrl+"/initMultiUpload", http.MethodGet, func(req *resty.Request) {
 		req.SetContext(ctx)
 	}, params, &initMultiUpload)
 	if err != nil {
-		return err
+		return nil, err
 	}
+
+	threadG, upCtx := errgroup.NewGroupWithContext(ctx, y.uploadThread,
+		retry.Attempts(3),
+		retry.Delay(time.Second),
+		retry.DelayType(retry.BackOffDelay))
 
 	fileMd5 := md5.New()
 	silceMd5 := md5.New()
 	silceMd5Hexs := make([]string, 0, count)
-	byteData := bytes.NewBuffer(make([]byte, DEFAULT))
+
 	for i := 1; i <= count; i++ {
-		if utils.IsCanceled(ctx) {
-			return ctx.Err()
+		if utils.IsCanceled(upCtx) {
+			break
+		}
+
+		byteData := make([]byte, sliceSize)
+		if i == count {
+			byteData = byteData[:lastPartSize]
 		}
 
 		// 读取块
-		byteData.Reset()
 		silceMd5.Reset()
-		_, err := io.CopyN(io.MultiWriter(fileMd5, silceMd5, byteData), file, DEFAULT)
-		if err != io.EOF && err != io.ErrUnexpectedEOF && err != nil {
-			return err
+		if _, err := io.ReadFull(io.TeeReader(file, io.MultiWriter(fileMd5, silceMd5)), byteData); err != io.EOF && err != nil {
+			return nil, err
 		}
 
 		// 计算块md5并进行hex和base64编码
 		md5Bytes := silceMd5.Sum(nil)
 		silceMd5Hexs = append(silceMd5Hexs, strings.ToUpper(hex.EncodeToString(md5Bytes)))
-		silceMd5Base64 := base64.StdEncoding.EncodeToString(md5Bytes)
+		partInfo := fmt.Sprintf("%d-%s", i, base64.StdEncoding.EncodeToString(md5Bytes))
 
-		// 获取上传链接
-		var uploadUrl UploadUrlsResp
-		_, err = y.request(fullUrl+"/getMultiUploadUrls", http.MethodGet,
-			func(req *resty.Request) {
-				req.SetContext(ctx)
-			}, Params{
-				"partInfo":     fmt.Sprintf("%d-%s", i, silceMd5Base64),
-				"uploadFileId": initMultiUpload.Data.UploadFileID,
-			}, &uploadUrl)
-		if err != nil {
-			return err
-		}
+		threadG.Go(func(ctx context.Context) error {
+			uploadUrls, err := y.GetMultiUploadUrls(ctx, initMultiUpload.Data.UploadFileID, partInfo)
+			if err != nil {
+				return err
+			}
 
-		// 开始上传
-		uploadData := uploadUrl.UploadUrls[fmt.Sprint("partNumber_", i)]
-
-		err = retry.Do(func() error {
-			_, err := y.put(ctx, uploadData.RequestURL, ParseHttpHeader(uploadData.RequestHeader), false, bytes.NewReader(byteData.Bytes()))
-			return err
-		},
-			retry.Context(ctx),
-			retry.Attempts(3),
-			retry.Delay(time.Second),
-			retry.MaxDelay(5*time.Second))
-		if err != nil {
-			return err
-		}
-		up(int(i * 100 / count))
+			// step.4 上传切片
+			uploadUrl := uploadUrls[0]
+			_, err = y.put(ctx, uploadUrl.RequestURL, uploadUrl.Headers, false, bytes.NewReader(byteData))
+			if err != nil {
+				return err
+			}
+			up(int(threadG.Success()) * 100 / count)
+			return nil
+		})
+	}
+	if err = threadG.Wait(); err != nil {
+		return nil, err
 	}
 
 	fileMd5Hex := strings.ToUpper(hex.EncodeToString(fileMd5.Sum(nil)))
 	sliceMd5Hex := fileMd5Hex
-	if file.GetSize() > DEFAULT {
-		sliceMd5Hex = strings.ToUpper(utils.GetMD5Encode(strings.Join(silceMd5Hexs, "\n")))
+	if file.GetSize() > sliceSize {
+		sliceMd5Hex = strings.ToUpper(utils.GetMD5EncodeStr(strings.Join(silceMd5Hexs, "\n")))
 	}
 
 	// 提交上传
+	var resp CommitMultiUploadFileResp
 	_, err = y.request(fullUrl+"/commitMultiUploadFile", http.MethodGet,
 		func(req *resty.Request) {
 			req.SetContext(ctx)
@@ -533,138 +540,211 @@ func (y *Cloud189PC) CommonUpload(ctx context.Context, dstDir model.Obj, file mo
 			"lazyCheck":    "1",
 			"isLog":        "0",
 			"opertype":     "3",
-		}, nil)
-	return err
+		}, &resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp.toFile(), nil
 }
 
 // 快传
-func (y *Cloud189PC) FastUpload(ctx context.Context, dstDir model.Obj, file model.FileStreamer, up driver.UpdateProgress) (err error) {
+func (y *Cloud189PC) FastUpload(ctx context.Context, dstDir model.Obj, file model.FileStreamer, up driver.UpdateProgress) (model.Obj, error) {
 	// 需要获取完整文件md5,必须支持 io.Seek
-	tempFile, err := utils.CreateTempFile(file.GetReadCloser())
+	tempFile, err := utils.CreateTempFile(file.GetReadCloser(), file.GetSize())
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer func() {
 		_ = tempFile.Close()
 		_ = os.Remove(tempFile.Name())
 	}()
 
-	var DEFAULT = partSize(file.GetSize())
-	count := int(math.Ceil(float64(file.GetSize()) / float64(DEFAULT)))
+	var sliceSize = partSize(file.GetSize())
+	count := int(math.Ceil(float64(file.GetSize()) / float64(sliceSize)))
+	lastSliceSize := file.GetSize() % sliceSize
+	if file.GetSize() > 0 && lastSliceSize == 0 {
+		lastSliceSize = sliceSize
+	}
 
-	// 优先计算所需信息
+	//step.1 优先计算所需信息
+	byteSize := sliceSize
 	fileMd5 := md5.New()
 	silceMd5 := md5.New()
 	silceMd5Hexs := make([]string, 0, count)
-	silceMd5Base64s := make([]string, 0, count)
+	partInfos := make([]string, 0, count)
 	for i := 1; i <= count; i++ {
 		if utils.IsCanceled(ctx) {
-			return ctx.Err()
+			return nil, ctx.Err()
+		}
+
+		if i == count {
+			byteSize = lastSliceSize
 		}
 
 		silceMd5.Reset()
-		if _, err := io.CopyN(io.MultiWriter(fileMd5, silceMd5), tempFile, DEFAULT); err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
-			return err
+		if _, err := io.CopyN(io.MultiWriter(fileMd5, silceMd5), tempFile, byteSize); err != nil && err != io.EOF {
+			return nil, err
 		}
 		md5Byte := silceMd5.Sum(nil)
 		silceMd5Hexs = append(silceMd5Hexs, strings.ToUpper(hex.EncodeToString(md5Byte)))
-		silceMd5Base64s = append(silceMd5Base64s, fmt.Sprint(i, "-", base64.StdEncoding.EncodeToString(md5Byte)))
-	}
-	if _, err = tempFile.Seek(0, io.SeekStart); err != nil {
-		return err
+		partInfos = append(partInfos, fmt.Sprint(i, "-", base64.StdEncoding.EncodeToString(md5Byte)))
 	}
 
 	fileMd5Hex := strings.ToUpper(hex.EncodeToString(fileMd5.Sum(nil)))
 	sliceMd5Hex := fileMd5Hex
-	if file.GetSize() > DEFAULT {
-		sliceMd5Hex = strings.ToUpper(utils.GetMD5Encode(strings.Join(silceMd5Hexs, "\n")))
-	}
-
-	// 检测是否支持快传
-	params := Params{
-		"parentFolderId": dstDir.GetID(),
-		"fileName":       url.QueryEscape(file.GetName()),
-		"fileSize":       fmt.Sprint(file.GetSize()),
-		"fileMd5":        fileMd5Hex,
-		"sliceSize":      fmt.Sprint(DEFAULT),
-		"sliceMd5":       sliceMd5Hex,
+	if file.GetSize() > sliceSize {
+		sliceMd5Hex = strings.ToUpper(utils.GetMD5EncodeStr(strings.Join(silceMd5Hexs, "\n")))
 	}
 
 	fullUrl := UPLOAD_URL
 	if y.isFamily() {
-		params.Set("familyId", y.FamilyID)
 		fullUrl += "/family"
 	} else {
 		//params.Set("extend", `{"opScene":"1","relativepath":"","rootfolderid":""}`)
 		fullUrl += "/person"
 	}
 
-	var uploadInfo InitMultiUploadResp
-	_, err = y.request(fullUrl+"/initMultiUpload", http.MethodGet, func(req *resty.Request) {
-		req.SetContext(ctx)
-	}, params, &uploadInfo)
-	if err != nil {
-		return err
-	}
-
-	// 网盘中不存在该文件，开始上传
-	if uploadInfo.Data.FileDataExists != 1 {
-		var uploadUrls UploadUrlsResp
-		_, err = y.request(fullUrl+"/getMultiUploadUrls", http.MethodGet,
-			func(req *resty.Request) {
-				req.SetContext(ctx)
-			}, Params{
-				"uploadFileId": uploadInfo.Data.UploadFileID,
-				"partInfo":     strings.Join(silceMd5Base64s, ","),
-			}, &uploadUrls)
+	// 尝试恢复进度
+	uploadProgress, ok := base.GetUploadProgress[*UploadProgress](y, y.tokenInfo.SessionKey, fileMd5Hex)
+	if !ok {
+		//step.2 预上传
+		params := Params{
+			"parentFolderId": dstDir.GetID(),
+			"fileName":       url.QueryEscape(file.GetName()),
+			"fileSize":       fmt.Sprint(file.GetSize()),
+			"fileMd5":        fileMd5Hex,
+			"sliceSize":      fmt.Sprint(sliceSize),
+			"sliceMd5":       sliceMd5Hex,
+		}
+		if y.isFamily() {
+			params.Set("familyId", y.FamilyID)
+		}
+		var uploadInfo InitMultiUploadResp
+		_, err = y.request(fullUrl+"/initMultiUpload", http.MethodGet, func(req *resty.Request) {
+			req.SetContext(ctx)
+		}, params, &uploadInfo)
 		if err != nil {
-			return err
+			return nil, err
 		}
-
-		buf := make([]byte, DEFAULT)
-		for i := 1; i <= count; i++ {
-			if utils.IsCanceled(ctx) {
-				return ctx.Err()
-			}
-
-			n, err := io.ReadFull(tempFile, buf)
-			if err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
-				return err
-			}
-			uploadData := uploadUrls.UploadUrls[fmt.Sprint("partNumber_", i)]
-			err = retry.Do(func() error {
-				_, err := y.put(ctx, uploadData.RequestURL, ParseHttpHeader(uploadData.RequestHeader), false, bytes.NewReader(buf[:n]))
-				return err
-			},
-				retry.Context(ctx),
-				retry.Attempts(3),
-				retry.Delay(time.Second),
-				retry.MaxDelay(5*time.Second))
-			if err != nil {
-				return err
-			}
-
-			up(int(i * 100 / count))
+		uploadProgress = &UploadProgress{
+			UploadInfo:  uploadInfo,
+			UploadParts: partInfos,
 		}
 	}
 
-	// 提交
+	uploadInfo := uploadProgress.UploadInfo.Data
+	// 网盘中不存在该文件，开始上传
+	if uploadInfo.FileDataExists != 1 {
+		threadG, upCtx := errgroup.NewGroupWithContext(ctx, y.uploadThread,
+			retry.Attempts(3),
+			retry.Delay(time.Second),
+			retry.DelayType(retry.BackOffDelay))
+		for i, uploadPart := range uploadProgress.UploadParts {
+			if utils.IsCanceled(upCtx) {
+				break
+			}
+
+			i, uploadPart := i, uploadPart
+			threadG.Go(func(ctx context.Context) error {
+				// step.3 获取上传链接
+				uploadUrls, err := y.GetMultiUploadUrls(ctx, uploadInfo.UploadFileID, uploadPart)
+				if err != nil {
+					return err
+				}
+				uploadUrl := uploadUrls[0]
+
+				byteSize, offset := sliceSize, int64(uploadUrl.PartNumber-1)*sliceSize
+				if uploadUrl.PartNumber == count {
+					byteSize = lastSliceSize
+				}
+
+				// step.4 上传切片
+				_, err = y.put(ctx, uploadUrl.RequestURL, uploadUrl.Headers, false, io.NewSectionReader(tempFile, offset, byteSize))
+				if err != nil {
+					return err
+				}
+
+				up(int(threadG.Success()) * 100 / len(uploadUrls))
+				uploadProgress.UploadParts[i] = ""
+				return nil
+			})
+		}
+		if err = threadG.Wait(); err != nil {
+			if errors.Is(err, context.Canceled) {
+				uploadProgress.UploadParts = utils.SliceFilter(uploadProgress.UploadParts, func(s string) bool { return s != "" })
+				base.SaveUploadProgress(y, uploadProgress, y.tokenInfo.SessionKey, fileMd5Hex)
+			}
+			return nil, err
+		}
+	}
+
+	// step.5 提交
+	var resp CommitMultiUploadFileResp
 	_, err = y.request(fullUrl+"/commitMultiUploadFile", http.MethodGet,
 		func(req *resty.Request) {
 			req.SetContext(ctx)
 		}, Params{
-			"uploadFileId": uploadInfo.Data.UploadFileID,
+			"uploadFileId": uploadInfo.UploadFileID,
 			"isLog":        "0",
 			"opertype":     "3",
-		}, nil)
-	return err
+		}, &resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp.toFile(), nil
 }
 
-func (y *Cloud189PC) OldUpload(ctx context.Context, dstDir model.Obj, file model.FileStreamer, up driver.UpdateProgress) (err error) {
-	// 需要获取完整文件md5,必须支持 io.Seek
-	tempFile, err := utils.CreateTempFile(file.GetReadCloser())
+// 获取上传切片信息
+// 对http body有大小限制，分片信息太多会出错
+func (y *Cloud189PC) GetMultiUploadUrls(ctx context.Context, uploadFileId string, partInfo ...string) ([]UploadUrlInfo, error) {
+	fullUrl := UPLOAD_URL
+	if y.isFamily() {
+		fullUrl += "/family"
+	} else {
+		fullUrl += "/person"
+	}
+
+	var uploadUrlsResp UploadUrlsResp
+	_, err := y.request(fullUrl+"/getMultiUploadUrls", http.MethodGet,
+		func(req *resty.Request) {
+			req.SetContext(ctx)
+		}, Params{
+			"uploadFileId": uploadFileId,
+			"partInfo":     strings.Join(partInfo, ","),
+		}, &uploadUrlsResp)
 	if err != nil {
-		return err
+		return nil, err
+	}
+	uploadUrls := uploadUrlsResp.Data
+
+	if len(uploadUrls) != len(partInfo) {
+		return nil, fmt.Errorf("uploadUrls get error, due to get length %d, real length %d", len(partInfo), len(uploadUrls))
+	}
+
+	uploadUrlInfos := make([]UploadUrlInfo, 0, len(uploadUrls))
+	for k, uploadUrl := range uploadUrls {
+		partNumber, err := strconv.Atoi(strings.TrimPrefix(k, "partNumber_"))
+		if err != nil {
+			return nil, err
+		}
+		uploadUrlInfos = append(uploadUrlInfos, UploadUrlInfo{
+			PartNumber:     partNumber,
+			Headers:        ParseHttpHeader(uploadUrl.RequestHeader),
+			UploadUrlsData: uploadUrl,
+		})
+	}
+	sort.Slice(uploadUrlInfos, func(i, j int) bool {
+		return uploadUrlInfos[i].PartNumber < uploadUrlInfos[j].PartNumber
+	})
+	return uploadUrlInfos, nil
+}
+
+// 旧版本上传，家庭云不支持覆盖
+func (y *Cloud189PC) OldUpload(ctx context.Context, dstDir model.Obj, file model.FileStreamer, up driver.UpdateProgress) (model.Obj, error) {
+	// 需要获取完整文件md5,必须支持 io.Seek
+	tempFile, err := utils.CreateTempFile(file.GetReadCloser(), file.GetSize())
+	if err != nil {
+		return nil, err
 	}
 	defer func() {
 		_ = tempFile.Close()
@@ -674,10 +754,10 @@ func (y *Cloud189PC) OldUpload(ctx context.Context, dstDir model.Obj, file model
 	// 计算md5
 	fileMd5 := md5.New()
 	if _, err := io.Copy(fileMd5, tempFile); err != nil {
-		return err
+		return nil, err
 	}
 	if _, err = tempFile.Seek(0, io.SeekStart); err != nil {
-		return err
+		return nil, err
 	}
 	fileMd5Hex := strings.ToUpper(hex.EncodeToString(fileMd5.Sum(nil)))
 
@@ -718,14 +798,14 @@ func (y *Cloud189PC) OldUpload(ctx context.Context, dstDir model.Obj, file model
 	}, &uploadInfo)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// 网盘中不存在该文件，开始上传
 	status := GetUploadFileStatusResp{CreateUploadFileResp: uploadInfo}
 	for status.Size < file.GetSize() && status.FileDataExists != 1 {
 		if utils.IsCanceled(ctx) {
-			return ctx.Err()
+			return nil, ctx.Err()
 		}
 
 		header := map[string]string{
@@ -742,7 +822,7 @@ func (y *Cloud189PC) OldUpload(ctx context.Context, dstDir model.Obj, file model
 
 		_, err := y.put(ctx, status.FileUploadUrl, header, true, io.NopCloser(tempFile))
 		if err, ok := err.(*RespErr); ok && err.Code != "InputStreamReadError" {
-			return err
+			return nil, err
 		}
 
 		// 获取断点状态
@@ -760,17 +840,17 @@ func (y *Cloud189PC) OldUpload(ctx context.Context, dstDir model.Obj, file model
 			}
 		}, &status)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		if _, err := tempFile.Seek(status.GetSize(), io.SeekStart); err != nil {
-			return err
+			return nil, err
 		}
 		up(int(status.Size / file.GetSize()))
 	}
 
 	// 提交
-	var resp CommitUploadFileResp
+	var resp OldCommitUploadFileResp
 	_, err = y.post(status.FileCommitUrl, func(req *resty.Request) {
 		req.SetContext(ctx)
 		if y.isFamily() {
@@ -788,7 +868,10 @@ func (y *Cloud189PC) OldUpload(ctx context.Context, dstDir model.Obj, file model
 			})
 		}
 	}, &resp)
-	return err
+	if err != nil {
+		return nil, err
+	}
+	return resp.toFile(), nil
 }
 
 func (y *Cloud189PC) isFamily() bool {
@@ -828,4 +911,34 @@ func (y *Cloud189PC) getFamilyID() (string, error) {
 		}
 	}
 	return fmt.Sprint(infos[0].FamilyID), nil
+}
+
+func (y *Cloud189PC) CheckBatchTask(aType string, taskID string) (*BatchTaskStateResp, error) {
+	var resp BatchTaskStateResp
+	_, err := y.post(API_URL+"/batch/checkBatchTask.action", func(req *resty.Request) {
+		req.SetFormData(map[string]string{
+			"type":   aType,
+			"taskId": taskID,
+		})
+	}, &resp)
+	if err != nil {
+		return nil, err
+	}
+	return &resp, nil
+}
+
+func (y *Cloud189PC) WaitBatchTask(aType string, taskID string, t time.Duration) error {
+	for {
+		state, err := y.CheckBatchTask(aType, taskID)
+		if err != nil {
+			return err
+		}
+		switch state.TaskStatus {
+		case 2:
+			return errors.New("there is a conflict with the target object")
+		case 4:
+			return nil
+		}
+		time.Sleep(t)
+	}
 }

@@ -48,8 +48,16 @@ func AddAria2(c *gin.Context) {
 		return
 	}
 	if !aria2.IsAria2Ready() {
-		common.ErrorStrResp(c, "aria2 not ready", 500)
-		return
+		// try to init client
+		_, err := aria2.InitClient(2)
+		if err != nil {
+			common.ErrorResp(c, err, 500)
+			return
+		}
+		if !aria2.IsAria2Ready() {
+			common.ErrorStrResp(c, "aria2 still not ready after init", 500)
+			return
+		}
 	}
 	var req AddAria2Req
 	if err := c.ShouldBind(&req); err != nil {
