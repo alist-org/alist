@@ -1,9 +1,16 @@
 package fs
 
 import (
+	"context"
+	"fmt"
+	"github.com/alist-org/alist/v3/internal/driver"
+	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/pkg/http_range"
+	"github.com/alist-org/alist/v3/pkg/task"
+	log "github.com/sirupsen/logrus"
 	"io"
 	"net/http"
+	stdpath "path"
 	"strings"
 
 	"github.com/alist-org/alist/v3/internal/model"
