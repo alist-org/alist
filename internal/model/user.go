@@ -46,7 +46,7 @@ type User struct {
 	Permission int32  `json:"permission"`
 	OtpSecret  string `json:"-"`
 	SsoID      string `json:"sso_id"` // unique by sso platform
-	Authn      string `gorm:"size:65535" json:"-"`
+	Authn      string `gorm:"type:text" json:"-"`
 }
 
 func (u *User) IsGuest() bool {
