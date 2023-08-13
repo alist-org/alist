@@ -38,6 +38,6 @@ func get(ctx context.Context, path string) (model.Obj, error) {
 	}
 	//sync(copy) is high-level op, that why those thing are here
 	//otherwise cycle import will fuck you
-	storage = chooseCache(storage, path)
+	storage = chooseCache(ctx, storage, path)
 	return op.Get(ctx, storage, actualPath)
 }

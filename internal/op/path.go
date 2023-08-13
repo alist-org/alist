@@ -24,12 +24,12 @@ func GetStorageAndActualPath(rawPath string) (storage driver.Driver, actualPath 
 	}
 	log.Debugln("use storage: ", storage.GetStorage().MountPath)
 
-	actualPath = GetAndActualWithStorage(rawPath, storage)
+	actualPath = GetActualWithStorage(rawPath, storage)
 	return
 }
 
-// GetAndActualWithStorage balance cache or main will return the same, do better
-func GetAndActualWithStorage(rawPath string, storage driver.Driver) string {
+// GetActualWithStorage balance cache or main will return the same, do better
+func GetActualWithStorage(rawPath string, storage driver.Driver) string {
 	mountPath := utils.GetActualMountPath(storage.GetStorage().MountPath)
 	return utils.FixAndCleanPath(strings.TrimPrefix(rawPath, mountPath))
 }

@@ -1,22 +1,14 @@
 package fs
 
 import (
-	"context"
-	"fmt"
-	"github.com/alist-org/alist/v3/internal/driver"
-	"github.com/alist-org/alist/v3/internal/op"
-	"github.com/alist-org/alist/v3/pkg/http_range"
-	"github.com/alist-org/alist/v3/pkg/task"
-	log "github.com/sirupsen/logrus"
-	"io"
-	"net/http"
-	stdpath "path"
-	"strings"
-
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/pkg/http_range"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/pkg/errors"
+	"io"
+	"net/http"
+	"strings"
 )
 
 func getFileStreamFromLink(file model.Obj, link *model.Link) (*model.FileStream, error) {
@@ -59,69 +51,4 @@ func getFileStreamFromLink(file model.Obj, link *model.Link) (*model.FileStream,
 		Mimetype:   mimetype,
 	}
 	return stream, nil
-}
-
-var cachedFiles []string
-
-func chooseCache(storage driver.Driver, path string) driver.Driver {
-	cacheStorage, has := op.HasCacheStorage(storage.GetStorage().MountPath)
-	if has {
-		if isFileCached(path) {
-			storage = cacheStorage
-		} else {
-			syncCache(storage, path, cacheStorage)
-		}
-	}
-	return storage
-}
-func isFileCached(path string) bool {
-	ret := utils.SliceContains(cachedFiles, path)
-	log.Debugf("isFileCached %s: %t", path, ret)
-	return ret
-
-}
-func syncCache(main driver.Driver, path string, cache driver.Driver) uint64 {
-	//using CopyTaskManager but should have it own taskManager, I dont know web
-	return CopyTaskManager.Submit(task.WithCancelCtx(&task.Task[uint64]{
-		Name: fmt.Sprintf("cache [%s](%s) to [%s](%s)", main.GetStorage().MountPath, path, cache.GetStorage().MountPath, path),
-		Func: func(t *task.Task[uint64]) error {
-			actualPath := op.GetAndActualWithStorage(path, main)
-
-			srcFile, err := op.Get(t.Ctx, main, actualPath)
-			// only cache file exclude dir
-			if (err == nil) && !(srcFile.IsDir()) {
-
-				err = op.Remove(t.Ctx, cache, actualPath)
-				if err != nil {
-					return err
-				}
-				err = copyFileBetween2Storages(t, main, cache, actualPath, stdpath.Dir(actualPath))
-				if err == nil {
-					fifoCache(t.Ctx, cache, path)
-				}
-			}
-			log.Debugf("copy file between storages: %+v", err)
-			return err
-		},
-	}))
-
-}
-
-// LRU better than fifo, use database to do
-// restart means drop and overflow
-func fifoCache(ctx context.Context, storage driver.Driver, path string) {
-	// what should i do if the task fail?
-	if len(cachedFiles) <= 100 {
-		cachedFiles = append(cachedFiles, path)
-	}
-
-	if len(cachedFiles) > 100 {
-		actualPath := op.GetAndActualWithStorage(path, storage)
-		// Cache will lag behind main deletion when fifo is full
-		err := op.Remove(ctx, storage, actualPath)
-		if err == nil {
-			cachedFiles = cachedFiles[1:100]
-		}
-	}
-
 }

@@ -26,6 +26,7 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/websocket v1.5.0
+	github.com/hashicorp/golang-lru/v2 v2.0.2
 	github.com/hirochachacha/go-smb2 v1.1.0
 	github.com/ipfs/go-ipfs-api v0.6.1
 	github.com/jlaffaye/ftp v0.2.0

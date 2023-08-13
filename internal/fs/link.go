@@ -16,7 +16,7 @@ func link(ctx context.Context, path string, args model.LinkArgs) (*model.Link, m
 	if err != nil {
 		return nil, nil, errors.WithMessage(err, "failed get storage")
 	}
-	storage = chooseCache(storage, path)
+	storage = chooseCache(ctx, storage, path)
 	l, obj, err := op.Link(ctx, storage, actualPath, args)
 	if err != nil {
 		return nil, nil, errors.WithMessage(err, "failed link")
