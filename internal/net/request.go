@@ -3,9 +3,6 @@ package net
 import (
 	"context"
 	"fmt"
-	"github.com/alist-org/alist/v3/pkg/http_range"
-	"github.com/aws/aws-sdk-go/aws/awsutil"
-	log "github.com/sirupsen/logrus"
 	"io"
 	"math"
 	"net/http"
@@ -13,6 +10,10 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/alist-org/alist/v3/pkg/http_range"
+	"github.com/aws/aws-sdk-go/aws/awsutil"
+	log "github.com/sirupsen/logrus"
 )
 
 // DefaultDownloadPartSize is the default range of bytes to get at a time when
@@ -60,7 +61,7 @@ func NewDownloader(options ...func(*Downloader)) *Downloader {
 // cache some data, then return Reader with assembled data
 // Supports range, do not support unknown FileSize, and will fail if FileSize is incorrect
 // memory usage is at about Concurrency*PartSize, use this wisely
-func (d Downloader) Download(ctx context.Context, p *HttpRequestParams) (readCloser *io.ReadCloser, err error) {
+func (d Downloader) Download(ctx context.Context, p *HttpRequestParams) (readCloser io.ReadCloser, err error) {
 
 	var finalP HttpRequestParams
 	awsutil.Copy(&finalP, p)
@@ -107,7 +108,7 @@ type downloader struct {
 }
 
 // download performs the implementation of the object download across ranged GETs.
-func (d *downloader) download() (*io.ReadCloser, error) {
+func (d *downloader) download() (io.ReadCloser, error) {
 	d.ctx, d.cancel = context.WithCancel(d.ctx)
 
 	pos := d.params.Range.Start
@@ -133,7 +134,7 @@ func (d *downloader) download() (*io.ReadCloser, error) {
 		if err != nil {
 			return nil, err
 		}
-		return &resp.Body, nil
+		return resp.Body, nil
 	}
 
 	// workers
@@ -152,7 +153,7 @@ func (d *downloader) download() (*io.ReadCloser, error) {
 	var rc io.ReadCloser = NewMultiReadCloser(d.chunks[0].buf, d.interrupt, d.finishBuf)
 
 	// Return error
-	return &rc, d.err
+	return rc, d.err
 }
 func (d *downloader) sendChunkTask() *chunk {
 	ch := &d.chunks[d.nextChunk]
@@ -384,7 +385,7 @@ type HttpRequestParams struct {
 	URL string
 	//only want data within this range
 	Range     http_range.Range
-	HeaderRef *http.Header
+	HeaderRef http.Header
 	//total file size
 	Size int64
 }

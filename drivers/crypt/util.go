@@ -13,7 +13,7 @@ import (
 )
 
 func RequestRangedHttp(r *http.Request, link *model.Link, offset, length int64) (*http.Response, error) {
-	header := net.ProcessHeader(&http.Header{}, &link.Header)
+	header := net.ProcessHeader(http.Header{}, link.Header)
 	header = http_range.ApplyRangeToHttpHeader(http_range.Range{Start: offset, Length: length}, header)
 
 	return net.RequestHttp("GET", header, link.URL)

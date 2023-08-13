@@ -120,10 +120,10 @@ func (r Range) contentRange(size int64) string {
 }
 
 // ApplyRangeToHttpHeader for http request header
-func ApplyRangeToHttpHeader(p Range, headerRef *http.Header) *http.Header {
+func ApplyRangeToHttpHeader(p Range, headerRef http.Header) http.Header {
 	header := headerRef
 	if header == nil {
-		header = &http.Header{}
+		header = http.Header{}
 	}
 	if p.Start == 0 && p.Length < 0 {
 		header.Del("Range")

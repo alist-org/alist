@@ -3,16 +3,17 @@ package common
 import (
 	"context"
 	"fmt"
+	"io"
+	"net/http"
+	"net/url"
+	"sync"
+
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/net"
 	"github.com/alist-org/alist/v3/pkg/http_range"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
-	"io"
-	"net/http"
-	"net/url"
-	"sync"
 )
 
 func HttpClient() *http.Client {
@@ -52,7 +53,7 @@ func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.
 		size := file.GetSize()
 		//var finalClosers model.Closers
 		finalClosers := utils.NewClosers()
-		header := net.ProcessHeader(&r.Header, &link.Header)
+		header := net.ProcessHeader(r.Header, link.Header)
 		rangeReader := func(httpRange http_range.Range) (io.ReadCloser, error) {
 			down := net.NewDownloader(func(d *net.Downloader) {
 				d.Concurrency = link.Concurrency
@@ -65,15 +66,15 @@ func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.
 				HeaderRef: header,
 			}
 			rc, err := down.Download(context.Background(), req)
-			finalClosers.Add(*rc)
-			return *rc, err
+			finalClosers.Add(rc)
+			return rc, err
 		}
 		net.ServeHTTP(w, r, file.GetName(), file.ModTime(), file.GetSize(), rangeReader)
 		defer finalClosers.Close()
 		return nil
 	} else {
 		//transparent proxy
-		header := net.ProcessHeader(&r.Header, &link.Header)
+		header := net.ProcessHeader(r.Header, link.Header)
 		res, err := net.RequestHttp(r.Method, header, link.URL)
 		if err != nil {
 			return err

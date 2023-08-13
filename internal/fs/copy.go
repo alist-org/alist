@@ -94,7 +94,7 @@ func copyFileBetween2Storages(tsk *task.Task[uint64], srcStorage, dstStorage dri
 	if err != nil {
 		return errors.WithMessagef(err, "failed get [%s] link", srcFilePath)
 	}
-	stream, err := getFileStreamFromLink(srcFile, link)
+	stream, err := getFileStreamFromLink(tsk.Ctx, srcFile, link)
 	if err != nil {
 		return errors.WithMessagef(err, "failed get [%s] stream", srcFilePath)
 	}

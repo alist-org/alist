@@ -2,13 +2,6 @@ package net
 
 import (
 	"fmt"
-	"github.com/alist-org/alist/v3/drivers/base"
-	"github.com/alist-org/alist/v3/internal/conf"
-	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/pkg/http_range"
-	"github.com/alist-org/alist/v3/pkg/utils"
-	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
 	"io"
 	"mime"
 	"mime/multipart"
@@ -18,6 +11,14 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/alist-org/alist/v3/drivers/base"
+	"github.com/alist-org/alist/v3/internal/conf"
+	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/pkg/http_range"
+	"github.com/alist-org/alist/v3/pkg/utils"
+	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 )
 
 //this file is inspired by GO_SDK net.http.ServeContent
@@ -109,7 +110,7 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request, name string, modTime time
 	}
 	switch {
 	case len(ranges) == 0:
-		reader, err := RangeReaderFunc(http_range.Range{0, -1})
+		reader, err := RangeReaderFunc(http_range.Range{Length: -1})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -191,29 +192,29 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request, name string, modTime time
 	}
 	//defer sendContent.Close()
 }
-func ProcessHeader(origin, override *http.Header) *http.Header {
+func ProcessHeader(origin, override http.Header) http.Header {
 	result := http.Header{}
 	// client header
-	for h, val := range *origin {
+	for h, val := range origin {
 		if utils.SliceContains(conf.SlicesMap[conf.ProxyIgnoreHeaders], strings.ToLower(h)) {
 			continue
 		}
 		result[h] = val
 	}
 	// needed header
-	for h, val := range *override {
+	for h, val := range override {
 		result[h] = val
 	}
-	return &result
+	return result
 }
 
 // RequestHttp deal with Header properly then send the request
-func RequestHttp(httpMethod string, headerOverride *http.Header, URL string) (*http.Response, error) {
+func RequestHttp(httpMethod string, headerOverride http.Header, URL string) (*http.Response, error) {
 	req, err := http.NewRequest(httpMethod, URL, nil)
 	if err != nil {
 		return nil, err
 	}
-	req.Header = *headerOverride
+	req.Header = headerOverride
 	log.Debugln("request Header: ", req.Header)
 	log.Debugln("request URL: ", URL)
 	res, err := HttpClient().Do(req)

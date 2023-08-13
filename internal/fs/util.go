@@ -1,10 +1,13 @@
 package fs
 
 import (
-	"github.com/alist-org/alist/v3/pkg/http_range"
+	"context"
 	"io"
 	"net/http"
 	"strings"
+
+	"github.com/alist-org/alist/v3/internal/net"
+	"github.com/alist-org/alist/v3/pkg/http_range"
 
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/utils"
@@ -12,7 +15,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func getFileStreamFromLink(file model.Obj, link *model.Link) (*model.FileStream, error) {
+func getFileStreamFromLink(ctx context.Context, file model.Obj, link *model.Link) (*model.FileStream, error) {
 	var rc io.ReadCloser
 	var err error
 	mimetype := utils.GetMimeType(file.GetName())
@@ -23,6 +26,21 @@ func getFileStreamFromLink(file model.Obj, link *model.Link) (*model.FileStream,
 		}
 	} else if link.ReadSeekCloser != nil {
 		rc = link.ReadSeekCloser
+	} else if link.Concurrency != 0 || link.PartSize != 0 {
+		down := net.NewDownloader(func(d *net.Downloader) {
+			d.Concurrency = link.Concurrency
+			d.PartSize = link.PartSize
+		})
+		req := &net.HttpRequestParams{
+			URL:       link.URL,
+			Range:     http_range.Range{Length: -1},
+			Size:      file.GetSize(),
+			HeaderRef: link.Header,
+		}
+		rc, err = down.Download(ctx, req)
+		if err != nil {
+			return nil, err
+		}
 	} else {
 		//TODO: add accelerator
 		req, err := http.NewRequest(http.MethodGet, link.URL, nil)
