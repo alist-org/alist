@@ -66,7 +66,7 @@ func getSub(token string) (string, error) {
 	if len(segments) != 3 {
 		return "", errors.New("not a jwt token because of invalid segments")
 	}
-	bs, err := base64.StdEncoding.DecodeString(segments[1])
+	bs, err := base64.RawStdEncoding.DecodeString(segments[1])
 	if err != nil {
 		return "", errors.New("failed to decode jwt token")
 	}
