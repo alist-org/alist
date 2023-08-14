@@ -1,13 +1,11 @@
 package model
 
 import (
-	"encoding/base64"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
 
 	"github.com/alist-org/alist/v3/internal/errs"
-	"github.com/alist-org/alist/v3/pkg/authninterface"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/pkg/utils/random"
 	"github.com/go-webauthn/webauthn/webauthn"
@@ -137,21 +135,21 @@ func TwoHashPwd(password string, salt string) string {
 	return HashPwd(StaticHash(password), salt)
 }
 
-func (u User) WebAuthnID() []byte {
+func (u *User) WebAuthnID() []byte {
 	bs := make([]byte, 8)
 	binary.LittleEndian.PutUint64(bs, uint64(u.ID))
 	return bs
 }
 
-func (u User) WebAuthnName() string {
+func (u *User) WebAuthnName() string {
 	return u.Username
 }
 
-func (u User) WebAuthnDisplayName() string {
+func (u *User) WebAuthnDisplayName() string {
 	return u.Username
 }
 
-func (u User) WebAuthnCredentials() []webauthn.Credential {
+func (u *User) WebAuthnCredentials() []webauthn.Credential {
 	var res []webauthn.Credential
 	err := json.Unmarshal([]byte(u.Authn), &res)
 	if err != nil {
@@ -160,36 +158,6 @@ func (u User) WebAuthnCredentials() []webauthn.Credential {
 	return res
 }
 
-func (user User) WebAuthnIcon() string {
+func (u *User) WebAuthnIcon() string {
 	return "https://alist.nn.ci/logo.svg"
-}
-
-func (u *User) RegisterAuthn(credential *webauthn.Credential, dbi authninterface.AuthnInterface) error {
-	if u == nil {
-		return errors.New("user is nil")
-	}
-	exists := u.WebAuthnCredentials()
-	if credential != nil {
-		exists = append(exists, *credential)
-	}
-	res, err := json.Marshal(exists)
-	if err != nil {
-		return err
-	}
-	return dbi.UpdateAuthn(u.ID, string(res))
-}
-
-func (u *User) RemoveAuthn(id string, dbi authninterface.AuthnInterface) {
-	exists := u.WebAuthnCredentials()
-	for i := 0; i < len(exists); i++ {
-		idEncoded := base64.StdEncoding.EncodeToString(exists[i].ID)
-		if idEncoded == id {
-			exists[len(exists)-1], exists[i] = exists[i], exists[len(exists)-1]
-			exists = exists[:len(exists)-1]
-			break
-		}
-	}
-
-	res, _ := json.Marshal(exists)
-	dbi.UpdateAuthn(u.ID, string(res))
 }

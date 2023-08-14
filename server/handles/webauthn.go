@@ -5,12 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/alist-org/alist/v3/internal/authn"
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/internal/setting"
-	"github.com/alist-org/alist/v3/pkg/authn"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
 	"github.com/go-webauthn/webauthn/webauthn"
@@ -32,13 +32,13 @@ func BeginAuthnLogin(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	authninstance, err := authn.NewAuthnInstance(c.Request)
+	authnInstance, err := authn.NewAuthnInstance(c.Request)
 	if err != nil {
 		common.ErrorResp(c, err, 400)
 		return
 	}
 
-	options, sessionData, err := authninstance.BeginLogin(user)
+	options, sessionData, err := authnInstance.BeginLogin(user)
 
 	if err != nil {
 		common.ErrorResp(c, err, 400)
@@ -70,12 +70,11 @@ func FinishAuthnLogin(c *gin.Context) {
 
 	sessionDataString := c.GetHeader("session")
 
-	authninstance, err := authn.NewAuthnInstance(c.Request)
+	authnInstance, err := authn.NewAuthnInstance(c.Request)
 	if err != nil {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-
 	sessionDataBytes, err := base64.StdEncoding.DecodeString(sessionDataString)
 	if err != nil {
 		common.ErrorResp(c, err, 400)
@@ -88,7 +87,7 @@ func FinishAuthnLogin(c *gin.Context) {
 		return
 	}
 
-	_, err = authninstance.FinishLogin(user, sessionData, c.Request)
+	_, err = authnInstance.FinishLogin(user, sessionData, c.Request)
 
 	if err != nil {
 		common.ErrorResp(c, err, 400)
@@ -111,12 +110,12 @@ func BeginAuthnRegistration(c *gin.Context) {
 	}
 	user := c.MustGet("user").(*model.User)
 
-	authninstance, err := authn.NewAuthnInstance(c.Request)
+	authnInstance, err := authn.NewAuthnInstance(c.Request)
 	if err != nil {
 		common.ErrorResp(c, err, 400)
 	}
 
-	options, sessionData, err := authninstance.BeginRegistration(user)
+	options, sessionData, err := authnInstance.BeginRegistration(user)
 
 	if err != nil {
 		common.ErrorResp(c, err, 400)
@@ -142,7 +141,7 @@ func FinishAuthnRegistration(c *gin.Context) {
 	user := c.MustGet("user").(*model.User)
 	sessionDataString := c.GetHeader("Session")
 
-	authninstance, err := authn.NewAuthnInstance(c.Request)
+	authnInstance, err := authn.NewAuthnInstance(c.Request)
 	if err != nil {
 		common.ErrorResp(c, err, 400)
 		return
@@ -160,14 +159,13 @@ func FinishAuthnRegistration(c *gin.Context) {
 		return
 	}
 
-	credential, err := authninstance.FinishRegistration(user, sessionData, c.Request)
+	credential, err := authnInstance.FinishRegistration(user, sessionData, c.Request)
 
 	if err != nil {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	authn := &authn.Authn{}
-	err = user.RegisterAuthn(credential, authn)
+	err = db.RegisterAuthn(user, credential)
 	if err != nil {
 		common.ErrorResp(c, err, 400)
 		return
@@ -182,17 +180,16 @@ func FinishAuthnRegistration(c *gin.Context) {
 
 func DeleteAuthnLogin(c *gin.Context) {
 	user := c.MustGet("user").(*model.User)
-	type DeleteauthnReq struct {
+	type DeleteAuthnReq struct {
 		ID string `json:"id"`
 	}
-	var req DeleteauthnReq
+	var req DeleteAuthnReq
 	err := c.ShouldBind(&req)
 	if err != nil {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	authn := &authn.Authn{}
-	user.RemoveAuthn(req.ID, authn)
+	err = db.RemoveAuthn(user, req.ID)
 	err = op.DelUserCache(user.Username)
 	if err != nil {
 		common.ErrorResp(c, err, 400)
