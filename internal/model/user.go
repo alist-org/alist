@@ -1,11 +1,14 @@
 package model
 
 import (
+	"encoding/binary"
+	"encoding/json"
 	"fmt"
 
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/pkg/utils/random"
+	"github.com/go-webauthn/webauthn/webauthn"
 	"github.com/pkg/errors"
 )
 
@@ -41,6 +44,7 @@ type User struct {
 	Permission int32  `json:"permission"`
 	OtpSecret  string `json:"-"`
 	SsoID      string `json:"sso_id"` // unique by sso platform
+	Authn      string `gorm:"type:text" json:"-"`
 }
 
 func (u *User) IsGuest() bool {
@@ -129,4 +133,31 @@ func HashPwd(static string, salt string) string {
 
 func TwoHashPwd(password string, salt string) string {
 	return HashPwd(StaticHash(password), salt)
+}
+
+func (u *User) WebAuthnID() []byte {
+	bs := make([]byte, 8)
+	binary.LittleEndian.PutUint64(bs, uint64(u.ID))
+	return bs
+}
+
+func (u *User) WebAuthnName() string {
+	return u.Username
+}
+
+func (u *User) WebAuthnDisplayName() string {
+	return u.Username
+}
+
+func (u *User) WebAuthnCredentials() []webauthn.Credential {
+	var res []webauthn.Credential
+	err := json.Unmarshal([]byte(u.Authn), &res)
+	if err != nil {
+		fmt.Println(err)
+	}
+	return res
+}
+
+func (u *User) WebAuthnIcon() string {
+	return "https://alist.nn.ci/logo.svg"
 }

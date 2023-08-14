@@ -44,6 +44,7 @@ func Init(e *gin.Engine) {
 
 	api := g.Group("/api")
 	auth := api.Group("", middlewares.Auth)
+	webauthn := api.Group("/authn", middlewares.Authn)
 
 	api.POST("/auth/login", handles.Login)
 	api.POST("/auth/login/hash", handles.LoginHash)
@@ -52,9 +53,17 @@ func Init(e *gin.Engine) {
 	auth.POST("/auth/2fa/generate", handles.Generate2FA)
 	auth.POST("/auth/2fa/verify", handles.Verify2FA)
 
-	// github auth
+	// auth
 	api.GET("/auth/sso", handles.SSOLoginRedirect)
 	api.GET("/auth/sso_callback", handles.SSOLoginCallback)
+
+	//webauthn
+	webauthn.GET("/webauthn_begin_registration", handles.BeginAuthnRegistration)
+	webauthn.POST("/webauthn_finish_registration", handles.FinishAuthnRegistration)
+	webauthn.GET("/webauthn_begin_login", handles.BeginAuthnLogin)
+	webauthn.POST("/webauthn_finish_login", handles.FinishAuthnLogin)
+	webauthn.POST("/delete_authn", handles.DeleteAuthnLogin)
+	webauthn.GET("/getcredentials", handles.GetAuthnCredentials)
 
 	// no need auth
 	public := api.Group("/public")

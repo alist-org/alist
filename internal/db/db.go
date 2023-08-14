@@ -29,5 +29,5 @@ func AutoMigrate(dst ...interface{}) error {
 }
 
 func GetDb() *gorm.DB {
-	return db;
+	return db
 }
