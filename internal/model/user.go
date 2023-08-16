@@ -24,10 +24,10 @@ type User struct {
 	ID       uint   `json:"id" gorm:"primaryKey"`                      // unique key
 	Username string `json:"username" gorm:"unique" binding:"required"` // username
 	PwdHash  string `json:"-"`                                         // password hash
-	Salt     string // unique salt
-	Password string `json:"password"`  // password
-	BasePath string `json:"base_path"` // base path
-	Role     int    `json:"role"`      // user's role
+	Salt     string `json:"-"`                                         // unique salt
+	Password string `json:"password"`                                  // password
+	BasePath string `json:"base_path"`                                 // base path
+	Role     int    `json:"role"`                                      // user's role
 	Disabled bool   `json:"disabled"`
 	// Determine permissions by bit
 	//   0: can see hidden files
