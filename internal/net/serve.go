@@ -215,14 +215,10 @@ func RequestHttp(httpMethod string, headerOverride http.Header, URL string) (*ht
 		return nil, err
 	}
 	req.Header = headerOverride
-	log.Debugln("request Header: ", req.Header)
-	log.Debugln("request URL: ", URL)
 	res, err := HttpClient().Do(req)
 	if err != nil {
 		return nil, err
 	}
-	log.Debugf("response status: %d", res.StatusCode)
-	log.Debugln("response Header: ", res.Header)
 	// TODO clean header with blocklist or passlist
 	res.Header.Del("set-cookie")
 	if res.StatusCode >= 400 {
@@ -231,7 +227,6 @@ func RequestHttp(httpMethod string, headerOverride http.Header, URL string) (*ht
 		log.Debugln(msg)
 		return res, errors.New(msg)
 	}
-
 	return res, nil
 }
 
