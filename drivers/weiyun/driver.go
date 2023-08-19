@@ -6,7 +6,6 @@ import (
 	"io"
 	"math"
 	"net/http"
-	"os"
 	"strconv"
 	"time"
 
@@ -310,13 +309,12 @@ func (d *WeiYun) Remove(ctx context.Context, obj model.Obj) error {
 
 func (d *WeiYun) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) (model.Obj, error) {
 	if folder, ok := dstDir.(*Folder); ok {
-		file, err := utils.CreateTempFile(stream, stream.GetSize())
+		file, err := stream.CacheFullInTempFile()
 		if err != nil {
 			return nil, err
 		}
 		defer func() {
 			_ = file.Close()
-			_ = os.Remove(file.Name())
 		}()
 
 		// step 1.

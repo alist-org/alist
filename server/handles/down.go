@@ -40,13 +40,13 @@ func Down(c *gin.Context) {
 			common.ErrorResp(c, err, 500)
 			return
 		}
-		if link.ReadSeekCloser != nil {
+		if link.MFile != nil {
 			defer func(ReadSeekCloser io.ReadCloser) {
 				err := ReadSeekCloser.Close()
 				if err != nil {
 					log.Errorf("close data error: %s", err)
 				}
-			}(link.ReadSeekCloser)
+			}(link.MFile)
 		}
 		c.Header("Referrer-Policy", "no-referrer")
 		c.Header("Cache-Control", "max-age=0, no-cache, no-store, must-revalidate")

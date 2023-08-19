@@ -75,7 +75,7 @@ func (d *Mega) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*
 
 		size := file.GetSize()
 		var finalClosers utils.Closers
-		resultRangeReader := func(httpRange http_range.Range) (io.ReadCloser, error) {
+		resultRangeReader := func(ctx context.Context, httpRange http_range.Range) (io.ReadCloser, error) {
 			length := httpRange.Length
 			if httpRange.Length >= 0 && httpRange.Start+httpRange.Length >= size {
 				length = -1
@@ -97,9 +97,9 @@ func (d *Mega) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*
 
 			return readers.NewLimitedReadCloser(oo, length), nil
 		}
-		resultRangeReadCloser := &model.RangeReadCloser{RangeReader: resultRangeReader, Closers: &finalClosers}
+		resultRangeReadCloser := &model.RangeReadCloser{RangeReader: resultRangeReader, Closers: finalClosers}
 		resultLink := &model.Link{
-			RangeReadCloser: *resultRangeReadCloser,
+			RangeReadCloser: resultRangeReadCloser,
 		}
 		return resultLink, nil
 	}

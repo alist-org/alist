@@ -3,6 +3,7 @@ package alist_v3
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"path"
 	"strconv"
@@ -176,7 +177,7 @@ func (d *AListV3) Put(ctx context.Context, dstDir model.Obj, stream model.FileSt
 			SetHeader("Password", d.MetaPassword).
 			SetHeader("Content-Length", strconv.FormatInt(stream.GetSize(), 10)).
 			SetContentLength(true).
-			SetBody(stream.GetReadCloser())
+			SetBody(io.ReadCloser(stream))
 	})
 	return err
 }

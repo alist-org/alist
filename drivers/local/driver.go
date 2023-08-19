@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"io/fs"
 	"net/http"
 	"os"
@@ -171,9 +170,9 @@ func (d *Local) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 			if err != nil {
 				return nil, err
 			}
-			link.ReadSeekCloser = open
+			link.MFile = open
 		} else {
-			link.ReadSeekCloser = utils.ReadSeekerNopCloser(bytes.NewReader(buf.Bytes()))
+			link.MFile = model.NewNopMFile(bytes.NewReader(buf.Bytes()))
 			//link.Header.Set("Content-Length", strconv.Itoa(buf.Len()))
 		}
 	} else {
@@ -181,15 +180,7 @@ func (d *Local) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 		if err != nil {
 			return nil, err
 		}
-		link.ReadSeekCloser = struct {
-			io.Reader
-			io.Seeker
-			io.Closer
-		}{
-			Reader: open,
-			Seeker: open,
-			Closer: open,
-		}
+		link.MFile = open
 	}
 	return &link, nil
 }

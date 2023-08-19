@@ -79,7 +79,7 @@ func (d *SMB) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*m
 		return nil, err
 	}
 	link := &model.Link{
-		ReadSeekCloser: remoteFile,
+		MFile: remoteFile,
 	}
 	d.updateLastConnTime()
 	return link, nil

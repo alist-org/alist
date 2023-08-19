@@ -8,6 +8,7 @@ package webdav // import "golang.org/x/net/webdav"
 import (
 	"errors"
 	"fmt"
+	"github.com/alist-org/alist/v3/internal/stream"
 	"net/http"
 	"net/url"
 	"os"
@@ -323,10 +324,10 @@ func (h *Handler) handlePut(w http.ResponseWriter, r *http.Request) (status int,
 		Size:     r.ContentLength,
 		Modified: time.Now(),
 	}
-	stream := &model.FileStream{
-		Obj:        &obj,
-		ReadCloser: r.Body,
-		Mimetype:   r.Header.Get("Content-Type"),
+	stream := &stream.FileStream{
+		Obj:      &obj,
+		Reader:   r.Body,
+		Mimetype: r.Header.Get("Content-Type"),
 	}
 	if stream.Mimetype == "" {
 		stream.Mimetype = utils.GetMimeType(reqPath)
@@ -336,6 +337,8 @@ func (h *Handler) handlePut(w http.ResponseWriter, r *http.Request) (status int,
 		return http.StatusNotFound, err
 	}
 
+	_ = r.Body.Close()
+	_ = stream.Close()
 	// TODO(rost): Returning 405 Method Not Allowed might not be appropriate.
 	if err != nil {
 		return http.StatusMethodNotAllowed, err

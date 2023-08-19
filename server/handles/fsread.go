@@ -37,9 +37,11 @@ type ObjResp struct {
 	Size     int64     `json:"size"`
 	IsDir    bool      `json:"is_dir"`
 	Modified time.Time `json:"modified"`
+	Created  time.Time `json:"created"`
 	Sign     string    `json:"sign"`
 	Thumb    string    `json:"thumb"`
 	Type     int       `json:"type"`
+	HashInfo string    `json:"hashinfo"`
 }
 
 type FsListResp struct {
@@ -313,6 +315,8 @@ func FsGet(c *gin.Context) {
 			Size:     obj.GetSize(),
 			IsDir:    obj.IsDir(),
 			Modified: obj.ModTime(),
+			Created:  obj.CreateTime(),
+			HashInfo: obj.GetHash().String(),
 			Sign:     common.Sign(obj, parentPath, isEncrypt(meta, reqPath)),
 			Type:     utils.GetFileType(obj.GetName()),
 			Thumb:    thumb,

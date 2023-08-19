@@ -2,13 +2,13 @@ package _115
 
 import (
 	"context"
-	"os"
-
 	driver115 "github.com/SheltonZhu/115driver/pkg/driver"
 	"github.com/alist-org/alist/v3/internal/driver"
+	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
+	"os"
 )
 
 type Pan115 struct {
@@ -83,15 +83,19 @@ func (d *Pan115) Remove(ctx context.Context, obj model.Obj) error {
 }
 
 func (d *Pan115) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
-	tempFile, err := utils.CreateTempFile(stream.GetReadCloser(), stream.GetSize())
+	tempFile, err := stream.CacheFullInTempFile()
 	if err != nil {
 		return err
 	}
 	defer func() {
 		_ = tempFile.Close()
-		_ = os.Remove(tempFile.Name())
 	}()
-	return d.client.UploadFastOrByMultipart(dstDir.GetID(), stream.GetName(), stream.GetSize(), tempFile)
+	//TODO: 115 drvier author should update below code, since only few functions is used in the code, no need to use
+	// os.File level interface at all
+	if result, ok := tempFile.(*os.File); ok {
+		return d.client.UploadFastOrByMultipart(dstDir.GetID(), stream.GetName(), stream.GetSize(), result)
+	}
+	return errs.NotSupport
 }
 
 var _ driver.Driver = (*Pan115)(nil)
