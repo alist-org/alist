@@ -61,6 +61,7 @@ func (d *SMB) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]m
 				Modified: f.ModTime(),
 				Size:     f.Size(),
 				IsFolder: f.IsDir(),
+				Ctime:    f.(*smb2.FileStat).CreationTime,
 			},
 		}
 		files = append(files, &file)

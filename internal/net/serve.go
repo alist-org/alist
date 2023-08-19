@@ -3,12 +3,6 @@ package net
 import (
 	"context"
 	"fmt"
-	"github.com/alist-org/alist/v3/internal/conf"
-	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/pkg/http_range"
-	"github.com/alist-org/alist/v3/pkg/utils"
-	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
 	"io"
 	"mime"
 	"mime/multipart"
@@ -16,7 +10,16 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
+
+	"github.com/alist-org/alist/v3/drivers/base"
+	"github.com/alist-org/alist/v3/internal/conf"
+	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/pkg/http_range"
+	"github.com/alist-org/alist/v3/pkg/utils"
+	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 )
 
 //this file is inspired by GO_SDK net.http.ServeContent
@@ -190,37 +193,33 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request, name string, modTime time
 	}
 	//defer sendContent.Close()
 }
-func ProcessHeader(origin, override *http.Header) *http.Header {
+func ProcessHeader(origin, override http.Header) http.Header {
 	result := http.Header{}
 	// client header
-	for h, val := range *origin {
+	for h, val := range origin {
 		if utils.SliceContains(conf.SlicesMap[conf.ProxyIgnoreHeaders], strings.ToLower(h)) {
 			continue
 		}
 		result[h] = val
 	}
 	// needed header
-	for h, val := range *override {
+	for h, val := range override {
 		result[h] = val
 	}
-	return &result
+	return result
 }
 
 // RequestHttp deal with Header properly then send the request
-func RequestHttp(ctx context.Context, httpMethod string, headerOverride *http.Header, URL string) (*http.Response, error) {
+func RequestHttp(ctx context.Context, httpMethod string, headerOverride http.Header, URL string) (*http.Response, error) {
 	req, err := http.NewRequestWithContext(ctx, httpMethod, URL, nil)
 	if err != nil {
 		return nil, err
 	}
-	req.Header = *headerOverride
-	log.Debugln("request Header: ", req.Header)
-	log.Debugln("request URL: ", URL)
+	req.Header = headerOverride
 	res, err := HttpClient().Do(req)
 	if err != nil {
 		return nil, err
 	}
-	log.Debugf("response status: %d", res.StatusCode)
-	log.Debugln("response Header: ", res.Header)
 	// TODO clean header with blocklist or passlist
 	res.Header.Del("set-cookie")
 	if res.StatusCode >= 400 {
@@ -229,6 +228,22 @@ func RequestHttp(ctx context.Context, httpMethod string, headerOverride *http.He
 		log.Debugln(msg)
 		return res, errors.New(msg)
 	}
-
 	return res, nil
+}
+
+var once sync.Once
+var httpClient *http.Client
+
+func HttpClient() *http.Client {
+	once.Do(func() {
+		httpClient = base.NewHttpClient()
+		httpClient.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+			if len(via) >= 10 {
+				return errors.New("stopped after 10 redirects")
+			}
+			req.Header.Del("Referer")
+			return nil
+		}
+	})
+	return httpClient
 }

@@ -99,7 +99,7 @@ func GetRangeReadCloserFromLink(size int64, link *model.Link) (model.RangeReadCl
 	//remoteClosers := utils.EmptyClosers()
 	rangeReaderFunc := func(ctx context.Context, r http_range.Range) (io.ReadCloser, error) {
 		if link.Concurrency != 0 || link.PartSize != 0 {
-			header := net.ProcessHeader(&http.Header{}, &link.Header)
+			header := net.ProcessHeader(http.Header{}, link.Header)
 			down := net.NewDownloader(func(d *net.Downloader) {
 				d.Concurrency = link.Concurrency
 				d.PartSize = link.PartSize
@@ -114,7 +114,7 @@ func GetRangeReadCloserFromLink(size int64, link *model.Link) (model.RangeReadCl
 			if err != nil {
 				return nil, errs.NewErr(err, "GetReadCloserFromLink failed")
 			}
-			return *rc, nil
+			return rc, nil
 
 		}
 		if len(link.URL) > 0 {
@@ -145,7 +145,7 @@ func GetRangeReadCloserFromLink(size int64, link *model.Link) (model.RangeReadCl
 }
 
 func RequestRangedHttp(ctx context.Context, link *model.Link, offset, length int64) (*http.Response, error) {
-	header := net.ProcessHeader(&http.Header{}, &link.Header)
+	header := net.ProcessHeader(http.Header{}, link.Header)
 	header = http_range.ApplyRangeToHttpHeader(http_range.Range{Start: offset, Length: length}, header)
 
 	return net.RequestHttp(ctx, "GET", header, link.URL)
@@ -161,42 +161,4 @@ func checkContentRange(header *http.Header, size, offset int64) bool {
 		return true
 	}
 	return false
-}
-
-// LimitSeekReader returns a Reader that reads from rs
-// but stops with EOF after n bytes.
-// The underlying implementation is a *LimitedReader.
-func LimitSeekReader(rs io.ReadSeeker, n int64) io.Reader { return &LimitedReadSeeker{rs, n} }
-
-// A LimitedReadSeeker reads from Rs but limits the amount of
-// data returned to just N bytes. Each call to Read
-// updates N to reflect the new amount remaining.
-// Read returns EOF when N <= 0 or when the underlying R returns EOF.
-// it will also try to seek to 0 when got EOF or reached N
-type LimitedReadSeeker struct {
-	Rs io.ReadSeeker // underlying reader
-	N  int64         // max bytes remaining
-}
-
-func (l *LimitedReadSeeker) Read(p []byte) (n int, err error) {
-	if l.N <= 0 {
-		err = l.trySeek0()
-		if err != nil {
-			return 0, err
-		}
-		return 0, io.EOF
-	}
-	if int64(len(p)) > l.N {
-		p = p[0:l.N]
-	}
-	n, err = l.Rs.Read(p)
-	l.N -= int64(n)
-	return
-}
-func (l *LimitedReadSeeker) trySeek0() error {
-	_, err := l.Rs.Seek(0, io.SeekStart)
-	if err != nil {
-		return errs.NewErr(err, "failed to seek to 0: %+v", err)
-	}
-	return nil
 }

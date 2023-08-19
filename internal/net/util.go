@@ -1,16 +1,13 @@
 package net
 
 import (
-	"errors"
 	"fmt"
-	"github.com/alist-org/alist/v3/drivers/base"
 	"io"
 	"math"
 	"mime/multipart"
 	"net/http"
 	"net/textproto"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/alist-org/alist/v3/pkg/http_range"
@@ -339,21 +336,4 @@ func GetRangedHttpReader(readCloser io.ReadCloser, offset, length int64) (io.Rea
 
 	// return an io.ReadCloser that is limited to `length` bytes.
 	return &LimitedReadCloser{readCloser, length_int}, nil
-}
-
-var once sync.Once
-var httpClient *http.Client
-
-func HttpClient() *http.Client {
-	once.Do(func() {
-		httpClient = base.NewHttpClient()
-		httpClient.CheckRedirect = func(req *http.Request, via []*http.Request) error {
-			if len(via) >= 10 {
-				return errors.New("stopped after 10 redirects")
-			}
-			req.Header.Del("Referer")
-			return nil
-		}
-	})
-	return httpClient
 }

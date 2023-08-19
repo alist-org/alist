@@ -3,6 +3,10 @@ package fs
 import (
 	"context"
 	"fmt"
+	"net/http"
+	stdpath "path"
+	"sync/atomic"
+
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/op"
@@ -11,9 +15,6 @@ import (
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-	"net/http"
-	stdpath "path"
-	"sync/atomic"
 )
 
 var CopyTaskManager = task.NewTaskManager(3, func(tid *uint64) {

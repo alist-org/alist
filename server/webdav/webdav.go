@@ -322,7 +322,8 @@ func (h *Handler) handlePut(w http.ResponseWriter, r *http.Request) (status int,
 	obj := model.Object{
 		Name:     path.Base(reqPath),
 		Size:     r.ContentLength,
-		Modified: time.Now(),
+		Modified: h.getModTime(r),
+		Ctime:    h.getCreateTime(r),
 	}
 	stream := &stream.FileStream{
 		Obj:      &obj,
