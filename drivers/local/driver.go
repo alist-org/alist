@@ -5,16 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/fs"
-	"net/http"
-	"os"
-	stdpath "path"
-	"path/filepath"
-	"strconv"
-	"strings"
-	"syscall"
-	"time"
-
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
@@ -22,7 +12,15 @@ import (
 	"github.com/alist-org/alist/v3/internal/sign"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/server/common"
+	"github.com/djherbis/times"
 	_ "golang.org/x/image/webp"
+	"io/fs"
+	"net/http"
+	"os"
+	stdpath "path"
+	"path/filepath"
+	"strconv"
+	"strings"
 )
 
 type Local struct {
@@ -103,7 +101,13 @@ func (d *Local) FileInfoToObj(f fs.FileInfo, reqPath string, fullPath string) mo
 	if !isFolder {
 		size = f.Size()
 	}
-	stat := f.Sys().(*syscall.Stat_t)
+	ctime := f.ModTime()
+	t, err := times.Stat(stdpath.Join(fullPath, f.Name()))
+	if err == nil {
+		if t.HasBirthTime() {
+			ctime = t.BirthTime()
+		}
+	}
 
 	file := model.ObjThumb{
 		Object: model.Object{
@@ -112,7 +116,7 @@ func (d *Local) FileInfoToObj(f fs.FileInfo, reqPath string, fullPath string) mo
 			Modified: f.ModTime(),
 			Size:     size,
 			IsFolder: isFolder,
-			Ctime:    time.Unix(stat.Birthtimespec.Sec, stat.Birthtimespec.Sec),
+			Ctime:    ctime,
 		},
 		Thumbnail: model.Thumbnail{
 			Thumbnail: thumb,
