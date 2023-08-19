@@ -456,7 +456,7 @@ type Buf struct {
 // NewBuf is a buffer that can have 1 read & 1 write at the same time.
 // when read is faster write, immediately feed data to read after written
 func NewBuf(ctx context.Context, maxSize int, id int) *Buf {
-	d := make([]byte, maxSize)
+	d := make([]byte, 0, maxSize)
 	return &Buf{ctx: ctx, buffer: bytes.NewBuffer(d), size: maxSize, notify: make(chan struct{})}
 
 }
