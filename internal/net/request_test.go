@@ -7,14 +7,15 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/alist-org/alist/v3/pkg/http_range"
-	"github.com/sirupsen/logrus"
-	"golang.org/x/exp/slices"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"sync"
 	"testing"
+
+	"github.com/alist-org/alist/v3/pkg/http_range"
+	"github.com/sirupsen/logrus"
+	"golang.org/x/exp/slices"
 )
 
 var buf22MB = make([]byte, 1024*1024*22)
@@ -55,7 +56,7 @@ func TestDownloadOrder(t *testing.T) {
 	if err != nil {
 		t.Fatalf("expect no error, got %v", err)
 	}
-	resultBuf, err := io.ReadAll(*readCloser)
+	resultBuf, err := io.ReadAll(readCloser)
 	if err != nil {
 		t.Fatalf("expect no error, got %v", err)
 	}
@@ -111,7 +112,7 @@ func TestDownloadSingle(t *testing.T) {
 	if err != nil {
 		t.Fatalf("expect no error, got %v", err)
 	}
-	resultBuf, err := io.ReadAll(*readCloser)
+	resultBuf, err := io.ReadAll(readCloser)
 	if err != nil {
 		t.Fatalf("expect no error, got %v", err)
 	}
