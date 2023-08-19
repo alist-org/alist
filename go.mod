@@ -42,7 +42,7 @@ require (
 	github.com/t3rm1n4l/go-mega v0.0.0-20230228171823-a01a2cda13ca
 	github.com/u2takey/ffmpeg-go v0.4.1
 	github.com/upyun/go-sdk/v3 v3.0.4
-	github.com/winfsp/cgofuse v1.5.1-0.20221118130120-84c0898ad2e0
+	github.com/winfsp/cgofuse v1.5.1-0.20230130140708-f87f5db493b5
 	golang.org/x/crypto v0.11.0
 	golang.org/x/exp v0.0.0-20230817173708-d852ddb80c63
 	golang.org/x/image v0.10.0
