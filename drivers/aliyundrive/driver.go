@@ -68,7 +68,7 @@ func (d *AliDrive) Init(ctx context.Context) error {
 		return nil
 	}
 	// init deviceID
-	deviceID := utils.GetSHA256Encode([]byte(d.UserID))
+	deviceID := utils.HashData(utils.SHA256, []byte(d.UserID))
 	// init privateKey
 	privateKey, _ := NewPrivateKeyFromHex(deviceID)
 	state := State{

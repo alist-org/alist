@@ -12,26 +12,8 @@ import (
 	"strings"
 )
 
-func GetSHA1Encode(data []byte) string {
-	h := sha1.New()
-	h.Write(data)
-	return hex.EncodeToString(h.Sum(nil))
-}
-
-func GetSHA256Encode(data []byte) string {
-	h := sha256.New()
-	h.Write(data)
-	return hex.EncodeToString(h.Sum(nil))
-}
-
-func GetMD5Encode(data []byte) string {
-	h := md5.New()
-	h.Write(data)
-	return hex.EncodeToString(h.Sum(nil))
-}
-
 func GetMD5EncodeStr(data string) string {
-	return GetMD5Encode([]byte(data))
+	return HashData(MD5, []byte(data))
 }
 
 //inspired by "github.com/rclone/rclone/fs/hash"
@@ -40,8 +22,8 @@ func GetMD5EncodeStr(data string) string {
 // if it is requested to deliver an unsupported hash type.
 var ErrUnsupported = errors.New("hash type not supported")
 
-// Type indicates a standard hashing algorithm
-type hashType struct {
+// HashType indicates a standard hashing algorithm
+type HashType struct {
 	Width   int
 	Name    string
 	Alias   string
@@ -49,15 +31,15 @@ type hashType struct {
 }
 
 var (
-	name2hash  = map[string]*hashType{}
-	alias2hash = map[string]*hashType{}
-	Supported  []*hashType
+	name2hash  = map[string]*HashType{}
+	alias2hash = map[string]*HashType{}
+	Supported  []*HashType
 )
 
-// RegisterHash adds a new Hash to the list and returns it Type
-func RegisterHash(name, alias string, width int, newFunc func() hash.Hash) *hashType {
+// RegisterHash adds a new Hash to the list and returns its Type
+func RegisterHash(name, alias string, width int, newFunc func() hash.Hash) *HashType {
 
-	newType := &hashType{
+	newType := &HashType{
 		Name:    name,
 		Alias:   alias,
 		Width:   width,
@@ -82,14 +64,14 @@ var (
 )
 
 // HashData get hash of one hashType
-func HashData(hashType *hashType, data []byte) string {
+func HashData(hashType *HashType, data []byte) string {
 	h := hashType.NewFunc()
 	h.Write(data)
 	return hex.EncodeToString(h.Sum(nil))
 }
 
 // HashReader get hash of one hashType from a reader
-func HashReader(hashType *hashType, reader io.Reader) (string, error) {
+func HashReader(hashType *HashType, reader io.Reader) (string, error) {
 	h := hashType.NewFunc()
 	_, err := io.Copy(h, reader)
 	if err != nil {
@@ -99,8 +81,8 @@ func HashReader(hashType *hashType, reader io.Reader) (string, error) {
 }
 
 // fromTypes will return hashers for all the requested types.
-func fromTypes(types []*hashType) map[*hashType]hash.Hash {
-	hashers := map[*hashType]hash.Hash{}
+func fromTypes(types []*HashType) map[*HashType]hash.Hash {
+	hashers := map[*HashType]hash.Hash{}
 	for _, t := range types {
 		hashers[t] = t.NewFunc()
 	}
@@ -110,7 +92,7 @@ func fromTypes(types []*hashType) map[*hashType]hash.Hash {
 // toMultiWriter will return a set of hashers into a
 // single multiwriter, where one write will update all
 // the hashers.
-func toMultiWriter(h map[*hashType]hash.Hash) io.Writer {
+func toMultiWriter(h map[*HashType]hash.Hash) io.Writer {
 	// Convert to to slice
 	var w = make([]io.Writer, 0, len(h))
 	for _, v := range h {
@@ -123,12 +105,12 @@ func toMultiWriter(h map[*hashType]hash.Hash) io.Writer {
 type MultiHasher struct {
 	w    io.Writer
 	size int64
-	h    map[*hashType]hash.Hash // Hashes
+	h    map[*HashType]hash.Hash // Hashes
 }
 
 // NewMultiHasher will return a hash writer that will write
 // the requested hash types.
-func NewMultiHasher(types []*hashType) *MultiHasher {
+func NewMultiHasher(types []*HashType) *MultiHasher {
 	hashers := fromTypes(types)
 	m := MultiHasher{h: hashers, w: toMultiWriter(hashers)}
 	return &m
@@ -141,7 +123,7 @@ func (m *MultiHasher) Write(p []byte) (n int, err error) {
 }
 
 func (m *MultiHasher) GetHashInfo() *HashInfo {
-	dst := make(map[*hashType]string)
+	dst := make(map[*HashType]string)
 	for k, v := range m.h {
 		dst[k] = hex.EncodeToString(v.Sum(nil))
 	}
@@ -149,7 +131,7 @@ func (m *MultiHasher) GetHashInfo() *HashInfo {
 }
 
 // Sum returns the specified hash from the multihasher
-func (m *MultiHasher) Sum(hashType *hashType) ([]byte, error) {
+func (m *MultiHasher) Sum(hashType *HashType) ([]byte, error) {
 	h, ok := m.h[hashType]
 	if !ok {
 		return nil, ErrUnsupported
@@ -164,11 +146,11 @@ func (m *MultiHasher) Size() int64 {
 
 // A HashInfo contains hash string for one or more hashType
 type HashInfo struct {
-	h map[*hashType]string
+	h map[*HashType]string
 }
 
-func NewHashInfo(ht *hashType, str string) HashInfo {
-	m := make(map[*hashType]string)
+func NewHashInfo(ht *HashType, str string) HashInfo {
+	m := make(map[*HashType]string)
 	m[ht] = str
 	return HashInfo{h: m}
 }
@@ -182,6 +164,6 @@ func (hi HashInfo) String() string {
 	}
 	return strings.Join(tmp, "\n")
 }
-func (hi HashInfo) GetHash(ht *hashType) string {
+func (hi HashInfo) GetHash(ht *HashType) string {
 	return hi.h[ht]
 }

@@ -10,13 +10,13 @@ import (
 
 type hashTest struct {
 	input  []byte
-	output map[*hashType]string
+	output map[*HashType]string
 }
 
 var hashTestSet = []hashTest{
 	{
 		input: []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14},
-		output: map[*hashType]string{
+		output: map[*HashType]string{
 			MD5:    "bf13fc19e5151ac57d4252e0e0f87abe",
 			SHA1:   "3ab6543c08a75f292a5ecedac87ec41642d12166",
 			SHA256: "c839e57675862af5c21bd0a15413c3ec579e0d5522dab600bc6c3489b05b8f54",
@@ -25,7 +25,7 @@ var hashTestSet = []hashTest{
 	// Empty data set
 	{
 		input: []byte{},
-		output: map[*hashType]string{
+		output: map[*HashType]string{
 			MD5:    "d41d8cd98f00b204e9800998ecf8427e",
 			SHA1:   "da39a3ee5e6b4b0d3255bfef95601890afd80709",
 			SHA256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -35,7 +35,7 @@ var hashTestSet = []hashTest{
 
 func TestMultiHasher(t *testing.T) {
 	for _, test := range hashTestSet {
-		mh := NewMultiHasher([]*hashType{MD5, SHA1, SHA256})
+		mh := NewMultiHasher([]*HashType{MD5, SHA1, SHA256})
 		n, err := io.Copy(mh, bytes.NewBuffer(test.input))
 		require.NoError(t, err)
 		assert.Len(t, test.input, int(n))
