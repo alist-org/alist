@@ -131,7 +131,7 @@ func (d *AliyundriveOpen) calProofCode(stream model.FileStreamer) (string, error
 		return "", err
 	}
 	length := proofRange.End - proofRange.Start
-	buf := bytes.NewBuffer(make([]byte, length))
+	buf := bytes.NewBuffer(make([]byte, 0, length))
 	reader, err := stream.RangeRead(http_range.Range{Start: proofRange.Start, Length: length})
 	if err != nil {
 		return "", err
@@ -148,7 +148,7 @@ func (d *AliyundriveOpen) upload(ctx context.Context, dstDir model.Obj, stream m
 	// Part Size Unit: Bytes, Default: 20MB,
 	// Maximum number of slices 10,000, ≈195.3125GB
 	var partSize = calPartSize(stream.GetSize())
-	const dateFormat = "2019-08-20T06:51:27.292Z"
+	const dateFormat = "2006-01-02T15:04:05.88Z"
 	mtime := stream.ModTime()
 	mtimeStr := mtime.UTC().Format(dateFormat)
 	ctimeStr := stream.CreateTime().UTC().Format(dateFormat)
