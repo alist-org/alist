@@ -346,7 +346,11 @@ func (d *LanZou) getFilesByShareUrl(shareID, pwd string, sharePageData string) (
 
 	// 需要密码
 	if strings.Contains(sharePageData, "pwdload") || strings.Contains(sharePageData, "passwddiv") {
-		param, err := htmlFormToMap(sharePageData)
+		sharePageData, err := getJSFunctionByName(sharePageData, "down_p")
+		if err != nil {
+			return nil, err
+		}
+		param, err := htmlJsonToMap(sharePageData)
 		if err != nil {
 			return nil, err
 		}
@@ -370,8 +374,7 @@ func (d *LanZou) getFilesByShareUrl(shareID, pwd string, sharePageData string) (
 		if err != nil {
 			return nil, err
 		}
-		nextPageData := RemoveNotes(string(data))
-
+		nextPageData := removeJSGlobalFunction(RemoveNotes(string(data)))
 		param, err = htmlJsonToMap(nextPageData)
 		if err != nil {
 			return nil, err
