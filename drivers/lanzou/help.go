@@ -118,7 +118,19 @@ var findKVReg = regexp.MustCompile(`'(.+?)':('?([^' },]*)'?)`) // 拆分kv
 
 // 根据key查询js变量
 func findJSVarFunc(key, data string) string {
-	values := regexp.MustCompile(`var ` + key + ` = '(.+?)';`).FindStringSubmatch(data)
+	var values []string
+	if key != "sasign" {
+		values = regexp.MustCompile(`var ` + key + ` = '(.+?)';`).FindStringSubmatch(data)
+	} else {
+		matches := regexp.MustCompile(`var `+key+` = '(.+?)';`).FindAllStringSubmatch(data, -1)
+		if len(matches) == 3 {
+			values = matches[1]
+		} else {
+			if len(matches) > 0 {
+				values = matches[0]
+			}
+		}
+	}
 	if len(values) == 0 {
 		return ""
 	}
