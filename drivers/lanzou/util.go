@@ -374,7 +374,7 @@ func (d *LanZou) getFilesByShareUrl(shareID, pwd string, sharePageData string) (
 		if err != nil {
 			return nil, err
 		}
-		nextPageData := removeJSGlobalFunction(RemoveNotes(string(data)))
+		nextPageData := RemoveNotes(string(data))
 		param, err = htmlJsonToMap(nextPageData)
 		if err != nil {
 			return nil, err
