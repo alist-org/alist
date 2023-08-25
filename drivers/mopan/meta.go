@@ -9,7 +9,7 @@ type Addition struct {
 	Phone    string `json:"phone" required:"true"`
 	Password string `json:"password" required:"true"`
 
-	RootFolderID string `json:"root_folder_id" default:"-11" required:"true" help:"be careful when using the -11 value, some operations may cause system errors"`
+	RootFolderID string `json:"root_folder_id" default:""`
 
 	CloudID string `json:"cloud_id"`
 
