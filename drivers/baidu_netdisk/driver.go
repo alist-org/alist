@@ -80,7 +80,7 @@ func (d *BaiduNetdisk) Link(ctx context.Context, file model.Obj, args model.Link
 
 func (d *BaiduNetdisk) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) (model.Obj, error) {
 	var newDir File
-	_, err := d.create(stdpath.Join(parentDir.GetPath(), dirName), 0, 1, "", "", &newDir)
+	_, err := d.create(stdpath.Join(parentDir.GetPath(), dirName), 0, 1, "", "", &newDir, 0, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -151,9 +151,6 @@ func (d *BaiduNetdisk) Put(ctx context.Context, dstDir model.Obj, stream model.F
 	if err != nil {
 		return nil, err
 	}
-	defer func() {
-		_ = tempFile.Close()
-	}()
 
 	streamSize := stream.GetSize()
 	count := int(math.Max(math.Ceil(float64(streamSize)/float64(DefaultSliceSize)), 1))
@@ -192,15 +189,15 @@ func (d *BaiduNetdisk) Put(ctx context.Context, dstDir model.Obj, stream model.F
 
 	rawPath := stdpath.Join(dstDir.GetPath(), stream.GetName())
 	path := encodeURIComponent(rawPath)
+	mtime := stream.ModTime().Unix()
+	ctime := stream.CreateTime().Unix()
 
 	// step.1 预上传
 	// 尝试获取之前的进度
 	precreateResp, ok := base.GetUploadProgress[*PrecreateResp](d, d.AccessToken, contentMd5)
 	if !ok {
-		data := fmt.Sprintf("path=%s&size=%d&isdir=0&autoinit=1&rtype=3&block_list=%s&content-md5=%s&slice-md5=%s",
-			path, streamSize,
-			blockListStr,
-			contentMd5, sliceMd5)
+		data := fmt.Sprintf("path=%s&size=%d&isdir=0&autoinit=1&rtype=3&block_list=%s&content-md5=%s&slice-md5=%s&local_mtime=%d&local_ctime=%d",
+			path, streamSize, blockListStr, contentMd5, sliceMd5, mtime, ctime)
 		params := map[string]string{
 			"method": "precreate",
 		}
@@ -261,7 +258,7 @@ func (d *BaiduNetdisk) Put(ctx context.Context, dstDir model.Obj, stream model.F
 
 	// step.3 创建文件
 	var newFile File
-	_, err = d.create(rawPath, streamSize, 0, precreateResp.Uploadid, blockListStr, &newFile)
+	_, err = d.create(rawPath, streamSize, 0, precreateResp.Uploadid, blockListStr, &newFile, mtime, ctime)
 	if err != nil {
 		return nil, err
 	}
