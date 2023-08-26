@@ -125,7 +125,9 @@ func (d *Pan115) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 	}
 	fullHash = strings.ToUpper(fullHash)
 
-	// 闪传
+	// rapid-upload
+	// note that 115 add timeout for rapid-upload,
+	// and "sig invalid" err is thrown even when the hash is correct after timeout.
 	if fastInfo, err = d.rapidUpload(stream.GetSize(), stream.GetName(), dirID, preHash, fullHash, stream); err != nil {
 		return err
 	}
