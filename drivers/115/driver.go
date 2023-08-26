@@ -4,11 +4,11 @@ import (
 	"context"
 	driver115 "github.com/SheltonZhu/115driver/pkg/driver"
 	"github.com/alist-org/alist/v3/internal/driver"
-	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/pkg/http_range"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
-	"os"
+	"strings"
 )
 
 type Pan115 struct {
@@ -83,19 +83,65 @@ func (d *Pan115) Remove(ctx context.Context, obj model.Obj) error {
 }
 
 func (d *Pan115) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
-	tempFile, err := stream.CacheFullInTempFile()
+	var (
+		fastInfo *driver115.UploadInitResp
+		dirID    = dstDir.GetID()
+	)
+
+	if ok, err := d.client.UploadAvailable(); err != nil || !ok {
+		return err
+	}
+	if stream.GetSize() > d.client.UploadMetaInfo.SizeLimit {
+		return driver115.ErrUploadTooLarge
+	}
+	//if digest, err = d.client.GetDigestResult(stream); err != nil {
+	//	return err
+	//}
+
+	const PreHashSize int64 = 128 * utils.KB
+	hashSize := PreHashSize
+	if stream.GetSize() < PreHashSize {
+		hashSize = stream.GetSize()
+	}
+	reader, err := stream.RangeRead(http_range.Range{Start: 0, Length: hashSize})
 	if err != nil {
 		return err
 	}
-	defer func() {
-		_ = tempFile.Close()
-	}()
-	//TODO: 115 drvier author should update below code, since only few functions is used in the code, no need to use
-	// os.File level interface at all
-	if result, ok := tempFile.(*os.File); ok {
-		return d.client.UploadFastOrByMultipart(dstDir.GetID(), stream.GetName(), stream.GetSize(), result)
+	preHash, err := utils.HashReader(utils.SHA1, reader)
+	if err != nil {
+		return err
 	}
-	return errs.NotSupport
+	preHash = strings.ToUpper(preHash)
+	fullHash := stream.GetHash().GetHash(utils.SHA1)
+	if len(fullHash) <= 0 {
+		tmpF, err := stream.CacheFullInTempFile()
+		if err != nil {
+			return err
+		}
+		fullHash, err = utils.HashFile(utils.SHA1, tmpF)
+		if err != nil {
+			return err
+		}
+	}
+	fullHash = strings.ToUpper(fullHash)
+
+	// 闪传
+	if fastInfo, err = d.rapidUpload(stream.GetSize(), stream.GetName(), dirID, preHash, fullHash, stream); err != nil {
+		return err
+	}
+	if matched, err := fastInfo.Ok(); err != nil {
+		return err
+	} else if matched {
+		return nil
+	}
+
+	// 闪传失败，上传
+	if stream.GetSize() <= utils.KB { // 文件大小小于1KB，改用普通模式上传
+		return d.client.UploadByOSS(&fastInfo.UploadOSSParams, stream, dirID)
+	}
+	// 分片上传
+	return d.UploadByMultipart(&fastInfo.UploadOSSParams, stream.GetSize(), stream, dirID)
+
 }
 
 var _ driver.Driver = (*Pan115)(nil)

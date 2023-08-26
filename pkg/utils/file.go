@@ -171,3 +171,10 @@ func GetMimeType(name string) string {
 	}
 	return "application/octet-stream"
 }
+
+const (
+	KB = 1 << (10 * (iota + 1))
+	MB
+	GB
+	TB
+)

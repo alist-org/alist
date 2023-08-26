@@ -80,6 +80,18 @@ func HashReader(hashType *HashType, reader io.Reader) (string, error) {
 	return hex.EncodeToString(h.Sum(nil)), nil
 }
 
+// HashFile get hash of one hashType from a model.File
+func HashFile(hashType *HashType, file io.ReadSeeker) (string, error) {
+	str, err := HashReader(hashType, file)
+	if err != nil {
+		return "", err
+	}
+	if _, err = file.Seek(0, io.SeekStart); err != nil {
+		return str, err
+	}
+	return str, nil
+}
+
 // fromTypes will return hashers for all the requested types.
 func fromTypes(types []*HashType) map[*HashType]hash.Hash {
 	hashers := map[*HashType]hash.Hash{}

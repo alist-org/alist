@@ -30,7 +30,7 @@ type BaiduNetdisk struct {
 	uploadThread int
 }
 
-const DefaultSliceSize int64 = 4 * 1024 * 1024
+const DefaultSliceSize int64 = 4 * utils.MB
 
 func (d *BaiduNetdisk) Config() driver.Config {
 	return config

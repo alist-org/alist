@@ -13,8 +13,8 @@ type FileObj struct {
 	driver.File
 }
 
-func (f FileObj) CreateTime() time.Time {
-	return f.CreateTime()
+func (f *FileObj) CreateTime() time.Time {
+	return f.File.CreateTime
 }
 
 func (f *FileObj) GetHash() utils.HashInfo {

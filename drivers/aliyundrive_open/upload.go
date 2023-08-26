@@ -31,19 +31,19 @@ func makePartInfos(size int) []base.Json {
 }
 
 func calPartSize(fileSize int64) int64 {
-	var partSize int64 = 20 * 1024 * 1024
+	var partSize int64 = 20 * utils.MB
 	if fileSize > partSize {
-		if fileSize > 1*1024*1024*1024*1024 { // file Size over 1TB
-			partSize = 5 * 1024 * 1024 * 1024 // file part size 5GB
-		} else if fileSize > 768*1024*1024*1024 { // over 768GB
+		if fileSize > 1*utils.TB { // file Size over 1TB
+			partSize = 5 * utils.GB // file part size 5GB
+		} else if fileSize > 768*utils.GB { // over 768GB
 			partSize = 109951163 // ≈ 104.8576MB, split 1TB into 10,000 part
-		} else if fileSize > 512*1024*1024*1024 { // over 512GB
+		} else if fileSize > 512*utils.GB { // over 512GB
 			partSize = 82463373 // ≈ 78.6432MB
-		} else if fileSize > 384*1024*1024*1024 { // over 384GB
+		} else if fileSize > 384*utils.GB { // over 384GB
 			partSize = 54975582 // ≈ 52.4288MB
-		} else if fileSize > 256*1024*1024*1024 { // over 256GB
+		} else if fileSize > 256*utils.GB { // over 256GB
 			partSize = 41231687 // ≈ 39.3216MB
-		} else if fileSize > 128*1024*1024*1024 { // over 128GB
+		} else if fileSize > 128*utils.GB { // over 128GB
 			partSize = 27487791 // ≈ 26.2144MB
 		}
 	}
@@ -165,7 +165,7 @@ func (d *AliyundriveOpen) upload(ctx context.Context, dstDir model.Obj, stream m
 	count := int(math.Ceil(float64(stream.GetSize()) / float64(partSize)))
 	createData["part_info_list"] = makePartInfos(count)
 	// rapid upload
-	rapidUpload := stream.GetSize() > 100*1024 && d.RapidUpload
+	rapidUpload := stream.GetSize() > 100*utils.KB && d.RapidUpload
 	if rapidUpload {
 		log.Debugf("[aliyundrive_open] start cal pre_hash")
 		// read 1024 bytes to calculate pre hash
@@ -198,11 +198,8 @@ func (d *AliyundriveOpen) upload(ctx context.Context, dstDir model.Obj, stream m
 			if err != nil {
 				return nil, err
 			}
-			hash, err = utils.HashReader(utils.SHA1, tmpF)
+			hash, err = utils.HashFile(utils.SHA1, tmpF)
 			if err != nil {
-				return nil, err
-			}
-			if _, err = tmpF.Seek(0, io.SeekStart); err != nil {
 				return nil, err
 			}
 
