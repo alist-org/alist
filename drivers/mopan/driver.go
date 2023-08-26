@@ -17,6 +17,7 @@ import (
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/avast/retry-go"
 	"github.com/foxxorcat/mopan-sdk-go"
+	log "github.com/sirupsen/logrus"
 )
 
 type MoPan struct {
@@ -53,6 +54,16 @@ func (d *MoPan) Init(ctx context.Context) error {
 			return err
 		}
 		d.userID = info.UserID
+		log.Debugf("[mopan] Phone: %s UserCloudStorageRelations: %+v", d.Phone, data.UserCloudStorageRelations)
+		cloudCircleApp, _ := d.client.QueryAllCloudCircleApp()
+		log.Debugf("[mopan] Phone: %s CloudCircleApp: %+v", d.Phone, cloudCircleApp)
+		if d.RootFolderID == "" {
+			for _, userCloudStorage := range data.UserCloudStorageRelations {
+				if userCloudStorage.Path == "/文件" {
+					d.RootFolderID = userCloudStorage.FolderID
+				}
+			}
+		}
 		return nil
 	}
 	d.client = mopan.NewMoClientWithRestyClient(base.NewRestyClient()).
@@ -93,6 +104,7 @@ func (d *MoPan) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([
 			break
 		}
 
+		log.Debugf("[mopan] Phone: %s folder: %+v", d.Phone, data.FileListAO.FolderList)
 		files = append(files, utils.MustSliceConvert(data.FileListAO.FolderList, folderToObj)...)
 		files = append(files, utils.MustSliceConvert(data.FileListAO.FileList, fileToObj)...)
 	}
