@@ -1,11 +1,12 @@
 package handles
 
 import (
-	"github.com/alist-org/alist/v3/internal/stream"
 	"net/url"
 	stdpath "path"
 	"strconv"
 	"time"
+
+	"github.com/alist-org/alist/v3/internal/stream"
 
 	"github.com/alist-org/alist/v3/internal/fs"
 	"github.com/alist-org/alist/v3/internal/model"
@@ -34,11 +35,18 @@ func FsStream(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
+	lastModifiedStr := c.GetHeader("Last-Modified")
+	lastModifiedMillisecond, err := strconv.ParseInt(lastModifiedStr, 10, 64)
+	if err != nil {
+		common.ErrorResp(c, err, 400)
+		return
+	}
+	lastModified := time.UnixMilli(lastModifiedMillisecond)
 	s := &stream.FileStream{
 		Obj: &model.Object{
 			Name:     name,
 			Size:     size,
-			Modified: time.Now(),
+			Modified: lastModified,
 		},
 		Reader:       c.Request.Body,
 		Mimetype:     c.GetHeader("Content-Type"),
@@ -64,6 +72,13 @@ func FsForm(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
+	lastModifiedStr := c.GetHeader("Last-Modified")
+	lastModifiedMillisecond, err := strconv.ParseInt(lastModifiedStr, 10, 64)
+	if err != nil {
+		common.ErrorResp(c, err, 400)
+		return
+	}
+	lastModified := time.UnixMilli(lastModifiedMillisecond)
 	asTask := c.GetHeader("As-Task") == "true"
 	user := c.MustGet("user").(*model.User)
 	path, err = user.JoinPath(path)
@@ -95,7 +110,7 @@ func FsForm(c *gin.Context) {
 		Obj: &model.Object{
 			Name:     name,
 			Size:     file.Size,
-			Modified: time.Now(),
+			Modified: lastModified,
 		},
 		Reader:       f,
 		Mimetype:     file.Header.Get("Content-Type"),
