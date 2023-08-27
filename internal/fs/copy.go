@@ -10,6 +10,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/op"
+	"github.com/alist-org/alist/v3/internal/stream"
 	"github.com/alist-org/alist/v3/pkg/task"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
@@ -94,9 +95,14 @@ func copyFileBetween2Storages(tsk *task.Task[uint64], srcStorage, dstStorage dri
 	if err != nil {
 		return errors.WithMessagef(err, "failed get [%s] link", srcFilePath)
 	}
-	stream, err := getFileStreamFromLink(tsk.Ctx, srcFile, link)
+	fs := stream.FileStream{
+		Obj: srcFile,
+		Ctx: tsk.Ctx,
+	}
+	// any link provided is seekable
+	ss, err := stream.NewSeekableStream(fs, link)
 	if err != nil {
 		return errors.WithMessagef(err, "failed get [%s] stream", srcFilePath)
 	}
-	return op.Put(tsk.Ctx, dstStorage, dstDirPath, stream, tsk.SetProgress, true)
+	return op.Put(tsk.Ctx, dstStorage, dstDirPath, ss, tsk.SetProgress, true)
 }

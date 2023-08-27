@@ -2,13 +2,13 @@ package _115
 
 import (
 	"context"
-	"os"
-
 	driver115 "github.com/SheltonZhu/115driver/pkg/driver"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/pkg/http_range"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
+	"strings"
 )
 
 type Pan115 struct {
@@ -38,15 +38,15 @@ func (d *Pan115) List(ctx context.Context, dir model.Obj, args model.ListArgs) (
 	if err != nil && !errors.Is(err, driver115.ErrNotExist) {
 		return nil, err
 	}
-	return utils.SliceConvert(files, func(src driver115.File) (model.Obj, error) {
-		return src, nil
+	return utils.SliceConvert(files, func(src FileObj) (model.Obj, error) {
+		return &src, nil
 	})
 }
 
 func (d *Pan115) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	downloadInfo, err := d.client.
 		SetUserAgent(driver115.UA115Browser).
-		Download(file.(driver115.File).PickCode)
+		Download(file.(*FileObj).PickCode)
 	// recover for upload
 	d.client.SetUserAgent(driver115.UA115Desktop)
 	if err != nil {
@@ -83,15 +83,67 @@ func (d *Pan115) Remove(ctx context.Context, obj model.Obj) error {
 }
 
 func (d *Pan115) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
-	tempFile, err := utils.CreateTempFile(stream.GetReadCloser(), stream.GetSize())
+	var (
+		fastInfo *driver115.UploadInitResp
+		dirID    = dstDir.GetID()
+	)
+
+	if ok, err := d.client.UploadAvailable(); err != nil || !ok {
+		return err
+	}
+	if stream.GetSize() > d.client.UploadMetaInfo.SizeLimit {
+		return driver115.ErrUploadTooLarge
+	}
+	//if digest, err = d.client.GetDigestResult(stream); err != nil {
+	//	return err
+	//}
+
+	const PreHashSize int64 = 128 * utils.KB
+	hashSize := PreHashSize
+	if stream.GetSize() < PreHashSize {
+		hashSize = stream.GetSize()
+	}
+	reader, err := stream.RangeRead(http_range.Range{Start: 0, Length: hashSize})
 	if err != nil {
 		return err
 	}
-	defer func() {
-		_ = tempFile.Close()
-		_ = os.Remove(tempFile.Name())
-	}()
-	return d.client.UploadFastOrByMultipart(dstDir.GetID(), stream.GetName(), stream.GetSize(), tempFile)
+	preHash, err := utils.HashReader(utils.SHA1, reader)
+	if err != nil {
+		return err
+	}
+	preHash = strings.ToUpper(preHash)
+	fullHash := stream.GetHash().GetHash(utils.SHA1)
+	if len(fullHash) <= 0 {
+		tmpF, err := stream.CacheFullInTempFile()
+		if err != nil {
+			return err
+		}
+		fullHash, err = utils.HashFile(utils.SHA1, tmpF)
+		if err != nil {
+			return err
+		}
+	}
+	fullHash = strings.ToUpper(fullHash)
+
+	// rapid-upload
+	// note that 115 add timeout for rapid-upload,
+	// and "sig invalid" err is thrown even when the hash is correct after timeout.
+	if fastInfo, err = d.rapidUpload(stream.GetSize(), stream.GetName(), dirID, preHash, fullHash, stream); err != nil {
+		return err
+	}
+	if matched, err := fastInfo.Ok(); err != nil {
+		return err
+	} else if matched {
+		return nil
+	}
+
+	// 闪传失败，上传
+	if stream.GetSize() <= utils.KB { // 文件大小小于1KB，改用普通模式上传
+		return d.client.UploadByOSS(&fastInfo.UploadOSSParams, stream, dirID)
+	}
+	// 分片上传
+	return d.UploadByMultipart(&fastInfo.UploadOSSParams, stream.GetSize(), stream, dirID)
+
 }
 
 var _ driver.Driver = (*Pan115)(nil)

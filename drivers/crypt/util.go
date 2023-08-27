@@ -1,23 +1,12 @@
 package crypt
 
 import (
-	"net/http"
 	stdpath "path"
 	"path/filepath"
 	"strings"
 
-	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/internal/net"
 	"github.com/alist-org/alist/v3/internal/op"
-	"github.com/alist-org/alist/v3/pkg/http_range"
 )
-
-func RequestRangedHttp(r *http.Request, link *model.Link, offset, length int64) (*http.Response, error) {
-	header := net.ProcessHeader(http.Header{}, link.Header)
-	header = http_range.ApplyRangeToHttpHeader(http_range.Range{Start: offset, Length: length}, header)
-
-	return net.RequestHttp("GET", header, link.URL)
-}
 
 // will give the best guessing based on the path
 func guessPath(path string) (isFolder, secondTry bool) {

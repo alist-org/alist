@@ -5,7 +5,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"io"
+	"github.com/alist-org/alist/v3/pkg/http_range"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -216,25 +216,29 @@ func (d *GoogleDrive) getFiles(id string) ([]File, error) {
 
 func (d *GoogleDrive) chunkUpload(ctx context.Context, stream model.FileStreamer, url string) error {
 	var defaultChunkSize = d.ChunkSize * 1024 * 1024
-	var finish int64 = 0
-	for finish < stream.GetSize() {
+	var offset int64 = 0
+	for offset < stream.GetSize() {
 		if utils.IsCanceled(ctx) {
 			return ctx.Err()
 		}
-		chunkSize := stream.GetSize() - finish
+		chunkSize := stream.GetSize() - offset
 		if chunkSize > defaultChunkSize {
 			chunkSize = defaultChunkSize
 		}
-		_, err := d.request(url, http.MethodPut, func(req *resty.Request) {
+		reader, err := stream.RangeRead(http_range.Range{Start: offset, Length: chunkSize})
+		if err != nil {
+			return err
+		}
+		_, err = d.request(url, http.MethodPut, func(req *resty.Request) {
 			req.SetHeaders(map[string]string{
 				"Content-Length": strconv.FormatInt(chunkSize, 10),
-				"Content-Range":  fmt.Sprintf("bytes %d-%d/%d", finish, finish+chunkSize-1, stream.GetSize()),
-			}).SetBody(io.LimitReader(stream.GetReadCloser(), chunkSize)).SetContext(ctx)
+				"Content-Range":  fmt.Sprintf("bytes %d-%d/%d", offset, offset+chunkSize-1, stream.GetSize()),
+			}).SetBody(reader).SetContext(ctx)
 		}, nil)
 		if err != nil {
 			return err
 		}
-		finish += chunkSize
+		offset += chunkSize
 	}
 	return nil
 }

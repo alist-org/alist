@@ -52,18 +52,29 @@ func (d *Virtual) List(ctx context.Context, dir model.Obj, args model.ListArgs) 
 	return res, nil
 }
 
-type nopReadSeekCloser struct {
+type DummyMFile struct {
 	io.Reader
 }
 
-func (nopReadSeekCloser) Seek(offset int64, whence int) (int64, error) {
+func (f DummyMFile) Read(p []byte) (n int, err error) {
+	return f.Reader.Read(p)
+}
+
+func (f DummyMFile) ReadAt(p []byte, off int64) (n int, err error) {
+	return f.Reader.Read(p)
+}
+
+func (f DummyMFile) Close() error {
+	return nil
+}
+
+func (DummyMFile) Seek(offset int64, whence int) (int64, error) {
 	return offset, nil
 }
-func (nopReadSeekCloser) Close() error { return nil }
 
 func (d *Virtual) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	return &model.Link{
-		ReadSeekCloser: nopReadSeekCloser{io.LimitReader(random.Rand, file.GetSize())},
+		MFile: DummyMFile{Reader: random.Rand},
 	}, nil
 }
 

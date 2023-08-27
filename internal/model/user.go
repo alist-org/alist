@@ -124,11 +124,11 @@ func (u *User) JoinPath(reqPath string) (string, error) {
 }
 
 func StaticHash(password string) string {
-	return utils.GetSHA256Encode([]byte(fmt.Sprintf("%s-%s", password, StaticHashSalt)))
+	return utils.HashData(utils.SHA256, []byte(fmt.Sprintf("%s-%s", password, StaticHashSalt)))
 }
 
 func HashPwd(static string, salt string) string {
-	return utils.GetSHA256Encode([]byte(fmt.Sprintf("%s-%s", static, salt)))
+	return utils.HashData(utils.SHA256, []byte(fmt.Sprintf("%s-%s", static, salt)))
 }
 
 func TwoHashPwd(password string, salt string) string {

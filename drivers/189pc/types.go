@@ -3,6 +3,7 @@ package _189pc
 import (
 	"encoding/xml"
 	"fmt"
+	"github.com/alist-org/alist/v3/pkg/utils"
 	"sort"
 	"strings"
 	"time"
@@ -175,6 +176,14 @@ type Cloud189File struct {
 	// StarLabel   int64  `json:"starLabel"`
 }
 
+func (c *Cloud189File) CreateTime() time.Time {
+	return time.Time(c.CreateDate)
+}
+
+func (c *Cloud189File) GetHash() utils.HashInfo {
+	return utils.NewHashInfo(utils.MD5, c.Md5)
+}
+
 func (c *Cloud189File) GetSize() int64     { return c.Size }
 func (c *Cloud189File) GetName() string    { return c.Name }
 func (c *Cloud189File) ModTime() time.Time { return time.Time(c.LastOpTime) }
@@ -197,6 +206,14 @@ type Cloud189Folder struct {
 	// FileCata  int64 `json:"fileCata"`
 	// Rev          string `json:"rev"`
 	// StarLabel    int64  `json:"starLabel"`
+}
+
+func (c *Cloud189Folder) CreateTime() time.Time {
+	return time.Time(c.CreateDate)
+}
+
+func (c *Cloud189Folder) GetHash() utils.HashInfo {
+	return utils.HashInfo{}
 }
 
 func (c *Cloud189Folder) GetSize() int64     { return 0 }

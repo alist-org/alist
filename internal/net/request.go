@@ -43,7 +43,7 @@ type Downloader struct {
 	//RequestParam        HttpRequestParams
 	HttpClient HttpRequestFunc
 }
-type HttpRequestFunc func(params *HttpRequestParams) (*http.Response, error)
+type HttpRequestFunc func(ctx context.Context, params *HttpRequestParams) (*http.Response, error)
 
 func NewDownloader(options ...func(*Downloader)) *Downloader {
 	d := &Downloader{
@@ -131,7 +131,7 @@ func (d *downloader) download() (io.ReadCloser, error) {
 	}
 
 	if d.cfg.Concurrency == 1 {
-		resp, err := d.cfg.HttpClient(d.params)
+		resp, err := d.cfg.HttpClient(d.ctx, d.params)
 		if err != nil {
 			return nil, err
 		}
@@ -258,7 +258,7 @@ func (d *downloader) downloadChunk(ch *chunk) error {
 
 func (d *downloader) tryDownloadChunk(params *HttpRequestParams, ch *chunk) (int64, error) {
 
-	resp, err := d.cfg.HttpClient(params)
+	resp, err := d.cfg.HttpClient(d.ctx, params)
 	if err != nil {
 		return 0, err
 	}
@@ -371,10 +371,10 @@ type chunk struct {
 	//boundary http_range.Range
 }
 
-func DefaultHttpRequestFunc(params *HttpRequestParams) (*http.Response, error) {
+func DefaultHttpRequestFunc(ctx context.Context, params *HttpRequestParams) (*http.Response, error) {
 	header := http_range.ApplyRangeToHttpHeader(params.Range, params.HeaderRef)
 
-	res, err := RequestHttp("GET", header, params.URL)
+	res, err := RequestHttp(ctx, "GET", header, params.URL)
 	if err != nil {
 		return nil, err
 	}
@@ -456,7 +456,7 @@ type Buf struct {
 // NewBuf is a buffer that can have 1 read & 1 write at the same time.
 // when read is faster write, immediately feed data to read after written
 func NewBuf(ctx context.Context, maxSize int, id int) *Buf {
-	d := make([]byte, maxSize)
+	d := make([]byte, 0, maxSize)
 	return &Buf{ctx: ctx, buffer: bytes.NewBuffer(d), size: maxSize, notify: make(chan struct{})}
 
 }

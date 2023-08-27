@@ -1,6 +1,7 @@
 package net
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"mime"
@@ -110,7 +111,7 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request, name string, modTime time
 	}
 	switch {
 	case len(ranges) == 0:
-		reader, err := RangeReaderFunc(http_range.Range{Length: -1})
+		reader, err := RangeReaderFunc(context.Background(), http_range.Range{Length: -1})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -129,7 +130,7 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request, name string, modTime time
 		// does not request multiple parts might not support
 		// multipart responses."
 		ra := ranges[0]
-		sendContent, err = RangeReaderFunc(ra)
+		sendContent, err = RangeReaderFunc(context.Background(), ra)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusRequestedRangeNotSatisfiable)
 			return
@@ -156,7 +157,7 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request, name string, modTime time
 					pw.CloseWithError(err)
 					return
 				}
-				reader, err := RangeReaderFunc(ra)
+				reader, err := RangeReaderFunc(context.Background(), ra)
 				if err != nil {
 					pw.CloseWithError(err)
 					return
@@ -209,8 +210,8 @@ func ProcessHeader(origin, override http.Header) http.Header {
 }
 
 // RequestHttp deal with Header properly then send the request
-func RequestHttp(httpMethod string, headerOverride http.Header, URL string) (*http.Response, error) {
-	req, err := http.NewRequest(httpMethod, URL, nil)
+func RequestHttp(ctx context.Context, httpMethod string, headerOverride http.Header, URL string) (*http.Response, error) {
+	req, err := http.NewRequestWithContext(ctx, httpMethod, URL, nil)
 	if err != nil {
 		return nil, err
 	}

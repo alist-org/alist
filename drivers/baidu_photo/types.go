@@ -2,6 +2,7 @@ package baiduphoto
 
 import (
 	"fmt"
+	"github.com/alist-org/alist/v3/pkg/utils"
 	"time"
 
 	"github.com/alist-org/alist/v3/internal/model"
@@ -73,6 +74,13 @@ func (c *File) Thumb() string {
 	}
 	return ""
 }
+func (c *File) CreateTime() time.Time {
+	return time.Unix(c.Ctime, 0)
+}
+
+func (c *File) GetHash() utils.HashInfo {
+	return utils.HashInfo{}
+}
 
 /*相册部分*/
 type (
@@ -84,12 +92,12 @@ type (
 	}
 
 	Album struct {
-		AlbumID    string `json:"album_id"`
-		Tid        int64  `json:"tid"`
-		Title      string `json:"title"`
-		JoinTime   int64  `json:"join_time"`
-		CreateTime int64  `json:"create_time"`
-		Mtime      int64  `json:"mtime"`
+		AlbumID      string `json:"album_id"`
+		Tid          int64  `json:"tid"`
+		Title        string `json:"title"`
+		JoinTime     int64  `json:"join_time"`
+		CreationTime int64  `json:"create_time"`
+		Mtime        int64  `json:"mtime"`
 
 		parseTime *time.Time
 	}
@@ -108,6 +116,14 @@ type (
 		Uk      int64  `json:"uk"`
 	}
 )
+
+func (a *Album) CreateTime() time.Time {
+	return time.Unix(a.CreationTime, 0)
+}
+
+func (a *Album) GetHash() utils.HashInfo {
+	return utils.HashInfo{}
+}
 
 func (a *Album) GetSize() int64  { return 0 }
 func (a *Album) GetName() string { return a.Title }

@@ -61,6 +61,7 @@ func (d *SMB) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]m
 				Modified: f.ModTime(),
 				Size:     f.Size(),
 				IsFolder: f.IsDir(),
+				Ctime:    f.(*smb2.FileStat).CreationTime,
 			},
 		}
 		files = append(files, &file)
@@ -79,7 +80,7 @@ func (d *SMB) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*m
 		return nil, err
 	}
 	link := &model.Link{
-		ReadSeekCloser: remoteFile,
+		MFile: remoteFile,
 	}
 	d.updateLastConnTime()
 	return link, nil

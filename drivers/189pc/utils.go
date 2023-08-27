@@ -13,7 +13,6 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
-	"os"
 	"regexp"
 	"sort"
 	"strconv"
@@ -550,13 +549,12 @@ func (y *Cloud189PC) StreamUpload(ctx context.Context, dstDir model.Obj, file mo
 // 快传
 func (y *Cloud189PC) FastUpload(ctx context.Context, dstDir model.Obj, file model.FileStreamer, up driver.UpdateProgress) (model.Obj, error) {
 	// 需要获取完整文件md5,必须支持 io.Seek
-	tempFile, err := utils.CreateTempFile(file.GetReadCloser(), file.GetSize())
+	tempFile, err := file.CacheFullInTempFile()
 	if err != nil {
 		return nil, err
 	}
 	defer func() {
 		_ = tempFile.Close()
-		_ = os.Remove(tempFile.Name())
 	}()
 
 	var sliceSize = partSize(file.GetSize())
@@ -742,13 +740,12 @@ func (y *Cloud189PC) GetMultiUploadUrls(ctx context.Context, uploadFileId string
 // 旧版本上传，家庭云不支持覆盖
 func (y *Cloud189PC) OldUpload(ctx context.Context, dstDir model.Obj, file model.FileStreamer, up driver.UpdateProgress) (model.Obj, error) {
 	// 需要获取完整文件md5,必须支持 io.Seek
-	tempFile, err := utils.CreateTempFile(file.GetReadCloser(), file.GetSize())
+	tempFile, err := file.CacheFullInTempFile()
 	if err != nil {
 		return nil, err
 	}
 	defer func() {
 		_ = tempFile.Close()
-		_ = os.Remove(tempFile.Name())
 	}()
 
 	// 计算md5

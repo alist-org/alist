@@ -115,7 +115,7 @@ func (d *Cloudreve) Remove(ctx context.Context, obj model.Obj) error {
 }
 
 func (d *Cloudreve) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
-	if stream.GetReadCloser() == http.NoBody {
+	if io.ReadCloser(stream) == http.NoBody {
 		return d.create(ctx, dstDir, stream)
 	}
 	var r DirectoryResp

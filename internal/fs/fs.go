@@ -2,7 +2,6 @@ package fs
 
 import (
 	"context"
-
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/op"
@@ -93,7 +92,7 @@ func Remove(ctx context.Context, path string) error {
 	return err
 }
 
-func PutDirectly(ctx context.Context, dstDirPath string, file *model.FileStream, lazyCache ...bool) error {
+func PutDirectly(ctx context.Context, dstDirPath string, file model.FileStreamer, lazyCache ...bool) error {
 	err := putDirectly(ctx, dstDirPath, file, lazyCache...)
 	if err != nil {
 		log.Errorf("failed put %s: %+v", dstDirPath, err)
@@ -101,7 +100,7 @@ func PutDirectly(ctx context.Context, dstDirPath string, file *model.FileStream,
 	return err
 }
 
-func PutAsTask(dstDirPath string, file *model.FileStream) error {
+func PutAsTask(dstDirPath string, file model.FileStreamer) error {
 	err := putAsTask(dstDirPath, file)
 	if err != nil {
 		log.Errorf("failed put %s: %+v", dstDirPath, err)

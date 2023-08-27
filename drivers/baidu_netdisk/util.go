@@ -198,11 +198,17 @@ func (d *BaiduNetdisk) manage(opera string, filelist any) ([]byte, error) {
 	return d.post("/xpan/file", params, data, nil)
 }
 
-func (d *BaiduNetdisk) create(path string, size int64, isdir int, uploadid, block_list string, resp any) ([]byte, error) {
+func (d *BaiduNetdisk) create(path string, size int64, isdir int, uploadid, block_list string, resp any, mtime, ctime int64) ([]byte, error) {
 	params := map[string]string{
 		"method": "create",
 	}
-	data := fmt.Sprintf("path=%s&size=%d&isdir=%d&rtype=3", encodeURIComponent(path), size, isdir)
+	data := ""
+	if mtime == 0 || ctime == 0 {
+		data = fmt.Sprintf("path=%s&size=%d&isdir=%d&rtype=3", encodeURIComponent(path), size, isdir)
+	} else {
+		data = fmt.Sprintf("path=%s&size=%d&isdir=%d&rtype=3&local_mtime=%d&local_ctime=%d", encodeURIComponent(path), size, isdir, mtime, ctime)
+	}
+
 	if uploadid != "" {
 		data += fmt.Sprintf("&uploadid=%s&block_list=%s", uploadid, block_list)
 	}

@@ -56,7 +56,7 @@ func (d *SFTP) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*
 		return nil, err
 	}
 	link := &model.Link{
-		ReadSeekCloser: remoteFile,
+		MFile: remoteFile,
 	}
 	return link, nil
 }

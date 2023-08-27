@@ -61,12 +61,12 @@ func moveFileToAlbumFile(file *File, album *Album, uk int64) *AlbumFile {
 
 func renameAlbum(album *Album, newName string) *Album {
 	return &Album{
-		AlbumID:    album.AlbumID,
-		Tid:        album.Tid,
-		JoinTime:   album.JoinTime,
-		CreateTime: album.CreateTime,
-		Title:      newName,
-		Mtime:      time.Now().Unix(),
+		AlbumID:      album.AlbumID,
+		Tid:          album.Tid,
+		JoinTime:     album.JoinTime,
+		CreationTime: album.CreationTime,
+		Title:        newName,
+		Mtime:        time.Now().Unix(),
 	}
 }
 

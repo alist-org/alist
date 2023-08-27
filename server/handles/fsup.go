@@ -1,6 +1,7 @@
 package handles
 
 import (
+	"github.com/alist-org/alist/v3/internal/stream"
 	"net/url"
 	stdpath "path"
 	"strconv"
@@ -33,21 +34,22 @@ func FsStream(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	stream := &model.FileStream{
+	s := &stream.FileStream{
 		Obj: &model.Object{
 			Name:     name,
 			Size:     size,
 			Modified: time.Now(),
 		},
-		ReadCloser:   c.Request.Body,
+		Reader:       c.Request.Body,
 		Mimetype:     c.GetHeader("Content-Type"),
 		WebPutAsTask: asTask,
 	}
 	if asTask {
-		err = fs.PutAsTask(dir, stream)
+		err = fs.PutAsTask(dir, s)
 	} else {
-		err = fs.PutDirectly(c, dir, stream, true)
+		err = fs.PutDirectly(c, dir, s, true)
 	}
+	defer c.Request.Body.Close()
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return
@@ -89,21 +91,27 @@ func FsForm(c *gin.Context) {
 		return
 	}
 	dir, name := stdpath.Split(path)
-	stream := &model.FileStream{
+	s := stream.FileStream{
 		Obj: &model.Object{
 			Name:     name,
 			Size:     file.Size,
 			Modified: time.Now(),
 		},
-		ReadCloser:   f,
+		Reader:       f,
 		Mimetype:     file.Header.Get("Content-Type"),
 		WebPutAsTask: false,
 	}
-	if asTask {
-		err = fs.PutAsTask(dir, stream)
-	} else {
-		err = fs.PutDirectly(c, dir, stream, true)
+	ss, err := stream.NewSeekableStream(s, nil)
+	if err != nil {
+		common.ErrorResp(c, err, 500)
+		return
 	}
+	if asTask {
+		err = fs.PutAsTask(dir, ss)
+	} else {
+		err = fs.PutDirectly(c, dir, ss, true)
+	}
+	defer f.Close()
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return

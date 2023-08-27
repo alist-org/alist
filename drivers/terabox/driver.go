@@ -11,7 +11,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io"
 	"math"
-	"os"
 	stdpath "path"
 	"strconv"
 	"strings"
@@ -116,13 +115,12 @@ func (d *Terabox) Remove(ctx context.Context, obj model.Obj) error {
 }
 
 func (d *Terabox) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
-	tempFile, err := utils.CreateTempFile(stream.GetReadCloser(), stream.GetSize())
+	tempFile, err := stream.CacheFullInTempFile()
 	if err != nil {
 		return err
 	}
 	defer func() {
 		_ = tempFile.Close()
-		_ = os.Remove(tempFile.Name())
 	}()
 	var Default int64 = 4 * 1024 * 1024
 	defaultByteData := make([]byte, Default)

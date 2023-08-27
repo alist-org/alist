@@ -30,13 +30,14 @@ func (d *FTP) login() error {
 	return nil
 }
 
-// An FTP file reader that implements io.ReadSeekCloser for seeking.
+// An FTP file reader that implements io.MFile for seeking.
 type FTPFileReader struct {
-	conn   *ftp.ServerConn
-	resp   *ftp.Response
-	offset int64
-	mu     sync.Mutex
-	path   string
+	conn         *ftp.ServerConn
+	resp         *ftp.Response
+	offset       int64
+	readAtOffset int64
+	mu           sync.Mutex
+	path         string
 }
 
 func NewFTPFileReader(conn *ftp.ServerConn, path string) *FTPFileReader {
@@ -50,15 +51,33 @@ func (r *FTPFileReader) Read(buf []byte) (n int, err error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
+	n, err = r.ReadAt(buf, r.offset)
+	r.offset += int64(n)
+	return
+}
+func (r *FTPFileReader) ReadAt(buf []byte, off int64) (n int, err error) {
+	if off < 0 {
+		return -1, os.ErrInvalid
+	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if off != r.readAtOffset {
+		//have to restart the connection, to correct offset
+		_ = r.resp.Close()
+		r.resp = nil
+	}
+
 	if r.resp == nil {
-		r.resp, err = r.conn.RetrFrom(r.path, uint64(r.offset))
+		r.resp, err = r.conn.RetrFrom(r.path, uint64(off))
+		r.readAtOffset = off
 		if err != nil {
 			return 0, err
 		}
 	}
 
 	n, err = r.resp.Read(buf)
-	r.offset += int64(n)
+	r.readAtOffset += int64(n)
 	return
 }
 
@@ -92,12 +111,6 @@ func (r *FTPFileReader) Seek(offset int64, whence int) (int64, error) {
 		return oldOffset, nil
 	}
 	r.offset = newOffset
-
-	if r.resp != nil {
-		// close the existing ftp data connection, otherwise the next read will be blocked
-		_ = r.resp.Close() // we do not care about whether it returns an error
-		r.resp = nil
-	}
 	return newOffset, nil
 }
 

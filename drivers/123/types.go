@@ -1,6 +1,7 @@
 package _123
 
 import (
+	"github.com/alist-org/alist/v3/pkg/utils"
 	"net/url"
 	"path"
 	"strconv"
@@ -19,6 +20,14 @@ type File struct {
 	Etag        string    `json:"Etag"`
 	S3KeyFlag   string    `json:"S3KeyFlag"`
 	DownloadUrl string    `json:"DownloadUrl"`
+}
+
+func (f File) CreateTime() time.Time {
+	return f.UpdateAt
+}
+
+func (f File) GetHash() utils.HashInfo {
+	return utils.HashInfo{}
 }
 
 func (f File) GetPath() string {

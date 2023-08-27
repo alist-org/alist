@@ -113,7 +113,7 @@ func CreateNestedFile(path string) (*os.File, error) {
 }
 
 // CreateTempFile create temp file from io.ReadCloser, and seek to 0
-func CreateTempFile(r io.ReadCloser, size int64) (*os.File, error) {
+func CreateTempFile(r io.Reader, size int64) (*os.File, error) {
 	if f, ok := r.(*os.File); ok {
 		return f, nil
 	}
@@ -171,3 +171,10 @@ func GetMimeType(name string) string {
 	}
 	return "application/octet-stream"
 }
+
+const (
+	KB = 1 << (10 * (iota + 1))
+	MB
+	GB
+	TB
+)

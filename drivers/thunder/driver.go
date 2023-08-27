@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/alist-org/alist/v3/drivers/base"
@@ -333,13 +332,12 @@ func (xc *XunLeiCommon) Remove(ctx context.Context, obj model.Obj) error {
 }
 
 func (xc *XunLeiCommon) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
-	tempFile, err := utils.CreateTempFile(stream.GetReadCloser(), stream.GetSize())
+	tempFile, err := stream.CacheFullInTempFile()
 	if err != nil {
 		return err
 	}
 	defer func() {
 		_ = tempFile.Close()
-		_ = os.Remove(tempFile.Name())
 	}()
 
 	gcid, err := getGcid(tempFile, stream.GetSize())

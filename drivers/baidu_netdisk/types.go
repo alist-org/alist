@@ -1,6 +1,7 @@
 package baidu_netdisk
 
 import (
+	"github.com/alist-org/alist/v3/pkg/utils"
 	"path"
 	"strconv"
 	"time"
@@ -40,11 +41,11 @@ type File struct {
 	Isdir int `json:"isdir"`
 
 	// list resp
-	//ServerCtime int64   `json:"server_ctime"`
+	ServerCtime int64 `json:"server_ctime"`
 	ServerMtime int64 `json:"server_mtime"`
-	//ServerAtime    int64    `json:"server_atime"`
-	//LocalCtime     int64    `json:"local_ctime"`
-	//LocalMtime     int64    `json:"local_mtime"`
+	LocalMtime  int64 `json:"local_mtime"`
+	LocalCtime  int64 `json:"local_ctime"`
+	//ServerAtime    int64    `json:"server_atime"` `
 
 	// only create and precreate resp
 	Ctime int64 `json:"ctime"`
@@ -55,8 +56,11 @@ func fileToObj(f File) *model.ObjThumb {
 	if f.ServerFilename == "" {
 		f.ServerFilename = path.Base(f.Path)
 	}
-	if f.ServerMtime == 0 {
-		f.ServerMtime = int64(f.Mtime)
+	if f.LocalCtime == 0 {
+		f.LocalCtime = f.Ctime
+	}
+	if f.LocalMtime == 0 {
+		f.LocalMtime = f.Mtime
 	}
 	return &model.ObjThumb{
 		Object: model.Object{
@@ -64,8 +68,10 @@ func fileToObj(f File) *model.ObjThumb {
 			Path:     f.Path,
 			Name:     f.ServerFilename,
 			Size:     f.Size,
-			Modified: time.Unix(f.ServerMtime, 0),
+			Modified: time.Unix(f.LocalMtime, 0),
+			Ctime:    time.Unix(f.LocalCtime, 0),
 			IsFolder: f.Isdir == 1,
+			HashInfo: utils.NewHashInfo(utils.MD5, f.Md5),
 		},
 		Thumbnail: model.Thumbnail{Thumbnail: f.Thumbs.Url3},
 	}

@@ -5,15 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
-	"io/fs"
-	"net/http"
-	"os"
-	stdpath "path"
-	"path/filepath"
-	"strconv"
-	"strings"
-
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
@@ -21,7 +12,15 @@ import (
 	"github.com/alist-org/alist/v3/internal/sign"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/server/common"
+	"github.com/djherbis/times"
 	_ "golang.org/x/image/webp"
+	"io/fs"
+	"net/http"
+	"os"
+	stdpath "path"
+	"path/filepath"
+	"strconv"
+	"strings"
 )
 
 type Local struct {
@@ -102,6 +101,14 @@ func (d *Local) FileInfoToObj(f fs.FileInfo, reqPath string, fullPath string) mo
 	if !isFolder {
 		size = f.Size()
 	}
+	ctime := f.ModTime()
+	t, err := times.Stat(stdpath.Join(fullPath, f.Name()))
+	if err == nil {
+		if t.HasBirthTime() {
+			ctime = t.BirthTime()
+		}
+	}
+
 	file := model.ObjThumb{
 		Object: model.Object{
 			Path:     filepath.Join(fullPath, f.Name()),
@@ -109,6 +116,7 @@ func (d *Local) FileInfoToObj(f fs.FileInfo, reqPath string, fullPath string) mo
 			Modified: f.ModTime(),
 			Size:     size,
 			IsFolder: isFolder,
+			Ctime:    ctime,
 		},
 		Thumbnail: model.Thumbnail{
 			Thumbnail: thumb,
@@ -171,9 +179,9 @@ func (d *Local) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 			if err != nil {
 				return nil, err
 			}
-			link.ReadSeekCloser = open
+			link.MFile = open
 		} else {
-			link.ReadSeekCloser = utils.ReadSeekerNopCloser(bytes.NewReader(buf.Bytes()))
+			link.MFile = model.NewNopMFile(bytes.NewReader(buf.Bytes()))
 			//link.Header.Set("Content-Length", strconv.Itoa(buf.Len()))
 		}
 	} else {
@@ -181,15 +189,7 @@ func (d *Local) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 		if err != nil {
 			return nil, err
 		}
-		link.ReadSeekCloser = struct {
-			io.Reader
-			io.Seeker
-			io.Closer
-		}{
-			Reader: open,
-			Seeker: open,
-			Closer: open,
-		}
+		link.MFile = open
 	}
 	return &link, nil
 }

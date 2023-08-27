@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io"
 	"math"
-	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -229,13 +228,12 @@ func (d *BaiduPhoto) Put(ctx context.Context, dstDir model.Obj, stream model.Fil
 	}
 
 	// 需要获取完整文件md5,必须支持 io.Seek
-	tempFile, err := utils.CreateTempFile(stream.GetReadCloser(), stream.GetSize())
+	tempFile, err := stream.CacheFullInTempFile()
 	if err != nil {
 		return nil, err
 	}
 	defer func() {
 		_ = tempFile.Close()
-		_ = os.Remove(tempFile.Name())
 	}()
 
 	const DEFAULT int64 = 1 << 22

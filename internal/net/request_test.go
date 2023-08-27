@@ -143,7 +143,7 @@ type downloadCaptureClient struct {
 	lock sync.Mutex
 }
 
-func (c *downloadCaptureClient) HttpRequest(params *HttpRequestParams) (*http.Response, error) {
+func (c *downloadCaptureClient) HttpRequest(ctx context.Context, params *HttpRequestParams) (*http.Response, error) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
