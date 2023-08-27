@@ -5,6 +5,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/fs"
+	"net/http"
+	"os"
+	stdpath "path"
+	"path/filepath"
+	"strconv"
+	"strings"
+
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
@@ -13,14 +21,8 @@ import (
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/djherbis/times"
+	log "github.com/sirupsen/logrus"
 	_ "golang.org/x/image/webp"
-	"io/fs"
-	"net/http"
-	"os"
-	stdpath "path"
-	"path/filepath"
-	"strconv"
-	"strings"
 )
 
 type Local struct {
@@ -272,6 +274,10 @@ func (d *Local) Put(ctx context.Context, dstDir model.Obj, stream model.FileStre
 	err = utils.CopyWithCtx(ctx, out, stream, stream.GetSize(), up)
 	if err != nil {
 		return err
+	}
+	err = os.Chtimes(fullPath, stream.ModTime(), stream.ModTime())
+	if err != nil {
+		log.Errorf("[local] failed to change time of %s: %s", fullPath, err)
 	}
 	return nil
 }
