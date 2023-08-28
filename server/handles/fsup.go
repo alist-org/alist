@@ -111,7 +111,7 @@ func FsForm(c *gin.Context) {
 		},
 		Reader:       f,
 		Mimetype:     file.Header.Get("Content-Type"),
-		WebPutAsTask: false,
+		WebPutAsTask: asTask,
 	}
 	ss, err := stream.NewSeekableStream(s, nil)
 	if err != nil {

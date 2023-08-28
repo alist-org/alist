@@ -5,12 +5,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
+	"os"
+
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/http_range"
 	"github.com/alist-org/alist/v3/pkg/utils"
-	"io"
-	"os"
 )
 
 type FileStream struct {
@@ -66,6 +67,7 @@ func (f *FileStream) CacheFullInTempFile() (model.File, error) {
 	if err != nil {
 		return nil, err
 	}
+	f.Add(tmpF)
 	f.tmpFile = tmpF
 	f.Reader = tmpF
 	return f.tmpFile, nil
@@ -220,6 +222,7 @@ func (ss *SeekableStream) CacheFullInTempFile() (model.File, error) {
 	if err != nil {
 		return nil, err
 	}
+	ss.Add(tmpF)
 	ss.tmpFile = tmpF
 	ss.Reader = tmpF
 	return ss.tmpFile, nil
