@@ -14,6 +14,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func getLastModified(c *gin.Context) time.Time {
+	now := time.Now()
+	lastModifiedStr := c.GetHeader("Last-Modified")
+	lastModifiedMillisecond, err := strconv.ParseInt(lastModifiedStr, 10, 64)
+	if err != nil {
+		return now
+	}
+	lastModified := time.UnixMilli(lastModifiedMillisecond)
+	return lastModified
+}
+
 func FsStream(c *gin.Context) {
 	path := c.GetHeader("File-Path")
 	path, err := url.PathUnescape(path)
@@ -35,18 +46,11 @@ func FsStream(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	lastModifiedStr := c.GetHeader("Last-Modified")
-	lastModifiedMillisecond, err := strconv.ParseInt(lastModifiedStr, 10, 64)
-	if err != nil {
-		common.ErrorResp(c, err, 400)
-		return
-	}
-	lastModified := time.UnixMilli(lastModifiedMillisecond)
 	s := &stream.FileStream{
 		Obj: &model.Object{
 			Name:     name,
 			Size:     size,
-			Modified: lastModified,
+			Modified: getLastModified(c),
 		},
 		Reader:       c.Request.Body,
 		Mimetype:     c.GetHeader("Content-Type"),
@@ -72,13 +76,6 @@ func FsForm(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	lastModifiedStr := c.GetHeader("Last-Modified")
-	lastModifiedMillisecond, err := strconv.ParseInt(lastModifiedStr, 10, 64)
-	if err != nil {
-		common.ErrorResp(c, err, 400)
-		return
-	}
-	lastModified := time.UnixMilli(lastModifiedMillisecond)
 	asTask := c.GetHeader("As-Task") == "true"
 	user := c.MustGet("user").(*model.User)
 	path, err = user.JoinPath(path)
@@ -110,7 +107,7 @@ func FsForm(c *gin.Context) {
 		Obj: &model.Object{
 			Name:     name,
 			Size:     file.Size,
-			Modified: lastModified,
+			Modified: getLastModified(c),
 		},
 		Reader:       f,
 		Mimetype:     file.Header.Get("Content-Type"),
