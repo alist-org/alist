@@ -7,11 +7,24 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/alist-org/alist/v3/internal/stream"
+
 	"github.com/alist-org/alist/v3/internal/fs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
 )
+
+func getLastModified(c *gin.Context) time.Time {
+	now := time.Now()
+	lastModifiedStr := c.GetHeader("Last-Modified")
+	lastModifiedMillisecond, err := strconv.ParseInt(lastModifiedStr, 10, 64)
+	if err != nil {
+		return now
+	}
+	lastModified := time.UnixMilli(lastModifiedMillisecond)
+	return lastModified
+}
 
 func FsStream(c *gin.Context) {
 	path := c.GetHeader("File-Path")
@@ -38,7 +51,7 @@ func FsStream(c *gin.Context) {
 		Obj: &model.Object{
 			Name:     name,
 			Size:     size,
-			Modified: time.Now(),
+			Modified: getLastModified(c),
 		},
 		Reader:       c.Request.Body,
 		Mimetype:     c.GetHeader("Content-Type"),
@@ -95,11 +108,16 @@ func FsForm(c *gin.Context) {
 		Obj: &model.Object{
 			Name:     name,
 			Size:     file.Size,
-			Modified: time.Now(),
+			Modified: getLastModified(c),
 		},
 		Reader:       f,
 		Mimetype:     file.Header.Get("Content-Type"),
-		WebPutAsTask: false,
+		WebPutAsTask: asTask,
+	}
+	ss, err := stream.NewSeekableStream(s, nil)
+	if err != nil {
+		common.ErrorResp(c, err, 500)
+		return
 	}
 	ss, err := stream.NewSeekableStream(s, nil)
 	if err != nil {
