@@ -94,8 +94,10 @@ func (d *AListV3) List(ctx context.Context, dir model.Obj, args model.ListArgs) 
 			Object: model.Object{
 				Name:     f.Name,
 				Modified: f.Modified,
+				Ctime:    f.Created,
 				Size:     f.Size,
 				IsFolder: f.IsDir,
+				HashInfo: utils.FromString(f.HashInfo),
 			},
 			Thumbnail: model.Thumbnail{Thumbnail: f.Thumb},
 		}

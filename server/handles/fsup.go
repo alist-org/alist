@@ -1,7 +1,6 @@
 package handles
 
 import (
-	"github.com/alist-org/alist/v3/internal/stream"
 	"net/url"
 	stdpath "path"
 	"strconv"
@@ -113,11 +112,6 @@ func FsForm(c *gin.Context) {
 		Reader:       f,
 		Mimetype:     file.Header.Get("Content-Type"),
 		WebPutAsTask: asTask,
-	}
-	ss, err := stream.NewSeekableStream(s, nil)
-	if err != nil {
-		common.ErrorResp(c, err, 500)
-		return
 	}
 	ss, err := stream.NewSeekableStream(s, nil)
 	if err != nil {

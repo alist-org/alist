@@ -4,12 +4,14 @@ import (
 	"crypto/md5"
 	"crypto/sha1"
 	"crypto/sha256"
+	"encoding"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"github.com/alist-org/alist/v3/internal/errs"
+	log "github.com/sirupsen/logrus"
 	"hash"
 	"io"
-	"strings"
 )
 
 func GetMD5EncodeStr(data string) string {
@@ -29,6 +31,23 @@ type HashType struct {
 	Alias   string
 	NewFunc func() hash.Hash
 }
+
+func (ht *HashType) MarshalJSON() ([]byte, error) {
+	return []byte(`"` + ht.Name + `"`), nil
+}
+
+func (ht *HashType) MarshalText() (text []byte, err error) {
+	return []byte(ht.Name), nil
+}
+
+var (
+	_ json.Marshaler = (*HashType)(nil)
+	//_ json.Unmarshaler = (*HashType)(nil)
+
+	// read/write from/to json keys
+	_ encoding.TextMarshaler = (*HashType)(nil)
+	//_ encoding.TextUnmarshaler = (*HashType)(nil)
+)
 
 var (
 	name2hash  = map[string]*HashType{}
@@ -158,23 +177,39 @@ func (m *MultiHasher) Size() int64 {
 
 // A HashInfo contains hash string for one or more hashType
 type HashInfo struct {
-	h map[*HashType]string
+	h map[*HashType]string `json:"hashInfo"`
 }
 
 func NewHashInfo(ht *HashType, str string) HashInfo {
 	m := make(map[*HashType]string)
-	m[ht] = str
+	if ht != nil {
+		m[ht] = str
+	}
 	return HashInfo{h: m}
 }
 
 func (hi HashInfo) String() string {
-	var tmp []string
-	for ht, str := range hi.h {
-		if len(str) > 0 {
-			tmp = append(tmp, ht.Name+":"+str)
+	result, err := json.Marshal(hi.h)
+	if err != nil {
+		return ""
+	}
+	return string(result)
+}
+func FromString(str string) HashInfo {
+	hi := NewHashInfo(nil, "")
+	var tmp map[string]string
+	err := json.Unmarshal([]byte(str), &tmp)
+	if err != nil {
+		log.Warnf("failed to unmarsh HashInfo from string=%s", str)
+	} else {
+		for k, v := range tmp {
+			if name2hash[k] != nil && len(v) > 0 {
+				hi.h[name2hash[k]] = v
+			}
 		}
 	}
-	return strings.Join(tmp, "\n")
+
+	return hi
 }
 func (hi HashInfo) GetHash(ht *HashType) string {
 	return hi.h[ht]
