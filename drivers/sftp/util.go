@@ -23,7 +23,7 @@ func (d *SFTP) initClient() error {
 	config := &ssh.ClientConfig{
 		User:            d.Username,
 		Auth:            []ssh.AuthMethod{auth},
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		HostKeyCallback: ssh.FixedHostKey(hostKey),
 	}
 	conn, err := ssh.Dial("tcp", d.Address, config)
 	if err != nil {
