@@ -58,7 +58,10 @@ func TestMultiHasher(t *testing.T) {
 		}
 		expect := hashInfo.GetHash(nil)
 		require.True(t, len(expect) == 0, "unknown type should return empty string")
-		Log.Info(hashInfo.String())
+		str := hashInfo.String()
+		Log.Info("str=" + str)
+		newHi := FromString(str)
+		assert.Equal(t, newHi.h, hashInfo.h)
 
 	}
 }

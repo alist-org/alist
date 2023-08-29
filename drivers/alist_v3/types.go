@@ -18,9 +18,11 @@ type ObjResp struct {
 	Size     int64     `json:"size"`
 	IsDir    bool      `json:"is_dir"`
 	Modified time.Time `json:"modified"`
+	Created  time.Time `json:"created"`
 	Sign     string    `json:"sign"`
 	Thumb    string    `json:"thumb"`
 	Type     int       `json:"type"`
+	HashInfo string    `json:"hashinfo"`
 }
 
 type FsListResp struct {

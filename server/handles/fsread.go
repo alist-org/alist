@@ -204,6 +204,8 @@ func toObjsResp(objs []model.Obj, parent string, encrypt bool) []ObjResp {
 			Size:     obj.GetSize(),
 			IsDir:    obj.IsDir(),
 			Modified: obj.ModTime(),
+			Created:  obj.CreateTime(),
+			HashInfo: obj.GetHash().String(),
 			Sign:     common.Sign(obj, parent, encrypt),
 			Thumb:    thumb,
 			Type:     utils.GetObjType(obj.GetName(), obj.IsDir()),
