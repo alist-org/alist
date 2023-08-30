@@ -10,6 +10,8 @@ github.com/RoaringBitmap/roaring v1.2.3 h1:yqreLINqIrX22ErkKI0vY47/ivtJr6n+kMhVO
 github.com/RoaringBitmap/roaring v1.2.3/go.mod h1:plvDsJQpxOC5bw8LRteu/MLWHsHez/3y6cubLI4/1yE=
 github.com/SheltonZhu/115driver v1.0.15 h1:RRvgXvXEzvrPwkRno0CUIg7ucEphbsfwct2mQxfNOdQ=
 github.com/SheltonZhu/115driver v1.0.15/go.mod h1:e3fPOBANbH/FsTya8FquJwOR3ErhCQgEab3q6CVY2k4=
+github.com/SheltonZhu/115driver v1.0.16 h1:XOhqRtKF9huTCobM5rWVd9DtJyBKLJSnBwWPF3+GM+k=
+github.com/SheltonZhu/115driver v1.0.16/go.mod h1:e3fPOBANbH/FsTya8FquJwOR3ErhCQgEab3q6CVY2k4=
 github.com/Unknwon/goconfig v1.0.0 h1:9IAu/BYbSLQi8puFjUQApZTxIHqSwrj5d8vpP8vTq4A=
 github.com/Xhofe/go-cache v0.0.0-20220723083548-714439c8af9a h1:RenIAa2q4H8UcS/cqmwdT1WCWIAH5aumP8m8RpbqVsE=
 github.com/Xhofe/go-cache v0.0.0-20220723083548-714439c8af9a/go.mod h1:sSBbaOg90XwWKtpT56kVujF0bIeVITnPlssLclogS04=
