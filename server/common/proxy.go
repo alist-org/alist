@@ -3,20 +3,21 @@ package common
 import (
 	"context"
 	"fmt"
+	"io"
+	"net/http"
+	"net/url"
+
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/net"
 	"github.com/alist-org/alist/v3/pkg/http_range"
 	"github.com/alist-org/alist/v3/pkg/utils"
-	"io"
-	"net/http"
-	"net/url"
 )
 
 func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.Obj) error {
 	if link.MFile != nil {
+		defer link.MFile.Close()
 		attachFileName(w, file)
 		http.ServeContent(w, r, file.GetName(), file.ModTime(), link.MFile)
-		defer link.MFile.Close()
 		return nil
 	} else if link.RangeReadCloser != nil {
 		attachFileName(w, file)
