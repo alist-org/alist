@@ -26,7 +26,7 @@ func (d *AliyundriveOpen) _refreshToken() (string, string, error) {
 	//var resp base.TokenResp
 	var e ErrResp
 	res, err := base.RestyClient.R().
-		ForceContentType("application/json").
+		//ForceContentType("application/json").
 		SetBody(base.Json{
 			"client_id":     d.ClientID,
 			"client_secret": d.ClientSecret,
@@ -45,7 +45,7 @@ func (d *AliyundriveOpen) _refreshToken() (string, string, error) {
 	}
 	refresh, access := utils.Json.Get(res.Body(), "refresh_token").ToString(), utils.Json.Get(res.Body(), "access_token").ToString()
 	if refresh == "" {
-		return "", "", errors.New("failed to refresh token: refresh token is empty")
+		return "", "", fmt.Errorf("failed to refresh token: refresh token is empty, resp: %s", res.String())
 	}
 	curSub, err := getSub(d.RefreshToken)
 	if err != nil {
