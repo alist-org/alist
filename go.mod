@@ -34,7 +34,7 @@ require (
 	github.com/jlaffaye/ftp v0.2.0
 	github.com/json-iterator/go v1.1.12
 	github.com/maruel/natural v1.1.0
-	github.com/natefinch/lumberjack v2.0.0+incompatible
+	github.com/natefinch/lumberjack v2.2.1+incompatible
 	github.com/orzogc/fake115uploader v0.3.3-0.20230715111618-58f9eb76f831
 	github.com/pkg/errors v0.9.1
 	github.com/pkg/sftp v1.13.6-0.20230213180117-971c283182b6
