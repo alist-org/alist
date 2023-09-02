@@ -48,10 +48,9 @@ func NewFTPFileReader(conn *ftp.ServerConn, path string) *FTPFileReader {
 }
 
 func (r *FTPFileReader) Read(buf []byte) (n int, err error) {
+	n, err = r.ReadAt(buf, r.offset)
 	r.mu.Lock()
 	defer r.mu.Unlock()
-
-	n, err = r.ReadAt(buf, r.offset)
 	r.offset += int64(n)
 	return
 }
