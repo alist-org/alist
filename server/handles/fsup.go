@@ -1,8 +1,13 @@
 package handles
 
 import (
+	"github.com/alist-org/alist/v3/internal/conf"
+	"github.com/alist-org/alist/v3/pkg/utils/random"
+	"io"
 	"net/url"
+	"os"
 	stdpath "path"
+	"reflect"
 	"strconv"
 	"time"
 
@@ -97,7 +102,24 @@ func FsForm(c *gin.Context) {
 		common.ErrorResp(c, err, 500)
 		return
 	}
-	f, err := file.Open()
+	tmpFile, tmpInSys := "", ""
+	fv := reflect.ValueOf(*file)
+	tmpInSys = fv.FieldByName("tmpfile").String()
+
+	var f io.Reader
+	var osFile *os.File
+	if len(tmpInSys) > 0 {
+		tmpFile = conf.Conf.TempDir + "file-" + random.String(8)
+		err = os.Rename(tmpInSys, tmpFile)
+		if err != nil {
+			common.ErrorResp(c, err, 500)
+			return
+		}
+		osFile, err = os.Open(tmpFile)
+		f = osFile
+	} else {
+		f, err = file.Open()
+	}
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return
@@ -118,12 +140,17 @@ func FsForm(c *gin.Context) {
 		common.ErrorResp(c, err, 500)
 		return
 	}
+	if osFile != nil {
+		ss.SetTmpFile(osFile)
+	}
+
 	if asTask {
 		err = fs.PutAsTask(dir, ss)
 	} else {
+		defer ss.Close()
 		err = fs.PutDirectly(c, dir, ss, true)
 	}
-	defer f.Close()
+
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return

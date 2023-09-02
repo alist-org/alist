@@ -228,54 +228,7 @@ func (ss *SeekableStream) CacheFullInTempFile() (model.File, error) {
 	return ss.tmpFile, nil
 }
 
-//func (f *FileStream) SetReader(r io.Reader) {
-//	f.Reader = r
-//}
-
-/*
-// RangePeek allow once peek at start of the data, since most drives check first XX bytes for rapid-upload
-func (f *FileStream) RangePeek(length int64) (*bytes.Buffer, error) {
-	if length > InMemoryBufMaxSize*1024*1024 {
-		return nil, errs.NewErr(errs.StreamPeekFail, "can't peek size > %d MB", InMemoryBufMaxSize)
-	}
-	httpRange := &http_range.Range{Length: length}
-	bufSize := utils.Min(httpRange.Length, f.GetSize())
-	buf := bytes.NewBuffer(make([]byte, 0, bufSize))
-	if f.link == nil && f.tmpFile == nil {
-		if !f.peekedOnce {
-			f.mu.Lock()
-			f.peekedOnce = true
-			_, err := io.CopyN(buf, f.Reader, bufSize)
-
-			if err != nil {
-				f.mu.Unlock()
-				return nil, errs.NewErr(errs.StreamPeekFail, "failed to copyN %d bytes data", bufSize)
-			}
-			f.Reader = io.MultiReader(buf, f.Reader)
-			f.mu.Unlock()
-			return buf, nil
-
-		}
-		return nil, errs.NewErr(errs.StreamPeekFail, "link and tmpFile both are null")
-	}
-	f.mu.Lock()
-	defer f.mu.Unlock()
-	rc, _, err := GetReadCloserFromLink(f.Obj, f.link, httpRange)
-
-	if err != nil {
-		return nil, err
-	}
-	_, err = io.CopyN(buf, rc, bufSize)
-	if err != nil {
-		return nil, err
-	}
-	return buf, nil
-}*/
-
-//func (f *FileStream) SetTmpFile(r *os.File) {
-//	f.mu.Lock()
-//	//f.readDisabled = true
-//	f.tmpFile = r
-//	f.Reader = r
-//	f.mu.Unlock()
-//}
+func (f *FileStream) SetTmpFile(r *os.File) {
+	f.Reader = r
+	f.tmpFile = r
+}
