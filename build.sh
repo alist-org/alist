@@ -91,6 +91,18 @@ BuildDocker() {
 BuildRelease() {
   rm -rf .git/
   mkdir -p "build"
+  BuildWinArm64 ./build/alist-windows-arm64.exe
+  xgo -out "$appName" -ldflags="$ldflags" -tags=jsoniter .
+  # why? Because some target platforms seem to have issues with upx compression
+  upx -9 ./alist-linux-amd64
+  cp ./alist-windows-amd64.exe ./alist-windows-amd64-upx.exe
+  upx -9 ./alist-windows-amd64-upx.exe
+  mv alist-* build
+}
+
+BuildReleaseLinuxMusl() {
+  rm -rf .git/
+  mkdir -p "build"
   muslflags="--extldflags '-static -fpic' $ldflags"
   BASE="https://musl.nn.ci/"
   FILES=(x86_64-linux-musl-cross aarch64-linux-musl-cross mips-linux-musl-cross mips64-linux-musl-cross mips64el-linux-musl-cross mipsel-linux-musl-cross powerpc64le-linux-musl-cross s390x-linux-musl-cross)
@@ -112,13 +124,6 @@ BuildRelease() {
     export CGO_ENABLED=1
     go build -o ./build/$appName-$os_arch -ldflags="$muslflags" -tags=jsoniter .
   done
-  BuildWinArm64 ./build/alist-windows-arm64.exe
-  xgo -out "$appName" -ldflags="$ldflags" -tags=jsoniter .
-  # why? Because some target platforms seem to have issues with upx compression
-  upx -9 ./alist-linux-amd64
-  cp ./alist-windows-amd64.exe ./alist-windows-amd64-upx.exe
-  upx -9 ./alist-windows-amd64-upx.exe
-  mv alist-* build
 }
 
 BuildReleaseLinuxMuslArm() {
@@ -192,6 +197,9 @@ elif [ "$1" = "release" ]; then
   elif [ "$2" = "linux_musl_arm" ]; then
     BuildReleaseLinuxMuslArm
     MakeRelease "md5-linux-musl-arm.txt"
+  elif [ "$2" = "linux_musl" ]; then
+    BuildReleaseLinuxMusl
+    MakeRelease "md5-linux-musl.txt"
   else
     BuildRelease
     MakeRelease "md5.txt"
