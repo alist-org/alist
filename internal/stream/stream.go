@@ -55,7 +55,6 @@ func (f *FileStream) SetExist(obj model.Obj) {
 
 // CacheFullInTempFile save all data into tmpFile. Not recommended since it wears disk,
 // and can't start upload until the file is written. It's not thread-safe!
-// won't check if some
 func (f *FileStream) CacheFullInTempFile() (model.File, error) {
 	if f.tmpFile != nil {
 		return f.tmpFile, nil
@@ -82,28 +81,28 @@ func (f *FileStream) RangeRead(httpRange http_range.Range) (io.Reader, error) {
 	if httpRange.Length == -1 {
 		httpRange.Length = f.GetSize()
 	}
-
 	if f.peekBuff != nil && httpRange.Start < int64(f.peekBuff.Len()) && httpRange.Start+httpRange.Length-1 < int64(f.peekBuff.Len()) {
 		return io.NewSectionReader(f.peekBuff, httpRange.Start, httpRange.Length), nil
 	}
-	if httpRange.Start == 0 && httpRange.Length <= InMemoryBufMaxSizeBytes && f.peekBuff == nil {
-		bufSize := utils.Min(httpRange.Length, f.GetSize())
-		newBuf := bytes.NewBuffer(make([]byte, 0, bufSize))
-		n, err := io.CopyN(newBuf, f.Reader, bufSize)
-		if err != nil {
-			return nil, err
-		}
-		if n != bufSize {
-			return nil, fmt.Errorf("stream RangeRead did not get all data in peek, expect =%d ,actual =%d", bufSize, n)
-		}
-		f.peekBuff = bytes.NewReader(newBuf.Bytes())
-		f.Reader = io.MultiReader(f.peekBuff, f.Reader)
-		return io.NewSectionReader(f.peekBuff, httpRange.Start, httpRange.Length), nil
-	}
 	if f.tmpFile == nil {
-		_, err := f.CacheFullInTempFile()
-		if err != nil {
-			return nil, err
+		if httpRange.Start == 0 && httpRange.Length <= InMemoryBufMaxSizeBytes && f.peekBuff == nil {
+			bufSize := utils.Min(httpRange.Length, f.GetSize())
+			newBuf := bytes.NewBuffer(make([]byte, 0, bufSize))
+			n, err := io.CopyN(newBuf, f.Reader, bufSize)
+			if err != nil {
+				return nil, err
+			}
+			if n != bufSize {
+				return nil, fmt.Errorf("stream RangeRead did not get all data in peek, expect =%d ,actual =%d", bufSize, n)
+			}
+			f.peekBuff = bytes.NewReader(newBuf.Bytes())
+			f.Reader = io.MultiReader(f.peekBuff, f.Reader)
+			return io.NewSectionReader(f.peekBuff, httpRange.Start, httpRange.Length), nil
+		} else {
+			_, err := f.CacheFullInTempFile()
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 	return io.NewSectionReader(f.tmpFile, httpRange.Start, httpRange.Length), nil
@@ -228,54 +227,7 @@ func (ss *SeekableStream) CacheFullInTempFile() (model.File, error) {
 	return ss.tmpFile, nil
 }
 
-//func (f *FileStream) SetReader(r io.Reader) {
-//	f.Reader = r
-//}
-
-/*
-// RangePeek allow once peek at start of the data, since most drives check first XX bytes for rapid-upload
-func (f *FileStream) RangePeek(length int64) (*bytes.Buffer, error) {
-	if length > InMemoryBufMaxSize*1024*1024 {
-		return nil, errs.NewErr(errs.StreamPeekFail, "can't peek size > %d MB", InMemoryBufMaxSize)
-	}
-	httpRange := &http_range.Range{Length: length}
-	bufSize := utils.Min(httpRange.Length, f.GetSize())
-	buf := bytes.NewBuffer(make([]byte, 0, bufSize))
-	if f.link == nil && f.tmpFile == nil {
-		if !f.peekedOnce {
-			f.mu.Lock()
-			f.peekedOnce = true
-			_, err := io.CopyN(buf, f.Reader, bufSize)
-
-			if err != nil {
-				f.mu.Unlock()
-				return nil, errs.NewErr(errs.StreamPeekFail, "failed to copyN %d bytes data", bufSize)
-			}
-			f.Reader = io.MultiReader(buf, f.Reader)
-			f.mu.Unlock()
-			return buf, nil
-
-		}
-		return nil, errs.NewErr(errs.StreamPeekFail, "link and tmpFile both are null")
-	}
-	f.mu.Lock()
-	defer f.mu.Unlock()
-	rc, _, err := GetReadCloserFromLink(f.Obj, f.link, httpRange)
-
-	if err != nil {
-		return nil, err
-	}
-	_, err = io.CopyN(buf, rc, bufSize)
-	if err != nil {
-		return nil, err
-	}
-	return buf, nil
-}*/
-
-//func (f *FileStream) SetTmpFile(r *os.File) {
-//	f.mu.Lock()
-//	//f.readDisabled = true
-//	f.tmpFile = r
-//	f.Reader = r
-//	f.mu.Unlock()
-//}
+func (f *FileStream) SetTmpFile(r *os.File) {
+	f.Reader = r
+	f.tmpFile = r
+}
