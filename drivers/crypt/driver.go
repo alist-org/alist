@@ -54,6 +54,8 @@ func (d *Crypt) Init(ctx context.Context) error {
 	if !isCryptExt(d.EncryptedSuffix) {
 		return fmt.Errorf("EncryptedSuffix is Illegal")
 	}
+	d.FileNameEncoding = utils.GetNoneEmpty(d.FileNameEncoding, "base64")
+	d.EncryptedSuffix = utils.GetNoneEmpty(d.EncryptedSuffix, ".bin")
 
 	op.MustSaveDriverStorage(d)
 
@@ -71,7 +73,7 @@ func (d *Crypt) Init(ctx context.Context) error {
 		"password2":                 p2,
 		"filename_encryption":       d.FileNameEnc,
 		"directory_name_encryption": d.DirNameEnc,
-		"filename_encoding":         "base64",
+		"filename_encoding":         d.FileNameEncoding,
 		"suffix":                    d.EncryptedSuffix,
 		"pass_bad_blocks":           "",
 	}

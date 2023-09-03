@@ -30,3 +30,13 @@ func SafeAtob(data string) (string, error) {
 	}
 	return string(bytes), err
 }
+
+// GetNoneEmpty returns the first non-empty string, return empty if all empty
+func GetNoneEmpty(strArr ...string) string {
+	for _, s := range strArr {
+		if len(s) > 0 {
+			return s
+		}
+	}
+	return ""
+}
