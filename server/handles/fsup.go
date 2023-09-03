@@ -147,7 +147,6 @@ func FsForm(c *gin.Context) {
 	if asTask {
 		err = fs.PutAsTask(dir, ss)
 	} else {
-		defer ss.Close()
 		err = fs.PutDirectly(c, dir, ss, true)
 	}
 
