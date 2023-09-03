@@ -15,16 +15,11 @@ type Addition struct {
 	DirNameEnc  string `json:"directory_name_encryption" type:"select" required:"true" options:"false,true" default:"false"`
 	RemotePath  string `json:"remote_path" required:"true" help:"This is where the encrypted data stores"`
 
-	Password        string `json:"password" required:"true" confidential:"true" help:"the main password"`
-	Salt            string `json:"salt" confidential:"true"  help:"If you don't know what is salt, treat it as a second password'. Optional but recommended"`
-	EncryptedSuffix string `json:"encrypted_suffix" required:"true" default:".bin" help:"encrypted files will have this suffix"`
+	Password         string `json:"password" required:"true" confidential:"true" help:"the main password"`
+	Salt             string `json:"salt" confidential:"true"  help:"If you don't know what is salt, treat it as a second password. Optional but recommended"`
+	EncryptedSuffix  string `json:"encrypted_suffix" required:"true" default:".bin" help:"for advanced user only! encrypted files will have this suffix"`
+	FileNameEncoding string `json:"filename_encoding" type:"select" required:"true" options:"base64,base32,base32768" default:"base64" help:"for advanced user only!"`
 }
-
-/*// inMemory contains decrypted confidential info and other temp data. will not persist these info anywhere
-type inMemory struct {
-	password string
-	salt     string
-}*/
 
 var config = driver.Config{
 	Name:              "Crypt",
