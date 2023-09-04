@@ -26,6 +26,16 @@ type FileStream struct {
 	peekBuff *bytes.Reader
 }
 
+func (f *FileStream) GetSize() int64 {
+	if f.tmpFile != nil {
+		info, err := f.tmpFile.Stat()
+		if err == nil {
+			return info.Size()
+		}
+	}
+	return f.Obj.GetSize()
+}
+
 func (f *FileStream) GetMimetype() string {
 	return f.Mimetype
 }
