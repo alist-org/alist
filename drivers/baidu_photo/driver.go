@@ -227,14 +227,14 @@ func (d *BaiduPhoto) Put(ctx context.Context, dstDir model.Obj, stream model.Fil
 		return nil, fmt.Errorf("file size cannot be zero")
 	}
 
+	// TODO:
+	// 暂时没有找到妙传方式
+
 	// 需要获取完整文件md5,必须支持 io.Seek
 	tempFile, err := stream.CacheFullInTempFile()
 	if err != nil {
 		return nil, err
 	}
-	defer func() {
-		_ = tempFile.Close()
-	}()
 
 	const DEFAULT int64 = 1 << 22
 	const SliceSize int64 = 1 << 18
