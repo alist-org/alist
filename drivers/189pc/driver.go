@@ -27,10 +27,15 @@ type Cloud189PC struct {
 	tokenInfo  *AppSessionResp
 
 	uploadThread int
+
+	storageConfig driver.Config
 }
 
 func (y *Cloud189PC) Config() driver.Config {
-	return config
+	if y.storageConfig.Name == "" {
+		y.storageConfig = config
+	}
+	return y.storageConfig
 }
 
 func (y *Cloud189PC) GetAddition() driver.Additional {
@@ -38,6 +43,9 @@ func (y *Cloud189PC) GetAddition() driver.Additional {
 }
 
 func (y *Cloud189PC) Init(ctx context.Context) (err error) {
+	// 兼容旧上传接口
+	y.storageConfig.NoOverwriteUpload = y.isFamily() && (y.Addition.RapidUpload || y.Addition.UploadMethod == "old")
+
 	// 处理个人云和家庭云参数
 	if y.isFamily() && y.RootFolderID == "-11" {
 		y.RootFolderID = ""
@@ -118,7 +126,7 @@ func (y *Cloud189PC) Link(ctx context.Context, file model.Obj, args model.LinkAr
 
 	// 重定向获取真实链接
 	downloadUrl.URL = strings.Replace(strings.ReplaceAll(downloadUrl.URL, "&amp;", "&"), "http://", "https://", 1)
-	res, err := base.NoRedirectClient.R().SetContext(ctx).Get(downloadUrl.URL)
+	res, err := base.NoRedirectClient.R().SetContext(ctx).Head(downloadUrl.URL)
 	if err != nil {
 		return nil, err
 	}
@@ -302,6 +310,13 @@ func (y *Cloud189PC) Remove(ctx context.Context, obj model.Obj) error {
 }
 
 func (y *Cloud189PC) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) (model.Obj, error) {
+	// 响应时间长,按需启用
+	if y.Addition.RapidUpload {
+		if newObj, err := y.RapidUpload(ctx, dstDir, stream); err == nil {
+			return newObj, nil
+		}
+	}
+
 	switch y.UploadMethod {
 	case "old":
 		return y.OldUpload(ctx, dstDir, stream, up)
