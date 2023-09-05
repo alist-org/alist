@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/pkg/utils"
+	hash_extend "github.com/alist-org/alist/v3/pkg/utils/hash"
 )
 
 type RespErr struct {
@@ -21,7 +23,9 @@ type File struct {
 	Id             string    `json:"id"`
 	Kind           string    `json:"kind"`
 	Name           string    `json:"name"`
+	CreatedTime    time.Time `json:"created_time"`
 	ModifiedTime   time.Time `json:"modified_time"`
+	Hash           string    `json:"hash"`
 	Size           string    `json:"size"`
 	ThumbnailLink  string    `json:"thumbnail_link"`
 	WebContentLink string    `json:"web_content_link"`
@@ -35,8 +39,10 @@ func fileToObj(f File) *model.ObjThumb {
 			ID:       f.Id,
 			Name:     f.Name,
 			Size:     size,
+			Ctime:    f.CreatedTime,
 			Modified: f.ModifiedTime,
 			IsFolder: f.Kind == "drive#folder",
+			HashInfo: utils.NewHashInfo(hash_extend.GCID, f.Hash),
 		},
 		Thumbnail: model.Thumbnail{
 			Thumbnail: f.ThumbnailLink,
