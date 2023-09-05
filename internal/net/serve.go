@@ -224,9 +224,10 @@ func RequestHttp(ctx context.Context, httpMethod string, headerOverride http.Hea
 	res.Header.Del("set-cookie")
 	if res.StatusCode >= 400 {
 		all, _ := io.ReadAll(res.Body)
+		_ = res.Body.Close()
 		msg := string(all)
 		log.Debugln(msg)
-		return res, errors.New(msg)
+		return nil, fmt.Errorf("http request [%s] failure,status: %d response:%s", URL, res.StatusCode, msg)
 	}
 	return res, nil
 }
