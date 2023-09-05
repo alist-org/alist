@@ -146,7 +146,39 @@ func (d *BaiduNetdisk) Remove(ctx context.Context, obj model.Obj) error {
 	return err
 }
 
+func (d *BaiduNetdisk) PutRapid(ctx context.Context, dstDir model.Obj, stream model.FileStreamer) (model.Obj, error) {
+	contentMd5 := stream.GetHash().GetHash(utils.MD5)
+	if len(contentMd5) < utils.MD5.Width {
+		return nil, errors.New("invalid hash")
+	}
+
+	streamSize := stream.GetSize()
+	rawPath := stdpath.Join(dstDir.GetPath(), stream.GetName())
+	path := encodeURIComponent(rawPath)
+	mtime := stream.ModTime().Unix()
+	ctime := stream.CreateTime().Unix()
+	blockList, _ := utils.Json.MarshalToString([]string{contentMd5})
+
+	data := fmt.Sprintf("path=%s&size=%d&isdir=0&rtype=3&block_list=%s&local_mtime=%d&local_ctime=%d",
+		path, streamSize, blockList, mtime, ctime)
+	params := map[string]string{
+		"method": "create",
+	}
+	log.Debugf("[baidu_netdisk] precreate data: %s", data)
+	var newFile File
+	_, err := d.post("/xpan/file", params, data, &newFile)
+	if err != nil {
+		return nil, err
+	}
+	return fileToObj(newFile), nil
+}
+
 func (d *BaiduNetdisk) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) (model.Obj, error) {
+	// rapid upload
+	if newObj, err := d.PutRapid(ctx, dstDir, stream); err == nil {
+		return newObj, nil
+	}
+
 	tempFile, err := stream.CacheFullInTempFile()
 	if err != nil {
 		return nil, err
@@ -264,6 +296,7 @@ func (d *BaiduNetdisk) Put(ctx context.Context, dstDir model.Obj, stream model.F
 	}
 	return fileToObj(newFile), nil
 }
+
 func (d *BaiduNetdisk) uploadSlice(ctx context.Context, params map[string]string, fileName string, file io.Reader) error {
 	res, err := base.RestyClient.R().
 		SetContext(ctx).
