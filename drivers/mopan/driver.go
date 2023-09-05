@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
@@ -115,6 +116,15 @@ func (d *MoPan) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 	data, err := d.client.GetFileDownloadUrl(file.GetID(), mopan.WarpParamOption(mopan.ParamOptionShareFile(d.CloudID)))
 	if err != nil {
 		return nil, err
+	}
+
+	data.DownloadUrl = strings.Replace(strings.ReplaceAll(data.DownloadUrl, "&amp;", "&"), "http://", "https://", 1)
+	res, err := base.NoRedirectClient.R().SetContext(ctx).Head(data.DownloadUrl)
+	if err != nil {
+		return nil, err
+	}
+	if res.StatusCode() == 302 {
+		data.DownloadUrl = res.Header().Get("location")
 	}
 
 	return &model.Link{
@@ -262,7 +272,7 @@ func (d *MoPan) Put(ctx context.Context, dstDir model.Obj, stream model.FileStre
 	}
 
 	if !initUpdload.FileDataExists {
-		fmt.Println(d.client.CloudDiskStartBusiness())
+		utils.Log.Error(d.client.CloudDiskStartBusiness())
 
 		threadG, upCtx := errgroup.NewGroupWithContext(ctx, d.uploadThread,
 			retry.Attempts(3),
