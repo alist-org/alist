@@ -126,7 +126,7 @@ func CreateTempFile(r io.Reader, size int64) (*os.File, error) {
 		_ = os.Remove(f.Name())
 		return nil, errs.NewErr(err, "CreateTempFile failed")
 	}
-	if size != 0 && readBytes != size {
+	if size > 0 && readBytes != size {
 		_ = os.Remove(f.Name())
 		return nil, errs.NewErr(err, "CreateTempFile failed, incoming stream actual size= %d, expect = %d ", readBytes, size)
 	}
