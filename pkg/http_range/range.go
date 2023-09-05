@@ -107,6 +107,27 @@ func ParseRange(s string, size int64) ([]Range, error) { // nolint:gocognit
 	return ranges, nil
 }
 
+// ParseContentRange this function parse content-range in http response
+func ParseContentRange(s string) (start, end int64, err error) {
+	if s == "" {
+		return 0, 0, ErrInvalid
+	}
+	const b = "bytes "
+	if !strings.HasPrefix(s, b) {
+		return 0, 0, ErrInvalid
+	}
+	p1 := strings.Index(s, "-")
+	p2 := strings.Index(s, "/")
+	if p1 < 0 || p2 < 0 {
+		return 0, 0, ErrInvalid
+	}
+	startStr, endStr := textproto.TrimString(s[len(b):p1]), textproto.TrimString(s[p1+1:p2])
+	start, startErr := strconv.ParseInt(startStr, 10, 64)
+	end, endErr := strconv.ParseInt(endStr, 10, 64)
+
+	return start, end, errors.Join(startErr, endErr)
+}
+
 func (r Range) MimeHeader(contentType string, size int64) textproto.MIMEHeader {
 	return textproto.MIMEHeader{
 		"Content-Range": {r.ContentRange(size)},
