@@ -31,6 +31,7 @@ var disableStorageCmd = &cobra.Command{
 		}
 		mountPath := args[0]
 		Init()
+		defer Release()
 		storage, err := db.GetStorageByMountPath(mountPath)
 		if err != nil {
 			utils.Log.Errorf("failed to query storage: %+v", err)
@@ -89,6 +90,7 @@ var listStorageCmd = &cobra.Command{
 	Short: "List all storages",
 	Run: func(cmd *cobra.Command, args []string) {
 		Init()
+		defer Release()
 		storages, _, err := db.GetStorages(1, -1)
 		if err != nil {
 			utils.Log.Errorf("failed to query storages: %+v", err)

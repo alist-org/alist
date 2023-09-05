@@ -19,6 +19,7 @@ var AdminCmd = &cobra.Command{
 	Short:   "Show admin user's info and some operations about admin user's password",
 	Run: func(cmd *cobra.Command, args []string) {
 		Init()
+		defer Release()
 		admin, err := op.GetAdmin()
 		if err != nil {
 			utils.Log.Errorf("failed get admin user: %+v", err)
@@ -57,6 +58,7 @@ var ShowTokenCmd = &cobra.Command{
 	Short: "Show admin token",
 	Run: func(cmd *cobra.Command, args []string) {
 		Init()
+		defer Release()
 		token := setting.GetStr(conf.Token)
 		utils.Log.Infof("Admin token: %s", token)
 	},
@@ -64,6 +66,7 @@ var ShowTokenCmd = &cobra.Command{
 
 func setAdminPassword(pwd string) {
 	Init()
+	defer Release()
 	admin, err := op.GetAdmin()
 	if err != nil {
 		utils.Log.Errorf("failed get admin user: %+v", err)
