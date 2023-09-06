@@ -258,7 +258,7 @@ var sizeFindReg = regexp.MustCompile(`(?i)大小\W*([0-9.]+\s*[bkm]+)`)
 var timeFindReg = regexp.MustCompile(`\d+\s*[秒天分小][钟时]?前|[昨前]天|\d{4}-\d{2}-\d{2}`)
 
 // 查找分享文件夹子文件夹ID和名称
-var findSubFolaerReg = regexp.MustCompile(`(?i)(?:folderlink|mbxfolder).+href="/(.+?)"(?:.+filename")?>(.+?)<`)
+var findSubFolderReg = regexp.MustCompile(`(?i)(?:folderlink|mbxfolder).+href="/(.+?)"(?:.+filename")?>(.+?)<`)
 
 // 获取下载页面链接
 var findDownPageParamReg = regexp.MustCompile(`<iframe.*?src="(.+?)"`)
@@ -455,7 +455,7 @@ func (d *LanZou) getFolderByShareUrl(pwd string, sharePageData string) ([]FileOr
 
 	files := make([]FileOrFolderByShareUrl, 0)
 	// vip获取文件夹
-	floders := findSubFolaerReg.FindAllStringSubmatch(sharePageData, -1)
+	floders := findSubFolderReg.FindAllStringSubmatch(sharePageData, -1)
 	for _, floder := range floders {
 		if len(floder) == 3 {
 			files = append(files, FileOrFolderByShareUrl{
@@ -476,10 +476,10 @@ func (d *LanZou) getFolderByShareUrl(pwd string, sharePageData string) ([]FileOr
 		if err != nil {
 			return nil, err
 		}
-		/*// 文件夹中的文件也不加密
+		// 文件夹中的文件加密
 		for i := 0; i < len(resp.Text); i++ {
 			resp.Text[i].Pwd = pwd
-		}*/
+		}
 		if len(resp.Text) == 0 {
 			break
 		}
