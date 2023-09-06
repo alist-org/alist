@@ -126,10 +126,11 @@ func (y *Cloud189PC) Link(ctx context.Context, file model.Obj, args model.LinkAr
 
 	// 重定向获取真实链接
 	downloadUrl.URL = strings.Replace(strings.ReplaceAll(downloadUrl.URL, "&amp;", "&"), "http://", "https://", 1)
-	res, err := base.NoRedirectClient.R().SetContext(ctx).Head(downloadUrl.URL)
+	res, err := base.NoRedirectClient.R().SetContext(ctx).SetDoNotParseResponse(true).Get(downloadUrl.URL)
 	if err != nil {
 		return nil, err
 	}
+	defer res.RawBody().Close()
 	if res.StatusCode() == 302 {
 		downloadUrl.URL = res.Header().Get("location")
 	}
