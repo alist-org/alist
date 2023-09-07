@@ -1,13 +1,9 @@
 package handles
 
 import (
-	"github.com/alist-org/alist/v3/internal/conf"
-	"github.com/alist-org/alist/v3/pkg/utils/random"
 	"io"
 	"net/url"
-	"os"
 	stdpath "path"
-	"reflect"
 	"strconv"
 	"time"
 
@@ -102,28 +98,12 @@ func FsForm(c *gin.Context) {
 		common.ErrorResp(c, err, 500)
 		return
 	}
-	tmpFile, tmpInSys := "", ""
-	fv := reflect.ValueOf(*file)
-	tmpInSys = fv.FieldByName("tmpfile").String()
-
-	var f io.Reader
-	var osFile *os.File
-	if len(tmpInSys) > 0 {
-		tmpFile = conf.Conf.TempDir + "file-" + random.String(8)
-		err = os.Rename(tmpInSys, tmpFile)
-		if err != nil {
-			common.ErrorResp(c, err, 500)
-			return
-		}
-		osFile, err = os.Open(tmpFile)
-		f = osFile
-	} else {
-		f, err = file.Open()
-	}
+	f, err := file.Open()
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return
 	}
+	defer f.Close()
 	dir, name := stdpath.Split(path)
 	s := stream.FileStream{
 		Obj: &model.Object{
@@ -135,21 +115,19 @@ func FsForm(c *gin.Context) {
 		Mimetype:     file.Header.Get("Content-Type"),
 		WebPutAsTask: asTask,
 	}
-	ss, err := stream.NewSeekableStream(s, nil)
-	if err != nil {
-		common.ErrorResp(c, err, 500)
-		return
-	}
-	if osFile != nil {
-		ss.SetTmpFile(osFile)
-	}
-
 	if asTask {
-		err = fs.PutAsTask(dir, ss)
+		s.Reader = struct {
+			io.Reader
+		}{f}
+		err = fs.PutAsTask(dir, &s)
 	} else {
+		ss, err := stream.NewSeekableStream(s, nil)
+		if err != nil {
+			common.ErrorResp(c, err, 500)
+			return
+		}
 		err = fs.PutDirectly(c, dir, ss, true)
 	}
-
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return
