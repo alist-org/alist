@@ -5,10 +5,8 @@ import (
 	"fmt"
 	"io/fs"
 	"net/http"
-	"net/http/pprof"
 	"strings"
 
-	"github.com/alist-org/alist/v3/cmd/flags"
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/setting"
 	"github.com/alist-org/alist/v3/pkg/utils"
@@ -85,8 +83,6 @@ func Static(r *gin.RouterGroup, noRoute func(handlers ...gin.HandlerFunc)) {
 		c.Status(200)
 		if strings.HasPrefix(c.Request.URL.Path, "/@manage") {
 			_, _ = c.Writer.WriteString(conf.ManageHtml)
-		} else if strings.HasPrefix(c.Request.URL.Path, "/debug/pprof") && flags.Debug {
-			pprof.Index(c.Writer, c.Request)
 		} else {
 			_, _ = c.Writer.WriteString(conf.IndexHtml)
 		}

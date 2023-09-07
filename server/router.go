@@ -71,8 +71,8 @@ func Init(e *gin.Engine) {
 
 	_fs(auth.Group("/fs"))
 	admin(auth.Group("/admin", middlewares.AuthAdmin))
-	if flags.Dev {
-		dev(g.Group("/dev"))
+	if flags.Debug || flags.Dev {
+		debug(g.Group("/debug"))
 	}
 	static.Static(g, func(handlers ...gin.HandlerFunc) {
 		e.NoRoute(handlers...)
