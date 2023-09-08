@@ -6,14 +6,15 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
-	"github.com/alist-org/alist/v3/drivers/base"
-	"github.com/alist-org/alist/v3/pkg/utils"
-	log "github.com/sirupsen/logrus"
 	"io"
 	"math"
 	stdpath "path"
 	"strconv"
 	"strings"
+
+	"github.com/alist-org/alist/v3/drivers/base"
+	"github.com/alist-org/alist/v3/pkg/utils"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
@@ -119,9 +120,6 @@ func (d *Terabox) Put(ctx context.Context, dstDir model.Obj, stream model.FileSt
 	if err != nil {
 		return err
 	}
-	defer func() {
-		_ = tempFile.Close()
-	}()
 	var Default int64 = 4 * 1024 * 1024
 	defaultByteData := make([]byte, Default)
 	count := int(math.Ceil(float64(stream.GetSize()) / float64(Default)))
@@ -168,6 +166,9 @@ func (d *Terabox) Put(ctx context.Context, dstDir model.Obj, stream model.FileSt
 		return err
 	}
 	log.Debugf("%+v", precreateResp)
+	if precreateResp.Errno != 0 {
+		return fmt.Errorf("[terabox] failed to precreate file, errno: %s", precreateResp.Errno)
+	}
 	if precreateResp.ReturnType == 2 {
 		return nil
 	}

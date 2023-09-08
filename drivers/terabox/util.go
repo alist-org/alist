@@ -24,10 +24,13 @@ func (d *Terabox) request(furl string, method string, callback base.ReqCallback,
 		"User-Agent":       base.UserAgent,
 		"X-Requested-With": "XMLHttpRequest",
 	})
-	req.SetQueryParam("app_id", "250528")
-	req.SetQueryParam("web", "1")
-	req.SetQueryParam("channel", "dubox")
-	req.SetQueryParam("clienttype", "0")
+	req.SetQueryParams(map[string]string{
+		"app_id":     "250528",
+		"web":        "1",
+		"channel":    "dubox",
+		"clienttype": "0",
+		"jsToken":    d.JsToken,
+	})
 	if callback != nil {
 		callback(req)
 	}
