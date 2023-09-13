@@ -103,9 +103,9 @@ func (d *Yun139) MakeDir(ctx context.Context, parentDir model.Obj, dirName strin
 	return err
 }
 
-func (d *Yun139) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
+func (d *Yun139) Move(ctx context.Context, srcObj, dstDir model.Obj) (model.Obj, error) {
 	if d.isFamily() {
-		return errs.NotImplement
+		return nil, errs.NotImplement
 	}
 	var contentInfoList []string
 	var catalogInfoList []string
@@ -131,7 +131,10 @@ func (d *Yun139) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 	}
 	pathname := "/orchestration/personalCloud/batchOprTask/v1.0/createBatchOprTask"
 	_, err := d.post(pathname, data, nil)
-	return err
+	if err != nil {
+		return nil, err
+	}
+	return srcObj, nil
 }
 
 func (d *Yun139) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
