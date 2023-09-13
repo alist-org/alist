@@ -196,7 +196,8 @@ func (d *Onedrive) upBig(ctx context.Context, dstDir model.Obj, stream model.Fil
 		if err != nil {
 			return err
 		}
-		if res.StatusCode != 201 && res.StatusCode != 202 {
+		// https://learn.microsoft.com/zh-cn/onedrive/developer/rest-api/api/driveitem_createuploadsession
+		if res.StatusCode != 201 && res.StatusCode != 202 && res.StatusCode != 200 {
 			data, _ := io.ReadAll(res.Body)
 			res.Body.Close()
 			return errors.New(string(data))
