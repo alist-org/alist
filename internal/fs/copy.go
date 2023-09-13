@@ -7,6 +7,7 @@ import (
 	stdpath "path"
 	"sync/atomic"
 
+	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/op"
@@ -35,6 +36,31 @@ func _copy(ctx context.Context, srcObjPath, dstDirPath string, lazyCache ...bool
 	// copy if in the same storage, just call driver.Copy
 	if srcStorage.GetStorage() == dstStorage.GetStorage() {
 		return false, op.Copy(ctx, srcStorage, srcObjActualPath, dstDirActualPath, lazyCache...)
+	}
+	if ctx.Value(conf.NoTaskKey) != nil {
+		srcObj, err := op.Get(ctx, srcStorage, srcObjActualPath)
+		if err != nil {
+			return false, errors.WithMessagef(err, "failed get src [%s] file", srcObjPath)
+		}
+		if !srcObj.IsDir() {
+			// copy file directly
+			link, _, err := op.Link(ctx, srcStorage, srcObjActualPath, model.LinkArgs{
+				Header: http.Header{},
+			})
+			if err != nil {
+				return false, errors.WithMessagef(err, "failed get [%s] link", srcObjPath)
+			}
+			fs := stream.FileStream{
+				Obj: srcObj,
+				Ctx: ctx,
+			}
+			// any link provided is seekable
+			ss, err := stream.NewSeekableStream(fs, link)
+			if err != nil {
+				return false, errors.WithMessagef(err, "failed get [%s] stream", srcObjPath)
+			}
+			return false, op.Put(ctx, dstStorage, dstDirActualPath, ss, nil, false)
+		}
 	}
 	// not in the same storage
 	CopyTaskManager.Submit(task.WithCancelCtx(&task.Task[uint64]{
