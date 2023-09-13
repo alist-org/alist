@@ -84,6 +84,14 @@ func addCacheObj(storage driver.Driver, path string, newObj model.Obj) {
 }
 
 func ClearCache(storage driver.Driver, path string) {
+	objs, ok := listCache.Get(Key(storage, path))
+	if ok {
+		for _, obj := range objs {
+			if obj.IsDir() {
+				ClearCache(storage, stdpath.Join(path, obj.GetName()))
+			}
+		}
+	}
 	listCache.Del(Key(storage, path))
 }
 
@@ -473,6 +481,10 @@ func Remove(ctx context.Context, storage driver.Driver, path string) error {
 		err = s.Remove(ctx, model.UnwrapObj(rawObj))
 		if err == nil {
 			delCacheObj(storage, dirPath, rawObj)
+			// clear folder cache recursively
+			if rawObj.IsDir() {
+				ClearCache(storage, path)
+			}
 		}
 	default:
 		return errs.NotImplement
