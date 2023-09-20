@@ -45,10 +45,7 @@ func (d *Pan115) List(ctx context.Context, dir model.Obj, args model.ListArgs) (
 
 func (d *Pan115) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	downloadInfo, err := d.client.
-		SetUserAgent(driver115.UA115Browser).
-		Download(file.(*FileObj).PickCode)
-	// recover for upload
-	d.client.SetUserAgent(driver115.UA115Desktop)
+		DownloadWithUA(file.(*FileObj).PickCode, driver115.UA115Browser)
 	if err != nil {
 		return nil, err
 	}
