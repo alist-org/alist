@@ -56,6 +56,8 @@ func Init(e *gin.Engine) {
 	// auth
 	api.GET("/auth/sso", handles.SSOLoginRedirect)
 	api.GET("/auth/sso_callback", handles.SSOLoginCallback)
+	api.GET("/auth/get_sso_id", handles.SSOLoginCallback)
+	api.GET("/auth/sso_get_token", handles.SSOLoginCallback)
 
 	//webauthn
 	webauthn.GET("/webauthn_begin_registration", handles.BeginAuthnRegistration)

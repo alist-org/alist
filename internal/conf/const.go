@@ -69,6 +69,7 @@ const (
 	SSOAutoRegister      = "sso_auto_register"
 	SSODefaultDir        = "sso_default_dir"
 	SSODefaultPermission = "sso_default_permission"
+	SSOCompatibilityMode = "sso_compatibility_mode"
 
 	// qbittorrent
 	QbittorrentUrl      = "qbittorrent_url"
