@@ -48,7 +48,7 @@ func calSign(body, ts, randStr string) string {
 }
 
 func getTime(t string) time.Time {
-	stamp, _ := time.ParseInLocation("20060102150405", t, time.Local)
+	stamp, _ := time.ParseInLocation("20060102150405", t, utils.CNLoc)
 	return stamp
 }
 
