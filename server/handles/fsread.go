@@ -33,15 +33,16 @@ type DirReq struct {
 }
 
 type ObjResp struct {
-	Name     string    `json:"name"`
-	Size     int64     `json:"size"`
-	IsDir    bool      `json:"is_dir"`
-	Modified time.Time `json:"modified"`
-	Created  time.Time `json:"created"`
-	Sign     string    `json:"sign"`
-	Thumb    string    `json:"thumb"`
-	Type     int       `json:"type"`
-	HashInfo string    `json:"hashinfo"`
+	Name        string                     `json:"name"`
+	Size        int64                      `json:"size"`
+	IsDir       bool                       `json:"is_dir"`
+	Modified    time.Time                  `json:"modified"`
+	Created     time.Time                  `json:"created"`
+	Sign        string                     `json:"sign"`
+	Thumb       string                     `json:"thumb"`
+	Type        int                        `json:"type"`
+	HashInfoStr string                     `json:"hashinfo"`
+	HashInfo    map[*utils.HashType]string `json:"hash_info"`
 }
 
 type FsListResp struct {
@@ -200,15 +201,16 @@ func toObjsResp(objs []model.Obj, parent string, encrypt bool) []ObjResp {
 	for _, obj := range objs {
 		thumb, _ := model.GetThumb(obj)
 		resp = append(resp, ObjResp{
-			Name:     obj.GetName(),
-			Size:     obj.GetSize(),
-			IsDir:    obj.IsDir(),
-			Modified: obj.ModTime(),
-			Created:  obj.CreateTime(),
-			HashInfo: obj.GetHash().String(),
-			Sign:     common.Sign(obj, parent, encrypt),
-			Thumb:    thumb,
-			Type:     utils.GetObjType(obj.GetName(), obj.IsDir()),
+			Name:        obj.GetName(),
+			Size:        obj.GetSize(),
+			IsDir:       obj.IsDir(),
+			Modified:    obj.ModTime(),
+			Created:     obj.CreateTime(),
+			HashInfoStr: obj.GetHash().String(),
+			HashInfo:    obj.GetHash().Export(),
+			Sign:        common.Sign(obj, parent, encrypt),
+			Thumb:       thumb,
+			Type:        utils.GetObjType(obj.GetName(), obj.IsDir()),
 		})
 	}
 	return resp
@@ -313,15 +315,16 @@ func FsGet(c *gin.Context) {
 	thumb, _ := model.GetThumb(obj)
 	common.SuccessResp(c, FsGetResp{
 		ObjResp: ObjResp{
-			Name:     obj.GetName(),
-			Size:     obj.GetSize(),
-			IsDir:    obj.IsDir(),
-			Modified: obj.ModTime(),
-			Created:  obj.CreateTime(),
-			HashInfo: obj.GetHash().String(),
-			Sign:     common.Sign(obj, parentPath, isEncrypt(meta, reqPath)),
-			Type:     utils.GetFileType(obj.GetName()),
-			Thumb:    thumb,
+			Name:        obj.GetName(),
+			Size:        obj.GetSize(),
+			IsDir:       obj.IsDir(),
+			Modified:    obj.ModTime(),
+			Created:     obj.CreateTime(),
+			HashInfoStr: obj.GetHash().String(),
+			HashInfo:    obj.GetHash().Export(),
+			Sign:        common.Sign(obj, parentPath, isEncrypt(meta, reqPath)),
+			Type:        utils.GetFileType(obj.GetName()),
+			Thumb:       thumb,
 		},
 		RawURL:   rawURL,
 		Readme:   getReadme(meta, reqPath),

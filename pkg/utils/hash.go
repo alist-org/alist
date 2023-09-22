@@ -218,3 +218,7 @@ func FromString(str string) HashInfo {
 func (hi HashInfo) GetHash(ht *HashType) string {
 	return hi.h[ht]
 }
+
+func (hi HashInfo) Export() map[*HashType]string {
+	return hi.h
+}
