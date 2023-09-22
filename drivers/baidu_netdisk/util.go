@@ -1,6 +1,7 @@
 package baidu_netdisk
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -22,7 +23,7 @@ import (
 
 func (d *BaiduNetdisk) refreshToken() error {
 	err := d._refreshToken()
-	if err != nil && err == errs.EmptyToken {
+	if err != nil && errors.Is(err, errs.EmptyToken) {
 		err = d._refreshToken()
 	}
 	return err
@@ -74,21 +75,16 @@ func (d *BaiduNetdisk) request(furl string, method string, callback base.ReqCall
 				log.Info("refreshing baidu_netdisk token.")
 				err2 := d.refreshToken()
 				if err2 != nil {
-					return err2
+					return retry.Unrecoverable(err2)
 				}
 			}
-
-			err2 := fmt.Errorf("req: [%s] ,errno: %d, refer to https://pan.baidu.com/union/doc/", furl, errno)
-			if !utils.SliceContains([]int{2}, errno) {
-				err2 = retry.Unrecoverable(err2)
-			}
-			return err2
+			return fmt.Errorf("req: [%s] ,errno: %d, refer to https://pan.baidu.com/union/doc/", furl, errno)
 		}
 		result = res.Body()
 		return nil
 	},
 		retry.LastErrorOnly(true),
-		retry.Attempts(5),
+		retry.Attempts(3),
 		retry.Delay(time.Second),
 		retry.DelayType(retry.BackOffDelay))
 	return result, err
