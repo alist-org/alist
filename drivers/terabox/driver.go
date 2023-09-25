@@ -1,4 +1,4 @@
-package terbox
+package terabox
 
 import (
 	"bytes"
@@ -23,6 +23,7 @@ import (
 type Terabox struct {
 	model.Storage
 	Addition
+	JsToken string
 }
 
 func (d *Terabox) Config() driver.Config {
@@ -167,7 +168,7 @@ func (d *Terabox) Put(ctx context.Context, dstDir model.Obj, stream model.FileSt
 	}
 	log.Debugf("%+v", precreateResp)
 	if precreateResp.Errno != 0 {
-		return fmt.Errorf("[terabox] failed to precreate file, errno: %s", precreateResp.Errno)
+		return fmt.Errorf("[terabox] failed to precreate file, errno: %d", precreateResp.Errno)
 	}
 	if precreateResp.ReturnType == 2 {
 		return nil
