@@ -16,6 +16,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/pkg/http_range"
 	"github.com/alist-org/alist/v3/pkg/utils"
+	"github.com/alist-org/alist/v3/server/common"
 	rcCrypt "github.com/rclone/rclone/backend/crypt"
 	"github.com/rclone/rclone/fs/config/configmap"
 	"github.com/rclone/rclone/fs/config/obscure"
@@ -152,7 +153,10 @@ func (d *Crypt) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([
 				Ctime:    obj.CreateTime(),
 				// discarding hash as it's encrypted
 			}
-			if !ok {
+			if d.Thumbnail && thumb == "" {
+				thumb = utils.EncodePath(common.GetApiUrl(nil) + stdpath.Join("/d", args.ReqPath, ".thumbnails", name+".webp"), true)
+			}
+			if !ok && !d.Thumbnail {
 				result = append(result, &objRes)
 			} else {
 				objWithThumb := model.ObjThumb{
