@@ -86,7 +86,7 @@ func (d *AliyundriveOpen) refreshToken() error {
 	if err != nil {
 		return err
 	}
-	log.Infof("[ali_open] toekn exchange: %s -> %s", d.RefreshToken, refresh)
+	log.Infof("[ali_open] token exchange: %s -> %s", d.RefreshToken, refresh)
 	d.RefreshToken, d.AccessToken = refresh, access
 	op.MustSaveDriverStorage(d)
 	return nil
