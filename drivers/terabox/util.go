@@ -233,7 +233,7 @@ func (d *Terabox) manage(opera string, filelist interface{}) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	data := fmt.Sprintf("async=0&filelist=%s&ondup=newcopy", string(marshal))
+	data := fmt.Sprintf("async=0&filelist=%s&ondup=newcopy", encodeURIComponent(string(marshal)))
 	return d.post("/api/filemanager", params, data, nil)
 }
 
