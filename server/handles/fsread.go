@@ -49,6 +49,7 @@ type FsListResp struct {
 	Content  []ObjResp `json:"content"`
 	Total    int64     `json:"total"`
 	Readme   string    `json:"readme"`
+	Header   string    `json:"header"`
 	Write    bool      `json:"write"`
 	Provider string    `json:"provider"`
 }
@@ -97,6 +98,7 @@ func FsList(c *gin.Context) {
 		Content:  toObjsResp(objs, reqPath, isEncrypt(meta, reqPath)),
 		Total:    int64(total),
 		Readme:   getReadme(meta, reqPath),
+		Header:   getHeader(meta, reqPath),
 		Write:    user.CanWrite() || common.CanWrite(meta, reqPath),
 		Provider: provider,
 	})
@@ -169,6 +171,13 @@ func getReadme(meta *model.Meta, path string) string {
 	return ""
 }
 
+func getHeader(meta *model.Meta, path string) string {
+	if meta != nil && (utils.PathEqual(meta.Path, path) || meta.HeaderSub) {
+		return meta.Header
+	}
+	return ""
+}
+
 func isEncrypt(meta *model.Meta, path string) bool {
 	if common.IsStorageSignEnabled(path) {
 		return true
@@ -225,6 +234,7 @@ type FsGetResp struct {
 	ObjResp
 	RawURL   string    `json:"raw_url"`
 	Readme   string    `json:"readme"`
+	Header   string    `json:"header"`
 	Provider string    `json:"provider"`
 	Related  []ObjResp `json:"related"`
 }
@@ -328,6 +338,7 @@ func FsGet(c *gin.Context) {
 		},
 		RawURL:   rawURL,
 		Readme:   getReadme(meta, reqPath),
+		Header:   getHeader(meta, reqPath),
 		Provider: provider,
 		Related:  toObjsResp(related, parentPath, isEncrypt(parentMeta, parentPath)),
 	})
