@@ -2,7 +2,7 @@ package qbittorrent
 
 import (
 	"fmt"
-	"io"
+	"github.com/alist-org/alist/v3/internal/stream"
 	"os"
 	"path/filepath"
 	"sync"
@@ -157,17 +157,22 @@ func (m *Monitor) complete() error {
 				if err != nil {
 					return errors.Wrapf(err, "failed to open file %s", tempPath)
 				}
-				stream := &model.FileStream{
+				s := stream.FileStream{
 					Obj: &model.Object{
 						Name:     fileName,
 						Size:     size,
 						Modified: time.Now(),
 						IsFolder: false,
 					},
-					ReadCloser: struct{ io.ReadSeekCloser }{f},
-					Mimetype:   mimetype,
+					Reader:   f,
+					Closers:  utils.NewClosers(f),
+					Mimetype: mimetype,
 				}
-				return op.Put(tsk.Ctx, storage, dstDir, stream, tsk.SetProgress)
+				ss, err := stream.NewSeekableStream(s, nil)
+				if err != nil {
+					return err
+				}
+				return op.Put(tsk.Ctx, storage, dstDir, ss, tsk.SetProgress)
 			},
 		}))
 	}

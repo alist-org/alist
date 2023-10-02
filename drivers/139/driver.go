@@ -2,10 +2,12 @@ package _139
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
@@ -18,6 +20,7 @@ import (
 type Yun139 struct {
 	model.Storage
 	Addition
+	Account string
 }
 
 func (d *Yun139) Config() driver.Config {
@@ -29,7 +32,20 @@ func (d *Yun139) GetAddition() driver.Additional {
 }
 
 func (d *Yun139) Init(ctx context.Context) error {
-	_, err := d.post("/orchestration/personalCloud/user/v1.0/qryUserExternInfo", base.Json{
+	if d.Authorization == "" {
+		return fmt.Errorf("authorization is empty")
+	}
+	decode, err := base64.StdEncoding.DecodeString(d.Authorization)
+	if err != nil {
+		return err
+	}
+	decodeStr := string(decode)
+	splits := strings.Split(decodeStr, ":")
+	if len(splits) < 2 {
+		return fmt.Errorf("authorization is invalid, splits < 2")
+	}
+	d.Account = splits[1]
+	_, err = d.post("/orchestration/personalCloud/user/v1.0/qryUserExternInfo", base.Json{
 		"qryUserExternInfoReq": base.Json{
 			"commonAccountInfo": base.Json{
 				"account":     d.Account,
@@ -87,9 +103,9 @@ func (d *Yun139) MakeDir(ctx context.Context, parentDir model.Obj, dirName strin
 	return err
 }
 
-func (d *Yun139) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
+func (d *Yun139) Move(ctx context.Context, srcObj, dstDir model.Obj) (model.Obj, error) {
 	if d.isFamily() {
-		return errs.NotImplement
+		return nil, errs.NotImplement
 	}
 	var contentInfoList []string
 	var catalogInfoList []string
@@ -115,7 +131,10 @@ func (d *Yun139) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 	}
 	pathname := "/orchestration/personalCloud/batchOprTask/v1.0/createBatchOprTask"
 	_, err := d.post(pathname, data, nil)
-	return err
+	if err != nil {
+		return nil, err
+	}
+	return srcObj, nil
 }
 
 func (d *Yun139) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
@@ -284,6 +303,9 @@ func (d *Yun139) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 
 	var partSize = getPartSize(stream.GetSize())
 	part := (stream.GetSize() + partSize - 1) / partSize
+	if part == 0 {
+		part = 1
+	}
 	for i := int64(0); i < part; i++ {
 		if utils.IsCanceled(ctx) {
 			return ctx.Err()
@@ -315,13 +337,11 @@ func (d *Yun139) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 		if err != nil {
 			return err
 		}
+		_ = res.Body.Close()
 		log.Debugf("%+v", res)
-
 		if res.StatusCode != http.StatusOK {
 			return fmt.Errorf("unexpected status code: %d", res.StatusCode)
 		}
-
-		res.Body.Close()
 	}
 
 	return nil

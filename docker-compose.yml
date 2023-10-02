@@ -6,6 +6,7 @@ services:
       - '/etc/alist:/opt/alist/data'
     ports:
       - '5244:5244'
+      - '5245:5245'
     environment:
       - PUID=0
       - PGID=0

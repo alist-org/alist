@@ -44,6 +44,7 @@ func fileToObj(f File) *model.ObjThumb {
 			Name:     f.Name,
 			Size:     f.Size,
 			Modified: f.UpdatedAt,
+			Ctime:    f.CreatedAt,
 			IsFolder: f.Type == "folder",
 		},
 		Thumbnail: model.Thumbnail{Thumbnail: f.Thumbnail},

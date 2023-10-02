@@ -72,12 +72,19 @@ func SearchNode(req model.SearchReq, useFullText bool) ([]model.SearchNode, int6
 				Where("to_tsvector(name) @@ to_tsquery(?)", strings.Join(strings.Fields(req.Keywords), " & "))
 		}
 	}
+
+	if req.Scope != 0 {
+		isDir := req.Scope == 1
+		searchDB.Where(db.Where("is_dir = ?", isDir))
+	}
+
 	var count int64
 	if err := searchDB.Count(&count).Error; err != nil {
-		return nil, 0, errors.Wrapf(err, "failed get users count")
+		return nil, 0, errors.Wrapf(err, "failed get search items count")
 	}
 	var files []model.SearchNode
-	if err := searchDB.Offset((req.Page - 1) * req.PerPage).Limit(req.PerPage).Find(&files).Error; err != nil {
+	if err := searchDB.Order("name asc").Offset((req.Page - 1) * req.PerPage).Limit(req.PerPage).
+		Find(&files).Error; err != nil {
 		return nil, 0, err
 	}
 	return files, count, nil

@@ -1,25 +1,29 @@
 package baidu_netdisk
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/pkg/utils"
+	"github.com/avast/retry-go"
 	"github.com/go-resty/resty/v2"
+	log "github.com/sirupsen/logrus"
 )
 
 // do others that not defined in Driver interface
 
 func (d *BaiduNetdisk) refreshToken() error {
 	err := d._refreshToken()
-	if err != nil && err == errs.EmptyToken {
+	if err != nil && errors.Is(err, errs.EmptyToken) {
 		err = d._refreshToken()
 	}
 	return err
@@ -50,30 +54,40 @@ func (d *BaiduNetdisk) _refreshToken() error {
 }
 
 func (d *BaiduNetdisk) request(furl string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
-	req := base.RestyClient.R()
-	req.SetQueryParam("access_token", d.AccessToken)
-	if callback != nil {
-		callback(req)
-	}
-	if resp != nil {
-		req.SetResult(resp)
-	}
-	res, err := req.Execute(method, furl)
-	if err != nil {
-		return nil, err
-	}
-	errno := utils.Json.Get(res.Body(), "errno").ToInt()
-	if errno != 0 {
-		if errno == -6 {
-			err = d.refreshToken()
-			if err != nil {
-				return nil, err
-			}
-			return d.request(furl, method, callback, resp)
+	var result []byte
+	err := retry.Do(func() error {
+		req := base.RestyClient.R()
+		req.SetQueryParam("access_token", d.AccessToken)
+		if callback != nil {
+			callback(req)
 		}
-		return nil, fmt.Errorf("errno: %d, refer to https://pan.baidu.com/union/doc/", errno)
-	}
-	return res.Body(), nil
+		if resp != nil {
+			req.SetResult(resp)
+		}
+		res, err := req.Execute(method, furl)
+		if err != nil {
+			return err
+		}
+		log.Debugf("[baidu_netdisk] req: %s, resp: %s", furl, res.String())
+		errno := utils.Json.Get(res.Body(), "errno").ToInt()
+		if errno != 0 {
+			if utils.SliceContains([]int{111, -6}, errno) {
+				log.Info("refreshing baidu_netdisk token.")
+				err2 := d.refreshToken()
+				if err2 != nil {
+					return retry.Unrecoverable(err2)
+				}
+			}
+			return fmt.Errorf("req: [%s] ,errno: %d, refer to https://pan.baidu.com/union/doc/", furl, errno)
+		}
+		result = res.Body()
+		return nil
+	},
+		retry.LastErrorOnly(true),
+		retry.Attempts(3),
+		retry.Delay(time.Second),
+		retry.DelayType(retry.BackOffDelay))
+	return result, err
 }
 
 func (d *BaiduNetdisk) get(pathname string, params map[string]string, resp interface{}) ([]byte, error) {
@@ -154,7 +168,7 @@ func (d *BaiduNetdisk) linkCrack(file model.Obj, args model.LinkArgs) (*model.Li
 		"target": fmt.Sprintf("[\"%s\"]", file.GetPath()),
 		"dlink":  "1",
 		"web":    "5",
-		//"origin": "dlna",
+		"origin": "dlna",
 	}
 	_, err := d.request("https://pan.baidu.com/api/filemetas", http.MethodGet, func(req *resty.Request) {
 		req.SetQueryParams(param)
@@ -165,33 +179,36 @@ func (d *BaiduNetdisk) linkCrack(file model.Obj, args model.LinkArgs) (*model.Li
 	return &model.Link{
 		URL: resp.Info[0].Dlink,
 		Header: http.Header{
-			"User-Agent": []string{"netdisk"},
+			"User-Agent": []string{d.CustomCrackUA},
 		},
 	}, nil
 }
 
-func (d *BaiduNetdisk) manage(opera string, filelist interface{}) ([]byte, error) {
+func (d *BaiduNetdisk) manage(opera string, filelist any) ([]byte, error) {
 	params := map[string]string{
 		"method": "filemanager",
 		"opera":  opera,
 	}
-	marshal, err := utils.Json.Marshal(filelist)
-	if err != nil {
-		return nil, err
-	}
-	data := fmt.Sprintf("async=0&filelist=%s&ondup=newcopy", string(marshal))
+	marshal, _ := utils.Json.MarshalToString(filelist)
+	data := fmt.Sprintf("async=0&filelist=%s&ondup=fail", marshal)
 	return d.post("/xpan/file", params, data, nil)
 }
 
-func (d *BaiduNetdisk) create(path string, size int64, isdir int, uploadid, block_list string) ([]byte, error) {
+func (d *BaiduNetdisk) create(path string, size int64, isdir int, uploadid, block_list string, resp any, mtime, ctime int64) ([]byte, error) {
 	params := map[string]string{
 		"method": "create",
 	}
-	data := fmt.Sprintf("path=%s&size=%d&isdir=%d&rtype=3", encodeURIComponent(path), size, isdir)
+	data := ""
+	if mtime == 0 || ctime == 0 {
+		data = fmt.Sprintf("path=%s&size=%d&isdir=%d&rtype=3", encodeURIComponent(path), size, isdir)
+	} else {
+		data = fmt.Sprintf("path=%s&size=%d&isdir=%d&rtype=3&local_mtime=%d&local_ctime=%d", encodeURIComponent(path), size, isdir, mtime, ctime)
+	}
+
 	if uploadid != "" {
 		data += fmt.Sprintf("&uploadid=%s&block_list=%s", uploadid, block_list)
 	}
-	return d.post("/xpan/file", params, data, nil)
+	return d.post("/xpan/file", params, data, resp)
 }
 
 func encodeURIComponent(str string) string {

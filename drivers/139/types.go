@@ -10,7 +10,7 @@ type Catalog struct {
 	CatalogID   string `json:"catalogID"`
 	CatalogName string `json:"catalogName"`
 	//CatalogType     int         `json:"catalogType"`
-	//CreateTime      string      `json:"createTime"`
+	CreateTime string `json:"createTime"`
 	UpdateTime string `json:"updateTime"`
 	//IsShared        bool        `json:"isShared"`
 	//CatalogLevel    int         `json:"catalogLevel"`
@@ -63,7 +63,7 @@ type Content struct {
 	//ParentCatalogID string      `json:"parentCatalogId"`
 	//Channel         string      `json:"channel"`
 	//GeoLocFlag      string      `json:"geoLocFlag"`
-	//Digest          string      `json:"digest"`
+	Digest string `json:"digest"`
 	//Version         string      `json:"version"`
 	//FileEtag        string      `json:"fileEtag"`
 	//FileVersion     string      `json:"fileVersion"`
@@ -141,7 +141,7 @@ type CloudContent struct {
 	//ContentSuffix    string      `json:"contentSuffix"`
 	ContentSize int64 `json:"contentSize"`
 	//ContentDesc      string      `json:"contentDesc"`
-	//CreateTime       string      `json:"createTime"`
+	CreateTime string `json:"createTime"`
 	//Shottime         interface{} `json:"shottime"`
 	LastUpdateTime string `json:"lastUpdateTime"`
 	ThumbnailURL   string `json:"thumbnailURL"`
@@ -165,7 +165,7 @@ type CloudCatalog struct {
 	CatalogID   string `json:"catalogID"`
 	CatalogName string `json:"catalogName"`
 	//CloudID         string `json:"cloudID"`
-	//CreateTime      string `json:"createTime"`
+	CreateTime     string `json:"createTime"`
 	LastUpdateTime string `json:"lastUpdateTime"`
 	//Creator         string `json:"creator"`
 	//CreatorNickname string `json:"creatorNickname"`

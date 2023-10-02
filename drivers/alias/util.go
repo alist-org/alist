@@ -72,11 +72,21 @@ func (d *Alias) list(ctx context.Context, dst, sub string) ([]model.Obj, error) 
 		return nil, err
 	}
 	return utils.SliceConvert(objs, func(obj model.Obj) (model.Obj, error) {
-		return &model.Object{
+		thumb, ok := model.GetThumb(obj)
+		objRes := model.Object{
 			Name:     obj.GetName(),
 			Size:     obj.GetSize(),
 			Modified: obj.ModTime(),
 			IsFolder: obj.IsDir(),
+		}
+		if !ok {
+			return &objRes, nil
+		}
+		return &model.ObjThumb{
+			Object: objRes,
+			Thumbnail: model.Thumbnail{
+				Thumbnail: thumb,
+			},
 		}, nil
 	})
 }
@@ -93,7 +103,8 @@ func (d *Alias) link(ctx context.Context, dst, sub string, args model.LinkArgs) 
 	}
 	if common.ShouldProxy(storage, stdpath.Base(sub)) {
 		return &model.Link{
-			URL: fmt.Sprintf("/p%s?sign=%s",
+			URL: fmt.Sprintf("%s/p%s?sign=%s",
+				common.GetApiUrl(args.HttpReq),
 				utils.EncodePath(reqPath, true),
 				sign.Sign(reqPath)),
 		}, nil

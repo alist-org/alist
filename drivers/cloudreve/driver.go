@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
@@ -16,7 +17,6 @@ import (
 type Cloudreve struct {
 	model.Storage
 	Addition
-	Cookie string
 }
 
 func (d *Cloudreve) Config() driver.Config {
@@ -28,6 +28,11 @@ func (d *Cloudreve) GetAddition() driver.Additional {
 }
 
 func (d *Cloudreve) Init(ctx context.Context) error {
+	if d.Cookie != "" {
+		return nil
+	}
+	// removing trailing slash
+	d.Address = strings.TrimSuffix(d.Address, "/")
 	return d.login()
 }
 
@@ -110,7 +115,7 @@ func (d *Cloudreve) Remove(ctx context.Context, obj model.Obj) error {
 }
 
 func (d *Cloudreve) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
-	if stream.GetReadCloser() == http.NoBody {
+	if io.ReadCloser(stream) == http.NoBody {
 		return d.create(ctx, dstDir, stream)
 	}
 	var r DirectoryResp

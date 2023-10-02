@@ -10,8 +10,10 @@ type Addition struct {
 	driver.RootPath
 	// define other
 	Address  string `json:"address" required:"true"`
-	Username string `json:"username" required:"true"`
-	Password string `json:"password" required:"true"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Cookie   string `json:"cookie"`
+	CustomUA string `json:"custom_ua"`
 }
 
 var config = driver.Config{

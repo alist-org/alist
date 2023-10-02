@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"github.com/alist-org/alist/v3/internal/stream"
 	"io"
 	"math"
 	"math/big"
@@ -67,7 +68,7 @@ func (d *AliDrive) Init(ctx context.Context) error {
 		return nil
 	}
 	// init deviceID
-	deviceID := utils.GetSHA256Encode(d.UserID)
+	deviceID := utils.HashData(utils.SHA256, []byte(d.UserID))
 	// init privateKey
 	privateKey, _ := NewPrivateKeyFromHex(deviceID)
 	state := State{
@@ -163,14 +164,14 @@ func (d *AliDrive) Remove(ctx context.Context, obj model.Obj) error {
 	return err
 }
 
-func (d *AliDrive) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
-	file := model.FileStream{
-		Obj:        stream,
-		ReadCloser: stream,
-		Mimetype:   stream.GetMimetype(),
+func (d *AliDrive) Put(ctx context.Context, dstDir model.Obj, streamer model.FileStreamer, up driver.UpdateProgress) error {
+	file := stream.FileStream{
+		Obj:      streamer,
+		Reader:   streamer,
+		Mimetype: streamer.GetMimetype(),
 	}
 	const DEFAULT int64 = 10485760
-	var count = int(math.Ceil(float64(stream.GetSize()) / float64(DEFAULT)))
+	var count = int(math.Ceil(float64(streamer.GetSize()) / float64(DEFAULT)))
 
 	partInfoList := make([]base.Json, 0, count)
 	for i := 1; i <= count; i++ {
@@ -187,25 +188,25 @@ func (d *AliDrive) Put(ctx context.Context, dstDir model.Obj, stream model.FileS
 	}
 
 	var localFile *os.File
-	if fileStream, ok := file.ReadCloser.(*model.FileStream); ok {
-		localFile, _ = fileStream.ReadCloser.(*os.File)
+	if fileStream, ok := file.Reader.(*stream.FileStream); ok {
+		localFile, _ = fileStream.Reader.(*os.File)
 	}
 	if d.RapidUpload {
 		buf := bytes.NewBuffer(make([]byte, 0, 1024))
 		io.CopyN(buf, file, 1024)
-		reqBody["pre_hash"] = utils.GetSHA1Encode(buf.String())
+		reqBody["pre_hash"] = utils.HashData(utils.SHA1, buf.Bytes())
 		if localFile != nil {
 			if _, err := localFile.Seek(0, io.SeekStart); err != nil {
 				return err
 			}
 		} else {
 			// 把头部拼接回去
-			file.ReadCloser = struct {
+			file.Reader = struct {
 				io.Reader
 				io.Closer
 			}{
 				Reader: io.MultiReader(buf, file),
-				Closer: file,
+				Closer: &file,
 			}
 		}
 	} else {
@@ -259,7 +260,7 @@ func (d *AliDrive) Put(ctx context.Context, dstDir model.Obj, stream model.FileS
 			(t.file.slice(o.toNumber(), Math.min(o.plus(8).toNumber(), t.file.size)))
 		*/
 		buf := make([]byte, 8)
-		r, _ := new(big.Int).SetString(utils.GetMD5Encode(d.AccessToken)[:16], 16)
+		r, _ := new(big.Int).SetString(utils.GetMD5EncodeStr(d.AccessToken)[:16], 16)
 		i := new(big.Int).SetInt64(file.GetSize())
 		o := new(big.Int).SetInt64(0)
 		if file.GetSize() > 0 {
@@ -281,7 +282,7 @@ func (d *AliDrive) Put(ctx context.Context, dstDir model.Obj, stream model.FileS
 		if _, err = localFile.Seek(0, io.SeekStart); err != nil {
 			return err
 		}
-		file.ReadCloser = localFile
+		file.Reader = localFile
 	}
 
 	for i, partInfo := range resp.PartInfoList {

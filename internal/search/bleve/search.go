@@ -4,6 +4,8 @@ import (
 	"context"
 	"os"
 
+	query2 "github.com/blevesearch/bleve/v2/search/query"
+
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
@@ -24,9 +26,19 @@ func (b *Bleve) Config() searcher.Config {
 }
 
 func (b *Bleve) Search(ctx context.Context, req model.SearchReq) ([]model.SearchNode, int64, error) {
+	var queries []query2.Query
 	query := bleve.NewMatchQuery(req.Keywords)
 	query.SetField("name")
-	search := bleve.NewSearchRequest(query)
+	queries = append(queries, query)
+	if req.Scope != 0 {
+		isDir := req.Scope == 1
+		isDirQuery := bleve.NewBoolFieldQuery(isDir)
+		queries = append(queries, isDirQuery)
+	}
+	reqQuery := bleve.NewConjunctionQuery(queries...)
+	search := bleve.NewSearchRequest(reqQuery)
+	search.SortBy([]string{"name"})
+	search.From = (req.Page - 1) * req.PerPage
 	search.Size = req.PerPage
 	search.Fields = []string{"*"}
 	searchResults, err := b.BIndex.Search(search)
@@ -42,7 +54,7 @@ func (b *Bleve) Search(ctx context.Context, req model.SearchReq) ([]model.Search
 			Size:   int64(src.Fields["size"].(float64)),
 		}, nil
 	})
-	return res, int64(len(res)), nil
+	return res, int64(searchResults.Total), nil
 }
 
 func (b *Bleve) Index(ctx context.Context, node model.SearchNode) error {

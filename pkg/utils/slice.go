@@ -60,3 +60,22 @@ func MergeErrors(errs ...error) error {
 	}
 	return nil
 }
+
+func SliceMeet[T1, T2 any](arr []T1, v T2, meet func(item T1, v T2) bool) bool {
+	for _, item := range arr {
+		if meet(item, v) {
+			return true
+		}
+	}
+	return false
+}
+
+func SliceFilter[T any](arr []T, filter func(src T) bool) []T {
+	res := make([]T, 0, len(arr))
+	for _, src := range arr {
+		if filter(src) {
+			res = append(res, src)
+		}
+	}
+	return res
+}

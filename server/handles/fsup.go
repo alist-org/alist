@@ -1,16 +1,30 @@
 package handles
 
 import (
+	"io"
 	"net/url"
 	stdpath "path"
 	"strconv"
 	"time"
+
+	"github.com/alist-org/alist/v3/internal/stream"
 
 	"github.com/alist-org/alist/v3/internal/fs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
 )
+
+func getLastModified(c *gin.Context) time.Time {
+	now := time.Now()
+	lastModifiedStr := c.GetHeader("Last-Modified")
+	lastModifiedMillisecond, err := strconv.ParseInt(lastModifiedStr, 10, 64)
+	if err != nil {
+		return now
+	}
+	lastModified := time.UnixMilli(lastModifiedMillisecond)
+	return lastModified
+}
 
 func FsStream(c *gin.Context) {
 	path := c.GetHeader("File-Path")
@@ -33,21 +47,22 @@ func FsStream(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	stream := &model.FileStream{
+	s := &stream.FileStream{
 		Obj: &model.Object{
 			Name:     name,
 			Size:     size,
-			Modified: time.Now(),
+			Modified: getLastModified(c),
 		},
-		ReadCloser:   c.Request.Body,
+		Reader:       c.Request.Body,
 		Mimetype:     c.GetHeader("Content-Type"),
 		WebPutAsTask: asTask,
 	}
 	if asTask {
-		err = fs.PutAsTask(dir, stream)
+		err = fs.PutAsTask(dir, s)
 	} else {
-		err = fs.PutDirectly(c, dir, stream, true)
+		err = fs.PutDirectly(c, dir, s, true)
 	}
+	defer c.Request.Body.Close()
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return
@@ -88,21 +103,30 @@ func FsForm(c *gin.Context) {
 		common.ErrorResp(c, err, 500)
 		return
 	}
+	defer f.Close()
 	dir, name := stdpath.Split(path)
-	stream := &model.FileStream{
+	s := stream.FileStream{
 		Obj: &model.Object{
 			Name:     name,
 			Size:     file.Size,
-			Modified: time.Now(),
+			Modified: getLastModified(c),
 		},
-		ReadCloser:   f,
+		Reader:       f,
 		Mimetype:     file.Header.Get("Content-Type"),
-		WebPutAsTask: false,
+		WebPutAsTask: asTask,
 	}
 	if asTask {
-		err = fs.PutAsTask(dir, stream)
+		s.Reader = struct {
+			io.Reader
+		}{f}
+		err = fs.PutAsTask(dir, &s)
 	} else {
-		err = fs.PutDirectly(c, dir, stream, true)
+		ss, err := stream.NewSeekableStream(s, nil)
+		if err != nil {
+			common.ErrorResp(c, err, 500)
+			return
+		}
+		err = fs.PutDirectly(c, dir, ss, true)
 	}
 	if err != nil {
 		common.ErrorResp(c, err, 500)

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/alist-org/alist/v3/internal/stream"
 	"io"
 	"net/url"
 	stdpath "path"
@@ -53,15 +54,18 @@ func (d *S3) Drop(ctx context.Context) error {
 
 func (d *S3) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
 	if d.ListObjectVersion == "v2" {
-		return d.listV2(dir.GetPath())
+		return d.listV2(dir.GetPath(), args)
 	}
-	return d.listV1(dir.GetPath())
+	return d.listV1(dir.GetPath(), args)
 }
 
 func (d *S3) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	path := getKey(file.GetPath(), false)
 	filename := stdpath.Base(path)
-	disposition := fmt.Sprintf(`attachment; filename="%s"; filename*=UTF-8''%s`, filename, url.PathEscape(filename))
+	disposition := fmt.Sprintf(`attachment; filename*=UTF-8''%s`, url.PathEscape(filename))
+	if d.AddFilenameToDisposition {
+		disposition = fmt.Sprintf(`attachment; filename="%s"; filename*=UTF-8''%s`, filename, url.PathEscape(filename))
+	}
 	input := &s3.GetObjectInput{
 		Bucket: &d.Bucket,
 		Key:    &path,
@@ -93,13 +97,13 @@ func (d *S3) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*mo
 func (d *S3) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
 	return d.Put(ctx, &model.Object{
 		Path: stdpath.Join(parentDir.GetPath(), dirName),
-	}, &model.FileStream{
+	}, &stream.FileStream{
 		Obj: &model.Object{
 			Name:     getPlaceholderName(d.Placeholder),
 			Modified: time.Now(),
 		},
-		ReadCloser: io.NopCloser(bytes.NewReader([]byte{})),
-		Mimetype:   "application/octet-stream",
+		Reader:   io.NopCloser(bytes.NewReader([]byte{})),
+		Mimetype: "application/octet-stream",
 	}, func(int) {})
 }
 
@@ -136,11 +140,13 @@ func (d *S3) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreame
 		uploader.PartSize = stream.GetSize() / (s3manager.MaxUploadParts - 1)
 	}
 	key := getKey(stdpath.Join(dstDir.GetPath(), stream.GetName()), false)
+	contentType := stream.GetMimetype()
 	log.Debugln("key:", key)
 	input := &s3manager.UploadInput{
-		Bucket: &d.Bucket,
-		Key:    &key,
-		Body:   stream,
+		Bucket:      &d.Bucket,
+		Key:         &key,
+		Body:        stream,
+		ContentType: &contentType,
 	}
 	_, err := uploader.UploadWithContext(ctx, input)
 	return err

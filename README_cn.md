@@ -39,7 +39,7 @@
 
 ---
 
-[English](./README.md) | 中文 | [Contributing](./CONTRIBUTING.md) | [CODE_OF_CONDUCT](./CODE_OF_CONDUCT.md)
+[English](./README.md) | 中文 | [日本語](./README_ja.md) | [Contributing](./CONTRIBUTING.md) | [CODE_OF_CONDUCT](./CODE_OF_CONDUCT.md)
 
 ## 功能
 
@@ -61,6 +61,7 @@
     - [x] [和彩云](https://yun.139.com/) (个人云, 家庭云)
     - [x] [Yandex.Disk](https://disk.yandex.com/)
     - [x] [百度网盘](http://pan.baidu.com/)
+    - [x] [UC网盘](https://drive.uc.cn)
     - [x] [夸克网盘](https://pan.quark.cn)
     - [x] [迅雷网盘](https://pan.xunlei.com)
     - [x] [蓝奏云](https://www.lanzou.com/)
@@ -71,6 +72,7 @@
     - [x] SMB
     - [x] [115](https://115.com/)
     - [X] Cloudreve
+    - [x] [Dropbox](https://www.dropbox.com/)
 - [x] 部署方便，开箱即用
 - [x] 文件预览（PDF、markdown、代码、纯文本……）
 - [x] 画廊模式下的图像预览
@@ -88,6 +90,7 @@
 - [x] 网页上传(可以允许访客上传)，删除，新建文件夹，重命名，移动，复制
 - [x] 离线下载
 - [x] 跨存储复制文件
+- [x] 单线程下载/串流的多线程下载加速
 
 ## 文档
 
@@ -107,8 +110,8 @@ AList 是一个开源软件，如果你碰巧喜欢这个项目，并希望我�
 
 ### 特别赞助
 
-- [找资源 - 阿里云盘资源搜索引擎](https://zhaoziyuan.la/)
-- [KinhDown 百度云盘不限速下载！永久免费！已稳定运行3年！非常可靠！Q群 -> 786799372](https://kinhdown.com)
+- [亚洲云 - 高防服务器|服务器租用|福州高防|广东电信|香港服务器|美国服务器|海外服务器 - 国内靠谱的企业级云计算服务提供商](https://www.asiayun.com/aff/QQCOOQKZ) (国内API服务器赞助)
+- [找资源 - 阿里云盘资源搜索引擎](https://zhaoziyuan.pw/)
 - [JetBrains: Essential tools for software developers and teams](https://www.jetbrains.com/)
 
 ## 贡献者

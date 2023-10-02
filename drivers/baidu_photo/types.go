@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/alist-org/alist/v3/pkg/utils"
+
 	"github.com/alist-org/alist/v3/internal/model"
 )
 
@@ -51,27 +53,26 @@ type (
 		Ctime    int64    `json:"ctime"` // 创建时间 s
 		Mtime    int64    `json:"mtime"` // 修改时间 s
 		Thumburl []string `json:"thumburl"`
-
-		parseTime *time.Time
+		Md5      string   `json:"md5"`
 	}
 )
 
-func (c *File) GetSize() int64  { return c.Size }
-func (c *File) GetName() string { return getFileName(c.Path) }
-func (c *File) ModTime() time.Time {
-	if c.parseTime == nil {
-		c.parseTime = toTime(c.Mtime)
-	}
-	return *c.parseTime
-}
-func (c *File) IsDir() bool     { return false }
-func (c *File) GetID() string   { return "" }
-func (c *File) GetPath() string { return "" }
+func (c *File) GetSize() int64        { return c.Size }
+func (c *File) GetName() string       { return getFileName(c.Path) }
+func (c *File) CreateTime() time.Time { return time.Unix(c.Ctime, 0) }
+func (c *File) ModTime() time.Time    { return time.Unix(c.Mtime, 0) }
+func (c *File) IsDir() bool           { return false }
+func (c *File) GetID() string         { return "" }
+func (c *File) GetPath() string       { return "" }
 func (c *File) Thumb() string {
 	if len(c.Thumburl) > 0 {
 		return c.Thumburl[0]
 	}
 	return ""
+}
+
+func (c *File) GetHash() utils.HashInfo {
+	return utils.NewHashInfo(utils.MD5, c.Md5)
 }
 
 /*相册部分*/
@@ -84,12 +85,12 @@ type (
 	}
 
 	Album struct {
-		AlbumID    string `json:"album_id"`
-		Tid        int64  `json:"tid"`
-		Title      string `json:"title"`
-		JoinTime   int64  `json:"join_time"`
-		CreateTime int64  `json:"create_time"`
-		Mtime      int64  `json:"mtime"`
+		AlbumID      string `json:"album_id"`
+		Tid          int64  `json:"tid"`
+		Title        string `json:"title"`
+		JoinTime     int64  `json:"join_time"`
+		CreationTime int64  `json:"create_time"`
+		Mtime        int64  `json:"mtime"`
 
 		parseTime *time.Time
 	}
@@ -109,17 +110,17 @@ type (
 	}
 )
 
-func (a *Album) GetSize() int64  { return 0 }
-func (a *Album) GetName() string { return a.Title }
-func (a *Album) ModTime() time.Time {
-	if a.parseTime == nil {
-		a.parseTime = toTime(a.Mtime)
-	}
-	return *a.parseTime
+func (a *Album) GetHash() utils.HashInfo {
+	return utils.HashInfo{}
 }
-func (a *Album) IsDir() bool     { return true }
-func (a *Album) GetID() string   { return "" }
-func (a *Album) GetPath() string { return "" }
+
+func (a *Album) GetSize() int64        { return 0 }
+func (a *Album) GetName() string       { return a.Title }
+func (a *Album) CreateTime() time.Time { return time.Unix(a.CreationTime, 0) }
+func (a *Album) ModTime() time.Time    { return time.Unix(a.Mtime, 0) }
+func (a *Album) IsDir() bool           { return true }
+func (a *Album) GetID() string         { return "" }
+func (a *Album) GetPath() string       { return "" }
 
 type (
 	CopyFileResp struct {
@@ -160,9 +161,9 @@ type (
 		CreateFileResp
 
 		//不存在返回
-		Path      string  `json:"path"`
-		UploadID  string  `json:"uploadid"`
-		Blocklist []int64 `json:"block_list"`
+		Path      string `json:"path"`
+		UploadID  string `json:"uploadid"`
+		BlockList []int  `json:"block_list"`
 	}
 )
 

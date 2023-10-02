@@ -12,6 +12,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/pkg/utils"
+	hash_extend "github.com/alist-org/alist/v3/pkg/utils/hash"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -54,7 +55,7 @@ func (x *Thunder) Init(ctx context.Context) (err error) {
 					"j",
 					"4scKJNdd7F27Hv7tbt",
 				},
-				DeviceID:          utils.GetMD5Encode(x.Username + x.Password),
+				DeviceID:          utils.GetMD5EncodeStr(x.Username + x.Password),
 				ClientID:          "Xp6vsxz_7IYVw2BB",
 				ClientSecret:      "Xp6vsy4tN9toTVdMSpomVdXpRmES",
 				ClientVersion:     "7.51.0.8196",
@@ -135,7 +136,7 @@ func (x *ThunderExpert) Init(ctx context.Context) (err error) {
 
 				DeviceID: func() string {
 					if len(x.DeviceID) != 32 {
-						return utils.GetMD5Encode(x.DeviceID)
+						return utils.GetMD5EncodeStr(x.DeviceID)
 					}
 					return x.DeviceID
 				}(),
@@ -331,6 +332,20 @@ func (xc *XunLeiCommon) Remove(ctx context.Context, obj model.Obj) error {
 }
 
 func (xc *XunLeiCommon) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
+	hi := stream.GetHash()
+	gcid := hi.GetHash(hash_extend.GCID)
+	if len(gcid) < hash_extend.GCID.Width {
+		tFile, err := stream.CacheFullInTempFile()
+		if err != nil {
+			return err
+		}
+
+		gcid, err = utils.HashFile(hash_extend.GCID, tFile, stream.GetSize())
+		if err != nil {
+			return err
+		}
+	}
+
 	var resp UploadTaskResponse
 	_, err := xc.Request(FILE_API_URL, http.MethodPost, func(r *resty.Request) {
 		r.SetContext(ctx)
@@ -339,7 +354,7 @@ func (xc *XunLeiCommon) Put(ctx context.Context, dstDir model.Obj, stream model.
 			"parent_id":   dstDir.GetID(),
 			"name":        stream.GetName(),
 			"size":        stream.GetSize(),
-			"hash":        "1CF254FBC456E1B012CD45C546636AA62CF8350E",
+			"hash":        gcid,
 			"upload_type": UPLOAD_TYPE_RESUMABLE,
 		})
 	}, &resp)

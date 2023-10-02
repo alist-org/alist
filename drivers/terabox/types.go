@@ -1,9 +1,10 @@
-package terbox
+package terabox
 
 import (
-	"github.com/alist-org/alist/v3/internal/model"
 	"strconv"
 	"time"
+
+	"github.com/alist-org/alist/v3/internal/model"
 )
 
 type File struct {

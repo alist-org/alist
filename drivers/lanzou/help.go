@@ -3,6 +3,7 @@ package lanzou
 import (
 	"bytes"
 	"fmt"
+	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
@@ -117,11 +118,100 @@ var findKVReg = regexp.MustCompile(`'(.+?)':('?([^' },]*)'?)`) // 拆分kv
 
 // 根据key查询js变量
 func findJSVarFunc(key, data string) string {
-	values := regexp.MustCompile(`var ` + key + ` = '(.+?)';`).FindStringSubmatch(data)
+	var values []string
+	if key != "sasign" {
+		values = regexp.MustCompile(`var ` + key + ` = '(.+?)';`).FindStringSubmatch(data)
+	} else {
+		matches := regexp.MustCompile(`var `+key+` = '(.+?)';`).FindAllStringSubmatch(data, -1)
+		if len(matches) == 3 {
+			values = matches[1]
+		} else {
+			if len(matches) > 0 {
+				values = matches[0]
+			}
+		}
+	}
 	if len(values) == 0 {
 		return ""
 	}
 	return values[1]
+}
+
+var findFunction = regexp.MustCompile(`(?ims)^function[^{]+`)
+var findFunctionAll = regexp.MustCompile(`(?is)function[^{]+`)
+
+// 查找所有方法位置
+func findJSFunctionIndex(data string, all bool) [][2]int {
+	findFunction := findFunction
+	if all {
+		findFunction = findFunctionAll
+	}
+
+	indexs := findFunction.FindAllStringIndex(data, -1)
+	fIndexs := make([][2]int, 0, len(indexs))
+
+	for _, index := range indexs {
+		if len(index) != 2 {
+			continue
+		}
+		count, data := 0, data[index[1]:]
+		for ii, v := range data {
+			if v == ' ' && count == 0 {
+				continue
+			}
+			if v == '{' {
+				count++
+			}
+
+			if v == '}' {
+				count--
+			}
+			if count == 0 {
+				fIndexs = append(fIndexs, [2]int{index[0], index[1] + ii + 1})
+				break
+			}
+		}
+	}
+	return fIndexs
+}
+
+// 删除JS全局方法
+func removeJSGlobalFunction(html string) string {
+	indexs := findJSFunctionIndex(html, false)
+	block := make([]string, len(indexs))
+	for i, next := len(indexs)-1, len(html); i >= 0; i-- {
+		index := indexs[i]
+		block[i] = html[index[1]:next]
+		next = index[0]
+	}
+	return strings.Join(block, "")
+}
+
+// 根据名称获取方法
+func getJSFunctionByName(html string, name string) (string, error) {
+	indexs := findJSFunctionIndex(html, true)
+	for _, index := range indexs {
+		data := html[index[0]:index[1]]
+		if regexp.MustCompile(`function\s+` + name + `[()\s]+{`).MatchString(data) {
+			return data, nil
+		}
+	}
+	return "", fmt.Errorf("not find %s function", name)
+}
+
+// 解析html中的JSON,选择最长的数据
+func htmlJsonToMap2(html string) (map[string]string, error) {
+	datas := findDataReg.FindAllStringSubmatch(html, -1)
+	var sData string
+	for _, data := range datas {
+		if len(datas) > 0 && len(data[1]) > len(sData) {
+			sData = data[1]
+		}
+	}
+	if sData == "" {
+		return nil, fmt.Errorf("not find data")
+	}
+	return jsonToMap(sData, html), nil
 }
 
 // 解析html中的JSON
@@ -189,4 +279,15 @@ func GetExpirationTime(url string) (etime time.Duration) {
 	}
 	etime = time.Duration(timestamp-time.Now().Unix()) * time.Second
 	return
+}
+
+func CookieToString(cookies []*http.Cookie) string {
+	if cookies == nil {
+		return ""
+	}
+	cookieStrings := make([]string, len(cookies))
+	for i, cookie := range cookies {
+		cookieStrings[i] = cookie.Name + "=" + cookie.Value
+	}
+	return strings.Join(cookieStrings, ";")
 }

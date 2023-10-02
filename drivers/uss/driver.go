@@ -80,8 +80,12 @@ func (d *USS) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*m
 	downExp := time.Hour * time.Duration(d.SignURLExpire)
 	expireAt := time.Now().Add(downExp).Unix()
 	upd := url.QueryEscape(path.Base(file.GetPath()))
-	signStr := strings.Join([]string{d.OperatorPassword, fmt.Sprint(expireAt), fmt.Sprintf("/%s", key)}, "&")
-	upt := utils.GetMD5Encode(signStr)[12:20] + fmt.Sprint(expireAt)
+	tokenOrPassword := d.AntiTheftChainToken
+	if tokenOrPassword == "" {
+		tokenOrPassword = d.OperatorPassword
+	}
+	signStr := strings.Join([]string{tokenOrPassword, fmt.Sprint(expireAt), fmt.Sprintf("/%s", key)}, "&")
+	upt := utils.GetMD5EncodeStr(signStr)[12:20] + fmt.Sprint(expireAt)
 	link := fmt.Sprintf("%s?_upd=%s&_upt=%s", u, upd, upt)
 	return &model.Link{URL: link}, nil
 }

@@ -47,8 +47,16 @@ func AddQbittorrent(c *gin.Context) {
 		return
 	}
 	if !qbittorrent.IsQbittorrentReady() {
-		common.ErrorStrResp(c, "qbittorrent not ready", 500)
-		return
+		// try to init client
+		err := qbittorrent.InitClient()
+		if err != nil {
+			common.ErrorResp(c, err, 500)
+			return
+		}
+		if !qbittorrent.IsQbittorrentReady() {
+			common.ErrorStrResp(c, "qbittorrent still not ready after init", 500)
+			return
+		}
 	}
 	var req AddQbittorrentReq
 	if err := c.ShouldBind(&req); err != nil {

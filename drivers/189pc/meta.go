@@ -14,6 +14,8 @@ type Addition struct {
 	OrderDirection string `json:"order_direction" type:"select" options:"asc,desc" default:"asc"`
 	Type           string `json:"type" type:"select" options:"personal,family" default:"personal"`
 	FamilyID       string `json:"family_id"`
+	UploadMethod   string `json:"upload_method" type:"select" options:"stream,rapid,old" default:"stream"`
+	UploadThread   string `json:"upload_thread" default:"3" help:"1<=thread<=32"`
 	RapidUpload    bool   `json:"rapid_upload"`
 	NoUseOcr       bool   `json:"no_use_ocr"`
 }
@@ -21,6 +23,7 @@ type Addition struct {
 var config = driver.Config{
 	Name:        "189CloudPC",
 	DefaultRoot: "-11",
+	CheckStatus: true,
 }
 
 func init() {

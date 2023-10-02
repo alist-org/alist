@@ -1,6 +1,7 @@
 package aliyundrive_open
 
 import (
+	"github.com/alist-org/alist/v3/pkg/utils"
 	"time"
 
 	"github.com/alist-org/alist/v3/internal/model"
@@ -17,22 +18,28 @@ type Files struct {
 }
 
 type File struct {
-	DriveId       string     `json:"drive_id"`
-	FileId        string     `json:"file_id"`
-	ParentFileId  string     `json:"parent_file_id"`
-	Name          string     `json:"name"`
-	Size          int64      `json:"size"`
-	FileExtension string     `json:"file_extension"`
-	ContentHash   string     `json:"content_hash"`
-	Category      string     `json:"category"`
-	Type          string     `json:"type"`
-	Thumbnail     string     `json:"thumbnail"`
-	Url           string     `json:"url"`
-	CreatedAt     *time.Time `json:"created_at"`
-	UpdatedAt     time.Time  `json:"updated_at"`
+	DriveId       string    `json:"drive_id"`
+	FileId        string    `json:"file_id"`
+	ParentFileId  string    `json:"parent_file_id"`
+	Name          string    `json:"name"`
+	Size          int64     `json:"size"`
+	FileExtension string    `json:"file_extension"`
+	ContentHash   string    `json:"content_hash"`
+	Category      string    `json:"category"`
+	Type          string    `json:"type"`
+	Thumbnail     string    `json:"thumbnail"`
+	Url           string    `json:"url"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
+
+	// create only
+	FileName string `json:"file_name"`
 }
 
 func fileToObj(f File) *model.ObjThumb {
+	if f.Name == "" {
+		f.Name = f.FileName
+	}
 	return &model.ObjThumb{
 		Object: model.Object{
 			ID:       f.FileId,
@@ -40,6 +47,8 @@ func fileToObj(f File) *model.ObjThumb {
 			Size:     f.Size,
 			Modified: f.UpdatedAt,
 			IsFolder: f.Type == "folder",
+			Ctime:    f.CreatedAt,
+			HashInfo: utils.NewHashInfo(utils.SHA1, f.ContentHash),
 		},
 		Thumbnail: model.Thumbnail{Thumbnail: f.Thumbnail},
 	}
@@ -66,4 +75,10 @@ type CreateResp struct {
 	//Location     string `json:"location"`
 	RapidUpload  bool       `json:"rapid_upload"`
 	PartInfoList []PartInfo `json:"part_info_list"`
+}
+
+type MoveOrCopyResp struct {
+	Exist   bool   `json:"exist"`
+	DriveID string `json:"drive_id"`
+	FileID  string `json:"file_id"`
 }

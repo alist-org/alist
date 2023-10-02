@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 	"path"
 
 	"github.com/alist-org/alist/v3/drivers/base"
@@ -57,8 +58,17 @@ func (d *Onedrive) Link(ctx context.Context, file model.Obj, args model.LinkArgs
 	if f.File == nil {
 		return nil, errs.NotFile
 	}
+	u := f.Url
+	if d.CustomHost != "" {
+		_u, err := url.Parse(f.Url)
+		if err != nil {
+			return nil, err
+		}
+		_u.Host = d.CustomHost
+		u = _u.String()
+	}
 	return &model.Link{
-		URL: f.Url,
+		URL: u,
 	}, nil
 }
 

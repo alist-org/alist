@@ -42,13 +42,13 @@ func calSign(body, ts, randStr string) string {
 	sort.Strings(strs)
 	body = strings.Join(strs, "")
 	body = base64.StdEncoding.EncodeToString([]byte(body))
-	res := utils.GetMD5Encode(body) + utils.GetMD5Encode(ts+":"+randStr)
-	res = strings.ToUpper(utils.GetMD5Encode(res))
+	res := utils.GetMD5EncodeStr(body) + utils.GetMD5EncodeStr(ts+":"+randStr)
+	res = strings.ToUpper(utils.GetMD5EncodeStr(res))
 	return res
 }
 
 func getTime(t string) time.Time {
-	stamp, _ := time.ParseInLocation("20060102150405", t, time.Local)
+	stamp, _ := time.ParseInLocation("20060102150405", t, utils.CNLoc)
 	return stamp
 }
 
@@ -72,7 +72,7 @@ func (d *Yun139) request(pathname string, method string, callback base.ReqCallba
 	req.SetHeaders(map[string]string{
 		"Accept":         "application/json, text/plain, */*",
 		"CMS-DEVICE":     "default",
-		"Cookie":         d.Cookie,
+		"Authorization":  "Basic " + d.Authorization,
 		"mcloud-channel": "1000101",
 		"mcloud-client":  "10701",
 		//"mcloud-route": "001",
@@ -139,6 +139,7 @@ func (d *Yun139) getFiles(catalogID string) ([]model.Obj, error) {
 				Name:     catalog.CatalogName,
 				Size:     0,
 				Modified: getTime(catalog.UpdateTime),
+				Ctime:    getTime(catalog.CreateTime),
 				IsFolder: true,
 			}
 			files = append(files, &f)
@@ -150,6 +151,7 @@ func (d *Yun139) getFiles(catalogID string) ([]model.Obj, error) {
 					Name:     content.ContentName,
 					Size:     content.ContentSize,
 					Modified: getTime(content.UpdateTime),
+					HashInfo: utils.NewHashInfo(utils.MD5, content.Digest),
 				},
 				Thumbnail: model.Thumbnail{Thumbnail: content.ThumbnailURL},
 				//Thumbnail: content.BigthumbnailURL,
@@ -202,6 +204,7 @@ func (d *Yun139) familyGetFiles(catalogID string) ([]model.Obj, error) {
 				Size:     0,
 				IsFolder: true,
 				Modified: getTime(catalog.LastUpdateTime),
+				Ctime:    getTime(catalog.CreateTime),
 			}
 			files = append(files, &f)
 		}
@@ -212,6 +215,7 @@ func (d *Yun139) familyGetFiles(catalogID string) ([]model.Obj, error) {
 					Name:     content.ContentName,
 					Size:     content.ContentSize,
 					Modified: getTime(content.LastUpdateTime),
+					Ctime:    getTime(content.CreateTime),
 				},
 				Thumbnail: model.Thumbnail{Thumbnail: content.ThumbnailURL},
 				//Thumbnail: content.BigthumbnailURL,
