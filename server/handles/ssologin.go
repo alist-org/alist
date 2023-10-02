@@ -2,6 +2,7 @@ package handles
 
 import (
 	"encoding/base32"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"net/http"
@@ -166,10 +167,22 @@ func autoRegister(username, userID string, err error) (*model.User, error) {
 	return user, nil
 }
 
+func parseJWT(p string) ([]byte, error) {
+	parts := strings.Split(p, ".")
+	if len(parts) < 2 {
+		return nil, fmt.Errorf("oidc: malformed jwt, expected 3 parts got %d", len(parts))
+	}
+	payload, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		return nil, fmt.Errorf("oidc: malformed jwt payload: %v", err)
+	}
+	return payload, nil
+}
+
 func OIDCLoginCallback(c *gin.Context) {
-	usecompatibility := setting.GetBool(conf.SSOCompatibilityMode)
+	useCompatibility := setting.GetBool(conf.SSOCompatibilityMode)
 	argument := c.Query("method")
-	if usecompatibility {
+	if useCompatibility {
 		argument = path.Base(c.Request.URL.Path)
 	}
 	clientId := setting.GetStr(conf.SSOClientId)
@@ -208,23 +221,24 @@ func OIDCLoginCallback(c *gin.Context) {
 	verifier := provider.Verifier(&oidc.Config{
 		ClientID: clientId,
 	})
-	idToken, err := verifier.Verify(c, rawIDToken)
+	_, err = verifier.Verify(c, rawIDToken)
 	if err != nil {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	type UserInfo struct {
-		Name string `json:"name"`
-	}
-	claims := UserInfo{}
-	if err := idToken.Claims(&claims); err != nil {
+	payload, err := parseJWT(rawIDToken)
+	if err != nil {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	UserID := claims.Name
+	userID := utils.Json.Get(payload, conf.SSOOIDCUsernameKey).ToString()
+	if userID == "" {
+		common.ErrorStrResp(c, "cannot get username from OIDC provider", 400)
+		return
+	}
 	if argument == "get_sso_id" {
-		if usecompatibility {
-			c.Redirect(302, common.GetApiUrl(c.Request)+"/@manage?sso_id="+UserID)
+		if useCompatibility {
+			c.Redirect(302, common.GetApiUrl(c.Request)+"/@manage?sso_id="+userID)
 			return
 		}
 		html := fmt.Sprintf(`<!DOCTYPE html>
@@ -234,14 +248,14 @@ func OIDCLoginCallback(c *gin.Context) {
 				window.opener.postMessage({"sso_id": "%s"}, "*")
 				window.close()
 				</script>
-				</body>`, UserID)
+				</body>`, userID)
 		c.Data(200, "text/html; charset=utf-8", []byte(html))
 		return
 	}
 	if argument == "sso_get_token" {
-		user, err := db.GetUserBySSOID(UserID)
+		user, err := db.GetUserBySSOID(userID)
 		if err != nil {
-			user, err = autoRegister(UserID, UserID, err)
+			user, err = autoRegister(userID, userID, err)
 			if err != nil {
 				common.ErrorResp(c, err, 400)
 			}
@@ -250,7 +264,7 @@ func OIDCLoginCallback(c *gin.Context) {
 		if err != nil {
 			common.ErrorResp(c, err, 400)
 		}
-		if usecompatibility {
+		if useCompatibility {
 			c.Redirect(302, common.GetApiUrl(c.Request)+"/@login?token="+token)
 			return
 		}
