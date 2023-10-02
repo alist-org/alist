@@ -15,6 +15,7 @@ type Addition struct {
 	RefreshToken string `json:"refresh_token" required:"true"`
 	SiteId       string `json:"site_id"`
 	ChunkSize    int64  `json:"chunk_size" type:"number" default:"5"`
+	CustomHost   string `json:"custom_host" help:"Custom host for onedrive download link"`
 }
 
 var config = driver.Config{
