@@ -3,6 +3,7 @@ package aria2
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/alist-org/alist/v3/internal/conf"
@@ -46,28 +47,70 @@ func (a *Aria2) Init() (string, error) {
 }
 
 func (a *Aria2) IsReady() bool {
-	//TODO implement me
-	panic("implement me")
+	return a.client != nil
 }
 
 func (a *Aria2) AddURI(args *offline_download.AddUriArgs) (string, error) {
-	//TODO implement me
-	panic("implement me")
+	options := map[string]interface{}{
+		"dir": args.TempDir,
+	}
+	gid, err := a.client.AddURI([]string{args.Uri}, options)
+	if err != nil {
+		return "", err
+	}
+	return gid, nil
 }
 
 func (a *Aria2) Remove(tid string) error {
-	//TODO implement me
-	panic("implement me")
+	_, err := a.client.Remove(tid)
+	return err
 }
 
 func (a *Aria2) Status(tid string) (*offline_download.Status, error) {
-	//TODO implement me
-	panic("implement me")
+	info, err := a.client.TellStatus(tid)
+	if err != nil {
+		return nil, err
+	}
+	total, err := strconv.ParseUint(info.TotalLength, 10, 64)
+	if err != nil {
+		total = 0
+	}
+	downloaded, err := strconv.ParseUint(info.CompletedLength, 10, 64)
+	if err != nil {
+		downloaded = 0
+	}
+	s := &offline_download.Status{
+		Completed: info.Status == "complete",
+		Err:       err,
+	}
+	s.Progress = float64(downloaded) / float64(total) * 100
+	if len(info.FollowedBy) != 0 {
+		s.NewTID = info.FollowedBy[0]
+		notify.Signals.Delete(tid)
+		//notify.Signals.Store(gid, m.c)
+	}
+	switch info.Status {
+	case "complete":
+		s.Completed = true
+	case "error":
+		s.Err = errors.Errorf("failed to download %s, error: %s", tid, info.ErrorMessage)
+	case "active":
+		s.Status = "aria2: " + info.Status
+		if info.Seeder == "true" {
+			s.Completed = true
+		}
+	case "waiting", "paused":
+		s.Status = "aria2: " + info.Status
+	case "removed":
+		s.Err = errors.Errorf("failed to download %s, removed", tid)
+	default:
+		return nil, errors.Errorf("[aria2] unknown status %s", info.Status)
+	}
+	return s, nil
 }
 
 func (a *Aria2) GetFile(tid string) *offline_download.File {
-	//TODO implement me
-	panic("implement me")
+	return nil
 }
 
 var _ offline_download.Tool = (*Aria2)(nil)

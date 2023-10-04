@@ -25,6 +25,10 @@ func AddURI(ctx context.Context, args *AddURIArgs) error {
 	if err != nil {
 		return errors.Wrapf(err, "failed get tool")
 	}
+	// check tool is ready
+	if !tool.IsReady() {
+		return errors.Wrapf(err, "tool %s is not ready", args.Tool)
+	}
 	// check storage
 	storage, dstDirActualPath, err := op.GetStorageAndActualPath(args.DstDirPath)
 	if err != nil {
@@ -57,7 +61,7 @@ func AddURI(ctx context.Context, args *AddURIArgs) error {
 		Signal:  signal,
 	})
 	if err != nil {
-		return errors.Wrapf(err, "failed to add uri %s", args.URI)
+		return errors.Wrapf(err, "[%s] failed to add uri %s", args.Tool, args.URI)
 	}
 	DownTaskManager.Submit(task.WithCancelCtx(&task.Task[string]{
 		ID:   gid,

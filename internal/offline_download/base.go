@@ -30,7 +30,7 @@ type Tool interface {
 	IsReady() bool
 	// AddURI add an uri to download, return the task id
 	AddURI(args *AddUriArgs) (string, error)
-	// Remove the task if an error occurred
+	// Remove the download if task been canceled
 	Remove(tid string) error
 	// Status return the status of the download task, if an error occurred, return the error in Status.Err
 	Status(tid string) (*Status, error)
