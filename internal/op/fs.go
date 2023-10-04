@@ -534,7 +534,7 @@ func Put(ctx context.Context, storage driver.Driver, dstDirPath string, file mod
 	}
 	// if up is nil, set a default to prevent panic
 	if up == nil {
-		up = func(p int) {}
+		up = func(p float64) {}
 	}
 
 	switch s := storage.(type) {

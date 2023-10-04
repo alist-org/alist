@@ -26,7 +26,7 @@ type Task[K comparable] struct {
 	Name     string
 	state    string // pending, running, finished, canceling, canceled, errored
 	status   string
-	progress int
+	progress float64
 
 	Error error
 
@@ -41,11 +41,11 @@ func (t *Task[K]) SetStatus(status string) {
 	t.status = status
 }
 
-func (t *Task[K]) SetProgress(percentage int) {
+func (t *Task[K]) SetProgress(percentage float64) {
 	t.progress = percentage
 }
 
-func (t Task[K]) GetProgress() int {
+func (t Task[K]) GetProgress() float64 {
 	return t.progress
 }
 

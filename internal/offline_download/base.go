@@ -3,6 +3,7 @@ package offline_download
 import (
 	"io"
 	"os"
+	"time"
 
 	"github.com/alist-org/alist/v3/internal/model"
 )
@@ -15,7 +16,7 @@ type AddUriArgs struct {
 }
 
 type Status struct {
-	Progress  int
+	Progress  float64
 	NewTID    string
 	Completed bool
 	Status    string
@@ -39,9 +40,10 @@ type Tool interface {
 
 type File struct {
 	io.ReadCloser
-	Name string
-	Size int64
-	Path string
+	Name     string
+	Size     int64
+	Path     string
+	Modified time.Time
 }
 
 func (f *File) GetReadCloser() (io.ReadCloser, error) {

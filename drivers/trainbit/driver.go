@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"math"
 	"net/http"
 	"net/url"
 	"strings"
@@ -128,7 +127,7 @@ func (d *Trainbit) Put(ctx context.Context, dstDir model.Obj, stream model.FileS
 		stream,
 		func(byteNum int) {
 			total += int64(byteNum)
-			up(int(math.Round(float64(total) / float64(stream.GetSize()) * 100)))
+			up(float64(total) / float64(stream.GetSize()) * 100)
 		},
 	}
 	req, err := http.NewRequest(http.MethodPost, endpoint.String(), progressReader)

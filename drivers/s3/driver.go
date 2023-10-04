@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/alist-org/alist/v3/internal/stream"
 	"io"
 	"net/url"
 	stdpath "path"
 	"strings"
 	"time"
+
+	"github.com/alist-org/alist/v3/internal/stream"
 
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
@@ -104,7 +105,7 @@ func (d *S3) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) e
 		},
 		Reader:   io.NopCloser(bytes.NewReader([]byte{})),
 		Mimetype: "application/octet-stream",
-	}, func(int) {})
+	}, func(float64) {})
 }
 
 func (d *S3) Move(ctx context.Context, srcObj, dstDir model.Obj) error {

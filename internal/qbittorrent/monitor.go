@@ -2,12 +2,13 @@ package qbittorrent
 
 import (
 	"fmt"
-	"github.com/alist-org/alist/v3/internal/stream"
 	"os"
 	"path/filepath"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/alist-org/alist/v3/internal/stream"
 
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/op"
@@ -85,7 +86,7 @@ func (m *Monitor) update() (bool, error) {
 	}
 
 	progress := float64(info.Completed) / float64(info.Size) * 100
-	m.tsk.SetProgress(int(progress))
+	m.tsk.SetProgress(progress)
 	switch info.State {
 	case UPLOADING, PAUSEDUP, QUEUEDUP, STALLEDUP, FORCEDUP, CHECKINGUP:
 		err = m.complete()

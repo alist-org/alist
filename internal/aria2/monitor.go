@@ -2,7 +2,6 @@ package aria2
 
 import (
 	"fmt"
-	"github.com/alist-org/alist/v3/internal/stream"
 	"os"
 	"path"
 	"path/filepath"
@@ -10,6 +9,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/alist-org/alist/v3/internal/stream"
 
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/op"
@@ -100,7 +101,7 @@ func (m *Monitor) Update() (bool, error) {
 		downloaded = 0
 	}
 	progress := float64(downloaded) / float64(total) * 100
-	m.tsk.SetProgress(int(progress))
+	m.tsk.SetProgress(progress)
 	switch info.Status {
 	case "complete":
 		err := m.Complete()

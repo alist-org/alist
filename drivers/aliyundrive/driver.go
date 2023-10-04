@@ -7,13 +7,14 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"github.com/alist-org/alist/v3/internal/stream"
 	"io"
 	"math"
 	"math/big"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/alist-org/alist/v3/internal/stream"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/conf"
@@ -304,7 +305,7 @@ func (d *AliDrive) Put(ctx context.Context, dstDir model.Obj, streamer model.Fil
 		}
 		res.Body.Close()
 		if count > 0 {
-			up(i * 100 / count)
+			up(float64(i) * 100 / float64(count))
 		}
 	}
 	var resp2 base.Json

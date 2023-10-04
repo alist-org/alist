@@ -12,12 +12,12 @@ import (
 )
 
 type TaskInfo struct {
-	ID       string `json:"id"`
-	Name     string `json:"name"`
-	State    string `json:"state"`
-	Status   string `json:"status"`
-	Progress int    `json:"progress"`
-	Error    string `json:"error"`
+	ID       string  `json:"id"`
+	Name     string  `json:"name"`
+	State    string  `json:"state"`
+	Status   string  `json:"status"`
+	Progress float64 `json:"progress"`
+	Error    string  `json:"error"`
 }
 
 type K2Str[K comparable] func(k K) string

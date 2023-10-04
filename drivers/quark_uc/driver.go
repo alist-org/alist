@@ -209,7 +209,7 @@ func (d *QuarkOrUC) Put(ctx context.Context, dstDir model.Obj, stream model.File
 		}
 		md5s = append(md5s, m)
 		partNumber++
-		up(int(100 * (total - left) / total))
+		up(100 * float64(total-left) / float64(total))
 	}
 	err = d.upCommit(pre, md5s)
 	if err != nil {

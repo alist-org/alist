@@ -107,7 +107,7 @@ func (d *Pan123) newUpload(ctx context.Context, upReq *UploadResp, file model.Fi
 			if err != nil {
 				return err
 			}
-			up(j * 100 / chunkCount)
+			up(float64(j) * 100 / float64(chunkCount))
 		}
 	}
 	// complete s3 upload

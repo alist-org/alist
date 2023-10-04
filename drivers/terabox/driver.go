@@ -213,7 +213,7 @@ func (d *Terabox) Put(ctx context.Context, dstDir model.Obj, stream model.FileSt
 		}
 		log.Debugln(res.String())
 		if len(precreateResp.BlockList) > 0 {
-			up(i * 100 / len(precreateResp.BlockList))
+			up(float64(i) * 100 / float64(len(precreateResp.BlockList)))
 		}
 	}
 	_, err = d.create(rawPath, stream.GetSize(), 0, precreateResp.Uploadid, block_list_str)

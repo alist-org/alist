@@ -13,9 +13,10 @@ func GetFiles(dir string) ([]*File, error) {
 		}
 		if !info.IsDir() {
 			files = append(files, &File{
-				Name: info.Name(),
-				Size: info.Size(),
-				Path: path,
+				Name:     info.Name(),
+				Size:     info.Size(),
+				Path:     path,
+				Modified: info.ModTime(),
 			})
 		}
 		return nil

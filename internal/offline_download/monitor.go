@@ -11,6 +11,7 @@ import (
 
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/op"
+	"github.com/alist-org/alist/v3/internal/stream"
 	"github.com/alist-org/alist/v3/pkg/task"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
@@ -134,22 +135,24 @@ func (m *Monitor) Complete() error {
 				if err != nil {
 					return errors.Wrapf(err, "failed to open file %s", file.Path)
 				}
-				stream := &model.FileStream{
+				s := &stream.FileStream{
+					Ctx: nil,
 					Obj: &model.Object{
 						Name:     path.Base(file.Path),
 						Size:     file.Size,
-						Modified: time.Now(),
+						Modified: file.Modified,
 						IsFolder: false,
 					},
-					ReadCloser: rc,
-					Mimetype:   mimetype,
+					Reader:   rc,
+					Mimetype: mimetype,
+					Closers:  utils.NewClosers(rc),
 				}
 				relDir, err := filepath.Rel(m.tempDir, filepath.Dir(file.Path))
 				if err != nil {
 					log.Errorf("find relation directory error: %v", err)
 				}
 				newDistDir := filepath.Join(dstDirActualPath, relDir)
-				return op.Put(tsk.Ctx, storage, newDistDir, stream, tsk.SetProgress)
+				return op.Put(tsk.Ctx, storage, newDistDir, s, tsk.SetProgress)
 			},
 		}))
 	}
