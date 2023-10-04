@@ -120,7 +120,7 @@ https://alist.nn.ci/guide/sponsor.html
 
 Thanks goes to these wonderful people:
 
-[![Contributors](http://contributors.nn.ci/api?repo=alist-org/alist&repo=alist-org/alist-web&repo=alist-org/docs)](https://github.com/alist-org/alist/graphs/contributors)
+[![Contributors](http://contrib.nn.ci/api?repo=alist-org/alist&repo=alist-org/alist-web&repo=alist-org/docs)](https://github.com/alist-org/alist/graphs/contributors)
 
 ## License
 
