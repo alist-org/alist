@@ -3,7 +3,6 @@ package tool
 import (
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 	"sync"
 	"sync/atomic"
@@ -104,9 +103,9 @@ func (m *Monitor) Complete() error {
 	if err != nil {
 		return errors.WithMessage(err, "failed get storage")
 	}
-	var files []*File
-	if f := m.tool.GetFile(m.tsk.ID); f != nil {
-		files = append(files, f)
+	var files []File
+	if f := m.tool.GetFiles(m.tsk.ID); f != nil {
+		files = f
 	} else {
 		files, err = GetFiles(m.tempDir)
 		if err != nil {
@@ -138,7 +137,7 @@ func (m *Monitor) Complete() error {
 				s := &stream.FileStream{
 					Ctx: nil,
 					Obj: &model.Object{
-						Name:     path.Base(file.Path),
+						Name:     filepath.Base(file.Path),
 						Size:     file.Size,
 						Modified: file.Modified,
 						IsFolder: false,

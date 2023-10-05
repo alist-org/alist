@@ -4,7 +4,9 @@ import (
 	"github.com/alist-org/alist/v3/internal/aria2"
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/offline_download/tool"
 	"github.com/alist-org/alist/v3/internal/op"
+	"github.com/alist-org/alist/v3/internal/qbittorrent"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
 )
@@ -36,30 +38,51 @@ func SetAria2(c *gin.Context) {
 	common.SuccessResp(c, version)
 }
 
-type AddAria2Req struct {
-	Urls []string `json:"urls"`
-	Path string   `json:"path"`
+type SetQbittorrentReq struct {
+	Url      string `json:"url" form:"url"`
+	Seedtime string `json:"seedtime" form:"seedtime"`
 }
 
-func AddAria2(c *gin.Context) {
+func SetQbittorrent(c *gin.Context) {
+	var req SetQbittorrentReq
+	if err := c.ShouldBind(&req); err != nil {
+		common.ErrorResp(c, err, 400)
+		return
+	}
+	items := []model.SettingItem{
+		{Key: conf.QbittorrentUrl, Value: req.Url, Type: conf.TypeString, Group: model.OFFLINE_DOWNLOAD, Flag: model.PRIVATE},
+		{Key: conf.QbittorrentSeedtime, Value: req.Seedtime, Type: conf.TypeNumber, Group: model.OFFLINE_DOWNLOAD, Flag: model.PRIVATE},
+	}
+	if err := op.SaveSettingItems(items); err != nil {
+		common.ErrorResp(c, err, 500)
+		return
+	}
+	if err := qbittorrent.InitClient(); err != nil {
+		common.ErrorResp(c, err, 500)
+		return
+	}
+	common.SuccessResp(c, "ok")
+}
+
+func OfflineDownloadTools(c *gin.Context) {
+	tools := tool.Tools.Names()
+	common.SuccessResp(c, tools)
+}
+
+type AddOfflineDownloadReq struct {
+	Urls []string `json:"urls"`
+	Path string   `json:"path"`
+	Tool string   `json:"tool"`
+}
+
+func AddOfflineDownload(c *gin.Context) {
 	user := c.MustGet("user").(*model.User)
-	if !user.CanAddAria2Tasks() {
+	if !user.CanAddOfflineDownloadTasks() {
 		common.ErrorStrResp(c, "permission denied", 403)
 		return
 	}
-	if !aria2.IsAria2Ready() {
-		// try to init client
-		_, err := aria2.InitClient(2)
-		if err != nil {
-			common.ErrorResp(c, err, 500)
-			return
-		}
-		if !aria2.IsAria2Ready() {
-			common.ErrorStrResp(c, "aria2 still not ready after init", 500)
-			return
-		}
-	}
-	var req AddAria2Req
+
+	var req AddOfflineDownloadReq
 	if err := c.ShouldBind(&req); err != nil {
 		common.ErrorResp(c, err, 400)
 		return
@@ -70,7 +93,11 @@ func AddAria2(c *gin.Context) {
 		return
 	}
 	for _, url := range req.Urls {
-		err := aria2.AddURI(c, url, reqPath)
+		err := tool.AddURL(c, &tool.AddURLArgs{
+			URL:        url,
+			DstDirPath: reqPath,
+			Tool:       req.Tool,
+		})
 		if err != nil {
 			common.ErrorResp(c, err, 500)
 			return

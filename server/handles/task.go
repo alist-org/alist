@@ -3,8 +3,8 @@ package handles
 import (
 	"strconv"
 
-	"github.com/alist-org/alist/v3/internal/aria2"
 	"github.com/alist-org/alist/v3/internal/fs"
+	"github.com/alist-org/alist/v3/internal/offline_download/tool"
 	"github.com/alist-org/alist/v3/internal/qbittorrent"
 	"github.com/alist-org/alist/v3/pkg/task"
 	"github.com/alist-org/alist/v3/server/common"
@@ -116,10 +116,12 @@ func taskRoute[K comparable](g *gin.RouterGroup, manager *task.Manager[K], k2Str
 }
 
 func SetupTaskRoute(g *gin.RouterGroup) {
-	taskRoute(g.Group("/aria2_down"), aria2.DownTaskManager, strK2Str, str2StrK)
-	taskRoute(g.Group("/aria2_transfer"), aria2.TransferTaskManager, uint64K2Str, str2Uint64K)
 	taskRoute(g.Group("/upload"), fs.UploadTaskManager, uint64K2Str, str2Uint64K)
 	taskRoute(g.Group("/copy"), fs.CopyTaskManager, uint64K2Str, str2Uint64K)
 	taskRoute(g.Group("/qbit_down"), qbittorrent.DownTaskManager, strK2Str, str2StrK)
 	taskRoute(g.Group("/qbit_transfer"), qbittorrent.TransferTaskManager, uint64K2Str, str2Uint64K)
+	//taskRoute(g.Group("/aria2_down"), aria2.DownTaskManager, strK2Str, str2StrK)
+	//taskRoute(g.Group("/aria2_transfer"), aria2.TransferTaskManager, uint64K2Str, str2Uint64K)
+	taskRoute(g.Group("/offline_download"), tool.DownTaskManager, strK2Str, str2StrK)
+	taskRoute(g.Group("/offline_download_transfer"), tool.TransferTaskManager, uint64K2Str, str2Uint64K)
 }

@@ -70,6 +70,7 @@ func Init(e *gin.Engine) {
 	// no need auth
 	public := api.Group("/public")
 	public.Any("/settings", handles.PublicSettings)
+	public.Any("/offline_download_tools", handles.OfflineDownloadTools)
 
 	_fs(auth.Group("/fs"))
 	admin(auth.Group("/admin", middlewares.AuthAdmin))
@@ -155,8 +156,9 @@ func _fs(g *gin.RouterGroup) {
 	g.PUT("/put", middlewares.FsUp, handles.FsStream)
 	g.PUT("/form", middlewares.FsUp, handles.FsForm)
 	g.POST("/link", middlewares.AuthAdmin, handles.Link)
-	g.POST("/add_aria2", handles.AddAria2)
-	g.POST("/add_qbit", handles.AddQbittorrent)
+	//g.POST("/add_aria2", handles.AddOfflineDownload)
+	//g.POST("/add_qbit", handles.AddQbittorrent)
+	g.POST("/add_offline_download", handles.AddOfflineDownload)
 }
 
 func Cors(r *gin.Engine) {

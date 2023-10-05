@@ -34,8 +34,7 @@ the address is defined in config file`,
 			utils.Log.Infof("delayed start for %d seconds", conf.Conf.DelayedStart)
 			time.Sleep(time.Duration(conf.Conf.DelayedStart) * time.Second)
 		}
-		bootstrap.InitAria2()
-		bootstrap.InitQbittorrent()
+		bootstrap.InitOfflineDownloadTools()
 		bootstrap.LoadStorages()
 		if !flags.Debug && !flags.Dev {
 			gin.SetMode(gin.ReleaseMode)

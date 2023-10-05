@@ -8,8 +8,8 @@ import (
 	"github.com/alist-org/alist/v3/internal/model"
 )
 
-type AddUriArgs struct {
-	Uri     string
+type AddUrlArgs struct {
+	Url     string
 	UID     string
 	TempDir string
 	Signal  chan int
@@ -28,17 +28,18 @@ type Tool interface {
 	Items() []model.SettingItem
 	Init() (string, error)
 	IsReady() bool
-	// AddURI add an uri to download, return the task id
-	AddURI(args *AddUriArgs) (string, error)
+	// AddURL add an uri to download, return the task id
+	AddURL(args *AddUrlArgs) (string, error)
 	// Remove the download if task been canceled
 	Remove(tid string) error
 	// Status return the status of the download task, if an error occurred, return the error in Status.Err
 	Status(tid string) (*Status, error)
-	// GetFile return an io.ReadCloser as the download file, if nil, means walk the temp dir to get the files
-	GetFile(tid string) *File
+	// GetFiles return the files of the download task, if nil, means walk the temp dir to get the files
+	GetFiles(tid string) []File
 }
 
 type File struct {
+	// ReadCloser for http client
 	io.ReadCloser
 	Name     string
 	Size     int64

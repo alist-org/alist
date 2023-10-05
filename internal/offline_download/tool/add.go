@@ -13,13 +13,13 @@ import (
 	"github.com/pkg/errors"
 )
 
-type AddURIArgs struct {
-	URI        string
+type AddURLArgs struct {
+	URL        string
 	DstDirPath string
 	Tool       string
 }
 
-func AddURI(ctx context.Context, args *AddURIArgs) error {
+func AddURL(ctx context.Context, args *AddURLArgs) error {
 	// get tool
 	tool, err := Tools.Get(args.Tool)
 	if err != nil {
@@ -27,7 +27,10 @@ func AddURI(ctx context.Context, args *AddURIArgs) error {
 	}
 	// check tool is ready
 	if !tool.IsReady() {
-		return errors.Wrapf(err, "tool %s is not ready", args.Tool)
+		// try to init tool
+		if _, err := tool.Init(); err != nil {
+			return errors.Wrapf(err, "failed init tool %s", args.Tool)
+		}
 	}
 	// check storage
 	storage, dstDirActualPath, err := op.GetStorageAndActualPath(args.DstDirPath)
@@ -54,20 +57,21 @@ func AddURI(ctx context.Context, args *AddURIArgs) error {
 	uid := uuid.NewString()
 	tempDir := filepath.Join(conf.Conf.TempDir, args.Tool, uid)
 	signal := make(chan int)
-	gid, err := tool.AddURI(&AddUriArgs{
-		Uri:     args.URI,
+	gid, err := tool.AddURL(&AddUrlArgs{
+		Url:     args.URL,
 		UID:     uid,
 		TempDir: tempDir,
 		Signal:  signal,
 	})
 	if err != nil {
-		return errors.Wrapf(err, "[%s] failed to add uri %s", args.Tool, args.URI)
+		return errors.Wrapf(err, "[%s] failed to add uri %s", args.Tool, args.URL)
 	}
 	DownTaskManager.Submit(task.WithCancelCtx(&task.Task[string]{
 		ID:   gid,
-		Name: fmt.Sprintf("download %s to [%s](%s)", args.URI, storage.GetStorage().MountPath, dstDirActualPath),
+		Name: fmt.Sprintf("download %s to [%s](%s)", args.URL, storage.GetStorage().MountPath, dstDirActualPath),
 		Func: func(tsk *task.Task[string]) error {
 			m := &Monitor{
+				tool:       tool,
 				tsk:        tsk,
 				tempDir:    tempDir,
 				dstDirPath: args.DstDirPath,

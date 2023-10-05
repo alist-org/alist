@@ -50,11 +50,11 @@ func (a *Aria2) IsReady() bool {
 	return a.client != nil
 }
 
-func (a *Aria2) AddURI(args *tool.AddUriArgs) (string, error) {
+func (a *Aria2) AddURL(args *tool.AddUrlArgs) (string, error) {
 	options := map[string]interface{}{
 		"dir": args.TempDir,
 	}
-	gid, err := a.client.AddURI([]string{args.Uri}, options)
+	gid, err := a.client.AddURI([]string{args.Url}, options)
 	if err != nil {
 		return "", err
 	}
@@ -109,7 +109,20 @@ func (a *Aria2) Status(tid string) (*tool.Status, error) {
 	return s, nil
 }
 
-func (a *Aria2) GetFile(tid string) *tool.File {
+func (a *Aria2) GetFiles(tid string) []tool.File {
+	//files, err := a.client.GetFiles(tid)
+	//if err != nil {
+	//	return nil
+	//}
+	//return utils.MustSliceConvert(files, func(f rpc.FileInfo) tool.File {
+	//	return tool.File{
+	//		//ReadCloser: nil,
+	//		Name:     path.Base(f.Path),
+	//		Size:     f.Length,
+	//		Path:     "",
+	//		Modified: time.Time{},
+	//	}
+	//})
 	return nil
 }
 
