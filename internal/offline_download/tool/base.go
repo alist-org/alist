@@ -1,4 +1,4 @@
-package offline_download
+package tool
 
 import (
 	"io"

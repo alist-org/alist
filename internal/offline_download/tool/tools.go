@@ -1,8 +1,9 @@
-package offline_download
+package tool
 
 import (
 	"fmt"
 
+	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/task"
 )
 
@@ -30,4 +31,12 @@ func (t ToolsManager) Names() []string {
 		names = append(names, name)
 	}
 	return names
+}
+
+func (t ToolsManager) Items() []model.SettingItem {
+	var items []model.SettingItem
+	for _, tool := range t {
+		items = append(items, tool.Items()...)
+	}
+	return items
 }

@@ -8,7 +8,7 @@ import (
 
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/internal/offline_download"
+	"github.com/alist-org/alist/v3/internal/offline_download/tool"
 	"github.com/alist-org/alist/v3/internal/setting"
 	"github.com/alist-org/alist/v3/pkg/aria2/rpc"
 	"github.com/pkg/errors"
@@ -50,7 +50,7 @@ func (a *Aria2) IsReady() bool {
 	return a.client != nil
 }
 
-func (a *Aria2) AddURI(args *offline_download.AddUriArgs) (string, error) {
+func (a *Aria2) AddURI(args *tool.AddUriArgs) (string, error) {
 	options := map[string]interface{}{
 		"dir": args.TempDir,
 	}
@@ -66,7 +66,7 @@ func (a *Aria2) Remove(tid string) error {
 	return err
 }
 
-func (a *Aria2) Status(tid string) (*offline_download.Status, error) {
+func (a *Aria2) Status(tid string) (*tool.Status, error) {
 	info, err := a.client.TellStatus(tid)
 	if err != nil {
 		return nil, err
@@ -79,7 +79,7 @@ func (a *Aria2) Status(tid string) (*offline_download.Status, error) {
 	if err != nil {
 		downloaded = 0
 	}
-	s := &offline_download.Status{
+	s := &tool.Status{
 		Completed: info.Status == "complete",
 		Err:       err,
 	}
@@ -109,8 +109,12 @@ func (a *Aria2) Status(tid string) (*offline_download.Status, error) {
 	return s, nil
 }
 
-func (a *Aria2) GetFile(tid string) *offline_download.File {
+func (a *Aria2) GetFile(tid string) *tool.File {
 	return nil
 }
 
-var _ offline_download.Tool = (*Aria2)(nil)
+var _ tool.Tool = (*Aria2)(nil)
+
+func init() {
+	tool.Tools.Add("aria2", &Aria2{})
+}

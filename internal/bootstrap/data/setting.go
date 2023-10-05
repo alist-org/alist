@@ -4,6 +4,7 @@ import (
 	"github.com/alist-org/alist/v3/cmd/flags"
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/offline_download/tool"
 	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/pkg/utils/random"
@@ -168,6 +169,7 @@ func InitialSettings() []model.SettingItem {
 		{Key: conf.QbittorrentUrl, Value: "http://admin:adminadmin@localhost:8080/", Type: conf.TypeString, Group: model.SINGLE, Flag: model.PRIVATE},
 		{Key: conf.QbittorrentSeedtime, Value: "0", Type: conf.TypeNumber, Group: model.SINGLE, Flag: model.PRIVATE},
 	}
+	initialSettingItems = append(initialSettingItems, tool.Tools.Items()...)
 	if flags.Dev {
 		initialSettingItems = append(initialSettingItems, []model.SettingItem{
 			{Key: "test_deprecated", Value: "test_value", Type: conf.TypeString, Flag: model.DEPRECATED},

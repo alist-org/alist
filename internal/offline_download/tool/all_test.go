@@ -1,13 +1,13 @@
-package offline_download_test
+package tool_test
 
 import (
 	"testing"
 
-	"github.com/alist-org/alist/v3/internal/offline_download"
+	"github.com/alist-org/alist/v3/internal/offline_download/tool"
 )
 
 func TestGetFiles(t *testing.T) {
-	files, err := offline_download.GetFiles("..")
+	files, err := tool.GetFiles("..")
 	if err != nil {
 		t.Fatal(err)
 	}
