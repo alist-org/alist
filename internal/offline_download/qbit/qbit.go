@@ -14,7 +14,7 @@ type QBittorrent struct {
 }
 
 func (a *QBittorrent) Items() []model.SettingItem {
-	// aria2 settings
+	// qBittorrent settings
 	return []model.SettingItem{
 		{Key: conf.QbittorrentUrl, Value: "http://admin:adminadmin@localhost:8080/", Type: conf.TypeString, Group: model.OFFLINE_DOWNLOAD, Flag: model.PRIVATE},
 		{Key: conf.QbittorrentSeedtime, Value: "0", Type: conf.TypeNumber, Group: model.OFFLINE_DOWNLOAD, Flag: model.PRIVATE},
