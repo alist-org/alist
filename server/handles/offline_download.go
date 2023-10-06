@@ -1,12 +1,10 @@
 package handles
 
 import (
-	"github.com/alist-org/alist/v3/internal/aria2"
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/offline_download/tool"
 	"github.com/alist-org/alist/v3/internal/op"
-	"github.com/alist-org/alist/v3/internal/qbittorrent"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
 )
@@ -30,7 +28,8 @@ func SetAria2(c *gin.Context) {
 		common.ErrorResp(c, err, 500)
 		return
 	}
-	version, err := aria2.InitClient(2)
+	_tool, err := tool.Tools.Get("aria2")
+	version, err := _tool.Init()
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return
@@ -57,7 +56,12 @@ func SetQbittorrent(c *gin.Context) {
 		common.ErrorResp(c, err, 500)
 		return
 	}
-	if err := qbittorrent.InitClient(); err != nil {
+	_tool, err := tool.Tools.Get("qBittorrent")
+	if err != nil {
+		common.ErrorResp(c, err, 500)
+		return
+	}
+	if _, err := _tool.Init(); err != nil {
 		common.ErrorResp(c, err, 500)
 		return
 	}
