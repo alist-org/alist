@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/pkg/utils"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -23,12 +24,17 @@ type File struct {
 	Name            string    `json:"name"`
 	MimeType        string    `json:"mimeType"`
 	ModifiedTime    time.Time `json:"modifiedTime"`
+	CreatedTime     time.Time `json:"createdTime"`
 	Size            string    `json:"size"`
 	ThumbnailLink   string    `json:"thumbnailLink"`
 	ShortcutDetails struct {
 		TargetId       string `json:"targetId"`
 		TargetMimeType string `json:"targetMimeType"`
 	} `json:"shortcutDetails"`
+
+	MD5Checksum    string `json:"md5Checksum"`
+	SHA1Checksum   string `json:"sha1Checksum"`
+	SHA256Checksum string `json:"sha256Checksum"`
 }
 
 func fileToObj(f File) *model.ObjThumb {
@@ -39,10 +45,18 @@ func fileToObj(f File) *model.ObjThumb {
 			ID:       f.Id,
 			Name:     f.Name,
 			Size:     size,
+			Ctime:    f.CreatedTime,
 			Modified: f.ModifiedTime,
 			IsFolder: f.MimeType == "application/vnd.google-apps.folder",
+			HashInfo: utils.NewHashInfoByMap(map[*utils.HashType]string{
+				utils.MD5:    f.MD5Checksum,
+				utils.SHA1:   f.SHA1Checksum,
+				utils.SHA256: f.SHA256Checksum,
+			}),
 		},
-		Thumbnail: model.Thumbnail{},
+		Thumbnail: model.Thumbnail{
+			Thumbnail: f.ThumbnailLink,
+		},
 	}
 	if f.MimeType == "application/vnd.google-apps.shortcut" {
 		obj.ID = f.ShortcutDetails.TargetId
