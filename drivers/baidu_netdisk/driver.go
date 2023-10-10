@@ -5,7 +5,6 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"io"
 	"math"
 	"net/url"
@@ -153,20 +152,13 @@ func (d *BaiduNetdisk) PutRapid(ctx context.Context, dstDir model.Obj, stream mo
 	}
 
 	streamSize := stream.GetSize()
-	rawPath := stdpath.Join(dstDir.GetPath(), stream.GetName())
-	path := encodeURIComponent(rawPath)
+	path := stdpath.Join(dstDir.GetPath(), stream.GetName())
 	mtime := stream.ModTime().Unix()
 	ctime := stream.CreateTime().Unix()
 	blockList, _ := utils.Json.MarshalToString([]string{contentMd5})
 
-	data := fmt.Sprintf("path=%s&size=%d&isdir=0&rtype=3&block_list=%s&local_mtime=%d&local_ctime=%d",
-		path, streamSize, blockList, mtime, ctime)
-	params := map[string]string{
-		"method": "create",
-	}
-	log.Debugf("[baidu_netdisk] precreate data: %s", data)
 	var newFile File
-	_, err := d.post("/xpan/file", params, data, &newFile)
+	_, err := d.create(path, streamSize, 0, "", blockList, &newFile, mtime, ctime)
 	if err != nil {
 		return nil, err
 	}
@@ -218,9 +210,7 @@ func (d *BaiduNetdisk) Put(ctx context.Context, dstDir model.Obj, stream model.F
 	contentMd5 := hex.EncodeToString(fileMd5H.Sum(nil))
 	sliceMd5 := hex.EncodeToString(sliceMd5H2.Sum(nil))
 	blockListStr, _ := utils.Json.MarshalToString(blockList)
-
-	rawPath := stdpath.Join(dstDir.GetPath(), stream.GetName())
-	path := encodeURIComponent(rawPath)
+	path := stdpath.Join(dstDir.GetPath(), stream.GetName())
 	mtime := stream.ModTime().Unix()
 	ctime := stream.CreateTime().Unix()
 
@@ -228,13 +218,23 @@ func (d *BaiduNetdisk) Put(ctx context.Context, dstDir model.Obj, stream model.F
 	// 尝试获取之前的进度
 	precreateResp, ok := base.GetUploadProgress[*PrecreateResp](d, d.AccessToken, contentMd5)
 	if !ok {
-		data := fmt.Sprintf("path=%s&size=%d&isdir=0&autoinit=1&rtype=3&block_list=%s&content-md5=%s&slice-md5=%s&local_mtime=%d&local_ctime=%d",
-			path, streamSize, blockListStr, contentMd5, sliceMd5, mtime, ctime)
 		params := map[string]string{
 			"method": "precreate",
 		}
-		log.Debugf("[baidu_netdisk] precreate data: %s", data)
-		_, err = d.post("/xpan/file", params, data, &precreateResp)
+		form := map[string]string{
+			"path":        path,
+			"size":        strconv.FormatInt(streamSize, 10),
+			"isdir":       "0",
+			"autoinit":    "1",
+			"rtype":       "3",
+			"block_list":  blockListStr,
+			"content-md5": contentMd5,
+			"slice-md5":   sliceMd5,
+		}
+		joinTime(form, ctime, mtime)
+
+		log.Debugf("[baidu_netdisk] precreate data: %s", form)
+		_, err = d.postForm("/xpan/file", params, form, &precreateResp)
 		if err != nil {
 			return nil, err
 		}
@@ -290,7 +290,7 @@ func (d *BaiduNetdisk) Put(ctx context.Context, dstDir model.Obj, stream model.F
 
 	// step.3 创建文件
 	var newFile File
-	_, err = d.create(rawPath, streamSize, 0, precreateResp.Uploadid, blockListStr, &newFile, mtime, ctime)
+	_, err = d.create(path, streamSize, 0, precreateResp.Uploadid, blockListStr, &newFile, mtime, ctime)
 	if err != nil {
 		return nil, err
 	}

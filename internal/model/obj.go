@@ -1,13 +1,14 @@
 package model
 
 import (
-	"github.com/alist-org/alist/v3/pkg/http_range"
-	"github.com/alist-org/alist/v3/pkg/utils"
 	"io"
 	"regexp"
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/alist-org/alist/v3/pkg/http_range"
+	"github.com/alist-org/alist/v3/pkg/utils"
 
 	mapset "github.com/deckarep/golang-set/v2"
 
@@ -144,6 +145,20 @@ func GetUrl(obj Obj) (url string, ok bool) {
 		return GetUrl(unwrap.Unwrap())
 	}
 	return url, false
+}
+
+func GetRawObject(obj Obj) *Object {
+	switch v := obj.(type) {
+	case *ObjThumbURL:
+		return &v.Object
+	case *ObjThumb:
+		return &v.Object
+	case *ObjectURL:
+		return &v.Object
+	case *Object:
+		return v
+	}
+	return nil
 }
 
 // Merge

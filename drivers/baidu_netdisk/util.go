@@ -4,9 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"net/url"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
@@ -96,10 +94,10 @@ func (d *BaiduNetdisk) get(pathname string, params map[string]string, resp inter
 	}, resp)
 }
 
-func (d *BaiduNetdisk) post(pathname string, params map[string]string, data interface{}, resp interface{}) ([]byte, error) {
+func (d *BaiduNetdisk) postForm(pathname string, params map[string]string, form map[string]string, resp interface{}) ([]byte, error) {
 	return d.request("https://pan.baidu.com/rest/2.0"+pathname, http.MethodPost, func(req *resty.Request) {
 		req.SetQueryParams(params)
-		req.SetBody(data)
+		req.SetFormData(form)
 	}, resp)
 }
 
@@ -154,6 +152,9 @@ func (d *BaiduNetdisk) linkOfficial(file model.Obj, args model.LinkArgs) (*model
 	//if res.StatusCode() == 302 {
 	u = res.Header().Get("location")
 	//}
+
+	updateObjMd5(file, "pan.baidu.com", u)
+
 	return &model.Link{
 		URL: u,
 		Header: http.Header{
@@ -176,6 +177,9 @@ func (d *BaiduNetdisk) linkCrack(file model.Obj, args model.LinkArgs) (*model.Li
 	if err != nil {
 		return nil, err
 	}
+
+	updateObjMd5(file, d.CustomCrackUA, resp.Info[0].Dlink)
+
 	return &model.Link{
 		URL: resp.Info[0].Dlink,
 		Header: http.Header{
@@ -190,29 +194,56 @@ func (d *BaiduNetdisk) manage(opera string, filelist any) ([]byte, error) {
 		"opera":  opera,
 	}
 	marshal, _ := utils.Json.MarshalToString(filelist)
-	data := fmt.Sprintf("async=0&filelist=%s&ondup=fail", marshal)
-	return d.post("/xpan/file", params, data, nil)
+	return d.postForm("/xpan/file", params, map[string]string{
+		"async":    "0",
+		"filelist": marshal,
+		"ondup":    "fail",
+	}, nil)
 }
 
 func (d *BaiduNetdisk) create(path string, size int64, isdir int, uploadid, block_list string, resp any, mtime, ctime int64) ([]byte, error) {
 	params := map[string]string{
 		"method": "create",
 	}
-	data := ""
-	if mtime == 0 || ctime == 0 {
-		data = fmt.Sprintf("path=%s&size=%d&isdir=%d&rtype=3", encodeURIComponent(path), size, isdir)
-	} else {
-		data = fmt.Sprintf("path=%s&size=%d&isdir=%d&rtype=3&local_mtime=%d&local_ctime=%d", encodeURIComponent(path), size, isdir, mtime, ctime)
+	form := map[string]string{
+		"path":  path,
+		"size":  strconv.FormatInt(size, 10),
+		"isdir": strconv.Itoa(isdir),
+		"rtype": "3",
+	}
+	if mtime != 0 && ctime != 0 {
+		joinTime(form, ctime, mtime)
 	}
 
 	if uploadid != "" {
-		data += fmt.Sprintf("&uploadid=%s&block_list=%s", uploadid, block_list)
+		form["uploadid"] = uploadid
 	}
-	return d.post("/xpan/file", params, data, resp)
+	if block_list != "" {
+		form["block_list"] = block_list
+	}
+	return d.postForm("/xpan/file", params, form, resp)
 }
 
-func encodeURIComponent(str string) string {
-	r := url.QueryEscape(str)
-	r = strings.ReplaceAll(r, "+", "%20")
-	return r
+func joinTime(form map[string]string, ctime, mtime int64) {
+	form["local_mtime"] = strconv.FormatInt(mtime, 10)
+	form["local_ctime"] = strconv.FormatInt(ctime, 10)
 }
+
+func updateObjMd5(obj model.Obj, userAgent, u string) {
+	object := model.GetRawObject(obj)
+	if object != nil {
+		req, _ := http.NewRequest(http.MethodHead, u, nil)
+		req.Header.Add("User-Agent", userAgent)
+		resp, _ := base.HttpClient.Do(req)
+		if resp != nil {
+			contentMd5 := resp.Header.Get("Content-Md5")
+			object.HashInfo = utils.NewHashInfo(utils.MD5, contentMd5)
+		}
+	}
+}
+
+// func encodeURIComponent(str string) string {
+// 	r := url.QueryEscape(str)
+// 	r = strings.ReplaceAll(r, "+", "%20")
+// 	return r
+// }
