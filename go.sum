@@ -19,6 +19,8 @@ github.com/Xhofe/rateg v0.0.0-20230728072201-251a4e1adad4 h1:WnvifFgYyogPz2ZFvaV
 github.com/Xhofe/rateg v0.0.0-20230728072201-251a4e1adad4/go.mod h1:8pWlL2rpusvx7Xa6yYaIWOJ8bR3gPdFBUT7OystyGOY=
 github.com/Xhofe/wopan-sdk-go v0.1.1 h1:dSrTxNYclqNuo9libjtC+R6C4RCen/inh/dUXd12vpM=
 github.com/Xhofe/wopan-sdk-go v0.1.1/go.mod h1:xWcUS7PoFLDD9gy2BK2VQfilEsZngLMz2Vkx3oF2zJY=
+github.com/Xhofe/wopan-sdk-go v0.1.2 h1:6Gh4YTT7b7YHN0OoJ33j7Jm9ru/ckuvcDxPnRmH07jc=
+github.com/Xhofe/wopan-sdk-go v0.1.2/go.mod h1:ktLYb4t7rnPFq1AshLaPXq5kZER+DkEagT6/i/in0uo=
 github.com/abbot/go-http-auth v0.4.0 h1:QjmvZ5gSC7jm3Zg54DqWE/T5m1t2AfDu6QlXJT0EVT0=
 github.com/abbot/go-http-auth v0.4.0/go.mod h1:Cz6ARTIzApMJDzh5bRMSUou6UMSp0IEXg9km/ci7TJM=
 github.com/aead/ecdh v0.2.0 h1:pYop54xVaq/CEREFEcukHRZfTdjiWvYIsZDXXrBapQQ=
