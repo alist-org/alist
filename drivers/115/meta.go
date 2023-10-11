@@ -9,6 +9,7 @@ type Addition struct {
 	Cookie      string `json:"cookie" type:"text" help:"one of QR code token and cookie required"`
 	QRCodeToken string `json:"qrcode_token" type:"text" help:"one of QR code token and cookie required"`
 	PageSize    int64  `json:"page_size" type:"number" default:"56" help:"list api per page size of 115 driver"`
+	LimitRate   int    `json:"limit_rate" type:"number" default:"5" help:"limit all api request rate (r/s)"`
 	driver.RootID
 }
 
