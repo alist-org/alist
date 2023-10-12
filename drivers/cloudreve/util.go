@@ -161,8 +161,6 @@ func (d *Cloudreve) GetThumb(file Object) (model.Thumbnail, error) {
 		"Accept":     "image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
 		"User-Agent": ua,
 	})
-	var r Resp
-	req.SetResult(&r)
 	resp, err := req.Execute(http.MethodGet, d.Address+"/api/v3/file/thumb/"+file.Id)
 	if err != nil {
 		return model.Thumbnail{}, err
