@@ -149,3 +149,23 @@ func convertSrc(obj model.Obj) map[string]interface{} {
 	m["items"] = items
 	return m
 }
+
+func (d *Cloudreve) GetThumb(file Object) (model.Thumbnail, error) {
+	ua := d.CustomUA
+	if ua == "" {
+		ua = base.UserAgent
+	}
+	req := base.NoRedirectClient.R()
+	req.SetHeaders(map[string]string{
+		"Cookie":     "cloudreve-session=" + d.Cookie,
+		"Accept":     "image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+		"User-Agent": ua,
+	})
+	resp, err := req.Execute(http.MethodGet, d.Address+"/api/v3/file/thumb/"+file.Id)
+	if err != nil {
+		return model.Thumbnail{}, err
+	}
+	return model.Thumbnail{
+		Thumbnail: resp.Header().Get("Location"),
+	}, nil
+}

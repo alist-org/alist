@@ -49,7 +49,11 @@ func (d *Cloudreve) List(ctx context.Context, dir model.Obj, args model.ListArgs
 	}
 
 	return utils.SliceConvert(r.Objects, func(src Object) (model.Obj, error) {
-		return objectToObj(src), nil
+		thumb, err := d.GetThumb(src)
+		if err != nil {
+			return nil, err
+		}
+		return objectToObj(src, thumb), nil
 	})
 }
 
