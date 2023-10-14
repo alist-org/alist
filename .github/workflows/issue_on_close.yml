@@ -14,4 +14,4 @@ jobs:
           actions: 'remove-labels'
           token: ${{ secrets.GITHUB_TOKEN }}
           issue-number: ${{ github.event.issue.number }}
-          labels: 'working'
+          labels: 'working,pr-welcome'
