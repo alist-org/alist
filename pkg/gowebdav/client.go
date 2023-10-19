@@ -83,6 +83,11 @@ func (c *Client) SetTransport(transport http.RoundTripper) {
 	c.c.Transport = transport
 }
 
+// SetJar exposes the ability to set a cookie jar to the client.
+func (c *Client) SetJar(jar http.CookieJar) {
+	c.c.Jar = jar
+}
+
 // Connect connects to our dav server
 func (c *Client) Connect() error {
 	rs, err := c.options("/")
@@ -351,6 +356,11 @@ func (c *Client) Link(path string) (string, http.Header, error) {
 		return "", nil, newPathErrorErr("Link", path, err)
 	}
 
+	if c.c.Jar != nil {
+		for _, cookie := range c.c.Jar.Cookies(r.URL) {
+			r.AddCookie(cookie)
+		}
+	}
 	for k, vals := range c.headers {
 		for _, v := range vals {
 			r.Header.Add(k, v)
