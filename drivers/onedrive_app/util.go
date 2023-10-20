@@ -71,8 +71,8 @@ func (d *OnedriveAPP) _accessToken() error {
 		"grant_type":    "client_credentials",
 		"client_id":     d.ClientID,
 		"client_secret": d.ClientSecret,
-		"resource":      "https://graph.microsoft.com/",
-		"scope":         "https://graph.microsoft.com/.default",
+		"resource":      onedriveHostMap[d.Region].Api + "/",
+		"scope":         onedriveHostMap[d.Region].Api + "/.default",
 	}).Post(url)
 	if err != nil {
 		return err

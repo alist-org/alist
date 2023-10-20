@@ -1,7 +1,6 @@
 package baidu_netdisk
 
 import (
-	"github.com/alist-org/alist/v3/pkg/utils"
 	"path"
 	"strconv"
 	"time"
@@ -71,7 +70,9 @@ func fileToObj(f File) *model.ObjThumb {
 			Modified: time.Unix(f.LocalMtime, 0),
 			Ctime:    time.Unix(f.LocalCtime, 0),
 			IsFolder: f.Isdir == 1,
-			HashInfo: utils.NewHashInfo(utils.MD5, f.Md5),
+
+			// 直接获取的MD5是错误的
+			// HashInfo: utils.NewHashInfo(utils.MD5, f.Md5),
 		},
 		Thumbnail: model.Thumbnail{Thumbnail: f.Thumbs.Url3},
 	}

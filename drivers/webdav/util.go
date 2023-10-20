@@ -2,6 +2,7 @@ package webdav
 
 import (
 	"net/http"
+	"net/http/cookiejar"
 
 	"github.com/alist-org/alist/v3/drivers/webdav/odrvcookie"
 	"github.com/alist-org/alist/v3/internal/model"
@@ -23,6 +24,13 @@ func (d *WebDav) setClient() error {
 				rq.Header.Del("Authorization")
 				rq.Header.Set("Cookie", cookie)
 			})
+		} else {
+			return err
+		}
+	} else {
+		cookieJar, err := cookiejar.New(nil)
+		if err == nil {
+			c.SetJar(cookieJar)
 		} else {
 			return err
 		}

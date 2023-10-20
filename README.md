@@ -43,7 +43,7 @@ English | [中文](./README_cn.md)| [日本語](./README_ja.md) | [Contributing]
 
 ## Features
 
-- [x] Multiple storage
+- [x] Multiple storages
     - [x] Local storage
     - [x] [Aliyundrive](https://www.aliyundrive.com/)
     - [x] OneDrive / Sharepoint ([global](https://www.office.com/), [cn](https://portal.partner.microsoftonline.cn),de,us)
@@ -86,7 +86,7 @@ English | [中文](./README_cn.md)| [日本語](./README_ja.md) | [Contributing]
 - [x] Protected routes (password protection and authentication)
 - [x] WebDav (see https://alist.nn.ci/guide/webdav.html for details)
 - [x] [Docker Deploy](https://hub.docker.com/r/xhofe/alist)
-- [x] Cloudflare workers proxy
+- [x] Cloudflare Workers proxy
 - [x] File/Folder package download
 - [x] Web upload(Can allow visitors to upload), delete, mkdir, rename, move and copy
 - [x] Offline download
@@ -103,7 +103,7 @@ English | [中文](./README_cn.md)| [日本語](./README_ja.md) | [Contributing]
 
 ## Discussion
 
-Please go to our [discussion forum](https://github.com/Xhofe/alist/discussions) for general questions, **issues are for bug reports and feature request only.**
+Please go to our [discussion forum](https://github.com/Xhofe/alist/discussions) for general questions, **issues are for bug reports and feature requests only.**
 
 ## Sponsor
 
@@ -127,7 +127,7 @@ Thanks goes to these wonderful people:
 The `AList` is open-source software licensed under the AGPL-3.0 license.
 
 ## Disclaimer
-- This program is a free and open source project. It is designed to share files on the network disk, which is convenient for downloading and learning golang. Please abide by relevant laws and regulations when using it, and do not abuse it;
+- This program is a free and open source project. It is designed to share files on the network disk, which is convenient for downloading and learning Golang. Please abide by relevant laws and regulations when using it, and do not abuse it;
 - This program is implemented by calling the official sdk/interface, without destroying the official interface behavior;
 - This program only does 302 redirect/traffic forwarding, and does not intercept, store, or tamper with any user data;
 - Before using this program, you should understand and bear the corresponding risks, including but not limited to account ban, download speed limit, etc., which is none of this program's business;
