@@ -242,6 +242,23 @@ func updateObjMd5(obj model.Obj, userAgent, u string) {
 	}
 }
 
+const (
+	DefaultSliceSize int64 = 4 * utils.MB
+	VipSliceSize           = 16 * utils.MB
+	SVipSliceSize          = 32 * utils.MB
+)
+
+func (d *BaiduNetdisk) getSliceSize() int64 {
+	switch d.vipType {
+	case 1:
+		return VipSliceSize
+	case 2:
+		return SVipSliceSize
+	default:
+		return DefaultSliceSize
+	}
+}
+
 // func encodeURIComponent(str string) string {
 // 	r := url.QueryEscape(str)
 // 	r = strings.ReplaceAll(r, "+", "%20")
