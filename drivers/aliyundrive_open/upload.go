@@ -258,7 +258,7 @@ func (d *AliyundriveOpen) upload(ctx context.Context, dstDir model.Obj, stream m
 				return nil, err
 			}
 			offset += partSize
-			up(i * 100 / count)
+			up(float64(i*100) / float64(count))
 		}
 	} else {
 		log.Debugf("[aliyundrive_open] rapid upload success, file id: %s", createResp.FileId)
