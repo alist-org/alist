@@ -72,11 +72,13 @@ func (h *gcid) Write(p []byte) (n int, err error) {
 }
 
 func (h *gcid) Sum(b []byte) []byte {
-	if hashm, ok := h.hash.(encoding.BinaryMarshaler); ok {
-		if hashum, ok := h.hash.(encoding.BinaryUnmarshaler); ok {
-			tempData, _ := hashm.MarshalBinary()
-			h.hash.Write(h.hashState.Sum(nil))
-			defer hashum.UnmarshalBinary(tempData)
+	if h.offset != 0 {
+		if hashm, ok := h.hash.(encoding.BinaryMarshaler); ok {
+			if hashum, ok := h.hash.(encoding.BinaryUnmarshaler); ok {
+				tempData, _ := hashm.MarshalBinary()
+				defer hashum.UnmarshalBinary(tempData)
+				h.hash.Write(h.hashState.Sum(nil))
+			}
 		}
 	}
 	return h.hash.Sum(b)

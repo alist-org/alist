@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"github.com/alist-org/alist/v3/pkg/http_range"
 	"io"
 	"math"
 	"net/http"
@@ -16,6 +15,7 @@ import (
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/pkg/http_range"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/avast/retry-go"
 	"github.com/go-resty/resty/v2"
@@ -258,6 +258,7 @@ func (d *AliyundriveOpen) upload(ctx context.Context, dstDir model.Obj, stream m
 				return nil, err
 			}
 			offset += partSize
+			up(i * 100 / count)
 		}
 	} else {
 		log.Debugf("[aliyundrive_open] rapid upload success, file id: %s", createResp.FileId)

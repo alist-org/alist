@@ -27,9 +27,8 @@ type BaiduNetdisk struct {
 	Addition
 
 	uploadThread int
+	vipType      int // 会员类型，0普通用户(4G/4M)、1普通会员(10G/16M)、2超级会员(20G/32M)
 }
-
-const DefaultSliceSize int64 = 4 * utils.MB
 
 func (d *BaiduNetdisk) Config() driver.Config {
 	return config
@@ -53,7 +52,11 @@ func (d *BaiduNetdisk) Init(ctx context.Context) error {
 		"method": "uinfo",
 	}, nil)
 	log.Debugf("[baidu] get uinfo: %s", string(res))
-	return err
+	if err != nil {
+		return err
+	}
+	d.vipType = utils.Json.Get(res, "vip_type").ToInt()
+	return nil
 }
 
 func (d *BaiduNetdisk) Drop(ctx context.Context) error {
@@ -177,17 +180,18 @@ func (d *BaiduNetdisk) Put(ctx context.Context, dstDir model.Obj, stream model.F
 	}
 
 	streamSize := stream.GetSize()
-	count := int(math.Max(math.Ceil(float64(streamSize)/float64(DefaultSliceSize)), 1))
-	lastBlockSize := streamSize % DefaultSliceSize
+	sliceSize := d.getSliceSize()
+	count := int(math.Max(math.Ceil(float64(streamSize)/float64(sliceSize)), 1))
+	lastBlockSize := streamSize % sliceSize
 	if streamSize > 0 && lastBlockSize == 0 {
-		lastBlockSize = DefaultSliceSize
+		lastBlockSize = sliceSize
 	}
 
 	//cal md5 for first 256k data
 	const SliceSize int64 = 256 * 1024
 	// cal md5
 	blockList := make([]string, 0, count)
-	byteSize := DefaultSliceSize
+	byteSize := sliceSize
 	fileMd5H := md5.New()
 	sliceMd5H := md5.New()
 	sliceMd5H2 := md5.New()
@@ -257,7 +261,7 @@ func (d *BaiduNetdisk) Put(ctx context.Context, dstDir model.Obj, stream model.F
 			break
 		}
 
-		i, partseq, offset, byteSize := i, partseq, int64(partseq)*DefaultSliceSize, DefaultSliceSize
+		i, partseq, offset, byteSize := i, partseq, int64(partseq)*sliceSize, sliceSize
 		if partseq+1 == count {
 			byteSize = lastBlockSize
 		}
