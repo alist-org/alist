@@ -78,6 +78,10 @@ var settingItemHooks = map[string]SettingItemHook{
 		log.Debugf("filename char mapping: %+v", conf.FilenameCharMap)
 		return nil
 	},
+	conf.IgnoreDirectLinkParams: func(item *model.SettingItem) error {
+		conf.SlicesMap[conf.IgnoreDirectLinkParams] = strings.Split(item.Value, ",")
+		return nil
+	},
 }
 
 func RegisterSettingItemHook(key string, hook SettingItemHook) {

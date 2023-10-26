@@ -41,6 +41,7 @@ const (
 	OcrApi                  = "ocr_api"
 	FilenameCharMapping     = "filename_char_mapping"
 	ForwardDirectLinkParams = "forward_direct_link_params"
+	IgnoreDirectLinkParams  = "ignore_direct_link_params"
 	WebauthnLoginEnabled    = "webauthn_login_enabled"
 
 	// index
