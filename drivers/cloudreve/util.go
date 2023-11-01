@@ -151,6 +151,9 @@ func convertSrc(obj model.Obj) map[string]interface{} {
 }
 
 func (d *Cloudreve) GetThumb(file Object) (model.Thumbnail, error) {
+	if !d.Addition.EnableThumbAndFolderSize {
+		return model.Thumbnail{}, nil
+	}
 	ua := d.CustomUA
 	if ua == "" {
 		ua = base.UserAgent
