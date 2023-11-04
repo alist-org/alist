@@ -63,15 +63,25 @@ func (d *Pan115) Link(ctx context.Context, file model.Obj, args model.LinkArgs) 
 	if err := d.WaitLimit(ctx); err != nil {
 		return nil, err
 	}
+	link := &model.Link{}
+	// 如果设置了直链分享码, 并且开启web代理，则使用直链下载，否则使用代理下载。
+	if len(d.ShareCode) > 0 && len(d.ReceiveCode) > 0 && !d.WebProxy {
+		downloadInfo, err := d.client.DownloadByShareCode(d.ShareCode, d.ReceiveCode, file.GetID())
+		if err != nil {
+			return nil, err
+		}
+		link.URL = downloadInfo.URL.URL
+		return link, nil
+	}
+
+	// 未配置直链分享码，或者配置了直链分享码但是设置了OnlyProxy，使用代理下载
 	downloadInfo, err := d.client.
 		DownloadWithUA(file.(*FileObj).PickCode, driver115.UA115Browser)
 	if err != nil {
 		return nil, err
 	}
-	link := &model.Link{
-		URL:    downloadInfo.Url.Url,
-		Header: downloadInfo.Header,
-	}
+	link.Header = downloadInfo.Header
+	link.URL = downloadInfo.Url.Url
 	return link, nil
 }
 
@@ -178,7 +188,6 @@ func (d *Pan115) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 	}
 	// 分片上传
 	return d.UploadByMultipart(&fastInfo.UploadOSSParams, stream.GetSize(), stream, dirID)
-
 }
 
 var _ driver.Driver = (*Pan115)(nil)

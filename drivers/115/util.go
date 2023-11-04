@@ -5,11 +5,6 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/pkg/http_range"
-	"github.com/alist-org/alist/v3/pkg/utils"
-	"github.com/aliyun/aliyun-oss-go-sdk/oss"
-	"github.com/orzogc/fake115uploader/cipher"
 	"io"
 	"net/url"
 	"path/filepath"
@@ -18,26 +13,31 @@ import (
 	"sync"
 	"time"
 
-	"github.com/SheltonZhu/115driver/pkg/driver"
+	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/pkg/http_range"
+	"github.com/alist-org/alist/v3/pkg/utils"
+	"github.com/aliyun/aliyun-oss-go-sdk/oss"
+	"github.com/orzogc/fake115uploader/cipher"
+
 	driver115 "github.com/SheltonZhu/115driver/pkg/driver"
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/pkg/errors"
 )
 
-var UserAgent = driver.UA115Desktop
+var UserAgent = driver115.UA115Desktop
 
 func (d *Pan115) login() error {
 	var err error
-	opts := []driver.Option{
-		driver.UA(UserAgent),
-		func(c *driver.Pan115Client) {
+	opts := []driver115.Option{
+		driver115.UA(UserAgent),
+		func(c *driver115.Pan115Client) {
 			c.Client.SetTLSClientConfig(&tls.Config{InsecureSkipVerify: conf.Conf.TlsInsecureSkipVerify})
 		},
 	}
-	d.client = driver.New(opts...)
-	cr := &driver.Credential{}
+	d.client = driver115.New(opts...)
+	cr := &driver115.Credential{}
 	if d.Addition.QRCodeToken != "" {
-		s := &driver.QRCodeSession{
+		s := &driver115.QRCodeSession{
 			UID: d.Addition.QRCodeToken,
 		}
 		if cr, err = d.client.QRCodeLogin(s); err != nil {
@@ -59,7 +59,7 @@ func (d *Pan115) login() error {
 func (d *Pan115) getFiles(fileId string) ([]FileObj, error) {
 	res := make([]FileObj, 0)
 	if d.PageSize <= 0 {
-		d.PageSize = driver.FileListLimit
+		d.PageSize = driver115.FileListLimit
 	}
 	files, err := d.client.ListWithLimit(fileId, d.PageSize)
 	if err != nil {
@@ -168,6 +168,9 @@ func UploadDigestRange(stream model.FileStreamer, rangeSpec string) (result stri
 
 	length := end - start + 1
 	reader, err := stream.RangeRead(http_range.Range{Start: start, Length: length})
+	if err != nil {
+		return "", err
+	}
 	hashStr, err := utils.HashReader(utils.SHA1, reader)
 	if err != nil {
 		return "", err
@@ -249,7 +252,7 @@ func (d *Pan115) UploadByMultipart(params *driver115.UploadOSSParams, fileSize i
 		go func(threadId int) {
 			defer func() {
 				if r := recover(); r != nil {
-					errCh <- fmt.Errorf("Recovered in %v", r)
+					errCh <- fmt.Errorf("recovered in %v", r)
 				}
 			}()
 			for chunk := range chunksCh {
@@ -313,11 +316,13 @@ LOOP:
 	}
 	return d.checkUploadStatus(dirID, params.SHA1)
 }
+
 func chunksProducer(ch chan oss.FileChunk, chunks []oss.FileChunk) {
 	for _, chunk := range chunks {
 		ch <- chunk
 	}
 }
+
 func (d *Pan115) checkUploadStatus(dirID, sha1 string) error {
 	// 验证上传是否成功
 	req := d.client.NewRequest().ForceContentType("application/json;charset=UTF-8")
@@ -374,8 +379,8 @@ func SplitFileByPartNum(fileSize int64, chunkNum int) ([]oss.FileChunk, error) {
 	}
 
 	var chunks []oss.FileChunk
-	var chunk = oss.FileChunk{}
-	var chunkN = (int64)(chunkNum)
+	chunk := oss.FileChunk{}
+	chunkN := (int64)(chunkNum)
 	for i := int64(0); i < chunkN; i++ {
 		chunk.Number = int(i + 1)
 		chunk.Offset = i * (fileSize / chunkN)
@@ -397,13 +402,13 @@ func SplitFileByPartSize(fileSize int64, chunkSize int64) ([]oss.FileChunk, erro
 		return nil, errors.New("chunkSize invalid")
 	}
 
-	var chunkN = fileSize / chunkSize
+	chunkN := fileSize / chunkSize
 	if chunkN >= 10000 {
 		return nil, errors.New("Too many parts, please increase part size")
 	}
 
 	var chunks []oss.FileChunk
-	var chunk = oss.FileChunk{}
+	chunk := oss.FileChunk{}
 	for i := int64(0); i < chunkN; i++ {
 		chunk.Number = int(i + 1)
 		chunk.Offset = i * chunkSize
