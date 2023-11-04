@@ -53,6 +53,14 @@ func (d *Cloudreve) List(ctx context.Context, dir model.Obj, args model.ListArgs
 		if err != nil {
 			return nil, err
 		}
+		if src.Type == "dir" && d.EnableThumbAndFolderSize {
+			var dprop DirectoryProp
+			err = d.request(http.MethodGet, "/object/property/"+src.Id+"?is_folder=true", nil, &dprop)
+			if err != nil {
+				return nil, err
+			}
+			src.Size = dprop.Size
+		}
 		return objectToObj(src, thumb), nil
 	})
 }
