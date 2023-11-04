@@ -36,17 +36,17 @@ func (d *Pan115) login() error {
 	}
 	d.client = driver115.New(opts...)
 	cr := &driver115.Credential{}
-	if d.Addition.QRCodeToken != "" {
+	if d.QRCodeToken != "" {
 		s := &driver115.QRCodeSession{
-			UID: d.Addition.QRCodeToken,
+			UID: d.QRCodeToken,
 		}
 		if cr, err = d.client.QRCodeLogin(s); err != nil {
 			return errors.Wrap(err, "failed to login by qrcode")
 		}
-		d.Addition.Cookie = fmt.Sprintf("UID=%s;CID=%s;SEID=%s", cr.UID, cr.CID, cr.SEID)
-		d.Addition.QRCodeToken = ""
-	} else if d.Addition.Cookie != "" {
-		if err = cr.FromCookie(d.Addition.Cookie); err != nil {
+		d.Cookie = fmt.Sprintf("UID=%s;CID=%s;SEID=%s", cr.UID, cr.CID, cr.SEID)
+		d.QRCodeToken = ""
+	} else if d.Cookie != "" {
+		if err = cr.FromCookie(d.Cookie); err != nil {
 			return errors.Wrap(err, "failed to login by cookies")
 		}
 		d.client.ImportCredential(cr)

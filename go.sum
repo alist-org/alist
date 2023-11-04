@@ -8,8 +8,8 @@ github.com/Max-Sum/base32768 v0.0.0-20230304063302-18e6ce5945fd h1:nzE1YQBdx1bq9
 github.com/Max-Sum/base32768 v0.0.0-20230304063302-18e6ce5945fd/go.mod h1:C8yoIfvESpM3GD07OCHU7fqI7lhwyZ2Td1rbNbTAhnc=
 github.com/RoaringBitmap/roaring v1.2.3 h1:yqreLINqIrX22ErkKI0vY47/ivtJr6n+kMhVOVmhWBY=
 github.com/RoaringBitmap/roaring v1.2.3/go.mod h1:plvDsJQpxOC5bw8LRteu/MLWHsHez/3y6cubLI4/1yE=
-github.com/SheltonZhu/115driver v1.0.18 h1:do5Z/EBguhnZ9sNdLhov3mUXAej/+ji6HJf8+yTM4zI=
-github.com/SheltonZhu/115driver v1.0.18/go.mod h1:e3fPOBANbH/FsTya8FquJwOR3ErhCQgEab3q6CVY2k4=
+github.com/SheltonZhu/115driver v1.0.20 h1:JNNsyVrJ54K4iAejYgmdFKqxFnwx/MicMTmRWHZJ/HE=
+github.com/SheltonZhu/115driver v1.0.20/go.mod h1:e3fPOBANbH/FsTya8FquJwOR3ErhCQgEab3q6CVY2k4=
 github.com/Unknwon/goconfig v1.0.0 h1:9IAu/BYbSLQi8puFjUQApZTxIHqSwrj5d8vpP8vTq4A=
 github.com/Xhofe/go-cache v0.0.0-20220723083548-714439c8af9a h1:RenIAa2q4H8UcS/cqmwdT1WCWIAH5aumP8m8RpbqVsE=
 github.com/Xhofe/go-cache v0.0.0-20220723083548-714439c8af9a/go.mod h1:sSBbaOg90XwWKtpT56kVujF0bIeVITnPlssLclogS04=
