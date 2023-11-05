@@ -52,7 +52,9 @@ func Down(c *gin.Context) {
 		c.Header("Cache-Control", "max-age=0, no-cache, no-store, must-revalidate")
 		if setting.GetBool(conf.ForwardDirectLinkParams) {
 			query := c.Request.URL.Query()
-			query.Del("sign")
+			for _, v := range conf.SlicesMap[conf.IgnoreDirectLinkParams] {
+				query.Del(v)
+			}
 			link.URL, err = utils.InjectQuery(link.URL, query)
 			if err != nil {
 				common.ErrorResp(c, err, 500)
@@ -95,7 +97,9 @@ func Proxy(c *gin.Context) {
 		}
 		if link.URL != "" && setting.GetBool(conf.ForwardDirectLinkParams) {
 			query := c.Request.URL.Query()
-			query.Del("sign")
+			for _, v := range conf.SlicesMap[conf.IgnoreDirectLinkParams] {
+				query.Del(v)
+			}
 			link.URL, err = utils.InjectQuery(link.URL, query)
 			if err != nil {
 				common.ErrorResp(c, err, 500)
