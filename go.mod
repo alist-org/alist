@@ -21,7 +21,7 @@ require (
 	github.com/djherbis/times v1.5.0
 	github.com/dustinxie/ecc v0.0.0-20210511000915-959544187564
 	github.com/foxxorcat/mopan-sdk-go v0.1.4
-	github.com/foxxorcat/weiyun-sdk-go v0.1.2
+	github.com/foxxorcat/weiyun-sdk-go v0.1.3
 	github.com/gin-contrib/cors v1.4.0
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-resty/resty/v2 v2.9.1
