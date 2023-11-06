@@ -18,26 +18,25 @@ import (
 	"sync"
 	"time"
 
-	"github.com/SheltonZhu/115driver/pkg/driver"
 	driver115 "github.com/SheltonZhu/115driver/pkg/driver"
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/pkg/errors"
 )
 
-var UserAgent = driver.UA115Desktop
+var UserAgent = driver115.UA115Desktop
 
 func (d *Pan115) login() error {
 	var err error
-	opts := []driver.Option{
-		driver.UA(UserAgent),
-		func(c *driver.Pan115Client) {
+	opts := []driver115.Option{
+		driver115.UA(UserAgent),
+		func(c *driver115.Pan115Client) {
 			c.Client.SetTLSClientConfig(&tls.Config{InsecureSkipVerify: conf.Conf.TlsInsecureSkipVerify})
 		},
 	}
-	d.client = driver.New(opts...)
-	cr := &driver.Credential{}
+	d.client = driver115.New(opts...)
+	cr := &driver115.Credential{}
 	if d.Addition.QRCodeToken != "" {
-		s := &driver.QRCodeSession{
+		s := &driver115.QRCodeSession{
 			UID: d.Addition.QRCodeToken,
 		}
 		if cr, err = d.client.QRCodeLogin(s); err != nil {
@@ -59,7 +58,7 @@ func (d *Pan115) login() error {
 func (d *Pan115) getFiles(fileId string) ([]FileObj, error) {
 	res := make([]FileObj, 0)
 	if d.PageSize <= 0 {
-		d.PageSize = driver.FileListLimit
+		d.PageSize = driver115.FileListLimit
 	}
 	files, err := d.client.ListWithLimit(fileId, d.PageSize)
 	if err != nil {
@@ -249,7 +248,7 @@ func (d *Pan115) UploadByMultipart(params *driver115.UploadOSSParams, fileSize i
 		go func(threadId int) {
 			defer func() {
 				if r := recover(); r != nil {
-					errCh <- fmt.Errorf("Recovered in %v", r)
+					errCh <- fmt.Errorf("recovered in %v", r)
 				}
 			}()
 			for chunk := range chunksCh {
