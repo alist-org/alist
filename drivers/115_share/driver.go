@@ -31,7 +31,6 @@ func (d *Pan115Share) Init(ctx context.Context) error {
 		d.limiter = rate.NewLimiter(rate.Limit(d.LimitRate), 1)
 	}
 
-	d.client = driver115.New(driver115.WithDebug())
 	return d.login()
 }
 
