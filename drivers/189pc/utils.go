@@ -513,7 +513,7 @@ func (y *Cloud189PC) StreamUpload(ctx context.Context, dstDir model.Obj, file mo
 			if err != nil {
 				return err
 			}
-			up(int(threadG.Success()) * 100 / count)
+			up(float64(threadG.Success()) * 100 / float64(count))
 			return nil
 		})
 	}
@@ -676,7 +676,7 @@ func (y *Cloud189PC) FastUpload(ctx context.Context, dstDir model.Obj, file mode
 					return err
 				}
 
-				up(int(threadG.Success()) * 100 / len(uploadUrls))
+				up(float64(threadG.Success()) * 100 / float64(len(uploadUrls)))
 				uploadProgress.UploadParts[i] = ""
 				return nil
 			})
@@ -812,7 +812,7 @@ func (y *Cloud189PC) OldUpload(ctx context.Context, dstDir model.Obj, file model
 		if _, err := tempFile.Seek(status.GetSize(), io.SeekStart); err != nil {
 			return nil, err
 		}
-		up(int(status.GetSize()/file.GetSize()) * 100)
+		up(float64(status.GetSize()) / float64(file.GetSize()) * 100)
 	}
 
 	return y.OldUploadCommit(ctx, status.FileCommitUrl, status.UploadFileId)

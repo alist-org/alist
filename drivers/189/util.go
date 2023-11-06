@@ -380,7 +380,7 @@ func (d *Cloud189) newUpload(ctx context.Context, dstDir model.Obj, file model.F
 		if err != nil {
 			return err
 		}
-		up(int(i * 100 / count))
+		up(float64(i) * 100 / float64(count))
 	}
 	fileMd5 := hex.EncodeToString(md5Sum.Sum(nil))
 	sliceMd5 := fileMd5

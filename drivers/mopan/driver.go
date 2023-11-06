@@ -308,7 +308,7 @@ func (d *MoPan) Put(ctx context.Context, dstDir model.Obj, stream model.FileStre
 				if resp.StatusCode != http.StatusOK {
 					return fmt.Errorf("upload err,code=%d", resp.StatusCode)
 				}
-				up(100 * int(threadG.Success()) / len(parts))
+				up(100 * float64(threadG.Success()) / float64(len(parts)))
 				initUpdload.PartInfos[i] = ""
 				return nil
 			})

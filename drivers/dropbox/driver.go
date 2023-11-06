@@ -203,7 +203,7 @@ func (d *Dropbox) Put(ctx context.Context, dstDir model.Obj, stream model.FileSt
 		_ = res.Body.Close()
 
 		if count > 0 {
-			up((i + 1) * 100 / count)
+			up(float64(i+1) * 100 / float64(count))
 		}
 
 		offset += byteSize

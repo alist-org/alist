@@ -1,19 +1,16 @@
-package aria2
+package tool
 
 import (
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
-	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
 
-	"github.com/alist-org/alist/v3/internal/stream"
-
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/op"
+	"github.com/alist-org/alist/v3/internal/stream"
 	"github.com/alist-org/alist/v3/pkg/task"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
@@ -21,23 +18,17 @@ import (
 )
 
 type Monitor struct {
+	tool       Tool
 	tsk        *task.Task[string]
 	tempDir    string
 	retried    int
-	c          chan int
 	dstDirPath string
 	finish     chan struct{}
+	signal     chan int
 }
 
 func (m *Monitor) Loop() error {
-	defer func() {
-		notify.Signals.Delete(m.tsk.ID)
-		// clear temp dir, should do while complete
-		//_ = os.RemoveAll(m.tempDir)
-	}()
-	m.c = make(chan int)
 	m.finish = make(chan struct{})
-	notify.Signals.Store(m.tsk.ID, m.c)
 	var (
 		err error
 		ok  bool
@@ -46,9 +37,9 @@ outer:
 	for {
 		select {
 		case <-m.tsk.Ctx.Done():
-			_, err := client.Remove(m.tsk.ID)
+			err := m.tool.Remove(m.tsk.ID)
 			return err
-		case <-m.c:
+		case <-m.signal:
 			ok, err = m.Update()
 			if ok {
 				break outer
@@ -69,8 +60,9 @@ outer:
 	return nil
 }
 
+// Update download status, return true if download completed
 func (m *Monitor) Update() (bool, error) {
-	info, err := client.TellStatus(m.tsk.ID)
+	info, err := m.tool.Status(m.tsk.ID)
 	if err != nil {
 		m.retried++
 		log.Errorf("failed to get status of %s, retried %d times", m.tsk.ID, m.retried)
@@ -80,49 +72,25 @@ func (m *Monitor) Update() (bool, error) {
 		return true, errors.Errorf("failed to get status of %s, retried %d times", m.tsk.ID, m.retried)
 	}
 	m.retried = 0
-	if len(info.FollowedBy) != 0 {
-		log.Debugf("followen by: %+v", info.FollowedBy)
-		gid := info.FollowedBy[0]
-		notify.Signals.Delete(m.tsk.ID)
-		oldId := m.tsk.ID
-		m.tsk.ID = gid
-		DownTaskManager.RawTasks().Delete(oldId)
+	m.tsk.SetProgress(info.Progress)
+	m.tsk.SetStatus("tool: " + info.Status)
+	if info.NewTID != "" {
+		log.Debugf("followen by: %+v", info.NewTID)
+		DownTaskManager.RawTasks().Delete(m.tsk.ID)
+		m.tsk.ID = info.NewTID
 		DownTaskManager.RawTasks().Store(m.tsk.ID, m.tsk)
-		notify.Signals.Store(gid, m.c)
 		return false, nil
 	}
-	// update download status
-	total, err := strconv.ParseUint(info.TotalLength, 10, 64)
-	if err != nil {
-		total = 0
-	}
-	downloaded, err := strconv.ParseUint(info.CompletedLength, 10, 64)
-	if err != nil {
-		downloaded = 0
-	}
-	progress := float64(downloaded) / float64(total) * 100
-	m.tsk.SetProgress(progress)
-	switch info.Status {
-	case "complete":
+	// if download completed
+	if info.Completed {
 		err := m.Complete()
 		return true, errors.WithMessage(err, "failed to transfer file")
-	case "error":
-		return true, errors.Errorf("failed to download %s, error: %s", m.tsk.ID, info.ErrorMessage)
-	case "active":
-		m.tsk.SetStatus("aria2: " + info.Status)
-		if info.Seeder == "true" {
-			err := m.Complete()
-			return true, errors.WithMessage(err, "failed to transfer file")
-		}
-		return false, nil
-	case "waiting", "paused":
-		m.tsk.SetStatus("aria2: " + info.Status)
-		return false, nil
-	case "removed":
-		return true, errors.Errorf("failed to download %s, removed", m.tsk.ID)
-	default:
-		return true, errors.Errorf("failed to download %s, unknown status %s", m.tsk.ID, info.Status)
 	}
+	// if download failed
+	if info.Err != nil {
+		return true, errors.Errorf("failed to download %s, error: %s", m.tsk.ID, info.Err.Error())
+	}
+	return false, nil
 }
 
 var TransferTaskManager = task.NewTaskManager(3, func(k *uint64) {
@@ -135,11 +103,14 @@ func (m *Monitor) Complete() error {
 	if err != nil {
 		return errors.WithMessage(err, "failed get storage")
 	}
-	// get files
-	files, err := client.GetFiles(m.tsk.ID)
-	log.Debugf("files len: %d", len(files))
-	if err != nil {
-		return errors.Wrapf(err, "failed to get files of %s", m.tsk.ID)
+	var files []File
+	if f := m.tool.GetFiles(m.tsk.ID); f != nil {
+		files = f
+	} else {
+		files, err = GetFiles(m.tempDir)
+		if err != nil {
+			return errors.Wrapf(err, "failed to get files")
+		}
 	}
 	// upload files
 	var wg sync.WaitGroup
@@ -158,33 +129,29 @@ func (m *Monitor) Complete() error {
 			Name: fmt.Sprintf("transfer %s to [%s](%s)", file.Path, storage.GetStorage().MountPath, dstDirActualPath),
 			Func: func(tsk *task.Task[uint64]) error {
 				defer wg.Done()
-				size, _ := strconv.ParseInt(file.Length, 10, 64)
 				mimetype := utils.GetMimeType(file.Path)
-				f, err := os.Open(file.Path)
+				rc, err := file.GetReadCloser()
 				if err != nil {
 					return errors.Wrapf(err, "failed to open file %s", file.Path)
 				}
-				s := stream.FileStream{
+				s := &stream.FileStream{
+					Ctx: nil,
 					Obj: &model.Object{
-						Name:     path.Base(file.Path),
-						Size:     size,
-						Modified: time.Now(),
+						Name:     filepath.Base(file.Path),
+						Size:     file.Size,
+						Modified: file.Modified,
 						IsFolder: false,
 					},
-					Reader:   f,
-					Closers:  utils.NewClosers(f),
+					Reader:   rc,
 					Mimetype: mimetype,
-				}
-				ss, err := stream.NewSeekableStream(s, nil)
-				if err != nil {
-					return err
+					Closers:  utils.NewClosers(rc),
 				}
 				relDir, err := filepath.Rel(m.tempDir, filepath.Dir(file.Path))
 				if err != nil {
 					log.Errorf("find relation directory error: %v", err)
 				}
 				newDistDir := filepath.Join(dstDirActualPath, relDir)
-				return op.Put(tsk.Ctx, storage, newDistDir, ss, tsk.SetProgress)
+				return op.Put(tsk.Ctx, storage, newDistDir, s, tsk.SetProgress)
 			},
 		}))
 	}

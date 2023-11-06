@@ -189,7 +189,7 @@ func (d *Teambition) chunkUpload(ctx context.Context, file model.FileStreamer, t
 		if err != nil {
 			return nil, err
 		}
-		up(i * 100 / newChunk.Chunks)
+		up(float64(i) * 100 / float64(newChunk.Chunks))
 	}
 	_, err = base.RestyClient.R().SetHeader("Authorization", token).Post(
 		fmt.Sprintf("https://%s.teambition.net/upload/chunk/%s",

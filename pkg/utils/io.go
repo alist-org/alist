@@ -5,9 +5,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"golang.org/x/exp/constraints"
 	"io"
 	"time"
+
+	"golang.org/x/exp/constraints"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -21,7 +22,7 @@ func (rf readerFunc) Read(p []byte) (n int, err error) { return rf(p) }
 // CopyWithCtx slightly modified function signature:
 // - context has been added in order to propagate cancellation
 // - I do not return the number of bytes written, has it is not useful in my use case
-func CopyWithCtx(ctx context.Context, out io.Writer, in io.Reader, size int64, progress func(percentage int)) error {
+func CopyWithCtx(ctx context.Context, out io.Writer, in io.Reader, size int64, progress func(percentage float64)) error {
 	// Copy will call the Reader and Writer interface multiple time, in order
 	// to copy by chunk (avoiding loading the whole file in memory).
 	// I insert the ability to cancel before read time as it is the earliest
@@ -40,7 +41,7 @@ func CopyWithCtx(ctx context.Context, out io.Writer, in io.Reader, size int64, p
 			n, err := in.Read(p)
 			if s > 0 && (err == nil || err == io.EOF) {
 				finish += int64(n)
-				progress(int(finish / s))
+				progress(float64(finish) / float64(s))
 			}
 			return n, err
 		}

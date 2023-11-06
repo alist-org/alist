@@ -203,7 +203,7 @@ func (d *Onedrive) upBig(ctx context.Context, dstDir model.Obj, stream model.Fil
 			return errors.New(string(data))
 		}
 		res.Body.Close()
-		up(int(finish * 100 / stream.GetSize()))
+		up(float64(finish) * 100 / float64(stream.GetSize()))
 	}
 	return nil
 }

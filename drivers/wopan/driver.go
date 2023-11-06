@@ -159,7 +159,7 @@ func (d *Wopan) Put(ctx context.Context, dstDir model.Obj, stream model.FileStre
 		ContentType: stream.GetMimetype(),
 	}, dstDir.GetID(), d.FamilyID, wopan.Upload2COption{
 		OnProgress: func(current, total int64) {
-			up(int(100 * current / total))
+			up(100 * float64(current) / float64(total))
 		},
 	})
 	return err

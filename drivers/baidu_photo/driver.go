@@ -329,7 +329,7 @@ func (d *BaiduPhoto) Put(ctx context.Context, dstDir model.Obj, stream model.Fil
 				if err != nil {
 					return err
 				}
-				up(int(threadG.Success()) * 100 / len(precreateResp.BlockList))
+				up(float64(threadG.Success()) * 100 / float64(len(precreateResp.BlockList)))
 				precreateResp.BlockList[i] = -1
 				return nil
 			})
