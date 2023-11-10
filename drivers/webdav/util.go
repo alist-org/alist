@@ -1,6 +1,7 @@
 package webdav
 
 import (
+	"crypto/tls"
 	"net/http"
 	"net/http/cookiejar"
 
@@ -17,6 +18,10 @@ func (d *WebDav) isSharepoint() bool {
 
 func (d *WebDav) setClient() error {
 	c := gowebdav.NewClient(d.Address, d.Username, d.Password)
+	c.SetTransport(&http.Transport{
+		Proxy:           http.ProxyFromEnvironment,
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: d.TlsInsecureSkipVerify},
+	})
 	if d.isSharepoint() {
 		cookie, err := odrvcookie.GetCookie(d.Username, d.Password, d.Address)
 		if err == nil {
