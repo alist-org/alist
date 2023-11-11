@@ -4,9 +4,9 @@ import (
 	"context"
 
 	driver115 "github.com/SheltonZhu/115driver/pkg/driver"
-	"github.com/alist-org/alist/v3/internal/driver"
-	"github.com/alist-org/alist/v3/internal/errs"
-	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal2/driver"
+	"github.com/alist-org/alist/v3/internal2/errs"
+	"github.com/alist-org/alist/v3/internal2/model"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"golang.org/x/time/rate"
 )

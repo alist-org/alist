@@ -10,10 +10,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/alist-org/alist/v3/internal/stream"
+	"github.com/alist-org/alist/v3/internal2/stream"
 
-	"github.com/alist-org/alist/v3/internal/driver"
-	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal2/driver"
+	"github.com/alist-org/alist/v3/internal2/model"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"

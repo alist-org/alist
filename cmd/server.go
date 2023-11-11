@@ -13,8 +13,8 @@ import (
 	"time"
 
 	"github.com/alist-org/alist/v3/cmd/flags"
-	"github.com/alist-org/alist/v3/internal/bootstrap"
-	"github.com/alist-org/alist/v3/internal/conf"
+	"github.com/alist-org/alist/v3/internal2/bootstrap"
+	"github.com/alist-org/alist/v3/internal2/conf"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/server"
 	"github.com/gin-gonic/gin"

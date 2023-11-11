@@ -2,7 +2,7 @@ package template
 
 import (
 	"github.com/Xhofe/wopan-sdk-go"
-	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal2/model"
 )
 
 type Object struct {

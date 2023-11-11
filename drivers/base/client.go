@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/alist-org/alist/v3/internal/conf"
+	"github.com/alist-org/alist/v3/internal2/conf"
 	"github.com/go-resty/resty/v2"
 )
 

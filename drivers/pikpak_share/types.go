@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal2/model"
 )
 
 type RespErr struct {
@@ -13,8 +13,8 @@ type RespErr struct {
 }
 
 type ShareResp struct {
-	ShareStatus		string `json:"share_status"`
-	ShareStatusText	string `json:"share_status_text"`
+	ShareStatus     string `json:"share_status"`
+	ShareStatusText string `json:"share_status_text"`
 	FileInfo        File   `json:"file_info"`
 	Files           []File `json:"files"`
 	NextPageToken   string `json:"next_page_token"`

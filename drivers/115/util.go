@@ -5,11 +5,6 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/pkg/http_range"
-	"github.com/alist-org/alist/v3/pkg/utils"
-	"github.com/aliyun/aliyun-oss-go-sdk/oss"
-	"github.com/orzogc/fake115uploader/cipher"
 	"io"
 	"net/url"
 	"path/filepath"
@@ -18,8 +13,14 @@ import (
 	"sync"
 	"time"
 
+	"github.com/alist-org/alist/v3/internal2/model"
+	"github.com/alist-org/alist/v3/pkg/http_range"
+	"github.com/alist-org/alist/v3/pkg/utils"
+	"github.com/aliyun/aliyun-oss-go-sdk/oss"
+	"github.com/orzogc/fake115uploader/cipher"
+
 	driver115 "github.com/SheltonZhu/115driver/pkg/driver"
-	"github.com/alist-org/alist/v3/internal/conf"
+	"github.com/alist-org/alist/v3/internal2/conf"
 	"github.com/pkg/errors"
 )
 

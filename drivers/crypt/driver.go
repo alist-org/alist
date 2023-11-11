@@ -3,17 +3,18 @@ package crypt
 import (
 	"context"
 	"fmt"
-	"github.com/alist-org/alist/v3/internal/stream"
 	"io"
 	stdpath "path"
 	"regexp"
 	"strings"
 
-	"github.com/alist-org/alist/v3/internal/driver"
-	"github.com/alist-org/alist/v3/internal/errs"
-	"github.com/alist-org/alist/v3/internal/fs"
-	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/internal/op"
+	"github.com/alist-org/alist/v3/internal2/stream"
+
+	"github.com/alist-org/alist/v3/internal2/driver"
+	"github.com/alist-org/alist/v3/internal2/errs"
+	"github.com/alist-org/alist/v3/internal2/fs"
+	"github.com/alist-org/alist/v3/internal2/model"
+	"github.com/alist-org/alist/v3/internal2/op"
 	"github.com/alist-org/alist/v3/pkg/http_range"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/server/common"
@@ -154,7 +155,7 @@ func (d *Crypt) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([
 				// discarding hash as it's encrypted
 			}
 			if d.Thumbnail && thumb == "" {
-				thumb = utils.EncodePath(common.GetApiUrl(nil) + stdpath.Join("/d", args.ReqPath, ".thumbnails", name+".webp"), true)
+				thumb = utils.EncodePath(common.GetApiUrl(nil)+stdpath.Join("/d", args.ReqPath, ".thumbnails", name+".webp"), true)
 			}
 			if !ok && !d.Thumbnail {
 				result = append(result, &objRes)

@@ -1,8 +1,8 @@
 package uss
 
 import (
-	"github.com/alist-org/alist/v3/internal/driver"
-	"github.com/alist-org/alist/v3/internal/op"
+	"github.com/alist-org/alist/v3/internal2/driver"
+	"github.com/alist-org/alist/v3/internal2/op"
 )
 
 type Addition struct {

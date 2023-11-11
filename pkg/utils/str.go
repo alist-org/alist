@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 	"strings"
 
-	"github.com/alist-org/alist/v3/internal/conf"
+	"github.com/alist-org/alist/v3/internal2/conf"
 )
 
 func MappingName(name string) string {

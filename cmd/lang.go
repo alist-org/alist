@@ -12,9 +12,9 @@ import (
 	"strings"
 
 	_ "github.com/alist-org/alist/v3/drivers"
-	"github.com/alist-org/alist/v3/internal/bootstrap/data"
-	"github.com/alist-org/alist/v3/internal/conf"
-	"github.com/alist-org/alist/v3/internal/op"
+	"github.com/alist-org/alist/v3/internal2/bootstrap/data"
+	"github.com/alist-org/alist/v3/internal2/conf"
+	"github.com/alist-org/alist/v3/internal2/op"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"

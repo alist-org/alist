@@ -3,9 +3,9 @@ package handles
 import (
 	"strconv"
 
-	"github.com/alist-org/alist/v3/internal/fs"
-	"github.com/alist-org/alist/v3/internal/offline_download/tool"
-	"github.com/alist-org/alist/v3/internal/qbittorrent"
+	"github.com/alist-org/alist/v3/internal2/fs"
+	"github.com/alist-org/alist/v3/internal2/offline_download/tool"
+	"github.com/alist-org/alist/v3/internal2/qbittorrent"
 	"github.com/alist-org/alist/v3/pkg/task"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"

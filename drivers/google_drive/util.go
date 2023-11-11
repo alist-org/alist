@@ -15,7 +15,7 @@ import (
 	"github.com/alist-org/alist/v3/pkg/http_range"
 
 	"github.com/alist-org/alist/v3/drivers/base"
-	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal2/model"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/go-resty/resty/v2"
 	"github.com/golang-jwt/jwt/v4"

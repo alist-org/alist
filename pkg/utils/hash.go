@@ -11,7 +11,7 @@ import (
 	"hash"
 	"io"
 
-	"github.com/alist-org/alist/v3/internal/errs"
+	"github.com/alist-org/alist/v3/internal2/errs"
 	log "github.com/sirupsen/logrus"
 )
 

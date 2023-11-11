@@ -7,7 +7,7 @@ import (
 	"strconv"
 
 	"github.com/alist-org/alist/v3/drivers/base"
-	"github.com/alist-org/alist/v3/internal/op"
+	"github.com/alist-org/alist/v3/internal2/op"
 	"github.com/go-resty/resty/v2"
 )
 

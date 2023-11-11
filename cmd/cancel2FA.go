@@ -4,7 +4,7 @@ Copyright © 2022 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"github.com/alist-org/alist/v3/internal/op"
+	"github.com/alist-org/alist/v3/internal2/op"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/spf13/cobra"
 )

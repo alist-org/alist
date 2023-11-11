@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal2/model"
 )
 
 type TokenError struct {
@@ -26,7 +26,7 @@ type MediaItem struct {
 	CoverPhotoBaseUrl string        `json:"coverPhotoBaseUrl,omitempty"`
 	MimeType          string        `json:"mimeType,omitempty"`
 	FileName          string        `json:"filename,omitempty"`
-	MediaMetadata MediaMetadata     `json:"mediaMetadata,omitempty"`
+	MediaMetadata     MediaMetadata `json:"mediaMetadata,omitempty"`
 }
 
 type MediaMetadata struct {
@@ -44,7 +44,7 @@ type Video struct {
 }
 
 func fileToObj(f MediaItem) *model.ObjThumb {
-	if !reflect.DeepEqual(f.MediaMetadata, MediaMetadata{}){
+	if !reflect.DeepEqual(f.MediaMetadata, MediaMetadata{}) {
 		return &model.ObjThumb{
 			Object: model.Object{
 				ID:       f.Id,

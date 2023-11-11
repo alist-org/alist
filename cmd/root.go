@@ -6,7 +6,7 @@ import (
 
 	"github.com/alist-org/alist/v3/cmd/flags"
 	_ "github.com/alist-org/alist/v3/drivers"
-	_ "github.com/alist-org/alist/v3/internal/offline_download"
+	_ "github.com/alist-org/alist/v3/internal2/offline_download"
 	"github.com/spf13/cobra"
 )
 

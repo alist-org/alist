@@ -6,7 +6,7 @@ import (
 
 	"github.com/alist-org/alist/v3/pkg/utils"
 
-	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal2/model"
 )
 
 type TokenErrResp struct {

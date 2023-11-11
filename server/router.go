@@ -2,8 +2,8 @@ package server
 
 import (
 	"github.com/alist-org/alist/v3/cmd/flags"
-	"github.com/alist-org/alist/v3/internal/conf"
-	"github.com/alist-org/alist/v3/internal/message"
+	"github.com/alist-org/alist/v3/internal2/conf"
+	"github.com/alist-org/alist/v3/internal2/message"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/alist-org/alist/v3/server/handles"

@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/alist-org/alist/v3/internal/conf"
+	"github.com/alist-org/alist/v3/internal2/conf"
 )
 
 func TestHidePrivacy(t *testing.T) {

@@ -17,12 +17,12 @@ echo "frontend version: $webVersion"
 
 ldflags="\
 -w -s \
--X 'github.com/alist-org/alist/v3/internal/conf.BuiltAt=$builtAt' \
--X 'github.com/alist-org/alist/v3/internal/conf.GoVersion=$goVersion' \
--X 'github.com/alist-org/alist/v3/internal/conf.GitAuthor=$gitAuthor' \
--X 'github.com/alist-org/alist/v3/internal/conf.GitCommit=$gitCommit' \
--X 'github.com/alist-org/alist/v3/internal/conf.Version=$version' \
--X 'github.com/alist-org/alist/v3/internal/conf.WebVersion=$webVersion' \
+-X 'github.com/alist-org/alist/v3/internal2/conf.BuiltAt=$builtAt' \
+-X 'github.com/alist-org/alist/v3/internal2/conf.GoVersion=$goVersion' \
+-X 'github.com/alist-org/alist/v3/internal2/conf.GitAuthor=$gitAuthor' \
+-X 'github.com/alist-org/alist/v3/internal2/conf.GitCommit=$gitCommit' \
+-X 'github.com/alist-org/alist/v3/internal2/conf.Version=$version' \
+-X 'github.com/alist-org/alist/v3/internal2/conf.WebVersion=$webVersion' \
 "
 
 FetchWebDev() {
@@ -131,7 +131,7 @@ BuildReleaseLinuxMuslArm() {
   mkdir -p "build"
   muslflags="--extldflags '-static -fpic' $ldflags"
   BASE="https://musl.nn.ci/"
-#  FILES=(arm-linux-musleabi-cross arm-linux-musleabihf-cross armeb-linux-musleabi-cross armeb-linux-musleabihf-cross armel-linux-musleabi-cross armel-linux-musleabihf-cross armv5l-linux-musleabi-cross armv5l-linux-musleabihf-cross armv6-linux-musleabi-cross armv6-linux-musleabihf-cross armv7l-linux-musleabihf-cross armv7m-linux-musleabi-cross armv7r-linux-musleabihf-cross)
+  #  FILES=(arm-linux-musleabi-cross arm-linux-musleabihf-cross armeb-linux-musleabi-cross armeb-linux-musleabihf-cross armel-linux-musleabi-cross armel-linux-musleabihf-cross armv5l-linux-musleabi-cross armv5l-linux-musleabihf-cross armv6-linux-musleabi-cross armv6-linux-musleabihf-cross armv7l-linux-musleabihf-cross armv7m-linux-musleabi-cross armv7r-linux-musleabihf-cross)
   FILES=(arm-linux-musleabi-cross arm-linux-musleabihf-cross armel-linux-musleabi-cross armel-linux-musleabihf-cross armv5l-linux-musleabi-cross armv5l-linux-musleabihf-cross armv6-linux-musleabi-cross armv6-linux-musleabihf-cross armv7l-linux-musleabihf-cross armv7m-linux-musleabi-cross armv7r-linux-musleabihf-cross)
   for i in "${FILES[@]}"; do
     url="${BASE}${i}.tgz"
@@ -139,9 +139,9 @@ BuildReleaseLinuxMuslArm() {
     sudo tar xf "${i}.tgz" --strip-components 1 -C /usr/local
     rm -f "${i}.tgz"
   done
-#  OS_ARCHES=(linux-musleabi-arm linux-musleabihf-arm linux-musleabi-armeb linux-musleabihf-armeb linux-musleabi-armel linux-musleabihf-armel linux-musleabi-armv5l linux-musleabihf-armv5l linux-musleabi-armv6 linux-musleabihf-armv6 linux-musleabihf-armv7l linux-musleabi-armv7m linux-musleabihf-armv7r)
-#  CGO_ARGS=(arm-linux-musleabi-gcc arm-linux-musleabihf-gcc armeb-linux-musleabi-gcc armeb-linux-musleabihf-gcc armel-linux-musleabi-gcc armel-linux-musleabihf-gcc armv5l-linux-musleabi-gcc armv5l-linux-musleabihf-gcc armv6-linux-musleabi-gcc armv6-linux-musleabihf-gcc armv7l-linux-musleabihf-gcc armv7m-linux-musleabi-gcc armv7r-linux-musleabihf-gcc)
-#  GOARMS=('' '' '' '' '' '' '5' '5' '6' '6' '7' '7' '7')
+  #  OS_ARCHES=(linux-musleabi-arm linux-musleabihf-arm linux-musleabi-armeb linux-musleabihf-armeb linux-musleabi-armel linux-musleabihf-armel linux-musleabi-armv5l linux-musleabihf-armv5l linux-musleabi-armv6 linux-musleabihf-armv6 linux-musleabihf-armv7l linux-musleabi-armv7m linux-musleabihf-armv7r)
+  #  CGO_ARGS=(arm-linux-musleabi-gcc arm-linux-musleabihf-gcc armeb-linux-musleabi-gcc armeb-linux-musleabihf-gcc armel-linux-musleabi-gcc armel-linux-musleabihf-gcc armv5l-linux-musleabi-gcc armv5l-linux-musleabihf-gcc armv6-linux-musleabi-gcc armv6-linux-musleabihf-gcc armv7l-linux-musleabihf-gcc armv7m-linux-musleabi-gcc armv7r-linux-musleabihf-gcc)
+  #  GOARMS=('' '' '' '' '' '' '5' '5' '6' '6' '7' '7' '7')
   OS_ARCHES=(linux-musleabi-arm linux-musleabihf-arm linux-musleabi-armel linux-musleabihf-armel linux-musleabi-armv5l linux-musleabihf-armv5l linux-musleabi-armv6 linux-musleabihf-armv6 linux-musleabihf-armv7l linux-musleabi-armv7m linux-musleabihf-armv7r)
   CGO_ARGS=(arm-linux-musleabi-gcc arm-linux-musleabihf-gcc armel-linux-musleabi-gcc armel-linux-musleabihf-gcc armv5l-linux-musleabi-gcc armv5l-linux-musleabihf-gcc armv6-linux-musleabi-gcc armv6-linux-musleabihf-gcc armv7l-linux-musleabihf-gcc armv7m-linux-musleabi-gcc armv7r-linux-musleabihf-gcc)
   GOARMS=('' '' '' '' '5' '5' '6' '6' '7' '7' '7')

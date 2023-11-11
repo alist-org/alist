@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/alist-org/alist/v3/internal/conf"
+	"github.com/alist-org/alist/v3/internal2/conf"
 	"github.com/spf13/cobra"
 )
 

@@ -20,11 +20,11 @@ import (
 	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
-	"github.com/alist-org/alist/v3/internal/conf"
-	"github.com/alist-org/alist/v3/internal/driver"
-	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/internal/op"
-	"github.com/alist-org/alist/v3/internal/setting"
+	"github.com/alist-org/alist/v3/internal2/conf"
+	"github.com/alist-org/alist/v3/internal2/driver"
+	"github.com/alist-org/alist/v3/internal2/model"
+	"github.com/alist-org/alist/v3/internal2/op"
+	"github.com/alist-org/alist/v3/internal2/setting"
 	"github.com/alist-org/alist/v3/pkg/errgroup"
 	"github.com/alist-org/alist/v3/pkg/utils"
 

@@ -8,7 +8,7 @@ import (
 	"net/http"
 
 	"github.com/alist-org/alist/v3/drivers/base"
-	"github.com/alist-org/alist/v3/internal/op"
+	"github.com/alist-org/alist/v3/internal2/op"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/dustinxie/ecc"
 	"github.com/go-resty/resty/v2"
@@ -35,7 +35,7 @@ func (d *AliDrive) createSession() error {
 			"refreshToken": d.RefreshToken,
 		})
 	}, nil)
-	if err == nil{
+	if err == nil {
 		state.retry = 0
 	}
 	return err
