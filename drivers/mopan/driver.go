@@ -119,10 +119,13 @@ func (d *MoPan) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 	}
 
 	data.DownloadUrl = strings.Replace(strings.ReplaceAll(data.DownloadUrl, "&amp;", "&"), "http://", "https://", 1)
-	res, err := base.NoRedirectClient.R().SetContext(ctx).Head(data.DownloadUrl)
+	res, err := base.NoRedirectClient.R().SetDoNotParseResponse(true).SetContext(ctx).Get(data.DownloadUrl)
 	if err != nil {
 		return nil, err
 	}
+	defer func() {
+		_ = res.RawBody().Close()
+	}()
 	if res.StatusCode() == 302 {
 		data.DownloadUrl = res.Header().Get("location")
 	}
