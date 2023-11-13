@@ -94,7 +94,7 @@ func FinishAuthnLogin(c *gin.Context) {
 		return
 	}
 
-	token, err := common.GenerateToken(user.Username)
+	token, err := common.GenerateToken(user)
 	if err != nil {
 		common.ErrorResp(c, err, 400, true)
 		return

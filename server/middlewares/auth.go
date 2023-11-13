@@ -57,6 +57,12 @@ func Auth(c *gin.Context) {
 		c.Abort()
 		return
 	}
+	// validate password timestamp
+	if userClaims.PwdTS != user.PwdTS {
+		common.ErrorStrResp(c, "Password has been changed, login please", 401)
+		c.Abort()
+		return
+	}
 	if user.Disabled {
 		common.ErrorStrResp(c, "Current user is disabled, replace please", 401)
 		c.Abort()
@@ -102,6 +108,12 @@ func Authn(c *gin.Context) {
 	user, err := op.GetUserByName(userClaims.Username)
 	if err != nil {
 		common.ErrorResp(c, err, 401)
+		c.Abort()
+		return
+	}
+	// validate password timestamp
+	if userClaims.PwdTS != user.PwdTS {
+		common.ErrorStrResp(c, "Password has been changed, login please", 401)
 		c.Abort()
 		return
 	}

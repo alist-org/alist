@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/pkg/utils"
@@ -24,6 +25,7 @@ type User struct {
 	ID       uint   `json:"id" gorm:"primaryKey"`                      // unique key
 	Username string `json:"username" gorm:"unique" binding:"required"` // username
 	PwdHash  string `json:"-"`                                         // password hash
+	PwdTS    int64  `json:"-"`                                         // password timestamp
 	Salt     string `json:"-"`                                         // unique salt
 	Password string `json:"password"`                                  // password
 	BasePath string `json:"base_path"`                                 // base path
@@ -71,6 +73,7 @@ func (u *User) ValidatePwdStaticHash(pwdStaticHash string) error {
 func (u *User) SetPassword(pwd string) *User {
 	u.Salt = random.String(16)
 	u.PwdHash = TwoHashPwd(pwd, u.Salt)
+	u.PwdTS = time.Now().Unix()
 	return u
 }
 
