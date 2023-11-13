@@ -41,6 +41,13 @@
 
 English | [中文](./README_cn.md)| [日本語](./README_ja.md) | [Contributing](./CONTRIBUTING.md) | [CODE_OF_CONDUCT](./CODE_OF_CONDUCT.md)
 
+## 我的修改
+
+### build
+
+1. 复制构建好的 alist-web dist 到 public/dist 中。
+2. 构建 linux 版，windows 平台需要在 wsl 下运行 `go build -ldflags "-s -w" -o build/alist`
+
 ## Features
 
 - [x] Multiple storages
