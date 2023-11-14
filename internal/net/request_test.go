@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"sync"
 	"testing"
@@ -169,7 +168,7 @@ func newDownloadRangeClient(data []byte) (*downloadCaptureClient, *int, *[]strin
 		header := &http.Header{}
 		header.Set("Content-Range", fmt.Sprintf("bytes %d-%d/%d", start, fin-1, len(data)))
 		return &http.Response{
-			Body:          ioutil.NopCloser(bytes.NewReader(bodyBytes)),
+			Body:          io.NopCloser(bytes.NewReader(bodyBytes)),
 			Header:        *header,
 			ContentLength: int64(len(bodyBytes)),
 		}, nil
