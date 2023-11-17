@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/fs"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/alist-org/alist/v3/internal/conf"
@@ -15,7 +16,14 @@ import (
 )
 
 func InitIndex() {
-	index, err := public.Public.ReadFile("dist/index.html")
+	var index []byte
+	var err error
+	if CheckHasLocalPublic() {
+		index, err = os.ReadFile("./public/dist/index.html")
+	} else {
+		index, err = public.Public.ReadFile("dist/index.html")
+	}
+
 	if err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
 			utils.Log.Fatalf("index.html not exist, you may forget to put dist of frontend to public/dist")
@@ -69,7 +77,15 @@ func Static(r *gin.RouterGroup, noRoute func(handlers ...gin.HandlerFunc)) {
 			}
 		}
 	})
+
+	hasLocalPublic := CheckHasLocalPublic()
 	for i, folder := range folders {
+		if hasLocalPublic {
+			folder = "./public/dist/" + folder
+			r.Static(fmt.Sprintf("/%s/", folders[i]), folder)
+			continue
+		}
+
 		folder = "dist/" + folder
 		sub, err := fs.Sub(public.Public, folder)
 		if err != nil {
@@ -89,4 +105,11 @@ func Static(r *gin.RouterGroup, noRoute func(handlers ...gin.HandlerFunc)) {
 		c.Writer.Flush()
 		c.Writer.WriteHeaderNow()
 	})
+}
+
+func CheckHasLocalPublic() bool {
+	if _, err := os.Stat("./public/dist"); err != nil {
+		return false
+	}
+	return true
 }

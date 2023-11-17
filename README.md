@@ -43,10 +43,15 @@ English | [中文](./README_cn.md)| [日本語](./README_ja.md) | [Contributing]
 
 ## 我的修改
 
+### 具体修改
+
+- 如果运行目录下存在 `public/dist`，则优先使用该目录下的文件
+
 ### build
 
 1. 复制构建好的 alist-web dist 到 public/dist 中。
 2. 构建 linux 版，windows 平台需要在 wsl 下运行 `go build -ldflags "-s -w" -o build/alist`
+	- 压缩 `upx -9 build/alist`
 
 ## Features
 
