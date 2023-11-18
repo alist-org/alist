@@ -5,7 +5,6 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"regexp"
@@ -44,7 +43,7 @@ func (d *GoogleDrive) refreshToken() error {
 		gdsaFileThis := d.RefreshToken
 		if gdsaFile.IsDir() {
 			if len(d.ServiceAccountFileList) <= 0 {
-				gdsaReadDir, gdsaDirErr := ioutil.ReadDir(d.RefreshToken)
+				gdsaReadDir, gdsaDirErr := os.ReadDir(d.RefreshToken)
 				if gdsaDirErr != nil {
 					log.Error("read dir fail")
 					return gdsaDirErr
@@ -76,7 +75,7 @@ func (d *GoogleDrive) refreshToken() error {
 			}
 		}
 
-		gdsaFileThisContent, err := ioutil.ReadFile(gdsaFileThis)
+		gdsaFileThisContent, err := os.ReadFile(gdsaFileThis)
 		if err != nil {
 			return err
 		}
