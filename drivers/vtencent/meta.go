@@ -7,8 +7,10 @@ import (
 
 type Addition struct {
 	driver.RootID
-	Cookie string `json:"cookie" required:"true"`
-	TfUid  string `json:"tf_uid"`
+	Cookie         string `json:"cookie" required:"true"`
+	TfUid          string `json:"tf_uid"`
+	OrderBy        string `json:"order_by" type:"select" options:"Name,Size,UpdateTime,CreatTime"`
+	OrderDirection string `json:"order_direction" type:"select" options:"Asc,Desc"`
 }
 
 type Conf struct {
@@ -22,8 +24,8 @@ func init() {
 		return &Vtencent{
 			config: driver.Config{
 				Name:              "腾讯智能创作平台",
-				OnlyProxy:         true,
-				OnlyLocal:         true,
+				OnlyProxy:         false,
+				OnlyLocal:         false,
 				DefaultRoot:       "9",
 				NoOverwriteUpload: true,
 			},

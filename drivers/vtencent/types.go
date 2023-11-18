@@ -162,7 +162,6 @@ type RspFiles struct {
 	} `json:"Data"`
 }
 
-
 type RspDown struct {
 	Code           string `json:"Code"`
 	Message        string `json:"Message"`
@@ -175,7 +174,6 @@ type RspDown struct {
 	} `json:"Data"`
 }
 
-
 type RspCreatrMaterial struct {
 	Code           string `json:"Code"`
 	Message        string `json:"Message"`
@@ -186,7 +184,6 @@ type RspCreatrMaterial struct {
 		QuickUpload   bool   `json:"QuickUpload"`
 	} `json:"Data"`
 }
-
 
 type RspApplyUploadUGC struct {
 	Code    int    `json:"code"`
@@ -213,6 +210,27 @@ type RspApplyUploadUGC struct {
 		StorageRegionV50          string `json:"StorageRegionV5"`
 		MiniProgramAccelerateHost string `json:"MiniProgramAccelerateHost"`
 	} `json:"data"`
+}
+
+type RspCommitUploadUGC struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+	Data    struct {
+		Video struct {
+			URL           string `json:"url"`
+			VerifyContent string `json:"verify_content"`
+		} `json:"video"`
+		FileID string `json:"fileId"`
+	} `json:"data"`
+}
+
+type RspFinishUpload struct {
+	Code           string `json:"Code"`
+	Message        string `json:"Message"`
+	EnglishMessage string `json:"EnglishMessage"`
+	Data           struct {
+		MaterialID string `json:"MaterialId"`
+	} `json:"Data"`
 }
 
 func fileToObj(f File) *model.Object {

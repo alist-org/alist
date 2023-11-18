@@ -192,10 +192,8 @@ func (d *Vtencent) Remove(ctx context.Context, obj model.Obj) error {
 }
 
 func (d *Vtencent) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
-	// q-signature参数未解决，暂时无法上传
-	d.FileUpload(dstDir, stream, up)
-	// TODO upload file, optional
-	return errs.NotImplement
+	err := d.FileUpload(ctx, dstDir, stream, up)
+	return err
 }
 
 //func (d *Vtencent) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
