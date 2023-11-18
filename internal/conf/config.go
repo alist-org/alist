@@ -49,6 +49,7 @@ type Config struct {
 	Scheme                Scheme    `json:"scheme"`
 	TempDir               string    `json:"temp_dir" env:"TEMP_DIR"`
 	BleveDir              string    `json:"bleve_dir" env:"BLEVE_DIR"`
+	DistDir               string    `json:"dist_dir"`
 	Log                   LogConfig `json:"log"`
 	DelayedStart          int       `json:"delayed_start" env:"DELAYED_START"`
 	MaxConnections        int       `json:"max_connections" env:"MAX_CONNECTIONS"`
