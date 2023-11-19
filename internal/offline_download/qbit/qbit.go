@@ -4,8 +4,8 @@ import (
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/offline_download/tool"
-	"github.com/alist-org/alist/v3/internal/qbittorrent"
 	"github.com/alist-org/alist/v3/internal/setting"
+	"github.com/alist-org/alist/v3/pkg/qbittorrent"
 	"github.com/pkg/errors"
 )
 
