@@ -1,9 +1,9 @@
 package vtencent
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
+	"crypto/sha1"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -15,6 +15,7 @@ import (
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/pkg/http_range"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -113,12 +114,10 @@ func (d *Vtencent) GetFiles(dirId string) ([]File, error) {
 		"SearchScopes":[{"Owner":{"Type":"PERSON","Id":"%s"},"ClassId":%s,"SearchOneDepth":true}]
 	}`, d.Addition.OrderBy, d.Addition.OrderDirection, d.TfUid, dirId)
 	var resps RspFiles
-	rsp, err := d.request(api, http.MethodPost, func(req *resty.Request) {
+	_, err := d.request(api, http.MethodPost, func(req *resty.Request) {
 		req.SetBody(form).ForceContentType("application/json")
 	}, &resps)
 	if err != nil {
-	}
-	if err := json.Unmarshal(rsp, &resps); err != nil {
 		return []File{}, err
 	}
 	return resps.Data.ResourceInfoSet, nil
@@ -129,14 +128,11 @@ func (d *Vtencent) CreateUploadMaterial(classId int, fileName string, UploadSumm
 	form := base.Json{"Owner": base.Json{"Type": "PERSON", "Id": d.TfUid},
 		"MaterialType": "VIDEO", "Name": fileName, "ClassId": classId,
 		"UploadSummaryKey": UploadSummaryKey}
-	rsp, err := d.request(api, http.MethodPost, func(req *resty.Request) {
-		req.SetBody(form)
-	}, nil)
-	if err != nil {
-		return RspCreatrMaterial{}, err
-	}
 	var resps RspCreatrMaterial
-	if err := json.Unmarshal(rsp, &resps); err != nil {
+	_, err := d.request(api, http.MethodPost, func(req *resty.Request) {
+		req.SetBody(form).ForceContentType("application/json")
+	}, &resps)
+	if err != nil {
 		return RspCreatrMaterial{}, err
 	}
 	return resps, nil
@@ -150,14 +146,11 @@ func (d *Vtencent) ApplyUploadUGC(signature string, stream model.FileStreamer) (
 		"videoType": strings.ReplaceAll(path.Ext(stream.GetName()), ".", ""),
 		"videoSize": stream.GetSize(),
 	}
-	rsp, err := d.ugcRequest(api, http.MethodPost, func(req *resty.Request) {
-		req.SetBody(form)
-	}, nil)
-	if err != nil {
-		return RspApplyUploadUGC{}, err
-	}
 	var resps RspApplyUploadUGC
-	if err := json.Unmarshal(rsp, &resps); err != nil {
+	_, err := d.ugcRequest(api, http.MethodPost, func(req *resty.Request) {
+		req.SetBody(form).ForceContentType("application/json")
+	}, &resps)
+	if err != nil {
 		return RspApplyUploadUGC{}, err
 	}
 	return resps, nil
@@ -169,14 +162,11 @@ func (d *Vtencent) CommitUploadUGC(signature string, vodSessionKey string) (RspC
 		"signature":     signature,
 		"vodSessionKey": vodSessionKey,
 	}
-	rsp, err := d.ugcRequest(api, http.MethodPost, func(req *resty.Request) {
-		req.SetBody(form)
-	}, nil)
-	if err != nil {
-		return RspCommitUploadUGC{}, err
-	}
 	var resps RspCommitUploadUGC
-	if err := json.Unmarshal(rsp, &resps); err != nil {
+	rsp, err := d.ugcRequest(api, http.MethodPost, func(req *resty.Request) {
+		req.SetBody(form).ForceContentType("application/json")
+	}, &resps)
+	if err != nil {
 		return RspCommitUploadUGC{}, err
 	}
 	if len(resps.Data.Video.URL) == 0 {
@@ -192,14 +182,11 @@ func (d *Vtencent) FinishUploadMaterial(SummaryKey string, VodVerifyKey string, 
 		"VodVerifyKey":  VodVerifyKey,
 		"VodFileId":     VodFileId,
 		"UploadFullKey": SummaryKey}
-	rsp, err := d.request(api, http.MethodPost, func(req *resty.Request) {
-		req.SetBody(form)
-	}, nil)
-	if err != nil {
-		return RspFinishUpload{}, err
-	}
 	var resps RspFinishUpload
-	if err := json.Unmarshal(rsp, &resps); err != nil {
+	rsp, err := d.request(api, http.MethodPost, func(req *resty.Request) {
+		req.SetBody(form).ForceContentType("application/json")
+	}, &resps)
+	if err != nil {
 		return RspFinishUpload{}, err
 	}
 	if len(resps.Data.MaterialID) == 0 {
@@ -210,17 +197,14 @@ func (d *Vtencent) FinishUploadMaterial(SummaryKey string, VodVerifyKey string, 
 
 func (d *Vtencent) FinishHashUploadMaterial(SummaryKey string, UploadContext string) (RspFinishUpload, error) {
 	api := "https://api.vs.tencent.com/PaaS/Material/FinishUploadMaterial"
+	var resps RspFinishUpload
 	form := base.Json{
 		"UploadContext": UploadContext,
 		"UploadFullKey": SummaryKey}
 	rsp, err := d.request(api, http.MethodPost, func(req *resty.Request) {
-		req.SetBody(form)
-	}, nil)
+		req.SetBody(form).ForceContentType("application/json")
+	}, &resps)
 	if err != nil {
-		return RspFinishUpload{}, err
-	}
-	var resps RspFinishUpload
-	if err := json.Unmarshal(rsp, &resps); err != nil {
 		return RspFinishUpload{}, err
 	}
 	if len(resps.Data.MaterialID) == 0 {
@@ -234,26 +218,26 @@ func (d *Vtencent) FileUpload(ctx context.Context, dstDir model.Obj, stream mode
 	if err != nil {
 		return err
 	}
-	tmpF, err := stream.CacheFullInTempFile()
+	const chunkLength int64 = 1024 * 1024 * 10
+	reader, err := stream.RangeRead(http_range.Range{Start: 0, Length: chunkLength})
 	if err != nil {
 		return err
 	}
-	SummaryKey, err := utils.HashFile(utils.SHA1, tmpF)
+	chunkHash, err := utils.HashReader(utils.SHA1, reader)
 	if err != nil {
 		return err
-	}
-	chunkHash := SummaryKey
-	var chunkLength int64 = 1024 * 1024 * 10
-	if stream.GetSize() > chunkLength {
-		buf := bytes.NewBuffer(make([]byte, 0, chunkLength))
-		io.CopyN(buf, tmpF, chunkLength)
-		chunkHash = utils.HashData(utils.SHA1, buf.Bytes())
 	}
 	rspCreatrMaterial, err := d.CreateUploadMaterial(classId, stream.GetName(), chunkHash)
 	if err != nil {
 		return err
 	}
 	if rspCreatrMaterial.Data.QuickUpload {
+		SummaryKey := stream.GetHash().GetHash(utils.SHA1)
+		if len(SummaryKey) < utils.SHA1.Width {
+			if SummaryKey, err = utils.HashReader(utils.SHA1, stream); err != nil {
+				return err
+			}
+		}
 		UploadContext := rspCreatrMaterial.Data.UploadContext
 		_, err = d.FinishHashUploadMaterial(SummaryKey, UploadContext)
 		if err != nil {
@@ -261,6 +245,7 @@ func (d *Vtencent) FileUpload(ctx context.Context, dstDir model.Obj, stream mode
 		}
 		return nil
 	}
+	hash := sha1.New()
 	rspUGC, err := d.ApplyUploadUGC(rspCreatrMaterial.Data.VodUploadSign, stream)
 	if err != nil {
 		return err
@@ -282,7 +267,7 @@ func (d *Vtencent) FileUpload(ctx context.Context, dstDir model.Obj, stream mode
 	input := &s3manager.UploadInput{
 		Bucket: aws.String(fmt.Sprintf("%s-%d", params.StorageBucket, params.StorageAppID)),
 		Key:    &params.Video.StoragePath,
-		Body:   stream,
+		Body:   io.TeeReader(stream, io.MultiWriter(hash, driver.NewProgress(stream.GetSize(), up))),
 	}
 	_, err = uploader.UploadWithContext(ctx, input)
 	if err != nil {
@@ -295,6 +280,7 @@ func (d *Vtencent) FileUpload(ctx context.Context, dstDir model.Obj, stream mode
 	VodVerifyKey := rspCommitUGC.Data.Video.VerifyContent
 	VodFileId := rspCommitUGC.Data.FileID
 	UploadContext := rspCreatrMaterial.Data.UploadContext
+	SummaryKey := hex.EncodeToString(hash.Sum(nil))
 	_, err = d.FinishUploadMaterial(SummaryKey, VodVerifyKey, UploadContext, VodFileId)
 	if err != nil {
 		return err
