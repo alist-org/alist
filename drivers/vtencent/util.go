@@ -3,16 +3,12 @@ package vtencent
 import (
 	"bytes"
 	"context"
-	"crypto/md5"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 	"path"
-	"regexp"
 	"strconv"
 	"strings"
 
@@ -20,8 +16,11 @@ import (
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/utils"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/go-resty/resty/v2"
-	"github.com/google/uuid"
 )
 
 func (d *Vtencent) request(url, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
@@ -113,16 +112,11 @@ func (d *Vtencent) GetFiles(dirId string) ([]File, error) {
 		"Tags":[],
 		"SearchScopes":[{"Owner":{"Type":"PERSON","Id":"%s"},"ClassId":%s,"SearchOneDepth":true}]
 	}`, d.Addition.OrderBy, d.Addition.OrderDirection, d.TfUid, dirId)
-	var dat map[string]interface{}
-	if err := json.Unmarshal([]byte(form), &dat); err != nil {
-		return []File{}, err
-	}
 	var resps RspFiles
 	rsp, err := d.request(api, http.MethodPost, func(req *resty.Request) {
-		req.SetBody(dat)
+		req.SetBody(form).ForceContentType("application/json")
 	}, &resps)
 	if err != nil {
-		return []File{}, err
 	}
 	if err := json.Unmarshal(rsp, &resps); err != nil {
 		return []File{}, err
@@ -133,7 +127,7 @@ func (d *Vtencent) GetFiles(dirId string) ([]File, error) {
 func (d *Vtencent) CreateUploadMaterial(classId int, fileName string, UploadSummaryKey string) (RspCreatrMaterial, error) {
 	api := "https://api.vs.tencent.com/PaaS/Material/CreateUploadMaterial"
 	form := base.Json{"Owner": base.Json{"Type": "PERSON", "Id": d.TfUid},
-		"MaterialType": "IMAGE", "Name": fileName, "ClassId": classId,
+		"MaterialType": "VIDEO", "Name": fileName, "ClassId": classId,
 		"UploadSummaryKey": UploadSummaryKey}
 	rsp, err := d.request(api, http.MethodPost, func(req *resty.Request) {
 		req.SetBody(form)
@@ -191,142 +185,6 @@ func (d *Vtencent) CommitUploadUGC(signature string, vodSessionKey string) (RspC
 	return resps, nil
 }
 
-func (d *Vtencent) GetUploadId(rspUGC RspApplyUploadUGC) (string, error) {
-	StoragePath := strings.ReplaceAll(rspUGC.Data.Video.StoragePath, "/"+rspUGC.Data.StorageBucket, rspUGC.Data.StorageBucket)
-	StoragePath = url.QueryEscape(StoragePath)
-	keyTime := fmt.Sprintf("%d;%d", rspUGC.Data.Timestamp, rspUGC.Data.TempCertificate.ExpiredTime)
-	signPath := fmt.Sprintf("get\n/\nprefix=%s&uploads=\n\n", StoragePath)
-	singleKey := QSignatureKey(keyTime, signPath, rspUGC.Data.TempCertificate.SecretKey)
-	authorization := fmt.Sprintf("q-sign-algorithm=sha1&q-ak=%s&q-sign-time=%s&q-key-time=%s&q-header-list=&q-url-param-list=prefix;uploads&q-signature=%s", rspUGC.Data.TempCertificate.SecretID, keyTime, keyTime, singleKey)
-	token := rspUGC.Data.TempCertificate.Token
-	req := base.RestyClient.R()
-	req.SetHeaders(map[string]string{
-		"Authorization":        authorization,
-		"X-Cos-Security-Token": token,
-		"X-Cos-Storage-Class":  "Standard",
-	})
-	api := fmt.Sprintf("https://%s-%d.cos.%s.myqcloud.com/?uploads&prefix=%s", rspUGC.Data.StorageBucket, rspUGC.Data.StorageAppID, rspUGC.Data.StorageRegionV5, StoragePath)
-	res, err := req.Execute("GET", api)
-	if err != nil {
-		return "", err
-	}
-	if !strings.Contains(string(res.Body()), "1000") {
-		if err != nil {
-			return "", errors.New(string(res.Body()))
-		}
-	}
-	signPath = fmt.Sprintf("post\n%s\nuploads=\nx-cos-storage-class=Standard\n", rspUGC.Data.Video.StoragePath)
-	singleKeyTwo := QSignatureKey(keyTime, signPath, rspUGC.Data.TempCertificate.SecretKey)
-	authorizationTwo := fmt.Sprintf("q-sign-algorithm=sha1&q-ak=%s&q-sign-time=%s&q-key-time=%s&q-header-list=x-cos-storage-class&q-url-param-list=uploads&q-signature=%s", rspUGC.Data.TempCertificate.SecretID, keyTime, keyTime, singleKeyTwo)
-	reqt := base.RestyClient.R()
-	reqt.SetHeaders(map[string]string{
-		"Authorization":        authorizationTwo,
-		"X-Cos-Security-Token": token,
-		"X-Cos-Storage-Class":  "Standard",
-	})
-	upIdUrl := fmt.Sprintf("https://%s-%d.cos.%s.myqcloud.com%s", rspUGC.Data.StorageBucket, rspUGC.Data.StorageAppID, rspUGC.Data.StorageRegionV5, rspUGC.Data.Video.StoragePath)
-	rest, err := reqt.Execute("POST", upIdUrl+"?uploads")
-	if err != nil {
-		return "", err
-	}
-	if !strings.Contains(string(rest.Body()), "UploadId") {
-		if err != nil {
-			return "", errors.New(string(rest.Body()))
-		}
-	}
-	re := regexp.MustCompile(`<UploadId>(.*?)</UploadId>`)
-	matches := re.FindAllStringSubmatch(string(rest.Body()), -1)
-	if len(matches) <= 0 {
-		return "", errors.New("UploadId not found")
-	}
-	uploadId := matches[0][1]
-	return uploadId, nil
-}
-
-func (d *Vtencent) PutFile(uploadId string, rspUGC RspApplyUploadUGC, stream model.FileStreamer) (string, error) {
-	keyTime := fmt.Sprintf("%d;%d", rspUGC.Data.Timestamp, rspUGC.Data.TempCertificate.ExpiredTime)
-	baseUrl := fmt.Sprintf("https://%s-%d.cos.%s.myqcloud.com%s", rspUGC.Data.StorageBucket, rspUGC.Data.StorageAppID, rspUGC.Data.StorageRegionV5, rspUGC.Data.Video.StoragePath)
-	putUrl := baseUrl + "?partNumber=1&uploadId=" + uploadId
-	signPath := fmt.Sprintf("put\n%s\npartnumber=1&uploadid=%s\ncontent-length=%d\n", rspUGC.Data.Video.StoragePath, uploadId, int(stream.GetSize()))
-	token := rspUGC.Data.TempCertificate.Token
-	form, err := io.ReadAll(stream)
-	if err != nil {
-		return "", err
-	}
-	req, err := http.NewRequest("PUT", putUrl, bytes.NewBuffer(form))
-	if err != nil {
-		return "", err
-	}
-	host := fmt.Sprintf("%s-%d.cos.%s.myqcloud.com", rspUGC.Data.StorageBucket, rspUGC.Data.StorageAppID, rspUGC.Data.StorageRegionV5)
-	singleKeyUpload := QSignatureKey(keyTime, signPath, rspUGC.Data.TempCertificate.SecretKey)
-	authorization := fmt.Sprintf("q-sign-algorithm=sha1&q-ak=%s&q-sign-time=%s&q-key-time=%s&q-header-list=content-length&q-url-param-list=partnumber;uploadid&q-signature=%s", rspUGC.Data.TempCertificate.SecretID, keyTime, keyTime, singleKeyUpload)
-	req.Header.Set("Content-Length", strconv.Itoa(int(stream.GetSize())))
-	req.Header.Set("Authorization", authorization)
-	req.Header.Set("X-Cos-Security-Token", token)
-	req.Header.Set("Host", host)
-	rsp, err := base.HttpClient.Do(req)
-	if err != nil {
-		return "", err
-	}
-	defer rsp.Body.Close()
-	body, err := io.ReadAll(rsp.Body)
-	if err != nil {
-		return "", err
-	}
-	if strings.Contains(string(body), "xml") {
-		return "", errors.New(string(body))
-	}
-	Etag := rsp.Header.Get("Etag")
-	return Etag, nil
-}
-
-func (d *Vtencent) CompleteMultipartUpload(uploadId string, Etag string, rspUGC RspApplyUploadUGC, stream model.FileStreamer) error {
-	keyTime := fmt.Sprintf("%d;%d", rspUGC.Data.Timestamp, rspUGC.Data.TempCertificate.ExpiredTime)
-	token := rspUGC.Data.TempCertificate.Token
-	form, err := io.ReadAll(stream)
-	if err != nil {
-		return err
-	}
-	baseUrl := fmt.Sprintf("https://%s-%d.cos.%s.myqcloud.com%s", rspUGC.Data.StorageBucket, rspUGC.Data.StorageAppID, rspUGC.Data.StorageRegionV5, rspUGC.Data.Video.StoragePath)
-	putUrl := baseUrl + "?uploadId=" + uploadId
-	hash := md5.Sum(form)
-	base64Hash := base64.StdEncoding.EncodeToString(hash[:])
-	fileMd5 := url.QueryEscape(base64Hash)
-	signPath := fmt.Sprintf("post\n%s\nuploadid=%s\ncontent-md5=%s\n", rspUGC.Data.Video.StoragePath, uploadId, fileMd5)
-	xmlData := fmt.Sprintf(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<CompleteMultipartUpload>
-  <Part>
-    <PartNumber>1</PartNumber>
-    <ETag>%s</ETag>
-  </Part>
-</CompleteMultipartUpload>`, Etag)
-	req, err := http.NewRequest("POST", putUrl, bytes.NewBuffer([]byte(xmlData)))
-	if err != nil {
-		return err
-	}
-	host := fmt.Sprintf("%s-%d.cos.%s.myqcloud.com", rspUGC.Data.StorageBucket, rspUGC.Data.StorageAppID, rspUGC.Data.StorageRegionV5)
-	singleKeyUpload := QSignatureKey(keyTime, signPath, rspUGC.Data.TempCertificate.SecretKey)
-	authorization := fmt.Sprintf("q-sign-algorithm=sha1&q-ak=%s&q-sign-time=%s&q-key-time=%s&q-header-list=content-md5&q-url-param-list=uploadid&q-signature=%s", rspUGC.Data.TempCertificate.SecretID, keyTime, keyTime, singleKeyUpload)
-	req.Header.Set("Authorization", authorization)
-	req.Header.Set("X-Cos-Security-Token", token)
-	req.Header.Set("Content-Md5", base64Hash)
-	req.Header.Set("Content-Type", "application/xml")
-	req.Header.Set("Host", host)
-	rspFile, err := base.HttpClient.Do(req)
-	if err != nil {
-		return err
-	}
-	defer rspFile.Body.Close()
-	body, err := io.ReadAll(rspFile.Body)
-	if err != nil {
-		return err
-	}
-	if strings.Contains(string(body), "Location") {
-		return nil
-	}
-	return errors.New(string(body))
-}
-
 func (d *Vtencent) FinishUploadMaterial(SummaryKey string, VodVerifyKey string, UploadContext, VodFileId string) (RspFinishUpload, error) {
 	api := "https://api.vs.tencent.com/PaaS/Material/FinishUploadMaterial"
 	form := base.Json{
@@ -350,30 +208,83 @@ func (d *Vtencent) FinishUploadMaterial(SummaryKey string, VodVerifyKey string, 
 	return resps, nil
 }
 
+func (d *Vtencent) FinishHashUploadMaterial(SummaryKey string, UploadContext string) (RspFinishUpload, error) {
+	api := "https://api.vs.tencent.com/PaaS/Material/FinishUploadMaterial"
+	form := base.Json{
+		"UploadContext": UploadContext,
+		"UploadFullKey": SummaryKey}
+	rsp, err := d.request(api, http.MethodPost, func(req *resty.Request) {
+		req.SetBody(form)
+	}, nil)
+	if err != nil {
+		return RspFinishUpload{}, err
+	}
+	var resps RspFinishUpload
+	if err := json.Unmarshal(rsp, &resps); err != nil {
+		return RspFinishUpload{}, err
+	}
+	if len(resps.Data.MaterialID) == 0 {
+		return RspFinishUpload{}, errors.New(string(rsp))
+	}
+	return resps, nil
+}
+
 func (d *Vtencent) FileUpload(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
 	classId, err := strconv.Atoi(dstDir.GetID())
 	if err != nil {
 		return err
 	}
-	secretKey := "M6BrOqmpW9rl+jZuFoAOwNawGdWCaKllffpDb53za4I="
-	SummaryKey := QTwoSignatureKey(uuid.New().String(), secretKey)
-	rspCreatrMaterial, err := d.CreateUploadMaterial(classId, stream.GetName(), SummaryKey)
+	tmpF, err := stream.CacheFullInTempFile()
 	if err != nil {
 		return err
+	}
+	SummaryKey, err := utils.HashFile(utils.SHA1, tmpF)
+	if err != nil {
+		return err
+	}
+	chunkHash := SummaryKey
+	var chunkLength int64 = 1024 * 1024 * 10
+	if stream.GetSize() > chunkLength {
+		buf := bytes.NewBuffer(make([]byte, 0, chunkLength))
+		io.CopyN(buf, tmpF, chunkLength)
+		chunkHash = utils.HashData(utils.SHA1, buf.Bytes())
+	}
+	rspCreatrMaterial, err := d.CreateUploadMaterial(classId, stream.GetName(), chunkHash)
+	if err != nil {
+		return err
+	}
+	if rspCreatrMaterial.Data.QuickUpload {
+		UploadContext := rspCreatrMaterial.Data.UploadContext
+		_, err = d.FinishHashUploadMaterial(SummaryKey, UploadContext)
+		if err != nil {
+			return err
+		}
+		return nil
 	}
 	rspUGC, err := d.ApplyUploadUGC(rspCreatrMaterial.Data.VodUploadSign, stream)
 	if err != nil {
 		return err
 	}
-	uploadId, err := d.GetUploadId(rspUGC)
+	params := rspUGC.Data
+	certificate := params.TempCertificate
+	cfg := &aws.Config{
+		HTTPClient: base.HttpClient,
+		// S3ForcePathStyle: aws.Bool(true),
+		Credentials: credentials.NewStaticCredentials(certificate.SecretID, certificate.SecretKey, certificate.Token),
+		Region:      aws.String(params.StorageRegionV5),
+		Endpoint:    aws.String(fmt.Sprintf("cos.%s.myqcloud.com", params.StorageRegionV5)),
+	}
+	ss, err := session.NewSession(cfg)
 	if err != nil {
 		return err
 	}
-	Etag, err := d.PutFile(uploadId, rspUGC, stream)
-	if err != nil {
-		return err
+	uploader := s3manager.NewUploader(ss)
+	input := &s3manager.UploadInput{
+		Bucket: aws.String(fmt.Sprintf("%s-%d", params.StorageBucket, params.StorageAppID)),
+		Key:    &params.Video.StoragePath,
+		Body:   stream,
 	}
-	err = d.CompleteMultipartUpload(uploadId, Etag, rspUGC, stream)
+	_, err = uploader.UploadWithContext(ctx, input)
 	if err != nil {
 		return err
 	}
