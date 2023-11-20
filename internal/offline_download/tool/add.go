@@ -2,21 +2,27 @@ package tool
 
 import (
 	"context"
-	"fmt"
-	"path/filepath"
-
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/op"
-	"github.com/alist-org/alist/v3/pkg/task"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
+	"path/filepath"
+)
+
+type DeletePolicy string
+
+const (
+	DeleteOnUploadSucceed DeletePolicy = "delete_on_upload_succeed"
+	DeleteOnUploadFailed  DeletePolicy = "delete_on_upload_failed"
+	DeleteNever           DeletePolicy = "delete_never"
 )
 
 type AddURLArgs struct {
-	URL        string
-	DstDirPath string
-	Tool       string
+	URL          string
+	DstDirPath   string
+	Tool         string
+	DeletePolicy DeletePolicy
 }
 
 func AddURL(ctx context.Context, args *AddURLArgs) error {
@@ -56,29 +62,13 @@ func AddURL(ctx context.Context, args *AddURLArgs) error {
 
 	uid := uuid.NewString()
 	tempDir := filepath.Join(conf.Conf.TempDir, args.Tool, uid)
-	signal := make(chan int)
-	gid, err := tool.AddURL(&AddUrlArgs{
-		Url:     args.URL,
-		UID:     uid,
-		TempDir: tempDir,
-		Signal:  signal,
-	})
-	if err != nil {
-		return errors.Wrapf(err, "[%s] failed to add uri %s", args.Tool, args.URL)
+	t := &DownloadTask{
+		Url:          args.URL,
+		DstDirPath:   args.DstDirPath,
+		TempDir:      tempDir,
+		DeletePolicy: args.DeletePolicy,
+		tool:         tool,
 	}
-	DownTaskManager.Submit(task.WithCancelCtx(&task.Task[string]{
-		ID:   gid,
-		Name: fmt.Sprintf("download %s to [%s](%s)", args.URL, storage.GetStorage().MountPath, dstDirActualPath),
-		Func: func(tsk *task.Task[string]) error {
-			m := &Monitor{
-				tool:       tool,
-				tsk:        tsk,
-				tempDir:    tempDir,
-				dstDirPath: args.DstDirPath,
-				signal:     signal,
-			}
-			return m.Loop()
-		},
-	}))
+	DownloadTaskManager.Add(t)
 	return nil
 }

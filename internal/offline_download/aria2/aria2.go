@@ -21,6 +21,10 @@ type Aria2 struct {
 	client rpc.Client
 }
 
+func (a *Aria2) Name() string {
+	return "aria2"
+}
+
 func (a *Aria2) Items() []model.SettingItem {
 	// aria2 settings
 	return []model.SettingItem{
@@ -58,16 +62,17 @@ func (a *Aria2) AddURL(args *tool.AddUrlArgs) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	notify.Signals.Store(gid, args.Signal)
 	return gid, nil
 }
 
-func (a *Aria2) Remove(tid string) error {
-	_, err := a.client.Remove(tid)
+func (a *Aria2) Remove(task *tool.DownloadTask) error {
+	_, err := a.client.Remove(task.GID)
 	return err
 }
 
-func (a *Aria2) Status(tid string) (*tool.Status, error) {
-	info, err := a.client.TellStatus(tid)
+func (a *Aria2) Status(task *tool.DownloadTask) (*tool.Status, error) {
+	info, err := a.client.TellStatus(task.GID)
 	if err != nil {
 		return nil, err
 	}
@@ -85,15 +90,15 @@ func (a *Aria2) Status(tid string) (*tool.Status, error) {
 	}
 	s.Progress = float64(downloaded) / float64(total) * 100
 	if len(info.FollowedBy) != 0 {
-		s.NewTID = info.FollowedBy[0]
-		notify.Signals.Delete(tid)
-		//notify.Signals.Store(gid, m.c)
+		s.NewGID = info.FollowedBy[0]
+		notify.Signals.Delete(task.GID)
+		notify.Signals.Store(s.NewGID, task.Signal)
 	}
 	switch info.Status {
 	case "complete":
 		s.Completed = true
 	case "error":
-		s.Err = errors.Errorf("failed to download %s, error: %s", tid, info.ErrorMessage)
+		s.Err = errors.Errorf("failed to download %s, error: %s", task.GID, info.ErrorMessage)
 	case "active":
 		s.Status = "aria2: " + info.Status
 		if info.Seeder == "true" {
@@ -102,32 +107,15 @@ func (a *Aria2) Status(tid string) (*tool.Status, error) {
 	case "waiting", "paused":
 		s.Status = "aria2: " + info.Status
 	case "removed":
-		s.Err = errors.Errorf("failed to download %s, removed", tid)
+		s.Err = errors.Errorf("failed to download %s, removed", task.GID)
 	default:
 		return nil, errors.Errorf("[aria2] unknown status %s", info.Status)
 	}
 	return s, nil
 }
 
-func (a *Aria2) GetFiles(tid string) []tool.File {
-	//files, err := a.client.GetFiles(tid)
-	//if err != nil {
-	//	return nil
-	//}
-	//return utils.MustSliceConvert(files, func(f rpc.FileInfo) tool.File {
-	//	return tool.File{
-	//		//ReadCloser: nil,
-	//		Name:     path.Base(f.Path),
-	//		Size:     f.Length,
-	//		Path:     "",
-	//		Modified: time.Time{},
-	//	}
-	//})
-	return nil
-}
-
 var _ tool.Tool = (*Aria2)(nil)
 
 func init() {
-	tool.Tools.Add("aria2", &Aria2{})
+	tool.Tools.Add(&Aria2{})
 }

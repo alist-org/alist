@@ -2,14 +2,11 @@ package tool
 
 import (
 	"fmt"
-
 	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/pkg/task"
 )
 
 var (
-	Tools           = make(ToolsManager)
-	DownTaskManager = task.NewTaskManager[string](3)
+	Tools = make(ToolsManager)
 )
 
 type ToolsManager map[string]Tool
@@ -21,8 +18,8 @@ func (t ToolsManager) Get(name string) (Tool, error) {
 	return nil, fmt.Errorf("tool %s not found", name)
 }
 
-func (t ToolsManager) Add(name string, tool Tool) {
-	t[name] = tool
+func (t ToolsManager) Add(tool Tool) {
+	t[tool.Name()] = tool
 }
 
 func (t ToolsManager) Names() []string {
