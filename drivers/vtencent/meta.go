@@ -24,8 +24,8 @@ func init() {
 		return &Vtencent{
 			config: driver.Config{
 				Name:              "腾讯智能创作平台",
-				OnlyProxy:         false,
-				OnlyLocal:         false,
+				OnlyProxy:         true,
+				OnlyLocal:         true,
 				DefaultRoot:       "9",
 				NoOverwriteUpload: true,
 			},
