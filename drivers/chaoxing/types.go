@@ -114,7 +114,6 @@ type File struct {
 		Extinfo          string `json:"extinfo"`
 		Thumbnail        string `json:"thumbnail"`
 		Creator          int    `json:"creator"`
-		ModifyDate       string `json:"modifyDate"`
 		ResTypeValue     int    `json:"resTypeValue"`
 		UploadDateFormat string `json:"uploadDateFormat"`
 		DisableOpt       bool   `json:"disableOpt"`
