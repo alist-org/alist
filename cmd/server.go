@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -36,6 +37,7 @@ the address is defined in config file`,
 		}
 		bootstrap.InitOfflineDownloadTools()
 		bootstrap.LoadStorages()
+		bootstrap.InitTaskManager()
 		if !flags.Debug && !flags.Dev {
 			gin.SetMode(gin.ReleaseMode)
 		}
@@ -49,7 +51,7 @@ the address is defined in config file`,
 			httpSrv = &http.Server{Addr: httpBase, Handler: r}
 			go func() {
 				err := httpSrv.ListenAndServe()
-				if err != nil && err != http.ErrServerClosed {
+				if err != nil && !errors.Is(err, http.ErrServerClosed) {
 					utils.Log.Fatalf("failed to start http: %s", err.Error())
 				}
 			}()
@@ -60,7 +62,7 @@ the address is defined in config file`,
 			httpsSrv = &http.Server{Addr: httpsBase, Handler: r}
 			go func() {
 				err := httpsSrv.ListenAndServeTLS(conf.Conf.Scheme.CertFile, conf.Conf.Scheme.KeyFile)
-				if err != nil && err != http.ErrServerClosed {
+				if err != nil && !errors.Is(err, http.ErrServerClosed) {
 					utils.Log.Fatalf("failed to start https: %s", err.Error())
 				}
 			}()
@@ -84,7 +86,7 @@ the address is defined in config file`,
 					}
 				}
 				err = unixSrv.Serve(listener)
-				if err != nil && err != http.ErrServerClosed {
+				if err != nil && !errors.Is(err, http.ErrServerClosed) {
 					utils.Log.Fatalf("failed to start unix: %s", err.Error())
 				}
 			}()

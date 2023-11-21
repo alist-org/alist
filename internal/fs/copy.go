@@ -35,7 +35,7 @@ func (t *CopyTask) Run() error {
 	return copyBetween2Storages(t, t.srcStorage, t.dstStorage, t.srcObjPath, t.dstDirPath)
 }
 
-var CopyTaskManager = tache.NewManager[*CopyTask]()
+var CopyTaskManager *tache.Manager[*CopyTask]
 
 // Copy if in the same storage, call move method
 // if not, add copy task

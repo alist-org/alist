@@ -143,5 +143,5 @@ func (t *DownloadTask) GetStatus() string {
 }
 
 var (
-	DownloadTaskManager *tache.Manager[*DownloadTask] = tache.NewManager[*DownloadTask]()
+	DownloadTaskManager *tache.Manager[*DownloadTask]
 )

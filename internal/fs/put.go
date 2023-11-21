@@ -30,7 +30,7 @@ func (t *UploadTask) Run() error {
 	return op.Put(t.Ctx(), t.storage, t.dstDirActualPath, t.file, t.SetProgress, true)
 }
 
-var UploadTaskManager = tache.NewManager[*UploadTask]()
+var UploadTaskManager *tache.Manager[*UploadTask]
 
 // putAsTask add as a put task and return immediately
 func putAsTask(dstDirPath string, file model.FileStreamer) error {

@@ -62,5 +62,5 @@ func (t *TransferTask) GetStatus() string {
 }
 
 var (
-	TransferTaskManager *tache.Manager[*TransferTask] = tache.NewManager[*TransferTask]()
+	TransferTaskManager *tache.Manager[*TransferTask]
 )

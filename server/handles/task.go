@@ -18,13 +18,17 @@ type TaskInfo struct {
 }
 
 func getTaskInfo[T tache.TaskWithInfo](task T) TaskInfo {
+	errMsg := ""
+	if task.GetErr() != nil {
+		errMsg = task.GetErr().Error()
+	}
 	return TaskInfo{
 		ID:       task.GetID(),
 		Name:     task.GetName(),
 		State:    task.GetState(),
 		Status:   task.GetStatus(),
 		Progress: task.GetProgress(),
-		Error:    task.GetErr().Error(),
+		Error:    errMsg,
 	}
 }
 
