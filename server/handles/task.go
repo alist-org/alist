@@ -71,6 +71,10 @@ func taskRoute[T tache.TaskWithInfo](g *gin.RouterGroup, manager *tache.Manager[
 		manager.RemoveByState(tache.StateSucceeded)
 		common.SuccessResp(c)
 	})
+	g.POST("/retry_failed", func(c *gin.Context) {
+		manager.RetryAllFailed()
+		common.SuccessResp(c)
+	})
 }
 
 func SetupTaskRoute(g *gin.RouterGroup) {
