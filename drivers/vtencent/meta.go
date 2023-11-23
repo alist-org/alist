@@ -23,9 +23,9 @@ func init() {
 	op.RegisterDriver(func() driver.Driver {
 		return &Vtencent{
 			config: driver.Config{
-				Name:              "腾讯智能创作平台",
+				Name:              "VTencent",
 				OnlyProxy:         true,
-				OnlyLocal:         true,
+				OnlyLocal:         false,
 				DefaultRoot:       "9",
 				NoOverwriteUpload: true,
 			},

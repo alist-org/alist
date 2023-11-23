@@ -90,7 +90,7 @@ func (d *Vtencent) Link(ctx context.Context, file model.Obj, args model.LinkArgs
 		return nil, err
 	}
 	u := resps.Data.DownloadURLInfoSet[0].DownloadURL
-	return &model.Link{
+	link := &model.Link{
 		URL: u,
 		Header: http.Header{
 			"Referer":    []string{d.conf.referer},
@@ -98,7 +98,12 @@ func (d *Vtencent) Link(ctx context.Context, file model.Obj, args model.LinkArgs
 		},
 		Concurrency: 2,
 		PartSize:    10 * utils.MB,
-	}, nil
+	}
+	if file.GetSize() == 0 {
+		link.Concurrency = 0
+		link.PartSize = 0
+	}
+	return link, nil
 }
 
 func (d *Vtencent) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {

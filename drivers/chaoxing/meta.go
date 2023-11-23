@@ -5,7 +5,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/op"
 )
 
-// 此程序挂载的是超星小组网盘，需要代理才能只用；
+// 此程序挂载的是超星小组网盘，需要代理才能使用；
 // 登录超星后进入个人空间，进入小组，新建小组，点击进去。
 // url中就有bbsid的参数，系统限制单文件大小2G，没有总容量限制
 type Addition struct {
@@ -30,9 +30,9 @@ func init() {
 	op.RegisterDriver(func() driver.Driver {
 		return &ChaoXing{
 			config: driver.Config{
-				Name:              "超星小组盘",
+				Name:              "ChaoXingGroupDrive",
 				OnlyProxy:         true,
-				OnlyLocal:         true,
+				OnlyLocal:         false,
 				DefaultRoot:       "-1",
 				NoOverwriteUpload: true,
 			},
