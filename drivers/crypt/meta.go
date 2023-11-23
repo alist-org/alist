@@ -21,6 +21,8 @@ type Addition struct {
 	FileNameEncoding string `json:"filename_encoding" type:"select" required:"true" options:"base64,base32,base32768" default:"base64" help:"for advanced user only!"`
 
 	Thumbnail   bool   `json:"thumbnail" required:"true" default:"false" help:"enable thumbnail which pre-generated under .thumbnails folder"`
+
+	ShowHidden       bool   `json:"show_hidden"  default:"true" required:"false" help:"show hidden directories and files"`
 }
 
 var config = driver.Config{
