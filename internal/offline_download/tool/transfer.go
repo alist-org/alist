@@ -9,16 +9,18 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/xhofe/tache"
+	"os"
 	"path/filepath"
 	"sync"
 )
 
 type TransferTask struct {
 	tache.Base
-	file       File
-	dstDirPath string
-	wg         *sync.WaitGroup
-	tempDir    string
+	file         File
+	dstDirPath   string
+	wg           *sync.WaitGroup
+	tempDir      string
+	deletePolicy DeletePolicy
 }
 
 func (t *TransferTask) Run() error {
@@ -59,6 +61,24 @@ func (t *TransferTask) GetName() string {
 
 func (t *TransferTask) GetStatus() string {
 	return "transferring"
+}
+
+func (t *TransferTask) OnSucceeded() {
+	if t.deletePolicy == DeleteOnUploadSucceed || t.deletePolicy == DeleteAlways {
+		err := os.Remove(t.file.Path)
+		if err != nil {
+			log.Errorf("failed to delete file %s, error: %s", t.file.Path, err.Error())
+		}
+	}
+}
+
+func (t *TransferTask) OnFailed() {
+	if t.deletePolicy == DeleteOnUploadFailed || t.deletePolicy == DeleteAlways {
+		err := os.Remove(t.file.Path)
+		if err != nil {
+			log.Errorf("failed to delete file %s, error: %s", t.file.Path, err.Error())
+		}
+	}
 }
 
 var (

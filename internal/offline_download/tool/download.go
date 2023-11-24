@@ -125,10 +125,11 @@ func (t *DownloadTask) Complete() error {
 	for i, _ := range files {
 		file := files[i]
 		TransferTaskManager.Add(&TransferTask{
-			file:       file,
-			dstDirPath: t.DstDirPath,
-			wg:         &wg,
-			tempDir:    t.TempDir,
+			file:         file,
+			dstDirPath:   t.DstDirPath,
+			wg:           &wg,
+			tempDir:      t.TempDir,
+			deletePolicy: t.DeletePolicy,
 		})
 	}
 	return nil
