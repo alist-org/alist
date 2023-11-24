@@ -19,7 +19,7 @@ func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.
 		attachFileName(w, file)
 		contentType := link.Header.Get("Content-Type")
 		if contentType != "" {
-			w.Header().Add("Content-Type", contentType)
+			w.Header().Set("Content-Type", contentType)
 		}
 		http.ServeContent(w, r, file.GetName(), file.ModTime(), link.MFile)
 		return nil
