@@ -2,6 +2,7 @@ package qbit
 
 import (
 	"github.com/alist-org/alist/v3/internal/conf"
+	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/offline_download/tool"
 	"github.com/alist-org/alist/v3/internal/setting"
@@ -11,6 +12,10 @@ import (
 
 type QBittorrent struct {
 	client qbittorrent.Client
+}
+
+func (a *QBittorrent) Run(task *tool.DownloadTask) error {
+	return errs.NotSupport
 }
 
 func (a *QBittorrent) Name() string {
