@@ -3,18 +3,34 @@ package fs
 import (
 	"context"
 	"fmt"
-	"github.com/alist-org/alist/v3/internal/model"
-	"sync/atomic"
-
+	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
+	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/op"
-	"github.com/alist-org/alist/v3/pkg/task"
 	"github.com/pkg/errors"
+	"github.com/xhofe/tache"
 )
 
-var UploadTaskManager = task.NewTaskManager(3, func(tid *uint64) {
-	atomic.AddUint64(tid, 1)
-})
+type UploadTask struct {
+	tache.Base
+	storage          driver.Driver
+	dstDirActualPath string
+	file             model.FileStreamer
+}
+
+func (t *UploadTask) GetName() string {
+	return fmt.Sprintf("upload %s to [%s](%s)", t.file.GetName(), t.storage.GetStorage().MountPath, t.dstDirActualPath)
+}
+
+func (t *UploadTask) GetStatus() string {
+	return "uploading"
+}
+
+func (t *UploadTask) Run() error {
+	return op.Put(t.Ctx(), t.storage, t.dstDirActualPath, t.file, t.SetProgress, true)
+}
+
+var UploadTaskManager *tache.Manager[*UploadTask]
 
 // putAsTask add as a put task and return immediately
 func putAsTask(dstDirPath string, file model.FileStreamer) error {
@@ -33,12 +49,11 @@ func putAsTask(dstDirPath string, file model.FileStreamer) error {
 		//file.SetReader(tempFile)
 		//file.SetTmpFile(tempFile)
 	}
-	UploadTaskManager.Submit(task.WithCancelCtx(&task.Task[uint64]{
-		Name: fmt.Sprintf("upload %s to [%s](%s)", file.GetName(), storage.GetStorage().MountPath, dstDirActualPath),
-		Func: func(task *task.Task[uint64]) error {
-			return op.Put(task.Ctx, storage, dstDirActualPath, file, task.SetProgress, true)
-		},
-	}))
+	UploadTaskManager.Add(&UploadTask{
+		storage:          storage,
+		dstDirActualPath: dstDirActualPath,
+		file:             file,
+	})
 	return nil
 }
 

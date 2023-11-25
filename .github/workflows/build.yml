@@ -27,6 +27,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - uses: benjlevesque/short-sha@v2.2
+        id: short-sha
+
       - name: Install dependencies
         run: |
           sudo snap install zig --classic --beta
@@ -41,5 +44,5 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
-          name: alist
+          name: alist_${{ env.SHA }}
           path: dist

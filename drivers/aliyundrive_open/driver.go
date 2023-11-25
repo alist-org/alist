@@ -80,7 +80,7 @@ func (d *AliyundriveOpen) link(ctx context.Context, file model.Obj) (*model.Link
 		req.SetBody(base.Json{
 			"drive_id":   d.DriveId,
 			"file_id":    file.GetID(),
-			"expire_sec": 14400,
+			"expire_sec": 900,
 		})
 	})
 	if err != nil {
@@ -93,7 +93,7 @@ func (d *AliyundriveOpen) link(ctx context.Context, file model.Obj) (*model.Link
 		}
 		url = utils.Json.Get(res, "streamsUrl", d.LIVPDownloadFormat).ToString()
 	}
-	exp := time.Hour
+	exp := time.Minute
 	return &model.Link{
 		URL:        url,
 		Expiration: &exp,
@@ -207,7 +207,7 @@ func (d *AliyundriveOpen) Other(ctx context.Context, args model.OtherArgs) (inte
 	case "video_preview":
 		uri = "/adrive/v1.0/openFile/getVideoPreviewPlayInfo"
 		data["category"] = "live_transcoding"
-		data["url_expire_sec"] = 14400
+		data["url_expire_sec"] = 900
 	default:
 		return nil, errs.NotSupport
 	}

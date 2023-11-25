@@ -74,9 +74,10 @@ func OfflineDownloadTools(c *gin.Context) {
 }
 
 type AddOfflineDownloadReq struct {
-	Urls []string `json:"urls"`
-	Path string   `json:"path"`
-	Tool string   `json:"tool"`
+	Urls         []string `json:"urls"`
+	Path         string   `json:"path"`
+	Tool         string   `json:"tool"`
+	DeletePolicy string   `json:"delete_policy"`
 }
 
 func AddOfflineDownload(c *gin.Context) {
@@ -98,9 +99,10 @@ func AddOfflineDownload(c *gin.Context) {
 	}
 	for _, url := range req.Urls {
 		err := tool.AddURL(c, &tool.AddURLArgs{
-			URL:        url,
-			DstDirPath: reqPath,
-			Tool:       req.Tool,
+			URL:          url,
+			DstDirPath:   reqPath,
+			Tool:         req.Tool,
+			DeletePolicy: tool.DeletePolicy(req.DeletePolicy),
 		})
 		if err != nil {
 			common.ErrorResp(c, err, 500)

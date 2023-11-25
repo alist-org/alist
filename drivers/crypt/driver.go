@@ -124,6 +124,9 @@ func (d *Crypt) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([
 				//filter illegal files
 				continue
 			}
+			if !d.ShowHidden && strings.HasPrefix(name, ".") {
+				continue
+			}
 			objRes := model.Object{
 				Name:     name,
 				Size:     0,
@@ -143,6 +146,9 @@ func (d *Crypt) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([
 			name, err := d.cipher.DecryptFileName(obj.GetName())
 			if err != nil {
 				//filter illegal files
+				continue
+			}
+			if !d.ShowHidden && strings.HasPrefix(name, ".") {
 				continue
 			}
 			objRes := model.Object{

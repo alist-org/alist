@@ -2,15 +2,24 @@ package qbit
 
 import (
 	"github.com/alist-org/alist/v3/internal/conf"
+	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/offline_download/tool"
-	"github.com/alist-org/alist/v3/internal/qbittorrent"
 	"github.com/alist-org/alist/v3/internal/setting"
+	"github.com/alist-org/alist/v3/pkg/qbittorrent"
 	"github.com/pkg/errors"
 )
 
 type QBittorrent struct {
 	client qbittorrent.Client
+}
+
+func (a *QBittorrent) Run(task *tool.DownloadTask) error {
+	return errs.NotSupport
+}
+
+func (a *QBittorrent) Name() string {
+	return "qBittorrent"
 }
 
 func (a *QBittorrent) Items() []model.SettingItem {
@@ -44,13 +53,13 @@ func (a *QBittorrent) AddURL(args *tool.AddUrlArgs) (string, error) {
 	return args.UID, nil
 }
 
-func (a *QBittorrent) Remove(tid string) error {
-	err := a.client.Delete(tid, true)
+func (a *QBittorrent) Remove(task *tool.DownloadTask) error {
+	err := a.client.Delete(task.GID, true)
 	return err
 }
 
-func (a *QBittorrent) Status(tid string) (*tool.Status, error) {
-	info, err := a.client.GetInfo(tid)
+func (a *QBittorrent) Status(task *tool.DownloadTask) (*tool.Status, error) {
+	info, err := a.client.GetInfo(task.GID)
 	if err != nil {
 		return nil, err
 	}
@@ -62,19 +71,15 @@ func (a *QBittorrent) Status(tid string) (*tool.Status, error) {
 	case qbittorrent.ALLOCATING, qbittorrent.DOWNLOADING, qbittorrent.METADL, qbittorrent.PAUSEDDL, qbittorrent.QUEUEDDL, qbittorrent.STALLEDDL, qbittorrent.CHECKINGDL, qbittorrent.FORCEDDL, qbittorrent.CHECKINGRESUMEDATA, qbittorrent.MOVING:
 		s.Status = "[qBittorrent] downloading"
 	case qbittorrent.ERROR, qbittorrent.MISSINGFILES, qbittorrent.UNKNOWN:
-		s.Err = errors.Errorf("[qBittorrent] failed to download %s, error: %s", tid, info.State)
+		s.Err = errors.Errorf("[qBittorrent] failed to download %s, error: %s", task.GID, info.State)
 	default:
-		s.Err = errors.Errorf("[qBittorrent] unknown error occurred downloading %s", tid)
+		s.Err = errors.Errorf("[qBittorrent] unknown error occurred downloading %s", task.GID)
 	}
 	return s, nil
-}
-
-func (a *QBittorrent) GetFiles(tid string) []tool.File {
-	return nil
 }
 
 var _ tool.Tool = (*QBittorrent)(nil)
 
 func init() {
-	tool.Tools.Add("qBittorrent", &QBittorrent{})
+	tool.Tools.Add(&QBittorrent{})
 }

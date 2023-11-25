@@ -8,15 +8,15 @@ import (
 )
 
 type Database struct {
-	Type        string `json:"type" env:"DB_TYPE"`
-	Host        string `json:"host" env:"DB_HOST"`
-	Port        int    `json:"port" env:"DB_PORT"`
-	User        string `json:"user" env:"DB_USER"`
-	Password    string `json:"password" env:"DB_PASS"`
-	Name        string `json:"name" env:"DB_NAME"`
-	DBFile      string `json:"db_file" env:"DB_FILE"`
-	TablePrefix string `json:"table_prefix" env:"DB_TABLE_PREFIX"`
-	SSLMode     string `json:"ssl_mode" env:"DB_SSL_MODE"`
+	Type        string `json:"type" env:"TYPE"`
+	Host        string `json:"host" env:"HOST"`
+	Port        int    `json:"port" env:"PORT"`
+	User        string `json:"user" env:"USER"`
+	Password    string `json:"password" env:"PASS"`
+	Name        string `json:"name" env:"NAME"`
+	DBFile      string `json:"db_file" env:"FILE"`
+	TablePrefix string `json:"table_prefix" env:"TABLE_PREFIX"`
+	SSLMode     string `json:"ssl_mode" env:"SSL_MODE"`
 }
 
 type Scheme struct {
@@ -39,20 +39,41 @@ type LogConfig struct {
 	Compress   bool   `json:"compress" env:"COMPRESS"`
 }
 
+type TaskConfig struct {
+	Workers  int `json:"workers" env:"WORKERS"`
+	MaxRetry int `json:"max_retry" env:"MAX_RETRY"`
+}
+
+type TasksConfig struct {
+	Download TaskConfig `json:"download" envPrefix:"DOWNLOAD_"`
+	Transfer TaskConfig `json:"transfer" envPrefix:"TRANSFER_"`
+	Upload   TaskConfig `json:"upload" envPrefix:"UPLOAD_"`
+	Copy     TaskConfig `json:"copy" envPrefix:"COPY_"`
+}
+
+type Cors struct {
+	AllowOrigins []string `json:"allow_origins" env:"ALLOW_ORIGINS"`
+	AllowMethods []string `json:"allow_methods" env:"ALLOW_METHODS"`
+	AllowHeaders []string `json:"allow_headers" env:"ALLOW_HEADERS"`
+}
+
 type Config struct {
-	Force                 bool      `json:"force" env:"FORCE"`
-	SiteURL               string    `json:"site_url" env:"SITE_URL"`
-	Cdn                   string    `json:"cdn" env:"CDN"`
-	JwtSecret             string    `json:"jwt_secret" env:"JWT_SECRET"`
-	TokenExpiresIn        int       `json:"token_expires_in" env:"TOKEN_EXPIRES_IN"`
-	Database              Database  `json:"database"`
-	Scheme                Scheme    `json:"scheme"`
-	TempDir               string    `json:"temp_dir" env:"TEMP_DIR"`
-	BleveDir              string    `json:"bleve_dir" env:"BLEVE_DIR"`
-	Log                   LogConfig `json:"log"`
-	DelayedStart          int       `json:"delayed_start" env:"DELAYED_START"`
-	MaxConnections        int       `json:"max_connections" env:"MAX_CONNECTIONS"`
-	TlsInsecureSkipVerify bool      `json:"tls_insecure_skip_verify" env:"TLS_INSECURE_SKIP_VERIFY"`
+	Force                 bool        `json:"force" env:"FORCE"`
+	SiteURL               string      `json:"site_url" env:"SITE_URL"`
+	Cdn                   string      `json:"cdn" env:"CDN"`
+	JwtSecret             string      `json:"jwt_secret" env:"JWT_SECRET"`
+	TokenExpiresIn        int         `json:"token_expires_in" env:"TOKEN_EXPIRES_IN"`
+	Database              Database    `json:"database" envPrefix:"DB_"`
+	Scheme                Scheme      `json:"scheme"`
+	TempDir               string      `json:"temp_dir" env:"TEMP_DIR"`
+	BleveDir              string      `json:"bleve_dir" env:"BLEVE_DIR"`
+	DistDir               string      `json:"dist_dir"`
+	Log                   LogConfig   `json:"log"`
+	DelayedStart          int         `json:"delayed_start" env:"DELAYED_START"`
+	MaxConnections        int         `json:"max_connections" env:"MAX_CONNECTIONS"`
+	TlsInsecureSkipVerify bool        `json:"tls_insecure_skip_verify" env:"TLS_INSECURE_SKIP_VERIFY"`
+	Tasks                 TasksConfig `json:"tasks" envPrefix:"TASKS_"`
+	Cors                  Cors        `json:"cors" envPrefix:"CORS_"`
 }
 
 func DefaultConfig() *Config {
@@ -89,5 +110,27 @@ func DefaultConfig() *Config {
 		},
 		MaxConnections:        0,
 		TlsInsecureSkipVerify: true,
+		Tasks: TasksConfig{
+			Download: TaskConfig{
+				Workers:  5,
+				MaxRetry: 1,
+			},
+			Transfer: TaskConfig{
+				Workers:  5,
+				MaxRetry: 2,
+			},
+			Upload: TaskConfig{
+				Workers: 5,
+			},
+			Copy: TaskConfig{
+				Workers:  5,
+				MaxRetry: 2,
+			},
+		},
+		Cors: Cors{
+			AllowOrigins: []string{"*"},
+			AllowMethods: []string{"*"},
+			AllowHeaders: []string{"*"},
+		},
 	}
 }

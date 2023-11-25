@@ -8,14 +8,15 @@ import (
 	"os"
 	"strings"
 
+	"github.com/alist-org/alist/v3/public"
+
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/setting"
 	"github.com/alist-org/alist/v3/pkg/utils"
-	"github.com/alist-org/alist/v3/public"
 	"github.com/gin-gonic/gin"
 )
 
-func InitIndex() {
+func initIndex() {
 	var index []byte
 	var err error
 	if CheckHasLocalPublic() {
@@ -68,7 +69,7 @@ func UpdateIndex() {
 }
 
 func Static(r *gin.RouterGroup, noRoute func(handlers ...gin.HandlerFunc)) {
-	InitIndex()
+	initIndex()
 	folders := []string{"assets", "images", "streamer", "static"}
 	r.Use(func(c *gin.Context) {
 		for i := range folders {
