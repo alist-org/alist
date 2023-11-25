@@ -443,6 +443,8 @@ github.com/xhofe/tache v0.0.0-20231120064353-a3585a237e25 h1:XZBuEzDB9Kqni/+zAKx
 github.com/xhofe/tache v0.0.0-20231120064353-a3585a237e25/go.mod h1:iKumPFvywf30FRpAHHCt64G0JHLMzT0K+wyGedHsmTQ=
 github.com/xhofe/tache v0.0.0-20231120085916-722855be0521 h1:m7O+xOqQRysjFngMhQ39RzCFdiCouFLvsrV7N2ScbUY=
 github.com/xhofe/tache v0.0.0-20231120085916-722855be0521/go.mod h1:iKumPFvywf30FRpAHHCt64G0JHLMzT0K+wyGedHsmTQ=
+github.com/xhofe/tache v0.1.0 h1:W0uoyLWCmUEQudXwB93owdlGSlN8gwZmiiDlKFCerKA=
+github.com/xhofe/tache v0.1.0/go.mod h1:iKumPFvywf30FRpAHHCt64G0JHLMzT0K+wyGedHsmTQ=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
 github.com/yusufpapurcu/wmi v1.2.3 h1:E1ctvB7uKFMOJw3fdOW32DwGE9I7t++CRUEMKvFoFiw=
 github.com/yusufpapurcu/wmi v1.2.3/go.mod h1:SBZ9tNy3G9/m5Oi98Zks0QjeHVDvuK0qfxQmPyzfmi0=
