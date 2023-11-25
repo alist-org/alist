@@ -85,6 +85,7 @@ BuildDev() {
 }
 
 BuildDocker() {
+  echo "replace github.com/mattn/go-sqlite3 => github.com/leso-kn/go-sqlite3 v0.0.0-20230710125852-03158dc838ed" >>go.mod
   go build -o ./bin/alist -ldflags="$ldflags" -tags=jsoniter .
 }
 
