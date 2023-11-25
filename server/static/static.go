@@ -3,6 +3,7 @@ package static
 import (
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
 	"net/http"
 	"os"
@@ -16,20 +17,39 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func initIndex() {
-	var index []byte
-	var err error
-	if CheckHasLocalPublic() {
-		index, err = os.ReadFile("./public/dist/index.html")
-	} else {
-		index, err = public.Public.ReadFile("dist/index.html")
-	}
+var static fs.FS = public.Public
 
+func initStatic() {
+	if conf.Conf.DistDir == "" {
+		if CheckHasLocalPublic() {
+			static = os.DirFS("./public/dist")
+			return
+		}
+
+		dist, err := fs.Sub(static, "dist")
+		if err != nil {
+			utils.Log.Fatalf("failed to read dist dir")
+		}
+		static = dist
+		return
+	}
+	static = os.DirFS(conf.Conf.DistDir)
+}
+
+func initIndex() {
+	indexFile, err := static.Open("index.html")
 	if err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
 			utils.Log.Fatalf("index.html not exist, you may forget to put dist of frontend to public/dist")
 		}
 		utils.Log.Fatalf("failed to read index.html: %v", err)
+	}
+	defer func() {
+		_ = indexFile.Close()
+	}()
+	index, err := io.ReadAll(indexFile)
+	if err != nil {
+		utils.Log.Fatalf("failed to read dist/index.html")
 	}
 	conf.RawIndexHtml = string(index)
 	siteConfig := getSiteConfig()
@@ -69,6 +89,7 @@ func UpdateIndex() {
 }
 
 func Static(r *gin.RouterGroup, noRoute func(handlers ...gin.HandlerFunc)) {
+	initStatic()
 	initIndex()
 	folders := []string{"assets", "images", "streamer", "static"}
 	r.Use(func(c *gin.Context) {
@@ -78,17 +99,8 @@ func Static(r *gin.RouterGroup, noRoute func(handlers ...gin.HandlerFunc)) {
 			}
 		}
 	})
-
-	hasLocalPublic := CheckHasLocalPublic()
 	for i, folder := range folders {
-		if hasLocalPublic {
-			folder = "./public/dist/" + folder
-			r.Static(fmt.Sprintf("/%s/", folders[i]), folder)
-			continue
-		}
-
-		folder = "dist/" + folder
-		sub, err := fs.Sub(public.Public, folder)
+		sub, err := fs.Sub(static, folder)
 		if err != nil {
 			utils.Log.Fatalf("can't find folder: %s", folder)
 		}
