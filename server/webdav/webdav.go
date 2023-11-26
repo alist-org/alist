@@ -536,12 +536,12 @@ func (h *Handler) handleLock(w http.ResponseWriter, r *http.Request) (retStatus 
 			}
 		}
 		reqPath, status, err := h.stripPrefix(r.URL.Path)
+		if err != nil {
+			return status, err
+		}
 		reqPath, err = user.JoinPath(reqPath)
 		if err != nil {
 			return 403, err
-		}
-		if err != nil {
-			return status, err
 		}
 		ld = LockDetails{
 			Root:      reqPath,
