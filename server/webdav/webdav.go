@@ -383,7 +383,7 @@ func (h *Handler) handleMkcol(w http.ResponseWriter, r *http.Request) (status in
 		return http.StatusUnsupportedMediaType, nil
 	}
 
-	// RFC 4918 8.3.2
+	// RFC 4918 9.3.1
 	//405 (Method Not Allowed) - MKCOL can only be executed on an unmapped URL
 	if _, err := fs.Get(ctx, reqPath, &fs.GetArgs{}); err == nil {
 		return http.StatusMethodNotAllowed, err
