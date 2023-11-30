@@ -207,13 +207,25 @@ func pagination(objs []model.Obj, req *model.PageReq) (int, []model.Obj) {
 
 func toObjsResp(objs []model.Obj, parent string, encrypt bool) []ObjResp {
 	var resp []ObjResp
+
+	MyHandleFsList(parent, objs)
+
 	for _, obj := range objs {
 		thumb, _ := model.GetThumb(obj)
+		// add by me
+		dirCache, ok := MyGetDirCach(stdpath.Join(parent, obj.GetName()))
+		size := obj.GetSize()
+		modified := obj.ModTime()
+		if ok {
+			size = dirCache.Size
+			modified = dirCache.Modified
+		}
+
 		resp = append(resp, ObjResp{
 			Name:        obj.GetName(),
-			Size:        obj.GetSize(),
+			Size:        size,
 			IsDir:       obj.IsDir(),
-			Modified:    obj.ModTime(),
+			Modified:    modified,
 			Created:     obj.CreateTime(),
 			HashInfoStr: obj.GetHash().String(),
 			HashInfo:    obj.GetHash().Export(),
