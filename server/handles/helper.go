@@ -45,6 +45,8 @@ func Plist(c *gin.Context) {
 	}
 	fullName := c.Param("name")
 	Url := link.String()
+	Url = strings.ReplaceAll(Url, "<", "[")
+	Url = strings.ReplaceAll(Url, ">", "]")
 	nameEncode := linkNameSplit[1]
 	fullName, err = url.PathUnescape(nameEncode)
 	if err != nil {

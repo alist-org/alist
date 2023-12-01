@@ -11,7 +11,7 @@ type Config struct {
 	DefaultRoot       string `json:"default_root"`
 	CheckStatus       bool   `json:"-"`
 	Alert             string `json:"alert"` //info,success,warning,danger
-	NoOverwriteUpload bool   `json:"-"`
+	NoOverwriteUpload bool   `json:"-"`     // whether to support overwrite upload
 }
 
 func (c Config) MustProxy() bool {

@@ -2,6 +2,7 @@ package tool
 
 import (
 	"fmt"
+	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/xhofe/tache"
@@ -25,6 +26,12 @@ type DownloadTask struct {
 }
 
 func (t *DownloadTask) Run() error {
+	if err := t.tool.Run(t); !errs.IsNotSupportError(err) {
+		if err == nil {
+			return t.Complete()
+		}
+		return err
+	}
 	t.Signal = make(chan int)
 	t.finish = make(chan struct{})
 	defer func() {
@@ -125,10 +132,11 @@ func (t *DownloadTask) Complete() error {
 	for i, _ := range files {
 		file := files[i]
 		TransferTaskManager.Add(&TransferTask{
-			file:       file,
-			dstDirPath: t.DstDirPath,
-			wg:         &wg,
-			tempDir:    t.TempDir,
+			file:         file,
+			dstDirPath:   t.DstDirPath,
+			wg:           &wg,
+			tempDir:      t.TempDir,
+			deletePolicy: t.DeletePolicy,
 		})
 	}
 	return nil

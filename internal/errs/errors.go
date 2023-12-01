@@ -29,3 +29,7 @@ func NewErr(err error, format string, a ...any) error {
 func IsNotFoundError(err error) bool {
 	return errors.Is(pkgerr.Cause(err), ObjectNotFound) || errors.Is(pkgerr.Cause(err), StorageNotFound)
 }
+
+func IsNotSupportError(err error) bool {
+	return errors.Is(pkgerr.Cause(err), NotSupport)
+}

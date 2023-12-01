@@ -3,6 +3,7 @@ package aria2
 import (
 	"context"
 	"fmt"
+	"github.com/alist-org/alist/v3/internal/errs"
 	"strconv"
 	"time"
 
@@ -19,6 +20,10 @@ var notify = NewNotify()
 
 type Aria2 struct {
 	client rpc.Client
+}
+
+func (a *Aria2) Run(task *tool.DownloadTask) error {
+	return errs.NotSupport
 }
 
 func (a *Aria2) Name() string {

@@ -3,12 +3,12 @@ package teambition
 import (
 	"context"
 	"errors"
+	"github.com/alist-org/alist/v3/pkg/utils"
 	"net/http"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/go-resty/resty/v2"
 )
 
@@ -128,11 +128,23 @@ func (d *Teambition) Put(ctx context.Context, dstDir model.Obj, stream model.Fil
 	if d.UseS3UploadMethod {
 		return d.newUpload(ctx, dstDir, stream, up)
 	}
-	res, err := d.request("/api/v2/users/me", http.MethodGet, nil, nil)
-	if err != nil {
-		return err
+	var (
+		token string
+		err   error
+	)
+	if d.isInternational() {
+		res, err := d.request("/projects", http.MethodGet, nil, nil)
+		if err != nil {
+			return err
+		}
+		token = getBetweenStr(string(res), "strikerAuth&quot;:&quot;", "&quot;,&quot;phoneForLogin")
+	} else {
+		res, err := d.request("/api/v2/users/me", http.MethodGet, nil, nil)
+		if err != nil {
+			return err
+		}
+		token = utils.Json.Get(res, "strikerAuth").ToString()
 	}
-	token := utils.Json.Get(res, "strikerAuth").ToString()
 	var newFile *FileUpload
 	if stream.GetSize() <= 20971520 {
 		// post upload

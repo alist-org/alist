@@ -382,6 +382,21 @@ func (h *Handler) handleMkcol(w http.ResponseWriter, r *http.Request) (status in
 	if r.ContentLength > 0 {
 		return http.StatusUnsupportedMediaType, nil
 	}
+
+	// RFC 4918 9.3.1
+	//405 (Method Not Allowed) - MKCOL can only be executed on an unmapped URL
+	if _, err := fs.Get(ctx, reqPath, &fs.GetArgs{}); err == nil {
+		return http.StatusMethodNotAllowed, err
+	}
+	// RFC 4918 9.3.1
+	// 409 (Conflict) The server MUST NOT create those intermediate collections automatically.
+	reqDir := path.Dir(reqPath)
+	if _, err := fs.Get(ctx, reqDir, &fs.GetArgs{}); err != nil {
+		if errs.IsObjectNotFound(err) {
+			return http.StatusConflict, err
+		}
+		return http.StatusMethodNotAllowed, err
+	}
 	if err := fs.MakeDir(ctx, reqPath); err != nil {
 		if os.IsNotExist(err) {
 			return http.StatusConflict, err
@@ -521,12 +536,12 @@ func (h *Handler) handleLock(w http.ResponseWriter, r *http.Request) (retStatus 
 			}
 		}
 		reqPath, status, err := h.stripPrefix(r.URL.Path)
+		if err != nil {
+			return status, err
+		}
 		reqPath, err = user.JoinPath(reqPath)
 		if err != nil {
 			return 403, err
-		}
-		if err != nil {
-			return status, err
 		}
 		ld = LockDetails{
 			Root:      reqPath,

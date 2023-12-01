@@ -35,6 +35,9 @@ type Tool interface {
 	Remove(task *DownloadTask) error
 	// Status return the status of the download task, if an error occurred, return the error in Status.Err
 	Status(task *DownloadTask) (*Status, error)
+
+	// Run for simple http download
+	Run(task *DownloadTask) error
 }
 
 type GetFileser interface {

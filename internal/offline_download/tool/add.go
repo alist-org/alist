@@ -16,6 +16,7 @@ const (
 	DeleteOnUploadSucceed DeletePolicy = "delete_on_upload_succeed"
 	DeleteOnUploadFailed  DeletePolicy = "delete_on_upload_failed"
 	DeleteNever           DeletePolicy = "delete_never"
+	DeleteAlways          DeletePolicy = "delete_always"
 )
 
 type AddURLArgs struct {

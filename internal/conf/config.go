@@ -51,6 +51,12 @@ type TasksConfig struct {
 	Copy     TaskConfig `json:"copy" envPrefix:"COPY_"`
 }
 
+type Cors struct {
+	AllowOrigins []string `json:"allow_origins" env:"ALLOW_ORIGINS"`
+	AllowMethods []string `json:"allow_methods" env:"ALLOW_METHODS"`
+	AllowHeaders []string `json:"allow_headers" env:"ALLOW_HEADERS"`
+}
+
 type Config struct {
 	Force                 bool        `json:"force" env:"FORCE"`
 	SiteURL               string      `json:"site_url" env:"SITE_URL"`
@@ -67,6 +73,7 @@ type Config struct {
 	MaxConnections        int         `json:"max_connections" env:"MAX_CONNECTIONS"`
 	TlsInsecureSkipVerify bool        `json:"tls_insecure_skip_verify" env:"TLS_INSECURE_SKIP_VERIFY"`
 	Tasks                 TasksConfig `json:"tasks" envPrefix:"TASKS_"`
+	Cors                  Cors        `json:"cors" envPrefix:"CORS_"`
 }
 
 func DefaultConfig() *Config {
@@ -119,6 +126,11 @@ func DefaultConfig() *Config {
 				Workers:  5,
 				MaxRetry: 2,
 			},
+		},
+		Cors: Cors{
+			AllowOrigins: []string{"*"},
+			AllowMethods: []string{"*"},
+			AllowHeaders: []string{"*"},
 		},
 	}
 }
