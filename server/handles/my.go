@@ -11,11 +11,12 @@ import (
 	"github.com/samber/lo"
 )
 
-// 20s自动清理
-var listCache = cache.NewMemCache(cache.WithClearInterval[model.DirCache](20 * time.Second))
+// 10s自动清理
+var listCache = cache.NewMemCache(cache.WithClearInterval[model.DirCache](10 * time.Second))
 
 func MyHandleFsList(path string, objs []model.Obj) {
-	if len(objs) == 0 {
+	// 还没开始添加存储
+	if path == "/" && len(objs) == 0 {
 		return
 	}
 
@@ -30,8 +31,17 @@ func MyHandleFsList(path string, objs []model.Obj) {
 	if ok {
 		listCache.Set(path, dirCache)
 	}
+	// 子文件为 空 的情况
+	if len(objs) == 0 {
+		if ok && dirCache.Size != 0 {
+			dirCache.Size = 0
+			db.UpdateDirCache(&dirCache)
+			listCache.Set(path, dirCache)
+		}
+		return
+	}
 
-	// 子文件夹
+	// 子文件夹包含的 dirCache
 	for _, obj := range objs {
 		if obj.IsDir() {
 			fullPath := stdpath.Join(path, obj.GetName())
@@ -40,17 +50,16 @@ func MyHandleFsList(path string, objs []model.Obj) {
 				return item.Path == fullPath
 			})
 			if ok {
-				if obj.ModTime().Before(dirCache.Modified) {
-					listCache.Set(fullPath, dirCache)
-				}
+				listCache.Set(fullPath, dirCache)
 			}
 		}
 	}
 
-	// 获取子文件夹最大的 修改时间
+	// 获取子文件 最大的修改时间
 	maxModifieObj := lo.MaxBy(objs, func(item model.Obj, max model.Obj) bool {
+		fullPath := stdpath.Join(path, item.GetName())
 		modified := item.ModTime()
-		dirCache, ok := MyGetDirCach(stdpath.Join(path, item.GetName()))
+		dirCache, ok := MyGetDirCach(fullPath)
 		if ok {
 			if modified.Before(dirCache.Modified) {
 				modified = dirCache.Modified
@@ -58,26 +67,35 @@ func MyHandleFsList(path string, objs []model.Obj) {
 		}
 		return modified.After(max.ModTime())
 	})
-	dirCache, ok = lo.Find(dirCaches, func(item model.DirCache) bool {
-		return item.Path == path
-	})
-
-	// 更新父文件夹 大小
+	// 子文件 大小相加
 	sum := lo.Reduce(objs, func(agg int, item model.Obj, _ int) int {
-		size := MyGetDirCacheSize(path)
-		if size == 0 {
-			size = int(item.GetSize())
+		size := int(item.GetSize())
+		if item.IsDir() {
+			fullPath := stdpath.Join(path, item.GetName())
+			dirCache, ok := MyGetDirCach(fullPath)
+			if ok {
+				size = int(dirCache.Size)
+			}
 		}
 		return agg + size
 	}, 0)
 
 	if ok {
+		isChanged := false
 		if maxModifieObj.ModTime().After(dirCache.Modified) {
 			// 更新父文件夹 修改时间
 			dirCache.Modified = maxModifieObj.ModTime()
-
+			isChanged = true
+		}
+		if dirCache.Size != int64(sum) {
 			dirCache.Size = int64(sum)
-			db.UpdateDirCache(&dirCache)
+			isChanged = true
+		}
+		if isChanged {
+			if err := db.UpdateDirCache(&dirCache); err != nil {
+				utils.Log.Errorf("failed update dirCache: %s", err)
+			}
+			listCache.Set(path, dirCache)
 		}
 	} else {
 		dirCache = model.DirCache{
@@ -86,17 +104,9 @@ func MyHandleFsList(path string, objs []model.Obj) {
 			Size:     int64(sum),
 		}
 		if err := db.CreateDirCache(&dirCache); err != nil {
-			utils.Log.Error("failed create dirCache", err)
+			utils.Log.Errorf("failed create dirCache: %s", err)
 		}
 	}
-}
-
-func MyGetDirCacheSize(path string) int {
-	dirCache, ok := listCache.Get(path)
-	if ok {
-		return int(dirCache.Size)
-	}
-	return 0
 }
 
 func MyGetDirCach(path string) (model.DirCache, bool) {

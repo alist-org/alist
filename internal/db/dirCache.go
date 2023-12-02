@@ -18,5 +18,5 @@ func CreateDirCache(u *model.DirCache) error {
 }
 
 func UpdateDirCache(u *model.DirCache) error {
-	return errors.WithStack(db.Save(u).Error)
+	return errors.WithStack(db.Where("path=?", u.Path).Save(u).Error)
 }
