@@ -115,7 +115,6 @@ https://alist.nn.ci/guide/sponsor.html
 - [VidHub](https://okaapps.com/product/1659622164?ref=alist) - An elegant cloud video player within the Apple ecosystem. Support for iPhone, iPad, Mac, and Apple TV.
 - [亚洲云](https://www.asiayun.com/aff/QQCOOQKZ) - 高防服务器|服务器租用|福州高防|广东电信|香港服务器|美国服务器|海外服务器 - 国内靠谱的企业级云计算服务提供商 (sponsored Chinese API server)
 - [找资源](https://zhaoziyuan.pw/) - 阿里云盘资源搜索引擎
-- [JetBrains](https://www.jetbrains.com/) - Essential tools for software developers and teams
 
 ## Contributors
 
