@@ -80,6 +80,7 @@ func MyHandleFsList(path string, objs []model.Obj) {
 		return agg + size
 	}, 0)
 
+	changedSize := 0
 	if ok {
 		isChanged := false
 		if maxModifieObj.ModTime().After(dirCache.Modified) {
@@ -88,6 +89,7 @@ func MyHandleFsList(path string, objs []model.Obj) {
 			isChanged = true
 		}
 		if dirCache.Size != int64(sum) {
+			changedSize = sum - int(dirCache.Size)
 			dirCache.Size = int64(sum)
 			isChanged = true
 		}
@@ -105,6 +107,29 @@ func MyHandleFsList(path string, objs []model.Obj) {
 		}
 		if err := db.CreateDirCache(&dirCache); err != nil {
 			utils.Log.Errorf("failed create dirCache: %s", err)
+		}
+		changedSize = sum
+	}
+
+	// 父文件夹，父父文件夹。。。
+	if changedSize > 0 {
+		parentFolders := []string{}
+		parentPath := path
+		for {
+			parentPath = stdpath.Dir(parentPath)
+			if parentPath == "/" {
+				break
+			}
+			parentFolders = append(parentFolders, parentPath)
+		}
+		parentCaches, err := db.GetDirCachesByManyPath(parentFolders)
+		if err == nil {
+			for _, parentCache := range parentCaches {
+				parentCache.Size += int64(changedSize)
+				if err := db.UpdateDirCache(&parentCache); err != nil {
+					utils.Log.Errorf("failed update dirCache: %s", err)
+				}
+			}
 		}
 	}
 }

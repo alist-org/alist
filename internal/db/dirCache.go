@@ -13,6 +13,14 @@ func GetDirCachesByPath(startPath string) ([]model.DirCache, error) {
 	return dirCaches, nil
 }
 
+func GetDirCachesByManyPath(pathes []string) ([]model.DirCache, error) {
+	var dirCaches []model.DirCache
+	if err := db.Where("path in ?", pathes).Find(&dirCaches).Error; err != nil {
+		return nil, errors.Wrapf(err, "failed select dirCache like %s", pathes)
+	}
+	return dirCaches, nil
+}
+
 func CreateDirCache(u *model.DirCache) error {
 	return errors.WithStack(db.Create(u).Error)
 }
