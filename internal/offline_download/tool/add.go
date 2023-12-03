@@ -7,6 +7,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
+	"github.com/xhofe/tache"
 	"path/filepath"
 )
 
@@ -26,38 +27,38 @@ type AddURLArgs struct {
 	DeletePolicy DeletePolicy
 }
 
-func AddURL(ctx context.Context, args *AddURLArgs) error {
+func AddURL(ctx context.Context, args *AddURLArgs) (tache.TaskWithInfo, error) {
 	// get tool
 	tool, err := Tools.Get(args.Tool)
 	if err != nil {
-		return errors.Wrapf(err, "failed get tool")
+		return nil, errors.Wrapf(err, "failed get tool")
 	}
 	// check tool is ready
 	if !tool.IsReady() {
 		// try to init tool
 		if _, err := tool.Init(); err != nil {
-			return errors.Wrapf(err, "failed init tool %s", args.Tool)
+			return nil, errors.Wrapf(err, "failed init tool %s", args.Tool)
 		}
 	}
 	// check storage
 	storage, dstDirActualPath, err := op.GetStorageAndActualPath(args.DstDirPath)
 	if err != nil {
-		return errors.WithMessage(err, "failed get storage")
+		return nil, errors.WithMessage(err, "failed get storage")
 	}
 	// check is it could upload
 	if storage.Config().NoUpload {
-		return errors.WithStack(errs.UploadNotSupported)
+		return nil, errors.WithStack(errs.UploadNotSupported)
 	}
 	// check path is valid
 	obj, err := op.Get(ctx, storage, dstDirActualPath)
 	if err != nil {
 		if !errs.IsObjectNotFound(err) {
-			return errors.WithMessage(err, "failed get object")
+			return nil, errors.WithMessage(err, "failed get object")
 		}
 	} else {
 		if !obj.IsDir() {
 			// can't add to a file
-			return errors.WithStack(errs.NotFolder)
+			return nil, errors.WithStack(errs.NotFolder)
 		}
 	}
 
@@ -71,5 +72,5 @@ func AddURL(ctx context.Context, args *AddURLArgs) error {
 		tool:         tool,
 	}
 	DownloadTaskManager.Add(t)
-	return nil
+	return t, nil
 }

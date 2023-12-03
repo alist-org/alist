@@ -39,23 +39,23 @@ var CopyTaskManager *tache.Manager[*CopyTask]
 
 // Copy if in the same storage, call move method
 // if not, add copy task
-func _copy(ctx context.Context, srcObjPath, dstDirPath string, lazyCache ...bool) (bool, error) {
+func _copy(ctx context.Context, srcObjPath, dstDirPath string, lazyCache ...bool) (tache.TaskWithInfo, error) {
 	srcStorage, srcObjActualPath, err := op.GetStorageAndActualPath(srcObjPath)
 	if err != nil {
-		return false, errors.WithMessage(err, "failed get src storage")
+		return nil, errors.WithMessage(err, "failed get src storage")
 	}
 	dstStorage, dstDirActualPath, err := op.GetStorageAndActualPath(dstDirPath)
 	if err != nil {
-		return false, errors.WithMessage(err, "failed get dst storage")
+		return nil, errors.WithMessage(err, "failed get dst storage")
 	}
 	// copy if in the same storage, just call driver.Copy
 	if srcStorage.GetStorage() == dstStorage.GetStorage() {
-		return false, op.Copy(ctx, srcStorage, srcObjActualPath, dstDirActualPath, lazyCache...)
+		return nil, op.Copy(ctx, srcStorage, srcObjActualPath, dstDirActualPath, lazyCache...)
 	}
 	if ctx.Value(conf.NoTaskKey) != nil {
 		srcObj, err := op.Get(ctx, srcStorage, srcObjActualPath)
 		if err != nil {
-			return false, errors.WithMessagef(err, "failed get src [%s] file", srcObjPath)
+			return nil, errors.WithMessagef(err, "failed get src [%s] file", srcObjPath)
 		}
 		if !srcObj.IsDir() {
 			// copy file directly
@@ -63,7 +63,7 @@ func _copy(ctx context.Context, srcObjPath, dstDirPath string, lazyCache ...bool
 				Header: http.Header{},
 			})
 			if err != nil {
-				return false, errors.WithMessagef(err, "failed get [%s] link", srcObjPath)
+				return nil, errors.WithMessagef(err, "failed get [%s] link", srcObjPath)
 			}
 			fs := stream.FileStream{
 				Obj: srcObj,
@@ -72,19 +72,20 @@ func _copy(ctx context.Context, srcObjPath, dstDirPath string, lazyCache ...bool
 			// any link provided is seekable
 			ss, err := stream.NewSeekableStream(fs, link)
 			if err != nil {
-				return false, errors.WithMessagef(err, "failed get [%s] stream", srcObjPath)
+				return nil, errors.WithMessagef(err, "failed get [%s] stream", srcObjPath)
 			}
-			return false, op.Put(ctx, dstStorage, dstDirActualPath, ss, nil, false)
+			return nil, op.Put(ctx, dstStorage, dstDirActualPath, ss, nil, false)
 		}
 	}
 	// not in the same storage
-	CopyTaskManager.Add(&CopyTask{
+	t := &CopyTask{
 		srcStorage: srcStorage,
 		dstStorage: dstStorage,
 		srcObjPath: srcObjActualPath,
 		dstDirPath: dstDirActualPath,
-	})
-	return true, nil
+	}
+	CopyTaskManager.Add(t)
+	return t, nil
 }
 
 func copyBetween2Storages(t *CopyTask, srcStorage, dstStorage driver.Driver, srcObjPath, dstDirPath string) error {
