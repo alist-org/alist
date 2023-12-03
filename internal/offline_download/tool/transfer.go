@@ -11,20 +11,17 @@ import (
 	"github.com/xhofe/tache"
 	"os"
 	"path/filepath"
-	"sync"
 )
 
 type TransferTask struct {
 	tache.Base
 	file         File
 	dstDirPath   string
-	wg           *sync.WaitGroup
 	tempDir      string
 	deletePolicy DeletePolicy
 }
 
 func (t *TransferTask) Run() error {
-	defer t.wg.Done()
 	// check dstDir again
 	storage, dstDirActualPath, err := op.GetStorageAndActualPath(t.dstDirPath)
 	if err != nil {
