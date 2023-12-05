@@ -185,6 +185,18 @@ MakeRelease() {
   cd ../..
 }
 
+BuildLoong64Release()
+{
+    os_arch="linux-loong64"
+    cgo_cc="loongarch64-linux-gnu-gcc"
+    echo building for ${os_arch}
+    export GOOS=${os_arch%%-*}
+    export GOARCH=${os_arch##*-}
+    export CC=${cgo_cc}
+    export CGO_ENABLED=1
+    go build -o ./build/$appName-$os_arch -ldflags="$ldflags" -tags=jsoniter .
+}
+
 if [ "$1" = "dev" ]; then
   FetchWebDev
   if [ "$2" = "docker" ]; then
@@ -196,6 +208,9 @@ elif [ "$1" = "release" ]; then
   FetchWebRelease
   if [ "$2" = "docker" ]; then
     BuildDocker
+  elif [ "$2" = "loong64" ]; then
+    BuildLoong64Release
+    MakeRelease "md5-linux-loong64.txt"
   elif [ "$2" = "linux_musl_arm" ]; then
     BuildReleaseLinuxMuslArm
     MakeRelease "md5-linux-musl-arm.txt"
