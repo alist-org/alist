@@ -54,7 +54,7 @@ func (a *QBittorrent) AddURL(args *tool.AddUrlArgs) (string, error) {
 }
 
 func (a *QBittorrent) Remove(task *tool.DownloadTask) error {
-	err := a.client.Delete(task.GID, true)
+	err := a.client.Delete(task.GID, false)
 	return err
 }
 

@@ -2,7 +2,9 @@ package tool
 
 import (
 	"fmt"
+	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/errs"
+	"github.com/alist-org/alist/v3/internal/setting"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/xhofe/tache"
@@ -69,6 +71,18 @@ outer:
 		return err
 	}
 	t.Status = "offline download completed, maybe transferring"
+	// hack for qBittorrent
+	if t.tool.Name() == "qBittorrent" {
+		seedTime := setting.GetInt(conf.QbittorrentSeedtime, 0)
+		if seedTime >= 0 {
+			t.Status = "offline download completed, waiting for seeding"
+			<-time.After(time.Minute * time.Duration(seedTime))
+			err := t.tool.Remove(t)
+			if err != nil {
+				log.Errorln(err.Error())
+			}
+		}
+	}
 	return nil
 }
 
