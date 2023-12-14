@@ -252,3 +252,154 @@ func unicode(str string) string {
 	textUnquoted := textQuoted[1 : len(textQuoted)-1]
 	return textUnquoted
 }
+
+func (d *Yun139) personalRequest(pathname string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+	url := "https://personal-kd-njs.yun.139.com" + pathname
+	req := base.RestyClient.R()
+	randStr := random.String(16)
+	ts := time.Now().Format("2006-01-02 15:04:05")
+	if callback != nil {
+		callback(req)
+	}
+	body, err := utils.Json.Marshal(req.Body)
+	if err != nil {
+		return nil, err
+	}
+	sign := calSign(string(body), ts, randStr)
+	svcType := "1"
+	if d.isFamily() {
+		svcType = "2"
+	}
+	req.SetHeaders(map[string]string{
+		"Accept":               "application/json, text/plain, */*",
+		"Authorization":        "Basic " + d.Authorization,
+		"Caller":               "web",
+		"Cms-Device":           "default",
+		"Mcloud-Channel":       "1000101",
+		"Mcloud-Client":        "10701",
+		"Mcloud-Route":         "001",
+		"Mcloud-Sign":          fmt.Sprintf("%s,%s,%s", ts, randStr, sign),
+		"Mcloud-Version":       "7.13.0",
+		"Origin":               "https://yun.139.com",
+		"Referer":              "https://yun.139.com/w/",
+		"x-DeviceInfo":         "||9|7.13.0|chrome|120.0.0.0|||windows 10||zh-CN|||",
+		"x-huawei-channelSrc":  "10000034",
+		"x-inner-ntwk":         "2",
+		"x-m4c-caller":         "PC",
+		"x-m4c-src":            "10002",
+		"x-SvcType":            svcType,
+		"X-Yun-Api-Version":    "v1",
+		"X-Yun-App-Channel":    "10000034",
+		"X-Yun-Channel-Source": "10000034",
+		"X-Yun-Client-Info":    "||9|7.13.0|chrome|120.0.0.0|||windows 10||zh-CN|||dW5kZWZpbmVk||",
+		"X-Yun-Module-Type":    "100",
+		"X-Yun-Svc-Type":       "1",
+	})
+
+	var e BaseResp
+	req.SetResult(&e)
+	res, err := req.Execute(method, url)
+	if err != nil {
+		return nil, err
+	}
+	log.Debugln(res.String())
+	if !e.Success {
+		return nil, errors.New(e.Message)
+	}
+	if resp != nil {
+		err = utils.Json.Unmarshal(res.Body(), resp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res.Body(), nil
+}
+func (d *Yun139) personalPost(pathname string, data interface{}, resp interface{}) ([]byte, error) {
+	return d.personalRequest(pathname, http.MethodPost, func(req *resty.Request) {
+		req.SetBody(data)
+	}, resp)
+}
+
+func getPersonalTime(t string) time.Time {
+	stamp, err := time.ParseInLocation("2006-01-02T15:04:05.999-07:00", t, utils.CNLoc)
+	if err != nil {
+		panic(err)
+	}
+	return stamp
+}
+
+func (d *Yun139) personalGetFiles(fileId string) ([]model.Obj, error) {
+	files := make([]model.Obj, 0)
+	nextPageCursor := ""
+	for {
+		data := base.Json{
+			"imageThumbnailStyleList": []string{"Small", "Large"},
+			"orderBy":                 "updated_at",
+			"orderDirection":          "DESC",
+			"pageInfo": base.Json{
+				"pageCursor": nextPageCursor,
+				"pageSize":   100,
+			},
+			"parentFileId": fileId,
+		}
+		var resp PersonalListResp
+		_, err := d.personalPost("/hcy/file/list", data, &resp)
+		if err != nil {
+			return nil, err
+		}
+		nextPageCursor = resp.Data.NextPageCursor
+		for _, item := range resp.Data.Items {
+			var isFolder = (item.Type == "folder")
+			var f model.Obj
+			if isFolder {
+				f = &model.Object{
+					ID:       item.FileId,
+					Name:     item.Name,
+					Size:     0,
+					Modified: getPersonalTime(item.UpdatedAt),
+					Ctime:    getPersonalTime(item.CreatedAt),
+					IsFolder: isFolder,
+				}
+			} else {
+				var Thumbnails = item.Thumbnails
+				var ThumbnailUrl string
+				if len(Thumbnails) > 0 {
+					ThumbnailUrl = Thumbnails[len(Thumbnails)-1].Url
+				}
+				f = &model.ObjThumb{
+					Object: model.Object{
+						ID:       item.FileId,
+						Name:     item.Name,
+						Size:     item.Size,
+						Modified: getPersonalTime(item.UpdatedAt),
+						Ctime:    getPersonalTime(item.CreatedAt),
+						IsFolder: isFolder,
+					},
+					Thumbnail: model.Thumbnail{Thumbnail: ThumbnailUrl},
+				}
+			}
+			files = append(files, f)
+		}
+		if len(nextPageCursor) == 0 {
+			break
+		}
+	}
+	return files, nil
+}
+
+func (d *Yun139) personalGetLink(fileId string) (string, error) {
+	data := base.Json{
+		"fileId": fileId,
+	}
+	res, err := d.personalPost("/hcy/file/getDownloadUrl",
+		data, nil)
+	if err != nil {
+		return "", err
+	}
+	var cdnUrl = jsoniter.Get(res, "data", "cdnUrl").ToString()
+	if cdnUrl != "" {
+		return cdnUrl, nil
+	} else {
+		return jsoniter.Get(res, "data", "url").ToString(), nil
+	}
+}
