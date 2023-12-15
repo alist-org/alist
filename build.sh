@@ -49,6 +49,7 @@ BuildWinArm64() {
   export GOARCH=arm64
   export CC=$(pwd)/wrapper/zcc-arm64
   export CXX=$(pwd)/wrapper/zcxx-arm64
+  export CGO_ENABLED=1
   go build -o "$1" -ldflags="$ldflags" -tags=jsoniter .
 }
 
