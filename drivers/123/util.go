@@ -3,12 +3,17 @@ package _123
 import (
 	"errors"
 	"fmt"
+	"hash/crc32"
+	"math"
+	"math/rand"
 	"net/http"
+	"net/url"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/pkg/utils"
-	js "github.com/dop251/goja"
 	resty "github.com/go-resty/resty/v2"
 	jsoniter "github.com/json-iterator/go"
 )
@@ -38,80 +43,103 @@ const (
 	//AuthKeySalt      = "8-8D$sL8gPjom7bk#cY"
 )
 
-func GetApi(url string) string {
-	vm := js.New()
-	vm.Set("url", url[22:])
-	r, err := vm.RunString(`
-	(function(e){
-        function A(t, e) {
-            e = 1 < arguments.length && void 0 !== e ? e : 10;
-            for (var n = function() {
-                for (var t = [], e = 0; e < 256; e++) {
-                    for (var n = e, r = 0; r < 8; r++)
-                        n = 1 & n ? 3988292384 ^ n >>> 1 : n >>> 1;
-                    t[e] = n
-                }
-                return t
-            }(), r = function(t) {
-                t = t.replace(/\\r\\n/g, "\\n");
-                for (var e = "", n = 0; n < t.length; n++) {
-                    var r = t.charCodeAt(n);
-                    r < 128 ? e += String.fromCharCode(r) : e = 127 < r && r < 2048 ? (e += String.fromCharCode(r >> 6 | 192)) + String.fromCharCode(63 & r | 128) : (e = (e += String.fromCharCode(r >> 12 | 224)) + String.fromCharCode(r >> 6 & 63 | 128)) + String.fromCharCode(63 & r | 128)
-                }
-                return e
-            }(t), a = -1, i = 0; i < r.length; i++)
-                a = a >>> 8 ^ n[255 & (a ^ r.charCodeAt(i))];
-            return (a = (-1 ^ a) >>> 0).toString(e)
-        }
-	
-	   function v(t) {
-	       return (v = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(t) {
-	                   return typeof t
-	               }
-	               : function(t) {
-	                   return t && "function" == typeof Symbol && t.constructor === Symbol && t !== Symbol.prototype ? "symbol" : typeof t
-	               }
-	       )(t)
-	   }
-	
-		for (p in a = Math.round(1e7 * Math.random()),
-		o = Math.round(((new Date).getTime() + 60 * (new Date).getTimezoneOffset() * 1e3 + 288e5) / 1e3).toString(),
-		m = ["a", "d", "e", "f", "g", "h", "l", "m", "y", "i", "j", "n", "o", "p", "k", "q", "r", "s", "t", "u", "b", "c", "v", "w", "s", "z"],
-		u = function(t, e, n) {
-			var r;
-			n = 2 < arguments.length && void 0 !== n ? n : 8;
-			return 0 === arguments.length ? null : (r = "object" === v(t) ? t : (10 === "".concat(t).length && (t = 1e3 * Number.parseInt(t)),
-			new Date(t)),
-			t += 6e4 * new Date(t).getTimezoneOffset(),
-			{
-				y: (r = new Date(t + 36e5 * n)).getFullYear(),
-				m: r.getMonth() + 1 < 10 ? "0".concat(r.getMonth() + 1) : r.getMonth() + 1,
-				d: r.getDate() < 10 ? "0".concat(r.getDate()) : r.getDate(),
-				h: r.getHours() < 10 ? "0".concat(r.getHours()) : r.getHours(),
-				f: r.getMinutes() < 10 ? "0".concat(r.getMinutes()) : r.getMinutes()
-			})
-		}(o),
-		h = u.y,
-		g = u.m,
-		l = u.d,
-		c = u.h,
-		u = u.f,
-		d = [h, g, l, c, u].join(""),
-		f = [],
-		d)
-			f.push(m[Number(d[p])]);
-		return h = A(f.join("")),
-		g = A("".concat(o, "|").concat(a, "|").concat(e, "|").concat("web", "|").concat("3", "|").concat(h)),
-		"".concat(h, "=").concat(o, "-").concat(a, "-").concat(g);
-	})(url)
-	   `)
-	if err != nil {
-		fmt.Println(err)
-		return url
+func signPath(path string, os string, version string) (k string, v string) {
+	table := []byte{'a', 'd', 'e', 'f', 'g', 'h', 'l', 'm', 'y', 'i', 'j', 'n', 'o', 'p', 'k', 'q', 'r', 's', 't', 'u', 'b', 'c', 'v', 'w', 's', 'z'}
+	random := fmt.Sprintf("%.f", math.Round(1e7*rand.Float64()))
+	now := time.Now().In(time.FixedZone("CST", 8*3600))
+	timestamp := fmt.Sprint(now.Unix())
+	nowStr := []byte(now.Format("200601021504"))
+	for i := 0; i < len(nowStr); i++ {
+		nowStr[i] = table[nowStr[i]-48]
 	}
-	v, _ := r.Export().(string)
-	return url + "?" + v
+	timeSign := fmt.Sprint(crc32.ChecksumIEEE(nowStr))
+	data := strings.Join([]string{timestamp, random, path, os, version, timeSign}, "|")
+	dataSign := fmt.Sprint(crc32.ChecksumIEEE([]byte(data)))
+	return timeSign, strings.Join([]string{timestamp, random, dataSign}, "-")
 }
+
+func GetApi(rawUrl string) string {
+	u, _ := url.Parse(rawUrl)
+	query := u.Query()
+	query.Add(signPath(u.Path, "web", "3"))
+	u.RawQuery = query.Encode()
+	return u.String()
+}
+
+//func GetApi(url string) string {
+//	vm := js.New()
+//	vm.Set("url", url[22:])
+//	r, err := vm.RunString(`
+//	(function(e){
+//        function A(t, e) {
+//            e = 1 < arguments.length && void 0 !== e ? e : 10;
+//            for (var n = function() {
+//                for (var t = [], e = 0; e < 256; e++) {
+//                    for (var n = e, r = 0; r < 8; r++)
+//                        n = 1 & n ? 3988292384 ^ n >>> 1 : n >>> 1;
+//                    t[e] = n
+//                }
+//                return t
+//            }(), r = function(t) {
+//                t = t.replace(/\\r\\n/g, "\\n");
+//                for (var e = "", n = 0; n < t.length; n++) {
+//                    var r = t.charCodeAt(n);
+//                    r < 128 ? e += String.fromCharCode(r) : e = 127 < r && r < 2048 ? (e += String.fromCharCode(r >> 6 | 192)) + String.fromCharCode(63 & r | 128) : (e = (e += String.fromCharCode(r >> 12 | 224)) + String.fromCharCode(r >> 6 & 63 | 128)) + String.fromCharCode(63 & r | 128)
+//                }
+//                return e
+//            }(t), a = -1, i = 0; i < r.length; i++)
+//                a = a >>> 8 ^ n[255 & (a ^ r.charCodeAt(i))];
+//            return (a = (-1 ^ a) >>> 0).toString(e)
+//        }
+//
+//	   function v(t) {
+//	       return (v = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(t) {
+//	                   return typeof t
+//	               }
+//	               : function(t) {
+//	                   return t && "function" == typeof Symbol && t.constructor === Symbol && t !== Symbol.prototype ? "symbol" : typeof t
+//	               }
+//	       )(t)
+//	   }
+//
+//		for (p in a = Math.round(1e7 * Math.random()),
+//		o = Math.round(((new Date).getTime() + 60 * (new Date).getTimezoneOffset() * 1e3 + 288e5) / 1e3).toString(),
+//		m = ["a", "d", "e", "f", "g", "h", "l", "m", "y", "i", "j", "n", "o", "p", "k", "q", "r", "s", "t", "u", "b", "c", "v", "w", "s", "z"],
+//		u = function(t, e, n) {
+//			var r;
+//			n = 2 < arguments.length && void 0 !== n ? n : 8;
+//			return 0 === arguments.length ? null : (r = "object" === v(t) ? t : (10 === "".concat(t).length && (t = 1e3 * Number.parseInt(t)),
+//			new Date(t)),
+//			t += 6e4 * new Date(t).getTimezoneOffset(),
+//			{
+//				y: (r = new Date(t + 36e5 * n)).getFullYear(),
+//				m: r.getMonth() + 1 < 10 ? "0".concat(r.getMonth() + 1) : r.getMonth() + 1,
+//				d: r.getDate() < 10 ? "0".concat(r.getDate()) : r.getDate(),
+//				h: r.getHours() < 10 ? "0".concat(r.getHours()) : r.getHours(),
+//				f: r.getMinutes() < 10 ? "0".concat(r.getMinutes()) : r.getMinutes()
+//			})
+//		}(o),
+//		h = u.y,
+//		g = u.m,
+//		l = u.d,
+//		c = u.h,
+//		u = u.f,
+//		d = [h, g, l, c, u].join(""),
+//		f = [],
+//		d)
+//			f.push(m[Number(d[p])]);
+//		return h = A(f.join("")),
+//		g = A("".concat(o, "|").concat(a, "|").concat(e, "|").concat("web", "|").concat("3", "|").concat(h)),
+//		"".concat(h, "=").concat(o, "-").concat(a, "-").concat(g);
+//	})(url)
+//	   `)
+//	if err != nil {
+//		fmt.Println(err)
+//		return url
+//	}
+//	v, _ := r.Export().(string)
+//	return url + "?" + v
+//}
 
 func (d *Pan123) login() error {
 	var body base.Json
