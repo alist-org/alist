@@ -33,6 +33,7 @@ func NewRestyClient() *resty.Client {
 	client := resty.New().
 		SetHeader("user-agent", UserAgent).
 		SetRetryCount(3).
+		SetRetryResetReaders(true).
 		SetTimeout(DefaultTimeout).
 		SetTLSClientConfig(&tls.Config{InsecureSkipVerify: conf.Conf.TlsInsecureSkipVerify})
 	return client
