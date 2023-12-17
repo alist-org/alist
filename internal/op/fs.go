@@ -177,30 +177,32 @@ func Get(ctx context.Context, storage driver.Driver, path string) (model.Obj, er
 	// is root folder
 	if utils.PathEqual(path, "/") {
 		var rootObj model.Obj
-		switch r := storage.GetAddition().(type) {
-		case driver.IRootId:
-			rootObj = &model.Object{
-				ID:       r.GetRootId(),
-				Name:     RootName,
-				Size:     0,
-				Modified: storage.GetStorage().Modified,
-				IsFolder: true,
+		if getRooter, ok := storage.(driver.GetRooter); ok {
+			obj, err := getRooter.GetRoot(ctx)
+			if err != nil {
+				return nil, errors.WithMessage(err, "failed get root obj")
 			}
-		case driver.IRootPath:
-			rootObj = &model.Object{
-				Path:     r.GetRootPath(),
-				Name:     RootName,
-				Size:     0,
-				Modified: storage.GetStorage().Modified,
-				IsFolder: true,
-			}
-		default:
-			if storage, ok := storage.(driver.GetRooter); ok {
-				obj, err := storage.GetRoot(ctx)
-				if err != nil {
-					return nil, errors.WithMessage(err, "failed get root obj")
+			rootObj = obj
+		} else {
+			switch r := storage.GetAddition().(type) {
+			case driver.IRootId:
+				rootObj = &model.Object{
+					ID:       r.GetRootId(),
+					Name:     RootName,
+					Size:     0,
+					Modified: storage.GetStorage().Modified,
+					IsFolder: true,
 				}
-				rootObj = obj
+			case driver.IRootPath:
+				rootObj = &model.Object{
+					Path:     r.GetRootPath(),
+					Name:     RootName,
+					Size:     0,
+					Modified: storage.GetStorage().Modified,
+					IsFolder: true,
+				}
+			default:
+				return nil, errors.Errorf("please implement IRootPath or IRootId or GetRooter method")
 			}
 		}
 		if rootObj == nil {
