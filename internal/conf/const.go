@@ -73,6 +73,17 @@ const (
 	SSODefaultPermission = "sso_default_permission"
 	SSOCompatibilityMode = "sso_compatibility_mode"
 
+	//ldap
+	LdapLoginEnabled      = "ldap_login_enabled"
+	LdapServer            = "ldap_server"
+	LdapManagerDN         = "ldap_manager_dn"
+	LdapManagerPassword   = "ldap_manager_password"
+	LdapUserSearchBase    = "ldap_user_search_base"
+	LdapUserSearchFilter  = "ldap_user_search_filter"
+	LdapDefaultPermission = "ldap_default_permission"
+	LdapDefaultDir        = "ldap_default_dir"
+	LdapLoginTips         = "ldap_login_tips"
+
 	// qbittorrent
 	QbittorrentUrl      = "qbittorrent_url"
 	QbittorrentSeedtime = "qbittorrent_seedtime"
