@@ -13,6 +13,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/setting"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
+	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
 )
 
@@ -22,28 +23,30 @@ func BeginAuthnLogin(c *gin.Context) {
 		common.ErrorStrResp(c, "WebAuthn is not enabled", 403)
 		return
 	}
-	username := c.Query("username")
-	if username == "" {
-		common.ErrorStrResp(c, "empty or no username provided", 400)
-		return
-	}
-	user, err := db.GetUserByName(username)
-	if err != nil {
-		common.ErrorResp(c, err, 400)
-		return
-	}
 	authnInstance, err := authn.NewAuthnInstance(c.Request)
 	if err != nil {
 		common.ErrorResp(c, err, 400)
 		return
 	}
 
-	options, sessionData, err := authnInstance.BeginLogin(user)
-
+	var (
+		options     *protocol.CredentialAssertion
+		sessionData *webauthn.SessionData
+	)
+	if username := c.Query("username"); username != "" {
+		var user *model.User
+		user, err = db.GetUserByName(username)
+		if err == nil {
+			options, sessionData, err = authnInstance.BeginLogin(user)
+		}
+	} else { // client-side discoverable login
+		options, sessionData, err = authnInstance.BeginDiscoverableLogin()
+	}
 	if err != nil {
 		common.ErrorResp(c, err, 400)
 		return
 	}
+
 	val, err := json.Marshal(sessionData)
 	if err != nil {
 		common.ErrorResp(c, err, 400)
