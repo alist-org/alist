@@ -2,6 +2,7 @@ package handles
 
 import (
 	"encoding/base64"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 
@@ -64,20 +65,13 @@ func FinishAuthnLogin(c *gin.Context) {
 		common.ErrorStrResp(c, "WebAuthn is not enabled", 403)
 		return
 	}
-	username := c.Query("username")
-	user, err := db.GetUserByName(username)
+	authnInstance, err := authn.NewAuthnInstance(c.Request)
 	if err != nil {
 		common.ErrorResp(c, err, 400)
 		return
 	}
 
 	sessionDataString := c.GetHeader("session")
-
-	authnInstance, err := authn.NewAuthnInstance(c.Request)
-	if err != nil {
-		common.ErrorResp(c, err, 400)
-		return
-	}
 	sessionDataBytes, err := base64.StdEncoding.DecodeString(sessionDataString)
 	if err != nil {
 		common.ErrorResp(c, err, 400)
@@ -90,8 +84,28 @@ func FinishAuthnLogin(c *gin.Context) {
 		return
 	}
 
-	_, err = authnInstance.FinishLogin(user, sessionData, c.Request)
+	var user *model.User
+	if username := c.Query("username"); username != "" {
+		user, err = db.GetUserByName(username)
+		if err != nil {
+			common.ErrorResp(c, err, 400)
+			return
+		}
+		_, err = authnInstance.FinishLogin(user, sessionData, c.Request)
+	} else { // client-side discoverable login
+		_, err = authnInstance.FinishDiscoverableLogin(func(_, userHandle []byte) (webauthn.User, error) {
+			// first param `rawID` in this callback function is equal to ID in webauthn.Credential,
+			// but it's unnnecessary to check it.
+			// userHandle param is equal to (User).WebAuthnID().
+			userID := uint(binary.LittleEndian.Uint64(userHandle))
+			user, err = db.GetUserById(userID)
+			if err != nil {
+				return nil, err
+			}
 
+			return user, nil
+		}, sessionData, c.Request)
+	}
 	if err != nil {
 		common.ErrorResp(c, err, 400)
 		return
