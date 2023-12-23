@@ -13,13 +13,34 @@ import (
 	"github.com/alist-org/alist/v3/server/common"
 )
 
-func (d *Alias) listRoot() []model.Obj {
+func (d *Alias) listRoot(ctx context.Context) []model.Obj {
 	var objs []model.Obj
-	for k, _ := range d.pathMap {
+	for k, v := range d.pathMap {
 		obj := model.Object{
 			Name:     k,
 			IsFolder: true,
 			Modified: d.Modified,
+		}
+		// file alias should be one-to-one
+		if len(v) == 1 {
+			sourceObj, err := fs.Get(ctx, v[0], &fs.GetArgs{NoLog: true})
+			if err != nil {
+				continue
+			} else {
+				obj.IsFolder = sourceObj.IsDir()
+				obj.Size = sourceObj.GetSize()
+
+				thumb, ok := model.GetThumb(sourceObj)
+				if ok {
+					objs = append(objs, &model.ObjThumb{
+						Object: obj,
+						Thumbnail: model.Thumbnail{
+							Thumbnail: thumb,
+						},
+					})
+					continue
+				}
+			}
 		}
 		objs = append(objs, &obj)
 	}
