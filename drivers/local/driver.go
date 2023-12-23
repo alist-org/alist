@@ -152,10 +152,6 @@ func (d *Local) Get(ctx context.Context, path string) (model.Obj, error) {
 		return nil, err
 	}
 	isFolder := f.IsDir() || isSymlinkDir(f, path)
-	size := f.Size()
-	if isFolder {
-		size = 0
-	}
 	var ctime time.Time
 	t, err := times.Stat(path)
 	if err == nil {
@@ -163,15 +159,18 @@ func (d *Local) Get(ctx context.Context, path string) (model.Obj, error) {
 			ctime = t.BirthTime()
 		}
 	}
-	file := model.Object{
-		Path:     path,
-		Name:     f.Name(),
-		Modified: f.ModTime(),
-		Ctime:    ctime,
-		Size:     size,
-		IsFolder: isFolder,
+	if isFolder {
+		file := model.Object{
+			Path:     path,
+			Name:     f.Name(),
+			Modified: f.ModTime(),
+			Ctime:    ctime,
+			Size:     0,
+			IsFolder: true,
+		}
+		return &file, nil
 	}
-	return &file, nil
+	return d.FileInfoToObj(f, d.MountPath, path), nil
 }
 
 func (d *Local) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
