@@ -323,7 +323,7 @@ func FsGet(c *gin.Context) {
 	}
 	parentMeta, _ := op.GetNearestMeta(parentPath)
 	thumb, _ := model.GetThumb(obj)
-	common.SuccessResp(c, FsGetResp{
+	fsresp := FsGetResp{
 		ObjResp: ObjResp{
 			Name:        obj.GetName(),
 			Size:        obj.GetSize(),
@@ -332,7 +332,6 @@ func FsGet(c *gin.Context) {
 			Created:     obj.CreateTime(),
 			HashInfoStr: obj.GetHash().String(),
 			HashInfo:    obj.GetHash().Export(),
-			Sign:        common.Sign(obj, parentPath, isEncrypt(meta, reqPath)),
 			Type:        utils.GetFileType(obj.GetName()),
 			Thumb:       thumb,
 		},
@@ -341,7 +340,14 @@ func FsGet(c *gin.Context) {
 		Header:   getHeader(meta, reqPath),
 		Provider: provider,
 		Related:  toObjsResp(related, parentPath, isEncrypt(parentMeta, parentPath)),
-	})
+	}
+	if provider == "Alias" {
+		fsresp.Name = stdpath.Base(reqPath)
+		fsresp.Sign = sign.Sign(reqPath)
+	} else {
+		fsresp.Sign = common.Sign(obj, parentPath, isEncrypt(meta, reqPath))
+	}
+	common.SuccessResp(c, fsresp)
 }
 
 func filterRelated(objs []model.Obj, obj model.Obj) []model.Obj {
