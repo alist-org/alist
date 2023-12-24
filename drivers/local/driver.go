@@ -170,7 +170,7 @@ func (d *Local) Get(ctx context.Context, path string) (model.Obj, error) {
 		}
 		return &file, nil
 	}
-	return d.FileInfoToObj(f, d.MountPath, path), nil
+	return d.FileInfoToObj(f, d.MountPath, d.GetRootPath()), nil
 }
 
 func (d *Local) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
