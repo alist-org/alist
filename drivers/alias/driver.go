@@ -7,6 +7,7 @@ import (
 
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
+	"github.com/alist-org/alist/v3/internal/fs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/utils"
 )
@@ -41,10 +42,16 @@ func (d *Alias) Init(ctx context.Context) error {
 		d.pathMap[k] = append(d.pathMap[k], v)
 	}
 	if len(d.pathMap) == 1 {
-		for k := range d.pathMap {
+		for k, v := range d.pathMap {
 			d.oneKey = k
+			d.autoFlatten = true
+			if len(v) == 1 {
+				sourceObj, err := fs.Get(ctx, v[0], &fs.GetArgs{NoLog: true})
+				if err == nil && !sourceObj.IsDir() {
+					d.autoFlatten = false
+				}
+			}
 		}
-		d.autoFlatten = true
 	}
 	return nil
 }
