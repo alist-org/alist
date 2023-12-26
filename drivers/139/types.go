@@ -1,5 +1,11 @@
 package _139
 
+const (
+	MetaPersonal    string = "personal"
+	MetaFamily      string = "family"
+	MetaPersonalNew string = "personal_new"
+)
+
 type BaseResp struct {
 	Success bool   `json:"success"`
 	Code    string `json:"code"`
@@ -10,7 +16,7 @@ type Catalog struct {
 	CatalogID   string `json:"catalogID"`
 	CatalogName string `json:"catalogName"`
 	//CatalogType     int         `json:"catalogType"`
-	//CreateTime      string      `json:"createTime"`
+	CreateTime string `json:"createTime"`
 	UpdateTime string `json:"updateTime"`
 	//IsShared        bool        `json:"isShared"`
 	//CatalogLevel    int         `json:"catalogLevel"`
@@ -63,7 +69,7 @@ type Content struct {
 	//ParentCatalogID string      `json:"parentCatalogId"`
 	//Channel         string      `json:"channel"`
 	//GeoLocFlag      string      `json:"geoLocFlag"`
-	//Digest          string      `json:"digest"`
+	Digest string `json:"digest"`
 	//Version         string      `json:"version"`
 	//FileEtag        string      `json:"fileEtag"`
 	//FileVersion     string      `json:"fileVersion"`
@@ -141,7 +147,7 @@ type CloudContent struct {
 	//ContentSuffix    string      `json:"contentSuffix"`
 	ContentSize int64 `json:"contentSize"`
 	//ContentDesc      string      `json:"contentDesc"`
-	//CreateTime       string      `json:"createTime"`
+	CreateTime string `json:"createTime"`
 	//Shottime         interface{} `json:"shottime"`
 	LastUpdateTime string `json:"lastUpdateTime"`
 	ThumbnailURL   string `json:"thumbnailURL"`
@@ -165,7 +171,7 @@ type CloudCatalog struct {
 	CatalogID   string `json:"catalogID"`
 	CatalogName string `json:"catalogName"`
 	//CloudID         string `json:"cloudID"`
-	//CreateTime      string `json:"createTime"`
+	CreateTime     string `json:"createTime"`
 	LastUpdateTime string `json:"lastUpdateTime"`
 	//Creator         string `json:"creator"`
 	//CreatorNickname string `json:"creatorNickname"`
@@ -184,4 +190,43 @@ type QueryContentListResp struct {
 		TotalCount       int            `json:"totalCount"`
 		RecallContent    interface{}    `json:"recallContent"`
 	} `json:"data"`
+}
+
+type PersonalThumbnail struct {
+	Style string `json:"style"`
+	Url   string `json:"url"`
+}
+
+type PersonalFileItem struct {
+	FileId     string              `json:"fileId"`
+	Name       string              `json:"name"`
+	Size       int64               `json:"size"`
+	Type       string              `json:"type"`
+	CreatedAt  string              `json:"createdAt"`
+	UpdatedAt  string              `json:"updatedAt"`
+	Thumbnails []PersonalThumbnail `json:"thumbnailUrls"`
+}
+
+type PersonalListResp struct {
+	BaseResp
+	Data struct {
+		Items          []PersonalFileItem `json:"items"`
+		NextPageCursor string             `json:"nextPageCursor"`
+	}
+}
+
+type PersonalPartInfo struct {
+	PartNumber int    `json:"partNumber"`
+	UploadUrl  string `json:"uploadUrl"`
+}
+
+type PersonalUploadResp struct {
+	BaseResp
+	Data struct {
+		FileId      string             `json:"fileId"`
+		PartInfos   []PersonalPartInfo `json:"partInfos"`
+		Exist       bool               `json:"exist"`
+		RapidUpload bool               `json:"rapidUpload"`
+		UploadId    string             `json:"uploadId"`
+	}
 }

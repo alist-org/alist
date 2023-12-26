@@ -5,13 +5,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
+	"io/fs"
 	"net/http"
 	"os"
 	stdpath "path"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/driver"
@@ -20,7 +21,8 @@ import (
 	"github.com/alist-org/alist/v3/internal/sign"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/server/common"
-	"github.com/disintegration/imaging"
+	"github.com/djherbis/times"
+	log "github.com/sirupsen/logrus"
 	_ "golang.org/x/image/webp"
 )
 
@@ -54,6 +56,12 @@ func (d *Local) Init(ctx context.Context) error {
 		}
 		d.Addition.RootFolderPath = abs
 	}
+	if d.ThumbCacheFolder != "" && !utils.Exists(d.ThumbCacheFolder) {
+		err := os.MkdirAll(d.ThumbCacheFolder, os.FileMode(d.mkdirPerm))
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -76,35 +84,62 @@ func (d *Local) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([
 		if !d.ShowHidden && strings.HasPrefix(f.Name(), ".") {
 			continue
 		}
-		thumb := ""
-		if d.Thumbnail {
-			typeName := utils.GetFileType(f.Name())
-			if typeName == conf.IMAGE || typeName == conf.VIDEO {
-				thumb = common.GetApiUrl(nil) + stdpath.Join("/d", args.ReqPath, f.Name())
-				thumb = utils.EncodePath(thumb, true)
-				thumb += "?type=thumb&sign=" + sign.Sign(stdpath.Join(args.ReqPath, f.Name()))
-			}
-		}
-		isFolder := f.IsDir() || isSymlinkDir(f, fullPath)
-		var size int64
-		if !isFolder {
-			size = f.Size()
-		}
-		file := model.ObjThumb{
-			Object: model.Object{
-				Path:     filepath.Join(dir.GetPath(), f.Name()),
-				Name:     f.Name(),
-				Modified: f.ModTime(),
-				Size:     size,
-				IsFolder: isFolder,
-			},
-			Thumbnail: model.Thumbnail{
-				Thumbnail: thumb,
-			},
-		}
-		files = append(files, &file)
+		file := d.FileInfoToObj(f, args.ReqPath, fullPath)
+		files = append(files, file)
 	}
 	return files, nil
+}
+func (d *Local) FileInfoToObj(f fs.FileInfo, reqPath string, fullPath string) model.Obj {
+	thumb := ""
+	if d.Thumbnail {
+		typeName := utils.GetFileType(f.Name())
+		if typeName == conf.IMAGE || typeName == conf.VIDEO {
+			thumb = common.GetApiUrl(nil) + stdpath.Join("/d", reqPath, f.Name())
+			thumb = utils.EncodePath(thumb, true)
+			thumb += "?type=thumb&sign=" + sign.Sign(stdpath.Join(reqPath, f.Name()))
+		}
+	}
+	isFolder := f.IsDir() || isSymlinkDir(f, fullPath)
+	var size int64
+	if !isFolder {
+		size = f.Size()
+	}
+	var ctime time.Time
+	t, err := times.Stat(stdpath.Join(fullPath, f.Name()))
+	if err == nil {
+		if t.HasBirthTime() {
+			ctime = t.BirthTime()
+		}
+	}
+
+	file := model.ObjThumb{
+		Object: model.Object{
+			Path:     filepath.Join(fullPath, f.Name()),
+			Name:     f.Name(),
+			Modified: f.ModTime(),
+			Size:     size,
+			IsFolder: isFolder,
+			Ctime:    ctime,
+		},
+		Thumbnail: model.Thumbnail{
+			Thumbnail: thumb,
+		},
+	}
+	return &file
+
+}
+func (d *Local) GetMeta(ctx context.Context, path string) (model.Obj, error) {
+	f, err := os.Stat(path)
+	if err != nil {
+		return nil, err
+	}
+	file := d.FileInfoToObj(f, path, path)
+	//h := "123123"
+	//if s, ok := f.(model.SetHash); ok && file.GetHash() == ("","")  {
+	//	s.SetHash(h,"SHA1")
+	//}
+	return file, nil
+
 }
 
 func (d *Local) Get(ctx context.Context, path string) (model.Obj, error) {
@@ -121,10 +156,18 @@ func (d *Local) Get(ctx context.Context, path string) (model.Obj, error) {
 	if isFolder {
 		size = 0
 	}
+	var ctime time.Time
+	t, err := times.Stat(path)
+	if err == nil {
+		if t.HasBirthTime() {
+			ctime = t.BirthTime()
+		}
+	}
 	file := model.Object{
 		Path:     path,
 		Name:     f.Name(),
 		Modified: f.ModTime(),
+		Ctime:    ctime,
 		Size:     size,
 		IsFolder: isFolder,
 	}
@@ -135,39 +178,29 @@ func (d *Local) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 	fullPath := file.GetPath()
 	var link model.Link
 	if args.Type == "thumb" && utils.Ext(file.GetName()) != "svg" {
-		var srcBuf *bytes.Buffer
-		if utils.GetFileType(file.GetName()) == conf.VIDEO {
-			videoBuf, err := GetSnapshot(fullPath, 10)
-			if err != nil {
-				return nil, err
-			}
-			srcBuf = videoBuf
-		} else {
-			imgData, err := os.ReadFile(fullPath)
-			if err != nil {
-				return nil, err
-			}
-			imgBuf := bytes.NewBuffer(imgData)
-			srcBuf = imgBuf
-		}
-
-		image, err := imaging.Decode(srcBuf)
+		buf, thumbPath, err := d.getThumb(file)
 		if err != nil {
 			return nil, err
 		}
-		thumbImg := imaging.Resize(image, 144, 0, imaging.Lanczos)
-		var buf bytes.Buffer
-		err = imaging.Encode(&buf, thumbImg, imaging.PNG)
-		if err != nil {
-			return nil, err
-		}
-		size := buf.Len()
-		link.Data = io.NopCloser(&buf)
 		link.Header = http.Header{
-			"Content-Length": []string{strconv.Itoa(size)},
+			"Content-Type": []string{"image/png"},
+		}
+		if thumbPath != nil {
+			open, err := os.Open(*thumbPath)
+			if err != nil {
+				return nil, err
+			}
+			link.MFile = open
+		} else {
+			link.MFile = model.NewNopMFile(bytes.NewReader(buf.Bytes()))
+			//link.Header.Set("Content-Length", strconv.Itoa(buf.Len()))
 		}
 	} else {
-		link.FilePath = &fullPath
+		open, err := os.Open(fullPath)
+		if err != nil {
+			return nil, err
+		}
+		link.MFile = open
 	}
 	return &link, nil
 }
@@ -250,6 +283,10 @@ func (d *Local) Put(ctx context.Context, dstDir model.Obj, stream model.FileStre
 	err = utils.CopyWithCtx(ctx, out, stream, stream.GetSize(), up)
 	if err != nil {
 		return err
+	}
+	err = os.Chtimes(fullPath, stream.ModTime(), stream.ModTime())
+	if err != nil {
+		log.Errorf("[local] failed to change time of %s: %s", fullPath, err)
 	}
 	return nil
 }

@@ -15,6 +15,7 @@ var Cancel2FACmd = &cobra.Command{
 	Short: "Delete 2FA of admin user",
 	Run: func(cmd *cobra.Command, args []string) {
 		Init()
+		defer Release()
 		admin, err := op.GetAdmin()
 		if err != nil {
 			utils.Log.Errorf("failed to get admin user: %+v", err)
@@ -24,6 +25,7 @@ var Cancel2FACmd = &cobra.Command{
 				utils.Log.Errorf("failed to cancel 2FA: %+v", err)
 			} else {
 				utils.Log.Info("2FA canceled")
+				DelAdminCacheOnline()
 			}
 		}
 	},

@@ -16,6 +16,10 @@ func Favicon(c *gin.Context) {
 	c.Redirect(302, setting.GetStr(conf.Favicon))
 }
 
+func Robots(c *gin.Context) {
+	c.String(200, setting.GetStr(conf.RobotsTxt))
+}
+
 func Plist(c *gin.Context) {
 	linkNameB64 := strings.TrimSuffix(c.Param("link_name"), ".plist")
 	linkName, err := utils.SafeAtob(linkNameB64)
@@ -41,6 +45,8 @@ func Plist(c *gin.Context) {
 	}
 	fullName := c.Param("name")
 	Url := link.String()
+	Url = strings.ReplaceAll(Url, "<", "[")
+	Url = strings.ReplaceAll(Url, ">", "]")
 	nameEncode := linkNameSplit[1]
 	fullName, err = url.PathUnescape(nameEncode)
 	if err != nil {

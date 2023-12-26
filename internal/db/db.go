@@ -29,5 +29,19 @@ func AutoMigrate(dst ...interface{}) error {
 }
 
 func GetDb() *gorm.DB {
-	return db;
+	return db
+}
+
+func Close() {
+	log.Info("closing db")
+	sqlDB, err := db.DB()
+	if err != nil {
+		log.Errorf("failed to get db: %s", err.Error())
+		return
+	}
+	err = sqlDB.Close()
+	if err != nil {
+		log.Errorf("failed to close db: %s", err.Error())
+		return
+	}
 }

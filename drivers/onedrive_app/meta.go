@@ -13,6 +13,7 @@ type Addition struct {
 	TenantID     string `json:"tenant_id"`
 	Email        string `json:"email"`
 	ChunkSize    int64  `json:"chunk_size" type:"number" default:"5"`
+	CustomHost   string `json:"custom_host" help:"Custom host for onedrive download link"`
 }
 
 var config = driver.Config{

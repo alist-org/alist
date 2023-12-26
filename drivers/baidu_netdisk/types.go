@@ -1,6 +1,7 @@
 package baidu_netdisk
 
 import (
+	"path"
 	"strconv"
 	"time"
 
@@ -17,10 +18,8 @@ type File struct {
 	//OwnerType    int    `json:"owner_type"`
 	//Category     int    `json:"category"`
 	//RealCategory string `json:"real_category"`
-	FsId        int64 `json:"fs_id"`
-	ServerMtime int64 `json:"server_mtime"`
+	FsId int64 `json:"fs_id"`
 	//OperId      int   `json:"oper_id"`
-	//ServerCtime int   `json:"server_ctime"`
 	Thumbs struct {
 		//Icon string `json:"icon"`
 		Url3 string `json:"url3"`
@@ -28,29 +27,52 @@ type File struct {
 		//Url1 string `json:"url1"`
 	} `json:"thumbs"`
 	//Wpfile         int    `json:"wpfile"`
-	//LocalMtime     int    `json:"local_mtime"`
+
 	Size int64 `json:"size"`
 	//ExtentTinyint7 int    `json:"extent_tinyint7"`
 	Path string `json:"path"`
 	//Share          int    `json:"share"`
-	//ServerAtime    int    `json:"server_atime"`
 	//Pl             int    `json:"pl"`
-	//LocalCtime     int    `json:"local_ctime"`
 	ServerFilename string `json:"server_filename"`
-	//Md5            string `json:"md5"`
+	Md5            string `json:"md5"`
 	//OwnerId        int    `json:"owner_id"`
 	//Unlist int `json:"unlist"`
 	Isdir int `json:"isdir"`
+
+	// list resp
+	ServerCtime int64 `json:"server_ctime"`
+	ServerMtime int64 `json:"server_mtime"`
+	LocalMtime  int64 `json:"local_mtime"`
+	LocalCtime  int64 `json:"local_ctime"`
+	//ServerAtime    int64    `json:"server_atime"` `
+
+	// only create and precreate resp
+	Ctime int64 `json:"ctime"`
+	Mtime int64 `json:"mtime"`
 }
 
 func fileToObj(f File) *model.ObjThumb {
+	if f.ServerFilename == "" {
+		f.ServerFilename = path.Base(f.Path)
+	}
+	if f.LocalCtime == 0 {
+		f.LocalCtime = f.Ctime
+	}
+	if f.LocalMtime == 0 {
+		f.LocalMtime = f.Mtime
+	}
 	return &model.ObjThumb{
 		Object: model.Object{
 			ID:       strconv.FormatInt(f.FsId, 10),
+			Path:     f.Path,
 			Name:     f.ServerFilename,
 			Size:     f.Size,
-			Modified: time.Unix(f.ServerMtime, 0),
+			Modified: time.Unix(f.LocalMtime, 0),
+			Ctime:    time.Unix(f.LocalCtime, 0),
 			IsFolder: f.Isdir == 1,
+
+			// 直接获取的MD5是错误的
+			// HashInfo: utils.NewHashInfo(utils.MD5, f.Md5),
 		},
 		Thumbnail: model.Thumbnail{Thumbnail: f.Thumbs.Url3},
 	}
@@ -154,10 +176,15 @@ type DownloadResp2 struct {
 }
 
 type PrecreateResp struct {
-	Path       string `json:"path"`
-	Uploadid   string `json:"uploadid"`
-	ReturnType int    `json:"return_type"`
-	BlockList  []int  `json:"block_list"`
-	Errno      int    `json:"errno"`
-	RequestId  int64  `json:"request_id"`
+	Errno      int   `json:"errno"`
+	RequestId  int64 `json:"request_id"`
+	ReturnType int   `json:"return_type"`
+
+	// return_type=1
+	Path      string `json:"path"`
+	Uploadid  string `json:"uploadid"`
+	BlockList []int  `json:"block_list"`
+
+	// return_type=2
+	File File `json:"info"`
 }

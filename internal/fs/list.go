@@ -11,9 +11,9 @@ import (
 )
 
 // List files
-func list(ctx context.Context, path string, refresh ...bool) ([]model.Obj, error) {
-	meta := ctx.Value("meta").(*model.Meta)
-	user := ctx.Value("user").(*model.User)
+func list(ctx context.Context, path string, args *ListArgs) ([]model.Obj, error) {
+	meta, _ := ctx.Value("meta").(*model.Meta)
+	user, _ := ctx.Value("user").(*model.User)
 	virtualFiles := op.GetStorageVirtualFilesByPath(path)
 	storage, actualPath, err := op.GetStorageAndActualPath(path)
 	if err != nil && len(virtualFiles) == 0 {
@@ -24,9 +24,11 @@ func list(ctx context.Context, path string, refresh ...bool) ([]model.Obj, error
 	if storage != nil {
 		_objs, err = op.List(ctx, storage, actualPath, model.ListArgs{
 			ReqPath: path,
-		}, refresh...)
+		}, args.Refresh)
 		if err != nil {
-			log.Errorf("%+v", err)
+			if !args.NoLog {
+				log.Errorf("fs/list: %+v", err)
+			}
 			if len(virtualFiles) == 0 {
 				return nil, errors.WithMessage(err, "failed get objs")
 			}
@@ -43,7 +45,7 @@ func list(ctx context.Context, path string, refresh ...bool) ([]model.Obj, error
 
 func whetherHide(user *model.User, meta *model.Meta, path string) bool {
 	// if is admin, don't hide
-	if user.CanSeeHides() {
+	if user == nil || user.CanSeeHides() {
 		return false
 	}
 	// if meta is nil, don't hide

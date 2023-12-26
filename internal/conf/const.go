@@ -14,6 +14,8 @@ const (
 	SiteTitle    = "site_title"
 	Announcement = "announcement"
 	AllowIndexed = "allow_indexed"
+	AllowMounted = "allow_mounted"
+	RobotsTxt    = "robots_txt"
 
 	Logo      = "logo"
 	Favicon   = "favicon"
@@ -39,6 +41,8 @@ const (
 	OcrApi                  = "ocr_api"
 	FilenameCharMapping     = "filename_char_mapping"
 	ForwardDirectLinkParams = "forward_direct_link_params"
+	IgnoreDirectLinkParams  = "ignore_direct_link_params"
+	WebauthnLoginEnabled    = "webauthn_login_enabled"
 
 	// index
 	SearchIndex     = "search_index"
@@ -55,10 +59,19 @@ const (
 	IndexProgress = "index_progress"
 
 	//SSO
-	SSOClientId      = "sso_client_id"
-	SSOClientSecret  = "sso_client_secret"
-	SSOLoginEnabled  = "sso_login_enabled"
-	SSOLoginplatform = "sso_login_platform"
+	SSOClientId          = "sso_client_id"
+	SSOClientSecret      = "sso_client_secret"
+	SSOLoginEnabled      = "sso_login_enabled"
+	SSOLoginPlatform     = "sso_login_platform"
+	SSOOIDCUsernameKey   = "sso_oidc_username_key"
+	SSOOrganizationName  = "sso_organization_name"
+	SSOApplicationName   = "sso_application_name"
+	SSOEndpointName      = "sso_endpoint_name"
+	SSOJwtPublicKey      = "sso_jwt_public_key"
+	SSOAutoRegister      = "sso_auto_register"
+	SSODefaultDir        = "sso_default_dir"
+	SSODefaultPermission = "sso_default_permission"
+	SSOCompatibilityMode = "sso_compatibility_mode"
 
 	// qbittorrent
 	QbittorrentUrl      = "qbittorrent_url"
@@ -73,4 +86,9 @@ const (
 	AUDIO
 	TEXT
 	IMAGE
+)
+
+// ContextKey is the type of context keys.
+const (
+	NoTaskKey = "no_task"
 )

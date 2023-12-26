@@ -3,6 +3,7 @@ package _189pc
 import (
 	"encoding/xml"
 	"fmt"
+	"github.com/alist-org/alist/v3/pkg/utils"
 	"sort"
 	"strings"
 	"time"
@@ -10,18 +11,60 @@ import (
 
 // 居然有四种返回方式
 type RespErr struct {
-	ResCode    string `json:"res_code"`
+	ResCode    any    `json:"res_code"` // int or string
 	ResMessage string `json:"res_message"`
+
+	Error_ string `json:"error"`
 
 	XMLName xml.Name `xml:"error"`
 	Code    string   `json:"code" xml:"code"`
 	Message string   `json:"message" xml:"message"`
-
-	// Code    string `json:"code"`
-	Msg string `json:"msg"`
+	Msg     string   `json:"msg"`
 
 	ErrorCode string `json:"errorCode"`
 	ErrorMsg  string `json:"errorMsg"`
+}
+
+func (e *RespErr) HasError() bool {
+	switch v := e.ResCode.(type) {
+	case int, int64, int32:
+		return v != 0
+	case string:
+		return e.ResCode != ""
+	}
+	return (e.Code != "" && e.Code != "SUCCESS") || e.ErrorCode != "" || e.Error_ != ""
+}
+
+func (e *RespErr) Error() string {
+	switch v := e.ResCode.(type) {
+	case int, int64, int32:
+		if v != 0 {
+			return fmt.Sprintf("res_code: %d ,res_msg: %s", v, e.ResMessage)
+		}
+	case string:
+		if e.ResCode != "" {
+			return fmt.Sprintf("res_code: %s ,res_msg: %s", e.ResCode, e.ResMessage)
+		}
+	}
+
+	if e.Code != "" && e.Code != "SUCCESS" {
+		if e.Msg != "" {
+			return fmt.Sprintf("code: %s ,msg: %s", e.Code, e.Msg)
+		}
+		if e.Message != "" {
+			return fmt.Sprintf("code: %s ,msg: %s", e.Code, e.Message)
+		}
+		return "code: " + e.Code
+	}
+
+	if e.ErrorCode != "" {
+		return fmt.Sprintf("err_code: %s ,err_msg: %s", e.ErrorCode, e.ErrorMsg)
+	}
+
+	if e.Error_ != "" {
+		return fmt.Sprintf("error: %s ,message: %s", e.ErrorCode, e.Message)
+	}
+	return ""
 }
 
 // 登陆需要的参数
@@ -109,8 +152,13 @@ type FamilyInfoResp struct {
 /*文件部分*/
 // 文件
 type Cloud189File struct {
-	CreateDate string `json:"createDate"`
-	FileCata   int64  `json:"fileCata"`
+	ID   String `json:"id"`
+	Name string `json:"name"`
+	Size int64  `json:"size"`
+	Md5  string `json:"md5"`
+
+	LastOpTime Time `json:"lastOpTime"`
+	CreateDate Time `json:"createDate"`
 	Icon       struct {
 		//iconOption 5
 		SmallUrl string `json:"smallUrl"`
@@ -120,62 +168,60 @@ type Cloud189File struct {
 		Max600    string `json:"max600"`
 		MediumURL string `json:"mediumUrl"`
 	} `json:"icon"`
-	ID          int64  `json:"id"`
-	LastOpTime  string `json:"lastOpTime"`
-	Md5         string `json:"md5"`
-	MediaType   int    `json:"mediaType"`
-	Name        string `json:"name"`
-	Orientation int64  `json:"orientation"`
-	Rev         string `json:"rev"`
-	Size        int64  `json:"size"`
-	StarLabel   int64  `json:"starLabel"`
 
-	parseTime *time.Time
+	// Orientation int64  `json:"orientation"`
+	// FileCata   int64  `json:"fileCata"`
+	// MediaType   int    `json:"mediaType"`
+	// Rev         string `json:"rev"`
+	// StarLabel   int64  `json:"starLabel"`
 }
 
-func (c *Cloud189File) GetSize() int64  { return c.Size }
-func (c *Cloud189File) GetName() string { return c.Name }
-func (c *Cloud189File) ModTime() time.Time {
-	if c.parseTime == nil {
-		c.parseTime = MustParseTime(c.LastOpTime)
-	}
-	return *c.parseTime
+func (c *Cloud189File) CreateTime() time.Time {
+	return time.Time(c.CreateDate)
 }
-func (c *Cloud189File) IsDir() bool     { return false }
-func (c *Cloud189File) GetID() string   { return fmt.Sprint(c.ID) }
-func (c *Cloud189File) GetPath() string { return "" }
-func (c *Cloud189File) Thumb() string   { return c.Icon.SmallUrl }
+
+func (c *Cloud189File) GetHash() utils.HashInfo {
+	return utils.NewHashInfo(utils.MD5, c.Md5)
+}
+
+func (c *Cloud189File) GetSize() int64     { return c.Size }
+func (c *Cloud189File) GetName() string    { return c.Name }
+func (c *Cloud189File) ModTime() time.Time { return time.Time(c.LastOpTime) }
+func (c *Cloud189File) IsDir() bool        { return false }
+func (c *Cloud189File) GetID() string      { return string(c.ID) }
+func (c *Cloud189File) GetPath() string    { return "" }
+func (c *Cloud189File) Thumb() string      { return c.Icon.SmallUrl }
 
 // 文件夹
 type Cloud189Folder struct {
-	ID       int64  `json:"id"`
+	ID       String `json:"id"`
 	ParentID int64  `json:"parentId"`
 	Name     string `json:"name"`
 
-	FileCata  int64 `json:"fileCata"`
-	FileCount int64 `json:"fileCount"`
+	LastOpTime Time `json:"lastOpTime"`
+	CreateDate Time `json:"createDate"`
 
-	LastOpTime string `json:"lastOpTime"`
-	CreateDate string `json:"createDate"`
-
-	FileListSize int64  `json:"fileListSize"`
-	Rev          string `json:"rev"`
-	StarLabel    int64  `json:"starLabel"`
-
-	parseTime *time.Time
+	// FileListSize int64 `json:"fileListSize"`
+	// FileCount int64 `json:"fileCount"`
+	// FileCata  int64 `json:"fileCata"`
+	// Rev          string `json:"rev"`
+	// StarLabel    int64  `json:"starLabel"`
 }
 
-func (c *Cloud189Folder) GetSize() int64  { return 0 }
-func (c *Cloud189Folder) GetName() string { return c.Name }
-func (c *Cloud189Folder) ModTime() time.Time {
-	if c.parseTime == nil {
-		c.parseTime = MustParseTime(c.LastOpTime)
-	}
-	return *c.parseTime
+func (c *Cloud189Folder) CreateTime() time.Time {
+	return time.Time(c.CreateDate)
 }
-func (c *Cloud189Folder) IsDir() bool     { return true }
-func (c *Cloud189Folder) GetID() string   { return fmt.Sprint(c.ID) }
-func (c *Cloud189Folder) GetPath() string { return "" }
+
+func (c *Cloud189Folder) GetHash() utils.HashInfo {
+	return utils.HashInfo{}
+}
+
+func (c *Cloud189Folder) GetSize() int64     { return 0 }
+func (c *Cloud189Folder) GetName() string    { return c.Name }
+func (c *Cloud189Folder) ModTime() time.Time { return time.Time(c.LastOpTime) }
+func (c *Cloud189Folder) IsDir() bool        { return true }
+func (c *Cloud189Folder) GetID() string      { return string(c.ID) }
+func (c *Cloud189Folder) GetPath() string    { return "" }
 
 type Cloud189FilesResp struct {
 	//ResCode    int    `json:"res_code"`
@@ -210,14 +256,106 @@ type InitMultiUploadResp struct {
 	} `json:"data"`
 }
 type UploadUrlsResp struct {
-	Code       string          `json:"code"`
-	UploadUrls map[string]Part `json:"uploadUrls"`
+	Code string                    `json:"code"`
+	Data map[string]UploadUrlsData `json:"uploadUrls"`
 }
-type Part struct {
+type UploadUrlsData struct {
 	RequestURL    string `json:"requestURL"`
 	RequestHeader string `json:"requestHeader"`
 }
 
+type UploadUrlInfo struct {
+	PartNumber int
+	Headers    map[string]string
+	UploadUrlsData
+}
+
+type UploadProgress struct {
+	UploadInfo  InitMultiUploadResp
+	UploadParts []string
+}
+
+/* 第二种上传方式 */
+type CreateUploadFileResp struct {
+	// 上传文件请求ID
+	UploadFileId int64 `json:"uploadFileId"`
+	// 上传文件数据的URL路径
+	FileUploadUrl string `json:"fileUploadUrl"`
+	// 上传文件完成后确认路径
+	FileCommitUrl string `json:"fileCommitUrl"`
+	// 文件是否已存在云盘中，0-未存在，1-已存在
+	FileDataExists int `json:"fileDataExists"`
+}
+
+type GetUploadFileStatusResp struct {
+	CreateUploadFileResp
+
+	// 已上传的大小
+	DataSize int64 `json:"dataSize"`
+	Size     int64 `json:"size"`
+}
+
+func (r *GetUploadFileStatusResp) GetSize() int64 {
+	return r.DataSize + r.Size
+}
+
+type CommitMultiUploadFileResp struct {
+	File struct {
+		UserFileID String `json:"userFileId"`
+		FileName   string `json:"fileName"`
+		FileSize   int64  `json:"fileSize"`
+		FileMd5    string `json:"fileMd5"`
+		CreateDate Time   `json:"createDate"`
+	} `json:"file"`
+}
+
+func (f *CommitMultiUploadFileResp) toFile() *Cloud189File {
+	return &Cloud189File{
+		ID:         f.File.UserFileID,
+		Name:       f.File.FileName,
+		Size:       f.File.FileSize,
+		Md5:        f.File.FileMd5,
+		LastOpTime: f.File.CreateDate,
+		CreateDate: f.File.CreateDate,
+	}
+}
+
+type OldCommitUploadFileResp struct {
+	XMLName    xml.Name `xml:"file"`
+	ID         String   `xml:"id"`
+	Name       string   `xml:"name"`
+	Size       int64    `xml:"size"`
+	Md5        string   `xml:"md5"`
+	CreateDate Time     `xml:"createDate"`
+}
+
+func (f *OldCommitUploadFileResp) toFile() *Cloud189File {
+	return &Cloud189File{
+		ID:         f.ID,
+		Name:       f.Name,
+		Size:       f.Size,
+		Md5:        f.Md5,
+		CreateDate: f.CreateDate,
+		LastOpTime: f.CreateDate,
+	}
+}
+
+type CreateBatchTaskResp struct {
+	TaskID string `json:"taskId"`
+}
+
+type BatchTaskStateResp struct {
+	FailedCount         int     `json:"failedCount"`
+	Process             int     `json:"process"`
+	SkipCount           int     `json:"skipCount"`
+	SubTaskCount        int     `json:"subTaskCount"`
+	SuccessedCount      int     `json:"successedCount"`
+	SuccessedFileIDList []int64 `json:"successedFileIdList"`
+	TaskID              string  `json:"taskId"`
+	TaskStatus          int     `json:"taskStatus"` //1 初始化 2 存在冲突 3 执行中，4 完成
+}
+
+/* query 加密参数*/
 type Params map[string]string
 
 func (p Params) Set(k, v string) {

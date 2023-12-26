@@ -5,8 +5,10 @@ import (
 	"time"
 )
 
+var CNLoc = time.FixedZone("UTC", 8*60*60)
+
 func MustParseCNTime(str string) time.Time {
-	lastOpTime, _ := time.ParseInLocation("2006-01-02 15:04:05 -07", str+" +08", time.Local)
+	lastOpTime, _ := time.ParseInLocation("2006-01-02 15:04:05 -07", str+" +08", CNLoc)
 	return lastOpTime
 }
 

@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/pkg/utils"
+	hash_extend "github.com/alist-org/alist/v3/pkg/utils/hash"
 )
 
 type RespErr struct {
@@ -21,7 +23,9 @@ type File struct {
 	Id             string    `json:"id"`
 	Kind           string    `json:"kind"`
 	Name           string    `json:"name"`
+	CreatedTime    time.Time `json:"created_time"`
 	ModifiedTime   time.Time `json:"modified_time"`
+	Hash           string    `json:"hash"`
 	Size           string    `json:"size"`
 	ThumbnailLink  string    `json:"thumbnail_link"`
 	WebContentLink string    `json:"web_content_link"`
@@ -35,8 +39,10 @@ func fileToObj(f File) *model.ObjThumb {
 			ID:       f.Id,
 			Name:     f.Name,
 			Size:     size,
+			Ctime:    f.CreatedTime,
 			Modified: f.ModifiedTime,
 			IsFolder: f.Kind == "drive#folder",
+			HashInfo: utils.NewHashInfo(hash_extend.GCID, f.Hash),
 		},
 		Thumbnail: model.Thumbnail{
 			Thumbnail: f.ThumbnailLink,
@@ -72,4 +78,24 @@ type Media struct {
 	ResolutionName string        `json:"resolution_name"`
 	IsVisible      bool          `json:"is_visible"`
 	Category       string        `json:"category"`
+}
+
+type UploadTaskData struct {
+	UploadType string `json:"upload_type"`
+	//UPLOAD_TYPE_RESUMABLE
+	Resumable *struct {
+		Kind   string `json:"kind"`
+		Params struct {
+			AccessKeyID     string    `json:"access_key_id"`
+			AccessKeySecret string    `json:"access_key_secret"`
+			Bucket          string    `json:"bucket"`
+			Endpoint        string    `json:"endpoint"`
+			Expiration      time.Time `json:"expiration"`
+			Key             string    `json:"key"`
+			SecurityToken   string    `json:"security_token"`
+		} `json:"params"`
+		Provider string `json:"provider"`
+	} `json:"resumable"`
+
+	File File `json:"file"`
 }

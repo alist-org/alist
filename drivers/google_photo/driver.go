@@ -124,7 +124,7 @@ func (d *GooglePhoto) Put(ctx context.Context, dstDir model.Obj, stream model.Fi
 	}
 
 	resp, err := d.request(postUrl, http.MethodPost, func(req *resty.Request) {
-		req.SetBody(stream.GetReadCloser()).SetContext(ctx)
+		req.SetBody(stream).SetContext(ctx)
 	}, nil, postHeaders)
 
 	if err != nil {

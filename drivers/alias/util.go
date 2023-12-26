@@ -51,7 +51,7 @@ func (d *Alias) getRootAndPath(path string) (string, string) {
 }
 
 func (d *Alias) get(ctx context.Context, path string, dst, sub string) (model.Obj, error) {
-	obj, err := fs.Get(ctx, stdpath.Join(dst, sub))
+	obj, err := fs.Get(ctx, stdpath.Join(dst, sub), &fs.GetArgs{NoLog: true})
 	if err != nil {
 		return nil, err
 	}
@@ -65,35 +65,46 @@ func (d *Alias) get(ctx context.Context, path string, dst, sub string) (model.Ob
 }
 
 func (d *Alias) list(ctx context.Context, dst, sub string) ([]model.Obj, error) {
-	objs, err := fs.List(ctx, stdpath.Join(dst, sub))
+	objs, err := fs.List(ctx, stdpath.Join(dst, sub), &fs.ListArgs{NoLog: true})
 	// the obj must implement the model.SetPath interface
 	// return objs, err
 	if err != nil {
 		return nil, err
 	}
 	return utils.SliceConvert(objs, func(obj model.Obj) (model.Obj, error) {
-		return &model.Object{
+		thumb, ok := model.GetThumb(obj)
+		objRes := model.Object{
 			Name:     obj.GetName(),
 			Size:     obj.GetSize(),
 			Modified: obj.ModTime(),
 			IsFolder: obj.IsDir(),
+		}
+		if !ok {
+			return &objRes, nil
+		}
+		return &model.ObjThumb{
+			Object: objRes,
+			Thumbnail: model.Thumbnail{
+				Thumbnail: thumb,
+			},
 		}, nil
 	})
 }
 
 func (d *Alias) link(ctx context.Context, dst, sub string, args model.LinkArgs) (*model.Link, error) {
 	reqPath := stdpath.Join(dst, sub)
-	storage, err := fs.GetStorage(reqPath)
+	storage, err := fs.GetStorage(reqPath, &fs.GetStoragesArgs{})
 	if err != nil {
 		return nil, err
 	}
-	_, err = fs.Get(ctx, reqPath)
+	_, err = fs.Get(ctx, reqPath, &fs.GetArgs{NoLog: true})
 	if err != nil {
 		return nil, err
 	}
 	if common.ShouldProxy(storage, stdpath.Base(sub)) {
 		return &model.Link{
-			URL: fmt.Sprintf("/p%s?sign=%s",
+			URL: fmt.Sprintf("%s/p%s?sign=%s",
+				common.GetApiUrl(args.HttpReq),
 				utils.EncodePath(reqPath, true),
 				sign.Sign(reqPath)),
 		}, nil

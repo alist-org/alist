@@ -3,6 +3,7 @@ package task
 
 import (
 	"context"
+	"runtime"
 
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -25,7 +26,7 @@ type Task[K comparable] struct {
 	Name     string
 	state    string // pending, running, finished, canceling, canceled, errored
 	status   string
-	progress int
+	progress float64
 
 	Error error
 
@@ -40,11 +41,11 @@ func (t *Task[K]) SetStatus(status string) {
 	t.status = status
 }
 
-func (t *Task[K]) SetProgress(percentage int) {
+func (t *Task[K]) SetProgress(percentage float64) {
 	t.progress = percentage
 }
 
-func (t Task[K]) GetProgress() int {
+func (t Task[K]) GetProgress() float64 {
 	return t.progress
 }
 
@@ -63,11 +64,17 @@ func (t Task[K]) GetErrMsg() string {
 	return t.Error.Error()
 }
 
+func getCurrentGoroutineStack() string {
+	buf := make([]byte, 1<<16)
+	n := runtime.Stack(buf, false)
+	return string(buf[:n])
+}
+
 func (t *Task[K]) run() {
 	t.state = RUNNING
 	defer func() {
 		if err := recover(); err != nil {
-			log.Errorf("error [%+v] while run task [%s]", err, t.Name)
+			log.Errorf("error [%s] while run task [%s],stack trace:\n%s", err, t.Name, getCurrentGoroutineStack())
 			t.Error = errors.Errorf("panic: %+v", err)
 			t.state = ERRORED
 		}

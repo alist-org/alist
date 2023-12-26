@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
-	"regexp"
 	"strings"
 	"time"
 
@@ -14,11 +13,6 @@ import (
 // Tid生成
 func getTid() string {
 	return fmt.Sprintf("3%d%.0f", time.Now().Unix(), math.Floor(9000000*rand.Float64()+1000000))
-}
-
-// 检查名称
-func checkName(name string) bool {
-	return len(name) <= 20 && regexp.MustCompile("[\u4e00-\u9fa5A-Za-z0-9_-]").MatchString(name)
 }
 
 func toTime(t int64) *time.Time {
@@ -67,11 +61,18 @@ func moveFileToAlbumFile(file *File, album *Album, uk int64) *AlbumFile {
 
 func renameAlbum(album *Album, newName string) *Album {
 	return &Album{
-		AlbumID:    album.AlbumID,
-		Tid:        album.Tid,
-		JoinTime:   album.JoinTime,
-		CreateTime: album.CreateTime,
-		Title:      newName,
-		Mtime:      time.Now().Unix(),
+		AlbumID:      album.AlbumID,
+		Tid:          album.Tid,
+		JoinTime:     album.JoinTime,
+		CreationTime: album.CreationTime,
+		Title:        newName,
+		Mtime:        time.Now().Unix(),
 	}
+}
+
+func BoolToIntStr(b bool) string {
+	if b {
+		return "1"
+	}
+	return "0"
 }

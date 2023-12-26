@@ -22,15 +22,18 @@ const loginPath = "/user/session"
 
 func (d *Cloudreve) request(method string, path string, callback base.ReqCallback, out interface{}) error {
 	u := d.Address + "/api/v3" + path
+	ua := d.CustomUA
+	if ua == "" {
+		ua = base.UserAgent
+	}
 	req := base.RestyClient.R()
 	req.SetHeaders(map[string]string{
 		"Cookie":     "cloudreve-session=" + d.Cookie,
 		"Accept":     "application/json, text/plain, */*",
-		"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36",
+		"User-Agent": ua,
 	})
 
 	var r Resp
-
 	req.SetResult(&r)
 
 	if callback != nil {
@@ -49,11 +52,13 @@ func (d *Cloudreve) request(method string, path string, callback base.ReqCallbac
 
 		// 刷新 cookie
 		if r.Code == http.StatusUnauthorized && path != loginPath {
-			err = d.login()
-			if err != nil {
-				return err
+			if d.Username != "" && d.Password != "" {
+				err = d.login()
+				if err != nil {
+					return err
+				}
+				return d.request(method, path, callback, out)
 			}
-			return d.request(method, path, callback, out)
 		}
 
 		return errors.New(r.Msg)
@@ -143,4 +148,27 @@ func convertSrc(obj model.Obj) map[string]interface{} {
 	m["dirs"] = dirs
 	m["items"] = items
 	return m
+}
+
+func (d *Cloudreve) GetThumb(file Object) (model.Thumbnail, error) {
+	if !d.Addition.EnableThumbAndFolderSize {
+		return model.Thumbnail{}, nil
+	}
+	ua := d.CustomUA
+	if ua == "" {
+		ua = base.UserAgent
+	}
+	req := base.NoRedirectClient.R()
+	req.SetHeaders(map[string]string{
+		"Cookie":     "cloudreve-session=" + d.Cookie,
+		"Accept":     "image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+		"User-Agent": ua,
+	})
+	resp, err := req.Execute(http.MethodGet, d.Address+"/api/v3/file/thumb/"+file.Id)
+	if err != nil {
+		return model.Thumbnail{}, err
+	}
+	return model.Thumbnail{
+		Thumbnail: resp.Header().Get("Location"),
+	}, nil
 }

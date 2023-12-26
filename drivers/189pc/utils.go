@@ -6,15 +6,18 @@ import (
 	"crypto/md5"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/xml"
 	"fmt"
 	"io"
 	"math"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
-	"os"
 	"regexp"
+	"sort"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/conf"
@@ -22,10 +25,14 @@ import (
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/internal/setting"
+	"github.com/alist-org/alist/v3/pkg/errgroup"
 	"github.com/alist-org/alist/v3/pkg/utils"
+
+	"github.com/avast/retry-go"
 	"github.com/go-resty/resty/v2"
 	"github.com/google/uuid"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -47,7 +54,7 @@ const (
 	CHANNEL_ID = "web_cloud.189.cn"
 )
 
-func (y *Cloud189PC) request(url, method string, callback base.ReqCallback, params Params, resp interface{}) ([]byte, error) {
+func (y *Cloud189PC) SignatureHeader(url, method, params string) map[string]string {
 	dateOfGmt := getHttpDateStr()
 	sessionKey := y.tokenInfo.SessionKey
 	sessionSecret := y.tokenInfo.SessionSecret
@@ -56,19 +63,40 @@ func (y *Cloud189PC) request(url, method string, callback base.ReqCallback, para
 		sessionSecret = y.tokenInfo.FamilySessionSecret
 	}
 
-	req := y.client.R().SetQueryParams(clientSuffix()).SetHeaders(map[string]string{
+	header := map[string]string{
 		"Date":         dateOfGmt,
 		"SessionKey":   sessionKey,
 		"X-Request-ID": uuid.NewString(),
-	})
+		"Signature":    signatureOfHmac(sessionSecret, sessionKey, method, url, dateOfGmt, params),
+	}
+	return header
+}
+
+func (y *Cloud189PC) EncryptParams(params Params) string {
+	sessionSecret := y.tokenInfo.SessionSecret
+	if y.isFamily() {
+		sessionSecret = y.tokenInfo.FamilySessionSecret
+	}
+	if params != nil {
+		return AesECBEncrypt(params.Encode(), sessionSecret[:16])
+	}
+	return ""
+}
+
+func (y *Cloud189PC) request(url, method string, callback base.ReqCallback, params Params, resp interface{}) ([]byte, error) {
+	req := y.client.R().SetQueryParams(clientSuffix())
 
 	// 设置params
-	var paramsData string
-	if params != nil {
-		paramsData = AesECBEncrypt(params.Encode(), sessionSecret[:16])
+	paramsData := y.EncryptParams(params)
+	if paramsData != "" {
 		req.SetQueryParam("params", paramsData)
 	}
-	req.SetHeader("Signature", signatureOfHmac(sessionSecret, sessionKey, method, url, dateOfGmt, paramsData))
+
+	// Signature
+	req.SetHeaders(y.SignatureHeader(url, method, paramsData))
+
+	var erron RespErr
+	req.SetError(&erron)
 
 	if callback != nil {
 		callback(req)
@@ -80,32 +108,6 @@ func (y *Cloud189PC) request(url, method string, callback base.ReqCallback, para
 	if err != nil {
 		return nil, err
 	}
-	var erron RespErr
-	utils.Json.Unmarshal(res.Body(), &erron)
-
-	if erron.ResCode != "" {
-		return nil, fmt.Errorf("res_code: %s ,res_msg: %s", erron.ResCode, erron.ResMessage)
-	}
-	if erron.Code != "" && erron.Code != "SUCCESS" {
-		if erron.Msg != "" {
-			return nil, fmt.Errorf("code: %s ,msg: %s", erron.Code, erron.Msg)
-		}
-		if erron.Message != "" {
-			return nil, fmt.Errorf("code: %s ,msg: %s", erron.Code, erron.Message)
-		}
-		return nil, fmt.Errorf(res.String())
-	}
-	switch erron.ErrorCode {
-	case "":
-		break
-	case "InvalidSessionKey":
-		if err = y.refreshSession(); err != nil {
-			return nil, err
-		}
-		return y.request(url, method, callback, params, resp)
-	default:
-		return nil, fmt.Errorf("err_code: %s ,err_msg: %s", erron.ErrorCode, erron.ErrorMsg)
-	}
 
 	if strings.Contains(res.String(), "userSessionBO is null") {
 		if err = y.refreshSession(); err != nil {
@@ -114,14 +116,17 @@ func (y *Cloud189PC) request(url, method string, callback base.ReqCallback, para
 		return y.request(url, method, callback, params, resp)
 	}
 
-	resCode := utils.Json.Get(res.Body(), "res_code").ToInt64()
-	message := utils.Json.Get(res.Body(), "res_message").ToString()
-	switch resCode {
-	case 0:
-		return res.Body(), nil
-	default:
-		return nil, fmt.Errorf("res_code: %d ,res_msg: %s", resCode, message)
+	// 处理错误
+	if erron.HasError() {
+		if erron.ErrorCode == "InvalidSessionKey" {
+			if err = y.refreshSession(); err != nil {
+				return nil, err
+			}
+			return y.request(url, method, callback, params, resp)
+		}
+		return nil, &erron
 	}
+	return res.Body(), nil
 }
 
 func (y *Cloud189PC) get(url string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
@@ -132,6 +137,50 @@ func (y *Cloud189PC) post(url string, callback base.ReqCallback, resp interface{
 	return y.request(url, http.MethodPost, callback, nil, resp)
 }
 
+func (y *Cloud189PC) put(ctx context.Context, url string, headers map[string]string, sign bool, file io.Reader) ([]byte, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, url, file)
+	if err != nil {
+		return nil, err
+	}
+
+	query := req.URL.Query()
+	for key, value := range clientSuffix() {
+		query.Add(key, value)
+	}
+	req.URL.RawQuery = query.Encode()
+
+	for key, value := range headers {
+		req.Header.Add(key, value)
+	}
+
+	if sign {
+		for key, value := range y.SignatureHeader(url, http.MethodPut, "") {
+			req.Header.Add(key, value)
+		}
+	}
+
+	resp, err := base.HttpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var erron RespErr
+	jsoniter.Unmarshal(body, &erron)
+	xml.Unmarshal(body, &erron)
+	if erron.HasError() {
+		return nil, &erron
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, errors.Errorf("put fail,err:%s", string(body))
+	}
+	return body, nil
+}
 func (y *Cloud189PC) getFiles(ctx context.Context, fileId string) ([]model.Obj, error) {
 	fullUrl := API_URL
 	if y.isFamily() {
@@ -186,7 +235,7 @@ func (y *Cloud189PC) getFiles(ctx context.Context, fileId string) ([]model.Obj, 
 
 func (y *Cloud189PC) login() (err error) {
 	// 初始化登陆所需参数
-	if y.loginParam == nil || !y.NoUseOcr {
+	if y.loginParam == nil {
 		if err = y.initLoginParam(); err != nil {
 			// 验证码也通过错误返回
 			return err
@@ -197,7 +246,7 @@ func (y *Cloud189PC) login() (err error) {
 		y.VCode = ""
 		// 销毁登陆参数
 		y.loginParam = nil
-		// 遇到错误，重新加载登陆参数
+		// 遇到错误，重新加载登陆参数(刷新验证码)
 		if err != nil && y.NoUseOcr {
 			if err1 := y.initLoginParam(); err1 != nil {
 				err = fmt.Errorf("err1: %s \nerr2: %s", err, err1)
@@ -221,7 +270,7 @@ func (y *Cloud189PC) login() (err error) {
 			"validateCode": y.VCode,
 			"captchaToken": param.CaptchaToken,
 			"returnUrl":    RETURN_URL,
-			"mailSuffix":   "@189.cn",
+			// "mailSuffix":   "@189.cn",
 			"dynamicCheck": "FALSE",
 			"clientType":   CLIENT_TYPE,
 			"cb_SaveName":  "1",
@@ -249,9 +298,8 @@ func (y *Cloud189PC) login() (err error) {
 		return
 	}
 
-	if erron.ResCode != "" {
-		err = fmt.Errorf(erron.ResMessage)
-		return
+	if erron.HasError() {
+		return &erron
 	}
 	if tokenInfo.ResCode != 0 {
 		err = fmt.Errorf(tokenInfo.ResMessage)
@@ -304,6 +352,22 @@ func (y *Cloud189PC) initLoginParam() error {
 	param.RsaPassword = encryptConf.Data.Pre + RsaEncrypt(param.jRsaKey, y.Password)
 	y.loginParam = &param
 
+	// 判断是否需要验证码
+	resp, err := y.client.R().
+		SetHeader("REQID", param.ReqId).
+		SetFormData(map[string]string{
+			"appKey":      APP_ID,
+			"accountType": ACCOUNT_TYPE,
+			"userName":    param.RsaUsername,
+		}).Post(AUTH_URL + "/api/logbox/oauth2/needcaptcha.do")
+	if err != nil {
+		return err
+	}
+	if resp.String() == "0" {
+		return nil
+	}
+
+	// 拉取验证码
 	imgRes, err := y.client.R().
 		SetQueryParams(map[string]string{
 			"token": param.CaptchaToken,
@@ -359,38 +423,33 @@ func (y *Cloud189PC) refreshSession() (err error) {
 		}
 	}()
 
-	switch erron.ResCode {
-	case "":
-		break
-	case "UserInvalidOpenToken":
-		if err = y.login(); err != nil {
-			return err
+	if erron.HasError() {
+		if erron.ResCode == "UserInvalidOpenToken" {
+			if err = y.login(); err != nil {
+				return err
+			}
 		}
-	default:
-		err = fmt.Errorf("res_code: %s ,res_msg: %s", erron.ResCode, erron.ResMessage)
-		return
+		return &erron
 	}
-
-	switch userSessionResp.ResCode {
-	case 0:
-		y.tokenInfo.UserSessionResp = userSessionResp
-	default:
-		err = fmt.Errorf("code: %d , msg: %s", userSessionResp.ResCode, userSessionResp.ResMessage)
-	}
+	y.tokenInfo.UserSessionResp = userSessionResp
 	return
 }
 
 // 普通上传
-func (y *Cloud189PC) CommonUpload(ctx context.Context, dstDir model.Obj, file model.FileStreamer, up driver.UpdateProgress) (err error) {
-	const DEFAULT int64 = 10485760
-	var count = int64(math.Ceil(float64(file.GetSize()) / float64(DEFAULT)))
+// 无法上传大小为0的文件
+func (y *Cloud189PC) StreamUpload(ctx context.Context, dstDir model.Obj, file model.FileStreamer, up driver.UpdateProgress) (model.Obj, error) {
+	var sliceSize = partSize(file.GetSize())
+	count := int(math.Ceil(float64(file.GetSize()) / float64(sliceSize)))
+	lastPartSize := file.GetSize() % sliceSize
+	if file.GetSize() > 0 && lastPartSize == 0 {
+		lastPartSize = sliceSize
+	}
 
-	requestID := uuid.NewString()
 	params := Params{
 		"parentFolderId": dstDir.GetID(),
 		"fileName":       url.QueryEscape(file.GetName()),
 		"fileSize":       fmt.Sprint(file.GetSize()),
-		"sliceSize":      fmt.Sprint(DEFAULT),
+		"sliceSize":      fmt.Sprint(sliceSize),
 		"lazyCheck":      "1",
 	}
 
@@ -405,78 +464,74 @@ func (y *Cloud189PC) CommonUpload(ctx context.Context, dstDir model.Obj, file mo
 
 	// 初始化上传
 	var initMultiUpload InitMultiUploadResp
-	_, err = y.request(fullUrl+"/initMultiUpload", http.MethodGet, func(req *resty.Request) {
+	_, err := y.request(fullUrl+"/initMultiUpload", http.MethodGet, func(req *resty.Request) {
 		req.SetContext(ctx)
-		req.SetHeader("X-Request-ID", requestID)
 	}, params, &initMultiUpload)
 	if err != nil {
-		return err
+		return nil, err
 	}
+
+	threadG, upCtx := errgroup.NewGroupWithContext(ctx, y.uploadThread,
+		retry.Attempts(3),
+		retry.Delay(time.Second),
+		retry.DelayType(retry.BackOffDelay))
 
 	fileMd5 := md5.New()
 	silceMd5 := md5.New()
 	silceMd5Hexs := make([]string, 0, count)
-	byteData := bytes.NewBuffer(make([]byte, DEFAULT))
-	for i := int64(1); i <= count; i++ {
-		if utils.IsCanceled(ctx) {
-			return ctx.Err()
+
+	for i := 1; i <= count; i++ {
+		if utils.IsCanceled(upCtx) {
+			break
+		}
+
+		byteData := make([]byte, sliceSize)
+		if i == count {
+			byteData = byteData[:lastPartSize]
 		}
 
 		// 读取块
-		byteData.Reset()
 		silceMd5.Reset()
-		_, err := io.CopyN(io.MultiWriter(fileMd5, silceMd5, byteData), file, DEFAULT)
-		if err != io.EOF && err != io.ErrUnexpectedEOF && err != nil {
-			return err
+		if _, err := io.ReadFull(io.TeeReader(file, io.MultiWriter(fileMd5, silceMd5)), byteData); err != io.EOF && err != nil {
+			return nil, err
 		}
 
 		// 计算块md5并进行hex和base64编码
 		md5Bytes := silceMd5.Sum(nil)
 		silceMd5Hexs = append(silceMd5Hexs, strings.ToUpper(hex.EncodeToString(md5Bytes)))
-		silceMd5Base64 := base64.StdEncoding.EncodeToString(md5Bytes)
+		partInfo := fmt.Sprintf("%d-%s", i, base64.StdEncoding.EncodeToString(md5Bytes))
 
-		// 获取上传链接
-		var uploadUrl UploadUrlsResp
-		_, err = y.request(fullUrl+"/getMultiUploadUrls", http.MethodGet,
-			func(req *resty.Request) {
-				req.SetContext(ctx)
-				req.SetHeader("X-Request-ID", requestID)
-			}, Params{
-				"partInfo":     fmt.Sprintf("%d-%s", i, silceMd5Base64),
-				"uploadFileId": initMultiUpload.Data.UploadFileID,
-			}, &uploadUrl)
-		if err != nil {
-			return err
-		}
+		threadG.Go(func(ctx context.Context) error {
+			uploadUrls, err := y.GetMultiUploadUrls(ctx, initMultiUpload.Data.UploadFileID, partInfo)
+			if err != nil {
+				return err
+			}
 
-		// 开始上传
-		uploadData := uploadUrl.UploadUrls[fmt.Sprint("partNumber_", i)]
-		res, err := y.putClient.R().
-			SetContext(ctx).
-			SetQueryParams(clientSuffix()).
-			SetHeaders(ParseHttpHeader(uploadData.RequestHeader)).
-			SetBody(byteData).
-			Put(uploadData.RequestURL)
-		if err != nil {
-			return err
-		}
-		if res.StatusCode() != http.StatusOK {
-			return fmt.Errorf("updload fail,msg: %s", res.String())
-		}
-		up(int(i * 100 / count))
+			// step.4 上传切片
+			uploadUrl := uploadUrls[0]
+			_, err = y.put(ctx, uploadUrl.RequestURL, uploadUrl.Headers, false, bytes.NewReader(byteData))
+			if err != nil {
+				return err
+			}
+			up(float64(threadG.Success()) * 100 / float64(count))
+			return nil
+		})
+	}
+	if err = threadG.Wait(); err != nil {
+		return nil, err
 	}
 
 	fileMd5Hex := strings.ToUpper(hex.EncodeToString(fileMd5.Sum(nil)))
 	sliceMd5Hex := fileMd5Hex
-	if file.GetSize() > DEFAULT {
-		sliceMd5Hex = strings.ToUpper(utils.GetMD5Encode(strings.Join(silceMd5Hexs, "\n")))
+	if file.GetSize() > sliceSize {
+		sliceMd5Hex = strings.ToUpper(utils.GetMD5EncodeStr(strings.Join(silceMd5Hexs, "\n")))
 	}
 
 	// 提交上传
+	var resp CommitMultiUploadFileResp
 	_, err = y.request(fullUrl+"/commitMultiUploadFile", http.MethodGet,
 		func(req *resty.Request) {
 			req.SetContext(ctx)
-			req.SetHeader("X-Request-ID", requestID)
 		}, Params{
 			"uploadFileId": initMultiUpload.Data.UploadFileID,
 			"fileMd5":      fileMd5Hex,
@@ -484,132 +539,348 @@ func (y *Cloud189PC) CommonUpload(ctx context.Context, dstDir model.Obj, file mo
 			"lazyCheck":    "1",
 			"isLog":        "0",
 			"opertype":     "3",
-		}, nil)
-	return err
+		}, &resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp.toFile(), nil
+}
+
+func (y *Cloud189PC) RapidUpload(ctx context.Context, dstDir model.Obj, stream model.FileStreamer) (model.Obj, error) {
+	fileMd5 := stream.GetHash().GetHash(utils.MD5)
+	if len(fileMd5) < utils.MD5.Width {
+		return nil, errors.New("invalid hash")
+	}
+
+	uploadInfo, err := y.OldUploadCreate(ctx, dstDir.GetID(), fileMd5, stream.GetName(), fmt.Sprint(stream.GetSize()))
+	if err != nil {
+		return nil, err
+	}
+
+	if uploadInfo.FileDataExists != 1 {
+		return nil, errors.New("rapid upload fail")
+	}
+
+	return y.OldUploadCommit(ctx, uploadInfo.FileCommitUrl, uploadInfo.UploadFileId)
 }
 
 // 快传
-func (y *Cloud189PC) FastUpload(ctx context.Context, dstDir model.Obj, file model.FileStreamer, up driver.UpdateProgress) (err error) {
-	// 需要获取完整文件md5,必须支持 io.Seek
-	tempFile, err := utils.CreateTempFile(file.GetReadCloser())
+func (y *Cloud189PC) FastUpload(ctx context.Context, dstDir model.Obj, file model.FileStreamer, up driver.UpdateProgress) (model.Obj, error) {
+	tempFile, err := file.CacheFullInTempFile()
 	if err != nil {
-		return err
+		return nil, err
 	}
-	defer func() {
-		_ = tempFile.Close()
-		_ = os.Remove(tempFile.Name())
-	}()
 
-	const DEFAULT int64 = 10485760
-	count := int(math.Ceil(float64(file.GetSize()) / float64(DEFAULT)))
+	var sliceSize = partSize(file.GetSize())
+	count := int(math.Ceil(float64(file.GetSize()) / float64(sliceSize)))
+	lastSliceSize := file.GetSize() % sliceSize
+	if file.GetSize() > 0 && lastSliceSize == 0 {
+		lastSliceSize = sliceSize
+	}
 
-	// 优先计算所需信息
+	//step.1 优先计算所需信息
+	byteSize := sliceSize
 	fileMd5 := md5.New()
 	silceMd5 := md5.New()
 	silceMd5Hexs := make([]string, 0, count)
-	silceMd5Base64s := make([]string, 0, count)
+	partInfos := make([]string, 0, count)
 	for i := 1; i <= count; i++ {
 		if utils.IsCanceled(ctx) {
-			return ctx.Err()
+			return nil, ctx.Err()
+		}
+
+		if i == count {
+			byteSize = lastSliceSize
 		}
 
 		silceMd5.Reset()
-		if _, err := io.CopyN(io.MultiWriter(fileMd5, silceMd5), tempFile, DEFAULT); err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
-			return err
+		if _, err := io.CopyN(io.MultiWriter(fileMd5, silceMd5), tempFile, byteSize); err != nil && err != io.EOF {
+			return nil, err
 		}
 		md5Byte := silceMd5.Sum(nil)
 		silceMd5Hexs = append(silceMd5Hexs, strings.ToUpper(hex.EncodeToString(md5Byte)))
-		silceMd5Base64s = append(silceMd5Base64s, fmt.Sprint(i, "-", base64.StdEncoding.EncodeToString(md5Byte)))
-	}
-	if _, err = tempFile.Seek(0, io.SeekStart); err != nil {
-		return err
+		partInfos = append(partInfos, fmt.Sprint(i, "-", base64.StdEncoding.EncodeToString(md5Byte)))
 	}
 
 	fileMd5Hex := strings.ToUpper(hex.EncodeToString(fileMd5.Sum(nil)))
 	sliceMd5Hex := fileMd5Hex
-	if file.GetSize() > DEFAULT {
-		sliceMd5Hex = strings.ToUpper(utils.GetMD5Encode(strings.Join(silceMd5Hexs, "\n")))
-	}
-
-	requestID := uuid.NewString()
-	// 检测是否支持快传
-	params := Params{
-		"parentFolderId": dstDir.GetID(),
-		"fileName":       url.QueryEscape(file.GetName()),
-		"fileSize":       fmt.Sprint(file.GetSize()),
-		"fileMd5":        fileMd5Hex,
-		"sliceSize":      fmt.Sprint(DEFAULT),
-		"sliceMd5":       sliceMd5Hex,
+	if file.GetSize() > sliceSize {
+		sliceMd5Hex = strings.ToUpper(utils.GetMD5EncodeStr(strings.Join(silceMd5Hexs, "\n")))
 	}
 
 	fullUrl := UPLOAD_URL
 	if y.isFamily() {
-		params.Set("familyId", y.FamilyID)
 		fullUrl += "/family"
 	} else {
 		//params.Set("extend", `{"opScene":"1","relativepath":"","rootfolderid":""}`)
 		fullUrl += "/person"
 	}
 
-	var uploadInfo InitMultiUploadResp
-	_, err = y.request(fullUrl+"/initMultiUpload", http.MethodGet, func(req *resty.Request) {
-		req.SetContext(ctx)
-		req.SetHeader("X-Request-ID", requestID)
-	}, params, &uploadInfo)
-	if err != nil {
-		return err
-	}
-
-	// 网盘中不存在该文件，开始上传
-	if uploadInfo.Data.FileDataExists != 1 {
-		var uploadUrls UploadUrlsResp
-		_, err = y.request(fullUrl+"/getMultiUploadUrls", http.MethodGet,
-			func(req *resty.Request) {
-				req.SetContext(ctx)
-				req.SetHeader("X-Request-ID", requestID)
-			}, Params{
-				"uploadFileId": uploadInfo.Data.UploadFileID,
-				"partInfo":     strings.Join(silceMd5Base64s, ","),
-			}, &uploadUrls)
+	// 尝试恢复进度
+	uploadProgress, ok := base.GetUploadProgress[*UploadProgress](y, y.tokenInfo.SessionKey, fileMd5Hex)
+	if !ok {
+		//step.2 预上传
+		params := Params{
+			"parentFolderId": dstDir.GetID(),
+			"fileName":       url.QueryEscape(file.GetName()),
+			"fileSize":       fmt.Sprint(file.GetSize()),
+			"fileMd5":        fileMd5Hex,
+			"sliceSize":      fmt.Sprint(sliceSize),
+			"sliceMd5":       sliceMd5Hex,
+		}
+		if y.isFamily() {
+			params.Set("familyId", y.FamilyID)
+		}
+		var uploadInfo InitMultiUploadResp
+		_, err = y.request(fullUrl+"/initMultiUpload", http.MethodGet, func(req *resty.Request) {
+			req.SetContext(ctx)
+		}, params, &uploadInfo)
 		if err != nil {
-			return err
+			return nil, err
 		}
-
-		for i := 1; i <= count; i++ {
-			select {
-			case <-ctx.Done():
-				return ctx.Err()
-			default:
-			}
-
-			uploadData := uploadUrls.UploadUrls[fmt.Sprint("partNumber_", i)]
-			res, err := y.putClient.R().
-				SetContext(ctx).
-				SetQueryParams(clientSuffix()).
-				SetHeaders(ParseHttpHeader(uploadData.RequestHeader)).
-				SetBody(io.LimitReader(tempFile, DEFAULT)).
-				Put(uploadData.RequestURL)
-			if err != nil {
-				return err
-			}
-			if res.StatusCode() != http.StatusOK {
-				return fmt.Errorf("updload fail,msg: %s", res.String())
-			}
-			up(int(i * 100 / count))
+		uploadProgress = &UploadProgress{
+			UploadInfo:  uploadInfo,
+			UploadParts: partInfos,
 		}
 	}
 
-	// 提交
+	uploadInfo := uploadProgress.UploadInfo.Data
+	// 网盘中不存在该文件，开始上传
+	if uploadInfo.FileDataExists != 1 {
+		threadG, upCtx := errgroup.NewGroupWithContext(ctx, y.uploadThread,
+			retry.Attempts(3),
+			retry.Delay(time.Second),
+			retry.DelayType(retry.BackOffDelay))
+		for i, uploadPart := range uploadProgress.UploadParts {
+			if utils.IsCanceled(upCtx) {
+				break
+			}
+
+			i, uploadPart := i, uploadPart
+			threadG.Go(func(ctx context.Context) error {
+				// step.3 获取上传链接
+				uploadUrls, err := y.GetMultiUploadUrls(ctx, uploadInfo.UploadFileID, uploadPart)
+				if err != nil {
+					return err
+				}
+				uploadUrl := uploadUrls[0]
+
+				byteSize, offset := sliceSize, int64(uploadUrl.PartNumber-1)*sliceSize
+				if uploadUrl.PartNumber == count {
+					byteSize = lastSliceSize
+				}
+
+				// step.4 上传切片
+				_, err = y.put(ctx, uploadUrl.RequestURL, uploadUrl.Headers, false, io.NewSectionReader(tempFile, offset, byteSize))
+				if err != nil {
+					return err
+				}
+
+				up(float64(threadG.Success()) * 100 / float64(len(uploadUrls)))
+				uploadProgress.UploadParts[i] = ""
+				return nil
+			})
+		}
+		if err = threadG.Wait(); err != nil {
+			if errors.Is(err, context.Canceled) {
+				uploadProgress.UploadParts = utils.SliceFilter(uploadProgress.UploadParts, func(s string) bool { return s != "" })
+				base.SaveUploadProgress(y, uploadProgress, y.tokenInfo.SessionKey, fileMd5Hex)
+			}
+			return nil, err
+		}
+	}
+
+	// step.5 提交
+	var resp CommitMultiUploadFileResp
 	_, err = y.request(fullUrl+"/commitMultiUploadFile", http.MethodGet,
 		func(req *resty.Request) {
 			req.SetContext(ctx)
-			req.SetHeader("X-Request-ID", requestID)
 		}, Params{
-			"uploadFileId": uploadInfo.Data.UploadFileID,
+			"uploadFileId": uploadInfo.UploadFileID,
 			"isLog":        "0",
 			"opertype":     "3",
-		}, nil)
-	return err
+		}, &resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp.toFile(), nil
+}
+
+// 获取上传切片信息
+// 对http body有大小限制，分片信息太多会出错
+func (y *Cloud189PC) GetMultiUploadUrls(ctx context.Context, uploadFileId string, partInfo ...string) ([]UploadUrlInfo, error) {
+	fullUrl := UPLOAD_URL
+	if y.isFamily() {
+		fullUrl += "/family"
+	} else {
+		fullUrl += "/person"
+	}
+
+	var uploadUrlsResp UploadUrlsResp
+	_, err := y.request(fullUrl+"/getMultiUploadUrls", http.MethodGet,
+		func(req *resty.Request) {
+			req.SetContext(ctx)
+		}, Params{
+			"uploadFileId": uploadFileId,
+			"partInfo":     strings.Join(partInfo, ","),
+		}, &uploadUrlsResp)
+	if err != nil {
+		return nil, err
+	}
+	uploadUrls := uploadUrlsResp.Data
+
+	if len(uploadUrls) != len(partInfo) {
+		return nil, fmt.Errorf("uploadUrls get error, due to get length %d, real length %d", len(partInfo), len(uploadUrls))
+	}
+
+	uploadUrlInfos := make([]UploadUrlInfo, 0, len(uploadUrls))
+	for k, uploadUrl := range uploadUrls {
+		partNumber, err := strconv.Atoi(strings.TrimPrefix(k, "partNumber_"))
+		if err != nil {
+			return nil, err
+		}
+		uploadUrlInfos = append(uploadUrlInfos, UploadUrlInfo{
+			PartNumber:     partNumber,
+			Headers:        ParseHttpHeader(uploadUrl.RequestHeader),
+			UploadUrlsData: uploadUrl,
+		})
+	}
+	sort.Slice(uploadUrlInfos, func(i, j int) bool {
+		return uploadUrlInfos[i].PartNumber < uploadUrlInfos[j].PartNumber
+	})
+	return uploadUrlInfos, nil
+}
+
+// 旧版本上传，家庭云不支持覆盖
+func (y *Cloud189PC) OldUpload(ctx context.Context, dstDir model.Obj, file model.FileStreamer, up driver.UpdateProgress) (model.Obj, error) {
+	tempFile, err := file.CacheFullInTempFile()
+	if err != nil {
+		return nil, err
+	}
+	fileMd5, err := utils.HashFile(utils.MD5, tempFile)
+	if err != nil {
+		return nil, err
+	}
+
+	// 创建上传会话
+	uploadInfo, err := y.OldUploadCreate(ctx, dstDir.GetID(), fileMd5, file.GetName(), fmt.Sprint(file.GetSize()))
+	if err != nil {
+		return nil, err
+	}
+
+	// 网盘中不存在该文件，开始上传
+	status := GetUploadFileStatusResp{CreateUploadFileResp: *uploadInfo}
+	for status.GetSize() < file.GetSize() && status.FileDataExists != 1 {
+		if utils.IsCanceled(ctx) {
+			return nil, ctx.Err()
+		}
+
+		header := map[string]string{
+			"ResumePolicy": "1",
+			"Expect":       "100-continue",
+		}
+
+		if y.isFamily() {
+			header["FamilyId"] = fmt.Sprint(y.FamilyID)
+			header["UploadFileId"] = fmt.Sprint(status.UploadFileId)
+		} else {
+			header["Edrive-UploadFileId"] = fmt.Sprint(status.UploadFileId)
+		}
+
+		_, err := y.put(ctx, status.FileUploadUrl, header, true, io.NopCloser(tempFile))
+		if err, ok := err.(*RespErr); ok && err.Code != "InputStreamReadError" {
+			return nil, err
+		}
+
+		// 获取断点状态
+		fullUrl := API_URL + "/getUploadFileStatus.action"
+		if y.isFamily() {
+			fullUrl = API_URL + "/family/file/getFamilyFileStatus.action"
+		}
+		_, err = y.get(fullUrl, func(req *resty.Request) {
+			req.SetContext(ctx).SetQueryParams(map[string]string{
+				"uploadFileId": fmt.Sprint(status.UploadFileId),
+				"resumePolicy": "1",
+			})
+			if y.isFamily() {
+				req.SetQueryParam("familyId", fmt.Sprint(y.FamilyID))
+			}
+		}, &status)
+		if err != nil {
+			return nil, err
+		}
+		if _, err := tempFile.Seek(status.GetSize(), io.SeekStart); err != nil {
+			return nil, err
+		}
+		up(float64(status.GetSize()) / float64(file.GetSize()) * 100)
+	}
+
+	return y.OldUploadCommit(ctx, status.FileCommitUrl, status.UploadFileId)
+}
+
+// 创建上传会话
+func (y *Cloud189PC) OldUploadCreate(ctx context.Context, parentID string, fileMd5, fileName, fileSize string) (*CreateUploadFileResp, error) {
+	var uploadInfo CreateUploadFileResp
+
+	fullUrl := API_URL + "/createUploadFile.action"
+	if y.isFamily() {
+		fullUrl = API_URL + "/family/file/createFamilyFile.action"
+	}
+	_, err := y.post(fullUrl, func(req *resty.Request) {
+		req.SetContext(ctx)
+		if y.isFamily() {
+			req.SetQueryParams(map[string]string{
+				"familyId":     y.FamilyID,
+				"parentId":     parentID,
+				"fileMd5":      fileMd5,
+				"fileName":     fileName,
+				"fileSize":     fileSize,
+				"resumePolicy": "1",
+			})
+		} else {
+			req.SetFormData(map[string]string{
+				"parentFolderId": parentID,
+				"fileName":       fileName,
+				"size":           fileSize,
+				"md5":            fileMd5,
+				"opertype":       "3",
+				"flag":           "1",
+				"resumePolicy":   "1",
+				"isLog":          "0",
+			})
+		}
+	}, &uploadInfo)
+
+	if err != nil {
+		return nil, err
+	}
+	return &uploadInfo, nil
+}
+
+// 提交上传文件
+func (y *Cloud189PC) OldUploadCommit(ctx context.Context, fileCommitUrl string, uploadFileID int64) (model.Obj, error) {
+	var resp OldCommitUploadFileResp
+	_, err := y.post(fileCommitUrl, func(req *resty.Request) {
+		req.SetContext(ctx)
+		if y.isFamily() {
+			req.SetHeaders(map[string]string{
+				"ResumePolicy": "1",
+				"UploadFileId": fmt.Sprint(uploadFileID),
+				"FamilyId":     fmt.Sprint(y.FamilyID),
+			})
+		} else {
+			req.SetFormData(map[string]string{
+				"opertype":     "3",
+				"resumePolicy": "1",
+				"uploadFileId": fmt.Sprint(uploadFileID),
+				"isLog":        "0",
+			})
+		}
+	}, &resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp.toFile(), nil
 }
 
 func (y *Cloud189PC) isFamily() bool {
@@ -649,4 +920,34 @@ func (y *Cloud189PC) getFamilyID() (string, error) {
 		}
 	}
 	return fmt.Sprint(infos[0].FamilyID), nil
+}
+
+func (y *Cloud189PC) CheckBatchTask(aType string, taskID string) (*BatchTaskStateResp, error) {
+	var resp BatchTaskStateResp
+	_, err := y.post(API_URL+"/batch/checkBatchTask.action", func(req *resty.Request) {
+		req.SetFormData(map[string]string{
+			"type":   aType,
+			"taskId": taskID,
+		})
+	}, &resp)
+	if err != nil {
+		return nil, err
+	}
+	return &resp, nil
+}
+
+func (y *Cloud189PC) WaitBatchTask(aType string, taskID string, t time.Duration) error {
+	for {
+		state, err := y.CheckBatchTask(aType, taskID)
+		if err != nil {
+			return err
+		}
+		switch state.TaskStatus {
+		case 2:
+			return errors.New("there is a conflict with the target object")
+		case 4:
+			return nil
+		}
+		time.Sleep(t)
+	}
 }

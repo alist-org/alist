@@ -4,7 +4,6 @@ import (
 	"context"
 	stdpath "path"
 
-	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
@@ -65,11 +64,10 @@ func (d *FTP) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*m
 		return nil, err
 	}
 
-	r := NewFTPFileReader(d.conn, file.GetPath())
+	r := NewFileReader(d.conn, file.GetPath(), file.GetSize())
 	link := &model.Link{
-		Data: r,
+		MFile: r,
 	}
-	base.HandleRange(link, r, args.Header, file.GetSize())
 	return link, nil
 }
 

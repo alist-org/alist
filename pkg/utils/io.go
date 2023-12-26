@@ -3,7 +3,14 @@ package utils
 import (
 	"bytes"
 	"context"
+	"errors"
+	"fmt"
 	"io"
+	"time"
+
+	"golang.org/x/exp/constraints"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // here is some syntaxic sugar inspired by the Tomas Senart's video,
@@ -13,9 +20,9 @@ type readerFunc func(p []byte) (n int, err error)
 func (rf readerFunc) Read(p []byte) (n int, err error) { return rf(p) }
 
 // CopyWithCtx slightly modified function signature:
-// - context has been added in order to propagate cancelation
+// - context has been added in order to propagate cancellation
 // - I do not return the number of bytes written, has it is not useful in my use case
-func CopyWithCtx(ctx context.Context, out io.Writer, in io.Reader, size int64, progress func(percentage int)) error {
+func CopyWithCtx(ctx context.Context, out io.Writer, in io.Reader, size int64, progress func(percentage float64)) error {
 	// Copy will call the Reader and Writer interface multiple time, in order
 	// to copy by chunk (avoiding loading the whole file in memory).
 	// I insert the ability to cancel before read time as it is the earliest
@@ -34,7 +41,7 @@ func CopyWithCtx(ctx context.Context, out io.Writer, in io.Reader, size int64, p
 			n, err := in.Read(p)
 			if s > 0 && (err == nil || err == io.EOF) {
 				finish += int64(n)
-				progress(int(finish / s))
+				progress(float64(finish) / float64(s))
 			}
 			return n, err
 		}
@@ -44,31 +51,23 @@ func CopyWithCtx(ctx context.Context, out io.Writer, in io.Reader, size int64, p
 
 type limitWriter struct {
 	w     io.Writer
-	count int64
 	limit int64
 }
 
-func (l limitWriter) Write(p []byte) (n int, err error) {
-	wn := int(l.limit - l.count)
-	if wn > len(p) {
-		wn = len(p)
-	}
-	if wn > 0 {
-		if n, err = l.w.Write(p[:wn]); err != nil {
-			return
+func (l *limitWriter) Write(p []byte) (n int, err error) {
+	lp := len(p)
+	if l.limit > 0 {
+		if int64(lp) > l.limit {
+			p = p[:l.limit]
 		}
-		if n < wn {
-			err = io.ErrShortWrite
-		}
+		l.limit -= int64(len(p))
+		_, err = l.w.Write(p)
 	}
-	if err == nil {
-		n = len(p)
-	}
-	return
+	return lp, err
 }
 
-func LimitWriter(w io.Writer, size int64) io.Writer {
-	return &limitWriter{w: w, limit: size}
+func LimitWriter(w io.Writer, limit int64) io.Writer {
+	return &limitWriter{w: w, limit: limit}
 }
 
 type ReadCloser struct {
@@ -134,4 +133,74 @@ func (mr *MultiReadable) Close() error {
 		return closer.Close()
 	}
 	return nil
+}
+
+func Retry(attempts int, sleep time.Duration, f func() error) (err error) {
+	for i := 0; i < attempts; i++ {
+		fmt.Println("This is attempt number", i)
+		if i > 0 {
+			log.Println("retrying after error:", err)
+			time.Sleep(sleep)
+			sleep *= 2
+		}
+		err = f()
+		if err == nil {
+			return nil
+		}
+	}
+	return fmt.Errorf("after %d attempts, last error: %s", attempts, err)
+}
+
+type ClosersIF interface {
+	io.Closer
+	Add(closer io.Closer)
+	AddClosers(closers Closers)
+	GetClosers() Closers
+}
+
+type Closers struct {
+	closers []io.Closer
+}
+
+func (c *Closers) GetClosers() Closers {
+	return *c
+}
+
+var _ ClosersIF = (*Closers)(nil)
+
+func (c *Closers) Close() error {
+	var errs []error
+	for _, closer := range c.closers {
+		if closer != nil {
+			errs = append(errs, closer.Close())
+		}
+	}
+	return errors.Join(errs...)
+}
+func (c *Closers) Add(closer io.Closer) {
+	c.closers = append(c.closers, closer)
+
+}
+func (c *Closers) AddClosers(closers Closers) {
+	c.closers = append(c.closers, closers.closers...)
+}
+
+func EmptyClosers() Closers {
+	return Closers{[]io.Closer{}}
+}
+func NewClosers(c ...io.Closer) Closers {
+	return Closers{c}
+}
+
+func Min[T constraints.Ordered](a, b T) T {
+	if a < b {
+		return a
+	}
+	return b
+}
+func Max[T constraints.Ordered](a, b T) T {
+	if a < b {
+		return b
+	}
+	return a
 }

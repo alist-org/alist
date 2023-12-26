@@ -7,6 +7,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/alist-org/alist/v3/pkg/http_range"
+	"github.com/alist-org/alist/v3/pkg/utils"
+
 	mapset "github.com/deckarep/golang-set/v2"
 
 	"github.com/maruel/natural"
@@ -20,7 +23,9 @@ type Obj interface {
 	GetSize() int64
 	GetName() string
 	ModTime() time.Time
+	CreateTime() time.Time
 	IsDir() bool
+	GetHash() utils.HashInfo
 
 	// The internal information of the driver.
 	// If you want to use it, please understand what it means
@@ -28,14 +33,20 @@ type Obj interface {
 	GetPath() string
 }
 
+// FileStreamer ->check FileStream for more comments
 type FileStreamer interface {
-	io.ReadCloser
+	io.Reader
+	io.Closer
 	Obj
 	GetMimetype() string
-	SetReadCloser(io.ReadCloser)
+	//SetReader(io.Reader)
 	NeedStore() bool
-	GetReadCloser() io.ReadCloser
-	GetOld() Obj
+	GetExist() Obj
+	SetExist(Obj)
+	//for a non-seekable Stream, RangeRead supports peeking some data, and CacheFullInTempFile still works
+	RangeRead(http_range.Range) (io.Reader, error)
+	//for a non-seekable Stream, if Read is called, this function won't work
+	CacheFullInTempFile() (File, error)
 }
 
 type URL interface {
@@ -134,6 +145,20 @@ func GetUrl(obj Obj) (url string, ok bool) {
 		return GetUrl(unwrap.Unwrap())
 	}
 	return url, false
+}
+
+func GetRawObject(obj Obj) *Object {
+	switch v := obj.(type) {
+	case *ObjThumbURL:
+		return &v.Object
+	case *ObjThumb:
+		return &v.Object
+	case *ObjectURL:
+		return &v.Object
+	case *Object:
+		return v
+	}
+	return nil
 }
 
 // Merge

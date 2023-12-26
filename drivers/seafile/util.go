@@ -36,11 +36,14 @@ func (d *Seafile) request(method string, pathname string, callback base.ReqCallb
 	if len(noRedirect) > 0 && noRedirect[0] {
 		req = base.NoRedirectClient.R()
 	}
-	var res resty.Response
+	req.SetHeader("Authorization", d.authorization)
+	callback(req)
+	var (
+		res *resty.Response
+		err error
+	)
 	for i := 0; i < 2; i++ {
-		req.SetHeader("Authorization", d.authorization)
-		callback(req)
-		res, err := req.Execute(method, full)
+		res, err = req.Execute(method, full)
 		if err != nil {
 			return nil, err
 		}

@@ -4,6 +4,7 @@ import (
 	"io"
 	"os"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/jlaffaye/ftp"
@@ -30,43 +31,59 @@ func (d *FTP) login() error {
 	return nil
 }
 
-// An FTP file reader that implements io.ReadSeekCloser for seeking.
-type FTPFileReader struct {
-	conn   *ftp.ServerConn
-	resp   *ftp.Response
-	offset int64
-	mu     sync.Mutex
-	path   string
+// FileReader An FTP file reader that implements io.MFile for seeking.
+type FileReader struct {
+	conn         *ftp.ServerConn
+	resp         *ftp.Response
+	offset       atomic.Int64
+	readAtOffset int64
+	mu           sync.Mutex
+	path         string
+	size         int64
 }
 
-func NewFTPFileReader(conn *ftp.ServerConn, path string) *FTPFileReader {
-	return &FTPFileReader{
+func NewFileReader(conn *ftp.ServerConn, path string, size int64) *FileReader {
+	return &FileReader{
 		conn: conn,
 		path: path,
+		size: size,
 	}
 }
 
-func (r *FTPFileReader) Read(buf []byte) (n int, err error) {
+func (r *FileReader) Read(buf []byte) (n int, err error) {
+	n, err = r.ReadAt(buf, r.offset.Load())
+	r.offset.Add(int64(n))
+	return
+}
+
+func (r *FileReader) ReadAt(buf []byte, off int64) (n int, err error) {
+	if off < 0 {
+		return -1, os.ErrInvalid
+	}
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
+	if off != r.readAtOffset {
+		//have to restart the connection, to correct offset
+		_ = r.resp.Close()
+		r.resp = nil
+	}
+
 	if r.resp == nil {
-		r.resp, err = r.conn.RetrFrom(r.path, uint64(r.offset))
+		r.resp, err = r.conn.RetrFrom(r.path, uint64(off))
+		r.readAtOffset = off
 		if err != nil {
 			return 0, err
 		}
 	}
 
 	n, err = r.resp.Read(buf)
-	r.offset += int64(n)
+	r.readAtOffset += int64(n)
 	return
 }
 
-func (r *FTPFileReader) Seek(offset int64, whence int) (int64, error) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
-	oldOffset := r.offset
+func (r *FileReader) Seek(offset int64, whence int) (int64, error) {
+	oldOffset := r.offset.Load()
 	var newOffset int64
 	switch whence {
 	case io.SeekStart:
@@ -74,11 +91,7 @@ func (r *FTPFileReader) Seek(offset int64, whence int) (int64, error) {
 	case io.SeekCurrent:
 		newOffset = oldOffset + offset
 	case io.SeekEnd:
-		size, err := r.conn.FileSize(r.path)
-		if err != nil {
-			return oldOffset, err
-		}
-		newOffset = offset + int64(size)
+		return r.size, nil
 	default:
 		return -1, os.ErrInvalid
 	}
@@ -91,17 +104,11 @@ func (r *FTPFileReader) Seek(offset int64, whence int) (int64, error) {
 		// offset not changed, so return directly
 		return oldOffset, nil
 	}
-	r.offset = newOffset
-
-	if r.resp != nil {
-		// close the existing ftp data connection, otherwise the next read will be blocked
-		_ = r.resp.Close() // we do not care about whether it returns an error
-		r.resp = nil
-	}
+	r.offset.Store(newOffset)
 	return newOffset, nil
 }
 
-func (r *FTPFileReader) Close() error {
+func (r *FileReader) Close() error {
 	if r.resp != nil {
 		return r.resp.Close()
 	}

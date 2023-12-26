@@ -46,7 +46,7 @@ func CreateStorage(ctx context.Context, storage model.Storage) (uint, error) {
 	var err error
 	// check driver first
 	driverName := storage.Driver
-	driverNew, err := GetDriverNew(driverName)
+	driverNew, err := GetDriver(driverName)
 	if err != nil {
 		return 0, errors.WithMessage(err, "failed get driver new")
 	}
@@ -71,7 +71,7 @@ func LoadStorage(ctx context.Context, storage model.Storage) error {
 	storage.MountPath = utils.FixAndCleanPath(storage.MountPath)
 	// check driver first
 	driverName := storage.Driver
-	driverNew, err := GetDriverNew(driverName)
+	driverNew, err := GetDriver(driverName)
 	if err != nil {
 		return errors.WithMessage(err, "failed get driver new")
 	}

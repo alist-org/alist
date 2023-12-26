@@ -5,30 +5,59 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
 )
 
+var upClient *resty.Client
+var once sync.Once
+
 func (d *LanZou) doupload(callback base.ReqCallback, resp interface{}) ([]byte, error) {
 	return d.post(d.BaseUrl+"/doupload.php", func(req *resty.Request) {
-		req.SetQueryParam("uid", d.uid)
-		callback(req)
+		req.SetQueryParams(map[string]string{
+			"uid": d.uid,
+			"vei": d.vei,
+		})
+		if callback != nil {
+			callback(req)
+		}
 	}, resp)
 }
 
-func (d *LanZou) get(url string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+func (d *LanZou) get(url string, callback base.ReqCallback) ([]byte, error) {
 	return d.request(url, http.MethodGet, callback, false)
 }
 
 func (d *LanZou) post(url string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
-	return d._post(url, callback, resp, false)
+	data, err := d._post(url, callback, resp, false)
+	if err == ErrCookieExpiration && d.IsAccount() {
+		if atomic.CompareAndSwapInt32(&d.flag, 0, 1) {
+			_, err2 := d.Login()
+			atomic.SwapInt32(&d.flag, 0)
+			if err2 != nil {
+				err = errors.Join(err, err2)
+				d.Status = err.Error()
+				op.MustSaveDriverStorage(d)
+				return data, err
+			}
+		}
+		for atomic.LoadInt32(&d.flag) != 0 {
+			runtime.Gosched()
+		}
+		return d._post(url, callback, resp, false)
+	}
+	return data, err
 }
 
 func (d *LanZou) _post(url string, callback base.ReqCallback, resp interface{}, up bool) ([]byte, error) {
@@ -40,10 +69,12 @@ func (d *LanZou) _post(url string, callback base.ReqCallback, resp interface{}, 
 			}
 			return false
 		})
-		callback(req)
+		if callback != nil {
+			callback(req)
+		}
 	}, up)
 	if err != nil {
-		return nil, err
+		return data, err
 	}
 	switch utils.Json.Get(data, "zt").ToInt() {
 	case 1, 2, 4:
@@ -52,18 +83,23 @@ func (d *LanZou) _post(url string, callback base.ReqCallback, resp interface{}, 
 			utils.Json.Unmarshal(data, resp)
 		}
 		return data, nil
+	case 9: // 登录过期
+		return data, ErrCookieExpiration
 	default:
 		info := utils.Json.Get(data, "inf").ToString()
 		if info == "" {
 			info = utils.Json.Get(data, "info").ToString()
 		}
-		return nil, fmt.Errorf(info)
+		return data, fmt.Errorf(info)
 	}
 }
 
 func (d *LanZou) request(url string, method string, callback base.ReqCallback, up bool) ([]byte, error) {
 	var req *resty.Request
 	if up {
+		once.Do(func() {
+			upClient = base.NewRestyClient().SetTimeout(120 * time.Second)
+		})
 		req = upClient.R()
 	} else {
 		req = base.RestyClient.R()
@@ -87,6 +123,28 @@ func (d *LanZou) request(url string, method string, callback base.ReqCallback, u
 	}
 	log.Debugf("lanzou request: url=>%s ,stats=>%d ,body => %s\n", res.Request.URL, res.StatusCode(), res.String())
 	return res.Body(), err
+}
+
+func (d *LanZou) Login() ([]*http.Cookie, error) {
+	resp, err := base.NewRestyClient().SetRedirectPolicy(resty.NoRedirectPolicy()).
+		R().SetFormData(map[string]string{
+		"task":         "3",
+		"uid":          d.Account,
+		"pwd":          d.Password,
+		"setSessionId": "",
+		"setSig":       "",
+		"setScene":     "",
+		"setTocen":     "",
+		"formhash":     "",
+	}).Post("https://up.woozooo.com/mlogin.php")
+	if err != nil {
+		return nil, err
+	}
+	if utils.Json.Get(resp.Body(), "zt").ToInt() != 1 {
+		return nil, fmt.Errorf("login err: %s", resp.Body())
+	}
+	d.Cookie = CookieToString(resp.Cookies())
+	return resp.Cookies(), nil
 }
 
 /*
@@ -200,7 +258,7 @@ var sizeFindReg = regexp.MustCompile(`(?i)大小\W*([0-9.]+\s*[bkm]+)`)
 var timeFindReg = regexp.MustCompile(`\d+\s*[秒天分小][钟时]?前|[昨前]天|\d{4}-\d{2}-\d{2}`)
 
 // 查找分享文件夹子文件夹ID和名称
-var findSubFolaerReg = regexp.MustCompile(`(?i)(?:folderlink|mbxfolder).+href="/(.+?)"(?:.+filename")?>(.+?)<`)
+var findSubFolderReg = regexp.MustCompile(`(?i)(?:folderlink|mbxfolder).+href="/(.+?)"(?:.+filename")?>(.+?)<`)
 
 // 获取下载页面链接
 var findDownPageParamReg = regexp.MustCompile(`<iframe.*?src="(.+?)"`)
@@ -217,7 +275,7 @@ func (d *LanZou) getShareUrlHtml(shareID string) (string, error) {
 						Value: vs,
 					})
 				}
-			}, nil)
+			})
 		if err != nil {
 			return "", err
 		}
@@ -288,7 +346,11 @@ func (d *LanZou) getFilesByShareUrl(shareID, pwd string, sharePageData string) (
 
 	// 需要密码
 	if strings.Contains(sharePageData, "pwdload") || strings.Contains(sharePageData, "passwddiv") {
-		param, err := htmlFormToMap(sharePageData)
+		sharePageData, err := getJSFunctionByName(sharePageData, "down_p")
+		if err != nil {
+			return nil, err
+		}
+		param, err := htmlJsonToMap(sharePageData)
 		if err != nil {
 			return nil, err
 		}
@@ -308,12 +370,11 @@ func (d *LanZou) getFilesByShareUrl(shareID, pwd string, sharePageData string) (
 			log.Errorf("lanzou: err => not find file page param ,data => %s\n", sharePageData)
 			return nil, fmt.Errorf("not find file page param")
 		}
-		data, err := d.get(fmt.Sprint(d.ShareUrl, urlpaths[1]), nil, nil)
+		data, err := d.get(fmt.Sprint(d.ShareUrl, urlpaths[1]), nil)
 		if err != nil {
 			return nil, err
 		}
 		nextPageData := RemoveNotes(string(data))
-
 		param, err = htmlJsonToMap(nextPageData)
 		if err != nil {
 			return nil, err
@@ -394,7 +455,7 @@ func (d *LanZou) getFolderByShareUrl(pwd string, sharePageData string) ([]FileOr
 
 	files := make([]FileOrFolderByShareUrl, 0)
 	// vip获取文件夹
-	floders := findSubFolaerReg.FindAllStringSubmatch(sharePageData, -1)
+	floders := findSubFolderReg.FindAllStringSubmatch(sharePageData, -1)
 	for _, floder := range floders {
 		if len(floder) == 3 {
 			files = append(files, FileOrFolderByShareUrl{
@@ -415,10 +476,10 @@ func (d *LanZou) getFolderByShareUrl(pwd string, sharePageData string) ([]FileOr
 		if err != nil {
 			return nil, err
 		}
-		/*// 文件夹中的文件也不加密
+		// 文件夹中的文件加密
 		for i := 0; i < len(resp.Text); i++ {
 			resp.Text[i].Pwd = pwd
-		}*/
+		}
 		if len(resp.Text) == 0 {
 			break
 		}
@@ -437,4 +498,34 @@ func (d *LanZou) getFileRealInfo(downURL string) (*int64, *time.Time) {
 	time, _ := http.ParseTime(res.Header().Get("Last-Modified"))
 	size, _ := strconv.ParseInt(res.Header().Get("Content-Length"), 10, 64)
 	return &size, &time
+}
+
+func (d *LanZou) getVeiAndUid() (vei string, uid string, err error) {
+	var resp []byte
+	resp, err = d.get("https://pc.woozooo.com/mydisk.php", func(req *resty.Request) {
+		req.SetQueryParams(map[string]string{
+			"item":   "files",
+			"action": "index",
+		})
+	})
+	if err != nil {
+		return
+	}
+	// uid
+	uids := regexp.MustCompile(`uid=([^'"&;]+)`).FindStringSubmatch(string(resp))
+	if len(uids) < 2 {
+		err = fmt.Errorf("uid variable not find")
+		return
+	}
+	uid = uids[1]
+
+	// vei
+	html := RemoveNotes(string(resp))
+	data, err := htmlJsonToMap(html)
+	if err != nil {
+		return
+	}
+	vei = data["vei"]
+
+	return
 }

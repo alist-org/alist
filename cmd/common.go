@@ -7,6 +7,7 @@ import (
 
 	"github.com/alist-org/alist/v3/internal/bootstrap"
 	"github.com/alist-org/alist/v3/internal/bootstrap/data"
+	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	log "github.com/sirupsen/logrus"
 )
@@ -17,6 +18,10 @@ func Init() {
 	bootstrap.InitDB()
 	data.InitData()
 	bootstrap.InitIndex()
+}
+
+func Release() {
+	db.Close()
 }
 
 var pid = -1

@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/alist-org/alist/v3/internal/conf"
+	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/pkg/errors"
 )
@@ -12,12 +13,14 @@ var SecretKey []byte
 
 type UserClaims struct {
 	Username string `json:"username"`
+	PwdTS    int64  `json:"pwd_ts"`
 	jwt.RegisteredClaims
 }
 
-func GenerateToken(username string) (tokenString string, err error) {
+func GenerateToken(user *model.User) (tokenString string, err error) {
 	claim := UserClaims{
-		Username: username,
+		Username: user.Username,
+		PwdTS:    user.PwdTS,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(conf.Conf.TokenExpiresIn) * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

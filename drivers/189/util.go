@@ -11,16 +11,13 @@ import (
 	"io"
 	"math"
 	"net/http"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
-	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/internal/setting"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	myrand "github.com/alist-org/alist/v3/pkg/utils/random"
 	"github.com/go-resty/resty/v2"
@@ -30,118 +27,118 @@ import (
 
 // do others that not defined in Driver interface
 
-func (d *Cloud189) login() error {
-	url := "https://cloud.189.cn/api/portal/loginUrl.action?redirectURL=https%3A%2F%2Fcloud.189.cn%2Fmain.action"
-	b := ""
-	lt := ""
-	ltText := regexp.MustCompile(`lt = "(.+?)"`)
-	var res *resty.Response
-	var err error
-	for i := 0; i < 3; i++ {
-		res, err = d.client.R().Get(url)
-		if err != nil {
-			return err
-		}
-		// 已经登陆
-		if res.RawResponse.Request.URL.String() == "https://cloud.189.cn/web/main" {
-			return nil
-		}
-		b = res.String()
-		ltTextArr := ltText.FindStringSubmatch(b)
-		if len(ltTextArr) > 0 {
-			lt = ltTextArr[1]
-			break
-		} else {
-			<-time.After(time.Second)
-		}
-	}
-	if lt == "" {
-		return fmt.Errorf("get page: %s \nstatus: %d \nrequest url: %s\nredirect url: %s",
-			b, res.StatusCode(), res.RawResponse.Request.URL.String(), res.Header().Get("location"))
-	}
-	captchaToken := regexp.MustCompile(`captchaToken' value='(.+?)'`).FindStringSubmatch(b)[1]
-	returnUrl := regexp.MustCompile(`returnUrl = '(.+?)'`).FindStringSubmatch(b)[1]
-	paramId := regexp.MustCompile(`paramId = "(.+?)"`).FindStringSubmatch(b)[1]
-	//reqId := regexp.MustCompile(`reqId = "(.+?)"`).FindStringSubmatch(b)[1]
-	jRsakey := regexp.MustCompile(`j_rsaKey" value="(\S+)"`).FindStringSubmatch(b)[1]
-	vCodeID := regexp.MustCompile(`picCaptcha\.do\?token\=([A-Za-z0-9\&\=]+)`).FindStringSubmatch(b)[1]
-	vCodeRS := ""
-	if vCodeID != "" {
-		// need ValidateCode
-		log.Debugf("try to identify verification codes")
-		timeStamp := strconv.FormatInt(time.Now().UnixNano()/1e6, 10)
-		u := "https://open.e.189.cn/api/logbox/oauth2/picCaptcha.do?token=" + vCodeID + timeStamp
-		imgRes, err := d.client.R().SetHeaders(map[string]string{
-			"User-Agent":     "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/76.0",
-			"Referer":        "https://open.e.189.cn/api/logbox/oauth2/unifyAccountLogin.do",
-			"Sec-Fetch-Dest": "image",
-			"Sec-Fetch-Mode": "no-cors",
-			"Sec-Fetch-Site": "same-origin",
-		}).Get(u)
-		if err != nil {
-			return err
-		}
-		// Enter the verification code manually
-		//err = message.GetMessenger().WaitSend(message.Message{
-		//	Type:    "image",
-		//	Content: "data:image/png;base64," + base64.StdEncoding.EncodeToString(imgRes.Body()),
-		//}, 10)
-		//if err != nil {
-		//	return err
-		//}
-		//vCodeRS, err = message.GetMessenger().WaitReceive(30)
-		// use ocr api
-		vRes, err := base.RestyClient.R().SetMultipartField(
-			"image", "validateCode.png", "image/png", bytes.NewReader(imgRes.Body())).
-			Post(setting.GetStr(conf.OcrApi))
-		if err != nil {
-			return err
-		}
-		if jsoniter.Get(vRes.Body(), "status").ToInt() != 200 {
-			return errors.New("ocr error:" + jsoniter.Get(vRes.Body(), "msg").ToString())
-		}
-		vCodeRS = jsoniter.Get(vRes.Body(), "result").ToString()
-		log.Debugln("code: ", vCodeRS)
-	}
-	userRsa := RsaEncode([]byte(d.Username), jRsakey, true)
-	passwordRsa := RsaEncode([]byte(d.Password), jRsakey, true)
-	url = "https://open.e.189.cn/api/logbox/oauth2/loginSubmit.do"
-	var loginResp LoginResp
-	res, err = d.client.R().
-		SetHeaders(map[string]string{
-			"lt":         lt,
-			"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36",
-			"Referer":    "https://open.e.189.cn/",
-			"accept":     "application/json;charset=UTF-8",
-		}).SetFormData(map[string]string{
-		"appKey":       "cloud",
-		"accountType":  "01",
-		"userName":     "{RSA}" + userRsa,
-		"password":     "{RSA}" + passwordRsa,
-		"validateCode": vCodeRS,
-		"captchaToken": captchaToken,
-		"returnUrl":    returnUrl,
-		"mailSuffix":   "@pan.cn",
-		"paramId":      paramId,
-		"clientType":   "10010",
-		"dynamicCheck": "FALSE",
-		"cb_SaveName":  "1",
-		"isOauth2":     "false",
-	}).Post(url)
-	if err != nil {
-		return err
-	}
-	err = utils.Json.Unmarshal(res.Body(), &loginResp)
-	if err != nil {
-		log.Error(err.Error())
-		return err
-	}
-	if loginResp.Result != 0 {
-		return fmt.Errorf(loginResp.Msg)
-	}
-	_, err = d.client.R().Get(loginResp.ToUrl)
-	return err
-}
+//func (d *Cloud189) login() error {
+//	url := "https://cloud.189.cn/api/portal/loginUrl.action?redirectURL=https%3A%2F%2Fcloud.189.cn%2Fmain.action"
+//	b := ""
+//	lt := ""
+//	ltText := regexp.MustCompile(`lt = "(.+?)"`)
+//	var res *resty.Response
+//	var err error
+//	for i := 0; i < 3; i++ {
+//		res, err = d.client.R().Get(url)
+//		if err != nil {
+//			return err
+//		}
+//		// 已经登陆
+//		if res.RawResponse.Request.URL.String() == "https://cloud.189.cn/web/main" {
+//			return nil
+//		}
+//		b = res.String()
+//		ltTextArr := ltText.FindStringSubmatch(b)
+//		if len(ltTextArr) > 0 {
+//			lt = ltTextArr[1]
+//			break
+//		} else {
+//			<-time.After(time.Second)
+//		}
+//	}
+//	if lt == "" {
+//		return fmt.Errorf("get page: %s \nstatus: %d \nrequest url: %s\nredirect url: %s",
+//			b, res.StatusCode(), res.RawResponse.Request.URL.String(), res.Header().Get("location"))
+//	}
+//	captchaToken := regexp.MustCompile(`captchaToken' value='(.+?)'`).FindStringSubmatch(b)[1]
+//	returnUrl := regexp.MustCompile(`returnUrl = '(.+?)'`).FindStringSubmatch(b)[1]
+//	paramId := regexp.MustCompile(`paramId = "(.+?)"`).FindStringSubmatch(b)[1]
+//	//reqId := regexp.MustCompile(`reqId = "(.+?)"`).FindStringSubmatch(b)[1]
+//	jRsakey := regexp.MustCompile(`j_rsaKey" value="(\S+)"`).FindStringSubmatch(b)[1]
+//	vCodeID := regexp.MustCompile(`picCaptcha\.do\?token\=([A-Za-z0-9\&\=]+)`).FindStringSubmatch(b)[1]
+//	vCodeRS := ""
+//	if vCodeID != "" {
+//		// need ValidateCode
+//		log.Debugf("try to identify verification codes")
+//		timeStamp := strconv.FormatInt(time.Now().UnixNano()/1e6, 10)
+//		u := "https://open.e.189.cn/api/logbox/oauth2/picCaptcha.do?token=" + vCodeID + timeStamp
+//		imgRes, err := d.client.R().SetHeaders(map[string]string{
+//			"User-Agent":     "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/76.0",
+//			"Referer":        "https://open.e.189.cn/api/logbox/oauth2/unifyAccountLogin.do",
+//			"Sec-Fetch-Dest": "image",
+//			"Sec-Fetch-Mode": "no-cors",
+//			"Sec-Fetch-Site": "same-origin",
+//		}).Get(u)
+//		if err != nil {
+//			return err
+//		}
+//		// Enter the verification code manually
+//		//err = message.GetMessenger().WaitSend(message.Message{
+//		//	Type:    "image",
+//		//	Content: "data:image/png;base64," + base64.StdEncoding.EncodeToString(imgRes.Body()),
+//		//}, 10)
+//		//if err != nil {
+//		//	return err
+//		//}
+//		//vCodeRS, err = message.GetMessenger().WaitReceive(30)
+//		// use ocr api
+//		vRes, err := base.RestyClient.R().SetMultipartField(
+//			"image", "validateCode.png", "image/png", bytes.NewReader(imgRes.Body())).
+//			Post(setting.GetStr(conf.OcrApi))
+//		if err != nil {
+//			return err
+//		}
+//		if jsoniter.Get(vRes.Body(), "status").ToInt() != 200 {
+//			return errors.New("ocr error:" + jsoniter.Get(vRes.Body(), "msg").ToString())
+//		}
+//		vCodeRS = jsoniter.Get(vRes.Body(), "result").ToString()
+//		log.Debugln("code: ", vCodeRS)
+//	}
+//	userRsa := RsaEncode([]byte(d.Username), jRsakey, true)
+//	passwordRsa := RsaEncode([]byte(d.Password), jRsakey, true)
+//	url = "https://open.e.189.cn/api/logbox/oauth2/loginSubmit.do"
+//	var loginResp LoginResp
+//	res, err = d.client.R().
+//		SetHeaders(map[string]string{
+//			"lt":         lt,
+//			"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36",
+//			"Referer":    "https://open.e.189.cn/",
+//			"accept":     "application/json;charset=UTF-8",
+//		}).SetFormData(map[string]string{
+//		"appKey":       "cloud",
+//		"accountType":  "01",
+//		"userName":     "{RSA}" + userRsa,
+//		"password":     "{RSA}" + passwordRsa,
+//		"validateCode": vCodeRS,
+//		"captchaToken": captchaToken,
+//		"returnUrl":    returnUrl,
+//		"mailSuffix":   "@pan.cn",
+//		"paramId":      paramId,
+//		"clientType":   "10010",
+//		"dynamicCheck": "FALSE",
+//		"cb_SaveName":  "1",
+//		"isOauth2":     "false",
+//	}).Post(url)
+//	if err != nil {
+//		return err
+//	}
+//	err = utils.Json.Unmarshal(res.Body(), &loginResp)
+//	if err != nil {
+//		log.Error(err.Error())
+//		return err
+//	}
+//	if loginResp.Result != 0 {
+//		return fmt.Errorf(loginResp.Msg)
+//	}
+//	_, err = d.client.R().Get(loginResp.ToUrl)
+//	return err
+//}
 
 func (d *Cloud189) request(url string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
 	var e Error
@@ -163,7 +160,7 @@ func (d *Cloud189) request(url string, method string, callback base.ReqCallback,
 	//log.Debug(res.String())
 	if e.ErrorCode != "" {
 		if e.ErrorCode == "InvalidSessionKey" {
-			err = d.login()
+			err = d.newLogin()
 			if err != nil {
 				return nil, err
 			}
@@ -383,12 +380,12 @@ func (d *Cloud189) newUpload(ctx context.Context, dstDir model.Obj, file model.F
 		if err != nil {
 			return err
 		}
-		up(int(i * 100 / count))
+		up(float64(i) * 100 / float64(count))
 	}
 	fileMd5 := hex.EncodeToString(md5Sum.Sum(nil))
 	sliceMd5 := fileMd5
 	if file.GetSize() > DEFAULT {
-		sliceMd5 = utils.GetMD5Encode(strings.Join(md5s, "\n"))
+		sliceMd5 = utils.GetMD5EncodeStr(strings.Join(md5s, "\n"))
 	}
 	res, err = d.uploadRequest("/person/commitMultiUploadFile", map[string]string{
 		"uploadFileId": uploadFileId,
