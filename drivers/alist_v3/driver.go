@@ -8,6 +8,7 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/conf"
@@ -174,13 +175,13 @@ func (d *AListV3) Remove(ctx context.Context, obj model.Obj) error {
 }
 
 func (d *AListV3) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
-	_, err := d.request("/fs/put", http.MethodPut, func(req *resty.Request) {
+	_, err := d.requestWithTimeout("/fs/put", http.MethodPut, func(req *resty.Request) {
 		req.SetHeader("File-Path", path.Join(dstDir.GetPath(), stream.GetName())).
 			SetHeader("Password", d.MetaPassword).
 			SetHeader("Content-Length", strconv.FormatInt(stream.GetSize(), 10)).
 			SetContentLength(true).
 			SetBody(io.ReadCloser(stream))
-	})
+	}, time.Hour*6)
 	return err
 }
 

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"sync"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
@@ -19,6 +20,8 @@ type OnedriveAPP struct {
 	model.Storage
 	Addition
 	AccessToken string
+	root        *Object
+	mutex       sync.Mutex
 }
 
 func (d *OnedriveAPP) Config() driver.Config {
@@ -38,6 +41,42 @@ func (d *OnedriveAPP) Init(ctx context.Context) error {
 
 func (d *OnedriveAPP) Drop(ctx context.Context) error {
 	return nil
+}
+
+func (d *OnedriveAPP) GetRoot(ctx context.Context) (model.Obj, error) {
+	if d.root != nil {
+		return d.root, nil
+	}
+	d.mutex.Lock()
+	defer d.mutex.Unlock()
+	root := &Object{
+		ObjThumb: model.ObjThumb{
+			Object: model.Object{
+				ID:       "root",
+				Path:     d.RootFolderPath,
+				Name:     "root",
+				Size:     0,
+				Modified: d.Modified,
+				Ctime:    d.Modified,
+				IsFolder: true,
+			},
+		},
+		ParentID: "",
+	}
+	if !utils.PathEqual(d.RootFolderPath, "/") {
+		// get root folder id
+		url := d.GetMetaUrl(false, d.RootFolderPath)
+		var resp struct {
+			Id string `json:"id"`
+		}
+		_, err := d.Request(url, http.MethodGet, nil, &resp)
+		if err != nil {
+			return nil, err
+		}
+		root.ID = resp.Id
+	}
+	d.root = root
+	return d.root, nil
 }
 
 func (d *OnedriveAPP) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {

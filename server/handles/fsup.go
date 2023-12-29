@@ -1,6 +1,7 @@
 package handles
 
 import (
+	"github.com/xhofe/tache"
 	"io"
 	"net/url"
 	stdpath "path"
@@ -57,8 +58,9 @@ func FsStream(c *gin.Context) {
 		Mimetype:     c.GetHeader("Content-Type"),
 		WebPutAsTask: asTask,
 	}
+	var t tache.TaskWithInfo
 	if asTask {
-		err = fs.PutAsTask(dir, s)
+		t, err = fs.PutAsTask(dir, s)
 	} else {
 		err = fs.PutDirectly(c, dir, s, true)
 	}
@@ -67,7 +69,13 @@ func FsStream(c *gin.Context) {
 		common.ErrorResp(c, err, 500)
 		return
 	}
-	common.SuccessResp(c)
+	if t == nil {
+		common.SuccessResp(c)
+		return
+	}
+	common.SuccessResp(c, gin.H{
+		"task": getTaskInfo(t),
+	})
 }
 
 func FsForm(c *gin.Context) {
@@ -115,11 +123,12 @@ func FsForm(c *gin.Context) {
 		Mimetype:     file.Header.Get("Content-Type"),
 		WebPutAsTask: asTask,
 	}
+	var t tache.TaskWithInfo
 	if asTask {
 		s.Reader = struct {
 			io.Reader
 		}{f}
-		err = fs.PutAsTask(dir, &s)
+		t, err = fs.PutAsTask(dir, &s)
 	} else {
 		ss, err := stream.NewSeekableStream(s, nil)
 		if err != nil {
@@ -132,5 +141,11 @@ func FsForm(c *gin.Context) {
 		common.ErrorResp(c, err, 500)
 		return
 	}
-	common.SuccessResp(c)
+	if t == nil {
+		common.SuccessResp(c)
+		return
+	}
+	common.SuccessResp(c, gin.H{
+		"task": getTaskInfo(t),
+	})
 }
