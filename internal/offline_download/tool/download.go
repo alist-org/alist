@@ -2,11 +2,12 @@ package tool
 
 import (
 	"fmt"
+	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/errs"
+	"github.com/alist-org/alist/v3/internal/setting"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/xhofe/tache"
-	"sync"
 	"time"
 )
 
@@ -20,7 +21,6 @@ type DownloadTask struct {
 	Status            string   `json:"status"`
 	Signal            chan int `json:"-"`
 	GID               string   `json:"-"`
-	finish            chan struct{}
 	tool              Tool
 	callStatusRetried int
 }
@@ -33,10 +33,8 @@ func (t *DownloadTask) Run() error {
 		return err
 	}
 	t.Signal = make(chan int)
-	t.finish = make(chan struct{})
 	defer func() {
 		t.Signal = nil
-		t.finish = nil
 	}()
 	gid, err := t.tool.AddURL(&AddUrlArgs{
 		Url:     t.Url,
@@ -72,9 +70,19 @@ outer:
 	if err != nil {
 		return err
 	}
-	t.Status = "aria2 download completed, maybe transferring"
-	t.finish <- struct{}{}
-	t.Status = "offline download completed"
+	t.Status = "offline download completed, maybe transferring"
+	// hack for qBittorrent
+	if t.tool.Name() == "qBittorrent" {
+		seedTime := setting.GetInt(conf.QbittorrentSeedtime, 0)
+		if seedTime >= 0 {
+			t.Status = "offline download completed, waiting for seeding"
+			<-time.After(time.Minute * time.Duration(seedTime))
+			err := t.tool.Remove(t)
+			if err != nil {
+				log.Errorln(err.Error())
+			}
+		}
+	}
 	return nil
 }
 
@@ -123,18 +131,11 @@ func (t *DownloadTask) Complete() error {
 		}
 	}
 	// upload files
-	var wg sync.WaitGroup
-	wg.Add(len(files))
-	go func() {
-		wg.Wait()
-		t.finish <- struct{}{}
-	}()
 	for i, _ := range files {
 		file := files[i]
 		TransferTaskManager.Add(&TransferTask{
 			file:         file,
 			dstDirPath:   t.DstDirPath,
-			wg:           &wg,
 			tempDir:      t.TempDir,
 			deletePolicy: t.DeletePolicy,
 		})

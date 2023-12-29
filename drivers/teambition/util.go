@@ -126,19 +126,20 @@ func (d *Teambition) upload(ctx context.Context, file model.FileStreamer, token 
 		prefix = "us-tcs"
 	}
 	var newFile FileUpload
-	_, err := base.RestyClient.R().
+	res, err := base.RestyClient.R().
 		SetContext(ctx).
 		SetResult(&newFile).SetHeader("Authorization", token).
 		SetMultipartFormData(map[string]string{
-			"name": file.GetName(),
-			"type": file.GetMimetype(),
-			"size": strconv.FormatInt(file.GetSize(), 10),
-			//"lastModifiedDate": "",
+			"name":             file.GetName(),
+			"type":             file.GetMimetype(),
+			"size":             strconv.FormatInt(file.GetSize(), 10),
+			"lastModifiedDate": time.Now().Format("Mon Jan 02 2006 15:04:05 GMT+0800 (中国标准时间)"),
 		}).SetMultipartField("file", file.GetName(), file.GetMimetype(), file).
 		Post(fmt.Sprintf("https://%s.teambition.net/upload", prefix))
 	if err != nil {
 		return nil, err
 	}
+	log.Debugf("[teambition] upload response: %s", res.String())
 	return &newFile, nil
 }
 

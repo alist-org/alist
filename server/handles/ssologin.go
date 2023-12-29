@@ -231,7 +231,7 @@ func OIDCLoginCallback(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
-	userID := utils.Json.Get(payload, conf.SSOOIDCUsernameKey).ToString()
+	userID := utils.Json.Get(payload, setting.GetStr(conf.SSOOIDCUsernameKey, "name")).ToString()
 	if userID == "" {
 		common.ErrorStrResp(c, "cannot get username from OIDC provider", 400)
 		return

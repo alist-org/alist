@@ -7,6 +7,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
+	"github.com/xhofe/tache"
 )
 
 type SetAria2Req struct {
@@ -97,8 +98,9 @@ func AddOfflineDownload(c *gin.Context) {
 		common.ErrorResp(c, err, 403)
 		return
 	}
+	var tasks []tache.TaskWithInfo
 	for _, url := range req.Urls {
-		err := tool.AddURL(c, &tool.AddURLArgs{
+		t, err := tool.AddURL(c, &tool.AddURLArgs{
 			URL:          url,
 			DstDirPath:   reqPath,
 			Tool:         req.Tool,
@@ -108,6 +110,9 @@ func AddOfflineDownload(c *gin.Context) {
 			common.ErrorResp(c, err, 500)
 			return
 		}
+		tasks = append(tasks, t)
 	}
-	common.SuccessResp(c)
+	common.SuccessResp(c, gin.H{
+		"tasks": getTaskInfos(tasks),
+	})
 }

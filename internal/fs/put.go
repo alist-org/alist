@@ -33,28 +33,29 @@ func (t *UploadTask) Run() error {
 var UploadTaskManager *tache.Manager[*UploadTask]
 
 // putAsTask add as a put task and return immediately
-func putAsTask(dstDirPath string, file model.FileStreamer) error {
+func putAsTask(dstDirPath string, file model.FileStreamer) (tache.TaskWithInfo, error) {
 	storage, dstDirActualPath, err := op.GetStorageAndActualPath(dstDirPath)
 	if err != nil {
-		return errors.WithMessage(err, "failed get storage")
+		return nil, errors.WithMessage(err, "failed get storage")
 	}
 	if storage.Config().NoUpload {
-		return errors.WithStack(errs.UploadNotSupported)
+		return nil, errors.WithStack(errs.UploadNotSupported)
 	}
 	if file.NeedStore() {
 		_, err := file.CacheFullInTempFile()
 		if err != nil {
-			return errors.Wrapf(err, "failed to create temp file")
+			return nil, errors.Wrapf(err, "failed to create temp file")
 		}
 		//file.SetReader(tempFile)
 		//file.SetTmpFile(tempFile)
 	}
-	UploadTaskManager.Add(&UploadTask{
+	t := &UploadTask{
 		storage:          storage,
 		dstDirActualPath: dstDirActualPath,
 		file:             file,
-	})
-	return nil
+	}
+	UploadTaskManager.Add(t)
+	return t, nil
 }
 
 // putDirect put the file and return after finish
