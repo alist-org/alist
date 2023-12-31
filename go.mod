@@ -19,6 +19,7 @@ require (
 	github.com/deckarep/golang-set/v2 v2.3.1
 	github.com/disintegration/imaging v1.6.2
 	github.com/djherbis/times v1.5.0
+	github.com/dlclark/regexp2 v1.10.0
 	github.com/dustinxie/ecc v0.0.0-20210511000915-959544187564
 	github.com/foxxorcat/mopan-sdk-go v0.1.4
 	github.com/foxxorcat/weiyun-sdk-go v0.1.3
