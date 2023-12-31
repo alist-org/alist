@@ -48,6 +48,7 @@ func Init(e *gin.Engine) {
 
 	api.POST("/auth/login", handles.Login)
 	api.POST("/auth/login/hash", handles.LoginHash)
+	api.POST("/auth/login/ldap", handles.LoginLdap)
 	auth.GET("/me", handles.CurrentUser)
 	auth.POST("/me/update", handles.UpdateCurrent)
 	auth.POST("/auth/2fa/generate", handles.Generate2FA)

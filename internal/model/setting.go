@@ -9,6 +9,7 @@ const (
 	OFFLINE_DOWNLOAD
 	INDEX
 	SSO
+	LDAP
 )
 
 const (
