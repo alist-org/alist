@@ -45,7 +45,7 @@ English | [中文](./README_cn.md)| [日本語](./README_ja.md) | [Contributing]
 
 - [x] Multiple storages
     - [x] Local storage
-    - [x] [Aliyundrive](https://www.aliyundrive.com/)
+    - [x] [Aliyundrive](https://www.alipan.com/)
     - [x] OneDrive / Sharepoint ([global](https://www.office.com/), [cn](https://portal.partner.microsoftonline.cn),de,us)
     - [x] [189cloud](https://cloud.189.cn) (Personal, Family)
     - [x] [GoogleDrive](https://drive.google.com/)
@@ -66,7 +66,7 @@ English | [中文](./README_cn.md)| [日本語](./README_ja.md) | [Contributing]
     - [x] [Quark](https://pan.quark.cn)
     - [x] [Thunder](https://pan.xunlei.com)
     - [x] [Lanzou](https://www.lanzou.com/)
-    - [x] [Aliyundrive share](https://www.aliyundrive.com/)
+    - [x] [Aliyundrive share](https://www.alipan.com/)
     - [x] [Google photo](https://photos.google.com/)
     - [x] [Mega.nz](https://mega.nz)
     - [x] [Baidu photo](https://photo.baidu.com/)
