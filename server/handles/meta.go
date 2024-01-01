@@ -2,13 +2,13 @@ package handles
 
 import (
 	"fmt"
-	"regexp"
 	"strconv"
 	"strings"
 
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/server/common"
+	"github.com/dlclark/regexp2"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 )
@@ -71,7 +71,7 @@ func UpdateMeta(c *gin.Context) {
 func validHide(hide string) (string, error) {
 	rs := strings.Split(hide, "\n")
 	for _, r := range rs {
-		_, err := regexp.Compile(r)
+		_, err := regexp2.Compile(r, regexp2.None)
 		if err != nil {
 			return r, err
 		}
