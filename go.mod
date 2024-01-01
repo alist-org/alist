@@ -29,7 +29,7 @@ require (
 	github.com/go-webauthn/webauthn v0.9.4
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/google/uuid v1.4.0
-	github.com/gorilla/websocket v1.5.0
+	github.com/gorilla/websocket v1.5.1
 	github.com/hirochachacha/go-smb2 v1.1.0
 	github.com/ipfs/go-ipfs-api v0.7.0
 	github.com/jlaffaye/ftp v0.2.0
@@ -56,6 +56,7 @@ require (
 	golang.org/x/oauth2 v0.12.0
 	golang.org/x/time v0.3.0
 	google.golang.org/appengine v1.6.7
+	gopkg.in/ldap.v3 v3.1.0
 	gorm.io/driver/mysql v1.4.7
 	gorm.io/driver/postgres v1.4.8
 	gorm.io/driver/sqlite v1.4.4
@@ -200,7 +201,6 @@ require (
 	google.golang.org/grpc v1.57.0 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/asn1-ber.v1 v1.0.0-20181015200546-f715ec2f112d // indirect
-	gopkg.in/ldap.v3 v3.1.0 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
