@@ -30,12 +30,12 @@ jobs:
           go-version: ${{ matrix.go-version }}
 
       - name: Checkout alist
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: alist
 
       - name: Checkout alist-web
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: 'alist-org/alist-web'
           ref: main
