@@ -91,6 +91,36 @@ BuildDocker() {
   go build -o ./bin/alist -ldflags="$ldflags" -tags=jsoniter .
 }
 
+BuildDockerMultiplatform() {
+  docker_lflags="--extldflags '-static' $ldflags"
+
+  echo "replace github.com/mattn/go-sqlite3 => github.com/leso-kn/go-sqlite3 v0.0.0-20230710125852-03158dc838ed" >>go.mod
+  go get gorm.io/driver/sqlite@v1.4.4
+  go mod download
+
+  OS_ARCHES=(linux-amd64 linux-arm64 linux-386 linux-s390x)
+  for i in "${!OS_ARCHES[@]}"; do
+    os_arch=${OS_ARCHES[$i]}
+    echo "building for $os_arch"
+    os=${os_arch%%-*}
+    arch=${os_arch##*-}
+    export GOOS=$os
+    export GOARCH=$arch
+    go build -o ./$os/$arch/alist -ldflags="$docker_lflags" -tags=jsoniter .
+  done
+
+  DOCKER_ARM_ARCHES=(linux-arm/v6 linux-arm/v7)
+  GO_ARM=(6 7)
+  export GOOS=linux
+  export GOARCH=arm
+  for i in "${!DOCKER_ARM_ARCHES[@]}"; do
+    docker_arch=${DOCKER_ARM_ARCHES[$i]}
+    echo "building for $docker_arch"
+    export GOARM=${GO_ARM[$i]}
+    go build -o ./${docker_arch%%-*}/${docker_arch##*-}/alist -ldflags="$docker_lflags" -tags=jsoniter .
+  done
+}
+
 BuildRelease() {
   rm -rf .git/
   mkdir -p "build"
@@ -197,6 +227,8 @@ elif [ "$1" = "release" ]; then
   FetchWebRelease
   if [ "$2" = "docker" ]; then
     BuildDocker
+  elif [ "$2" = "docker-multiplatform" ]; then
+    BuildDockerMultiplatform
   elif [ "$2" = "linux_musl_arm" ]; then
     BuildReleaseLinuxMuslArm
     MakeRelease "md5-linux-musl-arm.txt"
