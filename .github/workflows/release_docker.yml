@@ -13,6 +13,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - uses: actions/setup-go@v4
+        with:
+          go-version: 'stable'
+
+      - name: Build go binary
+        env:
+          CGO_ENABLED: 0
+        run: bash build.sh release docker-multiplatform
+
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
@@ -36,6 +45,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
+          file: Dockerfile.ci
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
