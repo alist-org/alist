@@ -11,6 +11,7 @@ type Addition struct {
 	Password string `json:"password" type:"string" required:"true"`
 
 	Token string
+	UUID  string
 }
 
 var config = driver.Config{

@@ -56,9 +56,9 @@ func (d *ILanZou) request(pathname, method string, callback base.ReqCallback, pr
 		return nil, err
 	}
 	req.SetQueryParams(map[string]string{
-		//"uuid": "32dcf64b-e314-4c99-b192-a0a98c5c1e5e",
-		"devType": "6",
-		//"devCode": "32dcf64b-e314-4c99-b192-a0a98c5c1e5e",
+		"uuid":       d.UUID,
+		"devType":    "6",
+		"devCode":    d.UUID,
 		"devModel":   "chrome",
 		"devVersion": "120",
 		"appVersion": "",
