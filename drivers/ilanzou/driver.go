@@ -7,8 +7,10 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
+	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
@@ -137,18 +139,79 @@ func (d *ILanZou) Link(ctx context.Context, file model.Obj, args model.LinkArgs)
 }
 
 func (d *ILanZou) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) (model.Obj, error) {
-	// TODO create folder, optional
-	return nil, errs.NotImplement
+	res, err := d.proved("/file/folder/save", http.MethodPost, func(req *resty.Request) {
+		req.SetBody(base.Json{
+			"folderDesc": "",
+			"folderId":   parentDir.GetID(),
+			"folderName": dirName,
+		})
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &model.Object{
+		ID: utils.Json.Get(res, "list", "0", "id").ToString(),
+		//Path:     "",
+		Name:     dirName,
+		Size:     0,
+		Modified: time.Now(),
+		Ctime:    time.Now(),
+		IsFolder: true,
+		//HashInfo: utils.HashInfo{},
+	}, nil
 }
 
 func (d *ILanZou) Move(ctx context.Context, srcObj, dstDir model.Obj) (model.Obj, error) {
-	// TODO move obj, optional
-	return nil, errs.NotImplement
+	var fileIds, folderIds []string
+	if srcObj.IsDir() {
+		folderIds = []string{srcObj.GetID()}
+	} else {
+		fileIds = []string{srcObj.GetID()}
+	}
+	_, err := d.proved("/file/folder/move", http.MethodPost, func(req *resty.Request) {
+		req.SetBody(base.Json{
+			"folderIds": strings.Join(folderIds, ","),
+			"fileIds":   strings.Join(fileIds, ","),
+			"targetId":  dstDir.GetID(),
+		})
+	})
+	if err != nil {
+		return nil, err
+	}
+	return srcObj, nil
 }
 
 func (d *ILanZou) Rename(ctx context.Context, srcObj model.Obj, newName string) (model.Obj, error) {
-	// TODO rename obj, optional
-	return nil, errs.NotImplement
+	var err error
+	if srcObj.IsDir() {
+		_, err = d.proved("/file/folder/edit", http.MethodPost, func(req *resty.Request) {
+			req.SetBody(base.Json{
+				"folderDesc": "",
+				"folderId":   srcObj.GetID(),
+				"folderName": newName,
+			})
+		})
+	} else {
+		_, err = d.proved("/file/edit", http.MethodPost, func(req *resty.Request) {
+			req.SetBody(base.Json{
+				"fileDesc": "",
+				"fileId":   srcObj.GetID(),
+				"fileName": newName,
+			})
+		})
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &model.Object{
+		ID: srcObj.GetID(),
+		//Path:     "",
+		Name:     newName,
+		Size:     srcObj.GetSize(),
+		Modified: time.Now(),
+		Ctime:    srcObj.CreateTime(),
+		IsFolder: srcObj.IsDir(),
+	}, nil
 }
 
 func (d *ILanZou) Copy(ctx context.Context, srcObj, dstDir model.Obj) (model.Obj, error) {
@@ -157,12 +220,25 @@ func (d *ILanZou) Copy(ctx context.Context, srcObj, dstDir model.Obj) (model.Obj
 }
 
 func (d *ILanZou) Remove(ctx context.Context, obj model.Obj) error {
-	// TODO remove obj, optional
-	return errs.NotImplement
+	var fileIds, folderIds []string
+	if obj.IsDir() {
+		folderIds = []string{obj.GetID()}
+	} else {
+		fileIds = []string{obj.GetID()}
+	}
+	_, err := d.proved("/file/delete", http.MethodPost, func(req *resty.Request) {
+		req.SetBody(base.Json{
+			"folderIds": strings.Join(folderIds, ","),
+			"fileIds":   strings.Join(fileIds, ","),
+			"status":    0,
+		})
+	})
+	return err
 }
 
+const DefaultPartSize = 1024 * 1024 * 8
+
 func (d *ILanZou) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) (model.Obj, error) {
-	// TODO upload file, optional
 	return nil, errs.NotImplement
 }
 
