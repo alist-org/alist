@@ -2,8 +2,11 @@ package template
 
 import (
 	"context"
+	"crypto/md5"
+	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -24,7 +27,9 @@ type ILanZou struct {
 	model.Storage
 	Addition
 
-	userID string
+	userID   string
+	account  string
+	upClient *resty.Client
 }
 
 func (d *ILanZou) Config() driver.Config {
@@ -36,6 +41,7 @@ func (d *ILanZou) GetAddition() driver.Additional {
 }
 
 func (d *ILanZou) Init(ctx context.Context) error {
+	d.upClient = base.NewRestyClient().SetTimeout(time.Minute * 10)
 	if d.UUID == "" {
 		res, err := d.unproved("/getUuid", http.MethodGet, nil)
 		if err != nil {
@@ -48,6 +54,7 @@ func (d *ILanZou) Init(ctx context.Context) error {
 		return err
 	}
 	d.userID = utils.Json.Get(res, "map", "userId").ToString()
+	d.account = utils.Json.Get(res, "map", "account").ToString()
 	log.Debugf("[ilanzou] init response: %s", res)
 	return nil
 }
@@ -239,7 +246,116 @@ func (d *ILanZou) Remove(ctx context.Context, obj model.Obj) error {
 const DefaultPartSize = 1024 * 1024 * 8
 
 func (d *ILanZou) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) (model.Obj, error) {
-	return nil, errs.NotImplement
+	h := md5.New()
+	// need to calculate md5 of the full content
+	tempFile, err := stream.CacheFullInTempFile()
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		_ = tempFile.Close()
+	}()
+	if _, err = io.Copy(h, tempFile); err != nil {
+		return nil, err
+	}
+	_, err = tempFile.Seek(0, io.SeekStart)
+	if err != nil {
+		return nil, err
+	}
+	etag := hex.EncodeToString(h.Sum(nil))
+	// get upToken
+	res, err := d.proved("/7n/getUpToken", http.MethodPost, func(req *resty.Request) {
+		req.SetBody(base.Json{
+			"fileId":   "",
+			"fileName": stream.GetName(),
+			"fileSize": stream.GetSize() / 1024,
+			"folderId": dstDir.GetID(),
+			"md5":      etag,
+			"type":     1,
+		})
+	})
+	if err != nil {
+		return nil, err
+	}
+	upToken := utils.Json.Get(res, "upToken").ToString()
+	now := time.Now()
+	key := fmt.Sprintf("disk/%d/%d/%d/%s/%016d", now.Year(), now.Month(), now.Day(), d.account, now.UnixMilli())
+	var token string
+	if stream.GetSize() > DefaultPartSize {
+		res, err := d.upClient.R().SetMultipartFormData(map[string]string{
+			"token": upToken,
+			"key":   key,
+			"fname": stream.GetName(),
+		}).SetMultipartField("file", stream.GetName(), stream.GetMimetype(), tempFile).
+			Post("https://upload.qiniup.com/")
+		if err != nil {
+			return nil, err
+		}
+		token = utils.Json.Get(res.Body(), "token").ToString()
+	} else {
+		keyBase64 := base64.URLEncoding.EncodeToString([]byte(key))
+		res, err := d.upClient.R().Post(fmt.Sprintf("https://upload.qiniup.com/buckets/wpanstore-lanzou/objects/%s/uploads", keyBase64))
+		if err != nil {
+			return nil, err
+		}
+		uploadId := utils.Json.Get(res.Body(), "uploadId").ToString()
+		parts := make([]Part, 0)
+		partNum := (stream.GetSize() + DefaultPartSize - 1) / DefaultPartSize
+		for i := 1; i <= int(partNum); i++ {
+			u := fmt.Sprintf("https://upload.qiniup.com/buckets/wpanstore-lanzou/objects/%s/uploads/%s/%d", keyBase64, uploadId, i)
+			res, err = d.upClient.R().SetBody(io.LimitReader(tempFile, DefaultPartSize)).Put(u)
+			if err != nil {
+				return nil, err
+			}
+			etag := utils.Json.Get(res.Body(), "etag").ToString()
+			parts = append(parts, Part{
+				PartNumber: i,
+				ETag:       etag,
+			})
+		}
+		res, err = d.upClient.R().SetBody(base.Json{
+			"fnmae": stream.GetName(),
+			"parts": parts,
+		}).Post(fmt.Sprintf("https://upload.qiniup.com/buckets/wpanstore-lanzou/objects/%s/uploads/%s", keyBase64, uploadId))
+		if err != nil {
+			return nil, err
+		}
+		token = utils.Json.Get(res.Body(), "token").ToString()
+	}
+	// commit upload
+	var resp UploadResultResp
+	for i := 0; i < 10; i++ {
+		_, err = d.unproved("/7n/results", http.MethodPost, func(req *resty.Request) {
+			req.SetQueryParams(map[string]string{
+				"tokenList": token,
+				"tokenTime": time.Now().Format("Mon Jan 02 2006 15:04:05 GMT-0700 (MST)"),
+			}).SetResult(&resp)
+		})
+		if err != nil {
+			return nil, err
+		}
+		if len(resp.List) == 0 {
+			return nil, fmt.Errorf("upload failed, empty response")
+		}
+		if resp.List[0].Status == 1 {
+			break
+		}
+		time.Sleep(time.Second * 1)
+	}
+	file := resp.List[0]
+	if file.Status != 1 {
+		return nil, fmt.Errorf("upload failed, status: %d", resp.List[0].Status)
+	}
+	return &model.Object{
+		ID: strconv.FormatInt(file.FileId, 10),
+		//Path:     ,
+		Name:     file.FileName,
+		Size:     stream.GetSize(),
+		Modified: stream.ModTime(),
+		Ctime:    stream.CreateTime(),
+		IsFolder: false,
+		HashInfo: utils.NewHashInfo(utils.MD5, etag),
+	}, nil
 }
 
 //func (d *ILanZou) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {

@@ -37,3 +37,21 @@ type ListItem struct {
 	FileLikes      int         `json:"fileLikes,omitempty"`
 	FileId         int64       `json:"fileId,omitempty"`
 }
+
+type Part struct {
+	PartNumber int    `json:"partNumber"`
+	ETag       string `json:"etag"`
+}
+
+type UploadResultResp struct {
+	Msg  string `json:"msg"`
+	Code int    `json:"code"`
+	List []struct {
+		FileIconId int    `json:"fileIconId"`
+		FileName   string `json:"fileName"`
+		FileIcon   string `json:"fileIcon"`
+		FileId     int64  `json:"fileId"`
+		Status     int    `json:"status"`
+		Token      string `json:"token"`
+	} `json:"list"`
+}
