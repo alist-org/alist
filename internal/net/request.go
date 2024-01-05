@@ -449,7 +449,7 @@ type Buf struct {
 	size   int //expected size
 	ctx    context.Context
 	off    int
-	rw     sync.RWMutex
+	rw     sync.Mutex
 	//notify chan struct{}
 }
 
@@ -480,9 +480,9 @@ func (br *Buf) Read(p []byte) (n int, err error) {
 	if br.off >= br.size {
 		return 0, io.EOF
 	}
-	br.rw.RLock()
+	br.rw.Lock()
 	n, err = br.buffer.Read(p)
-	br.rw.RUnlock()
+	br.rw.Unlock()
 	if err == nil {
 		br.off += n
 		return n, err
