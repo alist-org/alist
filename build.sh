@@ -239,6 +239,8 @@ if [ "$1" = "dev" ]; then
   FetchWebDev
   if [ "$2" = "docker" ]; then
     BuildDocker
+  elif [ "$2" = "docker-multiplatform" ]; then
+      BuildDockerMultiplatform
   else
     BuildDev
   fi
