@@ -54,10 +54,13 @@ func (d *S3) Drop(ctx context.Context) error {
 }
 
 func (d *S3) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
+	return d.list(ctx, dir.GetPath(), args)
+}
+func (d *S3) list(ctx context.Context, dirPath string, args model.ListArgs) ([]model.Obj, error) {
 	if d.ListObjectVersion == "v2" {
-		return d.listV2(dir.GetPath(), args)
+		return d.listV2(dirPath, args)
 	}
-	return d.listV1(dir.GetPath(), args)
+	return d.listV1(dirPath, args)
 }
 
 func (d *S3) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
@@ -109,11 +112,35 @@ func (d *S3) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) e
 }
 
 func (d *S3) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
-	err := d.Copy(ctx, srcObj, dstDir)
+	//if !strings.HasSuffix(dstDirPath, "/") {
+	//	dstDirPath = dstDirPath + "/"
+	//}
+	err := mkDstDir(ctx, srcObj, dstDir, d)
+	err = d.Copy(ctx, srcObj, dstDir)
 	if err != nil {
 		return err
 	}
 	return d.Remove(ctx, srcObj)
+}
+
+func mkDstDir(ctx context.Context, srcObj model.Obj, dstDir model.Obj, d *S3) error {
+	//parentPath, dirName := stdpath.Split(dstDir.GetPath())
+	if srcObj.IsDir() {
+		return d.Put(ctx, &model.Object{
+			Path: stdpath.Join(dstDir.GetPath(), srcObj.GetName(), "/"),
+		}, &stream.FileStream{
+			Obj: &model.Object{
+				Name:     getPlaceholderName(d.Placeholder),
+				Modified: time.Now(),
+			},
+			Reader:   io.NopCloser(bytes.NewReader([]byte{})),
+			Mimetype: "application/octet-stream",
+		}, func(float64) {})
+	} else {
+		//文件，不用创建文件夹
+		return nil
+	}
+
 }
 
 func (d *S3) Rename(ctx context.Context, srcObj model.Obj, newName string) error {

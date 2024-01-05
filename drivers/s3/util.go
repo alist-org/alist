@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -198,7 +197,7 @@ func (d *S3) copyFile(ctx context.Context, src string, dst string) error {
 }
 
 func (d *S3) copyDir(ctx context.Context, src string, dst string) error {
-	objs, err := op.List(ctx, d, src, model.ListArgs{S3ShowPlaceholder: true})
+	objs, err := d.list(ctx, src, model.ListArgs{S3ShowPlaceholder: true})
 	if err != nil {
 		return err
 	}
@@ -218,7 +217,7 @@ func (d *S3) copyDir(ctx context.Context, src string, dst string) error {
 }
 
 func (d *S3) removeDir(ctx context.Context, src string) error {
-	objs, err := op.List(ctx, d, src, model.ListArgs{})
+	objs, err := d.list(ctx, src, model.ListArgs{})
 	if err != nil {
 		return err
 	}
