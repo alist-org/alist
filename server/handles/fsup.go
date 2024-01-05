@@ -3,7 +3,9 @@ package handles
 import (
 	"github.com/xhofe/tache"
 	"io"
+	"net/http"
 	"net/url"
+	"os"
 	stdpath "path"
 	"strconv"
 	"time"
@@ -58,6 +60,17 @@ func FsStream(c *gin.Context) {
 		Mimetype:     c.GetHeader("Content-Type"),
 		WebPutAsTask: asTask,
 	}
+
+	if c.Request.Body == http.NoBody {
+		f, err := os.Open(path)
+		if err != nil {
+			common.ErrorResp(c, err, 400)
+			return
+		}
+		defer func() { _ = f.Close() }()
+		s.Reader = struct{ io.Reader }{f}
+	}
+
 	var t tache.TaskWithInfo
 	if asTask {
 		t, err = fs.PutAsTask(dir, s)
