@@ -102,6 +102,12 @@ English | [中文](./README_cn.md)| [日本語](./README_ja.md) | [Contributing]
 
 <https://al.nn.ci>
 
+## Installation
+
+One-click installation
+
+[![](https://raw.githubusercontent.com/labring-actions/templates/main/Deploy-on-Sealos.svg)](https://cloud.sealos.io/?openapp=system-template%3FtemplateName%3Dalist)
+
 ## Discussion
 
 Please go to our [discussion forum](https://github.com/Xhofe/alist/discussions) for general questions, **issues are for bug reports and feature requests only.**
