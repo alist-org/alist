@@ -50,27 +50,30 @@ func FsStream(c *gin.Context) {
 		common.ErrorResp(c, err, 400)
 		return
 	}
+	obj := &model.Object{
+		Name:     name,
+		Size:     size,
+		Modified: getLastModified(c),
+	}
 	s := &stream.FileStream{
-		Obj: &model.Object{
-			Name:     name,
-			Size:     size,
-			Modified: getLastModified(c),
-		},
+		Obj:          obj,
 		Reader:       c.Request.Body,
 		Mimetype:     c.GetHeader("Content-Type"),
 		WebPutAsTask: asTask,
 	}
-
 	if c.Request.Body == http.NoBody {
-		f, err := os.Open(path)
-		if err != nil {
-			common.ErrorResp(c, err, 400)
+		f, er := os.Open(path)
+		if er != nil {
+			common.ErrorResp(c, er, 400)
 			return
 		}
-		defer func() { _ = f.Close() }()
+		if info, _ := f.Stat(); info != nil {
+			obj.Size = info.Size()
+			obj.Modified = info.ModTime()
+		}
 		s.Reader = struct{ io.Reader }{f}
+		defer func() { _ = f.Close() }()
 	}
-
 	var t tache.TaskWithInfo
 	if asTask {
 		t, err = fs.PutAsTask(dir, s)
