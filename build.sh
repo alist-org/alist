@@ -85,10 +85,59 @@ BuildDev() {
   cat md5.txt
 }
 
-BuildDocker() {
+PrepareBuildDocker() {
   echo "replace github.com/mattn/go-sqlite3 => github.com/leso-kn/go-sqlite3 v0.0.0-20230710125852-03158dc838ed" >>go.mod
   go get gorm.io/driver/sqlite@v1.4.4
+  go mod download
+}
+
+BuildDocker() {
+  PrepareBuildDocker
   go build -o ./bin/alist -ldflags="$ldflags" -tags=jsoniter .
+}
+
+BuildDockerMultiplatform() {
+  PrepareBuildDocker
+
+  BASE="https://musl.cc/"
+  FILES=(x86_64-linux-musl-cross aarch64-linux-musl-cross i486-linux-musl-cross s390x-linux-musl-cross armv6-linux-musleabihf-cross armv7l-linux-musleabihf-cross)
+  for i in "${FILES[@]}"; do
+    url="${BASE}${i}.tgz"
+    curl -L -o "${i}.tgz" "${url}"
+    sudo tar xf "${i}.tgz" --strip-components 1 -C /usr/local
+    rm -f "${i}.tgz"
+  done
+
+  docker_lflags="--extldflags '-static -fpic' $ldflags"
+  export CGO_ENABLED=1
+
+  OS_ARCHES=(linux-amd64 linux-arm64 linux-386 linux-s390x)
+  CGO_ARGS=(x86_64-linux-musl-gcc aarch64-linux-musl-gcc i486-linux-musl-gcc s390x-linux-musl-gcc)
+  for i in "${!OS_ARCHES[@]}"; do
+    os_arch=${OS_ARCHES[$i]}
+    cgo_cc=${CGO_ARGS[$i]}
+    os=${os_arch%%-*}
+    arch=${os_arch##*-}
+    export GOOS=$os
+    export GOARCH=$arch
+    export CC=${cgo_cc}
+    echo "building for $os_arch"
+    go build -o ./$os/$arch/alist -ldflags="$docker_lflags" -tags=jsoniter .
+  done
+
+  DOCKER_ARM_ARCHES=(linux-arm/v6 linux-arm/v7)
+  CGO_ARGS=(armv6-linux-musleabihf-gcc armv7l-linux-musleabihf-gcc)
+  GO_ARM=(6 7)
+  export GOOS=linux
+  export GOARCH=arm
+  for i in "${!DOCKER_ARM_ARCHES[@]}"; do
+    docker_arch=${DOCKER_ARM_ARCHES[$i]}
+    cgo_cc=${CGO_ARGS[$i]}
+    export GOARM=${GO_ARM[$i]}
+    export CC=${cgo_cc}
+    echo "building for $docker_arch"
+    go build -o ./${docker_arch%%-*}/${docker_arch##*-}/alist -ldflags="$docker_lflags" -tags=jsoniter .
+  done
 }
 
 BuildRelease() {
@@ -190,6 +239,8 @@ if [ "$1" = "dev" ]; then
   FetchWebDev
   if [ "$2" = "docker" ]; then
     BuildDocker
+  elif [ "$2" = "docker-multiplatform" ]; then
+      BuildDockerMultiplatform
   else
     BuildDev
   fi
@@ -197,6 +248,8 @@ elif [ "$1" = "release" ]; then
   FetchWebRelease
   if [ "$2" = "docker" ]; then
     BuildDocker
+  elif [ "$2" = "docker-multiplatform" ]; then
+    BuildDockerMultiplatform
   elif [ "$2" = "linux_musl_arm" ]; then
     BuildReleaseLinuxMuslArm
     MakeRelease "md5-linux-musl-arm.txt"
