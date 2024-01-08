@@ -211,10 +211,36 @@ BuildReleaseLinuxMuslArm() {
   done
 }
 
+BuildReleaseAndroid() {
+  rm -rf .git/
+  mkdir -p "build"
+  wget https://dl.google.com/android/repository/android-ndk-r26b-linux.zip
+  unzip android-ndk-r26b-linux.zip
+  rm android-ndk-r26b-linux.zip
+  OS_ARCHES=(amd64 arm64 386 arm)
+  CGO_ARGS=(x86_64-linux-android24-clang aarch64-linux-android24-clang i686-linux-android24-clang armv7a-linux-androideabi24-clang)
+  for i in "${!OS_ARCHES[@]}"; do
+    os_arch=${OS_ARCHES[$i]}
+    cgo_cc=$(realpath android-ndk-r26b/toolchains/llvm/prebuilt/linux-x86_64/bin/${CGO_ARGS[$i]})
+    echo building for android-${os_arch}
+    export GOOS=android
+    export GOARCH=${os_arch##*-}
+    export CC=${cgo_cc}
+    export CGO_ENABLED=1
+    go build -o ./build/$appName-android-$os_arch -ldflags="$ldflags" -tags=jsoniter .
+    android-ndk-r26b/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip ./build/$appName-android-$os_arch
+  done
+}
+
 MakeRelease() {
   cd build
   mkdir compress
   for i in $(find . -type f -name "$appName-linux-*"); do
+    cp "$i" alist
+    tar -czvf compress/"$i".tar.gz alist
+    rm -f alist
+  done
+    for i in $(find . -type f -name "$appName-android-*"); do
     cp "$i" alist
     tar -czvf compress/"$i".tar.gz alist
     rm -f alist
@@ -256,6 +282,9 @@ elif [ "$1" = "release" ]; then
   elif [ "$2" = "linux_musl" ]; then
     BuildReleaseLinuxMusl
     MakeRelease "md5-linux-musl.txt"
+  elif [ "$2" = "android" ]; then
+    BuildReleaseAndroid
+    MakeRelease "md5-android.txt"
   else
     BuildRelease
     MakeRelease "md5.txt"
