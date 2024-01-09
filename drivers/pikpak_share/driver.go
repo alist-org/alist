@@ -3,11 +3,20 @@ package pikpak_share
 import (
 	"context"
 	"net/http"
+	"regexp"
 
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/go-resty/resty/v2"
+)
+
+const (
+	replacedDownloadLink = "dl-a10b-0880.mypikpak.com"
+)
+
+var (
+	downloadLinkRegexp = regexp.MustCompile(`dl-a10b-08\d{2}.mypikpak.com`)
 )
 
 type PikPakShare struct {
@@ -70,6 +79,7 @@ func (d *PikPakShare) Link(ctx context.Context, file model.Obj, args model.LinkA
 	link := model.Link{
 		URL: resp.FileInfo.WebContentLink,
 	}
+	link.URL = downloadLinkRegexp.ReplaceAllString(link.URL, replacedDownloadLink)
 	return &link, nil
 }
 
