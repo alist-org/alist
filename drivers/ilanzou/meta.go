@@ -14,22 +14,61 @@ type Addition struct {
 	UUID  string
 }
 
-var config = driver.Config{
-	Name:              "ILanZou",
-	LocalSort:         false,
-	OnlyLocal:         false,
-	OnlyProxy:         false,
-	NoCache:           false,
-	NoUpload:          false,
-	NeedMs:            false,
-	DefaultRoot:       "0",
-	CheckStatus:       false,
-	Alert:             "",
-	NoOverwriteUpload: false,
+type Conf struct {
+	base     string
+	secret   []byte
+	bucket   string
+	unproved string
+	proved   string
 }
 
 func init() {
 	op.RegisterDriver(func() driver.Driver {
-		return &ILanZou{}
+		return &ILanZou{
+			config: driver.Config{
+				Name:              "ILanZou",
+				LocalSort:         false,
+				OnlyLocal:         false,
+				OnlyProxy:         false,
+				NoCache:           false,
+				NoUpload:          false,
+				NeedMs:            false,
+				DefaultRoot:       "0",
+				CheckStatus:       false,
+				Alert:             "",
+				NoOverwriteUpload: false,
+			},
+			conf: Conf{
+				base:     "https://api.ilanzou.com",
+				secret:   []byte("lanZouY-disk-app"),
+				bucket:   "wpanstore-lanzou",
+				unproved: "unproved",
+				proved:   "proved",
+			},
+		}
+	})
+	op.RegisterDriver(func() driver.Driver {
+		return &ILanZou{
+			config: driver.Config{
+				Name:              "FeijiPan",
+				LocalSort:         false,
+				OnlyLocal:         false,
+				OnlyProxy:         false,
+				NoCache:           false,
+				NoUpload:          false,
+				NeedMs:            false,
+				DefaultRoot:       "0",
+				CheckStatus:       false,
+				Alert:             "",
+				NoOverwriteUpload: false,
+			},
+			conf: Conf{
+				base:     "https://api.feijipan.com",
+				secret:   []byte("dingHao-disk-app"),
+				bucket:   "wpanstore",
+				unproved: "ws",
+				proved:   "app",
+			},
+		}
 	})
 }

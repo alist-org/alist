@@ -14,14 +14,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const (
-	Base = "https://api.ilanzou.com"
-)
-
-var (
-	AesSecret = []byte("lanZouY-disk-app")
-)
-
 func (d *ILanZou) login() error {
 	res, err := d.unproved("/login", http.MethodPost, func(req *resty.Request) {
 		req.SetBody(base.Json{
@@ -39,10 +31,10 @@ func (d *ILanZou) login() error {
 	return nil
 }
 
-func getTimestamp() (string, error) {
+func getTimestamp(secret []byte) (string, error) {
 	ts := time.Now().UnixMilli()
 	tsStr := strconv.FormatInt(ts, 10)
-	res, err := mopan.AesEncrypt([]byte(tsStr), AesSecret)
+	res, err := mopan.AesEncrypt([]byte(tsStr), secret)
 	if err != nil {
 		return "", err
 	}
@@ -51,7 +43,7 @@ func getTimestamp() (string, error) {
 
 func (d *ILanZou) request(pathname, method string, callback base.ReqCallback, proved bool, retry ...bool) ([]byte, error) {
 	req := base.RestyClient.R()
-	ts, err := getTimestamp()
+	ts, err := getTimestamp(d.conf.secret)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +64,7 @@ func (d *ILanZou) request(pathname, method string, callback base.ReqCallback, pr
 	if callback != nil {
 		callback(req)
 	}
-	res, err := req.Execute(method, Base+pathname)
+	res, err := req.Execute(method, d.conf.base+pathname)
 	if err != nil {
 		if res != nil {
 			log.Errorf("[iLanZou] request error: %s", res.String())
@@ -97,9 +89,9 @@ func (d *ILanZou) request(pathname, method string, callback base.ReqCallback, pr
 }
 
 func (d *ILanZou) unproved(pathname, method string, callback base.ReqCallback) ([]byte, error) {
-	return d.request("/unproved"+pathname, method, callback, false)
+	return d.request("/"+d.conf.unproved+pathname, method, callback, false)
 }
 
 func (d *ILanZou) proved(pathname, method string, callback base.ReqCallback) ([]byte, error) {
-	return d.request("/proved"+pathname, method, callback, true)
+	return d.request("/"+d.conf.proved+pathname, method, callback, true)
 }

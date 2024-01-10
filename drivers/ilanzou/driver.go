@@ -30,10 +30,12 @@ type ILanZou struct {
 	userID   string
 	account  string
 	upClient *resty.Client
+	conf     Conf
+	config   driver.Config
 }
 
 func (d *ILanZou) Config() driver.Config {
-	return config
+	return d.config
 }
 
 func (d *ILanZou) GetAddition() driver.Additional {
@@ -123,19 +125,19 @@ func (d *ILanZou) Link(ctx context.Context, file model.Obj, args model.LinkArgs)
 	query.Set("devModel", "chrome")
 	query.Set("devVersion", "120")
 	query.Set("appVersion", "")
-	ts, err := getTimestamp()
+	ts, err := getTimestamp(d.conf.secret)
 	if err != nil {
 		return nil, err
 	}
 	query.Set("timestamp", ts)
 	//query.Set("appToken", d.Token)
 	query.Set("enable", "1")
-	downloadId, err := mopan.AesEncrypt([]byte(fmt.Sprintf("%s|%s", file.GetID(), d.userID)), AesSecret)
+	downloadId, err := mopan.AesEncrypt([]byte(fmt.Sprintf("%s|%s", file.GetID(), d.userID)), d.conf.secret)
 	if err != nil {
 		return nil, err
 	}
 	query.Set("downloadId", hex.EncodeToString(downloadId))
-	auth, err := mopan.AesEncrypt([]byte(fmt.Sprintf("%s|%d", file.GetID(), time.Now().UnixMilli())), AesSecret)
+	auth, err := mopan.AesEncrypt([]byte(fmt.Sprintf("%s|%d", file.GetID(), time.Now().UnixMilli())), d.conf.secret)
 	if err != nil {
 		return nil, err
 	}
@@ -281,7 +283,7 @@ func (d *ILanZou) Put(ctx context.Context, dstDir model.Obj, stream model.FileSt
 	now := time.Now()
 	key := fmt.Sprintf("disk/%d/%d/%d/%s/%016d", now.Year(), now.Month(), now.Day(), d.account, now.UnixMilli())
 	var token string
-	if stream.GetSize() > DefaultPartSize {
+	if stream.GetSize() <= DefaultPartSize {
 		res, err := d.upClient.R().SetMultipartFormData(map[string]string{
 			"token": upToken,
 			"key":   key,
@@ -294,7 +296,7 @@ func (d *ILanZou) Put(ctx context.Context, dstDir model.Obj, stream model.FileSt
 		token = utils.Json.Get(res.Body(), "token").ToString()
 	} else {
 		keyBase64 := base64.URLEncoding.EncodeToString([]byte(key))
-		res, err := d.upClient.R().Post(fmt.Sprintf("https://upload.qiniup.com/buckets/wpanstore-lanzou/objects/%s/uploads", keyBase64))
+		res, err := d.upClient.R().SetHeader("Authorization", "UpToken "+upToken).Post(fmt.Sprintf("https://upload.qiniup.com/buckets/%s/objects/%s/uploads", d.conf.bucket, keyBase64))
 		if err != nil {
 			return nil, err
 		}
@@ -302,8 +304,8 @@ func (d *ILanZou) Put(ctx context.Context, dstDir model.Obj, stream model.FileSt
 		parts := make([]Part, 0)
 		partNum := (stream.GetSize() + DefaultPartSize - 1) / DefaultPartSize
 		for i := 1; i <= int(partNum); i++ {
-			u := fmt.Sprintf("https://upload.qiniup.com/buckets/wpanstore-lanzou/objects/%s/uploads/%s/%d", keyBase64, uploadId, i)
-			res, err = d.upClient.R().SetBody(io.LimitReader(tempFile, DefaultPartSize)).Put(u)
+			u := fmt.Sprintf("https://upload.qiniup.com/buckets/%s/objects/%s/uploads/%s/%d", d.conf.bucket, keyBase64, uploadId, i)
+			res, err = d.upClient.R().SetHeader("Authorization", "UpToken "+upToken).SetBody(io.LimitReader(tempFile, DefaultPartSize)).Put(u)
 			if err != nil {
 				return nil, err
 			}
@@ -313,10 +315,10 @@ func (d *ILanZou) Put(ctx context.Context, dstDir model.Obj, stream model.FileSt
 				ETag:       etag,
 			})
 		}
-		res, err = d.upClient.R().SetBody(base.Json{
+		res, err = d.upClient.R().SetHeader("Authorization", "UpToken "+upToken).SetBody(base.Json{
 			"fnmae": stream.GetName(),
 			"parts": parts,
-		}).Post(fmt.Sprintf("https://upload.qiniup.com/buckets/wpanstore-lanzou/objects/%s/uploads/%s", keyBase64, uploadId))
+		}).Post(fmt.Sprintf("https://upload.qiniup.com/buckets/%s/objects/%s/uploads/%s", d.conf.bucket, keyBase64, uploadId))
 		if err != nil {
 			return nil, err
 		}
