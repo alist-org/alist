@@ -75,6 +75,7 @@
     - [x] [115](https://115.com/)
     - [X] Cloudreve
     - [x] [Dropbox](https://www.dropbox.com/)
+    - [x] [FeijiPan](https://www.feijipan.com/)
 - [x] デプロイが簡単で、すぐに使える
 - [x] ファイルプレビュー (PDF, マークダウン, コード, プレーンテキスト, ...)
 - [x] ギャラリーモードでの画像プレビュー

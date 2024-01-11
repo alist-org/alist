@@ -75,6 +75,7 @@ English | [中文](./README_cn.md)| [日本語](./README_ja.md) | [Contributing]
     - [x] [115](https://115.com/)
     - [X] Cloudreve
     - [x] [Dropbox](https://www.dropbox.com/)
+    - [x] [FeijiPan](https://www.feijipan.com/)
 - [x] Easy to deploy and out-of-the-box
 - [x] File preview (PDF, markdown, code, plain text, ...)
 - [x] Image preview in gallery mode
