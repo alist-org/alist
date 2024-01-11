@@ -114,7 +114,7 @@ func (d *ILanZou) List(ctx context.Context, dir model.Obj, args model.ListArgs) 
 }
 
 func (d *ILanZou) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
-	u, err := url.Parse("https://api.ilanzou.com/unproved/file/redirect")
+	u, err := url.Parse(d.conf.base + "/" + d.conf.unproved + "/file/redirect")
 	if err != nil {
 		return nil, err
 	}
