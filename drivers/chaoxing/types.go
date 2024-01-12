@@ -1,7 +1,9 @@
 package chaoxing
 
 import (
+	"encoding/json"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/alist-org/alist/v3/internal/model"
@@ -88,44 +90,69 @@ type UserAuth struct {
 	} `json:"operationAuth"`
 }
 
+// 手机端学习通上传的文件的json内容(content字段)与网页端上传的有所不同
+// 网页端json `"puid": 54321, "size": 12345`
+// 手机端json `"puid": "54321". "size": "12345"`
+type int_str int
+
+// UnmarshalJSON 实现 json.Unmarshaler 接口
+func (ios *int_str) UnmarshalJSON(data []byte) error {
+	// 解析为int
+	var intValue int
+	if err := json.Unmarshal(data, &intValue); err == nil {
+		*ios = int_str(intValue)
+		return nil
+	}
+	// 解析string再转int
+	var strValue string
+	if err := json.Unmarshal(data, &strValue); err == nil {
+		intValue, err := strconv.Atoi(strValue)
+		if err != nil {
+			return fmt.Errorf("json: cannot unmarshal data into Go struct field .list.content._ of type int_string")
+		}
+		*ios = int_str(intValue)
+	}
+	return nil
+}
+
 type File struct {
 	Cataid  int `json:"cataid"`
 	Cfid    int `json:"cfid"`
 	Content struct {
-		Cfid             int    `json:"cfid"`
-		Pid              int    `json:"pid"`
-		FolderName       string `json:"folderName"`
-		ShareType        int    `json:"shareType"`
-		Preview          string `json:"preview"`
-		Filetype         string `json:"filetype"`
-		PreviewURL       string `json:"previewUrl"`
-		IsImg            bool   `json:"isImg"`
-		ParentPath       string `json:"parentPath"`
-		Icon             string `json:"icon"`
-		Suffix           string `json:"suffix"`
-		Duration         int    `json:"duration"`
-		Pantype          string `json:"pantype"`
-		Puid             int    `json:"puid"`
-		Filepath         string `json:"filepath"`
-		Crc              string `json:"crc"`
-		Isfile           bool   `json:"isfile"`
-		Residstr         string `json:"residstr"`
-		ObjectID         string `json:"objectId"`
-		Extinfo          string `json:"extinfo"`
-		Thumbnail        string `json:"thumbnail"`
-		Creator          int    `json:"creator"`
-		ResTypeValue     int    `json:"resTypeValue"`
-		UploadDateFormat string `json:"uploadDateFormat"`
-		DisableOpt       bool   `json:"disableOpt"`
-		DownPath         string `json:"downPath"`
-		Sort             int    `json:"sort"`
-		Topsort          int    `json:"topsort"`
-		Restype          string `json:"restype"`
-		Size             int    `json:"size"`
-		UploadDate       string `json:"uploadDate"`
-		FileSize         string `json:"fileSize"`
-		Name             string `json:"name"`
-		FileID           string `json:"fileId"`
+		Cfid             int     `json:"cfid"`
+		Pid              int     `json:"pid"`
+		FolderName       string  `json:"folderName"`
+		ShareType        int     `json:"shareType"`
+		Preview          string  `json:"preview"`
+		Filetype         string  `json:"filetype"`
+		PreviewURL       string  `json:"previewUrl"`
+		IsImg            bool    `json:"isImg"`
+		ParentPath       string  `json:"parentPath"`
+		Icon             string  `json:"icon"`
+		Suffix           string  `json:"suffix"`
+		Duration         int     `json:"duration"`
+		Pantype          string  `json:"pantype"`
+		Puid             int_str `json:"puid"`
+		Filepath         string  `json:"filepath"`
+		Crc              string  `json:"crc"`
+		Isfile           bool    `json:"isfile"`
+		Residstr         string  `json:"residstr"`
+		ObjectID         string  `json:"objectId"`
+		Extinfo          string  `json:"extinfo"`
+		Thumbnail        string  `json:"thumbnail"`
+		Creator          int     `json:"creator"`
+		ResTypeValue     int     `json:"resTypeValue"`
+		UploadDateFormat string  `json:"uploadDateFormat"`
+		DisableOpt       bool    `json:"disableOpt"`
+		DownPath         string  `json:"downPath"`
+		Sort             int     `json:"sort"`
+		Topsort          int     `json:"topsort"`
+		Restype          string  `json:"restype"`
+		Size             int_str `json:"size"`
+		UploadDate       string  `json:"uploadDate"`
+		FileSize         string  `json:"fileSize"`
+		Name             string  `json:"name"`
+		FileID           string  `json:"fileId"`
 	} `json:"content"`
 	CreatorID  int    `json:"creatorId"`
 	DesID      string `json:"des_id"`
@@ -203,7 +230,6 @@ type UploadFileDataRsp struct {
 		Extinfo          string    `json:"extinfo"`
 	} `json:"data"`
 }
-
 
 type UploadDoneParam struct {
 	Cataid string `json:"cataid"`
