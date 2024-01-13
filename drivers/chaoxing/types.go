@@ -1,7 +1,7 @@
 package chaoxing
 
 import (
-	"encoding/json"
+	"bytes"
 	"fmt"
 	"strconv"
 	"time"
@@ -95,23 +95,13 @@ type UserAuth struct {
 // 手机端json `"puid": "54321". "size": "12345"`
 type int_str int
 
-// UnmarshalJSON 实现 json.Unmarshaler 接口
+// json 字符串数字和纯数字解析
 func (ios *int_str) UnmarshalJSON(data []byte) error {
-	// 解析为int
-	var intValue int
-	if err := json.Unmarshal(data, &intValue); err == nil {
-		*ios = int_str(intValue)
-		return nil
+	intValue, err := strconv.Atoi(string(bytes.Trim(data, "\"")))
+	if err != nil {
+		return err
 	}
-	// 解析string再转int
-	var strValue string
-	if err := json.Unmarshal(data, &strValue); err == nil {
-		intValue, err := strconv.Atoi(strValue)
-		if err != nil {
-			return fmt.Errorf("json: cannot unmarshal data into Go struct field .list.content._ of type int_string")
-		}
-		*ios = int_str(intValue)
-	}
+	*ios = int_str(intValue)
 	return nil
 }
 
