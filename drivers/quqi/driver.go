@@ -212,12 +212,14 @@ func (d *Quqi) Rename(ctx context.Context, srcObj model.Obj, newName string) (mo
 
 func (d *Quqi) Copy(ctx context.Context, srcObj, dstDir model.Obj) (model.Obj, error) {
 	// 无法从曲奇接口响应中直接获取复制后的文件信息
-	if _, err := d.request("", "/api/node/copy", resty.MethodPost, nil, map[string]string{
-		"quqi_id":        d.GroupID,
-		"node_id":        dstDir.GetID(),
-		"source_quqi_id": d.GroupID,
-		"source_node_id": srcObj.GetID(),
-	}); err != nil {
+	if _, err := d.request("", "/api/node/copy", resty.MethodPost, func(req *resty.Request) {
+		req.SetFormData(map[string]string{
+			"quqi_id":        d.GroupID,
+			"node_id":        dstDir.GetID(),
+			"source_quqi_id": d.GroupID,
+			"source_node_id": srcObj.GetID(),
+		})
+	}, nil); err != nil {
 		return nil, err
 	}
 
@@ -226,10 +228,12 @@ func (d *Quqi) Copy(ctx context.Context, srcObj, dstDir model.Obj) (model.Obj, e
 
 func (d *Quqi) Remove(ctx context.Context, obj model.Obj) error {
 	// 暂时不做直接删除，默认都放到回收站。直接删除方法：先调用删除接口放入回收站，在通过回收站接口删除文件
-	if _, err := d.request("", "/api/node/del", resty.MethodPost, nil, map[string]string{
-		"quqi_id": d.GroupID,
-		"node_id": obj.GetID(),
-	}); err != nil {
+	if _, err := d.request("", "/api/node/del", resty.MethodPost, func(req *resty.Request) {
+		req.SetFormData(map[string]string{
+			"quqi_id": d.GroupID,
+			"node_id": obj.GetID(),
+		})
+	}, nil); err != nil {
 		return err
 	}
 

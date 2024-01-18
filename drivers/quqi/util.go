@@ -65,10 +65,12 @@ func (d *Quqi) login() error {
 		return errors.New("empty phone number or password")
 	}
 
-	resp, err := d.request("", "/auth/person/v2/login/password", resty.MethodPost, nil, map[string]string{
-		"phone":    d.Phone,
-		"password": base64.StdEncoding.EncodeToString([]byte(d.Password)),
-	})
+	resp, err := d.request("", "/auth/person/v2/login/password", resty.MethodPost, func(req *resty.Request){
+		req.SetFormData(map[string]string{
+			"phone":    d.Phone,
+			"password": base64.StdEncoding.EncodeToString([]byte(d.Password)),
+		})
+	}, nil)
 	if err != nil {
 		return err
 	}
