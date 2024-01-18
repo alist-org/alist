@@ -123,3 +123,45 @@ type ListFile struct {
 	Size               int64  `json:"size"`
 	Version            int    `json:"version"`
 }
+
+type UploadInitResp struct {
+	Data struct {
+		Bucket   string `json:"bucket"`
+		Exist    bool   `json:"exist"`
+		Key      string `json:"key"`
+		TaskID   string `json:"task_id"`
+		Token    string `json:"token"`
+		UploadID string `json:"upload_id"`
+		URL      string `json:"url"`
+	} `json:"data"`
+	Err int    `json:"err"`
+	Msg string `json:"msg"`
+}
+
+type TempKeyResp struct {
+	Err  int    `json:"err"`
+	Msg  string `json:"msg"`
+	Data struct {
+		ExpiredTime int    `json:"expiredTime"`
+		Expiration  string `json:"expiration"`
+		Credentials struct {
+			SessionToken string `json:"sessionToken"`
+			TmpSecretID  string `json:"tmpSecretId"`
+			TmpSecretKey string `json:"tmpSecretKey"`
+		} `json:"credentials"`
+		RequestID string `json:"requestId"`
+		StartTime int    `json:"startTime"`
+	} `json:"data"`
+}
+
+type UploadFinishResp struct {
+	Data struct {
+		NodeID   int64  `json:"node_id"`
+		NodeName string `json:"node_name"`
+		ParentID int64  `json:"parent_id"`
+		QuqiID   int64  `json:"quqi_id"`
+		TreeID   int64  `json:"tree_id"`
+	} `json:"data"`
+	Err int    `json:"err"`
+	Msg string `json:"msg"`
+}

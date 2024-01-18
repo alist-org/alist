@@ -13,8 +13,9 @@ type Addition struct {
 }
 
 var config = driver.Config{
-	Name:        "曲奇网盘",
+	Name:        "Quqi",
 	OnlyLocal:   true,
+	LocalSort:   true,
 	NoUpload:    true,
 	DefaultRoot: "0",
 }

@@ -10,6 +10,11 @@ import (
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/pkg/utils"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/go-resty/resty/v2"
 )
 
@@ -232,9 +237,100 @@ func (d *Quqi) Remove(ctx context.Context, obj model.Obj) error {
 }
 
 func (d *Quqi) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) (model.Obj, error) {
-	// TODO upload file, optional
-	//
-	return nil, errs.NotImplement
+	// base info
+	sizeStr := strconv.FormatInt(stream.GetSize(), 10)
+	f, err := stream.CacheFullInTempFile()
+	if err != nil {
+		return nil, err
+	}
+	md5, err := utils.HashFile(utils.MD5, f)
+	if err != nil {
+		return nil, err
+	}
+	sha, err := utils.HashFile(utils.SHA256, f)
+	if err != nil {
+		return nil, err
+	}
+	// init upload
+	var uploadInitResp UploadInitResp
+	_, err = d.request("", "/api/upload/v1/file/init", resty.MethodPost, func(req *resty.Request) {
+		req.SetFormData(map[string]string{
+			"quqi_id":   d.GroupID,
+			"tree_id":   "1",
+			"parent_id": dstDir.GetID(),
+			"size":      sizeStr,
+			"file_name": stream.GetName(),
+			"md5":       md5,
+			"sha":       sha,
+			"is_slice":  "true",
+			"client_id": "quqipc_F8X2qOlSfF",
+		})
+	}, &uploadInitResp)
+	if err != nil {
+		return nil, err
+	}
+	// listParts
+	_, err = d.request("upload.quqi.com:20807", "/upload/v1/listParts", resty.MethodPost, func(req *resty.Request) {
+		req.SetFormData(map[string]string{
+			"token":     uploadInitResp.Data.Token,
+			"task_id":   uploadInitResp.Data.TaskID,
+			"client_id": "quqipc_F8X2qOlSfF",
+		})
+	}, nil)
+	if err != nil {
+		return nil, err
+	}
+	// get temp key
+	var tempKeyResp TempKeyResp
+	_, err = d.request("upload.quqi.com:20807", "/upload/v1/tempKey", resty.MethodGet, func(req *resty.Request) {
+		req.SetQueryParams(map[string]string{
+			"token":   uploadInitResp.Data.Token,
+			"task_id": uploadInitResp.Data.TaskID,
+		})
+	}, &tempKeyResp)
+	if err != nil {
+		return nil, err
+	}
+	// TODO: modify to cos sdk
+	cfg := &aws.Config{
+		Credentials: credentials.NewStaticCredentials(tempKeyResp.Data.Credentials.TmpSecretID, tempKeyResp.Data.Credentials.TmpSecretKey, tempKeyResp.Data.Credentials.SessionToken),
+		Region:      aws.String("shanghai"),
+		Endpoint:    aws.String("cos.ap-shanghai.myqcloud.com"),
+		// S3ForcePathStyle: aws.Bool(true),
+	}
+	s, err := session.NewSession(cfg)
+	if err != nil {
+		return nil, err
+	}
+	uploader := s3manager.NewUploader(s)
+	input := &s3manager.UploadInput{
+		Bucket: &uploadInitResp.Data.Bucket,
+		Key:    &uploadInitResp.Data.Key,
+		Body:   f,
+	}
+	_, err = uploader.UploadWithContext(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+	// finish upload
+	var uploadFinishResp UploadFinishResp
+	_, err = d.request("", "/api/upload/v1/file/finish", resty.MethodPost, func(req *resty.Request) {
+		req.SetFormData(map[string]string{
+			"token":     uploadInitResp.Data.Token,
+			"task_id":   uploadInitResp.Data.TaskID,
+			"client_id": "quqipc_F8X2qOlSfF",
+		})
+	}, &uploadFinishResp)
+	if err != nil {
+		return nil, err
+	}
+	return &model.Object{
+		ID:       strconv.FormatInt(uploadFinishResp.Data.NodeID, 10),
+		Name:     uploadFinishResp.Data.NodeName,
+		Size:     stream.GetSize(),
+		Modified: stream.ModTime(),
+		Ctime:    stream.CreateTime(),
+	}, nil
 }
 
 //func (d *Template) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
