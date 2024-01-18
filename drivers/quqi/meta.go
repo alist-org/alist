@@ -13,10 +13,10 @@ type Addition struct {
 }
 
 var config = driver.Config{
-	Name:        "Quqi",
-	OnlyLocal:   true,
-	LocalSort:   true,
-	NoUpload:    true,
+	Name:      "Quqi",
+	OnlyLocal: true,
+	LocalSort: true,
+	//NoUpload:    true,
 	DefaultRoot: "0",
 }
 
