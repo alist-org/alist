@@ -19,8 +19,6 @@ type Quqi struct {
 	GroupID string
 }
 
-var header = http.Header{}
-
 func (d *Quqi) Config() driver.Config {
 	return config
 }
@@ -52,10 +50,6 @@ func (d *Quqi) Init(ctx context.Context) error {
 	if d.GroupID == "" {
 		return errs.StorageNotFound
 	}
-
-	// 设置header
-	header.Set("Origin", "https://quqi.com")
-	header.Set("Cookie", d.Cookie)
 
 	return nil
 }
@@ -131,8 +125,11 @@ func (d *Quqi) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*
 	}
 
 	return &model.Link{
-		URL:    getDocResp.Data.OriginPath,
-		Header: header,
+		URL: getDocResp.Data.OriginPath,
+		Header: http.Header{
+			"Origin": []string{"https://quqi.com"},
+			"Cookie": []string{d.Cookie},
+		},
 	}, nil
 }
 
