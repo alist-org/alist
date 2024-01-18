@@ -13,7 +13,7 @@ import (
 )
 
 // do others that not defined in Driver interface
-func (d *Quqi) request(host string, path string, method string, resp interface{}, form map[string]string) (*resty.Response, error) {
+func (d *Quqi) request(host string, path string, method string, callback base.ReqCallback, resp interface{}) (*resty.Response, error) {
 	var (
 		reqUrl = url.URL{
 			Scheme: "https",
@@ -32,11 +32,12 @@ func (d *Quqi) request(host string, path string, method string, resp interface{}
 		"Cookie": d.Cookie,
 	}).SetResult(&result)
 
-	if form != nil {
-		req.SetFormData(form)
-	}
 	if d.GroupID != "" {
 		req.SetQueryParam("quqiid", d.GroupID)
+	}
+
+	if callback != nil {
+		callback(req)
 	}
 
 	res, err := req.Execute(method, reqUrl.String())
@@ -85,6 +86,5 @@ func (d *Quqi) checkLogin() bool {
 	if _, err := d.request("", "/auth/account/baseInfo", resty.MethodGet, nil, nil); err != nil {
 		return false
 	}
-
 	return true
 }

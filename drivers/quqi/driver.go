@@ -37,7 +37,7 @@ func (d *Quqi) Init(ctx context.Context) error {
 
 	// (暂时仅获取私人云) 获取私人云ID
 	groupResp := &GroupRes{}
-	if _, err := d.request("group.quqi.com", "/v1/group/list", resty.MethodGet, groupResp, nil); err != nil {
+	if _, err := d.request("group.quqi.com", "/v1/group/list", resty.MethodGet, nil, groupResp); err != nil {
 		return err
 	}
 	for _, groupInfo := range groupResp.Data {
@@ -70,10 +70,12 @@ func (d *Quqi) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]
 		files    []model.Obj
 	)
 
-	if _, err := d.request("", "/api/dir/ls", resty.MethodPost, listResp, map[string]string{
-		"quqi_id": d.GroupID,
-		"node_id": dir.GetID(),
-	}); err != nil {
+	if _, err := d.request("", "/api/dir/ls", resty.MethodPost, func(req *resty.Request) {
+		req.SetFormData(map[string]string{
+			"quqi_id": d.GroupID,
+			"node_id": dir.GetID(),
+		})
+	}, listResp); err != nil {
 		return nil, err
 	}
 
@@ -119,10 +121,12 @@ func (d *Quqi) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]
 func (d *Quqi) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	var getDocResp = &GetDocRes{}
 
-	if _, err := d.request("", "/api/doc/getDoc", resty.MethodPost, getDocResp, map[string]string{
-		"quqi_id": d.GroupID,
-		"node_id": file.GetID(),
-	}); err != nil {
+	if _, err := d.request("", "/api/doc/getDoc", resty.MethodPost, func(req *resty.Request) {
+		req.SetFormData(map[string]string{
+			"quqi_id": d.GroupID,
+			"node_id": file.GetID(),
+		})
+	}, getDocResp); err != nil {
 		return nil, err
 	}
 
@@ -138,11 +142,13 @@ func (d *Quqi) MakeDir(ctx context.Context, parentDir model.Obj, dirName string)
 		timeNow    = time.Now()
 	)
 
-	if _, err := d.request("", "/api/dir/mkDir", resty.MethodPost, makeDirRes, map[string]string{
-		"quqi_id":   d.GroupID,
-		"parent_id": parentDir.GetID(),
-		"name":      dirName,
-	}); err != nil {
+	if _, err := d.request("", "/api/dir/mkDir", resty.MethodPost, func(req *resty.Request) {
+		req.SetFormData(map[string]string{
+			"quqi_id":   d.GroupID,
+			"parent_id": parentDir.GetID(),
+			"name":      dirName,
+		})
+	}, makeDirRes); err != nil {
 		return nil, err
 	}
 
@@ -158,12 +164,14 @@ func (d *Quqi) MakeDir(ctx context.Context, parentDir model.Obj, dirName string)
 func (d *Quqi) Move(ctx context.Context, srcObj, dstDir model.Obj) (model.Obj, error) {
 	var moveRes = &MoveRes{}
 
-	if _, err := d.request("", "/api/dir/mvDir", resty.MethodPost, moveRes, map[string]string{
-		"quqi_id":        d.GroupID,
-		"node_id":        dstDir.GetID(),
-		"source_quqi_id": d.GroupID,
-		"source_node_id": srcObj.GetID(),
-	}); err != nil {
+	if _, err := d.request("", "/api/dir/mvDir", resty.MethodPost, func(req *resty.Request) {
+		req.SetFormData(map[string]string{
+			"quqi_id":        d.GroupID,
+			"node_id":        dstDir.GetID(),
+			"source_quqi_id": d.GroupID,
+			"source_node_id": srcObj.GetID(),
+		})
+	}, moveRes); err != nil {
 		return nil, err
 	}
 
@@ -180,11 +188,13 @@ func (d *Quqi) Move(ctx context.Context, srcObj, dstDir model.Obj) (model.Obj, e
 func (d *Quqi) Rename(ctx context.Context, srcObj model.Obj, newName string) (model.Obj, error) {
 	var renameRes = &RenameRes{}
 
-	if _, err := d.request("", "/api/dir/renameDir", resty.MethodPost, renameRes, map[string]string{
-		"quqi_id": d.GroupID,
-		"node_id": srcObj.GetID(),
-		"rename":  newName,
-	}); err != nil {
+	if _, err := d.request("", "/api/dir/renameDir", resty.MethodPost, func(req *resty.Request) {
+		req.SetFormData(map[string]string{
+			"quqi_id": d.GroupID,
+			"node_id": srcObj.GetID(),
+			"rename":  newName,
+		})
+	}, renameRes); err != nil {
 		return nil, err
 	}
 
@@ -226,6 +236,7 @@ func (d *Quqi) Remove(ctx context.Context, obj model.Obj) error {
 
 func (d *Quqi) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) (model.Obj, error) {
 	// TODO upload file, optional
+	//
 	return nil, errs.NotImplement
 }
 
