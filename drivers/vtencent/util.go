@@ -272,6 +272,9 @@ func (d *Vtencent) FileUpload(ctx context.Context, dstDir model.Obj, stream mode
 		return err
 	}
 	uploader := s3manager.NewUploader(ss)
+	if stream.GetSize() > s3manager.MaxUploadParts*s3manager.DefaultUploadPartSize {
+		uploader.PartSize = stream.GetSize() / (s3manager.MaxUploadParts - 1)
+	}
 	input := &s3manager.UploadInput{
 		Bucket: aws.String(fmt.Sprintf("%s-%d", params.StorageBucket, params.StorageAppID)),
 		Key:    &params.Video.StoragePath,

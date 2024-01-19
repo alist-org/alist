@@ -311,7 +311,7 @@ func (d *Quqi) Put(ctx context.Context, dstDir model.Obj, stream model.FileStrea
 			length = stream.GetSize() - (int64(i)-1)*partSize
 		}
 		_, err := client.Object.UploadPart(
-			context.Background(), uploadInitResp.Data.Key, uploadInitResp.Data.UploadID, i, io.LimitReader(f, partSize), &cos.ObjectUploadPartOptions{
+			ctx, uploadInitResp.Data.Key, uploadInitResp.Data.UploadID, i, io.LimitReader(f, partSize), &cos.ObjectUploadPartOptions{
 				ContentLength: length,
 			},
 		)

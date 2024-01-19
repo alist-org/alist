@@ -244,6 +244,9 @@ func (d *Teambition) newUpload(ctx context.Context, dstDir model.Obj, stream mod
 		return err
 	}
 	uploader := s3manager.NewUploader(ss)
+	if stream.GetSize() > s3manager.MaxUploadParts*s3manager.DefaultUploadPartSize {
+		uploader.PartSize = stream.GetSize() / (s3manager.MaxUploadParts - 1)
+	}
 	input := &s3manager.UploadInput{
 		Bucket:             &uploadToken.Upload.Bucket,
 		Key:                &uploadToken.Upload.Key,
