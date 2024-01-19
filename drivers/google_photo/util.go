@@ -151,7 +151,7 @@ func (d *GooglePhoto) getMedia(id string) (MediaItem, error) {
 	var resp MediaItem
 
 	query := map[string]string{
-		"fields": "baseUrl,mimeType",
+		"fields": "mediaMetadata,baseUrl,mimeType",
 	}
 	_, err := d.request(fmt.Sprintf("https://photoslibrary.googleapis.com/v1/mediaItems/%s", id), http.MethodGet, func(req *resty.Request) {
 		req.SetQueryParams(query)
