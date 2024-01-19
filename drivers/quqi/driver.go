@@ -202,25 +202,37 @@ func (d *Quqi) Move(ctx context.Context, srcObj, dstDir model.Obj) (model.Obj, e
 }
 
 func (d *Quqi) Rename(ctx context.Context, srcObj model.Obj, newName string) (model.Obj, error) {
-	var renameRes = &RenameRes{}
+	var realName = newName
+
+	if !srcObj.IsDir() {
+		srcExt, newExt := utils.Ext(srcObj.GetName()), utils.Ext(newName)
+
+		// 曲奇网盘的文件名称由文件名和扩展名组成，若存在扩展名，则重命名时仅支持更改文件名，扩展名在曲奇服务端保留
+		if srcExt != "" && srcExt == newExt {
+			parts := strings.Split(newName, ".")
+			if len(parts) > 1 {
+				realName = strings.Join(parts[:len(parts)-1], ".")
+			}
+		}
+	}
 
 	if _, err := d.request("", "/api/dir/renameDir", resty.MethodPost, func(req *resty.Request) {
 		req.SetFormData(map[string]string{
 			"quqi_id":   d.GroupID,
 			"tree_id":   "1",
 			"node_id":   srcObj.GetID(),
-			"rename":    newName,
+			"rename":    realName,
 			"client_id": d.ClientID,
 		})
-	}, renameRes); err != nil {
+	}, nil); err != nil {
 		return nil, err
 	}
 
 	return &model.Object{
-		ID:       strconv.FormatInt(renameRes.Data.NodeID, 10),
-		Name:     renameRes.Data.Rename,
+		ID:       srcObj.GetID(),
+		Name:     newName,
 		Size:     srcObj.GetSize(),
-		Modified: time.Unix(renameRes.Data.UpdateTime, 0),
+		Modified: time.Now(),
 		Ctime:    srcObj.CreateTime(),
 		IsFolder: srcObj.IsDir(),
 	}, nil
