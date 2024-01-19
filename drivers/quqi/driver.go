@@ -14,6 +14,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/utils"
+	"github.com/alist-org/alist/v3/pkg/utils/random"
 	"github.com/go-resty/resty/v2"
 	"github.com/tencentyun/cos-go-sdk-v5"
 )
@@ -21,7 +22,8 @@ import (
 type Quqi struct {
 	model.Storage
 	Addition
-	GroupID string
+	GroupID  string // 私人云群组ID
+	ClientID string // 随机生成客户端ID 经过测试，部分接口调用若不携带client id会出现错误
 }
 
 func (d *Quqi) Config() driver.Config {
@@ -38,7 +40,10 @@ func (d *Quqi) Init(ctx context.Context) error {
 		return err
 	}
 
-	// (暂时仅获取私人云) 获取私人云ID
+	// 生成随机client id (与网页端生成逻辑一致)
+	d.ClientID = "quqipc_" + random.String(10)
+
+	// 获取私人云ID (暂时仅获取私人云)
 	groupResp := &GroupRes{}
 	if _, err := d.request("group.quqi.com", "/v1/group/list", resty.MethodGet, nil, groupResp); err != nil {
 		return err
@@ -71,8 +76,10 @@ func (d *Quqi) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]
 
 	if _, err := d.request("", "/api/dir/ls", resty.MethodPost, func(req *resty.Request) {
 		req.SetFormData(map[string]string{
-			"quqi_id": d.GroupID,
-			"node_id": dir.GetID(),
+			"quqi_id":   d.GroupID,
+			"tree_id":   "1",
+			"node_id":   dir.GetID(),
+			"client_id": d.ClientID,
 		})
 	}, listResp); err != nil {
 		return nil, err
@@ -122,8 +129,10 @@ func (d *Quqi) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*
 
 	if _, err := d.request("", "/api/doc/getDoc", resty.MethodPost, func(req *resty.Request) {
 		req.SetFormData(map[string]string{
-			"quqi_id": d.GroupID,
-			"node_id": file.GetID(),
+			"quqi_id":   d.GroupID,
+			"tree_id":   "1",
+			"node_id":   file.GetID(),
+			"client_id": d.ClientID,
 		})
 	}, getDocResp); err != nil {
 		return nil, err
@@ -147,8 +156,10 @@ func (d *Quqi) MakeDir(ctx context.Context, parentDir model.Obj, dirName string)
 	if _, err := d.request("", "/api/dir/mkDir", resty.MethodPost, func(req *resty.Request) {
 		req.SetFormData(map[string]string{
 			"quqi_id":   d.GroupID,
+			"tree_id":   "1",
 			"parent_id": parentDir.GetID(),
 			"name":      dirName,
+			"client_id": d.ClientID,
 		})
 	}, makeDirRes); err != nil {
 		return nil, err
@@ -169,9 +180,12 @@ func (d *Quqi) Move(ctx context.Context, srcObj, dstDir model.Obj) (model.Obj, e
 	if _, err := d.request("", "/api/dir/mvDir", resty.MethodPost, func(req *resty.Request) {
 		req.SetFormData(map[string]string{
 			"quqi_id":        d.GroupID,
+			"tree_id":        "1",
 			"node_id":        dstDir.GetID(),
 			"source_quqi_id": d.GroupID,
+			"source_tree_id": "1",
 			"source_node_id": srcObj.GetID(),
+			"client_id":      d.ClientID,
 		})
 	}, moveRes); err != nil {
 		return nil, err
@@ -188,23 +202,37 @@ func (d *Quqi) Move(ctx context.Context, srcObj, dstDir model.Obj) (model.Obj, e
 }
 
 func (d *Quqi) Rename(ctx context.Context, srcObj model.Obj, newName string) (model.Obj, error) {
-	var renameRes = &RenameRes{}
+	var realName = newName
+
+	if !srcObj.IsDir() {
+		srcExt, newExt := utils.Ext(srcObj.GetName()), utils.Ext(newName)
+
+		// 曲奇网盘的文件名称由文件名和扩展名组成，若存在扩展名，则重命名时仅支持更改文件名，扩展名在曲奇服务端保留
+		if srcExt != "" && srcExt == newExt {
+			parts := strings.Split(newName, ".")
+			if len(parts) > 1 {
+				realName = strings.Join(parts[:len(parts)-1], ".")
+			}
+		}
+	}
 
 	if _, err := d.request("", "/api/dir/renameDir", resty.MethodPost, func(req *resty.Request) {
 		req.SetFormData(map[string]string{
-			"quqi_id": d.GroupID,
-			"node_id": srcObj.GetID(),
-			"rename":  newName,
+			"quqi_id":   d.GroupID,
+			"tree_id":   "1",
+			"node_id":   srcObj.GetID(),
+			"rename":    realName,
+			"client_id": d.ClientID,
 		})
-	}, renameRes); err != nil {
+	}, nil); err != nil {
 		return nil, err
 	}
 
 	return &model.Object{
-		ID:       strconv.FormatInt(renameRes.Data.NodeID, 10),
-		Name:     renameRes.Data.Rename,
+		ID:       srcObj.GetID(),
+		Name:     newName,
 		Size:     srcObj.GetSize(),
-		Modified: time.Unix(renameRes.Data.UpdateTime, 0),
+		Modified: time.Now(),
 		Ctime:    srcObj.CreateTime(),
 		IsFolder: srcObj.IsDir(),
 	}, nil
@@ -215,9 +243,12 @@ func (d *Quqi) Copy(ctx context.Context, srcObj, dstDir model.Obj) (model.Obj, e
 	if _, err := d.request("", "/api/node/copy", resty.MethodPost, func(req *resty.Request) {
 		req.SetFormData(map[string]string{
 			"quqi_id":        d.GroupID,
+			"tree_id":        "1",
 			"node_id":        dstDir.GetID(),
 			"source_quqi_id": d.GroupID,
+			"source_tree_id": "1",
 			"source_node_id": srcObj.GetID(),
+			"client_id":      d.ClientID,
 		})
 	}, nil); err != nil {
 		return nil, err
@@ -230,8 +261,10 @@ func (d *Quqi) Remove(ctx context.Context, obj model.Obj) error {
 	// 暂时不做直接删除，默认都放到回收站。直接删除方法：先调用删除接口放入回收站，在通过回收站接口删除文件
 	if _, err := d.request("", "/api/node/del", resty.MethodPost, func(req *resty.Request) {
 		req.SetFormData(map[string]string{
-			"quqi_id": d.GroupID,
-			"node_id": obj.GetID(),
+			"quqi_id":   d.GroupID,
+			"tree_id":   "1",
+			"node_id":   obj.GetID(),
+			"client_id": d.ClientID,
 		})
 	}, nil); err != nil {
 		return err
@@ -267,7 +300,7 @@ func (d *Quqi) Put(ctx context.Context, dstDir model.Obj, stream model.FileStrea
 			"md5":       md5,
 			"sha":       sha,
 			"is_slice":  "true",
-			"client_id": "quqipc_F8X2qOlSfF",
+			"client_id": d.ClientID,
 		})
 	}, &uploadInitResp)
 	if err != nil {
@@ -278,7 +311,7 @@ func (d *Quqi) Put(ctx context.Context, dstDir model.Obj, stream model.FileStrea
 		req.SetFormData(map[string]string{
 			"token":     uploadInitResp.Data.Token,
 			"task_id":   uploadInitResp.Data.TaskID,
-			"client_id": "quqipc_F8X2qOlSfF",
+			"client_id": d.ClientID,
 		})
 	}, nil)
 	if err != nil {
@@ -345,7 +378,7 @@ func (d *Quqi) Put(ctx context.Context, dstDir model.Obj, stream model.FileStrea
 		req.SetFormData(map[string]string{
 			"token":     uploadInitResp.Data.Token,
 			"task_id":   uploadInitResp.Data.TaskID,
-			"client_id": "quqipc_F8X2qOlSfF",
+			"client_id": d.ClientID,
 		})
 	}, &uploadFinishResp)
 	if err != nil {

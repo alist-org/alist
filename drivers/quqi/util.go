@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/alist-org/alist/v3/drivers/base"
+	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/go-resty/resty/v2"
 )
@@ -61,11 +62,17 @@ func (d *Quqi) login() error {
 		return nil
 	}
 
-	if d.Phone == "" || d.Password == "" {
-		return errors.New("empty phone number or password")
+	if d.Cookie != "" {
+		return errors.New("cookie is invalid")
+	}
+	if d.Phone == "" {
+		return errors.New("phone number is empty")
+	}
+	if d.Password == "" {
+		return errs.EmptyPassword
 	}
 
-	resp, err := d.request("", "/auth/person/v2/login/password", resty.MethodPost, func(req *resty.Request){
+	resp, err := d.request("", "/auth/person/v2/login/password", resty.MethodPost, func(req *resty.Request) {
 		req.SetFormData(map[string]string{
 			"phone":    d.Phone,
 			"password": base64.StdEncoding.EncodeToString([]byte(d.Password)),
