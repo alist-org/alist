@@ -306,6 +306,22 @@ func (d *Quqi) Put(ctx context.Context, dstDir model.Obj, stream model.FileStrea
 	if err != nil {
 		return nil, err
 	}
+	// check exist
+	// if the file already exists in Quqi server, there is no need to actually upload it
+	if uploadInitResp.Data.Exist {
+		// the file name returned by Quqi does not include the extension name
+		nodeName, nodeExt := uploadInitResp.Data.NodeName, rawExt(stream.GetName())
+		if nodeExt != "" {
+			nodeName = nodeName + "." + nodeExt
+		}
+		return &model.Object{
+			ID:       strconv.FormatInt(uploadInitResp.Data.NodeID, 10),
+			Name:     nodeName,
+			Size:     stream.GetSize(),
+			Modified: stream.ModTime(),
+			Ctime:    stream.CreateTime(),
+		}, nil
+	}
 	// listParts
 	_, err = d.request("upload.quqi.com:20807", "/upload/v1/listParts", resty.MethodPost, func(req *resty.Request) {
 		req.SetFormData(map[string]string{
@@ -384,9 +400,14 @@ func (d *Quqi) Put(ctx context.Context, dstDir model.Obj, stream model.FileStrea
 	if err != nil {
 		return nil, err
 	}
+	// the file name returned by Quqi does not include the extension name
+	nodeName, nodeExt := uploadFinishResp.Data.NodeName, rawExt(stream.GetName())
+	if nodeExt != "" {
+		nodeName = nodeName + "." + nodeExt
+	}
 	return &model.Object{
 		ID:       strconv.FormatInt(uploadFinishResp.Data.NodeID, 10),
-		Name:     uploadFinishResp.Data.NodeName,
+		Name:     nodeName,
 		Size:     stream.GetSize(),
 		Modified: stream.ModTime(),
 		Ctime:    stream.CreateTime(),

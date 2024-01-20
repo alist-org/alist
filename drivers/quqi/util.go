@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	stdpath "path"
 	"strings"
 
 	"github.com/alist-org/alist/v3/drivers/base"
@@ -96,4 +97,14 @@ func (d *Quqi) checkLogin() bool {
 		return false
 	}
 	return true
+}
+
+// rawExt 保留扩展名大小写
+func rawExt(name string) string {
+	ext := stdpath.Ext(name)
+	if strings.HasPrefix(ext, ".") {
+		ext = ext[1:]
+	}
+
+	return ext
 }

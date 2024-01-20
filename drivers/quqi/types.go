@@ -133,6 +133,9 @@ type UploadInitResp struct {
 		Token    string `json:"token"`
 		UploadID string `json:"upload_id"`
 		URL      string `json:"url"`
+		NodeID   int64  `json:"node_id"`
+		NodeName string `json:"node_name"`
+		ParentID int64  `json:"parent_id"`
 	} `json:"data"`
 	Err int    `json:"err"`
 	Msg string `json:"msg"`
