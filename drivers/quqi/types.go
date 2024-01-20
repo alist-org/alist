@@ -31,6 +31,13 @@ type GetDocRes struct {
 	} `json:"data"`
 }
 
+type GetDownloadResp struct {
+	BaseRes
+	Data struct {
+		Url string `json:"url"`
+	} `json:"data"`
+}
+
 type MakeDirRes struct {
 	BaseRes
 	Data struct {
