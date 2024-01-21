@@ -52,7 +52,7 @@ func (d *Dropbox) Init(ctx context.Context) error {
 
 func (d *Dropbox) GetRootNamespaceId(ctx context.Context) (string, error) {
 	res, err := d.request("/2/users/get_current_account", http.MethodPost, func(req *resty.Request) {
-		req.SetContext(ctx)
+		req.SetBody(nil)
 	})
 	if err != nil {
 		return "", err
