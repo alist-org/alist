@@ -59,7 +59,7 @@ func (d *Dropbox) request(uri, method string, callback base.ReqCallback, retry .
 	if callback != nil {
 		callback(req)
 	}
-	if method == http.MethodPost && req.Body!= nil {
+	if method == http.MethodPost && req.Body != nil {
 		req.SetHeader("Content-Type", "application/json")
 	}
 	var e ErrorResp
