@@ -46,6 +46,16 @@ func (d *Dropbox) refreshToken() error {
 func (d *Dropbox) request(uri, method string, callback base.ReqCallback, retry ...bool) ([]byte, error) {
 	req := base.RestyClient.R()
 	req.SetHeader("Authorization", "Bearer "+d.AccessToken)
+	if d.RootNamespaceId != "" {
+		apiPathRootJson, err := utils.Json.MarshalToString(map[string]interface{}{
+			".tag": "root",
+			"root": d.RootNamespaceId,
+		})
+		if err != nil {
+			return nil, err
+		}
+		req.SetHeader("Dropbox-API-Path-Root", apiPathRootJson)
+	}
 	if method == http.MethodPost {
 		req.SetHeader("Content-Type", "application/json")
 	}

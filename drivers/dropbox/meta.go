@@ -18,6 +18,7 @@ type Addition struct {
 	ClientSecret  string `json:"client_secret" required:"false" help:"Keep it empty if you don't have one"`
 
 	AccessToken string
+	RootNamespaceId string
 }
 
 var config = driver.Config{
