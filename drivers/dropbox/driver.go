@@ -57,8 +57,13 @@ func (d *Dropbox) GetRootNamespaceId(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	rootNamespaceID := utils.Json.Get(res, "root_info.root_namespace_id").ToString()
-	return rootNamespaceID, nil
+	var currentAccountResp CurrentAccountResp
+	err = utils.Json.Unmarshal(res, &currentAccountResp)
+	if err != nil {
+		return "", err
+	}
+	rootNamespaceId := currentAccountResp.RootInfo.RootNamespaceId
+	return rootNamespaceId, nil
 }
 
 func (d *Dropbox) Drop(ctx context.Context) error {
