@@ -127,6 +127,7 @@ func (d *Quqi) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]
 func (d *Quqi) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	var getDocResp = &GetDocRes{}
 
+	// 优先从getDoc接口获取文件预览链接，速度比实际下载链接更快
 	if _, err := d.request("", "/api/doc/getDoc", resty.MethodPost, func(req *resty.Request) {
 		req.SetFormData(map[string]string{
 			"quqi_id":   d.GroupID,
@@ -137,9 +138,33 @@ func (d *Quqi) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*
 	}, getDocResp); err != nil {
 		return nil, err
 	}
+	if getDocResp.Data.OriginPath != "" {
+		return &model.Link{
+			URL: getDocResp.Data.OriginPath,
+			Header: http.Header{
+				"Origin": []string{"https://quqi.com"},
+				"Cookie": []string{d.Cookie},
+			},
+		}, nil
+	}
 
+	// 对于非会员用户，无法从getDoc接口获取文件预览链接，只能获取下载链接
+	var getDownloadResp GetDownloadResp
+	if _, err := d.request("", "/api/doc/getDownload", resty.MethodGet, func(req *resty.Request) {
+		req.SetQueryParams(map[string]string{
+			"quqi_id":     d.GroupID,
+			"tree_id":     "1",
+			"node_id":     file.GetID(),
+			"url_type":    "undefined",
+			"entry_type":  "undefined",
+			"client_id":   d.ClientID,
+			"no_redirect": "1",
+		})
+	}, &getDownloadResp); err != nil {
+		return nil, err
+	}
 	return &model.Link{
-		URL: getDocResp.Data.OriginPath,
+		URL: getDownloadResp.Data.Url,
 		Header: http.Header{
 			"Origin": []string{"https://quqi.com"},
 			"Cookie": []string{d.Cookie},

@@ -32,7 +32,7 @@ func (d *Quqi) request(host string, path string, method string, callback base.Re
 	req.SetHeaders(map[string]string{
 		"Origin": "https://quqi.com",
 		"Cookie": d.Cookie,
-	}).SetResult(&result)
+	})
 
 	if d.GroupID != "" {
 		req.SetQueryParam("quqiid", d.GroupID)
@@ -43,6 +43,11 @@ func (d *Quqi) request(host string, path string, method string, callback base.Re
 	}
 
 	res, err := req.Execute(method, reqUrl.String())
+	if err != nil {
+		return nil, err
+	}
+	// resty.Request.SetResult cannot parse result correctly sometimes
+	err = utils.Json.Unmarshal(res.Body(), &result)
 	if err != nil {
 		return nil, err
 	}
