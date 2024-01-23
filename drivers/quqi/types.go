@@ -175,3 +175,23 @@ type UploadFinishResp struct {
 	Err int    `json:"err"`
 	Msg string `json:"msg"`
 }
+
+type UrlExchangeResp struct {
+	BaseRes
+	Data struct {
+		Name               string `json:"name"`
+		Mime               string `json:"mime"`
+		Size               int64  `json:"size"`
+		DownloadType       int    `json:"download_type"`
+		ChannelType        int    `json:"channel_type"`
+		ChannelID          int    `json:"channel_id"`
+		Url                string `json:"url"`
+		ExpiredTime        int64  `json:"expired_time"`
+		IsEncrypted        bool   `json:"is_encrypted"`
+		EncryptedSize      int64  `json:"encrypted_size"`
+		EncryptedAlg       string `json:"encrypted_alg"`
+		EncryptedKey       string `json:"encrypted_key"`
+		PassportID         int64  `json:"passport_id"`
+		RequestExpiredTime int64  `json:"request_expired_time"`
+	} `json:"data"`
+}
