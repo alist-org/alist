@@ -73,10 +73,12 @@ func (d *Quqi) request(host string, path string, method string, callback base.Re
 }
 
 func (d *Quqi) login() error {
-	if d.Cookie != "" && d.checkLogin() {
+	if d.Addition.Cookie != "" {
+		d.Cookie = d.Addition.Cookie
+	}
+	if d.checkLogin() {
 		return nil
 	}
-
 	if d.Cookie != "" {
 		return errors.New("cookie is invalid")
 	}

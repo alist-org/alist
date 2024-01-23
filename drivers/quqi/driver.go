@@ -23,6 +23,7 @@ import (
 type Quqi struct {
 	model.Storage
 	Addition
+	Cookie   string // Cookie
 	GroupID  string // 私人云群组ID
 	ClientID string // 随机生成客户端ID 经过测试，部分接口调用若不携带client id会出现错误
 }
