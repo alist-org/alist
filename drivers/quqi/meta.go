@@ -10,6 +10,7 @@ type Addition struct {
 	Phone    string `json:"phone"`
 	Password string `json:"password"`
 	Cookie   string `json:"cookie" help:"Cookie can be used on multiple clients at the same time"`
+	CDN      bool   `json:"cdn" help:"If you enable this option, the download speed can be increased, but there will be some performance loss"`
 }
 
 var config = driver.Config{

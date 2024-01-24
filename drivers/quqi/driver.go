@@ -16,12 +16,14 @@ import (
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/pkg/utils/random"
 	"github.com/go-resty/resty/v2"
+	log "github.com/sirupsen/logrus"
 	"github.com/tencentyun/cos-go-sdk-v5"
 )
 
 type Quqi struct {
 	model.Storage
 	Addition
+	Cookie   string // Cookie
 	GroupID  string // 私人云群组ID
 	ClientID string // 随机生成客户端ID 经过测试，部分接口调用若不携带client id会出现错误
 }
@@ -125,51 +127,27 @@ func (d *Quqi) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]
 }
 
 func (d *Quqi) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
-	var getDocResp = &GetDocRes{}
-
-	// 优先从getDoc接口获取文件预览链接，速度比实际下载链接更快
-	if _, err := d.request("", "/api/doc/getDoc", resty.MethodPost, func(req *resty.Request) {
-		req.SetFormData(map[string]string{
-			"quqi_id":   d.GroupID,
-			"tree_id":   "1",
-			"node_id":   file.GetID(),
-			"client_id": d.ClientID,
-		})
-	}, getDocResp); err != nil {
-		return nil, err
-	}
-	if getDocResp.Data.OriginPath != "" {
-		return &model.Link{
-			URL: getDocResp.Data.OriginPath,
-			Header: http.Header{
-				"Origin": []string{"https://quqi.com"},
-				"Cookie": []string{d.Cookie},
-			},
-		}, nil
+	if d.CDN {
+		link, err := d.linkFromCDN(file.GetID())
+		if err != nil {
+			log.Warn(err)
+		} else {
+			return link, nil
+		}
 	}
 
-	// 对于非会员用户，无法从getDoc接口获取文件预览链接，只能获取下载链接
-	var getDownloadResp GetDownloadResp
-	if _, err := d.request("", "/api/doc/getDownload", resty.MethodGet, func(req *resty.Request) {
-		req.SetQueryParams(map[string]string{
-			"quqi_id":     d.GroupID,
-			"tree_id":     "1",
-			"node_id":     file.GetID(),
-			"url_type":    "undefined",
-			"entry_type":  "undefined",
-			"client_id":   d.ClientID,
-			"no_redirect": "1",
-		})
-	}, &getDownloadResp); err != nil {
+	link, err := d.linkFromPreview(file.GetID())
+	if err != nil {
+		log.Warn(err)
+	} else {
+		return link, nil
+	}
+
+	link, err = d.linkFromDownload(file.GetID())
+	if err != nil {
 		return nil, err
 	}
-	return &model.Link{
-		URL: getDownloadResp.Data.Url,
-		Header: http.Header{
-			"Origin": []string{"https://quqi.com"},
-			"Cookie": []string{d.Cookie},
-		},
-	}, nil
+	return link, nil
 }
 
 func (d *Quqi) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) (model.Obj, error) {
