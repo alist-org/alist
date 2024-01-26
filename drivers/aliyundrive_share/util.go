@@ -16,7 +16,7 @@ const (
 )
 
 func (d *AliyundriveShare) refreshToken() error {
-	url := "https://auth.aliyundrive.com/v2/account/token"
+	url := "https://auth.alipan.com/v2/account/token"
 	var resp base.TokenResp
 	var e ErrorResp
 	_, err := base.RestyClient.R().
@@ -47,7 +47,7 @@ func (d *AliyundriveShare) getShareToken() error {
 	var resp ShareTokenResp
 	_, err := base.RestyClient.R().
 		SetResult(&resp).SetError(&e).SetBody(data).
-		Post("https://api.aliyundrive.com/v2/share_link/get_share_token")
+		Post("https://api.alipan.com/v2/share_link/get_share_token")
 	if err != nil {
 		return err
 	}
@@ -116,7 +116,7 @@ func (d *AliyundriveShare) getFiles(fileId string) ([]File, error) {
 			SetHeader("x-share-token", d.ShareToken).
 			SetHeader(CanaryHeaderKey, CanaryHeaderValue).
 			SetResult(&resp).SetError(&e).SetBody(data).
-			Post("https://api.aliyundrive.com/adrive/v3/file/list")
+			Post("https://api.alipan.com/adrive/v3/file/list")
 		if err != nil {
 			return nil, err
 		}

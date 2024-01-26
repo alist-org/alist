@@ -45,7 +45,7 @@
 
 - [x] 多种存储
     - [x] 本地存储
-    - [x] [阿里云盘](https://www.aliyundrive.com/)
+    - [x] [阿里云盘](https://www.alipan.com/)
     - [x] OneDrive / Sharepoint（[国际版](https://www.office.com/), [世纪互联](https://portal.partner.microsoftonline.cn),de,us）
     - [x] [天翼云盘](https://cloud.189.cn) (个人云, 家庭云)
     - [x] [GoogleDrive](https://drive.google.com/)
@@ -65,7 +65,8 @@
     - [x] [夸克网盘](https://pan.quark.cn)
     - [x] [迅雷网盘](https://pan.xunlei.com)
     - [x] [蓝奏云](https://www.lanzou.com/)
-    - [x] [阿里云盘分享](https://www.aliyundrive.com/)
+    - [x] [蓝奏云优享版](https://www.ilanzou.com/)
+    - [x] [阿里云盘分享](https://www.alipan.com/)
     - [x] [谷歌相册](https://photos.google.com/)
     - [x] [Mega.nz](https://mega.nz)
     - [x] [一刻相册](https://photo.baidu.com/)
@@ -73,6 +74,7 @@
     - [x] [115](https://115.com/)
     - [X] Cloudreve
     - [x] [Dropbox](https://www.dropbox.com/)
+    - [x] [飞机盘](https://www.feijipan.com/)
 - [x] 部署方便，开箱即用
 - [x] 文件预览（PDF、markdown、代码、纯文本……）
 - [x] 画廊模式下的图像预览

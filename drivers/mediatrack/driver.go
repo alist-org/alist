@@ -188,6 +188,9 @@ func (d *MediaTrack) Put(ctx context.Context, dstDir model.Obj, stream model.Fil
 		_ = tempFile.Close()
 	}()
 	uploader := s3manager.NewUploader(s)
+	if stream.GetSize() > s3manager.MaxUploadParts*s3manager.DefaultUploadPartSize {
+		uploader.PartSize = stream.GetSize() / (s3manager.MaxUploadParts - 1)
+	}
 	input := &s3manager.UploadInput{
 		Bucket: &resp.Data.Bucket,
 		Key:    &resp.Data.Object,

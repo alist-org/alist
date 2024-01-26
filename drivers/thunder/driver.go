@@ -373,7 +373,11 @@ func (xc *XunLeiCommon) Put(ctx context.Context, dstDir model.Obj, stream model.
 		if err != nil {
 			return err
 		}
-		_, err = s3manager.NewUploader(s).UploadWithContext(ctx, &s3manager.UploadInput{
+		uploader := s3manager.NewUploader(s)
+		if stream.GetSize() > s3manager.MaxUploadParts*s3manager.DefaultUploadPartSize {
+			uploader.PartSize = stream.GetSize() / (s3manager.MaxUploadParts - 1)
+		}
+		_, err = uploader.UploadWithContext(ctx, &s3manager.UploadInput{
 			Bucket:  aws.String(param.Bucket),
 			Key:     aws.String(param.Key),
 			Expires: aws.Time(param.Expiration),

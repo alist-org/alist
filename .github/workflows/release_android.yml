@@ -1,11 +1,11 @@
-name: release_linux_musl_arm
+name: release_android
 
 on:
   release:
     types: [ published ]
 
 jobs:
-  release_linux_musl_arm:
+  release_android:
     strategy:
       matrix:
         platform: [ ubuntu-latest ]
@@ -26,7 +26,7 @@ jobs:
 
       - name: Build
         run: |
-          bash build.sh release linux_musl_arm
+          bash build.sh release android
 
       - name: Upload assets
         uses: softprops/action-gh-release@v1

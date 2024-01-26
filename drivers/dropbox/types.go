@@ -23,6 +23,13 @@ type RefreshTokenErrorResp struct {
 	ErrorDescription string `json:"error_description"`
 }
 
+type CurrentAccountResp struct {
+	RootInfo struct {
+		RootNamespaceId string `json:"root_namespace_id"`
+		HomeNamespaceId string `json:"home_namespace_id"`
+	} `json:"root_info"`
+}
+
 type File struct {
 	Tag            string    `json:".tag"`
 	Name           string    `json:"name"`

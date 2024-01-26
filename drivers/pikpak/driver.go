@@ -172,6 +172,9 @@ func (d *PikPak) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 		return err
 	}
 	uploader := s3manager.NewUploader(ss)
+	if stream.GetSize() > s3manager.MaxUploadParts*s3manager.DefaultUploadPartSize {
+		uploader.PartSize = stream.GetSize() / (s3manager.MaxUploadParts - 1)
+	}
 	input := &s3manager.UploadInput{
 		Bucket: &params.Bucket,
 		Key:    &params.Key,
