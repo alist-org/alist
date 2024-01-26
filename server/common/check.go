@@ -2,7 +2,6 @@ package common
 
 import (
 	"path"
-	"regexp"
 	"strings"
 
 	"github.com/alist-org/alist/v3/internal/conf"
@@ -10,6 +9,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/pkg/utils"
+	"github.com/dlclark/regexp2"
 )
 
 func IsStorageSignEnabled(rawPath string) bool {
@@ -36,8 +36,8 @@ func CanAccess(user *model.User, meta *model.Meta, reqPath string, password stri
 	if meta != nil && !user.CanSeeHides() && meta.Hide != "" &&
 		IsApply(meta.Path, path.Dir(reqPath), meta.HSub) { // the meta should apply to the parent of current path
 		for _, hide := range strings.Split(meta.Hide, "\n") {
-			re := regexp.MustCompile(hide)
-			if re.MatchString(path.Base(reqPath)) {
+			re := regexp2.MustCompile(hide, regexp2.None)
+			if isMatch, _ := re.MatchString(path.Base(reqPath)); isMatch {
 				return false
 			}
 		}

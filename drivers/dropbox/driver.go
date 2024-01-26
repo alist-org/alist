@@ -45,7 +45,25 @@ func (d *Dropbox) Init(ctx context.Context) error {
 	if result != query {
 		return fmt.Errorf("failed to check user: %s", string(res))
 	}
-	return nil
+	d.RootNamespaceId, err = d.GetRootNamespaceId(ctx)
+
+	return err
+}
+
+func (d *Dropbox) GetRootNamespaceId(ctx context.Context) (string, error) {
+	res, err := d.request("/2/users/get_current_account", http.MethodPost, func(req *resty.Request) {
+		req.SetBody(nil)
+	})
+	if err != nil {
+		return "", err
+	}
+	var currentAccountResp CurrentAccountResp
+	err = utils.Json.Unmarshal(res, &currentAccountResp)
+	if err != nil {
+		return "", err
+	}
+	rootNamespaceId := currentAccountResp.RootInfo.RootNamespaceId
+	return rootNamespaceId, nil
 }
 
 func (d *Dropbox) Drop(ctx context.Context) error {

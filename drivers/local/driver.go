@@ -257,10 +257,18 @@ func (d *Local) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 
 func (d *Local) Remove(ctx context.Context, obj model.Obj) error {
 	var err error
-	if obj.IsDir() {
-		err = os.RemoveAll(obj.GetPath())
+	if utils.SliceContains([]string{"", "delete permanently"}, d.RecycleBinPath) {
+		if obj.IsDir() {
+			err = os.RemoveAll(obj.GetPath())
+		} else {
+			err = os.Remove(obj.GetPath())
+		}
 	} else {
-		err = os.Remove(obj.GetPath())
+		dstPath := filepath.Join(d.RecycleBinPath, obj.GetName())
+		if utils.Exists(dstPath) {
+			dstPath = filepath.Join(d.RecycleBinPath, obj.GetName()+"_"+time.Now().Format("20060102150405"))
+		}
+		err = os.Rename(obj.GetPath(), dstPath)
 	}
 	if err != nil {
 		return err

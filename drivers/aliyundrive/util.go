@@ -26,7 +26,7 @@ func (d *AliDrive) createSession() error {
 		state.retry = 0
 		return fmt.Errorf("createSession failed after three retries")
 	}
-	_, err, _ := d.request("https://api.aliyundrive.com/users/v1/users/device/create_session", http.MethodPost, func(req *resty.Request) {
+	_, err, _ := d.request("https://api.alipan.com/users/v1/users/device/create_session", http.MethodPost, func(req *resty.Request) {
 		req.SetBody(base.Json{
 			"deviceName":   "samsung",
 			"modelName":    "SM-G9810",
@@ -42,7 +42,7 @@ func (d *AliDrive) createSession() error {
 }
 
 // func (d *AliDrive) renewSession() error {
-// 	_, err, _ := d.request("https://api.aliyundrive.com/users/v1/users/device/renew_session", http.MethodPost, nil, nil)
+// 	_, err, _ := d.request("https://api.alipan.com/users/v1/users/device/renew_session", http.MethodPost, nil, nil)
 // 	return err
 // }
 
@@ -58,7 +58,7 @@ func (d *AliDrive) sign() {
 // do others that not defined in Driver interface
 
 func (d *AliDrive) refreshToken() error {
-	url := "https://auth.aliyundrive.com/v2/account/token"
+	url := "https://auth.alipan.com/v2/account/token"
 	var resp base.TokenResp
 	var e RespErr
 	_, err := base.RestyClient.R().
@@ -85,7 +85,7 @@ func (d *AliDrive) request(url, method string, callback base.ReqCallback, resp i
 	req := base.RestyClient.R()
 	state, ok := global.Load(d.UserID)
 	if !ok {
-		if url == "https://api.aliyundrive.com/v2/user/get" {
+		if url == "https://api.alipan.com/v2/user/get" {
 			state = &State{}
 		} else {
 			return nil, fmt.Errorf("can't load user state, user_id: %s", d.UserID), RespErr{}
@@ -94,8 +94,8 @@ func (d *AliDrive) request(url, method string, callback base.ReqCallback, resp i
 	req.SetHeaders(map[string]string{
 		"Authorization": "Bearer\t" + d.AccessToken,
 		"content-type":  "application/json",
-		"origin":        "https://www.aliyundrive.com",
-		"Referer":       "https://aliyundrive.com/",
+		"origin":        "https://www.alipan.com",
+		"Referer":       "https://alipan.com/",
 		"X-Signature":   state.signature,
 		"x-request-id":  uuid.NewString(),
 		"X-Canary":      "client=Android,app=adrive,version=v4.1.0",
@@ -158,7 +158,7 @@ func (d *AliDrive) getFiles(fileId string) ([]File, error) {
 			"video_thumbnail_process": "video/snapshot,t_0,f_jpg,ar_auto,w_300",
 			"url_expire_sec":          14400,
 		}
-		_, err, _ := d.request("https://api.aliyundrive.com/v2/file/list", http.MethodPost, func(req *resty.Request) {
+		_, err, _ := d.request("https://api.alipan.com/v2/file/list", http.MethodPost, func(req *resty.Request) {
 			req.SetBody(data)
 		}, &resp)
 
@@ -172,7 +172,7 @@ func (d *AliDrive) getFiles(fileId string) ([]File, error) {
 }
 
 func (d *AliDrive) batch(srcId, dstId string, url string) error {
-	res, err, _ := d.request("https://api.aliyundrive.com/v3/batch", http.MethodPost, func(req *resty.Request) {
+	res, err, _ := d.request("https://api.alipan.com/v3/batch", http.MethodPost, func(req *resty.Request) {
 		req.SetBody(base.Json{
 			"requests": []base.Json{
 				{

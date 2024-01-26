@@ -85,10 +85,59 @@ BuildDev() {
   cat md5.txt
 }
 
-BuildDocker() {
+PrepareBuildDocker() {
   echo "replace github.com/mattn/go-sqlite3 => github.com/leso-kn/go-sqlite3 v0.0.0-20230710125852-03158dc838ed" >>go.mod
   go get gorm.io/driver/sqlite@v1.4.4
+  go mod download
+}
+
+BuildDocker() {
+  PrepareBuildDocker
   go build -o ./bin/alist -ldflags="$ldflags" -tags=jsoniter .
+}
+
+BuildDockerMultiplatform() {
+  PrepareBuildDocker
+
+  BASE="https://musl.cc/"
+  FILES=(x86_64-linux-musl-cross aarch64-linux-musl-cross i486-linux-musl-cross s390x-linux-musl-cross armv6-linux-musleabihf-cross armv7l-linux-musleabihf-cross)
+  for i in "${FILES[@]}"; do
+    url="${BASE}${i}.tgz"
+    curl -L -o "${i}.tgz" "${url}"
+    sudo tar xf "${i}.tgz" --strip-components 1 -C /usr/local
+    rm -f "${i}.tgz"
+  done
+
+  docker_lflags="--extldflags '-static -fpic' $ldflags"
+  export CGO_ENABLED=1
+
+  OS_ARCHES=(linux-amd64 linux-arm64 linux-386 linux-s390x)
+  CGO_ARGS=(x86_64-linux-musl-gcc aarch64-linux-musl-gcc i486-linux-musl-gcc s390x-linux-musl-gcc)
+  for i in "${!OS_ARCHES[@]}"; do
+    os_arch=${OS_ARCHES[$i]}
+    cgo_cc=${CGO_ARGS[$i]}
+    os=${os_arch%%-*}
+    arch=${os_arch##*-}
+    export GOOS=$os
+    export GOARCH=$arch
+    export CC=${cgo_cc}
+    echo "building for $os_arch"
+    go build -o ./$os/$arch/alist -ldflags="$docker_lflags" -tags=jsoniter .
+  done
+
+  DOCKER_ARM_ARCHES=(linux-arm/v6 linux-arm/v7)
+  CGO_ARGS=(armv6-linux-musleabihf-gcc armv7l-linux-musleabihf-gcc)
+  GO_ARM=(6 7)
+  export GOOS=linux
+  export GOARCH=arm
+  for i in "${!DOCKER_ARM_ARCHES[@]}"; do
+    docker_arch=${DOCKER_ARM_ARCHES[$i]}
+    cgo_cc=${CGO_ARGS[$i]}
+    export GOARM=${GO_ARM[$i]}
+    export CC=${cgo_cc}
+    echo "building for $docker_arch"
+    go build -o ./${docker_arch%%-*}/${docker_arch##*-}/alist -ldflags="$docker_lflags" -tags=jsoniter .
+  done
 }
 
 BuildRelease() {
@@ -162,10 +211,36 @@ BuildReleaseLinuxMuslArm() {
   done
 }
 
+BuildReleaseAndroid() {
+  rm -rf .git/
+  mkdir -p "build"
+  wget https://dl.google.com/android/repository/android-ndk-r26b-linux.zip
+  unzip android-ndk-r26b-linux.zip
+  rm android-ndk-r26b-linux.zip
+  OS_ARCHES=(amd64 arm64 386 arm)
+  CGO_ARGS=(x86_64-linux-android24-clang aarch64-linux-android24-clang i686-linux-android24-clang armv7a-linux-androideabi24-clang)
+  for i in "${!OS_ARCHES[@]}"; do
+    os_arch=${OS_ARCHES[$i]}
+    cgo_cc=$(realpath android-ndk-r26b/toolchains/llvm/prebuilt/linux-x86_64/bin/${CGO_ARGS[$i]})
+    echo building for android-${os_arch}
+    export GOOS=android
+    export GOARCH=${os_arch##*-}
+    export CC=${cgo_cc}
+    export CGO_ENABLED=1
+    go build -o ./build/$appName-android-$os_arch -ldflags="$ldflags" -tags=jsoniter .
+    android-ndk-r26b/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip ./build/$appName-android-$os_arch
+  done
+}
+
 MakeRelease() {
   cd build
   mkdir compress
   for i in $(find . -type f -name "$appName-linux-*"); do
+    cp "$i" alist
+    tar -czvf compress/"$i".tar.gz alist
+    rm -f alist
+  done
+    for i in $(find . -type f -name "$appName-android-*"); do
     cp "$i" alist
     tar -czvf compress/"$i".tar.gz alist
     rm -f alist
@@ -190,6 +265,8 @@ if [ "$1" = "dev" ]; then
   FetchWebDev
   if [ "$2" = "docker" ]; then
     BuildDocker
+  elif [ "$2" = "docker-multiplatform" ]; then
+      BuildDockerMultiplatform
   else
     BuildDev
   fi
@@ -197,12 +274,17 @@ elif [ "$1" = "release" ]; then
   FetchWebRelease
   if [ "$2" = "docker" ]; then
     BuildDocker
+  elif [ "$2" = "docker-multiplatform" ]; then
+    BuildDockerMultiplatform
   elif [ "$2" = "linux_musl_arm" ]; then
     BuildReleaseLinuxMuslArm
     MakeRelease "md5-linux-musl-arm.txt"
   elif [ "$2" = "linux_musl" ]; then
     BuildReleaseLinuxMusl
     MakeRelease "md5-linux-musl.txt"
+  elif [ "$2" = "android" ]; then
+    BuildReleaseAndroid
+    MakeRelease "md5-android.txt"
   else
     BuildRelease
     MakeRelease "md5.txt"

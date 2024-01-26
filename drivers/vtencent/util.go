@@ -100,27 +100,35 @@ func (d *Vtencent) LoadUser() (string, error) {
 }
 
 func (d *Vtencent) GetFiles(dirId string) ([]File, error) {
-	api := "https://api.vs.tencent.com/PaaS/Material/SearchResource"
-	form := fmt.Sprintf(`{
+	var res []File
+	//offset := 0
+	for {
+		api := "https://api.vs.tencent.com/PaaS/Material/SearchResource"
+		form := fmt.Sprintf(`{
 		"Text":"",
 		"Text":"",
-		"Offset":0,
-		"Limit":20000,
+		"Offset":%d,
+		"Limit":50,
 		"Sort":{"Field":"%s","Order":"%s"},
 		"CreateTimeRanges":[],
 		"MaterialTypes":[],
 		"ReviewStatuses":[],
 		"Tags":[],
 		"SearchScopes":[{"Owner":{"Type":"PERSON","Id":"%s"},"ClassId":%s,"SearchOneDepth":true}]
-	}`, d.Addition.OrderBy, d.Addition.OrderDirection, d.TfUid, dirId)
-	var resps RspFiles
-	_, err := d.request(api, http.MethodPost, func(req *resty.Request) {
-		req.SetBody(form).ForceContentType("application/json")
-	}, &resps)
-	if err != nil {
-		return []File{}, err
+	}`, len(res), d.Addition.OrderBy, d.Addition.OrderDirection, d.TfUid, dirId)
+		var resp RspFiles
+		_, err := d.request(api, http.MethodPost, func(req *resty.Request) {
+			req.SetBody(form).ForceContentType("application/json")
+		}, &resp)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, resp.Data.ResourceInfoSet...)
+		if len(resp.Data.ResourceInfoSet) <= 0 || len(res) >= resp.Data.TotalCount {
+			break
+		}
 	}
-	return resps.Data.ResourceInfoSet, nil
+	return res, nil
 }
 
 func (d *Vtencent) CreateUploadMaterial(classId int, fileName string, UploadSummaryKey string) (RspCreatrMaterial, error) {
@@ -264,6 +272,9 @@ func (d *Vtencent) FileUpload(ctx context.Context, dstDir model.Obj, stream mode
 		return err
 	}
 	uploader := s3manager.NewUploader(ss)
+	if stream.GetSize() > s3manager.MaxUploadParts*s3manager.DefaultUploadPartSize {
+		uploader.PartSize = stream.GetSize() / (s3manager.MaxUploadParts - 1)
+	}
 	input := &s3manager.UploadInput{
 		Bucket: aws.String(fmt.Sprintf("%s-%d", params.StorageBucket, params.StorageAppID)),
 		Key:    &params.Video.StoragePath,

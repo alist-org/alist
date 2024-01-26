@@ -48,6 +48,7 @@ func initUser() {
 			guest = &model.User{
 				Username:   "guest",
 				PwdHash:    model.TwoHashPwd("guest", salt),
+				Salt:       salt,
 				Role:       model.GUEST,
 				BasePath:   "/",
 				Permission: 0,

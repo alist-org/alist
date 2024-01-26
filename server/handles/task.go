@@ -1,6 +1,8 @@
 package handles
 
 import (
+	"math"
+
 	"github.com/alist-org/alist/v3/internal/fs"
 	"github.com/alist-org/alist/v3/internal/offline_download/tool"
 	"github.com/alist-org/alist/v3/pkg/utils"
@@ -23,12 +25,17 @@ func getTaskInfo[T tache.TaskWithInfo](task T) TaskInfo {
 	if task.GetErr() != nil {
 		errMsg = task.GetErr().Error()
 	}
+	progress := task.GetProgress()
+	// if progress is NaN, set it to 100
+	if math.IsNaN(progress) {
+		progress = 100
+	}
 	return TaskInfo{
 		ID:       task.GetID(),
 		Name:     task.GetName(),
 		State:    task.GetState(),
 		Status:   task.GetStatus(),
-		Progress: task.GetProgress(),
+		Progress: progress,
 		Error:    errMsg,
 	}
 }

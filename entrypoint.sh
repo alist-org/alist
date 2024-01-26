@@ -4,4 +4,8 @@ chown -R ${PUID}:${PGID} /opt/alist/
 
 umask ${UMASK}
 
-exec su-exec ${PUID}:${PGID} ./alist server --no-prefix
+if [ "$1" = "version" ]; then
+  ./alist version
+else
+  exec su-exec ${PUID}:${PGID} ./alist server --no-prefix
+fi
