@@ -16,7 +16,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var static fs.FS = public.Public
+var static fs.FS
 
 func initStatic() {
 	if conf.Conf.DistDir == "" {
