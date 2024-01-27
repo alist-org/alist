@@ -20,7 +20,7 @@ var static fs.FS = public.Public
 
 func initStatic() {
 	if conf.Conf.DistDir == "" {
-		dist, err := fs.Sub(static, "dist")
+		dist, err := fs.Sub(public.Public, "dist")
 		if err != nil {
 			utils.Log.Fatalf("failed to read dist dir")
 		}
