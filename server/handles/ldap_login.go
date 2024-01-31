@@ -50,30 +50,12 @@ func loginLdap(c *gin.Context, req *LoginReq) {
 	ldapUserSearchBase := setting.GetStr(conf.LdapUserSearchBase)
 	ldapUserSearchFilter := setting.GetStr(conf.LdapUserSearchFilter) // (uid=%s)
 
-	var tlsEnabled bool = false
-	if strings.HasPrefix(ldapServer, "ldaps://") {
-		tlsEnabled = true
-		ldapServer = strings.TrimPrefix(ldapServer, "ldaps://")
-	} else if strings.HasPrefix(ldapServer, "ldap://") {
-		ldapServer = strings.TrimPrefix(ldapServer, "ldap://")
-	}
-
-	l, err := ldap.Dial("tcp", ldapServer)
+	// Connect to LdapServer
+	l, err := dial(ldapServer)
 	if err != nil {
 		utils.Log.Errorf("failed to connect to LDAP: %v", err)
 		common.ErrorResp(c, err, 500)
 		return
-	}
-	defer l.Close()
-
-	if tlsEnabled {
-		// Reconnect with TLS
-		err = l.StartTLS(&tls.Config{InsecureSkipVerify: true})
-		if err != nil {
-			utils.Log.Errorf("failed to start tls: %v", err)
-			common.ErrorResp(c, err, 500)
-			return
-		}
 	}
 
 	// First bind with a read only user
@@ -156,4 +138,20 @@ func ladpRegister(username string) (*model.User, error) {
 		return nil, err
 	}
 	return user, nil
+}
+
+func dial(ldapServer string) (*ldap.Conn, error) {
+	var tlsEnabled bool = false
+	if strings.HasPrefix(ldapServer, "ldaps://") {
+		tlsEnabled = true
+		ldapServer = strings.TrimPrefix(ldapServer, "ldaps://")
+	} else if strings.HasPrefix(ldapServer, "ldap://") {
+		ldapServer = strings.TrimPrefix(ldapServer, "ldap://")
+	}
+
+	if tlsEnabled {
+		return ldap.DialTLS("tcp", ldapServer, &tls.Config{InsecureSkipVerify: true})
+	} else {
+		return ldap.Dial("tcp", ldapServer)
+	}
 }
