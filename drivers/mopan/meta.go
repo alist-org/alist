@@ -8,6 +8,7 @@ import (
 type Addition struct {
 	Phone    string `json:"phone" required:"true"`
 	Password string `json:"password" required:"true"`
+	SMSCode  string `json:"sms_code" help:"input 'send' send sms "`
 
 	RootFolderID string `json:"root_folder_id" default:""`
 

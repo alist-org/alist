@@ -1,11 +1,9 @@
 package quqi
 
 import (
+	"bytes"
 	"context"
-	"fmt"
 	"io"
-	"net/http"
-	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -15,9 +13,13 @@ import (
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/pkg/utils/random"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
-	"github.com/tencentyun/cos-go-sdk-v5"
 )
 
 type Quqi struct {
@@ -348,49 +350,60 @@ func (d *Quqi) Put(ctx context.Context, dstDir model.Obj, stream model.FileStrea
 		return nil, err
 	}
 	// upload
-	u, err := url.Parse(fmt.Sprintf("https://%s.cos.ap-shanghai.myqcloud.com", uploadInitResp.Data.Bucket))
-	b := &cos.BaseURL{BucketURL: u}
-	client := cos.NewClient(b, &http.Client{
-		Transport: &cos.CredentialTransport{
-			Credential: cos.NewTokenCredential(tempKeyResp.Data.Credentials.TmpSecretID, tempKeyResp.Data.Credentials.TmpSecretKey, tempKeyResp.Data.Credentials.SessionToken),
-		},
-	})
-	partSize := int64(1024 * 1024 * 2)
-	partCount := (stream.GetSize() + partSize - 1) / partSize
-	for i := 1; i <= int(partCount); i++ {
-		length := partSize
-		if i == int(partCount) {
-			length = stream.GetSize() - (int64(i)-1)*partSize
+	// u, err := url.Parse(fmt.Sprintf("https://%s.cos.ap-shanghai.myqcloud.com", uploadInitResp.Data.Bucket))
+	// b := &cos.BaseURL{BucketURL: u}
+	// client := cos.NewClient(b, &http.Client{
+	// 	Transport: &cos.CredentialTransport{
+	// 		Credential: cos.NewTokenCredential(tempKeyResp.Data.Credentials.TmpSecretID, tempKeyResp.Data.Credentials.TmpSecretKey, tempKeyResp.Data.Credentials.SessionToken),
+	// 	},
+	// })
+	// partSize := int64(1024 * 1024 * 2)
+	// partCount := (stream.GetSize() + partSize - 1) / partSize
+	// for i := 1; i <= int(partCount); i++ {
+	// 	length := partSize
+	// 	if i == int(partCount) {
+	// 		length = stream.GetSize() - (int64(i)-1)*partSize
+	// 	}
+	// 	_, err := client.Object.UploadPart(
+	// 		ctx, uploadInitResp.Data.Key, uploadInitResp.Data.UploadID, i, io.LimitReader(f, partSize), &cos.ObjectUploadPartOptions{
+	// 			ContentLength: length,
+	// 		},
+	// 	)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// }
+
+	cfg := &aws.Config{
+		Credentials: credentials.NewStaticCredentials(tempKeyResp.Data.Credentials.TmpSecretID, tempKeyResp.Data.Credentials.TmpSecretKey, tempKeyResp.Data.Credentials.SessionToken),
+		Region:      aws.String("ap-shanghai"),
+		Endpoint:    aws.String("cos.ap-shanghai.myqcloud.com"),
+	}
+	s, err := session.NewSession(cfg)
+	if err != nil {
+		return nil, err
+	}
+	uploader := s3manager.NewUploader(s)
+	buf := make([]byte, 1024*1024*2)
+	for partNumber := int64(1); ; partNumber++ {
+		n, err := io.ReadFull(f, buf)
+		if err != nil && err != io.ErrUnexpectedEOF {
+			if err == io.EOF {
+				break
+			}
+			return nil, err
 		}
-		_, err := client.Object.UploadPart(
-			ctx, uploadInitResp.Data.Key, uploadInitResp.Data.UploadID, i, io.LimitReader(f, partSize), &cos.ObjectUploadPartOptions{
-				ContentLength: length,
-			},
-		)
+		_, err = uploader.S3.UploadPartWithContext(ctx, &s3.UploadPartInput{
+			UploadId:   &uploadInitResp.Data.UploadID,
+			Key:        &uploadInitResp.Data.Key,
+			Bucket:     &uploadInitResp.Data.Bucket,
+			PartNumber: aws.Int64(partNumber),
+			Body:       bytes.NewReader(buf[:n]),
+		})
 		if err != nil {
 			return nil, err
 		}
 	}
-	//cfg := &aws.Config{
-	//	Credentials: credentials.NewStaticCredentials(tempKeyResp.Data.Credentials.TmpSecretID, tempKeyResp.Data.Credentials.TmpSecretKey, tempKeyResp.Data.Credentials.SessionToken),
-	//	Region:      aws.String("shanghai"),
-	//	Endpoint:    aws.String("cos.ap-shanghai.myqcloud.com"),
-	//	// S3ForcePathStyle: aws.Bool(true),
-	//}
-	//s, err := session.NewSession(cfg)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//uploader := s3manager.NewUploader(s)
-	//input := &s3manager.UploadInput{
-	//	Bucket: &uploadInitResp.Data.Bucket,
-	//	Key:    &uploadInitResp.Data.Key,
-	//	Body:   f,
-	//}
-	//_, err = uploader.UploadWithContext(ctx, input)
-	//if err != nil {
-	//	return nil, err
-	//}
 	// finish upload
 	var uploadFinishResp UploadFinishResp
 	_, err = d.request("", "/api/upload/v1/file/finish", resty.MethodPost, func(req *resty.Request) {
