@@ -3,7 +3,6 @@ package static
 import (
 	"errors"
 	"fmt"
-	"github.com/alist-org/alist/v3/public"
 	"io"
 	"io/fs"
 	"net/http"
@@ -13,6 +12,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/setting"
 	"github.com/alist-org/alist/v3/pkg/utils"
+	"github.com/alist-org/alist/v3/public"
 	"github.com/gin-gonic/gin"
 )
 
