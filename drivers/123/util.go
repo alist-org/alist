@@ -235,6 +235,7 @@ func (d *Pan123) request(url string, method string, callback base.ReqCallback, r
 func (d *Pan123) getFiles(parentId string) ([]File, error) {
 	page := 1
 	res := make([]File, 0)
+	// TODO fix concurrency by 123pan
 	for {
 		var resp Files
 		query := map[string]string{
