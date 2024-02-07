@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"path"
 	"strconv"
+	"time"
 
 	"github.com/alist-org/alist/v3/internal/model"
 )
@@ -384,7 +385,7 @@ func findLastModified(ctx context.Context, ls LockSystem, name string, fi model.
 	return fi.ModTime().UTC().Format(http.TimeFormat), nil
 }
 func findCreationDate(ctx context.Context, ls LockSystem, name string, fi model.Obj) (string, error) {
-	return fi.CreateTime().UTC().Format(http.TimeFormat), nil
+	return fi.CreateTime().UTC().Format(time.RFC3339), nil
 }
 
 // ErrNotImplemented should be returned by optional interfaces if they
