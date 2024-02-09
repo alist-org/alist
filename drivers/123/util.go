@@ -160,7 +160,7 @@ func (d *Pan123) login() error {
 		SetHeaders(map[string]string{
 			"origin":      "https://www.123pan.com",
 			"referer":     "https://www.123pan.com/",
-			"user-agent":  "Dart/2.19(dart:io)",
+			"user-agent":  "Dart/2.19(dart:io)-alist",
 			"platform":    "web",
 			"app-version": "3",
 			//"user-agent":  base.UserAgent,
@@ -197,7 +197,7 @@ func (d *Pan123) request(url string, method string, callback base.ReqCallback, r
 		"origin":        "https://www.123pan.com",
 		"referer":       "https://www.123pan.com/",
 		"authorization": "Bearer " + d.AccessToken,
-		"user-agent":    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0",
+		"user-agent":    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) alist-client",
 		"platform":      "web",
 		"app-version":   "3",
 		//"user-agent":    base.UserAgent,
@@ -235,7 +235,12 @@ func (d *Pan123) request(url string, method string, callback base.ReqCallback, r
 func (d *Pan123) getFiles(parentId string) ([]File, error) {
 	page := 1
 	res := make([]File, 0)
+	// 2024-02-06 fix concurrency by 123pan
 	for {
+		if !d.APIRateLimit(FileList) {
+			time.Sleep(time.Millisecond * 200)
+			continue
+		}
 		var resp Files
 		query := map[string]string{
 			"driveId":              "0",
