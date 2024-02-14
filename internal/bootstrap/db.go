@@ -56,8 +56,33 @@ func InitDB() {
 			}
 		case "mysql":
 			{
-				dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local&tls=%s",
-					database.User, database.Password, database.Host, database.Port, database.Name, database.SSLMode)
+				//[username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]
+				dsn_builder := strings.Builder{}
+				if database.User != "" {
+					dsn_builder.WriteString(database.User)
+					if database.Password != "" {
+						dsn_builder.WriteString(":")
+						dsn_builder.WriteString(database.Password)
+					}
+					dsn_builder.WriteString("@")
+				}
+
+				if database.Host[:5] == "unix:" {
+					dsn_builder.WriteString("unix(")
+					dsn_builder.WriteString(database.Host[5:])
+					dsn_builder.WriteString(")")
+				} else {
+					dsn_builder.WriteString("tcp(")
+					dsn_builder.WriteString(database.Host)
+					dsn_builder.WriteString(":")
+					dsn_builder.WriteString(fmt.Sprintf("%d", database.Port))
+					dsn_builder.WriteString(")")
+				}
+				dsn_builder.WriteString("/")
+				dsn_builder.WriteString(database.Name)
+				dsn_builder.WriteString("?charset=utf8mb4&parseTime=True&loc=Local&tls=")
+				dsn_builder.WriteString(database.SSLMode)
+				dsn := dsn_builder.String()
 				dB, err = gorm.Open(mysql.Open(dsn), gormConfig)
 			}
 		case "postgres":
