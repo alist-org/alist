@@ -11,6 +11,7 @@ type Addition struct {
 	PrivateKey string `json:"private_key" type:"text"`
 	Password   string `json:"password"`
 	driver.RootPath
+	IgnoreSymlinkError bool `json:"ignore_symlink_error" default:"false" info:"Ignore symlink error"`
 }
 
 var config = driver.Config{
