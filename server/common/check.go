@@ -26,6 +26,9 @@ func CanWrite(meta *model.Meta, path string) bool {
 
 func IsApply(metaPath, reqPath string, applySub bool) bool {
 	if utils.PathEqual(metaPath, reqPath) {
+		return false
+	}
+	if utils.PathEqual(metaPath, path.Dir(reqPath)) {
 		return true
 	}
 	return utils.IsSubPath(metaPath, reqPath) && applySub
@@ -34,7 +37,7 @@ func IsApply(metaPath, reqPath string, applySub bool) bool {
 func CanAccess(user *model.User, meta *model.Meta, reqPath string, password string) bool {
 	// if the reqPath is in hide (only can check the nearest meta) and user can't see hides, can't access
 	if meta != nil && !user.CanSeeHides() && meta.Hide != "" &&
-		IsApply(meta.Path, path.Dir(reqPath), meta.HSub) { // the meta should apply to the parent of current path
+		IsApply(meta.Path, reqPath, meta.HSub) { // the meta should apply to the parent of current path
 		for _, hide := range strings.Split(meta.Hide, "\n") {
 			re := regexp2.MustCompile(hide, regexp2.None)
 			if isMatch, _ := re.MatchString(path.Base(reqPath)); isMatch {
