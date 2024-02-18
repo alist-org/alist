@@ -69,7 +69,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           file: Dockerfile.ffmpeg
-          push: true
+          push: ${{ github.event_name == 'push' }}
           tags: ${{ steps.meta-ffmpeg.outputs.tags }}
           labels: ${{ steps.meta-ffmpeg.outputs.labels }}
           platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/386,linux/arm/v6,linux/s390x
