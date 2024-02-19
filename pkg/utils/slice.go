@@ -29,6 +29,20 @@ func SliceContains[T comparable](arr []T, v T) bool {
 	return false
 }
 
+// SliceAllContains check if slice all contains elements
+func SliceAllContains[T comparable](arr []T, vs ...T) bool {
+	vsMap := make(map[T]struct{})
+	for _, v := range arr {
+		vsMap[v] = struct{}{}
+	}
+	for _, v := range vs {
+		if _, ok := vsMap[v]; !ok {
+			return false
+		}
+	}
+	return true
+}
+
 // SliceConvert convert slice to another type slice
 func SliceConvert[S any, D any](srcS []S, convert func(src S) (D, error)) ([]D, error) {
 	res := make([]D, 0, len(srcS))
