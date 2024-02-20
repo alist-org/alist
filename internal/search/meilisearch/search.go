@@ -62,7 +62,6 @@ func (m *Meilisearch) Index(ctx context.Context, node model.SearchNode) error {
 }
 
 func (m *Meilisearch) BatchIndex(ctx context.Context, nodes []model.SearchNode) error {
-	utils.Log.Infof("BI %v", nodes)
 	documents, _ := utils.SliceConvert(nodes, func(src model.SearchNode) (*searchDocument, error) {
 
 		return &searchDocument{
@@ -97,7 +96,6 @@ func (m *Meilisearch) getDocumentsByParent(ctx context.Context, parent string) (
 		Limit:  int64(model.MaxInt),
 	}, &result)
 	if err != nil {
-		utils.Log.Infof("err %s", err)
 		return nil, err
 	}
 	return utils.SliceConvert(result.Results, func(src map[string]any) (*searchDocument, error) {
@@ -114,7 +112,6 @@ func (m *Meilisearch) getDocumentsByParent(ctx context.Context, parent string) (
 }
 
 func (m *Meilisearch) Get(ctx context.Context, parent string) ([]model.SearchNode, error) {
-	utils.Log.Infof("get %s", parent)
 	result, err := m.getDocumentsByParent(ctx, parent)
 	if err != nil {
 		return nil, err
@@ -156,7 +153,6 @@ func (m *Meilisearch) DelDirChild(ctx context.Context, prefix string) error {
 	utils.SliceReplace(dfs, func(src string) string {
 		return "'" + strings.ReplaceAll(src, "'", "\\'") + "'"
 	})
-	utils.Log.Infof("arr %v", dfs)
 	s := fmt.Sprintf("parent IN [%s]", strings.Join(dfs, ","))
 	task, err := m.Client.Index(m.IndexUid).DeleteDocumentsByFilter(s)
 	if err != nil {
@@ -173,7 +169,6 @@ func (m *Meilisearch) DelDirChild(ctx context.Context, prefix string) error {
 }
 
 func (m *Meilisearch) Del(ctx context.Context, prefix string) error {
-	utils.Log.Infof("del %s", prefix)
 	prefix = utils.FixAndCleanPath(prefix)
 	dir, name := path.Split(prefix)
 	get, err := m.getDocumentsByParent(ctx, dir[:len(dir)-1])
