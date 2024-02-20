@@ -93,3 +93,9 @@ func SliceFilter[T any](arr []T, filter func(src T) bool) []T {
 	}
 	return res
 }
+
+func SliceReplace[T any](arr []T, replace func(src T) T) {
+	for i, src := range arr {
+		arr[i] = replace(src)
+	}
+}

@@ -3,13 +3,14 @@ package meilisearch
 import (
 	"context"
 	"fmt"
-	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/search/searcher"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/google/uuid"
 	"github.com/meilisearch/meilisearch-go"
+	"path"
 	"strings"
+	"time"
 )
 
 type searchDocument struct {
@@ -61,6 +62,7 @@ func (m *Meilisearch) Index(ctx context.Context, node model.SearchNode) error {
 }
 
 func (m *Meilisearch) BatchIndex(ctx context.Context, nodes []model.SearchNode) error {
+	utils.Log.Infof("BI %v", nodes)
 	documents, _ := utils.SliceConvert(nodes, func(src model.SearchNode) (*searchDocument, error) {
 
 		return &searchDocument{
@@ -88,28 +90,122 @@ func (m *Meilisearch) BatchIndex(ctx context.Context, nodes []model.SearchNode) 
 	return nil
 }
 
-func (m *Meilisearch) Get(ctx context.Context, parent string) ([]model.SearchNode, error) {
+func (m *Meilisearch) getDocumentsByParent(ctx context.Context, parent string) ([]*searchDocument, error) {
 	var result meilisearch.DocumentsResult
 	err := m.Client.Index(m.IndexUid).GetDocuments(&meilisearch.DocumentsQuery{
 		Filter: fmt.Sprintf("parent = '%s'", strings.ReplaceAll(parent, "'", "\\'")),
 		Limit:  int64(model.MaxInt),
 	}, &result)
 	if err != nil {
+		utils.Log.Infof("err %s", err)
 		return nil, err
 	}
-	return utils.SliceConvert(result.Results, func(src map[string]any) (model.SearchNode, error) {
-		return model.SearchNode{
-			Parent: src["parent"].(string),
-			Name:   src["name"].(string),
-			IsDir:  src["is_dir"].(bool),
-			Size:   int64(src["size"].(float64)),
+	return utils.SliceConvert(result.Results, func(src map[string]any) (*searchDocument, error) {
+		return &searchDocument{
+			ID: src["id"].(string),
+			SearchNode: model.SearchNode{
+				Parent: src["parent"].(string),
+				Name:   src["name"].(string),
+				IsDir:  src["is_dir"].(bool),
+				Size:   int64(src["size"].(float64)),
+			},
 		}, nil
+	})
+}
+
+func (m *Meilisearch) Get(ctx context.Context, parent string) ([]model.SearchNode, error) {
+	utils.Log.Infof("get %s", parent)
+	result, err := m.getDocumentsByParent(ctx, parent)
+	if err != nil {
+		return nil, err
+	}
+	return utils.SliceConvert(result, func(src *searchDocument) (model.SearchNode, error) {
+		return src.SearchNode, nil
 	})
 
 }
 
+func (m *Meilisearch) getParentsByPrefix(ctx context.Context, parent string) ([]string, error) {
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+		parents := []string{parent}
+		get, err := m.getDocumentsByParent(ctx, parent)
+		if err != nil {
+			return nil, err
+		}
+		for _, node := range get {
+			if node.IsDir {
+				arr, err := m.getParentsByPrefix(ctx, path.Join(node.Parent, node.Name))
+				if err != nil {
+					return nil, err
+				}
+				parents = append(parents, arr...)
+			}
+		}
+		return parents, nil
+	}
+}
+
+func (m *Meilisearch) DelDirChild(ctx context.Context, prefix string) error {
+	dfs, err := m.getParentsByPrefix(ctx, utils.FixAndCleanPath(prefix))
+	if err != nil {
+		return err
+	}
+	utils.SliceReplace(dfs, func(src string) string {
+		return "'" + strings.ReplaceAll(src, "'", "\\'") + "'"
+	})
+	utils.Log.Infof("arr %v", dfs)
+	s := fmt.Sprintf("parent IN [%s]", strings.Join(dfs, ","))
+	task, err := m.Client.Index(m.IndexUid).DeleteDocumentsByFilter(s)
+	if err != nil {
+		return err
+	}
+	taskStatus, err := m.getTaskStatus(ctx, task.TaskUID)
+	if err != nil {
+		return err
+	}
+	if taskStatus != meilisearch.TaskStatusSucceeded {
+		return fmt.Errorf("DelDir failed, task status is %s", taskStatus)
+	}
+	return nil
+}
+
 func (m *Meilisearch) Del(ctx context.Context, prefix string) error {
-	return errs.NotSupport
+	utils.Log.Infof("del %s", prefix)
+	prefix = utils.FixAndCleanPath(prefix)
+	dir, name := path.Split(prefix)
+	get, err := m.getDocumentsByParent(ctx, dir[:len(dir)-1])
+	if err != nil {
+		return err
+	}
+	var document *searchDocument
+	for _, v := range get {
+		if v.Name == name {
+			document = v
+			break
+		}
+	}
+
+	if document == nil || document.IsDir {
+		err = m.DelDirChild(ctx, prefix)
+		if err != nil {
+			return err
+		}
+	}
+	task, err := m.Client.Index(m.IndexUid).DeleteDocument(document.ID)
+	if err != nil {
+		return err
+	}
+	taskStatus, err := m.getTaskStatus(ctx, task.TaskUID)
+	if err != nil {
+		return err
+	}
+	if taskStatus != meilisearch.TaskStatusSucceeded {
+		return fmt.Errorf("DelDir failed, task status is %s", taskStatus)
+	}
+	return nil
 }
 
 func (m *Meilisearch) Release(ctx context.Context) error {
@@ -119,4 +215,15 @@ func (m *Meilisearch) Release(ctx context.Context) error {
 func (m *Meilisearch) Clear(ctx context.Context) error {
 	_, err := m.Client.Index(m.IndexUid).DeleteAllDocuments()
 	return err
+}
+
+func (m *Meilisearch) getTaskStatus(ctx context.Context, taskUID int64) (meilisearch.TaskStatus, error) {
+	forTask, err := m.Client.WaitForTask(taskUID, meilisearch.WaitParams{
+		Context:  ctx,
+		Interval: time.Second,
+	})
+	if err != nil {
+		return meilisearch.TaskStatusUnknown, err
+	}
+	return forTask.Status, nil
 }

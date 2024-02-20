@@ -11,7 +11,8 @@ import (
 )
 
 var config = searcher.Config{
-	Name: "meilisearch",
+	Name:       "meilisearch",
+	AutoUpdate: true,
 }
 
 func init() {
