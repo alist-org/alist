@@ -182,8 +182,11 @@ func (m *Meilisearch) Del(ctx context.Context, prefix string) error {
 			break
 		}
 	}
-
-	if document == nil || document.IsDir {
+	if document == nil {
+		// Defensive programming. Document may be the folder, try deleting Child
+		return m.DelDirChild(ctx, prefix)
+	}
+	if document.IsDir {
 		err = m.DelDirChild(ctx, prefix)
 		if err != nil {
 			return err
