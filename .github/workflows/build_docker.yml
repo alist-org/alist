@@ -18,18 +18,26 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: xhofe/alist
+
+      - name: Docker meta with ffmpeg
+        id: meta-ffmpeg
+        uses: docker/metadata-action@v5
+        with:
+          images: xhofe/alist
+          flavor: |
+            suffix=-ffmpeg,onlatest=true
+
       - uses: actions/setup-go@v4
         with:
           go-version: 'stable'
 
       - name: Build go binary
         run: bash build.sh dev docker-multiplatform
-
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: xhofe/alist
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -53,15 +61,6 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/386,linux/arm/v6,linux/s390x
-
-      - name: Docker meta with ffmpeg
-        id: meta-ffmpeg
-        uses: docker/metadata-action@v5
-        with:
-          images: xhofe/alist
-          flavor: |
-            latest=true
-            suffix=-ffmpeg,onlatest=true
 
       - name: Build and push with ffmpeg
         id: docker_build_ffmpeg
