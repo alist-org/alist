@@ -1,0 +1,24 @@
+name: delete closed pr docker tag
+
+on:
+  pull_request:
+    types: [closed]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  del_docker_tag:
+    name: Build Docker
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Delete docker tag
+        id: del_docker_tag
+        uses: xhofe/del-docker-tag@main
+        with:
+          username: xhofe
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          # token: ${{ secrets.DOCKER_TOKEN }}
+          tags: xhofe/alist:pr-${{ github.event.pull_request.number }},xhofe/alist:pr-${{ github.event.pull_request.number }}-ffmpeg
