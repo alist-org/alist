@@ -17,6 +17,7 @@ type Database struct {
 	DBFile      string `json:"db_file" env:"FILE"`
 	TablePrefix string `json:"table_prefix" env:"TABLE_PREFIX"`
 	SSLMode     string `json:"ssl_mode" env:"SSL_MODE"`
+	DSN         string `json:"dsn" env:"DSN"`
 }
 
 type Scheme struct {
