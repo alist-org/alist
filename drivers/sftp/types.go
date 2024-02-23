@@ -30,6 +30,14 @@ func (d *SFTP) fileToObj(f os.FileInfo, dir string) (model.Obj, error) {
 	}
 	_f, err := d.client.Stat(target)
 	if err != nil {
+		if d.IgnoreSymlinkError {
+			return &model.Object{
+				Name:     f.Name(),
+				Size:     f.Size(),
+				Modified: f.ModTime(),
+				IsFolder: f.IsDir(),
+			}, nil
+		}
 		return nil, err
 	}
 	// set basic info

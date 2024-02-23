@@ -51,6 +51,7 @@ func UpdateIndex(c *gin.Context) {
 	}
 	if !search.Config(c).AutoUpdate {
 		common.ErrorStrResp(c, "update is not supported for current index", 400)
+		return
 	}
 	go func() {
 		ctx := context.Background()
