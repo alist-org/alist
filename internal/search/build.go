@@ -211,14 +211,15 @@ func Update(parent string, objs []model.Obj) {
 	}
 	for i := range objs {
 		if toAdd.Contains(objs[i].GetName()) {
-			log.Debugf("add index: %s", path.Join(parent, objs[i].GetName()))
-			err = Index(ctx, parent, objs[i])
-			if err != nil {
-				log.Errorf("update search index error while index new node: %+v", err)
-				return
-			}
-			// build index if it's a folder
-			if objs[i].IsDir() {
+			if !objs[i].IsDir() {
+				log.Debugf("add index: %s", path.Join(parent, objs[i].GetName()))
+				err = Index(ctx, parent, objs[i])
+				if err != nil {
+					log.Errorf("update search index error while index new node: %+v", err)
+					return
+				}
+			} else {
+				// build index if it's a folder
 				dir := path.Join(parent, objs[i].GetName())
 				err = BuildIndex(ctx,
 					[]string{dir},
