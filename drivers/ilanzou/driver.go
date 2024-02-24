@@ -123,14 +123,14 @@ func (d *ILanZou) Link(ctx context.Context, file model.Obj, args model.LinkArgs)
 	query.Set("devType", "6")
 	query.Set("devCode", d.UUID)
 	query.Set("devModel", "chrome")
-	query.Set("devVersion", "120")
+	query.Set("devVersion", d.conf.devVersion)
 	query.Set("appVersion", "")
 	ts, err := getTimestamp(d.conf.secret)
 	if err != nil {
 		return nil, err
 	}
 	query.Set("timestamp", ts)
-	//query.Set("appToken", d.Token)
+	query.Set("appToken", d.Token)
 	query.Set("enable", "1")
 	downloadId, err := mopan.AesEncrypt([]byte(fmt.Sprintf("%s|%s", file.GetID(), d.userID)), d.conf.secret)
 	if err != nil {
@@ -143,7 +143,18 @@ func (d *ILanZou) Link(ctx context.Context, file model.Obj, args model.LinkArgs)
 	}
 	query.Set("auth", hex.EncodeToString(auth))
 	u.RawQuery = query.Encode()
-	link := model.Link{URL: u.String()}
+	realURL := u.String()
+	// get the url after redirect
+	res, err := base.NoRedirectClient.R().Get(realURL)
+	if err != nil {
+		return nil, err
+	}
+	if res.StatusCode() == 302 {
+		realURL = res.Header().Get("location")
+	} else {
+		return nil, fmt.Errorf("redirect failed, status: %d", res.StatusCode())
+	}
+	link := model.Link{URL: realURL}
 	return &link, nil
 }
 
