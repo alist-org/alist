@@ -139,7 +139,7 @@ type File struct {
 		Topsort          int     `json:"topsort"`
 		Restype          string  `json:"restype"`
 		Size             int_str `json:"size"`
-		UploadDate       string  `json:"uploadDate"`
+		UploadDate       int64   `json:"uploadDate"`
 		FileSize         string  `json:"fileSize"`
 		Name             string  `json:"name"`
 		FileID           string  `json:"fileId"`
@@ -265,10 +265,7 @@ func fileToObj(f File) *model.Object {
 			IsFolder: true,
 		}
 	}
-	paserTime, err := time.Parse("2006-01-02 15:04", f.Content.UploadDate)
-	if err != nil {
-		paserTime = time.Now()
-	}
+	paserTime := time.UnixMilli(f.Content.UploadDate)
 	return &model.Object{
 		ID:       fmt.Sprintf("%d$%s", f.ID, f.Content.FileID),
 		Name:     f.Content.Name,
