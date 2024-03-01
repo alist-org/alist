@@ -385,6 +385,10 @@ func findLastModified(ctx context.Context, ls LockSystem, name string, fi model.
 	return fi.ModTime().UTC().Format(http.TimeFormat), nil
 }
 func findCreationDate(ctx context.Context, ls LockSystem, name string, fi model.Obj) (string, error) {
+	userAgent := ctx.Value("userAgent").(string)
+	if strings.Contains(strings.ToLower(userAgent), "microsoft-webdav") {
+		return fi.CreateTime().UTC().Format(http.TimeFormat), nil
+	}
 	return fi.CreateTime().UTC().Format(time.RFC3339), nil
 }
 

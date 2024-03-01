@@ -619,6 +619,8 @@ func (h *Handler) handlePropfind(w http.ResponseWriter, r *http.Request) (status
 		return status, err
 	}
 	ctx := r.Context()
+	userAgent := r.Header.Get("User-Agent")
+	ctx = context.WithValue(ctx, "userAgent", userAgent)
 	user := ctx.Value("user").(*model.User)
 	reqPath, err = user.JoinPath(reqPath)
 	if err != nil {
