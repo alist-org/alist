@@ -10,6 +10,7 @@ const (
 	INDEX
 	SSO
 	LDAP
+	S3
 )
 
 const (
