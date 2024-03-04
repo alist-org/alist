@@ -449,6 +449,8 @@ github.com/stretchr/testify v1.8.4 h1:CcVxjf3Q8PM0mHUKJCdn+eZZtm5yQwehR5yeSVQQcU
 github.com/stretchr/testify v1.8.4/go.mod h1:sz/lmYIOXD/1dqDmKjjqLyZ2RngseejIcXlSw2iwfAo=
 github.com/t3rm1n4l/go-mega v0.0.0-20230228171823-a01a2cda13ca h1:I9rVnNXdIkij4UvMT7OmKhH9sOIvS8iXkxfPdnn9wQA=
 github.com/t3rm1n4l/go-mega v0.0.0-20230228171823-a01a2cda13ca/go.mod h1:suDIky6yrK07NnaBadCB4sS0CqFOvUK91lH7CR+JlDA=
+github.com/t3rm1n4l/go-mega v0.0.0-20240219080617-d494b6a8ace7 h1:Jtcrb09q0AVWe3BGe8qtuuGxNSHWGkTWr43kHTJ+CpA=
+github.com/t3rm1n4l/go-mega v0.0.0-20240219080617-d494b6a8ace7/go.mod h1:suDIky6yrK07NnaBadCB4sS0CqFOvUK91lH7CR+JlDA=
 github.com/tklauser/go-sysconf v0.3.11 h1:89WgdJhk5SNwJfu+GKyYveZ4IaJ7xAkecBo+KdJV0CM=
 github.com/tklauser/go-sysconf v0.3.11/go.mod h1:GqXfhXY3kiPa0nAXPDIQIWzJbMCB7AmcWpGR8lSZfqI=
 github.com/tklauser/numcpus v0.6.0/go.mod h1:FEZLMke0lhOUG6w2JadTzp0a+Nl8PF/GFkQ5UVIcaL4=
