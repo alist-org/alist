@@ -52,6 +52,32 @@ func getTime(t string) time.Time {
 	return stamp
 }
 
+func (d *Yun139) refreshToken() error {
+	url := "https://aas.caiyun.feixin.10086.cn:443/tellin/authTokenRefresh.do"
+	var resp RefreshTokenResp
+	decode, err := base64.StdEncoding.DecodeString(d.Authorization)
+	if err != nil {
+		return err
+	}
+	decodeStr := string(decode)
+	splits := strings.Split(decodeStr, ":")
+	reqBody := "<root><token>" + splits[2] + "</token><account>" + splits[1] + "</account><clienttype>656</clienttype></root>"
+	_, err := base.RestyClient.R().
+		//ForceContentType("application/json").
+		SetBody(reqBody).
+		SetResult(&resp).
+		Post(url)
+	if err != nil {
+		return err
+	}
+	if resp.Return != "0" {
+		return fmt.Errorf("failed to refresh token: %s", resp.Desc)
+	}
+	d.Authorization = base64.StdEncoding.EncodeToString("pc:" + splits[1] + ":" + resp.Token)
+	op.MustSaveDriverStorage(d)
+	return nil
+}
+
 func (d *Yun139) request(pathname string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
 	url := "https://yun.139.com" + pathname
 	req := base.RestyClient.R()
