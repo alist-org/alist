@@ -15,6 +15,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/pkg/utils/random"
+	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/go-resty/resty/v2"
 	jsoniter "github.com/json-iterator/go"
 	log "github.com/sirupsen/logrus"
@@ -62,7 +63,7 @@ func (d *Yun139) refreshToken() error {
 	decodeStr := string(decode)
 	splits := strings.Split(decodeStr, ":")
 	reqBody := "<root><token>" + splits[2] + "</token><account>" + splits[1] + "</account><clienttype>656</clienttype></root>"
-	_, err := base.RestyClient.R().
+	_, err = base.RestyClient.R().
 		//ForceContentType("application/json").
 		SetBody(reqBody).
 		SetResult(&resp).
@@ -73,7 +74,7 @@ func (d *Yun139) refreshToken() error {
 	if resp.Return != "0" {
 		return fmt.Errorf("failed to refresh token: %s", resp.Desc)
 	}
-	d.Authorization = base64.StdEncoding.EncodeToString("pc:" + splits[1] + ":" + resp.Token)
+	d.Authorization = base64.StdEncoding.EncodeToString([]byte(splits[0] + splits[1] + ":" + resp.Token))
 	op.MustSaveDriverStorage(d)
 	return nil
 }

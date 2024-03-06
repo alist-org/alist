@@ -1,5 +1,9 @@
 package _139
 
+import (
+	"encoding/xml"
+)
+
 const (
 	MetaPersonal    string = "personal"
 	MetaFamily      string = "family"
@@ -232,10 +236,10 @@ type PersonalUploadResp struct {
 }
 
 type RefreshTokenResp struct {
-	XMLName      xml.Name   `xml:"root"`
-    Return   string     `xml:"return"`
-    Token     string        `xml:"token"`
-    Expiretime    int32      `xml:"expiretime"`
-    AccessToken string     `xml:"accessToken"`
-	Desc string     `xml:"desc"`
+	XMLName     xml.Name   `xml:"root"`
+	Return      string     `xml:"return"`
+	Token       string     `xml:"token"`
+	Expiretime  int32      `xml:"expiretime"`
+	AccessToken string     `xml:"accessToken"`
+	Desc        string     `xml:"desc"`
 }
