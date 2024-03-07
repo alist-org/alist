@@ -11,7 +11,8 @@ type Addition struct {
 	Address  string `json:"address" required:"true"`
 	UserName string `json:"username" required:"true"`
 	Password string `json:"password" required:"true"`
-	RepoId   string `json:"repoId" required:"true"`
+	RepoId   string `json:"repoId" required:"false"`
+	RepoPwd  string `json:"repoPwd" required:"false"`
 }
 
 var config = driver.Config{
