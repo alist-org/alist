@@ -295,7 +295,7 @@ func (d *MoPan) Put(ctx context.Context, dstDir model.Obj, stream model.FileStre
 	}
 
 	if !initUpdload.FileDataExists {
-		utils.Log.Error(d.client.CloudDiskStartBusiness())
+		// utils.Log.Error(d.client.CloudDiskStartBusiness())
 
 		threadG, upCtx := errgroup.NewGroupWithContext(ctx, d.uploadThread,
 			retry.Attempts(3),
@@ -323,6 +323,7 @@ func (d *MoPan) Put(ctx context.Context, dstDir model.Obj, stream model.FileStre
 				if err != nil {
 					return err
 				}
+				req.ContentLength = byteSize
 				resp, err := base.HttpClient.Do(req)
 				if err != nil {
 					return err
