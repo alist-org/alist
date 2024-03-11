@@ -21,6 +21,7 @@ import (
 	_ "github.com/alist-org/alist/v3/drivers/chaoxing"
 	_ "github.com/alist-org/alist/v3/drivers/cloudreve"
 	_ "github.com/alist-org/alist/v3/drivers/crypt"
+	_ "github.com/alist-org/alist/v3/drivers/doge"
 	_ "github.com/alist-org/alist/v3/drivers/dropbox"
 	_ "github.com/alist-org/alist/v3/drivers/ftp"
 	_ "github.com/alist-org/alist/v3/drivers/google_drive"
