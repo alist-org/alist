@@ -8,18 +8,21 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/utils"
+	"github.com/alist-org/alist/v3/pkg/cron"
 	log "github.com/sirupsen/logrus"
 )
 
 type Yun139 struct {
 	model.Storage
 	Addition
+	cron   *cron.Cron
 	Account string
 }
 
@@ -35,6 +38,13 @@ func (d *Yun139) Init(ctx context.Context) error {
 	if d.Authorization == "" {
 		return fmt.Errorf("authorization is empty")
 	}
+	d.cron = cron.NewCron(time.Hour * 24 * 7)
+	d.cron.Do(func() {
+		err := d.refreshToken()
+		if err != nil {
+			log.Errorf("%+v", err)
+		}
+	})
 	switch d.Addition.Type {
 	case MetaPersonalNew:
 		if len(d.Addition.RootFolderID) == 0 {
@@ -72,6 +82,9 @@ func (d *Yun139) Init(ctx context.Context) error {
 }
 
 func (d *Yun139) Drop(ctx context.Context) error {
+	if d.cron != nil {
+		d.cron.Stop()
+	}
 	return nil
 }
 
