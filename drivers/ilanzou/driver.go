@@ -145,7 +145,10 @@ func (d *ILanZou) Link(ctx context.Context, file model.Obj, args model.LinkArgs)
 	u.RawQuery = query.Encode()
 	realURL := u.String()
 	// get the url after redirect
-	res, err := base.NoRedirectClient.R().Get(realURL)
+	res, err := base.NoRedirectClient.R().SetHeaders(map[string]string{
+		//"Origin":  d.conf.site,
+		"Referer": d.conf.site + "/",
+	}).Get(realURL)
 	if err != nil {
 		return nil, err
 	}
