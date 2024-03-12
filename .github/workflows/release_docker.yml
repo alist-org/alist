@@ -62,6 +62,7 @@ jobs:
         id: docker_build_ffmpeg
         uses: docker/build-push-action@v5
         with:
+          context: .
           file: Dockerfile.ffmpeg
           push: true
           tags: ${{ steps.meta-ffmpeg.outputs.tags }}
