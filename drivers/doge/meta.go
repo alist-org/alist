@@ -23,7 +23,7 @@ type Addition struct {
 }
 
 var config = driver.Config{
-	Name:        "S3",
+	Name:        "Doge",
 	DefaultRoot: "/",
 	LocalSort:   true,
 	CheckStatus: true,
