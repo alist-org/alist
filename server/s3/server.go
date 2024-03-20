@@ -11,7 +11,7 @@ import (
 )
 
 // Make a new S3 Server to serve the remote
-func NewServer(ctx context.Context, authpair []string) (h http.Handler, err error) {
+func NewServer(ctx context.Context) (h http.Handler, err error) {
 	var newLogger logger
 	faker := gofakes3.New(
 		newBackend(),
@@ -19,7 +19,7 @@ func NewServer(ctx context.Context, authpair []string) (h http.Handler, err erro
 		gofakes3.WithLogger(newLogger),
 		gofakes3.WithRequestID(rand.Uint64()),
 		gofakes3.WithoutVersioning(),
-		gofakes3.WithV4Auth(authlistResolver(authpair)),
+		gofakes3.WithV4Auth(authlistResolver()),
 		gofakes3.WithIntegrityCheck(true), // Check Content-MD5 if supplied
 	)
 

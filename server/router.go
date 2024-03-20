@@ -171,3 +171,8 @@ func Cors(r *gin.Engine) {
 	config.AllowMethods = conf.Conf.Cors.AllowMethods
 	r.Use(cors.New(config))
 }
+
+func InitS3(e *gin.Engine) {
+	Cors(e)
+	S3Server(e.Group("/"))
+}
