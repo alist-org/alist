@@ -64,7 +64,7 @@ func (d *Yun139) refreshToken() error {
 	splits := strings.Split(decodeStr, ":")
 	reqBody := "<root><token>" + splits[2] + "</token><account>" + splits[1] + "</account><clienttype>656</clienttype></root>"
 	_, err = base.RestyClient.R().
-		//ForceContentType("application/json").
+		ForceContentType("application/xml").
 		SetBody(reqBody).
 		SetResult(&resp).
 		Post(url)
@@ -74,7 +74,7 @@ func (d *Yun139) refreshToken() error {
 	if resp.Return != "0" {
 		return fmt.Errorf("failed to refresh token: %s", resp.Desc)
 	}
-	d.Authorization = base64.StdEncoding.EncodeToString([]byte(splits[0] + splits[1] + ":" + resp.Token))
+	d.Authorization = base64.StdEncoding.EncodeToString([]byte(splits[0] + ":" + splits[1] + ":" + resp.Token))
 	op.MustSaveDriverStorage(d)
 	return nil
 }
