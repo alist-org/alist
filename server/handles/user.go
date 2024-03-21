@@ -41,6 +41,7 @@ func CreateUser(c *gin.Context) {
 	}
 	req.SetPassword(req.Password)
 	req.Password = ""
+	req.Authn = "[]"
 	if err := op.CreateUser(&req); err != nil {
 		common.ErrorResp(c, err, 500, true)
 	} else {

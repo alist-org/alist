@@ -31,6 +31,7 @@ func initUser() {
 				PwdHash:  model.TwoHashPwd(adminPassword, salt),
 				Role:     model.ADMIN,
 				BasePath: "/",
+				Authn:    "[]",
 			}
 			if err := op.CreateUser(admin); err != nil {
 				panic(err)
@@ -53,6 +54,7 @@ func initUser() {
 				BasePath:   "/",
 				Permission: 0,
 				Disabled:   true,
+				Authn:      "[]",
 			}
 			if err := db.CreateUser(guest); err != nil {
 				utils.Log.Fatalf("[init user] Failed to create guest user: %v", err)
@@ -62,6 +64,7 @@ func initUser() {
 		}
 	}
 	hashPwdForOldVersion()
+	updateAuthnForOldVersion()
 }
 
 func hashPwdForOldVersion() {
@@ -76,6 +79,22 @@ func hashPwdForOldVersion() {
 			user.Password = ""
 			if err := db.UpdateUser(&user); err != nil {
 				utils.Log.Fatalf("[hash pwd for old version] failed update user: %v", err)
+			}
+		}
+	}
+}
+
+func updateAuthnForOldVersion() {
+	users, _, err := op.GetUsers(1, -1)
+	if err != nil {
+		utils.Log.Fatalf("[update authn for old version] failed get users: %v", err)
+	}
+	for i := range users {
+		user := users[i]
+		if user.Authn == "" {
+			user.Authn = "[]"
+			if err := db.UpdateUser(&user); err != nil {
+				utils.Log.Fatalf("[update authn for old version] failed update user: %v", err)
 			}
 		}
 	}
