@@ -299,7 +299,7 @@ func (b *s3Backend) PutObject(
 		Mimetype: meta["Content-Type"],
 	}
 
-	err = fs.PutDirectly(ctx, path.Dir(reqPath), stream)
+	err = fs.PutDirectly(ctx, reqPath, stream)
 	if err != nil {
 		return result, err
 	}

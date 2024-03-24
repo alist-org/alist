@@ -91,6 +91,27 @@ the address is defined in config file`,
 				}
 			}()
 		}
+		s3r := gin.New()
+		s3r.Use(gin.LoggerWithWriter(log.StandardLogger().Out), gin.RecoveryWithWriter(log.StandardLogger().Out))
+		server.InitS3(s3r)
+		if conf.Conf.S3.Port != -1 {
+			s3Base := fmt.Sprintf("%s:%d", conf.Conf.Scheme.Address, conf.Conf.S3.Port)
+			utils.Log.Infof("start S3 server @ %s", s3Base)
+			go func() {
+				var err error
+				if conf.Conf.S3.SSL {
+					httpsSrv = &http.Server{Addr: s3Base, Handler: s3r}
+					err = httpsSrv.ListenAndServeTLS(conf.Conf.Scheme.CertFile, conf.Conf.Scheme.KeyFile)
+				}
+				if !conf.Conf.S3.SSL {
+					httpSrv = &http.Server{Addr: s3Base, Handler: s3r}
+					err = httpSrv.ListenAndServe()
+				}
+				if err != nil && !errors.Is(err, http.ErrServerClosed) {
+					utils.Log.Fatalf("failed to start s3 server: %s", err.Error())
+				}
+			}()
+		}
 		// Wait for interrupt signal to gracefully shutdown the server with
 		// a timeout of 1 second.
 		quit := make(chan os.Signal, 1)
