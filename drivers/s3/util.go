@@ -21,13 +21,21 @@ import (
 // do others that not defined in Driver interface
 
 func (d *S3) initSession() error {
+	var err error
+	accessKeyID, secretAccessKey, sessionToken := d.AccessKeyID, d.SecretAccessKey, d.SessionToken
+	if d.config.Name == "Doge" {
+		credentialsTmp, err := getCredentials(d.AccessKeyID, d.SecretAccessKey)
+		if err != nil {
+			return err
+		}
+		accessKeyID, secretAccessKey, sessionToken = credentialsTmp.AccessKeyId, credentialsTmp.SecretAccessKey, credentialsTmp.SessionToken
+	}
 	cfg := &aws.Config{
-		Credentials:      credentials.NewStaticCredentials(d.AccessKeyID, d.SecretAccessKey, d.SessionToken),
+		Credentials:      credentials.NewStaticCredentials(accessKeyID, secretAccessKey, sessionToken),
 		Region:           &d.Region,
 		Endpoint:         &d.Endpoint,
 		S3ForcePathStyle: aws.Bool(d.ForcePathStyle),
 	}
-	var err error
 	d.Session, err = session.NewSession(cfg)
 	return err
 }

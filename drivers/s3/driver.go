@@ -26,10 +26,12 @@ type S3 struct {
 	Session    *session.Session
 	client     *s3.S3
 	linkClient *s3.S3
+
+	config driver.Config
 }
 
 func (d *S3) Config() driver.Config {
-	return config
+	return d.config
 }
 
 func (d *S3) GetAddition() driver.Additional {
