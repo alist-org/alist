@@ -20,7 +20,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type S3 struct {
+type Doge struct {
 	model.Storage
 	Addition
 	Session    *session.Session
@@ -28,15 +28,15 @@ type S3 struct {
 	linkClient *s3.S3
 }
 
-func (d *S3) Config() driver.Config {
+func (d *Doge) Config() driver.Config {
 	return config
 }
 
-func (d *S3) GetAddition() driver.Additional {
+func (d *Doge) GetAddition() driver.Additional {
 	return &d.Addition
 }
 
-func (d *S3) Init(ctx context.Context) error {
+func (d *Doge) Init(ctx context.Context) error {
 	if d.Region == "" {
 		d.Region = "automatic"
 	}
@@ -49,18 +49,18 @@ func (d *S3) Init(ctx context.Context) error {
 	return nil
 }
 
-func (d *S3) Drop(ctx context.Context) error {
+func (d *Doge) Drop(ctx context.Context) error {
 	return nil
 }
 
-func (d *S3) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
+func (d *Doge) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
 	if d.ListObjectVersion == "v2" {
 		return d.listV2(dir.GetPath(), args)
 	}
 	return d.listV1(dir.GetPath(), args)
 }
 
-func (d *S3) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
+func (d *Doge) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	path := getKey(file.GetPath(), false)
 	filename := stdpath.Base(path)
 	disposition := fmt.Sprintf(`attachment; filename*=UTF-8''%s`, url.PathEscape(filename))
@@ -95,7 +95,7 @@ func (d *S3) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*mo
 	}, nil
 }
 
-func (d *S3) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
+func (d *Doge) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
 	return d.Put(ctx, &model.Object{
 		Path: stdpath.Join(parentDir.GetPath(), dirName),
 	}, &stream.FileStream{
@@ -108,7 +108,7 @@ func (d *S3) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) e
 	}, func(float64) {})
 }
 
-func (d *S3) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
+func (d *Doge) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 	err := d.Copy(ctx, srcObj, dstDir)
 	if err != nil {
 		return err
@@ -116,7 +116,7 @@ func (d *S3) Move(ctx context.Context, srcObj, dstDir model.Obj) error {
 	return d.Remove(ctx, srcObj)
 }
 
-func (d *S3) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
+func (d *Doge) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
 	err := d.copy(ctx, srcObj.GetPath(), stdpath.Join(stdpath.Dir(srcObj.GetPath()), newName), srcObj.IsDir())
 	if err != nil {
 		return err
@@ -124,18 +124,18 @@ func (d *S3) Rename(ctx context.Context, srcObj model.Obj, newName string) error
 	return d.Remove(ctx, srcObj)
 }
 
-func (d *S3) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
+func (d *Doge) Copy(ctx context.Context, srcObj, dstDir model.Obj) error {
 	return d.copy(ctx, srcObj.GetPath(), stdpath.Join(dstDir.GetPath(), srcObj.GetName()), srcObj.IsDir())
 }
 
-func (d *S3) Remove(ctx context.Context, obj model.Obj) error {
+func (d *Doge) Remove(ctx context.Context, obj model.Obj) error {
 	if obj.IsDir() {
 		return d.removeDir(ctx, obj.GetPath())
 	}
 	return d.removeFile(obj.GetPath())
 }
 
-func (d *S3) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
+func (d *Doge) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
 	uploader := s3manager.NewUploader(d.Session)
 	if stream.GetSize() > s3manager.MaxUploadParts*s3manager.DefaultUploadPartSize {
 		uploader.PartSize = stream.GetSize() / (s3manager.MaxUploadParts - 1)
@@ -153,4 +153,4 @@ func (d *S3) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreame
 	return err
 }
 
-var _ driver.Driver = (*S3)(nil)
+var _ driver.Driver = (*Doge)(nil)

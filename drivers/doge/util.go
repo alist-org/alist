@@ -25,7 +25,7 @@ import (
 
 // do others that not defined in Driver interface
 
-func (d *S3) initSession() error {
+func (d *Doge) initSession() error {
 	var err error
 	credentialsTmp, err := getCredentials(d.AccessKeyID, d.SecretAccessKey)
 	if err != nil {
@@ -41,7 +41,7 @@ func (d *S3) initSession() error {
 	return err
 }
 
-func (d *S3) getClient(link bool) *s3.S3 {
+func (d *Doge) getClient(link bool) *s3.S3 {
 	client := s3.New(d.Session)
 	if link && d.CustomHost != "" {
 		client.Handlers.Build.PushBack(func(r *request.Request) {
@@ -129,7 +129,7 @@ func getPlaceholderName(placeholder string) string {
 	return placeholder
 }
 
-func (d *S3) listV1(prefix string, args model.ListArgs) ([]model.Obj, error) {
+func (d *Doge) listV1(prefix string, args model.ListArgs) ([]model.Obj, error) {
 	prefix = getKey(prefix, true)
 	log.Debugf("list: %s", prefix)
 	files := make([]model.Obj, 0)
@@ -180,7 +180,7 @@ func (d *S3) listV1(prefix string, args model.ListArgs) ([]model.Obj, error) {
 	return files, nil
 }
 
-func (d *S3) listV2(prefix string, args model.ListArgs) ([]model.Obj, error) {
+func (d *Doge) listV2(prefix string, args model.ListArgs) ([]model.Obj, error) {
 	prefix = getKey(prefix, true)
 	files := make([]model.Obj, 0)
 	var continuationToken, startAfter *string
@@ -238,14 +238,14 @@ func (d *S3) listV2(prefix string, args model.ListArgs) ([]model.Obj, error) {
 	return files, nil
 }
 
-func (d *S3) copy(ctx context.Context, src string, dst string, isDir bool) error {
+func (d *Doge) copy(ctx context.Context, src string, dst string, isDir bool) error {
 	if isDir {
 		return d.copyDir(ctx, src, dst)
 	}
 	return d.copyFile(ctx, src, dst)
 }
 
-func (d *S3) copyFile(ctx context.Context, src string, dst string) error {
+func (d *Doge) copyFile(ctx context.Context, src string, dst string) error {
 	srcKey := getKey(src, false)
 	dstKey := getKey(dst, false)
 	input := &s3.CopyObjectInput{
@@ -257,7 +257,7 @@ func (d *S3) copyFile(ctx context.Context, src string, dst string) error {
 	return err
 }
 
-func (d *S3) copyDir(ctx context.Context, src string, dst string) error {
+func (d *Doge) copyDir(ctx context.Context, src string, dst string) error {
 	objs, err := op.List(ctx, d, src, model.ListArgs{S3ShowPlaceholder: true})
 	if err != nil {
 		return err
@@ -277,7 +277,7 @@ func (d *S3) copyDir(ctx context.Context, src string, dst string) error {
 	return nil
 }
 
-func (d *S3) removeDir(ctx context.Context, src string) error {
+func (d *Doge) removeDir(ctx context.Context, src string) error {
 	objs, err := op.List(ctx, d, src, model.ListArgs{})
 	if err != nil {
 		return err
@@ -298,7 +298,7 @@ func (d *S3) removeDir(ctx context.Context, src string) error {
 	return nil
 }
 
-func (d *S3) removeFile(src string) error {
+func (d *Doge) removeFile(src string) error {
 	key := getKey(src, false)
 	input := &s3.DeleteObjectInput{
 		Bucket: &d.Bucket,
