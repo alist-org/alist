@@ -8,8 +8,8 @@ import (
 	"io"
 	"math"
 	"net/http"
+	"net/url"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
@@ -67,7 +67,14 @@ func (d *AliyundriveOpen) getUploadUrl(count int, fileId, uploadId string) ([]Pa
 func (d *AliyundriveOpen) uploadPart(ctx context.Context, r io.Reader, partInfo PartInfo) error {
 	uploadUrl := partInfo.UploadUrl
 	if d.InternalUpload {
-		uploadUrl = strings.ReplaceAll(uploadUrl, "https://cn-beijing-data.aliyundrive.net/", "http://ccp-bj29-bj-1592982087.oss-cn-beijing-internal.aliyuncs.com/")
+		parsedURL, err := url.Parse(uploadUrl)
+		if err != nil {
+			return err
+		}
+		parsedURL.Scheme = "http"
+		parsedURL.Host = "ccp-bj29-bj-1592982087.oss-cn-beijing-internal.aliyuncs.com"
+
+		uploadUrl = parsedURL.String()
 	}
 	req, err := http.NewRequestWithContext(ctx, "PUT", uploadUrl, r)
 	if err != nil {
