@@ -22,15 +22,25 @@ type Addition struct {
 	AddFilenameToDisposition bool   `json:"add_filename_to_disposition" help:"Add filename to Content-Disposition header."`
 }
 
-var config = driver.Config{
-	Name:        "S3",
-	DefaultRoot: "/",
-	LocalSort:   true,
-	CheckStatus: true,
-}
-
 func init() {
 	op.RegisterDriver(func() driver.Driver {
-		return &S3{}
+		return &S3{
+			config: driver.Config{
+				Name:        "S3",
+				DefaultRoot: "/",
+				LocalSort:   true,
+				CheckStatus: true,
+			},
+		}
+	})
+	op.RegisterDriver(func() driver.Driver {
+		return &S3{
+			config: driver.Config{
+				Name:        "Doge",
+				DefaultRoot: "/",
+				LocalSort:   true,
+				CheckStatus: true,
+			},
+		}
 	})
 }

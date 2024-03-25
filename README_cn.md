@@ -75,6 +75,7 @@
     - [X] Cloudreve
     - [x] [Dropbox](https://www.dropbox.com/)
     - [x] [飞机盘](https://www.feijipan.com/)
+    - [x] [多吉云](https://www.dogecloud.com/product/oss)
 - [x] 部署方便，开箱即用
 - [x] 文件预览（PDF、markdown、代码、纯文本……）
 - [x] 画廊模式下的图像预览

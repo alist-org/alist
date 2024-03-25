@@ -24,6 +24,7 @@ output/
 *.json
 /build
 /data/
+/tmp/
 /log/
 /lang/
 /daemon/
