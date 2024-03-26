@@ -3,7 +3,6 @@ package crypt
 import (
 	"context"
 	"fmt"
-	"github.com/alist-org/alist/v3/internal/stream"
 	"io"
 	stdpath "path"
 	"regexp"
@@ -14,6 +13,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/fs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/op"
+	"github.com/alist-org/alist/v3/internal/stream"
 	"github.com/alist-org/alist/v3/pkg/http_range"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/server/common"
@@ -160,7 +160,7 @@ func (d *Crypt) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([
 				// discarding hash as it's encrypted
 			}
 			if d.Thumbnail && thumb == "" {
-				thumb = utils.EncodePath(common.GetApiUrl(nil) + stdpath.Join("/d", args.ReqPath, ".thumbnails", name+".webp"), true)
+				thumb = utils.EncodePath(common.GetApiUrl(nil)+stdpath.Join("/d", args.ReqPath, ".thumbnails", name+".webp"), true)
 			}
 			if !ok && !d.Thumbnail {
 				result = append(result, &objRes)
@@ -389,10 +389,11 @@ func (d *Crypt) Put(ctx context.Context, dstDir model.Obj, streamer model.FileSt
 			Modified: streamer.ModTime(),
 			IsFolder: streamer.IsDir(),
 		},
-		Reader:       wrappedIn,
-		Mimetype:     "application/octet-stream",
-		WebPutAsTask: streamer.NeedStore(),
-		Exist:        streamer.GetExist(),
+		Reader:            wrappedIn,
+		Mimetype:          "application/octet-stream",
+		WebPutAsTask:      streamer.NeedStore(),
+		ForceStreamUpload: true,
+		Exist:             streamer.GetExist(),
 	}
 	err = op.Put(ctx, d.remoteStorage, dstDirActualPath, streamOut, up, false)
 	if err != nil {
