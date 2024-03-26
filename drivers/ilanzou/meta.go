@@ -21,6 +21,7 @@ type Conf struct {
 	unproved   string
 	proved     string
 	devVersion string
+	site       string
 }
 
 func init() {
@@ -45,7 +46,8 @@ func init() {
 				bucket:     "wpanstore-lanzou",
 				unproved:   "unproved",
 				proved:     "proved",
-				devVersion: "120",
+				devVersion: "122",
+				site:       "https://www.ilanzou.com",
 			},
 		}
 	})
@@ -71,6 +73,7 @@ func init() {
 				unproved:   "ws",
 				proved:     "app",
 				devVersion: "121",
+				site:       "https://www.feijipan.com",
 			},
 		}
 	})

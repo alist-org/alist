@@ -1,9 +1,10 @@
 package conf
 
 import (
+	"path/filepath"
+
 	"github.com/alist-org/alist/v3/cmd/flags"
 	"github.com/alist-org/alist/v3/pkg/utils/random"
-	"path/filepath"
 )
 
 type Database struct {
@@ -63,6 +64,12 @@ type Cors struct {
 	AllowHeaders []string `json:"allow_headers" env:"ALLOW_HEADERS"`
 }
 
+type S3 struct {
+	Enable bool `json:"enable" env:"ENABLE"`
+	Port   int  `json:"port" env:"PORT"`
+	SSL    bool `json:"ssl" env:"SSL"`
+}
+
 type Config struct {
 	Force                 bool        `json:"force" env:"FORCE"`
 	SiteURL               string      `json:"site_url" env:"SITE_URL"`
@@ -81,6 +88,7 @@ type Config struct {
 	TlsInsecureSkipVerify bool        `json:"tls_insecure_skip_verify" env:"TLS_INSECURE_SKIP_VERIFY"`
 	Tasks                 TasksConfig `json:"tasks" envPrefix:"TASKS_"`
 	Cors                  Cors        `json:"cors" envPrefix:"CORS_"`
+	S3                    S3          `json:"s3" envPrefix:"S3_"`
 }
 
 func DefaultConfig() *Config {
@@ -141,6 +149,11 @@ func DefaultConfig() *Config {
 			AllowOrigins: []string{"*"},
 			AllowMethods: []string{"*"},
 			AllowHeaders: []string{"*"},
+		},
+		S3: S3{
+			Enable: false,
+			Port:   5246,
+			SSL:    false,
 		},
 	}
 }

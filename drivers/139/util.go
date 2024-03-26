@@ -15,6 +15,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/pkg/utils/random"
+	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/go-resty/resty/v2"
 	jsoniter "github.com/json-iterator/go"
 	log "github.com/sirupsen/logrus"
@@ -50,6 +51,32 @@ func calSign(body, ts, randStr string) string {
 func getTime(t string) time.Time {
 	stamp, _ := time.ParseInLocation("20060102150405", t, utils.CNLoc)
 	return stamp
+}
+
+func (d *Yun139) refreshToken() error {
+	url := "https://aas.caiyun.feixin.10086.cn:443/tellin/authTokenRefresh.do"
+	var resp RefreshTokenResp
+	decode, err := base64.StdEncoding.DecodeString(d.Authorization)
+	if err != nil {
+		return err
+	}
+	decodeStr := string(decode)
+	splits := strings.Split(decodeStr, ":")
+	reqBody := "<root><token>" + splits[2] + "</token><account>" + splits[1] + "</account><clienttype>656</clienttype></root>"
+	_, err = base.RestyClient.R().
+		ForceContentType("application/xml").
+		SetBody(reqBody).
+		SetResult(&resp).
+		Post(url)
+	if err != nil {
+		return err
+	}
+	if resp.Return != "0" {
+		return fmt.Errorf("failed to refresh token: %s", resp.Desc)
+	}
+	d.Authorization = base64.StdEncoding.EncodeToString([]byte(splits[0] + ":" + splits[1] + ":" + resp.Token))
+	op.MustSaveDriverStorage(d)
+	return nil
 }
 
 func (d *Yun139) request(pathname string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {

@@ -52,11 +52,15 @@ func (d *ILanZou) request(pathname, method string, callback base.ReqCallback, pr
 		"devType":    "6",
 		"devCode":    d.UUID,
 		"devModel":   "chrome",
-		"devVersion": "120",
+		"devVersion": d.conf.devVersion,
 		"appVersion": "",
 		"timestamp":  ts,
 		//"appToken":   d.Token,
 		"extra": "2",
+	})
+	req.SetHeaders(map[string]string{
+		"Origin":  d.conf.site,
+		"Referer": d.conf.site + "/",
 	})
 	if proved {
 		req.SetQueryParam("appToken", d.Token)

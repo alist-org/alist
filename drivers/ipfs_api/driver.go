@@ -62,7 +62,7 @@ func (d *IPFS) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]
 	for _, file := range dirs {
 		gateurl := *d.gateURL
 		gateurl.Path = "ipfs/" + file.Hash
-		gateurl.RawQuery = "filename=" + file.Name
+		gateurl.RawQuery = "filename=" + url.PathEscape(file.Name)
 		objlist = append(objlist, &model.ObjectURL{
 			Object: model.Object{ID: file.Hash, Name: file.Name, Size: int64(file.Size), IsFolder: file.Type == 1},
 			Url:    model.Url{Url: gateurl.String()},
@@ -73,7 +73,7 @@ func (d *IPFS) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]
 }
 
 func (d *IPFS) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
-	link := d.Gateway + "/ipfs/" + file.GetID() + "/?filename=" + file.GetName()
+	link := d.Gateway + "/ipfs/" + file.GetID() + "/?filename=" + url.PathEscape(file.GetName())
 	return &model.Link{URL: link}, nil
 }
 
