@@ -17,6 +17,7 @@ type TmpTokenResponse struct {
 }
 type TmpTokenResponseData struct {
 	Credentials Credentials `json:"Credentials"`
+	ExpiredAt   int         `json:"ExpiredAt"`
 }
 type Credentials struct {
 	AccessKeyId     string `json:"accessKeyId,omitempty"`

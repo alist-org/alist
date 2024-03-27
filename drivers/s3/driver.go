@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/alist-org/alist/v3/internal/stream"
+	"github.com/alist-org/alist/v3/pkg/cron"
 
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
@@ -28,6 +29,7 @@ type S3 struct {
 	linkClient *s3.S3
 
 	config driver.Config
+	cron   *cron.Cron
 }
 
 func (d *S3) Config() driver.Config {
@@ -42,6 +44,15 @@ func (d *S3) Init(ctx context.Context) error {
 	if d.Region == "" {
 		d.Region = "alist"
 	}
+	if d.config.Name == "Doge" {
+		d.cron = cron.NewCron(time.Minute * 118)
+		d.cron.Do(func() {
+			err := d.initSession()
+			if err != nil {
+				log.Errorln("Doge init session error:", err)
+			}
+		})
+	}
 	err := d.initSession()
 	if err != nil {
 		return err
@@ -52,6 +63,9 @@ func (d *S3) Init(ctx context.Context) error {
 }
 
 func (d *S3) Drop(ctx context.Context) error {
+	if d.cron != nil {
+		d.cron.Stop()
+	}
 	return nil
 }
 
