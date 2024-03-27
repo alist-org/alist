@@ -41,6 +41,7 @@ type FileStreamer interface {
 	GetMimetype() string
 	//SetReader(io.Reader)
 	NeedStore() bool
+	IsForceStreamUpload() bool
 	GetExist() Obj
 	SetExist(Obj)
 	//for a non-seekable Stream, RangeRead supports peeking some data, and CacheFullInTempFile still works

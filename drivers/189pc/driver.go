@@ -312,13 +312,17 @@ func (y *Cloud189PC) Remove(ctx context.Context, obj model.Obj) error {
 
 func (y *Cloud189PC) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) (model.Obj, error) {
 	// 响应时间长,按需启用
-	if y.Addition.RapidUpload {
+	if y.Addition.RapidUpload && !stream.IsForceStreamUpload() {
 		if newObj, err := y.RapidUpload(ctx, dstDir, stream); err == nil {
 			return newObj, nil
 		}
 	}
 
-	switch y.UploadMethod {
+	uploadMethod := y.UploadMethod
+	if stream.IsForceStreamUpload() {
+		uploadMethod = "stream"
+	}
+	switch uploadMethod {
 	case "old":
 		return y.OldUpload(ctx, dstDir, stream, up)
 	case "rapid":
