@@ -63,6 +63,9 @@ func (d *S3) Init(ctx context.Context) error {
 }
 
 func (d *S3) Drop(ctx context.Context) error {
+	if d.cron != nil {
+		d.cron.Stop()
+	}
 	return nil
 }
 
