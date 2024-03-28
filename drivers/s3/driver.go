@@ -45,12 +45,15 @@ func (d *S3) Init(ctx context.Context) error {
 		d.Region = "alist"
 	}
 	if d.config.Name == "Doge" {
+		// 多吉云每次临时生成的秘钥有效期为 2h，所以这里设置为 118 分钟重新生成一次
 		d.cron = cron.NewCron(time.Minute * 118)
 		d.cron.Do(func() {
 			err := d.initSession()
 			if err != nil {
 				log.Errorln("Doge init session error:", err)
 			}
+			d.client = d.getClient(false)
+			d.linkClient = d.getClient(true)
 		})
 	}
 	err := d.initSession()
