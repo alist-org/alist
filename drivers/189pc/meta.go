@@ -16,6 +16,7 @@ type Addition struct {
 	FamilyID       string `json:"family_id"`
 	UploadMethod   string `json:"upload_method" type:"select" options:"stream,rapid,old" default:"stream"`
 	UploadThread   string `json:"upload_thread" default:"3" help:"1<=thread<=32"`
+	FamilyTransfer bool   `json:"family_transfer"`
 	RapidUpload    bool   `json:"rapid_upload"`
 	NoUseOcr       bool   `json:"no_use_ocr"`
 }
