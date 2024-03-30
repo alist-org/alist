@@ -34,12 +34,6 @@ func S3(g *gin.RouterGroup) {
 }
 
 func S3Server(g *gin.RouterGroup) {
-	if !conf.Conf.S3.Enable {
-		g.Any("/*path", func(c *gin.Context) {
-			common.ErrorStrResp(c, "S3 server is not enabled", 403)
-		})
-		return
-	}
 	h, _ := s3.NewServer(context.Background())
 	g.Any("/*path", gin.WrapH(h))
 }

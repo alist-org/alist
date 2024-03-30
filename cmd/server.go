@@ -91,10 +91,10 @@ the address is defined in config file`,
 				}
 			}()
 		}
-		s3r := gin.New()
-		s3r.Use(gin.LoggerWithWriter(log.StandardLogger().Out), gin.RecoveryWithWriter(log.StandardLogger().Out))
-		server.InitS3(s3r)
-		if conf.Conf.S3.Port != -1 {
+		if conf.Conf.S3.Port != -1 && conf.Conf.S3.Enable {
+			s3r := gin.New()
+			s3r.Use(gin.LoggerWithWriter(log.StandardLogger().Out), gin.RecoveryWithWriter(log.StandardLogger().Out))
+			server.InitS3(s3r)
 			s3Base := fmt.Sprintf("%s:%d", conf.Conf.Scheme.Address, conf.Conf.S3.Port)
 			utils.Log.Infof("start S3 server @ %s", s3Base)
 			go func() {
