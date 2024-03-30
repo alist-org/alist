@@ -27,8 +27,10 @@ type Cloud189PC struct {
 	loginParam *LoginParam
 	tokenInfo  *AppSessionResp
 
-	uploadThread         int
-	familyTransferFolder *ring.Ring
+	uploadThread int
+
+	familyTransferFolder    *ring.Ring
+	cleanFamilyTransferFile func()
 
 	storageConfig driver.Config
 }
@@ -92,6 +94,12 @@ func (y *Cloud189PC) Init(ctx context.Context) (err error) {
 			return err
 		}
 	}
+
+	y.cleanFamilyTransferFile = utils.NewThrottle2(time.Minute, func() {
+		if err := y.cleanFamilyTransfer(context.TODO()); err != nil {
+			utils.Log.Errorf("cleanFamilyTransferFolderError:%s", err)
+		}
+	})
 	return
 }
 
@@ -314,6 +322,9 @@ func (y *Cloud189PC) Put(ctx context.Context, dstDir model.Obj, stream model.Fil
 
 		defer func() {
 			if newObj != nil {
+				// 批量任务有概率删不掉
+				y.cleanFamilyTransferFile()
+
 				// 转存家庭云文件到个人云
 				err = y.SaveFamilyFileToPersonCloud(context.TODO(), y.FamilyID, newObj, transferDstDir, true)
 
@@ -322,12 +333,13 @@ func (y *Cloud189PC) Put(ctx context.Context, dstDir model.Obj, stream model.Fil
 					FileName: newObj.GetName(),
 					IsFolder: BoolToNumber(newObj.IsDir()),
 				}
+
 				// 删除源文件
 				if resp, err := y.CreateBatchTask("DELETE", y.FamilyID, "", nil, task); err == nil {
-					y.WaitBatchTask("DELETE", resp.TaskID, time.Millisecond*200)
+					y.WaitBatchTask("DELETE", resp.TaskID, time.Second)
 					// 永久删除
 					if resp, err := y.CreateBatchTask("CLEAR_RECYCLE", y.FamilyID, "", nil, task); err == nil {
-						y.WaitBatchTask("CLEAR_RECYCLE", resp.TaskID, time.Millisecond*200)
+						y.WaitBatchTask("CLEAR_RECYCLE", resp.TaskID, time.Second)
 					}
 				}
 				newObj = nil

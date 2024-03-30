@@ -945,6 +945,47 @@ func (y *Cloud189PC) createFamilyTransferFolder(count int) (*ring.Ring, error) {
 	return folders, nil
 }
 
+// 清理中转文件夹
+func (y *Cloud189PC) cleanFamilyTransfer(ctx context.Context) error {
+	var tasks []BatchTaskInfo
+	r := y.familyTransferFolder
+	for p := r.Next(); p != r; p = p.Next() {
+		folder := p.Value.(*Cloud189Folder)
+
+		files, err := y.getFiles(ctx, folder.GetID(), true)
+		if err != nil {
+			return err
+		}
+		for _, file := range files {
+			tasks = append(tasks, BatchTaskInfo{
+				FileId:   file.GetID(),
+				FileName: file.GetName(),
+				IsFolder: BoolToNumber(file.IsDir()),
+			})
+		}
+	}
+
+	if len(tasks) > 0 {
+		// 删除
+		resp, err := y.CreateBatchTask("DELETE", y.FamilyID, "", nil, tasks...)
+		if err != nil {
+			return err
+		}
+		err = y.WaitBatchTask("DELETE", resp.TaskID, time.Second)
+		if err != nil {
+			return err
+		}
+		// 永久删除
+		resp, err = y.CreateBatchTask("CLEAR_RECYCLE", y.FamilyID, "", nil, tasks...)
+		if err != nil {
+			return err
+		}
+		err = y.WaitBatchTask("CLEAR_RECYCLE", resp.TaskID, time.Second)
+		return err
+	}
+	return nil
+}
+
 // 获取家庭云所有用户信息
 func (y *Cloud189PC) getFamilyInfoList() ([]FamilyInfoResp, error) {
 	var resp FamilyInfoListResp
