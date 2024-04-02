@@ -192,3 +192,19 @@ func partSize(size int64) int64 {
 	}
 	return DEFAULT
 }
+
+func isBool(bs ...bool) bool {
+	for _, b := range bs {
+		if b {
+			return true
+		}
+	}
+	return false
+}
+
+func IF[V any](o bool, t V, f V) V {
+	if o {
+		return t
+	}
+	return f
+}

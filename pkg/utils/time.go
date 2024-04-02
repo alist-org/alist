@@ -37,3 +37,28 @@ func NewDebounce2(interval time.Duration, f func()) func() {
 		(*time.Timer)(timer).Reset(interval)
 	}
 }
+
+func NewThrottle(interval time.Duration) func(func()) {
+	var lastCall time.Time
+
+	return func(fn func()) {
+		now := time.Now()
+		if now.Sub(lastCall) < interval {
+			return
+		}
+		time.AfterFunc(interval, fn)
+		lastCall = now
+	}
+}
+
+func NewThrottle2(interval time.Duration, fn func()) func() {
+	var lastCall time.Time
+	return func() {
+		now := time.Now()
+		if now.Sub(lastCall) < interval {
+			return
+		}
+		time.AfterFunc(interval, fn)
+		lastCall = now
+	}
+}
