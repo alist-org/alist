@@ -398,7 +398,7 @@ func SSOLoginCallback(c *gin.Context) {
 	}
 	userID := utils.Json.Get(resp.Body(), idField).ToString()
 	if utils.SliceContains([]string{"", "0"}, userID) {
-		common.ErrorResp(c, errors.New("error occured"), 400)
+		common.ErrorResp(c, errors.New("error occurred"), 400)
 		return
 	}
 	if argument == "get_sso_id" {
