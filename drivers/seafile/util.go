@@ -14,6 +14,10 @@ import (
 )
 
 func (d *Seafile) getToken() error {
+	if d.Token != "" {
+		d.authorization = fmt.Sprintf("Token %s", d.Token)
+		return nil
+	}
 	var authResp AuthTokenResp
 	res, err := base.RestyClient.R().
 		SetResult(&authResp).
