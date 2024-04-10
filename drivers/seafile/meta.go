@@ -9,8 +9,9 @@ type Addition struct {
 	driver.RootPath
 
 	Address  string `json:"address" required:"true"`
-	UserName string `json:"username" required:"true"`
-	Password string `json:"password" required:"true"`
+	UserName string `json:"username" required:"false"`
+	Password string `json:"password" required:"false"`
+	Token    string `json:"token" required:"false"`	
 	RepoId   string `json:"repoId" required:"false"`
 	RepoPwd  string `json:"repoPwd" required:"false"`
 }
