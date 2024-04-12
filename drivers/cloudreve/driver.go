@@ -71,6 +71,7 @@ func (d *Cloudreve) Link(ctx context.Context, file model.Obj, args model.LinkArg
 	if err != nil {
 		return nil, err
 	}
+	dUrl = d.Address + dUrl
 	return &model.Link{
 		URL: dUrl,
 	}, nil
