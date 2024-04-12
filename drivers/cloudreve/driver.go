@@ -71,6 +71,9 @@ func (d *Cloudreve) Link(ctx context.Context, file model.Obj, args model.LinkArg
 	if err != nil {
 		return nil, err
 	}
+	if strings.HasPrefix(dUrl, "/api") {
+		dUrl = d.Address + dUrl
+	}
 	return &model.Link{
 		URL: dUrl,
 	}, nil
