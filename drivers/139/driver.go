@@ -14,15 +14,16 @@ import (
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/pkg/cron"
+	"github.com/alist-org/alist/v3/pkg/utils"
+	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 )
 
 type Yun139 struct {
 	model.Storage
 	Addition
-	cron   *cron.Cron
+	cron    *cron.Cron
 	Account string
 }
 
@@ -306,12 +307,20 @@ func (d *Yun139) Remove(ctx context.Context, obj model.Obj) error {
 	case MetaPersonal:
 		fallthrough
 	case MetaFamily:
+
+		log.Warn("==========================================")
 		var contentInfoList []string
 		var catalogInfoList []string
+		cataID := obj.GetID()
+		if strings.Contains(cataID, "/") {
+			lastSlashIndex := strings.LastIndex(cataID, "/")
+			cataID = cataID[lastSlashIndex+1:]
+		}
+
 		if obj.IsDir() {
-			catalogInfoList = append(catalogInfoList, obj.GetID())
+			catalogInfoList = append(catalogInfoList, cataID)
 		} else {
-			contentInfoList = append(contentInfoList, obj.GetID())
+			contentInfoList = append(contentInfoList, cataID)
 		}
 		data := base.Json{
 			"createBatchOprTaskReq": base.Json{
@@ -331,16 +340,18 @@ func (d *Yun139) Remove(ctx context.Context, obj model.Obj) error {
 		pathname := "/orchestration/personalCloud/batchOprTask/v1.0/createBatchOprTask"
 		if d.isFamily() {
 			data = base.Json{
-				"catalogList": catalogInfoList,
-				"contentList": contentInfoList,
+				"taskType":          2,
+				"sourceCloudID":     d.CloudID,
+				"sourceCatalogType": 1002,
+				"path":              "",
+				"contentList":       catalogInfoList,
+				"catalogList":       contentInfoList,
 				"commonAccountInfo": base.Json{
 					"account":     d.Account,
 					"accountType": 1,
 				},
-				"sourceCatalogType": 1002,
-				"taskType":          2,
 			}
-			pathname = "/orchestration/familyCloud/batchOprTask/v1.0/createBatchOprTask"
+			pathname = "/orchestration/familyCloud-rebuild/batchOprTask/v1.0/createBatchOprTask"
 		}
 		_, err := d.post(pathname, data, nil)
 		return err
@@ -471,28 +482,36 @@ func (d *Yun139) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 		}
 		pathname := "/orchestration/personalCloud/uploadAndDownload/v1.0/pcUploadFileRequest"
 		if d.isFamily() {
-			// data = d.newJson(base.Json{
-			// 	"fileCount":    1,
-			// 	"manualRename": 2,
-			// 	"operation":    0,
-			// 	"path":         "",
-			// 	"seqNo":        "",
-			// 	"totalSize":    0,
-			// 	"uploadContentList": []base.Json{{
-			// 		"contentName": stream.GetName(),
-			// 		"contentSize": 0,
-			// 		// "digest": "5a3231986ce7a6b46e408612d385bafa"
-			// 	}},
-			// })
-			// pathname = "/orchestration/familyCloud/content/v1.0/getFileUploadURL"
-			return errs.NotImplement
+			cataID := dstDir.GetID()
+			path := cataID
+			seqNo, _ := uuid.NewUUID()
+			data = base.Json{
+				"cloudID":      d.CloudID,
+				"path":         path,
+				"operation":    0,
+				"cloudType":    1,
+				"catalogType":  3,
+				"manualRename": 2,
+				"fileCount":    1,
+				"totalSize":    0,
+				"uploadContentList": []base.Json{{
+					"contentName": stream.GetName(),
+					"contentSize": 0,
+				}},
+				"seqNo": seqNo,
+				"commonAccountInfo": base.Json{
+					"account":     d.Account,
+					"accountType": 1,
+				},
+			}
+			pathname = "/orchestration/familyCloud-rebuild/content/v1.0/getFileUploadURL"
+			//return errs.NotImplement
 		}
 		var resp UploadResp
 		_, err := d.post(pathname, data, &resp)
 		if err != nil {
 			return err
 		}
-
 		// Progress
 		p := driver.NewProgress(stream.GetSize(), up)
 

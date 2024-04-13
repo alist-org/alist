@@ -13,9 +13,9 @@ import (
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/pkg/utils/random"
-	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/go-resty/resty/v2"
 	jsoniter "github.com/json-iterator/go"
 	log "github.com/sirupsen/logrus"
@@ -207,6 +207,12 @@ func (d *Yun139) newJson(data map[string]interface{}) base.Json {
 }
 
 func (d *Yun139) familyGetFiles(catalogID string) ([]model.Obj, error) {
+
+	if strings.Contains(catalogID, "/") {
+		lastSlashIndex := strings.LastIndex(catalogID, "/")
+		catalogID = catalogID[lastSlashIndex+1:]
+	}
+
 	pageNum := 1
 	files := make([]model.Obj, 0)
 	for {
@@ -226,7 +232,7 @@ func (d *Yun139) familyGetFiles(catalogID string) ([]model.Obj, error) {
 		}
 		for _, catalog := range resp.Data.CloudCatalogList {
 			f := model.Object{
-				ID:       catalog.CatalogID,
+				ID:       resp.Data.Path + "/" + catalog.CatalogID,
 				Name:     catalog.CatalogName,
 				Size:     0,
 				IsFolder: true,
