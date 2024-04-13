@@ -1,8 +1,12 @@
 name: Close need info
 
+# on:
+#   schedule:
+#     - cron: "0 0 */1 * *"
+#   workflow_dispatch:
+
 on:
-  schedule:
-    - cron: "0 0 */1 * *"
+  repository_dispatch:
   workflow_dispatch:
 
 jobs:

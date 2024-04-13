@@ -1,14 +1,7 @@
 name: auto_lang
 
 on:
-  push:
-    branches:
-      - 'main'
-    paths:
-      - 'drivers/**'
-      - 'internal/bootstrap/data/setting.go'
-      - 'internal/conf/const.go'
-      - 'cmd/lang.go'
+  repository_dispatch:
   workflow_dispatch:
 
 concurrency:

@@ -1,9 +1,8 @@
 name: auto changelog
 
 on:
-  push:
-    tags:
-      - '*'
+  repository_dispatch:
+  workflow_dispatch:
 
 jobs:
   changelog:

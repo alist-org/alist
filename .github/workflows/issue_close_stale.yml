@@ -1,8 +1,7 @@
 name: Close inactive
 
 on:
-  schedule:
-    - cron: "0 0 */7 * *"
+  repository_dispatch:
   workflow_dispatch:
 
 jobs:

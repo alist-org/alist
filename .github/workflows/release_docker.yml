@@ -1,9 +1,12 @@
 name: release_docker
 
+# on:
+#   push:
+#     tags:
+#       - '*'
 on:
-  push:
-    tags:
-      - '*'
+  repository_dispatch:
+  workflow_dispatch:
 
 jobs:
   release_docker:

@@ -1,8 +1,12 @@
 name: release
 
+# on:
+#   release:
+#     types: [ published ]
+
 on:
-  release:
-    types: [ published ]
+  repository_dispatch:
+  workflow_dispatch:
 
 jobs:
   release:
