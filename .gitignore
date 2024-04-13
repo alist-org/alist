@@ -1,5 +1,6 @@
 .idea/
 .DS_Store
+.github
 output/
 /dist/
 
