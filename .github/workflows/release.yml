@@ -60,7 +60,7 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.MY_TOKEN }}
-          file: target/release/pikpak-webdav*.tar.gz
+          file: build/compress/*
           file_glob: true
           overwrite: true
           tag: "refs/tags/${{ github.event.inputs.tag }}"
