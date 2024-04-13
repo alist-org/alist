@@ -15,7 +15,7 @@ var config = driver.Config{
 	Name:        "FastWebdav",
 	DefaultRoot: "/",
 	NoUpload:    true,
-	Alert:       "warning|只能读文件不能进行其它操作",
+	Alert:       "warning|只能读文件不能进行其它操作,如:复制,移动,上传等",
 }
 
 func init() {
