@@ -7,6 +7,11 @@ name: release
 on:
   repository_dispatch:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release'
+        required: true
+        default: 'v0.0.1'
 
 jobs:
   release:
@@ -17,12 +22,12 @@ jobs:
     name: Release
     runs-on: ${{ matrix.platform }}
     steps:
-      - name: Prerelease
-        uses: irongut/EditRelease@v1.2.0
-        with:
-          token: ${{ secrets.MY_TOKEN }}
-          id: ${{ github.event.release.id }}
-          prerelease: true
+      # - name: Prerelease
+      #   uses: irongut/EditRelease@v1.2.0
+      #   with:
+      #     token: ${{ secrets.MY_TOKEN }}
+      #     id: ${{ github.event.release.id }}
+      #     prerelease: true
 
       - name: Setup Go
         uses: actions/setup-go@v5
@@ -45,11 +50,20 @@ jobs:
         run: |
           bash build.sh release
 
-      - name: Upload assets
-        uses: softprops/action-gh-release@v1
+      # - name: Upload assets
+      #   uses: softprops/action-gh-release@v1
+      #   with:
+      #     files: build/compress/*
+      #     prerelease: false
+
+      - name: Upload binary to GitHub Release
+        uses: svenstaro/upload-release-action@v2
         with:
-          files: build/compress/*
-          prerelease: false
+          repo_token: ${{ secrets.MY_TOKEN }}
+          file: target/release/pikpak-webdav*.tar.gz
+          file_glob: true
+          overwrite: true
+          tag: "refs/tags/${{ github.event.inputs.tag }}"
 
   release_desktop:
     needs: release
