@@ -2,15 +2,16 @@ package tool
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/internal/stream"
+	"github.com/alist-org/alist/v3/pkg/tache"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-	"github.com/xhofe/tache"
-	"os"
-	"path/filepath"
 )
 
 type TransferTask struct {

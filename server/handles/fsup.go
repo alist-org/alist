@@ -1,12 +1,13 @@
 package handles
 
 import (
-	"github.com/xhofe/tache"
 	"io"
 	"net/url"
 	stdpath "path"
 	"strconv"
 	"time"
+
+	"github.com/alist-org/alist/v3/pkg/tache"
 
 	"github.com/alist-org/alist/v3/internal/stream"
 

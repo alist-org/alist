@@ -5,9 +5,9 @@ import (
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/offline_download/tool"
 	"github.com/alist-org/alist/v3/internal/op"
+	"github.com/alist-org/alist/v3/pkg/tache"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/gin-gonic/gin"
-	"github.com/xhofe/tache"
 )
 
 type SetAria2Req struct {

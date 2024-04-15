@@ -2,13 +2,14 @@ package tool
 
 import (
 	"context"
+	"path/filepath"
+
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/op"
+	"github.com/alist-org/alist/v3/pkg/tache"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
-	"github.com/xhofe/tache"
-	"path/filepath"
 )
 
 type DeletePolicy string

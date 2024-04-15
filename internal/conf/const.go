@@ -73,6 +73,11 @@ const (
 	SSODefaultPermission = "sso_default_permission"
 	SSOCompatibilityMode = "sso_compatibility_mode"
 
+	//NOTYFY
+	NotifyEnabled  = "notify_enabled"
+	NotifyPlatform = "notify_platform"
+	NotifyValue    = "notify_value"
+
 	//ldap
 	LdapLoginEnabled      = "ldap_login_enabled"
 	LdapServer            = "ldap_server"

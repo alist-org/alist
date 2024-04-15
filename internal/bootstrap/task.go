@@ -4,7 +4,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/fs"
 	"github.com/alist-org/alist/v3/internal/offline_download/tool"
-	"github.com/xhofe/tache"
+	"github.com/alist-org/alist/v3/pkg/tache"
 )
 
 func InitTaskManager() {

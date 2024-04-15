@@ -1,0 +1,186 @@
+<!--
+	mitm.html is the lite "man in the middle"
+	This is only meant to signal the opener's messageChannel to
+	the service worker - when that is done this mitm can be closed
+    but it's better to keep it alive since this also stops the sw
+    from restarting
+	The service worker is capable of intercepting all request and fork their
+	own "fake" response - wish we are going to craft
+	when the worker then receives a stream then the worker will tell the opener
+	to open up a link that will start the download
+-->
+<script>
+  // This will prevent the sw from restarting
+  let keepAlive = () => {
+    keepAlive = () => {}
+    var ping = location.href.substr(0, location.href.lastIndexOf("/")) + "/ping"
+    var interval = setInterval(() => {
+      if (sw) {
+        sw.postMessage("ping")
+      } else {
+        fetch(ping).then((res) => res.text(!res.ok && clearInterval(interval)))
+      }
+    }, 10000)
+  }
+
+  // message event is the first thing we need to setup a listener for
+  // don't want the opener to do a random timeout - instead they can listen for
+  // the ready event
+  // but since we need to wait for the Service Worker registration, we store the
+  // message for later
+  let messages = []
+  window.onmessage = (evt) => messages.push(evt)
+
+  let sw = null
+  let scope = ""
+
+  function registerWorker() {
+    return navigator.serviceWorker
+      .getRegistration("./")
+      .then((swReg) => {
+        return (
+          swReg || navigator.serviceWorker.register("sw.js", { scope: "./" })
+        )
+      })
+      .then((swReg) => {
+        const swRegTmp = swReg.installing || swReg.waiting
+
+        scope = swReg.scope
+
+        return (
+          (sw = swReg.active) ||
+          new Promise((resolve) => {
+            swRegTmp.addEventListener(
+              "statechange",
+              (fn = () => {
+                if (swRegTmp.state === "activated") {
+                  swRegTmp.removeEventListener("statechange", fn)
+                  sw = swReg.active
+                  resolve()
+                }
+              })
+            )
+          })
+        )
+      })
+  }
+
+  // Now that we have the Service Worker registered we can process messages
+  function onMessage(event) {
+    let { data, ports, origin } = event
+
+    // It's important to have a messageChannel, don't want to interfere
+    // with other simultaneous downloads
+    if (!ports || !ports.length) {
+      throw new TypeError("[StreamSaver] You didn't send a messageChannel")
+    }
+
+    if (typeof data !== "object") {
+      throw new TypeError("[StreamSaver] You didn't send a object")
+    }
+
+    // the default public service worker for StreamSaver is shared among others.
+    // so all download links needs to be prefixed to avoid any other conflict
+    data.origin = origin
+
+    // if we ever (in some feature version of streamsaver) would like to
+    // redirect back to the page of who initiated a http request
+    data.referrer = data.referrer || document.referrer || origin
+
+    // pass along version for possible backwards compatibility in sw.js
+    data.streamSaverVersion = new URLSearchParams(location.search).get(
+      "version"
+    )
+
+    if (data.streamSaverVersion === "1.2.0") {
+      console.warn("[StreamSaver] please update streamsaver")
+    }
+
+    /** @since v2.0.0 */
+    if (!data.headers) {
+      console.warn(
+        "[StreamSaver] pass `data.headers` that you would like to pass along to the service worker\nit should be a 2D array or a key/val object that fetch's Headers api accepts"
+      )
+    } else {
+      // test if it's correct
+      // should thorw a typeError if not
+      new Headers(data.headers)
+    }
+
+    /** @since v2.0.0 */
+    if (typeof data.filename === "string") {
+      console.warn(
+        "[StreamSaver] You shouldn't send `data.filename` anymore. It should be included in the Content-Disposition header option"
+      )
+      // Do what File constructor do with fileNames
+      data.filename = data.filename.replace(/\//g, ":")
+    }
+
+    /** @since v2.0.0 */
+    if (data.size) {
+      console.warn(
+        "[StreamSaver] You shouldn't send `data.size` anymore. It should be included in the content-length header option"
+      )
+    }
+
+    /** @since v2.0.0 */
+    if (data.readableStream) {
+      console.warn(
+        "[StreamSaver] You should send the readableStream in the messageChannel, not through mitm"
+      )
+    }
+
+    /** @since v2.0.0 */
+    if (!data.pathname) {
+      console.warn(
+        "[StreamSaver] Please send `data.pathname` (eg: /pictures/summer.jpg)"
+      )
+      data.pathname = Math.random().toString().slice(-6) + "/" + data.filename
+    }
+
+    // remove all leading slashes
+    data.pathname = data.pathname.replace(/^\/+/g, "")
+
+    // remove protocol
+    let org = origin.replace(/(^\w+:|^)\/\//, "")
+
+    // set the absolute pathname to the download url.
+    data.url = new URL(`${scope + org}/${data.pathname}`).toString()
+
+    if (!data.url.startsWith(`${scope + org}/`)) {
+      throw new TypeError("[StreamSaver] bad `data.pathname`")
+    }
+
+    // This sends the message data as well as transferring
+    // messageChannel.port2 to the service worker. The service worker can
+    // then use the transferred port to reply via postMessage(), which
+    // will in turn trigger the onmessage handler on messageChannel.port1.
+
+    const transferable = data.readableStream
+      ? [ports[0], data.readableStream]
+      : [ports[0]]
+
+    if (!(data.readableStream || data.transferringReadable)) {
+      keepAlive()
+    }
+
+    return sw.postMessage(data, transferable)
+  }
+
+  if (window.opener) {
+    // The opener can't listen to onload event, so we need to help em out!
+    // (telling them that we are ready to accept postMessage's)
+    window.opener.postMessage("StreamSaver::loadedPopup", "*")
+  }
+
+  if (navigator.serviceWorker) {
+    registerWorker().then(() => {
+      window.onmessage = onMessage
+      messages.forEach(window.onmessage)
+    })
+  } else {
+    // FF can ping sw with fetch from a secure hidden iframe
+    // shouldn't really be possible?
+    keepAlive()
+  }
+</script>

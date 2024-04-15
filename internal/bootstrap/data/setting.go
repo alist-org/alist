@@ -168,6 +168,11 @@ func InitialSettings() []model.SettingItem {
 		{Key: conf.SSODefaultPermission, Value: "0", Type: conf.TypeNumber, Group: model.SSO, Flag: model.PRIVATE},
 		{Key: conf.SSOCompatibilityMode, Value: "false", Type: conf.TypeBool, Group: model.SSO, Flag: model.PUBLIC},
 
+		// NOTIFY settings
+		{Key: conf.NotifyEnabled, Value: "false", Type: conf.TypeBool, Group: model.NOTIFICATION, Flag: model.PUBLIC},
+		{Key: conf.NotifyPlatform, Type: conf.TypeSelect, Options: "gotify,goCqHttpBot,serverChan,pushDeer,bark,telegramBot,dingtalkBot,weWorkBot,weWorkApp,aibotk,iGot,pushPlus,chat,email,lark,pushMe,chronocat,webhook,closed", Group: model.NOTIFICATION, Flag: model.PUBLIC},
+		{Key: conf.NotifyValue, Type: conf.TypeText, Group: model.NOTIFICATION, Flag: model.PUBLIC},
+
 		// ldap settings
 		{Key: conf.LdapLoginEnabled, Value: "false", Type: conf.TypeBool, Group: model.LDAP, Flag: model.PUBLIC},
 		{Key: conf.LdapServer, Value: "", Type: conf.TypeString, Group: model.LDAP, Flag: model.PRIVATE},

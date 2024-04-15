@@ -7,9 +7,9 @@ import (
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/setting"
+	"github.com/alist-org/alist/v3/pkg/tache"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-	"github.com/xhofe/tache"
 )
 
 type DownloadTask struct {

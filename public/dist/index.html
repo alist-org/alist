@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en" translate="no">
+  <head>
+    <!-- customize head -->
+    <meta charset="utf-8" >
+    <meta name="viewport" content="width=device-width, initial-scale=1" >
+    <meta name="referrer" content="same-origin" >
+    <meta name="generator" content="AList V3" >
+    <meta name="theme-color" content="#000000" >
+    <meta name="google" content="notranslate" >
+    
+    <meta name="apple-mobile-web-app-capable" content="yes" >
+    <meta name="apple-mobile-web-app-title" content="AList" >
+    <link       rel="apple-touch-icon"
+      href="https://jsd.nn.ci/gh/alist-org/logo@main/logo.png"
+    >
+    <script       src="https://g.alicdn.com/IMM/office-js/1.1.5/aliyun-web-office-sdk.min.js"
+      async
+    ></script>
+    <link       rel="shortcut icon"
+      type="image/ico"
+      href="https://jsd.nn.ci/gh/alist-org/logo@main/logo.svg"
+    >
+    <title>Loading...</title>
+    <script>
+      window.ALIST = {
+        cdn: undefined,
+        monaco_cdn: undefined,
+        base_path: undefined,
+        api: undefined,
+        main_color: undefined,
+      }
+      window.__dynamic_base__ = window.ALIST.cdn || ""
+    </script>
+    
+    
+    <script type="module">try{import.meta.url;import("_").catch(()=>1);}catch(e){}window.__vite_is_modern_browser=true;</script>
+    <script type="module">!function(){if(window.__vite_is_modern_browser)return;console.warn("vite: loading legacy build because dynamic import or import.meta.url is unsupported, syntax error above should be ignored");var e=document.getElementById("vite-legacy-polyfill"),n=document.createElement("script");n.src= window.__dynamic_base__+e.getAttribute('data-src'),n.onload=function(){System.import( window.__dynamic_base__+document.getElementById('vite-legacy-entry').getAttribute('data-src'))},document.body.appendChild(n)}();</script>
+    <script>
+(function(){
+var preloads = [{"parentTagName":"head","tagName":"link","attrs":{"href":"/static/manifest.json","rel":"manifest"}},{"parentTagName":"head","tagName":"script","attrs":{"type":"module","crossorigin":"","src":"/assets/index.2d320a5e.js"}},{"parentTagName":"head","tagName":"link","attrs":{"rel":"stylesheet","href":"/assets/index.15d8d646.css"}}];
+function setAttribute(target, attrs) {
+for (var key in attrs) {
+  target.setAttribute(key, attrs[key]);
+}
+return target;
+};
+for(var i = 0; i < preloads.length; i++){
+var item = preloads[i]
+var childNode = document.createElement(item.tagName);
+setAttribute(childNode, item.attrs)
+if( window.__dynamic_base__) {
+  if(item.tagName == 'link') {
+    setAttribute(childNode, { href:  window.__dynamic_base__ + item.attrs.href })
+  } else if (item.tagName == 'script') {
+    setAttribute(childNode, { src:  window.__dynamic_base__ + item.attrs.src })
+  }
+}
+document.getElementsByTagName(item.parentTagName)[0].appendChild(childNode);
+}
+})();
+</script>
+</head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+
+    
+    <!-- customize body -->
+    <script nomodule>!function(){var e=document,t=e.createElement("script");if(!("noModule"in t)&&"onbeforeload"in t){var n=!1;e.addEventListener("beforeload",(function(e){if(e.target===t)n=!0;else if(!e.target.hasAttribute("nomodule")||!n)return;e.preventDefault()}),!0),t.type="module",t.src=".",e.head.appendChild(t),t.remove()}}();</script>
+    <script nomodule crossorigin id="vite-legacy-polyfill" data-src="/assets/polyfills-legacy.006883eb.js">!(function() {
+      var e = document.createElement('script')
+      e.src =  window.__dynamic_base__ + document.getElementById('vite-legacy-polyfill').getAttribute('data-src');
+      e.onload = function() {
+        System.import( window.__dynamic_base__+document.getElementById('vite-legacy-entry').getAttribute('data-src'))
+      };
+      document.body.appendChild(e)
+    })();</script>
+    <script nomodule crossorigin id="vite-legacy-entry" data-src="/assets/index-legacy.38a490ba.js"></script>
+  </body>
+</html>

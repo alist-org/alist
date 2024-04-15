@@ -2,9 +2,10 @@ package handles
 
 import (
 	"fmt"
-	"github.com/xhofe/tache"
 	"io"
 	stdpath "path"
+
+	"github.com/alist-org/alist/v3/pkg/tache"
 
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/fs"

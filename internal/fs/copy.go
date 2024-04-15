@@ -3,16 +3,17 @@ package fs
 import (
 	"context"
 	"fmt"
+	"net/http"
+	stdpath "path"
+
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/internal/stream"
+	"github.com/alist-org/alist/v3/pkg/tache"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
-	"github.com/xhofe/tache"
-	"net/http"
-	stdpath "path"
 )
 
 type CopyTask struct {
@@ -29,6 +30,15 @@ func (t *CopyTask) GetName() string {
 
 func (t *CopyTask) GetStatus() string {
 	return t.Status
+}
+
+func (t *CopyTask) OnFailed() {
+	print("++++++++++++++++++++++++++++++++++++=")
+	op.Notify("哈哈测试下标题", "内容不重要，先不写")
+}
+
+func (t *CopyTask) OnSucceeded() {
+	print("++++++++++++++++++++++++++++++++++++=")
 }
 
 func (t *CopyTask) Run() error {

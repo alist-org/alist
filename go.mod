@@ -53,7 +53,6 @@ require (
 	github.com/u2takey/ffmpeg-go v0.5.0
 	github.com/upyun/go-sdk/v3 v3.0.4
 	github.com/winfsp/cgofuse v1.5.1-0.20230130140708-f87f5db493b5
-	github.com/xhofe/tache v0.1.1
 	golang.org/x/crypto v0.19.0
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225
 	golang.org/x/image v0.15.0
