@@ -331,12 +331,20 @@ var platform model.SettingItem
 
 func Notify(title string, content string) {
 	platform, err := GetSettingItemByKey(conf.NotifyPlatform)
+	enable, err := GetSettingItemByKey(conf.NotifyEnabled)
 	notifyBody, err := GetSettingItemByKey(conf.NotifyValue)
-	caser := cases.Title(language.English)
-	methodName := caser.String(platform.Value)
 	if err != nil {
 		log.Error("无法找到配置信息")
 	}
+	log.Warn(enable.Value)
+	if enable.Value != "true" && enable.Value != "1" {
+		log.Debug("未开启消息推送功能")
+		return
+	}
+
+	caser := cases.Title(language.English)
+	methodName := caser.String(platform.Value)
+
 	//注意映射方法名必需大写要不然找不到
 	// 使用反射获取结构体实例的值
 	v := reflect.ValueOf(SendNotifyPlatform{})

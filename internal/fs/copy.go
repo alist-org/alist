@@ -14,6 +14,7 @@ import (
 	"github.com/alist-org/alist/v3/pkg/tache"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 )
 
 type CopyTask struct {
@@ -33,12 +34,15 @@ func (t *CopyTask) GetStatus() string {
 }
 
 func (t *CopyTask) OnFailed() {
-	print("++++++++++++++++++++++++++++++++++++=")
-	op.Notify("哈哈测试下标题", "内容不重要，先不写")
+	result := fmt.Sprintf("复制%s到%s失败:%s", t.srcObjPath, t.dstDirPath, t.GetErr())
+	log.Debug(result)
+	op.Notify("文件复制结果", result)
 }
 
 func (t *CopyTask) OnSucceeded() {
-	print("++++++++++++++++++++++++++++++++++++=")
+	result := fmt.Sprintf("复制%s到%s成功", t.srcObjPath, t.dstDirPath)
+	log.Debug(result)
+	op.Notify("文件复制结果", result)
 }
 
 func (t *CopyTask) Run() error {
