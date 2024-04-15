@@ -36,13 +36,13 @@ func (t *CopyTask) GetStatus() string {
 func (t *CopyTask) OnFailed() {
 	result := fmt.Sprintf("复制%s到%s失败:%s", t.srcObjPath, t.dstDirPath, t.GetErr())
 	log.Debug(result)
-	op.Notify("文件复制结果", result)
+	go op.Notify("文件复制结果", result)
 }
 
 func (t *CopyTask) OnSucceeded() {
 	result := fmt.Sprintf("复制%s到%s成功", t.srcObjPath, t.dstDirPath)
 	log.Debug(result)
-	op.Notify("文件复制结果", result)
+	go op.Notify("文件复制结果", result)
 }
 
 func (t *CopyTask) Run() error {

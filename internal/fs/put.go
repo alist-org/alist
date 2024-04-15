@@ -22,13 +22,13 @@ type UploadTask struct {
 // func (t *UploadTask) OnFailed() {
 // 	result := fmt.Sprintf("%s上传失败:%s", t.file.GetName(), t.GetErr())
 // 	log.Debug(result)
-// 	op.Notify("文件上传结果", result)
+// 	go op.Notify("文件上传结果", result)
 // }
 
 // func (t *UploadTask) OnSucceeded() {
 // 	result := fmt.Sprintf("%s上传成功", t.file.GetName())
 // 	log.Debug(result)
-// 	op.Notify("文件上传结果", "文件复制成功")
+// 	go op.Notify("文件上传结果", "文件复制成功")
 // }
 
 func (t *UploadTask) GetName() string {
