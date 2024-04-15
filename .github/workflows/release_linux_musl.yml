@@ -7,6 +7,11 @@ name: release_linux_musl
 on:
   repository_dispatch:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release'
+        required: true
+        default: 'v0.0.1'
 
 jobs:
   release_linux_musl:
@@ -31,8 +36,12 @@ jobs:
       - name: Build
         run: |
           bash build.sh release linux_musl
-
-      - name: Upload assets
-        uses: softprops/action-gh-release@v1
+      
+      - name: Upload binary to GitHub Release
+        uses: svenstaro/upload-release-action@v2
         with:
-          files: build/compress/*
+          repo_token: ${{ secrets.MY_TOKEN }}
+          file: build/compress/*
+          file_glob: true
+          overwrite: true
+          tag: "refs/tags/${{ github.event.inputs.tag }}"
