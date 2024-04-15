@@ -26,7 +26,7 @@ ldflags="\
 "
 
 FetchWebDev() {
-  curl -L https://github.com/ykxVK8yL5L/alist/releases/latest/download/dist.tar.gz -o web-dist-dev.tar.gz
+  curl -L https://github.com/ykxVK8yL5L/alist-web/releases/latest/download/dist.tar.gz -o web-dist-dev.tar.gz
   tar -zxvf web-dist-dev.tar.gz
   rm -rf public/dist
   mv -f web-dist-dev/dist public
@@ -34,7 +34,7 @@ FetchWebDev() {
 }
 
 FetchWebRelease() {
-  curl -L https://github.com/ykxVK8yL5L/alist/releases/latest/download/dist.tar.gz -o dist.tar.gz
+  curl -L https://github.com/ykxVK8yL5L/alist-web/releases/latest/download/dist.tar.gz -o dist.tar.gz
   tar -zxvf dist.tar.gz
   rm -rf public/dist
   mv -f dist public
