@@ -2,6 +2,7 @@ package db
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/pkg/errors"
@@ -65,5 +66,8 @@ func GetEnabledStorages() ([]model.Storage, error) {
 	if err := db.Where(fmt.Sprintf("%s = ?", columnName("disabled")), false).Find(&storages).Error; err != nil {
 		return nil, errors.WithStack(err)
 	}
+	sort.Slice(storages, func(i, j int) bool {
+		return storages[i].Order < storages[j].Order
+	})
 	return storages, nil
 }

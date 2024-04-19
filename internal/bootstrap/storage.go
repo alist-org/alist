@@ -21,8 +21,8 @@ func LoadStorages() {
 			if err != nil {
 				utils.Log.Errorf("failed get enabled storages: %+v", err)
 			} else {
-				utils.Log.Infof("success load storage: [%s], driver: [%s]",
-					storages[i].MountPath, storages[i].Driver)
+				utils.Log.Infof("success load storage: [%s], driver: [%s], order: [%d]",
+					storages[i].MountPath, storages[i].Driver, storages[i].Order)
 			}
 		}
 		conf.StoragesLoaded = true
