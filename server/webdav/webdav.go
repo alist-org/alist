@@ -331,21 +331,21 @@ func (h *Handler) handlePut(w http.ResponseWriter, r *http.Request) (status int,
 		Modified: h.getModTime(r),
 		Ctime:    h.getCreateTime(r),
 	}
-	stream := &stream.FileStream{
+	fsStream := &stream.FileStream{
 		Obj:      &obj,
 		Reader:   r.Body,
 		Mimetype: r.Header.Get("Content-Type"),
 	}
-	if stream.Mimetype == "" {
-		stream.Mimetype = utils.GetMimeType(reqPath)
+	if fsStream.Mimetype == "" {
+		fsStream.Mimetype = utils.GetMimeType(reqPath)
 	}
-	err = fs.PutDirectly(ctx, path.Dir(reqPath), stream)
+	err = fs.PutDirectly(ctx, path.Dir(reqPath), fsStream)
 	if errs.IsNotFoundError(err) {
 		return http.StatusNotFound, err
 	}
 
 	_ = r.Body.Close()
-	_ = stream.Close()
+	_ = fsStream.Close()
 	// TODO(rost): Returning 405 Method Not Allowed might not be appropriate.
 	if err != nil {
 		return http.StatusMethodNotAllowed, err
