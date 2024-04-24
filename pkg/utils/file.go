@@ -32,7 +32,7 @@ func CopyFile(src, dst string) error {
 	}
 	defer dstfd.Close()
 
-	if _, err = io.Copy(dstfd, srcfd); err != nil {
+	if _, err = CopyWithBuffer(dstfd, srcfd); err != nil {
 		return err
 	}
 	if srcinfo, err = os.Stat(src); err != nil {
@@ -121,7 +121,7 @@ func CreateTempFile(r io.Reader, size int64) (*os.File, error) {
 	if err != nil {
 		return nil, err
 	}
-	readBytes, err := io.Copy(f, r)
+	readBytes, err := CopyWithBuffer(f, r)
 	if err != nil {
 		_ = os.Remove(f.Name())
 		return nil, errs.NewErr(err, "CreateTempFile failed")

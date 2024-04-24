@@ -1,7 +1,7 @@
 package smb
 
 import (
-	"io"
+	"github.com/alist-org/alist/v3/pkg/utils"
 	"io/fs"
 	"net"
 	"os"
@@ -74,7 +74,7 @@ func (d *SMB) CopyFile(src, dst string) error {
 	}
 	defer dstfd.Close()
 
-	if _, err = io.Copy(dstfd, srcfd); err != nil {
+	if _, err = utils.CopyWithBuffer(dstfd, srcfd); err != nil {
 		return err
 	}
 	if srcinfo, err = d.fs.Stat(src); err != nil {

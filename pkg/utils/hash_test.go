@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"io"
 	"testing"
 )
 
@@ -36,7 +35,7 @@ var hashTestSet = []hashTest{
 func TestMultiHasher(t *testing.T) {
 	for _, test := range hashTestSet {
 		mh := NewMultiHasher([]*HashType{MD5, SHA1, SHA256})
-		n, err := io.Copy(mh, bytes.NewBuffer(test.input))
+		n, err := CopyWithBuffer(mh, bytes.NewBuffer(test.input))
 		require.NoError(t, err)
 		assert.Len(t, test.input, int(n))
 		hashInfo := mh.GetHashInfo()

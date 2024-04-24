@@ -194,7 +194,7 @@ func (d *AliDrive) Put(ctx context.Context, dstDir model.Obj, streamer model.Fil
 	}
 	if d.RapidUpload {
 		buf := bytes.NewBuffer(make([]byte, 0, 1024))
-		io.CopyN(buf, file, 1024)
+		utils.CopyWithBufferN(buf, file, 1024)
 		reqBody["pre_hash"] = utils.HashData(utils.SHA1, buf.Bytes())
 		if localFile != nil {
 			if _, err := localFile.Seek(0, io.SeekStart); err != nil {

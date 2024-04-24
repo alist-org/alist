@@ -4,6 +4,7 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"errors"
+	"github.com/alist-org/alist/v3/pkg/utils"
 	"io"
 	"net/http"
 
@@ -141,7 +142,7 @@ func getGcid(r io.Reader, size int64) (string, error) {
 	readSize := calcBlockSize(size)
 	for {
 		hash2.Reset()
-		if n, err := io.CopyN(hash2, r, readSize); err != nil && n == 0 {
+		if n, err := utils.CopyWithBufferN(hash2, r, readSize); err != nil && n == 0 {
 			if err != io.EOF {
 				return "", err
 			}

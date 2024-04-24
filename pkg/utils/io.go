@@ -30,7 +30,7 @@ func CopyWithCtx(ctx context.Context, out io.Writer, in io.Reader, size int64, p
 	// possible in the call process.
 	var finish int64 = 0
 	s := size / 100
-	_, err := io.Copy(out, readerFunc(func(p []byte) (int, error) {
+	_, err := CopyWithBuffer(out, readerFunc(func(p []byte) (int, error) {
 		// golang non-blocking channel: https://gobyexample.com/non-blocking-channel-operations
 		select {
 		// if context has been canceled

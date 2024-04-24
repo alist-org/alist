@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/xml"
 	"fmt"
+	"github.com/alist-org/alist/v3/pkg/utils"
 	"io"
 	"net/http"
 	"net/url"
@@ -419,7 +420,7 @@ func (c *Client) ReadStreamRange(path string, offset, length int64) (io.ReadClos
 	// stream in rs.Body
 	if rs.StatusCode == 200 {
 		// discard first 'offset' bytes.
-		if _, err := io.Copy(io.Discard, io.LimitReader(rs.Body, offset)); err != nil {
+		if _, err := utils.CopyWithBuffer(io.Discard, io.LimitReader(rs.Body, offset)); err != nil {
 			return nil, newPathErrorErr("ReadStreamRange", path, err)
 		}
 
