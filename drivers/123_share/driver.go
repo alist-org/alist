@@ -4,8 +4,11 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"golang.org/x/time/rate"
 	"net/http"
 	"net/url"
+	"sync"
+	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
@@ -19,6 +22,7 @@ import (
 type Pan123Share struct {
 	model.Storage
 	Addition
+	apiRateLimit sync.Map
 }
 
 func (d *Pan123Share) Config() driver.Config {
@@ -145,5 +149,12 @@ func (d *Pan123Share) Put(ctx context.Context, dstDir model.Obj, stream model.Fi
 //func (d *Pan123Share) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
 //	return nil, errs.NotSupport
 //}
+
+func (d *Pan123Share) APIRateLimit(api string) bool {
+	limiter, _ := d.apiRateLimit.LoadOrStore(api,
+		rate.NewLimiter(rate.Every(time.Millisecond*700), 1))
+	ins := limiter.(*rate.Limiter)
+	return ins.Allow()
+}
 
 var _ driver.Driver = (*Pan123Share)(nil)

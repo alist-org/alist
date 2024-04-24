@@ -7,10 +7,11 @@ import (
 
 type Addition struct {
 	ShareKey string `json:"sharekey" required:"true"`
-	SharePwd string `json:"sharepassword" required:"true"`
+	SharePwd string `json:"sharepassword"`
 	driver.RootID
 	OrderBy        string `json:"order_by" type:"select" options:"file_name,size,update_at" default:"file_name"`
 	OrderDirection string `json:"order_direction" type:"select" options:"asc,desc" default:"asc"`
+	AccessToken    string `json:"accesstoken" type:"text"`
 }
 
 var config = driver.Config{
