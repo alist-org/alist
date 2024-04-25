@@ -271,7 +271,7 @@ func (d *ILanZou) Put(ctx context.Context, dstDir model.Obj, stream model.FileSt
 	defer func() {
 		_ = tempFile.Close()
 	}()
-	if _, err = io.Copy(h, tempFile); err != nil {
+	if _, err = utils.CopyWithBuffer(h, tempFile); err != nil {
 		return nil, err
 	}
 	_, err = tempFile.Seek(0, io.SeekStart)

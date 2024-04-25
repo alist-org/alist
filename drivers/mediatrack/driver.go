@@ -206,7 +206,7 @@ func (d *MediaTrack) Put(ctx context.Context, dstDir model.Obj, stream model.Fil
 		return err
 	}
 	h := md5.New()
-	_, err = io.Copy(h, tempFile)
+	_, err = utils.CopyWithBuffer(h, tempFile)
 	if err != nil {
 		return err
 	}

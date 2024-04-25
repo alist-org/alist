@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"sync"
 	"time"
 
 	"golang.org/x/exp/constraints"
@@ -29,7 +30,7 @@ func CopyWithCtx(ctx context.Context, out io.Writer, in io.Reader, size int64, p
 	// possible in the call process.
 	var finish int64 = 0
 	s := size / 100
-	_, err := io.Copy(out, readerFunc(func(p []byte) (int, error) {
+	_, err := CopyWithBuffer(out, readerFunc(func(p []byte) (int, error) {
 		// golang non-blocking channel: https://gobyexample.com/non-blocking-channel-operations
 		select {
 		// if context has been canceled
@@ -203,4 +204,32 @@ func Max[T constraints.Ordered](a, b T) T {
 		return b
 	}
 	return a
+}
+
+var IoBuffPool = &sync.Pool{
+	New: func() interface{} {
+		return make([]byte, 32*1024*2) // Two times of size in io package
+	},
+}
+
+func CopyWithBuffer(dst io.Writer, src io.Reader) (written int64, err error) {
+	buff := IoBuffPool.Get().([]byte)
+	defer IoBuffPool.Put(buff)
+	written, err = io.CopyBuffer(dst, src, buff)
+	if err != nil {
+		return
+	}
+	return written, nil
+}
+
+func CopyWithBufferN(dst io.Writer, src io.Reader, n int64) (written int64, err error) {
+	written, err = CopyWithBuffer(dst, io.LimitReader(src, n))
+	if written == n {
+		return n, nil
+	}
+	if written < n && err == nil {
+		// src stopped early; must have been EOF.
+		err = io.EOF
+	}
+	return
 }

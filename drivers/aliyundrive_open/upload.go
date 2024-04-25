@@ -136,7 +136,7 @@ func (d *AliyundriveOpen) calProofCode(stream model.FileStreamer) (string, error
 	if err != nil {
 		return "", err
 	}
-	_, err = io.CopyN(buf, reader, length)
+	_, err = utils.CopyWithBufferN(buf, reader, length)
 	if err != nil {
 		return "", err
 	}

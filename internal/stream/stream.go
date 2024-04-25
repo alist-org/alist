@@ -104,7 +104,7 @@ func (f *FileStream) RangeRead(httpRange http_range.Range) (io.Reader, error) {
 		if httpRange.Start == 0 && httpRange.Length <= InMemoryBufMaxSizeBytes && f.peekBuff == nil {
 			bufSize := utils.Min(httpRange.Length, f.GetSize())
 			newBuf := bytes.NewBuffer(make([]byte, 0, bufSize))
-			n, err := io.CopyN(newBuf, f.Reader, bufSize)
+			n, err := utils.CopyWithBufferN(newBuf, f.Reader, bufSize)
 			if err != nil {
 				return nil, err
 			}

@@ -2,6 +2,7 @@ package net
 
 import (
 	"fmt"
+	"github.com/alist-org/alist/v3/pkg/utils"
 	"io"
 	"math"
 	"mime/multipart"
@@ -330,7 +331,7 @@ func GetRangedHttpReader(readCloser io.ReadCloser, offset, length int64) (io.Rea
 		log.Warnf("offset is more than 100MB, if loading data from internet, high-latency and wasting of bandwidth is expected")
 	}
 
-	if _, err := io.Copy(io.Discard, io.LimitReader(readCloser, offset)); err != nil {
+	if _, err := utils.CopyWithBuffer(io.Discard, io.LimitReader(readCloser, offset)); err != nil {
 		return nil, err
 	}
 

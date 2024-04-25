@@ -162,7 +162,7 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request, name string, modTime time
 					pw.CloseWithError(err)
 					return
 				}
-				if _, err := io.CopyN(part, reader, ra.Length); err != nil {
+				if _, err := utils.CopyWithBufferN(part, reader, ra.Length); err != nil {
 					pw.CloseWithError(err)
 					return
 				}
@@ -182,7 +182,7 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request, name string, modTime time
 	w.WriteHeader(code)
 
 	if r.Method != "HEAD" {
-		written, err := io.CopyN(w, sendContent, sendSize)
+		written, err := utils.CopyWithBufferN(w, sendContent, sendSize)
 		if err != nil {
 			log.Warnf("ServeHttp error. err: %s ", err)
 			if written != sendSize {

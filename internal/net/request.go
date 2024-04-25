@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/alist-org/alist/v3/pkg/utils"
 	"io"
 	"math"
 	"net/http"
@@ -271,7 +272,7 @@ func (d *downloader) tryDownloadChunk(params *HttpRequestParams, ch *chunk) (int
 		}
 	}
 
-	n, err := io.Copy(ch.buf, resp.Body)
+	n, err := utils.CopyWithBuffer(ch.buf, resp.Body)
 
 	if err != nil {
 		return n, &errReadingBody{err: err}

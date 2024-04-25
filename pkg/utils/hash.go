@@ -96,7 +96,7 @@ func HashData(hashType *HashType, data []byte, params ...any) string {
 // HashReader get hash of one hashType from a reader
 func HashReader(hashType *HashType, reader io.Reader, params ...any) (string, error) {
 	h := hashType.NewFunc(params...)
-	_, err := io.Copy(h, reader)
+	_, err := CopyWithBuffer(h, reader)
 	if err != nil {
 		return "", errs.NewErr(err, "HashReader error")
 	}

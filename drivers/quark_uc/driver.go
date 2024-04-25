@@ -143,7 +143,7 @@ func (d *QuarkOrUC) Put(ctx context.Context, dstDir model.Obj, stream model.File
 		_ = tempFile.Close()
 	}()
 	m := md5.New()
-	_, err = io.Copy(m, tempFile)
+	_, err = utils.CopyWithBuffer(m, tempFile)
 	if err != nil {
 		return err
 	}
@@ -153,7 +153,7 @@ func (d *QuarkOrUC) Put(ctx context.Context, dstDir model.Obj, stream model.File
 	}
 	md5Str := hex.EncodeToString(m.Sum(nil))
 	s := sha1.New()
-	_, err = io.Copy(s, tempFile)
+	_, err = utils.CopyWithBuffer(s, tempFile)
 	if err != nil {
 		return err
 	}
