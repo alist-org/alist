@@ -19,7 +19,7 @@ var config = driver.Config{
 	DefaultRoot: "0",
 	//OnlyProxy:   true,
 	//OnlyLocal:         true,
-	NoOverwriteUpload: true,
+	//NoOverwriteUpload: true,
 }
 
 func init() {
