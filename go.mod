@@ -3,7 +3,7 @@ module github.com/alist-org/alist/v3
 go 1.21
 
 require (
-	github.com/Mikubill/gofakes3 v0.0.3-0.20230622102024-284c0f988700
+	github.com/Mikubill/gofakes3 b7a9fdb78ddb
 	github.com/SheltonZhu/115driver v1.0.22
 	github.com/Xhofe/go-cache v0.0.0-20220723083548-714439c8af9a
 	github.com/Xhofe/rateg v0.0.0-20230728072201-251a4e1adad4
