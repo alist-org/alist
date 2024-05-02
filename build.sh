@@ -96,17 +96,24 @@ BuildDocker() {
   go build -o ./bin/alist -ldflags="$ldflags" -tags=jsoniter .
 }
 
-BuildDockerMultiplatform() {
-  PrepareBuildDocker
-
+PrepareBuildDockerMusl() {
+  mkdir -p build/musl-libs
   BASE="https://musl.cc/"
   FILES=(x86_64-linux-musl-cross aarch64-linux-musl-cross i486-linux-musl-cross s390x-linux-musl-cross armv6-linux-musleabihf-cross armv7l-linux-musleabihf-cross)
   for i in "${FILES[@]}"; do
     url="${BASE}${i}.tgz"
-    curl -L -o "${i}.tgz" "${url}"
-    sudo tar xf "${i}.tgz" --strip-components 1 -C /usr/local
-    rm -f "${i}.tgz"
+    lib_tgz="build/${i}.tgz"
+    curl -L -o "${lib_tgz}" "${url}"
+    tar xf "${lib_tgz}" --strip-components 1 -C build/musl-libs
+    rm -f "${lib_tgz}"
   done
+}
+
+BuildDockerMultiplatform() {
+  PrepareBuildDocker
+
+  # run PrepareBuildDockerMusl before build
+  export PATH=$PATH:$PWD/build/musl-libs/bin
 
   docker_lflags="--extldflags '-static -fpic' $ldflags"
   export CGO_ENABLED=1
@@ -122,7 +129,7 @@ BuildDockerMultiplatform() {
     export GOARCH=$arch
     export CC=${cgo_cc}
     echo "building for $os_arch"
-    go build -o ./$os/$arch/alist -ldflags="$docker_lflags" -tags=jsoniter .
+    go build -o build/$os/$arch/alist -ldflags="$docker_lflags" -tags=jsoniter .
   done
 
   DOCKER_ARM_ARCHES=(linux-arm/v6 linux-arm/v7)
@@ -136,7 +143,7 @@ BuildDockerMultiplatform() {
     export GOARM=${GO_ARM[$i]}
     export CC=${cgo_cc}
     echo "building for $docker_arch"
-    go build -o ./${docker_arch%%-*}/${docker_arch##*-}/alist -ldflags="$docker_lflags" -tags=jsoniter .
+    go build -o build/${docker_arch%%-*}/${docker_arch##*-}/alist -ldflags="$docker_lflags" -tags=jsoniter .
   done
 }
 
@@ -288,6 +295,10 @@ elif [ "$1" = "release" ]; then
   else
     BuildRelease
     MakeRelease "md5.txt"
+  fi
+elif [ "$1" = "prepare" ]; then
+  if [ "$2" = "docker-multiplatform" ]; then
+    PrepareBuildDockerMusl
   fi
 else
   echo -e "Parameter error"

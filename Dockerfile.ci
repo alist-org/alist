@@ -3,7 +3,7 @@ ARG TARGETPLATFORM
 LABEL MAINTAINER="i@nn.ci"
 VOLUME /opt/alist/data/
 WORKDIR /opt/alist/
-COPY /${TARGETPLATFORM}/alist ./
+COPY /build/${TARGETPLATFORM}/alist ./
 COPY entrypoint.sh /entrypoint.sh
 RUN apk update && \
     apk upgrade --no-cache && \
