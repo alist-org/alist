@@ -249,6 +249,9 @@ const (
 )
 
 func (d *BaiduNetdisk) getSliceSize() int64 {
+	if d.CustomUploadPartSize != 0 {
+		return d.CustomUploadPartSize
+	}
 	switch d.vipType {
 	case 1:
 		return VipSliceSize
