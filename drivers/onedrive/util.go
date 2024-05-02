@@ -127,7 +127,7 @@ func (d *Onedrive) Request(url string, method string, callback base.ReqCallback,
 
 func (d *Onedrive) getFiles(path string) ([]File, error) {
 	var res []File
-	nextLink := d.GetMetaUrl(false, path) + "/children?$top=5000&$expand=thumbnails($select=medium)&$select=id,name,size,lastModifiedDateTime,content.downloadUrl,file,parentReference"
+	nextLink := d.GetMetaUrl(false, path) + "/children?$top=5000&$expand=thumbnails($select=medium)&$select=id,name,size,fileSystemInfo,content.downloadUrl,file,parentReference"
 	for nextLink != "" {
 		var files Files
 		_, err := d.Request(nextLink, http.MethodGet, nil, &files)
@@ -148,7 +148,10 @@ func (d *Onedrive) GetFile(path string) (*File, error) {
 }
 
 func (d *Onedrive) upSmall(ctx context.Context, dstDir model.Obj, stream model.FileStreamer) error {
-	url := d.GetMetaUrl(false, stdpath.Join(dstDir.GetPath(), stream.GetName())) + "/content"
+	filepath := stdpath.Join(dstDir.GetPath(), stream.GetName())
+	// 1. upload new file
+	// ApiDoc: https://learn.microsoft.com/en-us/onedrive/developer/rest-api/api/driveitem_put_content?view=odsp-graph-online
+	url := d.GetMetaUrl(false, filepath) + "/content"
 	data, err := io.ReadAll(stream)
 	if err != nil {
 		return err
@@ -156,12 +159,50 @@ func (d *Onedrive) upSmall(ctx context.Context, dstDir model.Obj, stream model.F
 	_, err = d.Request(url, http.MethodPut, func(req *resty.Request) {
 		req.SetBody(data).SetContext(ctx)
 	}, nil)
+	if err != nil {
+		return fmt.Errorf("onedrive: Failed to upload new file(path=%v): %w", filepath, err)
+	}
+
+	// 2. update metadata
+	err = d.updateMetadata(ctx, stream, filepath)
+	if err != nil {
+		return fmt.Errorf("onedrive: Failed to update file(path=%v) metadata: %w", filepath, err)
+	}
+	return nil
+}
+
+func (d *Onedrive) updateMetadata(ctx context.Context, stream model.FileStreamer, filepath string) error {
+	url := d.GetMetaUrl(false, filepath)
+	metadata := toAPIMetadata(stream)
+	// ApiDoc: https://learn.microsoft.com/en-us/onedrive/developer/rest-api/api/driveitem_update?view=odsp-graph-online
+	_, err := d.Request(url, http.MethodPatch, func(req *resty.Request) {
+		req.SetBody(metadata).SetContext(ctx)
+	}, nil)
 	return err
+}
+
+func toAPIMetadata(stream model.FileStreamer) Metadata {
+	metadata := Metadata{
+		FileSystemInfo: &FileSystemInfoFacet{},
+	}
+	if !stream.ModTime().IsZero() {
+		metadata.FileSystemInfo.LastModifiedDateTime = stream.ModTime()
+	}
+	if !stream.CreateTime().IsZero() {
+		metadata.FileSystemInfo.CreatedDateTime = stream.CreateTime()
+	}
+	if stream.CreateTime().IsZero() && !stream.ModTime().IsZero() {
+		metadata.FileSystemInfo.CreatedDateTime = stream.CreateTime()
+	}
+	return metadata
 }
 
 func (d *Onedrive) upBig(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
 	url := d.GetMetaUrl(false, stdpath.Join(dstDir.GetPath(), stream.GetName())) + "/createUploadSession"
-	res, err := d.Request(url, http.MethodPost, nil, nil)
+	metadata := map[string]interface{}{"item": toAPIMetadata(stream)}
+	res, err := d.Request(url, http.MethodPost, func(req *resty.Request) {
+		req.SetBody(metadata).SetContext(ctx)
+	}, nil)
 	if err != nil {
 		return err
 	}
