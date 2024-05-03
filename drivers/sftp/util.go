@@ -40,7 +40,7 @@ func (d *SFTP) initClient() error {
 	return err
 }
 
-func (d *SFTP) refreshClientOnConnectionError() error {
+func (d *SFTP) clientReconnectOnConnectionError() error {
 	err := d.clientConnectionError
 	if err == nil {
 		return nil
