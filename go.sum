@@ -7,8 +7,6 @@ github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/Max-Sum/base32768 v0.0.0-20230304063302-18e6ce5945fd h1:nzE1YQBdx1bq9IlZinHa+HVffy+NmVRoKr+wHN8fpLE=
 github.com/Max-Sum/base32768 v0.0.0-20230304063302-18e6ce5945fd/go.mod h1:C8yoIfvESpM3GD07OCHU7fqI7lhwyZ2Td1rbNbTAhnc=
-github.com/Mikubill/gofakes3 v0.0.3-0.20230622102024-284c0f988700 h1:r3fp2/Ro+0RtpjNY0/wsbN7vRmCW//dXTOZDQTct25Q=
-github.com/Mikubill/gofakes3 v0.0.3-0.20230622102024-284c0f988700/go.mod h1:OSXqXEGUe9CmPiwLMMnVrbXonMf4BeLBkBdLufxxiyY=
 github.com/RoaringBitmap/roaring v1.2.3 h1:yqreLINqIrX22ErkKI0vY47/ivtJr6n+kMhVOVmhWBY=
 github.com/RoaringBitmap/roaring v1.2.3/go.mod h1:plvDsJQpxOC5bw8LRteu/MLWHsHez/3y6cubLI4/1yE=
 github.com/SheltonZhu/115driver v1.0.22 h1:Wp8pN7/gK3YwEO5P18ggbIOHM++lo9eP/pBhuvXfI6U=
@@ -25,6 +23,8 @@ github.com/abbot/go-http-auth v0.4.0 h1:QjmvZ5gSC7jm3Zg54DqWE/T5m1t2AfDu6QlXJT0E
 github.com/abbot/go-http-auth v0.4.0/go.mod h1:Cz6ARTIzApMJDzh5bRMSUou6UMSp0IEXg9km/ci7TJM=
 github.com/aead/ecdh v0.2.0 h1:pYop54xVaq/CEREFEcukHRZfTdjiWvYIsZDXXrBapQQ=
 github.com/aead/ecdh v0.2.0/go.mod h1:a9HHtXuSo8J1Js1MwLQx2mBhkXMT6YwUmVVEY4tTB8U=
+github.com/alist-org/gofakes3 v0.0.4 h1:/ID4+1llsiB8EweLcC65rVmgBZKL95e3P7Wa+aJGUiE=
+github.com/alist-org/gofakes3 v0.0.4/go.mod h1:bLPZXt45XYMgaoGGLe5t0d1p13oZTQTptTEDLrku070=
 github.com/aliyun/aliyun-oss-go-sdk v3.0.2+incompatible h1:8psS8a+wKfiLt1iVDX79F7Y6wUM49Lcha2FMXt4UM8g=
 github.com/aliyun/aliyun-oss-go-sdk v3.0.2+incompatible/go.mod h1:T/Aws4fEfogEE9v+HPhhw+CntffsBHJ8nXQCwKr0/g8=
 github.com/andreburgaud/crypt2go v1.2.0 h1:oly/ENAodeqTYpUafgd4r3v+VKLQnmOKUyfpj+TxHbE=
