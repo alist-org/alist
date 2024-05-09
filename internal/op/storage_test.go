@@ -60,7 +60,6 @@ func TestGetStorageVirtualFilesByPath(t *testing.T) {
 }
 
 func TestGetBalancedStorage(t *testing.T) {
-	setupStorages(t)
 	set := mapset.NewSet[string]()
 	for i := 0; i < 5; i++ {
 		storage := op.GetBalancedStorage("/a/d/e1")
