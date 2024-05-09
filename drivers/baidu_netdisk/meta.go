@@ -17,7 +17,7 @@ type Addition struct {
 	AccessToken          string
 	UploadThread         string `json:"upload_thread" default:"3" help:"1<=thread<=32"`
 	UploadAPI            string `json:"upload_api" default:"https://d.pcs.baidu.com"`
-	CustomUploadPartSize int64  `json:"custom_upload_part_size" default:"0" help:"0 for auto"`
+	CustomUploadPartSize int64  `json:"custom_upload_part_size" type:"number" default:"0" help:"0 for auto"`
 }
 
 var config = driver.Config{
