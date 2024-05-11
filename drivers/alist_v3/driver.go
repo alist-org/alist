@@ -117,7 +117,7 @@ func (d *AListV3) Link(ctx context.Context, file model.Obj, args model.LinkArgs)
 		req.SetResult(&resp).SetBody(FsGetReq{
 			Path:     file.GetPath(),
 			Password: d.MetaPassword,
-		}).SetHeader("user-agent", userAgent).SetHeader("X-Alist-OriUA", userAgent)
+		}).SetHeader("user-agent", userAgent)
 	})
 	if err != nil {
 		return nil, err
