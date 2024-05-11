@@ -111,7 +111,7 @@ func (d *AListV3) Link(ctx context.Context, file model.Obj, args model.LinkArgs)
 	var resp common.Resp[FsGetResp]
 	userAgent := args.Header.Get("user-agent")
 	if userAgent == "" {
-		userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36"
+		userAgent = base.UserAgent
 	}
 	_, err := d.request("/fs/get", http.MethodPost, func(req *resty.Request) {
 		req.SetResult(&resp).SetBody(FsGetReq{
