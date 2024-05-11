@@ -109,11 +109,23 @@ func (d *AListV3) List(ctx context.Context, dir model.Obj, args model.ListArgs) 
 
 func (d *AListV3) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	var resp common.Resp[FsGetResp]
+	var oriUa = args.Header.Get("X-Alist-OriUA")
+	userAgent := oriUa
+	// if the original UA is empty, then use the UA in the header
+	// 1st: X-Alist-OriUA
+	// 2nd: user-agent
+	// 3rd: default UA
+	if oriUa == "" {
+		userAgent = args.Header.Get("user-agent")
+		if userAgent == "" {
+			userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36"
+		}
+	}
 	_, err := d.request("/fs/get", http.MethodPost, func(req *resty.Request) {
 		req.SetResult(&resp).SetBody(FsGetReq{
 			Path:     file.GetPath(),
 			Password: d.MetaPassword,
-		})
+		}).SetHeader("user-agent", userAgent).SetHeader("X-Alist-OriUA", userAgent)
 	})
 	if err != nil {
 		return nil, err
