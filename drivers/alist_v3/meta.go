@@ -7,11 +7,12 @@ import (
 
 type Addition struct {
 	driver.RootPath
-	Address      string `json:"url" required:"true"`
-	MetaPassword string `json:"meta_password"`
-	Username     string `json:"username"`
-	Password     string `json:"password"`
-	Token        string `json:"token"`
+	Address         string `json:"url" required:"true"`
+	MetaPassword    string `json:"meta_password"`
+	Username        string `json:"username"`
+	Password        string `json:"password"`
+	Token           string `json:"token"`
+	PassUAToUpsteam bool   `json:"pass_ua_to_upsteam" default:"true"`
 }
 
 var config = driver.Config{
