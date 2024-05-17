@@ -14,15 +14,17 @@ import (
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/pkg/utils"
+	"github.com/alist-org/alist/v3/internal/stream"
 	"github.com/alist-org/alist/v3/pkg/cron"
+	"github.com/alist-org/alist/v3/pkg/http_range"
+	"github.com/alist-org/alist/v3/pkg/utils"
 	log "github.com/sirupsen/logrus"
 )
 
 type Yun139 struct {
 	model.Storage
 	Addition
-	cron   *cron.Cron
+	cron    *cron.Cron
 	Account string
 }
 
@@ -117,7 +119,36 @@ func (d *Yun139) Link(ctx context.Context, file model.Obj, args model.LinkArgs) 
 	if err != nil {
 		return nil, err
 	}
-	return &model.Link{URL: url}, nil
+
+	size := file.GetSize()
+	closers := utils.EmptyClosers()
+	resultRangeReader := func(ctx context.Context, httpRange http_range.Range) (io.ReadCloser, error) {
+		length := httpRange.Length
+		if httpRange.Length >= 0 && httpRange.Start+httpRange.Length >= size {
+			length = -1
+		}
+		var rrc, err = stream.GetRangeReadCloserFromLink(size, &model.Link{URL: url})
+		if err != nil {
+			return nil, err
+		}
+		if rrc != nil {
+			remoteReader, err := rrc.RangeRead(ctx, http_range.Range{Start: httpRange.Start, Length: length})
+			closers.AddClosers(rrc.GetClosers())
+			if err != nil {
+				return nil, err
+			}
+			return remoteReader, nil
+		}
+
+		return nil, errs.NotSupport
+	}
+
+	resultRangeReadCloser := &model.RangeReadCloser{RangeReader: resultRangeReader, Closers: closers}
+	resultLink := &model.Link{
+		URL:             url,
+		RangeReadCloser: resultRangeReadCloser,
+	}
+	return resultLink, nil
 }
 
 func (d *Yun139) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
