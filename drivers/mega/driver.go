@@ -43,7 +43,6 @@ func (d *Mega) Init(ctx context.Context) error {
 		}
 		twoFACode = code
 	}
-	fmt.Println(d.Email, d.Password, twoFACode)
 	return d.c.MultiFactorLogin(d.Email, d.Password, twoFACode)
 }
 
