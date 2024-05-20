@@ -141,33 +141,41 @@ func (c *Lark) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*
 		return nil, err
 	}
 
-	accessToken := resp.TenantAccessToken
+	if !c.ExternalMode {
+		accessToken := resp.TenantAccessToken
 
-	url := fmt.Sprintf("https://open.feishu.cn/open-apis/drive/v1/files/%s/download", token)
+		url := fmt.Sprintf("https://open.feishu.cn/open-apis/drive/v1/files/%s/download", token)
 
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		return nil, err
+		req, err := http.NewRequest(http.MethodGet, url, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", accessToken))
+		req.Header.Set("Range", "bytes=0-1")
+
+		ar, err := http.DefaultClient.Do(req)
+		if err != nil {
+			return nil, err
+		}
+
+		if ar.StatusCode != http.StatusPartialContent {
+			return nil, errors.New("failed to get download link")
+		}
+
+		return &model.Link{
+			URL: url,
+			Header: http.Header{
+				"Authorization": []string{fmt.Sprintf("Bearer %s", accessToken)},
+			},
+		}, nil
+	} else {
+		url := path.Join([]string{c.TenantUrlPrefix, "file", token})
+
+		return &model.Link{
+			URL: url,
+		}, nil
 	}
-
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", accessToken))
-	req.Header.Set("Range", "bytes=0-1")
-
-	ar, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-
-	if ar.StatusCode != http.StatusPartialContent {
-		return nil, errors.New("failed to get download link")
-	}
-
-	return &model.Link{
-		URL: url,
-		Header: http.Header{
-			"Authorization": []string{fmt.Sprintf("Bearer %s", accessToken)},
-		},
-	}, nil
 }
 
 func (c *Lark) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) (model.Obj, error) {
