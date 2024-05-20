@@ -47,6 +47,9 @@ func (d *Alias) Init(ctx context.Context) error {
 			d.oneKey = k
 		}
 		d.autoFlatten = true
+	} else {
+		d.oneKey = ""
+		d.autoFlatten = false
 	}
 	return nil
 }
