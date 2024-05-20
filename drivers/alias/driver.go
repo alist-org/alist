@@ -3,10 +3,12 @@ package alias
 import (
 	"context"
 	"errors"
+	stdpath "path"
 	"strings"
 
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
+	"github.com/alist-org/alist/v3/internal/fs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/utils"
 )
@@ -109,6 +111,38 @@ func (d *Alias) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 		}
 	}
 	return nil, errs.ObjectNotFound
+}
+
+func (d *Alias) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
+	root, sub := d.getRootAndPath(srcObj.GetPath())
+	dsts, ok := d.pathMap[root]
+	if !ok {
+		return errs.ObjectNotFound
+	}
+	var srcPath string
+	for _, dst := range dsts {
+		srcPath = stdpath.Join(dst, sub)
+		err := fs.Rename(ctx, srcPath, newName)
+		if err == nil {
+			return nil
+		}
+	}
+	return errs.NotImplement
+}
+
+func (d *Alias) Remove(ctx context.Context, obj model.Obj) error {
+	root, sub := d.getRootAndPath(obj.GetPath())
+	dsts, ok := d.pathMap[root]
+	if !ok {
+		return errs.ObjectNotFound
+	}
+	for _, dst := range dsts {
+		err := fs.Remove(ctx, stdpath.Join(dst, sub))
+		if err == nil {
+			return nil
+		}
+	}
+	return errs.ObjectNotFound
 }
 
 var _ driver.Driver = (*Alias)(nil)
