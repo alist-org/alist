@@ -247,6 +247,9 @@ func (h *Handler) handleGetHeadPost(w http.ResponseWriter, r *http.Request) (sta
 		if err != nil {
 			return http.StatusInternalServerError, err
 		}
+		if storage.GetStorage().ProxyRange {
+			common.ProxyRange(link, fi.GetSize())
+		}
 		err = common.Proxy(w, r, link, fi)
 		if err != nil {
 			log.Errorf("webdav proxy error: %+v", err)

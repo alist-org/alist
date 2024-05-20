@@ -91,6 +91,10 @@ func getMainItems(config driver.Config) []driver.Item {
 			Options:  "302_redirect,use_proxy_url,native_proxy",
 			Default:  "302_redirect",
 			Required: true,
+		}, {
+			Name: "proxy_range",
+			Type: conf.TypeBool,
+			Help: "Need to enable proxy",
 		},
 		}...)
 	} else {
