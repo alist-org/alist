@@ -3,7 +3,6 @@ package alias
 import (
 	"context"
 	"errors"
-	stdpath "path"
 	"strings"
 
 	"github.com/alist-org/alist/v3/internal/driver"
@@ -117,35 +116,25 @@ func (d *Alias) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 }
 
 func (d *Alias) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
-	root, sub := d.getRootAndPath(srcObj.GetPath())
-	dsts, ok := d.pathMap[root]
-	if !ok {
-		return errs.ObjectNotFound
+	reqPath, err := d.getReqPath(ctx, srcObj)
+	if err == nil {
+		return fs.Rename(ctx, *reqPath, newName)
 	}
-	var srcPath string
-	for _, dst := range dsts {
-		srcPath = stdpath.Join(dst, sub)
-		err := fs.Rename(ctx, srcPath, newName)
-		if err == nil {
-			return nil
-		}
+	if errs.IsNotImplement(err) {
+		return errors.New("same-name files cannot be Rename")
 	}
-	return errs.NotImplement
+	return err
 }
 
 func (d *Alias) Remove(ctx context.Context, obj model.Obj) error {
-	root, sub := d.getRootAndPath(obj.GetPath())
-	dsts, ok := d.pathMap[root]
-	if !ok {
-		return errs.ObjectNotFound
+	reqPath, err := d.getReqPath(ctx, obj)
+	if err == nil {
+		return fs.Remove(ctx, *reqPath)
 	}
-	for _, dst := range dsts {
-		err := fs.Remove(ctx, stdpath.Join(dst, sub))
-		if err == nil {
-			return nil
-		}
+	if errs.IsNotImplement(err) {
+		return errors.New("same-name files cannot be Delete")
 	}
-	return errs.ObjectNotFound
+	return err
 }
 
 var _ driver.Driver = (*Alias)(nil)
