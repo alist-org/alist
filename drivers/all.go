@@ -28,7 +28,6 @@ import (
 	_ "github.com/alist-org/alist/v3/drivers/ilanzou"
 	_ "github.com/alist-org/alist/v3/drivers/ipfs_api"
 	_ "github.com/alist-org/alist/v3/drivers/lanzou"
-	_ "github.com/alist-org/alist/v3/drivers/lark"
 	_ "github.com/alist-org/alist/v3/drivers/local"
 	_ "github.com/alist-org/alist/v3/drivers/mediatrack"
 	_ "github.com/alist-org/alist/v3/drivers/mega"
