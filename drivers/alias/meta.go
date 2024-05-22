@@ -9,7 +9,8 @@ type Addition struct {
 	// Usually one of two
 	// driver.RootPath
 	// define other
-	Paths string `json:"paths" required:"true" type:"text"`
+	Paths           string `json:"paths" required:"true" type:"text"`
+	ProtectSameName bool   `json:"protect_same_name" default:"true" required:"false" help:"Protects same-name files from Delete or Rename"`
 }
 
 var config = driver.Config{
@@ -22,6 +23,10 @@ var config = driver.Config{
 
 func init() {
 	op.RegisterDriver(func() driver.Driver {
-		return &Alias{}
+		return &Alias{
+			Addition: Addition{
+				ProtectSameName: true,
+			},
+		}
 	})
 }
