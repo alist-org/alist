@@ -89,8 +89,14 @@ func (d *PikPakShare) Link(ctx context.Context, file model.Obj, args model.LinkA
 	if err != nil {
 		return nil, err
 	}
+
+	downloadUrl := resp.FileInfo.WebContentLink
+	if downloadUrl == "" && len(resp.FileInfo.Medias) > 0 {
+		downloadUrl = resp.FileInfo.Medias[0].Link.Url
+	}
+
 	link := model.Link{
-		URL: resp.FileInfo.WebContentLink,
+		URL: downloadUrl,
 	}
 	return &link, nil
 }
