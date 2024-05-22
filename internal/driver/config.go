@@ -12,6 +12,7 @@ type Config struct {
 	CheckStatus       bool   `json:"-"`
 	Alert             string `json:"alert"` //info,success,warning,danger
 	NoOverwriteUpload bool   `json:"-"`     // whether to support overwrite upload
+	ProxyRangeOption  bool   `json:"-"`
 }
 
 func (c Config) MustProxy() bool {

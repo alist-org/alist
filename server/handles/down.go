@@ -106,6 +106,9 @@ func Proxy(c *gin.Context) {
 				return
 			}
 		}
+		if storage.GetStorage().ProxyRange {
+			common.ProxyRange(link, file.GetSize())
+		}
 		err = common.Proxy(c.Writer, c.Request, link, file)
 		if err != nil {
 			common.ErrorResp(c, err, 500, true)

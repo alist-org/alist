@@ -14,11 +14,12 @@ type Addition struct {
 }
 
 var config = driver.Config{
-	Name:        "Alias",
-	LocalSort:   true,
-	NoCache:     true,
-	NoUpload:    true,
-	DefaultRoot: "/",
+	Name:             "Alias",
+	LocalSort:        true,
+	NoCache:          true,
+	NoUpload:         true,
+	DefaultRoot:      "/",
+	ProxyRangeOption: true,
 }
 
 func init() {
