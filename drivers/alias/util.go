@@ -103,12 +103,16 @@ func (d *Alias) link(ctx context.Context, dst, sub string, args model.LinkArgs) 
 		return nil, err
 	}
 	if common.ShouldProxy(storage, stdpath.Base(sub)) {
-		return &model.Link{
+		link := &model.Link{
 			URL: fmt.Sprintf("%s/p%s?sign=%s",
 				common.GetApiUrl(args.HttpReq),
 				utils.EncodePath(reqPath, true),
 				sign.Sign(reqPath)),
-		}, nil
+		}
+		if args.HttpReq != nil && d.ProxyRange {
+			link.RangeReadCloser = common.NoProxyRange
+		}
+		return link, nil
 	}
 	link, _, err := fs.Link(ctx, reqPath, args)
 	return link, err

@@ -14,12 +14,15 @@ type Addition struct {
 }
 
 var config = driver.Config{
-	Name:      "139Yun",
-	LocalSort: true,
+	Name:             "139Yun",
+	LocalSort:        true,
+	ProxyRangeOption: true,
 }
 
 func init() {
 	op.RegisterDriver(func() driver.Driver {
-		return &Yun139{}
+		d := &Yun139{}
+		d.ProxyRange = true
+		return d
 	})
 }
