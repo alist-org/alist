@@ -1,4 +1,4 @@
-// +build linux darwin
+// +build linux darwin windows
 // +build amd64 arm64
 
 package drivers
