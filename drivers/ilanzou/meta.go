@@ -46,7 +46,7 @@ func init() {
 				bucket:     "wpanstore-lanzou",
 				unproved:   "unproved",
 				proved:     "proved",
-				devVersion: "122",
+				devVersion: "125",
 				site:       "https://www.ilanzou.com",
 			},
 		}
@@ -72,7 +72,7 @@ func init() {
 				bucket:     "wpanstore",
 				unproved:   "ws",
 				proved:     "app",
-				devVersion: "121",
+				devVersion: "125",
 				site:       "https://www.feijipan.com",
 			},
 		}
