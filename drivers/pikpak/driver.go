@@ -41,10 +41,6 @@ func (d *PikPak) Init(ctx context.Context) (err error) {
 		d.ClientSecret = "dbw2OtmVEeuUvIptb1Coyg"
 	}
 
-	withClient := func(ctx context.Context) context.Context {
-		return context.WithValue(ctx, oauth2.HTTPClient, base.HttpClient)
-	}
-
 	oauth2Config := &oauth2.Config{
 		ClientID:     d.ClientID,
 		ClientSecret: d.ClientSecret,
@@ -55,11 +51,13 @@ func (d *PikPak) Init(ctx context.Context) (err error) {
 		},
 	}
 
-	oauth2Token, err := oauth2Config.PasswordCredentialsToken(withClient(ctx), d.Username, d.Password)
-	if err != nil {
-		return err
-	}
-	d.oauth2Token = oauth2Config.TokenSource(withClient(context.Background()), oauth2Token)
+	d.oauth2Token = oauth2.ReuseTokenSource(nil, utils.TokenSource(func() (*oauth2.Token, error) {
+		return oauth2Config.PasswordCredentialsToken(
+			context.WithValue(context.Background(), oauth2.HTTPClient, base.HttpClient),
+			d.Username,
+			d.Password,
+		)
+	}))
 	return nil
 }
 
