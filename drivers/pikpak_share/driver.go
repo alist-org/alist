@@ -4,17 +4,18 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/go-resty/resty/v2"
+	"golang.org/x/oauth2"
 )
 
 type PikPakShare struct {
 	model.Storage
 	Addition
-	RefreshToken  string
-	AccessToken   string
+	oauth2Token   oauth2.TokenSource
 	PassCodeToken string
 }
 
@@ -27,10 +28,31 @@ func (d *PikPakShare) GetAddition() driver.Additional {
 }
 
 func (d *PikPakShare) Init(ctx context.Context) error {
-	err := d.login()
+	if d.ClientID == "" || d.ClientSecret == "" {
+		d.ClientID = "YNxT9w7GMdWvEOKa"
+		d.ClientSecret = "dbw2OtmVEeuUvIptb1Coyg"
+	}
+
+	withClient := func(ctx context.Context) context.Context {
+		return context.WithValue(ctx, oauth2.HTTPClient, base.HttpClient)
+	}
+
+	oauth2Config := &oauth2.Config{
+		ClientID:     d.ClientID,
+		ClientSecret: d.ClientSecret,
+		Endpoint: oauth2.Endpoint{
+			AuthURL:   "https://user.mypikpak.com/v1/auth/signin",
+			TokenURL:  "https://user.mypikpak.com/v1/auth/token",
+			AuthStyle: oauth2.AuthStyleInParams,
+		},
+	}
+
+	oauth2Token, err := oauth2Config.PasswordCredentialsToken(withClient(ctx), d.Username, d.Password)
 	if err != nil {
 		return err
 	}
+	d.oauth2Token = oauth2Config.TokenSource(withClient(context.Background()), oauth2Token)
+
 	if d.SharePwd != "" {
 		err = d.getSharePassToken()
 		if err != nil {
@@ -67,8 +89,14 @@ func (d *PikPakShare) Link(ctx context.Context, file model.Obj, args model.LinkA
 	if err != nil {
 		return nil, err
 	}
+
+	downloadUrl := resp.FileInfo.WebContentLink
+	if downloadUrl == "" && len(resp.FileInfo.Medias) > 0 {
+		downloadUrl = resp.FileInfo.Medias[0].Link.Url
+	}
+
 	link := model.Link{
-		URL: resp.FileInfo.WebContentLink,
+		URL: downloadUrl,
 	}
 	return &link, nil
 }

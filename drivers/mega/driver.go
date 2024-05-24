@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/alist-org/alist/v3/pkg/http_range"
+	"github.com/pquerna/otp/totp"
 	"github.com/rclone/rclone/lib/readers"
 
 	"github.com/alist-org/alist/v3/internal/driver"
@@ -33,8 +34,16 @@ func (d *Mega) GetAddition() driver.Additional {
 }
 
 func (d *Mega) Init(ctx context.Context) error {
+	var twoFACode = d.TwoFACode
 	d.c = mega.New()
-	return d.c.Login(d.Email, d.Password)
+	if d.TwoFASecret != "" {
+		code, err := totp.GenerateCode(d.TwoFASecret, time.Now())
+		if err != nil {
+			return fmt.Errorf("generate totp code failed: %w", err)
+		}
+		twoFACode = code
+	}
+	return d.c.MultiFactorLogin(d.Email, d.Password, twoFACode)
 }
 
 func (d *Mega) Drop(ctx context.Context) error {

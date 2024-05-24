@@ -147,7 +147,8 @@ func (d *ILanZou) Link(ctx context.Context, file model.Obj, args model.LinkArgs)
 	// get the url after redirect
 	res, err := base.NoRedirectClient.R().SetHeaders(map[string]string{
 		//"Origin":  d.conf.site,
-		"Referer": d.conf.site + "/",
+		"Referer":    d.conf.site + "/",
+		"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36 Edg/125.0.0.0",
 	}).Get(realURL)
 	if err != nil {
 		return nil, err
@@ -155,7 +156,12 @@ func (d *ILanZou) Link(ctx context.Context, file model.Obj, args model.LinkArgs)
 	if res.StatusCode() == 302 {
 		realURL = res.Header().Get("location")
 	} else {
-		return nil, fmt.Errorf("redirect failed, status: %d", res.StatusCode())
+		contentLengthStr := res.Header().Get("Content-Length")
+		contentLength, err := strconv.Atoi(contentLengthStr)
+		if err != nil || contentLength == 0 || contentLength > 1024*10 {
+			return nil, fmt.Errorf("redirect failed, status: %d", res.StatusCode())
+		}
+		return nil, fmt.Errorf("redirect failed, content: %s", res.String())
 	}
 	link := model.Link{URL: realURL}
 	return &link, nil

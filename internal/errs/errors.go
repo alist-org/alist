@@ -3,6 +3,7 @@ package errs
 import (
 	"errors"
 	"fmt"
+
 	pkgerr "github.com/pkg/errors"
 )
 
@@ -32,4 +33,7 @@ func IsNotFoundError(err error) bool {
 
 func IsNotSupportError(err error) bool {
 	return errors.Is(pkgerr.Cause(err), NotSupport)
+}
+func IsNotImplement(err error) bool {
+	return errors.Is(pkgerr.Cause(err), NotImplement)
 }

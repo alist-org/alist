@@ -7,6 +7,7 @@ import (
 
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
+	"github.com/alist-org/alist/v3/internal/fs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/utils"
 )
@@ -45,6 +46,9 @@ func (d *Alias) Init(ctx context.Context) error {
 			d.oneKey = k
 		}
 		d.autoFlatten = true
+	} else {
+		d.oneKey = ""
+		d.autoFlatten = false
 	}
 	return nil
 }
@@ -109,6 +113,28 @@ func (d *Alias) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 		}
 	}
 	return nil, errs.ObjectNotFound
+}
+
+func (d *Alias) Rename(ctx context.Context, srcObj model.Obj, newName string) error {
+	reqPath, err := d.getReqPath(ctx, srcObj)
+	if err == nil {
+		return fs.Rename(ctx, *reqPath, newName)
+	}
+	if errs.IsNotImplement(err) {
+		return errors.New("same-name files cannot be Rename")
+	}
+	return err
+}
+
+func (d *Alias) Remove(ctx context.Context, obj model.Obj) error {
+	reqPath, err := d.getReqPath(ctx, obj)
+	if err == nil {
+		return fs.Remove(ctx, *reqPath)
+	}
+	if errs.IsNotImplement(err) {
+		return errors.New("same-name files cannot be Delete")
+	}
+	return err
 }
 
 var _ driver.Driver = (*Alias)(nil)

@@ -6,6 +6,7 @@ import (
 	stdpath "path"
 	"strings"
 
+	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/fs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/sign"
@@ -102,13 +103,49 @@ func (d *Alias) link(ctx context.Context, dst, sub string, args model.LinkArgs) 
 		return nil, err
 	}
 	if common.ShouldProxy(storage, stdpath.Base(sub)) {
-		return &model.Link{
+		link := &model.Link{
 			URL: fmt.Sprintf("%s/p%s?sign=%s",
 				common.GetApiUrl(args.HttpReq),
 				utils.EncodePath(reqPath, true),
 				sign.Sign(reqPath)),
-		}, nil
+		}
+		if args.HttpReq != nil && d.ProxyRange {
+			link.RangeReadCloser = common.NoProxyRange
+		}
+		return link, nil
 	}
 	link, _, err := fs.Link(ctx, reqPath, args)
 	return link, err
+}
+
+func (d *Alias) getReqPath(ctx context.Context, obj model.Obj) (*string, error) {
+	root, sub := d.getRootAndPath(obj.GetPath())
+	if sub == "" || sub == "/" {
+		return nil, errs.NotSupport
+	}
+	dsts, ok := d.pathMap[root]
+	if !ok {
+		return nil, errs.ObjectNotFound
+	}
+	var reqPath string
+	var err error
+	for _, dst := range dsts {
+		reqPath = stdpath.Join(dst, sub)
+		_, err = fs.Get(ctx, reqPath, &fs.GetArgs{NoLog: true})
+		if err == nil {
+			if d.ProtectSameName {
+				if ok {
+					ok = false
+				} else {
+					return nil, errs.NotImplement
+				}
+			} else {
+				break
+			}
+		}
+	}
+	if err != nil {
+		return nil, errs.ObjectNotFound
+	}
+	return &reqPath, nil
 }
