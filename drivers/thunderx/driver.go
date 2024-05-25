@@ -515,6 +515,7 @@ func (xc *XunLeiXCommon) Login(username, password string) (*TokenResp, error) {
 	if err != nil {
 		return nil, err
 	}
+	resp.UserID = resp.Sub
 	return &resp, nil
 }
 
