@@ -66,7 +66,7 @@ func (d *Alias) get(ctx context.Context, path string, dst, sub string) (model.Ob
 }
 
 func (d *Alias) list(ctx context.Context, dst, sub string) ([]model.Obj, error) {
-	objs, err := fs.List(ctx, stdpath.Join(dst, sub), &fs.ListArgs{NoLog: true})
+	objs, err := fs.List(ctx, stdpath.Join(dst, sub), &fs.ListArgs{NoLog: true, Refresh: true})
 	// the obj must implement the model.SetPath interface
 	// return objs, err
 	if err != nil {

@@ -16,7 +16,7 @@ type Addition struct {
 var config = driver.Config{
 	Name:             "Alias",
 	LocalSort:        true,
-	NoCache:          true,
+	NoCache:          false,
 	NoUpload:         true,
 	DefaultRoot:      "/",
 	ProxyRangeOption: true,
