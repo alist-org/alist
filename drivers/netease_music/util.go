@@ -128,7 +128,7 @@ func (d *NeteaseMusic) getSongObjs(args model.ListArgs) ([]model.Obj, error) {
 	return files, nil
 }
 
-func (d *NeteaseMusic) getSongLink(file model.Obj) (*model.Link, error) {
+func (d *NeteaseMusic) getSongLink(args model.LinkArgs, file model.Obj) (*model.Link, error) {
 	body, err := d.request(
 		"https://music.163.com/api/song/enhance/player/url", http.MethodPost, ReqOption{
 			crypto: "linuxapi",
@@ -154,8 +154,11 @@ func (d *NeteaseMusic) getSongLink(file model.Obj) (*model.Link, error) {
 	if len(resp.Data) < 1 {
 		return nil, errs.ObjectNotFound
 	}
-
-	return &model.Link{URL: resp.Data[0].Url}, nil
+	songUrl := resp.Data[0].Url
+	if args.HttpReq.TLS != nil || args.HttpReq.Header.Get("X-Forwarded-Proto") == "https" {
+		songUrl = strings.Replace(resp.Data[0].Url, "http:", "https:", 1)
+	}
+	return &model.Link{URL: songUrl}, nil
 }
 
 func (d *NeteaseMusic) getLyricObj(file model.Obj) (model.Obj, error) {

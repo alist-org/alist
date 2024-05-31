@@ -80,7 +80,7 @@ func (d *NeteaseMusic) Link(ctx context.Context, file model.Obj, args model.Link
 		}
 	}
 
-	return d.getSongLink(file)
+	return d.getSongLink(args, file)
 }
 
 func (d *NeteaseMusic) Remove(ctx context.Context, obj model.Obj) error {
