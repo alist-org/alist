@@ -34,6 +34,7 @@ func initSettings() {
 	// create or save setting
 	for i := range initialSettingItems {
 		item := &initialSettingItems[i]
+		item.Index = uint(i)
 		if item.PreDefault == "" {
 			item.PreDefault = item.Value
 		}

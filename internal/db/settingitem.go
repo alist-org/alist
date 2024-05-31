@@ -49,7 +49,8 @@ func GetSettingItemsByGroup(group int) ([]model.SettingItem, error) {
 
 func GetSettingItemsInGroups(groups []int) ([]model.SettingItem, error) {
 	var settingItems []model.SettingItem
-	if err := db.Where(fmt.Sprintf("%s in ?", columnName("group")), groups).Find(&settingItems).Error; err != nil {
+	err := db.Order(columnName("index")).Where(fmt.Sprintf("%s in ?", columnName("group")), groups).Find(&settingItems).Error
+	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 	return settingItems, nil
