@@ -13,6 +13,7 @@ import (
 type ListArgs struct {
 	ReqPath           string
 	S3ShowPlaceholder bool
+	Refresh           bool
 }
 
 type LinkArgs struct {

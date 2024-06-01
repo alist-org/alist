@@ -24,7 +24,8 @@ func list(ctx context.Context, path string, args *ListArgs) ([]model.Obj, error)
 	if storage != nil {
 		_objs, err = op.List(ctx, storage, actualPath, model.ListArgs{
 			ReqPath: path,
-		}, args.Refresh)
+			Refresh: args.Refresh,
+		})
 		if err != nil {
 			if !args.NoLog {
 				log.Errorf("fs/list: %+v", err)
