@@ -76,7 +76,7 @@ func (d *NeteaseMusic) Link(ctx context.Context, file model.Obj, args model.Link
 		if args.Type == "parsed" {
 			return lrc.getLyricLink(), nil
 		} else {
-			return lrc.getProxyLink(args), nil
+			return lrc.getProxyLink(ctx), nil
 		}
 	}
 

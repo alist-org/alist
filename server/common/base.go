@@ -1,12 +1,14 @@
 package common
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	stdpath "path"
 	"strings"
 
 	"github.com/alist-org/alist/v3/internal/conf"
+	"github.com/gin-gonic/gin"
 )
 
 func GetApiUrl(r *http.Request) string {
@@ -27,4 +29,12 @@ func GetApiUrl(r *http.Request) string {
 	}
 	api = strings.TrimSuffix(api, "/")
 	return api
+}
+
+func GetApiUrlFromContext(ctx context.Context) string {
+	var r *http.Request
+	if c, ok := ctx.(*gin.Context); ok {
+		r = c.Request
+	}
+	return GetApiUrl(r)
 }

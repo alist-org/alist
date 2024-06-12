@@ -243,7 +243,7 @@ func (h *Handler) handleGetHeadPost(w http.ResponseWriter, r *http.Request) (sta
 	storage, _ := fs.GetStorage(reqPath, &fs.GetStoragesArgs{})
 	downProxyUrl := storage.GetStorage().DownProxyUrl
 	if storage.GetStorage().WebdavNative() || (storage.GetStorage().WebdavProxy() && downProxyUrl == "") {
-		link, _, err := fs.Link(ctx, reqPath, model.LinkArgs{Header: r.Header, HttpReq: r})
+		link, _, err := fs.Link(ctx, reqPath, model.LinkArgs{Header: r.Header})
 		if err != nil {
 			return http.StatusInternalServerError, err
 		}
@@ -263,7 +263,7 @@ func (h *Handler) handleGetHeadPost(w http.ResponseWriter, r *http.Request) (sta
 		w.Header().Set("Cache-Control", "max-age=0, no-cache, no-store, must-revalidate")
 		http.Redirect(w, r, u, http.StatusFound)
 	} else {
-		link, _, err := fs.Link(ctx, reqPath, model.LinkArgs{IP: utils.ClientIP(r), Header: r.Header, HttpReq: r})
+		link, _, err := fs.Link(ctx, reqPath, model.LinkArgs{IP: utils.ClientIP(r), Header: r.Header})
 		if err != nil {
 			return http.StatusInternalServerError, err
 		}

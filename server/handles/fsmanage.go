@@ -2,9 +2,10 @@ package handles
 
 import (
 	"fmt"
-	"github.com/xhofe/tache"
 	"io"
 	stdpath "path"
+
+	"github.com/xhofe/tache"
 
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/fs"
@@ -325,7 +326,7 @@ func Link(c *gin.Context) {
 		})
 		return
 	}
-	link, _, err := fs.Link(c, rawPath, model.LinkArgs{IP: c.ClientIP(), Header: c.Request.Header, HttpReq: c.Request})
+	link, _, err := fs.Link(c, rawPath, model.LinkArgs{IP: c.ClientIP(), Header: c.Request.Header})
 	if err != nil {
 		common.ErrorResp(c, err, 500)
 		return
