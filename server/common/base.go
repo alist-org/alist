@@ -21,9 +21,9 @@ func GetApiUrl(r *http.Request) string {
 		if r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https" {
 			protocol = "https"
 		}
-		host := r.Host
-		if r.Header.Get("X-Forwarded-Host") != "" {
-			host = r.Header.Get("X-Forwarded-Host")
+		host := r.Header.Get("X-Forwarded-Host")
+		if host == "" {
+			host = r.Host
 		}
 		api = fmt.Sprintf("%s://%s", protocol, stdpath.Join(host, api))
 	}
@@ -32,9 +32,8 @@ func GetApiUrl(r *http.Request) string {
 }
 
 func GetApiUrlFromContext(ctx context.Context) string {
-	var r *http.Request
 	if c, ok := ctx.(*gin.Context); ok {
-		r = c.Request
+		return GetApiUrl(c.Request)
 	}
-	return GetApiUrl(r)
+	return GetApiUrl(nil)
 }
