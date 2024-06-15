@@ -13,6 +13,9 @@ import (
 )
 
 func (d *AListV3) login() error {
+	if d.Username == "" {
+		return nil
+	}
 	var resp common.Resp[LoginResp]
 	_, err := d.request("/auth/login", http.MethodPost, func(req *resty.Request) {
 		req.SetResult(&resp).SetBody(base.Json{

@@ -41,7 +41,7 @@ func (d *AListV3) Init(ctx context.Context) error {
 		return err
 	}
 	// if the username is not empty and the username is not the same as the current username, then login again
-	if d.Username != "" && d.Username != resp.Data.Username {
+	if d.Username != resp.Data.Username {
 		err = d.login()
 		if err != nil {
 			return err
@@ -182,8 +182,7 @@ func (d *AListV3) Remove(ctx context.Context, obj model.Obj) error {
 }
 
 func (d *AListV3) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
-	url := d.Address + "/api/fs/put"
-	req, err := http.NewRequestWithContext(ctx, http.MethodPut, url, stream)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, d.Address+"/api/fs/put", stream)
 	if err != nil {
 		return err
 	}
@@ -209,6 +208,12 @@ func (d *AListV3) Put(ctx context.Context, dstDir model.Obj, stream model.FileSt
 	}
 	code := utils.Json.Get(bytes, "code").ToInt()
 	if code != 200 {
+		if code == 401 || code == 403 {
+			err = d.login()
+			if err != nil {
+				return err
+			}
+		}
 		return fmt.Errorf("request failed,code: %d, message: %s", code, utils.Json.Get(bytes, "message").ToString())
 	}
 	return nil
