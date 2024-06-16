@@ -16,7 +16,7 @@ import (
 
 func (d *Alias) listRoot() []model.Obj {
 	var objs []model.Obj
-	for k, _ := range d.pathMap {
+	for k := range d.pathMap {
 		obj := model.Object{
 			Name:     k,
 			IsFolder: true,
@@ -65,8 +65,8 @@ func (d *Alias) get(ctx context.Context, path string, dst, sub string) (model.Ob
 	}, nil
 }
 
-func (d *Alias) list(ctx context.Context, dst, sub string) ([]model.Obj, error) {
-	objs, err := fs.List(ctx, stdpath.Join(dst, sub), &fs.ListArgs{NoLog: true})
+func (d *Alias) list(ctx context.Context, dst, sub string, args *fs.ListArgs) ([]model.Obj, error) {
+	objs, err := fs.List(ctx, stdpath.Join(dst, sub), args)
 	// the obj must implement the model.SetPath interface
 	// return objs, err
 	if err != nil {
@@ -120,32 +120,32 @@ func (d *Alias) link(ctx context.Context, dst, sub string, args model.LinkArgs) 
 
 func (d *Alias) getReqPath(ctx context.Context, obj model.Obj) (*string, error) {
 	root, sub := d.getRootAndPath(obj.GetPath())
-	if sub == "" || sub == "/" {
+	if sub == "" {
 		return nil, errs.NotSupport
 	}
 	dsts, ok := d.pathMap[root]
 	if !ok {
 		return nil, errs.ObjectNotFound
 	}
-	var reqPath string
-	var err error
+	var reqPath *string
 	for _, dst := range dsts {
-		reqPath = stdpath.Join(dst, sub)
-		_, err = fs.Get(ctx, reqPath, &fs.GetArgs{NoLog: true})
-		if err == nil {
-			if d.ProtectSameName {
-				if ok {
-					ok = false
-				} else {
-					return nil, errs.NotImplement
-				}
-			} else {
-				break
-			}
+		path := stdpath.Join(dst, sub)
+		_, err := fs.Get(ctx, path, &fs.GetArgs{NoLog: true})
+		if err != nil {
+			continue
 		}
+		if !d.ProtectSameName {
+			return &path, nil
+		}
+		if ok {
+			ok = false
+		} else {
+			return nil, errs.NotImplement
+		}
+		reqPath = &path
 	}
-	if err != nil {
+	if reqPath == nil {
 		return nil, errs.ObjectNotFound
 	}
-	return &reqPath, nil
+	return reqPath, nil
 }
