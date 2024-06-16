@@ -85,14 +85,7 @@ BuildDev() {
   cat md5.txt
 }
 
-PrepareBuildDocker() {
-  echo "replace github.com/mattn/go-sqlite3 => github.com/leso-kn/go-sqlite3 v0.0.0-20230710125852-03158dc838ed" >>go.mod
-  go get gorm.io/driver/sqlite@v1.4.4
-  go mod download
-}
-
 BuildDocker() {
-  PrepareBuildDocker
   go build -o ./bin/alist -ldflags="$ldflags" -tags=jsoniter .
 }
 
@@ -110,7 +103,7 @@ PrepareBuildDockerMusl() {
 }
 
 BuildDockerMultiplatform() {
-  PrepareBuildDocker
+  go mod download
 
   # run PrepareBuildDockerMusl before build
   export PATH=$PATH:$PWD/build/musl-libs/bin
