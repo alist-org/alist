@@ -6,9 +6,7 @@ import (
 	"io"
 	"net/http"
 	"path"
-	"strconv"
 	"strings"
-	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/conf"
@@ -17,6 +15,7 @@ import (
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/alist/v3/server/common"
 	"github.com/go-resty/resty/v2"
+	log "github.com/sirupsen/logrus"
 )
 
 type AListV3 struct {
@@ -42,7 +41,7 @@ func (d *AListV3) Init(ctx context.Context) error {
 		return err
 	}
 	// if the username is not empty and the username is not the same as the current username, then login again
-	if d.Username != "" && d.Username != resp.Data.Username {
+	if d.Username != resp.Data.Username {
 		err = d.login()
 		if err != nil {
 			return err
@@ -183,14 +182,41 @@ func (d *AListV3) Remove(ctx context.Context, obj model.Obj) error {
 }
 
 func (d *AListV3) Put(ctx context.Context, dstDir model.Obj, stream model.FileStreamer, up driver.UpdateProgress) error {
-	_, err := d.requestWithTimeout("/fs/put", http.MethodPut, func(req *resty.Request) {
-		req.SetHeader("File-Path", path.Join(dstDir.GetPath(), stream.GetName())).
-			SetHeader("Password", d.MetaPassword).
-			SetHeader("Content-Length", strconv.FormatInt(stream.GetSize(), 10)).
-			SetContentLength(true).
-			SetBody(io.ReadCloser(stream))
-	}, time.Hour*6)
-	return err
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, d.Address+"/api/fs/put", stream)
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Authorization", d.Token)
+	req.Header.Set("File-Path", path.Join(dstDir.GetPath(), stream.GetName()))
+	req.Header.Set("Password", d.MetaPassword)
+
+	req.ContentLength = stream.GetSize()
+	// client := base.NewHttpClient()
+	// client.Timeout = time.Hour * 6
+	res, err := base.HttpClient.Do(req)
+	if err != nil {
+		return err
+	}
+
+	bytes, err := io.ReadAll(res.Body)
+	if err != nil {
+		return err
+	}
+	log.Debugf("[alist_v3] response body: %s", string(bytes))
+	if res.StatusCode >= 400 {
+		return fmt.Errorf("request failed, status: %s", res.Status)
+	}
+	code := utils.Json.Get(bytes, "code").ToInt()
+	if code != 200 {
+		if code == 401 || code == 403 {
+			err = d.login()
+			if err != nil {
+				return err
+			}
+		}
+		return fmt.Errorf("request failed,code: %d, message: %s", code, utils.Json.Get(bytes, "message").ToString())
+	}
+	return nil
 }
 
 //func (d *AList) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
