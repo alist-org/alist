@@ -109,6 +109,9 @@ func (d *AliDrive) Link(ctx context.Context, file model.Obj, args model.LinkArgs
 	res, err, _ := d.request("https://bj29.api.aliyunpds.com/v2/file/get_download_url", http.MethodPost, func(req *resty.Request) {
 		req.SetBody(data)
 	}, nil)
+	if err != nil {
+		return nil, err
+	}
 	// 尝试获取 cdn_url
 	cdnURL := utils.Json.Get(res, "cdn_url").ToString()
 	var downloadURL string
@@ -117,9 +120,6 @@ func (d *AliDrive) Link(ctx context.Context, file model.Obj, args model.LinkArgs
 	} else {
 		// 如果 cdn_url 为空，则获取 url
 		downloadURL = utils.Json.Get(res, "url").ToString()
-	}
-	if err != nil {
-		return nil, err
 	}
 	return &model.Link{
 		Header: http.Header{
