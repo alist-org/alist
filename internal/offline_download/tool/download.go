@@ -123,6 +123,9 @@ func (t *DownloadTask) Complete() error {
 		files []File
 		err   error
 	)
+	if t.tool.Name() == "pikpak" {
+		return nil
+	}
 	if getFileser, ok := t.tool.(GetFileser); ok {
 		files = getFileser.GetFiles(t)
 	} else {
@@ -132,7 +135,7 @@ func (t *DownloadTask) Complete() error {
 		}
 	}
 	// upload files
-	for i, _ := range files {
+	for i := range files {
 		file := files[i]
 		TransferTaskManager.Add(&TransferTask{
 			file:         file,

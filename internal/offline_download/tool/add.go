@@ -64,11 +64,17 @@ func AddURL(ctx context.Context, args *AddURLArgs) (tache.TaskWithInfo, error) {
 
 	uid := uuid.NewString()
 	tempDir := filepath.Join(conf.Conf.TempDir, args.Tool, uid)
+	DeletePolicy := args.DeletePolicy
+	if args.Tool == "pikpak" {
+		tempDir = args.DstDirPath
+		// 防止将下载好的
+		DeletePolicy = DeleteNever
+	}
 	t := &DownloadTask{
 		Url:          args.URL,
 		DstDirPath:   args.DstDirPath,
 		TempDir:      tempDir,
-		DeletePolicy: args.DeletePolicy,
+		DeletePolicy: DeletePolicy,
 		tool:         tool,
 	}
 	DownloadTaskManager.Add(t)
