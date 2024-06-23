@@ -105,9 +105,7 @@ func (p PikPak) Status(task *tool.DownloadTask) (*tool.Status, error) {
 				s.Err = fmt.Errorf(t.Message)
 			}
 		} else {
-			s.Progress = 0
 			s.Status = "the task has been deleted"
-			s.Completed = false
 			s.Err = fmt.Errorf("the task has been deleted")
 		}
 	}
