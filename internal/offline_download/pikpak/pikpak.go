@@ -12,29 +12,33 @@ import (
 )
 
 type PikPak struct {
+	refreshTaskCache bool
 }
 
-func (p PikPak) Name() string {
+func (p *PikPak) Name() string {
 	return "pikpak"
 }
 
-func (p PikPak) Items() []model.SettingItem {
+func (p *PikPak) Items() []model.SettingItem {
 	return nil
 }
 
-func (p PikPak) Run(task *tool.DownloadTask) error {
+func (p *PikPak) Run(task *tool.DownloadTask) error {
 	return errs.NotSupport
 }
 
-func (p PikPak) Init() (string, error) {
+func (p *PikPak) Init() (string, error) {
+	p.refreshTaskCache = false
 	return "ok", nil
 }
 
-func (p PikPak) IsReady() bool {
+func (p *PikPak) IsReady() bool {
 	return true
 }
 
-func (p PikPak) AddURL(args *tool.AddUrlArgs) (string, error) {
+func (p *PikPak) AddURL(args *tool.AddUrlArgs) (string, error) {
+	// 添加新任务刷新缓存
+	p.refreshTaskCache = true
 	// args.TempDir 已经被修改为了 DstDirPath
 	storage, actualPath, err := op.GetStorageAndActualPath(args.TempDir)
 	if err != nil {
@@ -59,7 +63,7 @@ func (p PikPak) AddURL(args *tool.AddUrlArgs) (string, error) {
 	return t.ID, nil
 }
 
-func (p PikPak) Remove(task *tool.DownloadTask) error {
+func (p *PikPak) Remove(task *tool.DownloadTask) error {
 	storage, _, err := op.GetStorageAndActualPath(task.DstDirPath)
 	if err != nil {
 		return err
@@ -76,7 +80,7 @@ func (p PikPak) Remove(task *tool.DownloadTask) error {
 	return nil
 }
 
-func (p PikPak) Status(task *tool.DownloadTask) (*tool.Status, error) {
+func (p *PikPak) Status(task *tool.DownloadTask) (*tool.Status, error) {
 	storage, _, err := op.GetStorageAndActualPath(task.DstDirPath)
 	if err != nil {
 		return nil, err
@@ -85,7 +89,7 @@ func (p PikPak) Status(task *tool.DownloadTask) (*tool.Status, error) {
 	if !ok {
 		return nil, fmt.Errorf("unsupported storage driver for offline download, only Pikpak is supported")
 	}
-	tasks, err := GetTasks(pikpakDriver)
+	tasks, err := p.GetTasks(pikpakDriver)
 	if err != nil {
 		return nil, err
 	}
