@@ -2,13 +2,14 @@ package tool
 
 import (
 	"context"
+	"path/filepath"
+
 	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/xhofe/tache"
-	"path/filepath"
 )
 
 type DeletePolicy string
@@ -64,17 +65,17 @@ func AddURL(ctx context.Context, args *AddURLArgs) (tache.TaskWithInfo, error) {
 
 	uid := uuid.NewString()
 	tempDir := filepath.Join(conf.Conf.TempDir, args.Tool, uid)
-	DeletePolicy := args.DeletePolicy
+	deletePolicy := args.DeletePolicy
 	if args.Tool == "pikpak" {
 		tempDir = args.DstDirPath
-		// 防止将下载好的
-		DeletePolicy = DeleteNever
+		// 防止将下载好的文件删除
+		deletePolicy = DeleteNever
 	}
 	t := &DownloadTask{
 		Url:          args.URL,
 		DstDirPath:   args.DstDirPath,
 		TempDir:      tempDir,
-		DeletePolicy: DeletePolicy,
+		DeletePolicy: deletePolicy,
 		tool:         tool,
 	}
 	DownloadTaskManager.Add(t)

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/alist-org/alist/v3/drivers/base"
@@ -249,7 +250,7 @@ func (d *PikPak) OfflineList(ctx context.Context, nextPageToken string, phase []
 	if len(phase) == 0 {
 		phase = []string{"PHASE_TYPE_RUNNING", "PHASE_TYPE_ERROR", "PHASE_TYPE_COMPLETE", "PHASE_TYPE_PENDING"}
 	}
-	data := map[string]string{
+	params := map[string]string{
 		"type":           "offline",
 		"thumbnail_size": "SIZE_SMALL",
 		"limit":          "10000",
@@ -268,13 +269,13 @@ func (d *PikPak) OfflineList(ctx context.Context, nextPageToken string, phase []
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal filters: %w", err)
 		}
-		data["filters"] = string(filtersJSON)
+		params["filters"] = string(filtersJSON)
 	}
 
 	var resp OfflineListResp
 	_, err := d.request(url, http.MethodGet, func(req *resty.Request) {
 		req.SetContext(ctx).
-			SetQueryParams(data)
+			SetQueryParams(params)
 	}, &resp)
 
 	if err != nil {
@@ -282,6 +283,22 @@ func (d *PikPak) OfflineList(ctx context.Context, nextPageToken string, phase []
 	}
 	res = append(res, resp.Tasks...)
 	return res, nil
+}
+
+func (d *PikPak) DeleteOfflineTasks(ctx context.Context, taskIDs []string, deleteFiles bool) error {
+	url := "https://api-drive.mypikpak.com/drive/v1/tasks"
+	params := map[string]string{
+		"task_ids":     strings.Join(taskIDs, ","),
+		"delete_files": strconv.FormatBool(deleteFiles),
+	}
+	_, err := d.request(url, http.MethodDelete, func(req *resty.Request) {
+		req.SetContext(ctx).
+			SetQueryParams(params)
+	}, nil)
+	if err != nil {
+		return fmt.Errorf("failed to delete tasks %v: %w", taskIDs, err)
+	}
+	return nil
 }
 
 var _ driver.Driver = (*PikPak)(nil)

@@ -71,6 +71,9 @@ outer:
 	if err != nil {
 		return err
 	}
+	if t.tool.Name() == "pikpak" {
+		return nil
+	}
 	t.Status = "offline download completed, maybe transferring"
 	// hack for qBittorrent
 	if t.tool.Name() == "qBittorrent" {

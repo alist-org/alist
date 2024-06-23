@@ -1,21 +1,14 @@
 package pikpak
 
 import (
-	"fmt"
-	// "github.com/alist-org/alist/v3/internal/model"
 	"context"
+	"fmt"
 
 	"github.com/alist-org/alist/v3/drivers/pikpak"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/offline_download/tool"
 	"github.com/alist-org/alist/v3/internal/op"
-	// "github.com/alist-org/alist/v3/pkg/utils"
-	// "net/http"
-	// "net/url"
-	// "os"
-	// "path"
-	// "path/filepath"
 )
 
 type PikPak struct {
@@ -67,14 +60,57 @@ func (p PikPak) AddURL(args *tool.AddUrlArgs) (string, error) {
 }
 
 func (p PikPak) Remove(task *tool.DownloadTask) error {
-	panic("should not be called")
+	storage, _, err := op.GetStorageAndActualPath(task.DstDirPath)
+	if err != nil {
+		return err
+	}
+	pikpakDriver, ok := storage.(*pikpak.PikPak)
+	if !ok {
+		return fmt.Errorf("unsupported storage driver for offline download, only Pikpak is supported")
+	}
+	ctx := context.Background()
+	err = pikpakDriver.DeleteOfflineTasks(ctx, []string{task.GID}, false)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (p PikPak) Status(task *tool.DownloadTask) (*tool.Status, error) {
-	s := &tool.Status{}
-	s.Completed = true
-	s.Progress = 100
-	s.Err = nil
+	storage, _, err := op.GetStorageAndActualPath(task.DstDirPath)
+	if err != nil {
+		return nil, err
+	}
+	pikpakDriver, ok := storage.(*pikpak.PikPak)
+	if !ok {
+		return nil, fmt.Errorf("unsupported storage driver for offline download, only Pikpak is supported")
+	}
+	tasks, err := GetTasks(pikpakDriver)
+	if err != nil {
+		return nil, err
+	}
+	s := &tool.Status{
+		Progress:  0,
+		NewGID:    "",
+		Completed: false,
+		Status:    "",
+		Err:       nil,
+	}
+	for _, t := range tasks {
+		if t.ID == task.GID {
+			s.Progress = float64(t.Progress)
+			s.Status = t.Message
+			s.Completed = (t.Phase == "PHASE_TYPE_COMPLETE")
+			if t.Phase == "PHASE_TYPE_ERROR" {
+				s.Err = fmt.Errorf(t.Message)
+			}
+		} else {
+			s.Progress = 0
+			s.Status = "the task has been deleted"
+			s.Completed = false
+			s.Err = fmt.Errorf("the task has been deleted")
+		}
+	}
 	return s, nil
 }
 
