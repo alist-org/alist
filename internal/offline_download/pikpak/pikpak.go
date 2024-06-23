@@ -50,7 +50,7 @@ func (p *PikPak) AddURL(args *tool.AddUrlArgs) (string, error) {
 	}
 
 	ctx := context.Background()
-	parentDir, err := op.Get(ctx, storage, actualPath)
+	parentDir, err := op.GetUnwrap(ctx, storage, actualPath)
 	if err != nil {
 		return "", err
 	}
@@ -98,7 +98,7 @@ func (p *PikPak) Status(task *tool.DownloadTask) (*tool.Status, error) {
 		NewGID:    "",
 		Completed: false,
 		Status:    "the task has been deleted",
-		Err:       fmt.Errorf("the task has been deleted"),
+		Err:       nil,
 	}
 	for _, t := range tasks {
 		if t.ID == task.GID {
@@ -111,6 +111,7 @@ func (p *PikPak) Status(task *tool.DownloadTask) (*tool.Status, error) {
 			return s, nil
 		}
 	}
+	s.Err = fmt.Errorf("the task has been deleted")
 	return s, nil
 }
 
