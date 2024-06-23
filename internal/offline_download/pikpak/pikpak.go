@@ -97,8 +97,8 @@ func (p *PikPak) Status(task *tool.DownloadTask) (*tool.Status, error) {
 		Progress:  0,
 		NewGID:    "",
 		Completed: false,
-		Status:    "",
-		Err:       nil,
+		Status:    "the task has been deleted",
+		Err:       fmt.Errorf("the task has been deleted"),
 	}
 	for _, t := range tasks {
 		if t.ID == task.GID {
@@ -108,9 +108,7 @@ func (p *PikPak) Status(task *tool.DownloadTask) (*tool.Status, error) {
 			if t.Phase == "PHASE_TYPE_ERROR" {
 				s.Err = fmt.Errorf(t.Message)
 			}
-		} else {
-			s.Status = "the task has been deleted"
-			s.Err = fmt.Errorf("the task has been deleted")
+			return s, nil
 		}
 	}
 	return s, nil
