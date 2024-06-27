@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"github.com/pkg/errors"
 	"io"
 	"path"
 	"strings"
@@ -21,6 +22,7 @@ import (
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/alist-org/gofakes3"
 	"github.com/ncw/swift/v2"
+	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -268,9 +270,19 @@ func (b *s3Backend) PutObject(
 	fp := path.Join(bucketPath, objectName)
 	reqPath := path.Dir(fp)
 	fmeta, _ := op.GetNearestMeta(fp)
-	_, err = fs.Get(context.WithValue(ctx, "meta", fmeta), reqPath, &fs.GetArgs{})
+	ctx = context.WithValue(ctx, "meta", fmeta)
+
+	_, err = fs.Get(ctx, reqPath, &fs.GetArgs{})
 	if err != nil {
-		return result, gofakes3.KeyNotFound(objectName)
+		if errs.IsObjectNotFound(err) && strings.Contains(objectName, "/") {
+			log.Debugf("reqPath: %s not found and objectName contains /, need to makeDir", reqPath)
+			err = fs.MakeDir(ctx, reqPath, true)
+			if err != nil {
+				return result, errors.WithMessagef(err, "failed to makeDir, reqPath: %s", reqPath)
+			}
+		} else {
+			return result, gofakes3.KeyNotFound(objectName)
+		}
 	}
 
 	var ti time.Time
