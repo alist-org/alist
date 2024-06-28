@@ -10,6 +10,7 @@ type Addition struct {
 	Username   string `json:"username" required:"true"`
 	PrivateKey string `json:"private_key" type:"text"`
 	Password   string `json:"password"`
+	Passphrase string `json:"passphrase"`
 	driver.RootPath
 	IgnoreSymlinkError bool `json:"ignore_symlink_error" default:"false" info:"Ignore symlink error"`
 }
