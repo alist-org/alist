@@ -29,6 +29,7 @@ type SettingItem struct {
 	Options    string `json:"options"`                                  // values for select
 	Group      int    `json:"group"`                                    // use to group setting in frontend
 	Flag       int    `json:"flag"`                                     // 0 = public, 1 = private, 2 = readonly, 3 = deprecated, etc.
+	Index      uint   `json:"index"`
 }
 
 func (s SettingItem) IsDeprecated() bool {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/alist-org/alist/v3/internal/conf"
+	"gorm.io/gorm"
 )
 
 func columnName(name string) string {
@@ -11,4 +12,8 @@ func columnName(name string) string {
 		return fmt.Sprintf(`"%s"`, name)
 	}
 	return fmt.Sprintf("`%s`", name)
+}
+
+func addStorageOrder(db *gorm.DB) *gorm.DB {
+	return db.Order(fmt.Sprintf("%s, %s", columnName("order"), columnName("id")))
 }
