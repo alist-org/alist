@@ -31,10 +31,9 @@ func Down(c *gin.Context) {
 		return
 	} else {
 		link, _, err := fs.Link(c, rawPath, model.LinkArgs{
-			IP:      c.ClientIP(),
-			Header:  c.Request.Header,
-			Type:    c.Query("type"),
-			HttpReq: c.Request,
+			IP:     c.ClientIP(),
+			Header: c.Request.Header,
+			Type:   c.Query("type"),
 		})
 		if err != nil {
 			common.ErrorResp(c, err, 500)
@@ -87,9 +86,8 @@ func Proxy(c *gin.Context) {
 			}
 		}
 		link, file, err := fs.Link(c, rawPath, model.LinkArgs{
-			Header:  c.Request.Header,
-			Type:    c.Query("type"),
-			HttpReq: c.Request,
+			Header: c.Request.Header,
+			Type:   c.Query("type"),
 		})
 		if err != nil {
 			common.ErrorResp(c, err, 500)
