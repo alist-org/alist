@@ -1,5 +1,5 @@
 blank_issues_enabled: false
 contact_links:
   - name: Questions & Discussions
-    url: https://github.com/Xhofe/alist/discussions
+    url: https://github.com/alist-org/alist/discussions
     about: Use GitHub discussions for message-board style questions and discussions.
