@@ -216,21 +216,6 @@ func Get(ctx context.Context, storage driver.Driver, path string) (model.Obj, er
 
 	// not root folder
 	dir, name := stdpath.Split(path)
-
-	// makeDir default set to true, you can set it to false by context in some cases
-	// ctx = context.WithValue(ctx, "makeDir", false)
-	makeDir, ok := ctx.Value("makeDir").(bool)
-	if !ok {
-		makeDir = true
-	}
-	if makeDir {
-		log.Debugf("make dir: %s", dir)
-		err := MakeDir(ctx, storage, dir)
-		if err != nil {
-			return nil, errors.WithMessagef(err, "failed to make dir [%s]", dir)
-		}
-	}
-
 	files, err := List(ctx, storage, dir, model.ListArgs{})
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed get parent list")
