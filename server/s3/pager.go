@@ -5,7 +5,7 @@ package s3
 import (
 	"sort"
 
-	"github.com/alist-org/gofakes3"
+	"github.com/akang943578/gofakes3"
 )
 
 // pager splits the object list into smulitply pages.

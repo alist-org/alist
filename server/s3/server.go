@@ -7,7 +7,7 @@ import (
 	"math/rand"
 	"net/http"
 
-	"github.com/alist-org/gofakes3"
+	"github.com/akang943578/gofakes3"
 )
 
 // Make a new S3 Server to serve the remote
