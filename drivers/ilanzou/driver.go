@@ -118,31 +118,33 @@ func (d *ILanZou) Link(ctx context.Context, file model.Obj, args model.LinkArgs)
 	if err != nil {
 		return nil, err
 	}
-	query := u.Query()
-	query.Set("uuid", d.UUID)
-	query.Set("devType", "6")
-	query.Set("devCode", d.UUID)
-	query.Set("devModel", "chrome")
-	query.Set("devVersion", d.conf.devVersion)
-	query.Set("appVersion", "")
-	ts, err := getTimestamp(d.conf.secret)
-	if err != nil {
-		return nil, err
+	ts, ts_str, err := getTimestamp(d.conf.secret)
+
+	params := []string{
+		"uuid=" + url.QueryEscape(d.UUID),
+		"devType=6",
+		"devCode=" + url.QueryEscape(d.UUID),
+		"devModel=chrome",
+		"devVersion=" + url.QueryEscape(d.conf.devVersion),
+		"appVersion=",
+		"timestamp=" + ts_str,
+		"appToken=" + url.QueryEscape(d.Token),
+		"enable=0",
 	}
-	query.Set("timestamp", ts)
-	query.Set("appToken", d.Token)
-	query.Set("enable", "1")
+
 	downloadId, err := mopan.AesEncrypt([]byte(fmt.Sprintf("%s|%s", file.GetID(), d.userID)), d.conf.secret)
 	if err != nil {
 		return nil, err
 	}
-	query.Set("downloadId", hex.EncodeToString(downloadId))
-	auth, err := mopan.AesEncrypt([]byte(fmt.Sprintf("%s|%d", file.GetID(), time.Now().UnixMilli())), d.conf.secret)
+	params = append(params, "downloadId="+url.QueryEscape(hex.EncodeToString(downloadId)))
+
+	auth, err := mopan.AesEncrypt([]byte(fmt.Sprintf("%s|%d", file.GetID(), ts)), d.conf.secret)
 	if err != nil {
 		return nil, err
 	}
-	query.Set("auth", hex.EncodeToString(auth))
-	u.RawQuery = query.Encode()
+	params = append(params, "auth="+url.QueryEscape(hex.EncodeToString(auth)))
+
+	u.RawQuery = strings.Join(params, "&")
 	realURL := u.String()
 	// get the url after redirect
 	res, err := base.NoRedirectClient.R().SetHeaders(map[string]string{
@@ -156,12 +158,7 @@ func (d *ILanZou) Link(ctx context.Context, file model.Obj, args model.LinkArgs)
 	if res.StatusCode() == 302 {
 		realURL = res.Header().Get("location")
 	} else {
-		contentLengthStr := res.Header().Get("Content-Length")
-		contentLength, err := strconv.Atoi(contentLengthStr)
-		if err != nil || contentLength == 0 || contentLength > 1024*10 {
-			return nil, fmt.Errorf("redirect failed, status: %d", res.StatusCode())
-		}
-		return nil, fmt.Errorf("redirect failed, content: %s", res.String())
+		return nil, fmt.Errorf("redirect failed, status: %d, msg: %s", res.StatusCode(), utils.Json.Get(res.Body(), "msg").ToString())
 	}
 	link := model.Link{URL: realURL}
 	return &link, nil
