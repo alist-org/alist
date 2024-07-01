@@ -28,9 +28,9 @@ func (p *PikPak) GetTasks(pikpakDriver *pikpak.PikPak) ([]pikpak.OfflineTask, er
 		if err != nil {
 			return nil, err
 		}
-		// 添加缓存 15s
+		// 添加缓存 10s
 		if len(tasks) > 0 {
-			taskCache.Set(key, tasks, cache.WithEx[[]pikpak.OfflineTask](time.Second*15))
+			taskCache.Set(key, tasks, cache.WithEx[[]pikpak.OfflineTask](time.Second*10))
 		} else {
 			taskCache.Del(key)
 		}

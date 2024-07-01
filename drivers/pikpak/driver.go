@@ -218,12 +218,8 @@ func (d *PikPak) OfflineDownload(ctx context.Context, fileUrl string, parentDir 
 		"url": base.Json{
 			"url": fileUrl,
 		},
-		"parent_id": parentDir.GetID(),
-	}
-	if parentDir.GetID() == "" {
-		requestBody["folder_type"] = "DOWNLOAD"
-	} else {
-		requestBody["folder_type"] = ""
+		"parent_id":   parentDir.GetID(),
+		"folder_type": "",
 	}
 
 	var resp OfflineDownloadResp
