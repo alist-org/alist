@@ -66,18 +66,18 @@ func (d *ILanZou) Drop(ctx context.Context) error {
 }
 
 func (d *ILanZou) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
-	offset := 1
-	limit := 60
 	var res []ListItem
 	for {
 		var resp ListResp
 		_, err := d.proved("/record/file/list", http.MethodGet, func(req *resty.Request) {
-			req.SetQueryParams(map[string]string{
-				"type":     "0",
-				"folderId": dir.GetID(),
-				"offset":   strconv.Itoa(offset),
-				"limit":    strconv.Itoa(limit),
-			}).SetResult(&resp)
+			params := []string{
+				"offset=1",
+				"limit=60",
+				"folderId=" + dir.GetID(),
+				"type=0",
+			}
+			queryString := strings.Join(params, "&")
+			req.SetQueryString(queryString).SetResult(&resp)
 		})
 		if err != nil {
 			return nil, err
@@ -86,7 +86,6 @@ func (d *ILanZou) List(ctx context.Context, dir model.Obj, args model.ListArgs) 
 		if resp.TotalPage <= resp.Offset {
 			break
 		}
-		offset++
 	}
 	return utils.SliceConvert(res, func(f ListItem) (model.Obj, error) {
 		updTime, err := time.ParseInLocation("2006-01-02 15:04:05", f.UpdTime, time.Local)
@@ -176,7 +175,7 @@ func (d *ILanZou) MakeDir(ctx context.Context, parentDir model.Obj, dirName stri
 		return nil, err
 	}
 	return &model.Object{
-		ID: utils.Json.Get(res, "list", "0", "id").ToString(),
+		ID: utils.Json.Get(res, "list", 0, "id").ToString(),
 		//Path:     "",
 		Name:     dirName,
 		Size:     0,
@@ -345,10 +344,12 @@ func (d *ILanZou) Put(ctx context.Context, dstDir model.Obj, stream model.FileSt
 	var resp UploadResultResp
 	for i := 0; i < 10; i++ {
 		_, err = d.unproved("/7n/results", http.MethodPost, func(req *resty.Request) {
-			req.SetQueryParams(map[string]string{
-				"tokenList": token,
-				"tokenTime": time.Now().Format("Mon Jan 02 2006 15:04:05 GMT-0700 (MST)"),
-			}).SetResult(&resp)
+			params := []string{
+				"tokenList=" + token,
+				"tokenTime=" + time.Now().Format("Mon Jan 02 2006 15:04:05 GMT-0700 (MST)"),
+			}
+			queryString := strings.Join(params, "&")
+			req.SetQueryString(queryString).SetResult(&resp)
 		})
 		if err != nil {
 			return nil, err

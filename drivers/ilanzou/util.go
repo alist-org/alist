@@ -63,6 +63,8 @@ func (d *ILanZou) request(pathname, method string, callback base.ReqCallback, pr
 		params = append(params, "appToken="+url.QueryEscape(d.Token))
 	}
 
+	params = append(params, "extra=2")
+
 	queryString := strings.Join(params, "&")
 
 	req := base.RestyClient.R()
