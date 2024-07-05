@@ -115,7 +115,7 @@ func (d *AliDrive) Link(ctx context.Context, file model.Obj, args model.LinkArgs
 	// 尝试获取 cdn_url
 	cdnURL := utils.Json.Get(res, "cdn_url").ToString()
 	var downloadURL string
-	if cdnURL != nil && cdnURL != "" {
+	if cdnURL != "" {
 		downloadURL = cdnURL
 	} else {
 		// 如果 cdn_url 为空，则获取 url
