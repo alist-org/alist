@@ -4,7 +4,9 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/alist-org/alist/v3/drivers/base"
@@ -31,45 +33,52 @@ func (d *ILanZou) login() error {
 	return nil
 }
 
-func getTimestamp(secret []byte) (string, error) {
+func getTimestamp(secret []byte) (int64, string, error) {
 	ts := time.Now().UnixMilli()
 	tsStr := strconv.FormatInt(ts, 10)
 	res, err := mopan.AesEncrypt([]byte(tsStr), secret)
 	if err != nil {
-		return "", err
+		return 0, "", err
 	}
-	return hex.EncodeToString(res), nil
+	return ts, hex.EncodeToString(res), nil
 }
 
 func (d *ILanZou) request(pathname, method string, callback base.ReqCallback, proved bool, retry ...bool) ([]byte, error) {
-	req := base.RestyClient.R()
-	ts, err := getTimestamp(d.conf.secret)
+	_, ts_str, err := getTimestamp(d.conf.secret)
 	if err != nil {
 		return nil, err
 	}
-	req.SetQueryParams(map[string]string{
-		"uuid":       d.UUID,
-		"devType":    "6",
-		"devCode":    d.UUID,
-		"devModel":   "chrome",
-		"devVersion": d.conf.devVersion,
-		"appVersion": "",
-		"timestamp":  ts,
-		//"appToken":   d.Token,
-		"extra": "2",
-	})
+
+	params := []string{
+		"uuid=" + url.QueryEscape(d.UUID),
+		"devType=6",
+		"devCode=" + url.QueryEscape(d.UUID),
+		"devModel=chrome",
+		"devVersion=" + url.QueryEscape(d.conf.devVersion),
+		"appVersion=",
+		"timestamp=" + ts_str,
+	}
+
+	if proved {
+		params = append(params, "appToken="+url.QueryEscape(d.Token))
+	}
+
+	params = append(params, "extra=2")
+
+	queryString := strings.Join(params, "&")
+
+	req := base.RestyClient.R()
 	req.SetHeaders(map[string]string{
 		"Origin":     d.conf.site,
 		"Referer":    d.conf.site + "/",
 		"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36 Edg/125.0.0.0",
 	})
-	if proved {
-		req.SetQueryParam("appToken", d.Token)
-	}
+
 	if callback != nil {
 		callback(req)
 	}
-	res, err := req.Execute(method, d.conf.base+pathname)
+
+	res, err := req.Execute(method, d.conf.base+pathname+"?"+queryString)
 	if err != nil {
 		if res != nil {
 			log.Errorf("[iLanZou] request error: %s", res.String())

@@ -3,10 +3,6 @@ package thunderx
 import (
 	"context"
 	"fmt"
-	"github.com/go-resty/resty/v2"
-	"net/http"
-	"strings"
-
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
@@ -18,6 +14,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/go-resty/resty/v2"
+	"net/http"
+	"strings"
 )
 
 type ThunderX struct {
@@ -41,26 +40,15 @@ func (x *ThunderX) Init(ctx context.Context) (err error) {
 	if x.XunLeiXCommon == nil {
 		x.XunLeiXCommon = &XunLeiXCommon{
 			Common: &Common{
-				client: base.NewRestyClient(),
-				Algorithms: []string{
-					"lHwINjLeqssT28Ym99p5MvR",
-					"xvFcxvtqPKCa9Ajf",
-					"2ywOP8spKHzfuhZMUYZ9IpsViq0t8vT0",
-					"FTBrJism20SHKQ2m2",
-					"BHrWJsPwjnr5VeLtOUr2191X9uXhWmt",
-					"yu0QgHEjNmDoPNwXN17so2hQlDT83T",
-					"OcaMfLMCGZ7oYlvZGIbTqb4U7cCY",
-					"jBGGu0GzXOjtCXYwkOBb+c6TZ/Nymv",
-					"YLWRjVor2rOuYEL",
-					"94wjoPazejyNC+gRpOj+JOm1XXvxa",
-				},
+				client:            base.NewRestyClient(),
+				Algorithms:        Algorithms,
 				DeviceID:          utils.GetMD5EncodeStr(x.Username + x.Password),
-				ClientID:          "ZQL_zwA4qhHcoe_2",
-				ClientSecret:      "Og9Vr1L8Ee6bh0olFxFDRg",
-				ClientVersion:     "1.05.0.2115",
-				PackageName:       "com.thunder.downloader",
-				UserAgent:         "ANDROID-com.thunder.downloader/1.05.0.2115 netWorkType/5G appid/40 deviceName/Xiaomi_M2004j7ac deviceModel/M2004J7AC OSVersion/12 protocolVersion/301 platformVersion/10 sdkVersion/220200 Oauth2Client/0.9 (Linux 4_14_186-perf-gddfs8vbb238b) (JAVA 0)",
-				DownloadUserAgent: "Dalvik/2.1.0 (Linux; U; Android 12; M2004J7AC Build/SP1A.210812.016)",
+				ClientID:          ClientID,
+				ClientSecret:      ClientSecret,
+				ClientVersion:     ClientVersion,
+				PackageName:       PackageName,
+				UserAgent:         BuildCustomUserAgent(utils.GetMD5EncodeStr(x.Username+x.Password), ClientID, PackageName, SdkVersion, ClientVersion, PackageName, ""),
+				DownloadUserAgent: DownloadUserAgent,
 				UseVideoUrl:       x.UseVideoUrl,
 
 				refreshCTokenCk: func(token string) {
@@ -76,6 +64,10 @@ func (x *ThunderX) Init(ctx context.Context) (err error) {
 					token, err = x.Login(x.Username, x.Password)
 					if err != nil {
 						x.GetStorage().SetStatus(fmt.Sprintf("%+v", err.Error()))
+						if token.UserID != "" {
+							x.SetUserID(token.UserID)
+							x.UserAgent = BuildCustomUserAgent(utils.GetMD5EncodeStr(x.Username+x.Password), ClientID, PackageName, SdkVersion, ClientVersion, PackageName, token.UserID)
+						}
 						op.MustSaveDriverStorage(x)
 					}
 				}
@@ -86,10 +78,14 @@ func (x *ThunderX) Init(ctx context.Context) (err error) {
 	}
 
 	// 自定义验证码token
-	ctoekn := strings.TrimSpace(x.CaptchaToken)
-	if ctoekn != "" {
-		x.SetCaptchaToken(ctoekn)
+	ctoken := strings.TrimSpace(x.CaptchaToken)
+	if ctoken != "" {
+		x.SetCaptchaToken(ctoken)
 	}
+	if x.DeviceID == "" {
+		x.SetDeviceID(utils.GetMD5EncodeStr(x.Username + x.Password))
+	}
+
 	x.XunLeiXCommon.UseVideoUrl = x.UseVideoUrl
 	x.Addition.RootFolderID = x.RootFolderID
 	// 防止重复登录
@@ -102,6 +98,10 @@ func (x *ThunderX) Init(ctx context.Context) (err error) {
 			return err
 		}
 		x.SetTokenResp(token)
+		if token.UserID != "" {
+			x.SetUserID(token.UserID)
+			x.UserAgent = BuildCustomUserAgent(x.DeviceID, ClientID, PackageName, SdkVersion, ClientVersion, PackageName, token.UserID)
+		}
 	}
 	return nil
 }
@@ -137,18 +137,33 @@ func (x *ThunderXExpert) Init(ctx context.Context) (err error) {
 
 				DeviceID: func() string {
 					if len(x.DeviceID) != 32 {
-						return utils.GetMD5EncodeStr(x.DeviceID)
+						if x.LoginType == "user" {
+							return utils.GetMD5EncodeStr(x.Username + x.Password)
+						}
+						return utils.GetMD5EncodeStr(x.ExpertAddition.RefreshToken)
 					}
 					return x.DeviceID
 				}(),
-				ClientID:          x.ClientID,
-				ClientSecret:      x.ClientSecret,
-				ClientVersion:     x.ClientVersion,
-				PackageName:       x.PackageName,
-				UserAgent:         x.UserAgent,
-				DownloadUserAgent: x.DownloadUserAgent,
-				UseVideoUrl:       x.UseVideoUrl,
-
+				ClientID:      x.ClientID,
+				ClientSecret:  x.ClientSecret,
+				ClientVersion: x.ClientVersion,
+				PackageName:   x.PackageName,
+				UserAgent: func() string {
+					if x.ExpertAddition.UserAgent != "" {
+						return x.ExpertAddition.UserAgent
+					}
+					if x.LoginType == "user" {
+						return BuildCustomUserAgent(utils.GetMD5EncodeStr(x.Username+x.Password), ClientID, PackageName, SdkVersion, ClientVersion, PackageName, "")
+					}
+					return BuildCustomUserAgent(utils.GetMD5EncodeStr(x.ExpertAddition.RefreshToken), ClientID, PackageName, SdkVersion, ClientVersion, PackageName, "")
+				}(),
+				DownloadUserAgent: func() string {
+					if x.ExpertAddition.DownloadUserAgent != "" {
+						return x.ExpertAddition.DownloadUserAgent
+					}
+					return DownloadUserAgent
+				}(),
+				UseVideoUrl: x.UseVideoUrl,
 				refreshCTokenCk: func(token string) {
 					x.CaptchaToken = token
 					op.MustSaveDriverStorage(x)
@@ -156,8 +171,17 @@ func (x *ThunderXExpert) Init(ctx context.Context) (err error) {
 			},
 		}
 
-		if x.CaptchaToken != "" {
-			x.SetCaptchaToken(x.CaptchaToken)
+		if x.ExpertAddition.CaptchaToken != "" {
+			x.SetCaptchaToken(x.ExpertAddition.CaptchaToken)
+			op.MustSaveDriverStorage(x)
+		}
+		if x.Common.DeviceID != "" {
+			x.ExpertAddition.DeviceID = x.Common.DeviceID
+			op.MustSaveDriverStorage(x)
+		}
+		if x.Common.DownloadUserAgent != "" {
+			x.ExpertAddition.DownloadUserAgent = x.Common.DownloadUserAgent
+			op.MustSaveDriverStorage(x)
 		}
 		x.XunLeiXCommon.UseVideoUrl = x.UseVideoUrl
 		x.ExpertAddition.RootFolderID = x.RootFolderID
@@ -177,7 +201,6 @@ func (x *ThunderXExpert) Init(ctx context.Context) (err error) {
 				return err
 			}
 			x.SetTokenResp(token)
-
 			// 刷新token方法
 			x.SetRefreshTokenFunc(func() error {
 				token, err := x.XunLeiXCommon.RefreshToken(x.TokenResp.RefreshToken)
@@ -208,13 +231,19 @@ func (x *ThunderXExpert) Init(ctx context.Context) (err error) {
 				return err
 			})
 		}
+		// 更新 UserAgent
+		if x.TokenResp.UserID != "" {
+			x.ExpertAddition.UserAgent = BuildCustomUserAgent(x.ExpertAddition.DeviceID, ClientID, PackageName, SdkVersion, ClientVersion, PackageName, x.TokenResp.UserID)
+			x.SetUserAgent(x.ExpertAddition.UserAgent)
+			op.MustSaveDriverStorage(x)
+		}
 	} else {
 		// 仅修改验证码token
 		if x.CaptchaToken != "" {
 			x.SetCaptchaToken(x.CaptchaToken)
 		}
-		x.XunLeiXCommon.UserAgent = x.UserAgent
-		x.XunLeiXCommon.DownloadUserAgent = x.DownloadUserAgent
+		x.XunLeiXCommon.UserAgent = x.ExpertAddition.UserAgent
+		x.XunLeiXCommon.DownloadUserAgent = x.ExpertAddition.UserAgent
 		x.XunLeiXCommon.UseVideoUrl = x.UseVideoUrl
 		x.ExpertAddition.RootFolderID = x.RootFolderID
 	}
@@ -426,17 +455,17 @@ func (xc *XunLeiXCommon) getFiles(ctx context.Context, folderId string) ([]model
 	return files, nil
 }
 
-// 设置刷新Token的方法
+// SetRefreshTokenFunc 设置刷新Token的方法
 func (xc *XunLeiXCommon) SetRefreshTokenFunc(fn func() error) {
 	xc.refreshTokenFunc = fn
 }
 
-// 设置Token
+// SetTokenResp 设置Token
 func (xc *XunLeiXCommon) SetTokenResp(tr *TokenResp) {
 	xc.TokenResp = tr
 }
 
-// 携带Authorization和CaptchaToken的请求
+// Request 携带Authorization和CaptchaToken的请求
 func (xc *XunLeiXCommon) Request(url string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
 	data, err := xc.Common.Request(url, method, func(req *resty.Request) {
 		req.SetHeaders(map[string]string{
@@ -473,7 +502,7 @@ func (xc *XunLeiXCommon) Request(url string, method string, callback base.ReqCal
 	return xc.Request(url, method, callback, resp)
 }
 
-// 刷新Token
+// RefreshToken 刷新Token
 func (xc *XunLeiXCommon) RefreshToken(refreshToken string) (*TokenResp, error) {
 	var resp TokenResp
 	_, err := xc.Common.Request(XLUSER_API_URL+"/auth/token", http.MethodPost, func(req *resty.Request) {
@@ -491,10 +520,11 @@ func (xc *XunLeiXCommon) RefreshToken(refreshToken string) (*TokenResp, error) {
 	if resp.RefreshToken == "" {
 		return nil, errs.EmptyToken
 	}
+	resp.UserID = resp.Sub
 	return &resp, nil
 }
 
-// 登录
+// Login 登录
 func (xc *XunLeiXCommon) Login(username, password string) (*TokenResp, error) {
 	url := XLUSER_API_URL + "/auth/signin"
 	err := xc.RefreshCaptchaTokenInLogin(GetAction(http.MethodPost, url), username)

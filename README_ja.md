@@ -5,13 +5,13 @@
   <a href="https://goreportcard.com/report/github.com/alist-org/alist/v3">
     <img src="https://goreportcard.com/badge/github.com/alist-org/alist/v3" alt="latest version" />
   </a>
-  <a href="https://github.com/Xhofe/alist/blob/main/LICENSE">
+  <a href="https://github.com/alist-org/alist/blob/main/LICENSE">
     <img src="https://img.shields.io/github/license/Xhofe/alist" alt="License" />
   </a>
-  <a href="https://github.com/Xhofe/alist/actions?query=workflow%3ABuild">
+  <a href="https://github.com/alist-org/alist/actions?query=workflow%3ABuild">
     <img src="https://img.shields.io/github/actions/workflow/status/Xhofe/alist/build.yml?branch=main" alt="Build status" />
   </a>
-  <a href="https://github.com/Xhofe/alist/releases">
+  <a href="https://github.com/alist-org/alist/releases">
     <img src="https://img.shields.io/github/release/Xhofe/alist" alt="latest version" />
   </a>
   <a title="Crowdin" target="_blank" href="https://crwd.in/alist">
@@ -19,13 +19,13 @@
   </a>
 </div>
 <div>
-  <a href="https://github.com/Xhofe/alist/discussions">
+  <a href="https://github.com/alist-org/alist/discussions">
     <img src="https://img.shields.io/github/discussions/Xhofe/alist?color=%23ED8936" alt="discussions" />
   </a>
   <a href="https://discord.gg/F4ymsH4xv2">
     <img src="https://img.shields.io/discord/1018870125102895134?logo=discord" alt="discussions" />
   </a>
-  <a href="https://github.com/Xhofe/alist/releases">
+  <a href="https://github.com/alist-org/alist/releases">
     <img src="https://img.shields.io/github/downloads/Xhofe/alist/total?color=%239F7AEA&logo=github" alt="Downloads" />
   </a>
   <a href="https://hub.docker.com/r/xhofe/alist">
@@ -106,7 +106,7 @@
 
 ## ディスカッション
 
-一般的なご質問は[ディスカッションフォーラム](https://github.com/Xhofe/alist/discussions)をご利用ください。**問題はバグレポートと機能リクエストのみです。**
+一般的なご質問は[ディスカッションフォーラム](https://github.com/alist-org/alist/discussions)をご利用ください。**問題はバグレポートと機能リクエストのみです。**
 
 ## スポンサー
 
@@ -138,4 +138,4 @@ https://alist.nn.ci/guide/sponsor.html
 
 ---
 
-> [@Blog](https://nn.ci/) · [@GitHub](https://github.com/Xhofe) · [@TelegramGroup](https://t.me/alist_chat) · [@Discord](https://discord.gg/F4ymsH4xv2)
+> [@Blog](https://nn.ci/) · [@GitHub](https://github.com/alist-org) · [@TelegramGroup](https://t.me/alist_chat) · [@Discord](https://discord.gg/F4ymsH4xv2)
