@@ -88,7 +88,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          repository: alist-org/with_aria2
+          repository: qy527145/with_aria2
           ref: main
           persist-credentials: false
           fetch-depth: 0
@@ -104,4 +104,4 @@ jobs:
         with:
           github_token: ${{ secrets.MY_TOKEN }}
           branch: main
-          repository: alist-org/with_aria2
+          repository: qy527145/with_aria2
