@@ -22,13 +22,13 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: xhofe/alist
+          images: wmymz/alist
 
       - name: Docker meta with ffmpeg
         id: meta-ffmpeg
         uses: docker/metadata-action@v5
         with:
-          images: xhofe/alist
+          images: wmymz/alist
           flavor: |
             suffix=-ffmpeg,onlatest=true
 
