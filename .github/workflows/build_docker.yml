@@ -60,7 +60,7 @@ jobs:
         if: github.event_name == 'push'
         uses: docker/login-action@v3
         with:
-          username: xhofe
+          username: wmymz
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push
