@@ -12,7 +12,7 @@ require (
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/aws/aws-sdk-go v1.50.24
 	github.com/baidubce/bce-sdk-go v0.9.180
-	github.com/blevesearch/bleve/v2 v2.3.10
+	github.com/blevesearch/bleve/v2 v2.4.1
 	github.com/caarlos0/env/v9 v9.0.0
 	github.com/charmbracelet/bubbles v0.17.1
 	github.com/charmbracelet/bubbletea v0.25.0
@@ -75,11 +75,15 @@ require (
 	gorm.io/gorm v1.25.10
 )
 
-require github.com/BurntSushi/toml v0.3.1 // indirect
+require (
+	github.com/BurntSushi/toml v0.3.1 // indirect
+	github.com/blevesearch/go-faiss v1.0.19 // indirect
+	github.com/blevesearch/zapx/v16 v16.1.4 // indirect
+)
 
 require (
 	github.com/Max-Sum/base32768 v0.0.0-20230304063302-18e6ce5945fd // indirect
-	github.com/RoaringBitmap/roaring v1.2.3 // indirect
+	github.com/RoaringBitmap/roaring v1.9.3 // indirect
 	github.com/abbot/go-http-auth v0.4.0 // indirect
 	github.com/aead/ecdh v0.2.0 // indirect
 	github.com/andreburgaud/crypt2go v1.2.0 // indirect
@@ -88,14 +92,14 @@ require (
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/benbjohnson/clock v1.3.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/bits-and-blooms/bitset v1.2.0 // indirect
+	github.com/bits-and-blooms/bitset v1.12.0 // indirect
 	github.com/blang/semver/v4 v4.0.0 // indirect
-	github.com/blevesearch/bleve_index_api v1.0.6 // indirect
-	github.com/blevesearch/geo v0.1.18 // indirect
+	github.com/blevesearch/bleve_index_api v1.1.9 // indirect
+	github.com/blevesearch/geo v0.1.20 // indirect
 	github.com/blevesearch/go-porterstemmer v1.0.3 // indirect
 	github.com/blevesearch/gtreap v0.1.1 // indirect
 	github.com/blevesearch/mmap-go v1.0.4 // indirect
-	github.com/blevesearch/scorch_segment_api/v2 v2.1.6 // indirect
+	github.com/blevesearch/scorch_segment_api/v2 v2.2.14 // indirect
 	github.com/blevesearch/segment v0.9.1 // indirect
 	github.com/blevesearch/snowballstem v0.9.0 // indirect
 	github.com/blevesearch/upsidedown_store_api v1.0.2 // indirect
