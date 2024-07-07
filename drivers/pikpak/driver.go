@@ -2,8 +2,10 @@ package pikpak
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/alist-org/alist/v3/drivers/base"
@@ -205,6 +207,94 @@ func (d *PikPak) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 	}
 	_, err = uploader.UploadWithContext(ctx, input)
 	return err
+}
+
+// 离线下载文件
+func (d *PikPak) OfflineDownload(ctx context.Context, fileUrl string, parentDir model.Obj, fileName string) (*OfflineTask, error) {
+	requestBody := base.Json{
+		"kind":        "drive#file",
+		"name":        fileName,
+		"upload_type": "UPLOAD_TYPE_URL",
+		"url": base.Json{
+			"url": fileUrl,
+		},
+		"parent_id":   parentDir.GetID(),
+		"folder_type": "",
+	}
+
+	var resp OfflineDownloadResp
+	_, err := d.request("https://api-drive.mypikpak.com/drive/v1/files", http.MethodPost, func(req *resty.Request) {
+		req.SetBody(requestBody)
+	}, &resp)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp.Task, err
+}
+
+/*
+获取离线下载任务列表
+phase 可能的取值：
+PHASE_TYPE_RUNNING, PHASE_TYPE_ERROR, PHASE_TYPE_COMPLETE, PHASE_TYPE_PENDING
+*/
+func (d *PikPak) OfflineList(ctx context.Context, nextPageToken string, phase []string) ([]OfflineTask, error) {
+	res := make([]OfflineTask, 0)
+	url := "https://api-drive.mypikpak.com/drive/v1/tasks"
+
+	if len(phase) == 0 {
+		phase = []string{"PHASE_TYPE_RUNNING", "PHASE_TYPE_ERROR", "PHASE_TYPE_COMPLETE", "PHASE_TYPE_PENDING"}
+	}
+	params := map[string]string{
+		"type":           "offline",
+		"thumbnail_size": "SIZE_SMALL",
+		"limit":          "10000",
+		"page_token":     nextPageToken,
+		"with":           "reference_resource",
+	}
+
+	// 处理 phase 参数
+	if len(phase) > 0 {
+		filters := base.Json{
+			"phase": map[string]string{
+				"in": strings.Join(phase, ","),
+			},
+		}
+		filtersJSON, err := json.Marshal(filters)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal filters: %w", err)
+		}
+		params["filters"] = string(filtersJSON)
+	}
+
+	var resp OfflineListResp
+	_, err := d.request(url, http.MethodGet, func(req *resty.Request) {
+		req.SetContext(ctx).
+			SetQueryParams(params)
+	}, &resp)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get offline list: %w", err)
+	}
+	res = append(res, resp.Tasks...)
+	return res, nil
+}
+
+func (d *PikPak) DeleteOfflineTasks(ctx context.Context, taskIDs []string, deleteFiles bool) error {
+	url := "https://api-drive.mypikpak.com/drive/v1/tasks"
+	params := map[string]string{
+		"task_ids":     strings.Join(taskIDs, ","),
+		"delete_files": strconv.FormatBool(deleteFiles),
+	}
+	_, err := d.request(url, http.MethodDelete, func(req *resty.Request) {
+		req.SetContext(ctx).
+			SetQueryParams(params)
+	}, nil)
+	if err != nil {
+		return fmt.Errorf("failed to delete tasks %v: %w", taskIDs, err)
+	}
+	return nil
 }
 
 var _ driver.Driver = (*PikPak)(nil)
