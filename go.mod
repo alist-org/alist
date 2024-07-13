@@ -43,7 +43,7 @@ require (
 	github.com/json-iterator/go v1.1.12
 	github.com/larksuite/oapi-sdk-go/v3 v3.2.5
 	github.com/maruel/natural v1.1.1
-	github.com/meilisearch/meilisearch-go v0.26.1
+	github.com/meilisearch/meilisearch-go v0.27.0
 	github.com/minio/sio v0.3.0
 	github.com/natefinch/lumberjack v2.0.0+incompatible
 	github.com/ncw/swift/v2 v2.0.2

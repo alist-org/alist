@@ -358,6 +358,8 @@ github.com/matttproud/golang_protobuf_extensions v1.0.4 h1:mmDVorXM7PCGKw94cs5zk
 github.com/matttproud/golang_protobuf_extensions v1.0.4/go.mod h1:BSXmuO+STAnVfrANrmjBb36TMTDstsz7MSK+HVaYKv4=
 github.com/meilisearch/meilisearch-go v0.26.1 h1:3bmo2uLijX7kvBmiZ9LupVfC95TFcRJDgrRTzbOoE4A=
 github.com/meilisearch/meilisearch-go v0.26.1/go.mod h1:SxuSqDcPBIykjWz1PX+KzsYzArNLSCadQodWs8extS0=
+github.com/meilisearch/meilisearch-go v0.27.0 h1:lDFq8WzbsZCtt3/byr7GFqfOygWF5iy9TtDgzJo0Ds8=
+github.com/meilisearch/meilisearch-go v0.27.0/go.mod h1:SxuSqDcPBIykjWz1PX+KzsYzArNLSCadQodWs8extS0=
 github.com/minio/sha256-simd v1.0.1 h1:6kaan5IFmwTNynnKKpDHe6FWHohJOHhCPchzK49dzMM=
 github.com/minio/sha256-simd v1.0.1/go.mod h1:Pz6AKMiUdngCLpeTL/RJY1M9rUuPMYujV5xJjtbRSN8=
 github.com/minio/sio v0.3.0 h1:syEFBewzOMOYVzSTFpp1MqpSZk8rUNbz8VIIc+PNzus=
