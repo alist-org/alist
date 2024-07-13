@@ -50,7 +50,7 @@ require (
 	github.com/pquerna/otp v1.4.0
 	github.com/rclone/rclone v1.63.1
 	github.com/sirupsen/logrus v1.9.3
-	github.com/spf13/cobra v1.8.0
+	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.9.0
 	github.com/t3rm1n4l/go-mega v0.0.0-20240219080617-d494b6a8ace7
 	github.com/u2takey/ffmpeg-go v0.5.0
