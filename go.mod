@@ -3,7 +3,7 @@ module github.com/alist-org/alist/v3
 go 1.22.4
 
 require (
-	github.com/SheltonZhu/115driver v1.0.22
+	github.com/SheltonZhu/115driver v1.0.25
 	github.com/Xhofe/go-cache v0.0.0-20220723083548-714439c8af9a
 	github.com/Xhofe/rateg v0.0.0-20230728072201-251a4e1adad4
 	github.com/Xhofe/wopan-sdk-go v0.1.2
