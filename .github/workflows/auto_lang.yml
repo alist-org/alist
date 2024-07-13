@@ -37,7 +37,7 @@ jobs:
       - name: Checkout alist-web
         uses: actions/checkout@v4
         with:
-          repository: 'alist-org/alist-web'
+          repository: 'qy527145/alist-web'
           ref: main
           persist-credentials: false
           fetch-depth: 0
