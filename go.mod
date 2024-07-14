@@ -14,7 +14,7 @@ require (
 	github.com/caarlos0/env/v9 v9.0.0
 	github.com/charmbracelet/bubbles v0.18.0
 	github.com/charmbracelet/bubbletea v0.26.6
-	github.com/charmbracelet/lipgloss v0.9.1
+	github.com/charmbracelet/lipgloss v0.12.1
 	github.com/city404/v6-public-rpc-proto/go v0.0.0-20240708163039-9a9b82a0ce4d
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/deckarep/golang-set/v2 v2.6.0
@@ -78,7 +78,7 @@ require (
 	github.com/blevesearch/go-faiss v1.0.19 // indirect
 	github.com/blevesearch/zapx/v16 v16.1.4 // indirect
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
-	github.com/charmbracelet/x/ansi v0.1.2 // indirect
+	github.com/charmbracelet/x/ansi v0.1.4 // indirect
 	github.com/charmbracelet/x/input v0.1.0 // indirect
 	github.com/charmbracelet/x/term v0.1.1 // indirect
 	github.com/charmbracelet/x/windows v0.1.0 // indirect
