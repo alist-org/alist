@@ -4,7 +4,6 @@ import (
 	"crypto/md5"
 	"crypto/sha1"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"net/http"
@@ -53,15 +52,15 @@ func (d *PikPak) request(url string, method string, callback base.ReqCallback, r
 	if resp != nil {
 		req.SetResult(resp)
 	}
-	var e RespErr
+	var e ErrResp
 	req.SetError(&e)
 	res, err := req.Execute(method, url)
 	if err != nil {
 		return nil, err
 	}
 
-	if e.ErrorCode != 0 {
-		return nil, errors.New(e.Error)
+	if e.IsError() {
+		return nil, &e
 	}
 	return res.Body(), nil
 }
@@ -101,7 +100,7 @@ func (d *PikPak) requestWithCaptchaToken(url string, method string, callback bas
 	default:
 		return nil, err
 	}
-	return d.request(url, method, callback, resp)
+	return d.requestWithCaptchaToken(url, method, callback, resp)
 }
 
 func (d *PikPak) getFiles(id string) ([]File, error) {
@@ -264,7 +263,7 @@ func (c *Common) GetCaptchaSign() (timestamp, sign string) {
 	return
 }
 
-// 刷新验证码token
+// refreshCaptchaToken 刷新CaptchaToken
 func (d *PikPak) refreshCaptchaToken(action string, metas map[string]string) error {
 	param := CaptchaTokenRequest{
 		Action:       action,

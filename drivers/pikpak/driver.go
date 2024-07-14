@@ -76,11 +76,11 @@ func (d *PikPak) Init(ctx context.Context) (err error) {
 		)
 	}))
 
-	// 获取CaptchaToken
-	_ = d.RefreshCaptchaTokenAtLogin(GetAction(http.MethodGet, "https://api-drive.mypikpak.com/drive/v1/files"), d.Username)
-
 	// 获取用户ID
-	_ = d.GetUserID(ctx)
+	_ = d.GetUserID()
+
+	// 获取CaptchaToken
+	_ = d.RefreshCaptchaTokenAtLogin(GetAction(http.MethodGet, "https://api-drive.mypikpak.com/drive/v1/files"), d.Common.UserID)
 	// 更新UserAgent
 	d.Common.UserAgent = BuildCustomUserAgent(d.Common.DeviceID, ClientID, PackageName, SdkVersion, ClientVersion, PackageName, d.Common.UserID)
 	return nil
@@ -320,17 +320,17 @@ func (d *PikPak) DeleteOfflineTasks(ctx context.Context, taskIDs []string, delet
 	return nil
 }
 
-func (d *PikPak) GetUserID(ctx context.Context) error {
-	url := "https://api-drive.mypikpak.com/vip/v1/vip/info"
-	var resp VipInfo
-	_, err := d.requestWithCaptchaToken(url, http.MethodGet, func(req *resty.Request) {
-		req.SetContext(ctx)
-	}, &resp)
+func (d *PikPak) GetUserID() error {
+
+	token, err := d.oauth2Token.Token()
 	if err != nil {
-		return fmt.Errorf("failed to get user id : %w", err)
+		return err
 	}
-	if resp.Data.UserID != "" {
-		d.Common.SetUserID(resp.Data.UserID)
+
+	userID := token.Extra("sub").(string)
+
+	if userID != "" {
+		d.Common.SetUserID(userID)
 	}
 	return nil
 }

@@ -10,11 +10,6 @@ import (
 	hash_extend "github.com/alist-org/alist/v3/pkg/utils/hash"
 )
 
-type RespErr struct {
-	ErrorCode int    `json:"error_code"`
-	Error     string `json:"error"`
-}
-
 type Files struct {
 	Files         []File `json:"files"`
 	NextPageToken string `json:"next_page_token"`
@@ -174,7 +169,6 @@ type ErrResp struct {
 	ErrorCode        int64  `json:"error_code"`
 	ErrorMsg         string `json:"error"`
 	ErrorDescription string `json:"error_description"`
-	//	ErrorDetails   interface{} `json:"error_details"`
 }
 
 func (e *ErrResp) IsError() bool {
@@ -198,38 +192,4 @@ type CaptchaTokenResponse struct {
 	CaptchaToken string `json:"captcha_token"`
 	ExpiresIn    int64  `json:"expires_in"`
 	Url          string `json:"url"`
-}
-
-type VipInfo struct {
-	Data struct {
-		Expire      time.Time `json:"expire"`
-		ExtUserInfo struct {
-			UserRegion string `json:"userRegion"`
-		} `json:"extUserInfo"`
-		ExtType    string `json:"ext_type"`
-		FeeRecord  string `json:"fee_record"`
-		Restricted struct {
-			Result  bool `json:"result"`
-			Content struct {
-				Text     string `json:"text"`
-				Color    string `json:"color"`
-				DeepLink string `json:"deepLink"`
-			} `json:"content"`
-			LearnMore struct {
-				Text     string `json:"text"`
-				Color    string `json:"color"`
-				DeepLink string `json:"deepLink"`
-			} `json:"learnMore"`
-		} `json:"restricted"`
-		Status  string `json:"status"`
-		Type    string `json:"type"`
-		UserID  string `json:"user_id"`
-		VipItem []struct {
-			Type        string    `json:"type"`
-			Description string    `json:"description"`
-			Status      string    `json:"status"`
-			Expire      time.Time `json:"expire"`
-			SurplusDay  int       `json:"surplus_day"`
-		} `json:"vipItem"`
-	} `json:"data"`
 }
