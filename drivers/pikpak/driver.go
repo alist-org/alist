@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/alist-org/alist/v3/internal/op"
 	"net/http"
 	"strconv"
 	"strings"
@@ -25,7 +26,7 @@ import (
 type PikPak struct {
 	model.Storage
 	Addition
-
+	*Common
 	oauth2Token oauth2.TokenSource
 }
 
@@ -41,6 +42,20 @@ func (d *PikPak) Init(ctx context.Context) (err error) {
 	if d.ClientID == "" || d.ClientSecret == "" {
 		d.ClientID = "YNxT9w7GMdWvEOKa"
 		d.ClientSecret = "dbw2OtmVEeuUvIptb1Coyg"
+	}
+
+	if d.Common == nil {
+		d.Common = &Common{
+			client:       base.NewRestyClient(),
+			CaptchaToken: "",
+			UserID:       "",
+			DeviceID:     utils.GetMD5EncodeStr(d.Username + d.Password),
+			UserAgent:    BuildCustomUserAgent(utils.GetMD5EncodeStr(d.Username+d.Password), ClientID, PackageName, SdkVersion, ClientVersion, PackageName, ""),
+			RefreshCTokenCk: func(token string) {
+				d.Common.CaptchaToken = token
+				op.MustSaveDriverStorage(d)
+			},
+		}
 	}
 
 	oauth2Config := &oauth2.Config{
@@ -60,6 +75,14 @@ func (d *PikPak) Init(ctx context.Context) (err error) {
 			d.Password,
 		)
 	}))
+
+	// 获取CaptchaToken
+	_ = d.RefreshCaptchaTokenAtLogin(GetAction(http.MethodGet, "https://api-drive.mypikpak.com/drive/v1/files"), d.Username)
+
+	// 获取用户ID
+	_ = d.GetUserID(ctx)
+	// 更新UserAgent
+	d.Common.UserAgent = BuildCustomUserAgent(d.Common.DeviceID, ClientID, PackageName, SdkVersion, ClientVersion, PackageName, d.Common.UserID)
 	return nil
 }
 
@@ -79,7 +102,7 @@ func (d *PikPak) List(ctx context.Context, dir model.Obj, args model.ListArgs) (
 
 func (d *PikPak) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	var resp File
-	_, err := d.request(fmt.Sprintf("https://api-drive.mypikpak.com/drive/v1/files/%s?_magic=2021&thumbnail_size=SIZE_LARGE", file.GetID()),
+	_, err := d.requestWithCaptchaToken(fmt.Sprintf("https://api-drive.mypikpak.com/drive/v1/files/%s?_magic=2021&thumbnail_size=SIZE_LARGE", file.GetID()),
 		http.MethodGet, nil, &resp)
 	if err != nil {
 		return nil, err
@@ -293,6 +316,21 @@ func (d *PikPak) DeleteOfflineTasks(ctx context.Context, taskIDs []string, delet
 	}, nil)
 	if err != nil {
 		return fmt.Errorf("failed to delete tasks %v: %w", taskIDs, err)
+	}
+	return nil
+}
+
+func (d *PikPak) GetUserID(ctx context.Context) error {
+	url := "https://api-drive.mypikpak.com/vip/v1/vip/info"
+	var resp VipInfo
+	_, err := d.requestWithCaptchaToken(url, http.MethodGet, func(req *resty.Request) {
+		req.SetContext(ctx)
+	}, &resp)
+	if err != nil {
+		return fmt.Errorf("failed to get user id : %w", err)
+	}
+	if resp.Data.UserID != "" {
+		d.Common.SetUserID(resp.Data.UserID)
 	}
 	return nil
 }
