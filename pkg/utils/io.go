@@ -138,7 +138,7 @@ func (mr *MultiReadable) Close() error {
 
 func Retry(attempts int, sleep time.Duration, f func() error) (err error) {
 	for i := 0; i < attempts; i++ {
-		fmt.Println("This is attempt number", i)
+		//fmt.Println("This is attempt number", i)
 		if i > 0 {
 			log.Println("retrying after error:", err)
 			time.Sleep(sleep)

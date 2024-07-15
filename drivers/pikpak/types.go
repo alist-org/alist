@@ -1,6 +1,7 @@
 package pikpak
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 
@@ -98,4 +99,137 @@ type UploadTaskData struct {
 	} `json:"resumable"`
 
 	File File `json:"file"`
+}
+
+// 添加离线下载响应
+type OfflineDownloadResp struct {
+	File       *string     `json:"file"`
+	Task       OfflineTask `json:"task"`
+	UploadType string      `json:"upload_type"`
+	URL        struct {
+		Kind string `json:"kind"`
+	} `json:"url"`
+}
+
+// 离线下载列表
+type OfflineListResp struct {
+	ExpiresIn     int64         `json:"expires_in"`
+	NextPageToken string        `json:"next_page_token"`
+	Tasks         []OfflineTask `json:"tasks"`
+}
+
+// offlineTask
+type OfflineTask struct {
+	Callback          string            `json:"callback"`
+	CreatedTime       string            `json:"created_time"`
+	FileID            string            `json:"file_id"`
+	FileName          string            `json:"file_name"`
+	FileSize          string            `json:"file_size"`
+	IconLink          string            `json:"icon_link"`
+	ID                string            `json:"id"`
+	Kind              string            `json:"kind"`
+	Message           string            `json:"message"`
+	Name              string            `json:"name"`
+	Params            Params            `json:"params"`
+	Phase             string            `json:"phase"` // PHASE_TYPE_RUNNING, PHASE_TYPE_ERROR, PHASE_TYPE_COMPLETE, PHASE_TYPE_PENDING
+	Progress          int64             `json:"progress"`
+	ReferenceResource ReferenceResource `json:"reference_resource"`
+	Space             string            `json:"space"`
+	StatusSize        int64             `json:"status_size"`
+	Statuses          []string          `json:"statuses"`
+	ThirdTaskID       string            `json:"third_task_id"`
+	Type              string            `json:"type"`
+	UpdatedTime       string            `json:"updated_time"`
+	UserID            string            `json:"user_id"`
+}
+
+type Params struct {
+	Age         string  `json:"age"`
+	MIMEType    *string `json:"mime_type,omitempty"`
+	PredictType string  `json:"predict_type"`
+	URL         string  `json:"url"`
+}
+
+type ReferenceResource struct {
+	Type          string                 `json:"@type"`
+	Audit         interface{}            `json:"audit"`
+	Hash          string                 `json:"hash"`
+	IconLink      string                 `json:"icon_link"`
+	ID            string                 `json:"id"`
+	Kind          string                 `json:"kind"`
+	Medias        []Media                `json:"medias"`
+	MIMEType      string                 `json:"mime_type"`
+	Name          string                 `json:"name"`
+	Params        map[string]interface{} `json:"params"`
+	ParentID      string                 `json:"parent_id"`
+	Phase         string                 `json:"phase"`
+	Size          string                 `json:"size"`
+	Space         string                 `json:"space"`
+	Starred       bool                   `json:"starred"`
+	Tags          []string               `json:"tags"`
+	ThumbnailLink string                 `json:"thumbnail_link"`
+}
+
+type ErrResp struct {
+	ErrorCode        int64  `json:"error_code"`
+	ErrorMsg         string `json:"error"`
+	ErrorDescription string `json:"error_description"`
+	//	ErrorDetails   interface{} `json:"error_details"`
+}
+
+func (e *ErrResp) IsError() bool {
+	return e.ErrorCode != 0 || e.ErrorMsg != "" || e.ErrorDescription != ""
+}
+
+func (e *ErrResp) Error() string {
+	return fmt.Sprintf("ErrorCode: %d ,Error: %s ,ErrorDescription: %s ", e.ErrorCode, e.ErrorMsg, e.ErrorDescription)
+}
+
+type CaptchaTokenRequest struct {
+	Action       string            `json:"action"`
+	CaptchaToken string            `json:"captcha_token"`
+	ClientID     string            `json:"client_id"`
+	DeviceID     string            `json:"device_id"`
+	Meta         map[string]string `json:"meta"`
+	RedirectUri  string            `json:"redirect_uri"`
+}
+
+type CaptchaTokenResponse struct {
+	CaptchaToken string `json:"captcha_token"`
+	ExpiresIn    int64  `json:"expires_in"`
+	Url          string `json:"url"`
+}
+
+type VipInfo struct {
+	Data struct {
+		Expire      time.Time `json:"expire"`
+		ExtUserInfo struct {
+			UserRegion string `json:"userRegion"`
+		} `json:"extUserInfo"`
+		ExtType    string `json:"ext_type"`
+		FeeRecord  string `json:"fee_record"`
+		Restricted struct {
+			Result  bool `json:"result"`
+			Content struct {
+				Text     string `json:"text"`
+				Color    string `json:"color"`
+				DeepLink string `json:"deepLink"`
+			} `json:"content"`
+			LearnMore struct {
+				Text     string `json:"text"`
+				Color    string `json:"color"`
+				DeepLink string `json:"deepLink"`
+			} `json:"learnMore"`
+		} `json:"restricted"`
+		Status  string `json:"status"`
+		Type    string `json:"type"`
+		UserID  string `json:"user_id"`
+		VipItem []struct {
+			Type        string    `json:"type"`
+			Description string    `json:"description"`
+			Status      string    `json:"status"`
+			Expire      time.Time `json:"expire"`
+			SurplusDay  int       `json:"surplus_day"`
+		} `json:"vipItem"`
+	} `json:"data"`
 }
