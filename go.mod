@@ -6,7 +6,7 @@ require (
 	github.com/SheltonZhu/115driver v1.0.25
 	github.com/Xhofe/go-cache v0.0.0-20220723083548-714439c8af9a
 	github.com/Xhofe/rateg v0.0.0-20230728072201-251a4e1adad4
-	github.com/alist-org/gofakes3 v0.0.5
+	github.com/alist-org/gofakes3 v0.0.6
 	github.com/aliyun/aliyun-oss-go-sdk v3.0.2+incompatible
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/aws/aws-sdk-go v1.54.19
