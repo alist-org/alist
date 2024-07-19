@@ -3,6 +3,7 @@ package _123
 import (
 	"errors"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"hash/crc32"
 	"math"
 	"math/rand"
@@ -232,8 +233,9 @@ func (d *Pan123) request(url string, method string, callback base.ReqCallback, r
 	return body, nil
 }
 
-func (d *Pan123) getFiles(parentId string) ([]File, error) {
+func (d *Pan123) getFiles(parentId string, name string) ([]File, error) {
 	page := 1
+	total := 0
 	res := make([]File, 0)
 	// 2024-02-06 fix concurrency by 123pan
 	for {
@@ -265,9 +267,13 @@ func (d *Pan123) getFiles(parentId string) ([]File, error) {
 		}
 		page++
 		res = append(res, resp.Data.InfoList...)
+		total = resp.Data.Total
 		if len(resp.Data.InfoList) == 0 || resp.Data.Next == "-1" {
 			break
 		}
+	}
+	if len(res) != total {
+		log.Warnf("incorrect file count from remote at %s: expected %d, got %d", name, total, len(res))
 	}
 	return res, nil
 }

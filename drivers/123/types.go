@@ -87,8 +87,9 @@ var _ model.Thumb = (*File)(nil)
 type Files struct {
 	//BaseResp
 	Data struct {
-		InfoList []File `json:"InfoList"`
 		Next     string `json:"Next"`
+		Total    int    `json:"Total"`
+		InfoList []File `json:"InfoList"`
 	} `json:"data"`
 }
 
