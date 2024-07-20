@@ -82,3 +82,30 @@ type MoveOrCopyResp struct {
 	DriveID string `json:"drive_id"`
 	FileID  string `json:"file_id"`
 }
+
+type SIDResp struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+	Data    struct {
+		QRCodeURL string `json:"qrCodeUrl"`
+		SID       string `json:"sid"`
+	} `json:"data"`
+}
+
+type RefreshTokenSIDResp struct {
+	Status   string `json:"status"`
+	AuthCode string `json:"authCode"`
+}
+
+type RefreshTokenAuthResp struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+	Data    struct {
+		Code         string `json:"code"`
+		Message      string `json:"message"`
+		TokenType    string `json:"token_type"`
+		AccessToken  string `json:"access_token"`
+		RefreshToken string `json:"refresh_token"`
+		ExpiresIN    int    `json:"expires_in"`
+	}
+}

@@ -42,6 +42,18 @@ func (d *AliyundriveOpen) Init(ctx context.Context) error {
 	if d.DriveType == "" {
 		d.DriveType = "default"
 	}
+	if d.UseTVAuth && d.RefreshToken == "" {
+		if d.SID != "" {
+			// 查询 对应的 authCode --> 获取 access_token refresh_token
+			err := d.getRefreshTokenBySID()
+			if err != nil {
+				return err
+			}
+		} else {
+			// 发送 qcode 请求 获取 sid
+			return d.getSID()
+		}
+	}
 	res, err := d.request("/adrive/v1.0/user/getDriveInfo", http.MethodPost, nil)
 	if err != nil {
 		return err
