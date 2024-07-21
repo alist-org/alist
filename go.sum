@@ -23,6 +23,8 @@ github.com/alist-org/gofakes3 v0.0.6 h1:kenkDSqOIJt5ZDJ9KW91YkwplFXpfToPDjP3Bd6G
 github.com/alist-org/gofakes3 v0.0.6/go.mod h1:6IyGtYGIX29fLvtXo+XZhtwX2P33KVYYj8uTgAHSu58=
 github.com/alist-org/times v0.0.0-20240721124318-c2e3da27cc69 h1:E9QJ4vVTu1KYRhelnCsQImCsbl7NlkH3Yxs3/L2ldDk=
 github.com/alist-org/times v0.0.0-20240721124318-c2e3da27cc69/go.mod h1:oPJwGY3sLmGgcJamGumz//0A35f4BwQRacyqLNcJTOU=
+github.com/alist-org/times v0.0.0-20240721124654-efa0c7d3ad92 h1:pIEI87zhv8ZzQcu65rTL7kqirrs8dR6HDiXrqWat2Fk=
+github.com/alist-org/times v0.0.0-20240721124654-efa0c7d3ad92/go.mod h1:oPJwGY3sLmGgcJamGumz//0A35f4BwQRacyqLNcJTOU=
 github.com/aliyun/aliyun-oss-go-sdk v3.0.2+incompatible h1:8psS8a+wKfiLt1iVDX79F7Y6wUM49Lcha2FMXt4UM8g=
 github.com/aliyun/aliyun-oss-go-sdk v3.0.2+incompatible/go.mod h1:T/Aws4fEfogEE9v+HPhhw+CntffsBHJ8nXQCwKr0/g8=
 github.com/andreburgaud/crypt2go v1.2.0 h1:oly/ENAodeqTYpUafgd4r3v+VKLQnmOKUyfpj+TxHbE=
