@@ -92,8 +92,8 @@ func (d *Pan123Share) getFiles(parentId string) ([]File, error) {
 		query := map[string]string{
 			"limit":          "100",
 			"next":           "0",
-			"orderBy":        d.OrderBy,
-			"orderDirection": d.OrderDirection,
+			"orderBy":        "file_id",
+			"orderDirection": "desc",
 			"parentFileId":   parentId,
 			"Page":           strconv.Itoa(page),
 			"shareKey":       d.ShareKey,
