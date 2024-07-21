@@ -4,6 +4,7 @@ import "time"
 
 type Storage struct {
 	ID              uint      `json:"id" gorm:"primaryKey"`                        // unique key
+	ServerId        string    `json:"server_id"`                                   // only effective if driver is "Local"
 	MountPath       string    `json:"mount_path" gorm:"unique" binding:"required"` // must be standardized
 	Order           int       `json:"order"`                                       // use to sort
 	Driver          string    `json:"driver"`                                      // driver used

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/pkg/errors"
 )
@@ -66,8 +67,15 @@ func GetEnabledStorages() ([]model.Storage, error) {
 	if err := db.Where(fmt.Sprintf("%s = ?", columnName("disabled")), false).Find(&storages).Error; err != nil {
 		return nil, errors.WithStack(err)
 	}
-	sort.Slice(storages, func(i, j int) bool {
-		return storages[i].Order < storages[j].Order
+	serverStorages := make([]model.Storage, 0)
+	for _, v := range storages {
+		if v.Driver == "Local" && len(conf.Conf.ServerId) > 0 && conf.Conf.ServerId != v.ServerId {
+			continue
+		}
+		serverStorages = append(serverStorages, v)
+	}
+	sort.Slice(serverStorages, func(i, j int) bool {
+		return serverStorages[i].Order < serverStorages[j].Order
 	})
-	return storages, nil
+	return serverStorages, nil
 }

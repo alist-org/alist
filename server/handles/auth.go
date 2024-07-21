@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Xhofe/go-cache"
+	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/server/common"
@@ -89,7 +90,8 @@ func loginHash(c *gin.Context, req *LoginReq) {
 
 type UserResp struct {
 	model.User
-	Otp bool `json:"otp"`
+	Otp      bool   `json:"otp"`
+	ServerId string `json:"server_id"`
 }
 
 // CurrentUser get current user by token
@@ -97,7 +99,8 @@ type UserResp struct {
 func CurrentUser(c *gin.Context) {
 	user := c.MustGet("user").(*model.User)
 	userResp := UserResp{
-		User: *user,
+		User:     *user,
+		ServerId: conf.Conf.ServerId,
 	}
 	userResp.Password = ""
 	if userResp.OtpSecret != "" {

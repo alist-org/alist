@@ -71,6 +71,7 @@ type S3 struct {
 }
 
 type Config struct {
+	ServerId              string      `json:"server_id" env:"SERVER_ID"`
 	Force                 bool        `json:"force" env:"FORCE"`
 	SiteURL               string      `json:"site_url" env:"SITE_URL"`
 	Cdn                   string      `json:"cdn" env:"CDN"`
