@@ -3,7 +3,6 @@ package _123
 import (
 	"errors"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"hash/crc32"
 	"math"
 	"math/rand"
