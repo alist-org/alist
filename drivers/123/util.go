@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"hash/crc32"
 	"math"
 	"math/rand"
@@ -18,6 +17,7 @@ import (
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/go-resty/resty/v2"
 	jsoniter "github.com/json-iterator/go"
+	log "github.com/sirupsen/logrus"
 )
 
 // do others that not defined in Driver interface
@@ -248,8 +248,8 @@ func (d *Pan123) getFiles(ctx context.Context, parentId string, name string) ([]
 			"driveId":              "0",
 			"limit":                "100",
 			"next":                 "0",
-			"orderBy":              d.OrderBy,
-			"orderDirection":       d.OrderDirection,
+			"orderBy":              "file_id",
+			"orderDirection":       "desc",
 			"parentFileId":         parentId,
 			"trashed":              "false",
 			"SearchData":           "",
@@ -259,12 +259,13 @@ func (d *Pan123) getFiles(ctx context.Context, parentId string, name string) ([]
 			"operateType":          "4",
 			"inDirectSpace":        "false",
 		}
-		_, err := d.request(FileList, http.MethodGet, func(req *resty.Request) {
+		_res, err := d.request(FileList, http.MethodGet, func(req *resty.Request) {
 			req.SetQueryParams(query)
 		}, &resp)
 		if err != nil {
 			return nil, err
 		}
+		log.Debug(string(_res))
 		page++
 		res = append(res, resp.Data.InfoList...)
 		total = resp.Data.Total
