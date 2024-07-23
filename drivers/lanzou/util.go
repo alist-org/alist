@@ -106,7 +106,8 @@ func (d *LanZou) request(url string, method string, callback base.ReqCallback, u
 	}
 
 	req.SetHeaders(map[string]string{
-		"Referer": "https://pc.woozooo.com",
+		"Referer":    "https://pc.woozooo.com",
+		"User-Agent": d.UserAgent,
 	})
 
 	if d.Cookie != "" {
