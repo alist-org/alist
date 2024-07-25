@@ -45,7 +45,7 @@ func (d *Pan123Share) Drop(ctx context.Context) error {
 
 func (d *Pan123Share) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
 	// TODO return the files list, required
-	files, err := d.getFiles(dir.GetID())
+	files, err := d.getFiles(ctx, dir.GetID())
 	if err != nil {
 		return nil, err
 	}
@@ -150,11 +150,12 @@ func (d *Pan123Share) Put(ctx context.Context, dstDir model.Obj, stream model.Fi
 //	return nil, errs.NotSupport
 //}
 
-func (d *Pan123Share) APIRateLimit(api string) bool {
-	limiter, _ := d.apiRateLimit.LoadOrStore(api,
-		rate.NewLimiter(rate.Every(time.Millisecond*700), 1))
-	ins := limiter.(*rate.Limiter)
-	return ins.Allow()
+func (d *Pan123Share) APIRateLimit(ctx context.Context, api string) error {
+	value, _ := d.apiRateLimit.LoadOrStore(api,
+		rate.NewLimiter(rate.Every(700*time.Millisecond), 1))
+	limiter := value.(*rate.Limiter)
+
+	return limiter.Wait(ctx)
 }
 
 var _ driver.Driver = (*Pan123Share)(nil)
