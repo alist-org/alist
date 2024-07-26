@@ -16,7 +16,8 @@ type Addition struct {
 	driver.RootID
 	SharePassword  string `json:"share_password"`
 	BaseUrl        string `json:"baseUrl" required:"true" default:"https://pc.woozooo.com" help:"basic URL for file operation"`
-	ShareUrl       string `json:"shareUrl" required:"true" default:"https://pan.lanzouo.com" help:"used to get the sharing page"`
+	ShareUrl       string `json:"shareUrl" required:"true" default:"https://pan.lanzoui.com" help:"used to get the sharing page"`
+	UserAgent      string `json:"user_agent" required:"true" default:"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.39 (KHTML, like Gecko) Chrome/89.0.4389.111 Safari/537.39"`
 	RepairFileInfo bool   `json:"repair_file_info" help:"To use webdav, you need to enable it"`
 }
 
