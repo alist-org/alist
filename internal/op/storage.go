@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/db"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
@@ -51,6 +52,10 @@ func CreateStorage(ctx context.Context, storage model.Storage) (uint, error) {
 		return 0, errors.WithMessage(err, "failed get driver new")
 	}
 	storageDriver := driverNew()
+	//if server_id is not empty,set the local storage server id
+	if driverName == "Local" && len(conf.Conf.ServerId) > 0 {
+		storage.ServerId = conf.Conf.ServerId
+	}
 	// insert storage to database
 	err = db.CreateStorage(&storage)
 	if err != nil {
@@ -165,6 +170,9 @@ func UpdateStorage(ctx context.Context, storage model.Storage) error {
 	}
 	storage.Modified = time.Now()
 	storage.MountPath = utils.FixAndCleanPath(storage.MountPath)
+	if storage.Driver == "Local" && len(conf.Conf.ServerId) > 0 {
+		storage.ServerId = conf.Conf.ServerId
+	}
 	err = db.UpdateStorage(&storage)
 	if err != nil {
 		return errors.WithMessage(err, "failed update storage in database")
