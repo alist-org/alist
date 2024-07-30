@@ -6,7 +6,7 @@ import (
 )
 
 type Addition struct {
-	OriginURLs    string `json:"origin_urls" type:"text" required:"true" default:"https://vip.123pan.com/29/folder/file.mp3" help:"structure:FolderName:\n  [FileSize:][Modified:]Url"`
+	OriginURLs    string `json:"origin_urls" type:"text" required:"true" default:"https://vip.123pan.cn/29/folder/file.mp3" help:"structure:FolderName:\n  [FileSize:][Modified:]Url"`
 	PrivateKey    string `json:"private_key"`
 	UID           uint64 `json:"uid" type:"number"`
 	ValidDuration int64  `json:"valid_duration" type:"number" default:"30" help:"minutes"`
