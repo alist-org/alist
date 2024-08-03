@@ -181,3 +181,12 @@ func Verify2FA(c *gin.Context) {
 		common.SuccessResp(c)
 	}
 }
+
+func LogOut(c *gin.Context) {
+	err := common.InvalidateToken(c.GetHeader("Authorization"))
+	if err != nil {
+		common.ErrorResp(c, err, 500)
+	} else {
+		common.SuccessResp(c)
+	}
+}
