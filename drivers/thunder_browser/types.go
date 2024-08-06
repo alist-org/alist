@@ -114,8 +114,8 @@ type Files struct {
 	ModifiedTime   CustomTime `json:"modified_time"`
 	IconLink       string     `json:"icon_link"`
 	ThumbnailLink  string     `json:"thumbnail_link"`
-	// Md5Checksum    string    `json:"md5_checksum"`
-	Hash string `json:"hash"`
+	Md5Checksum    string     `json:"md5_checksum"`
+	Hash           string     `json:"hash"`
 	// Links map[string]Link `json:"links"`
 	// Phase string          `json:"phase"`
 	// Audit struct {
@@ -153,12 +153,22 @@ type Files struct {
 	OriginalURL string `json:"original_url"`
 	//Params            struct{} `json:"params"`
 	//OriginalFileIndex int    `json:"original_file_index"`
-	//Space             string `json:"space"`
+	Space string `json:"space"`
 	//Apps              []interface{} `json:"apps"`
 	//Writable   bool   `json:"writable"`
 	FolderType string `json:"folder_type"`
 	//Collection interface{} `json:"collection"`
-	FileType int8
+	SortName         string     `json:"sort_name"`
+	UserModifiedTime CustomTime `json:"user_modified_time"`
+	//SpellName         []interface{} `json:"spell_name"`
+	//FileCategory      string        `json:"file_category"`
+	//Tags              []interface{} `json:"tags"`
+	//ReferenceEvents   []interface{} `json:"reference_events"`
+	//ReferenceResource interface{}   `json:"reference_resource"`
+	//Params0           struct {
+	//	PlatformIcon   string `json:"platform_icon"`
+	//	SmallThumbnail string `json:"small_thumbnail"`
+	//} `json:"params,omitempty"`
 }
 
 func (c *Files) GetHash() utils.HashInfo {
@@ -172,15 +182,18 @@ func (c *Files) ModTime() time.Time    { return c.ModifiedTime.Time }
 func (c *Files) IsDir() bool           { return c.Kind == FOLDER }
 func (c *Files) GetID() string         { return c.ID }
 func (c *Files) GetPath() string {
-	// 对特殊文件进行特殊处理
-	if c.FileType == ThunderDriveType {
-		return ThunderDriveFileID
-	} else if c.FileType == ThunderBrowserDriveSafeType {
-		return ThunderBrowserDriveSafeFileID
-	}
 	return ""
 }
 func (c *Files) Thumb() string { return c.ThumbnailLink }
+
+func (c *Files) GetSpace() string {
+	if c.Space != "" {
+		return c.Space
+	} else {
+		// "迅雷云盘" 文件夹内 Space 为空
+		return ""
+	}
+}
 
 /*
 * 上传

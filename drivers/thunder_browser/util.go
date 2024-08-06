@@ -23,29 +23,24 @@ const (
 )
 
 var Algorithms = []string{
-	"p+ExqPV",
-	"LwdwKlprzv7cQBQmxN5",
-	"vc08P1NwUBnbGsl58LzTW",
-	"VVNeXaXmZ8HH1SJEnp6YpVFSFU",
-	"pNAOJ",
-	"CNChvyDehAmUR1TDodfOusBAx",
-	"MS98NnX4Np8nxvEh6Ulv+SMMKMzKvD34C7lGWbb",
-	"9MpFF21GnVOYku0NM9Y/hzsK471UCUZ2o+",
-	"EY1QfeA06fXlw9wZNoZaXEED5zZPvNWI",
-	"",
-	"sciE",
-	"FIPqgQDUUW1e0GkiBFd5w7mCQ",
-	"zW",
-	"75XFdEO0Gi",
+	"uWRwO7gPfdPB/0NfPtfQO+71",
+	"F93x+qPluYy6jdgNpq+lwdH1ap6WOM+nfz8/V",
+	"0HbpxvpXFsBK5CoTKam",
+	"dQhzbhzFRcawnsZqRETT9AuPAJ+wTQso82mRv",
+	"SAH98AmLZLRa6DB2u68sGhyiDh15guJpXhBzI",
+	"unqfo7Z64Rie9RNHMOB",
+	"7yxUdFADp3DOBvXdz0DPuKNVT35wqa5z0DEyEvf",
+	"RBG",
+	"ThTWPG5eC0UBqlbQ+04nZAptqGCdpv9o55A",
 }
 
 const (
 	ClientID          = "ZUBzD9J_XPXfn7f7"
 	ClientSecret      = "yESVmHecEe6F0aou69vl-g"
-	ClientVersion     = "1.0.8.2215"
+	ClientVersion     = "1.10.0.2633"
 	PackageName       = "com.xunlei.browser"
 	DownloadUserAgent = "AndroidDownloadManager/13 (Linux; U; Android 13; M2004J7AC Build/SP1A.210812.016)"
-	SdkVersion        = "2.0.3.262"
+	SdkVersion        = "233100"
 )
 
 const (
@@ -62,12 +57,10 @@ const (
 )
 
 const (
-	ThunderDriveFileID                = "XXXXXXXXXXXXXXXXXXXXXXXXXX"
-	ThunderBrowserDriveSafeFileID     = "YYYYYYYYYYYYYYYYYYYYYYYYYY"
-	ThunderDriveFolderName            = "迅雷云盘"
-	ThunderBrowserDriveSafeFolderName = "超级保险箱"
-	ThunderDriveType                  = 1
-	ThunderBrowserDriveSafeType       = 2
+	ThunderDriveSpace                 = ""
+	ThunderDriveSafeSpace             = "SPACE_SAFE"
+	ThunderBrowserDriveSpace          = "SPACE_BROWSER"
+	ThunderBrowserDriveSafeSpace      = "SPACE_BROWSER_SAFE"
 	ThunderDriveFolderType            = "DEFAULT_ROOT"
 	ThunderBrowserDriveSafeFolderType = "BROWSER_SAFE"
 )
