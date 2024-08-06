@@ -2,6 +2,9 @@ package tool
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/internal/stream"
@@ -9,21 +12,27 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/xhofe/tache"
-	"os"
-	"path/filepath"
 )
 
 type TransferTask struct {
 	tache.Base
+	FileDir      string       `json:"file_dir"`
+	DstDirPath   string       `json:"dst_dir_path"`
+	TempDir      string       `json:"temp_dir"`
+	DeletePolicy DeletePolicy `json:"delete_policy"`
 	file         File
-	dstDirPath   string
-	tempDir      string
-	deletePolicy DeletePolicy
 }
 
 func (t *TransferTask) Run() error {
 	// check dstDir again
-	storage, dstDirActualPath, err := op.GetStorageAndActualPath(t.dstDirPath)
+	var err error
+	if (t.file == File{}) {
+		t.file, err = GetFile(t.FileDir)
+		if err != nil {
+			return errors.Wrapf(err, "failed to get file %s", t.FileDir)
+		}
+	}
+	storage, dstDirActualPath, err := op.GetStorageAndActualPath(t.DstDirPath)
 	if err != nil {
 		return errors.WithMessage(err, "failed get storage")
 	}
@@ -44,7 +53,7 @@ func (t *TransferTask) Run() error {
 		Mimetype: mimetype,
 		Closers:  utils.NewClosers(rc),
 	}
-	relDir, err := filepath.Rel(t.tempDir, filepath.Dir(t.file.Path))
+	relDir, err := filepath.Rel(t.TempDir, filepath.Dir(t.file.Path))
 	if err != nil {
 		log.Errorf("find relation directory error: %v", err)
 	}
@@ -53,7 +62,7 @@ func (t *TransferTask) Run() error {
 }
 
 func (t *TransferTask) GetName() string {
-	return fmt.Sprintf("transfer %s to [%s]", t.file.Path, t.dstDirPath)
+	return fmt.Sprintf("transfer %s to [%s]", t.file.Path, t.DstDirPath)
 }
 
 func (t *TransferTask) GetStatus() string {
@@ -61,7 +70,7 @@ func (t *TransferTask) GetStatus() string {
 }
 
 func (t *TransferTask) OnSucceeded() {
-	if t.deletePolicy == DeleteOnUploadSucceed || t.deletePolicy == DeleteAlways {
+	if t.DeletePolicy == DeleteOnUploadSucceed || t.DeletePolicy == DeleteAlways {
 		err := os.Remove(t.file.Path)
 		if err != nil {
 			log.Errorf("failed to delete file %s, error: %s", t.file.Path, err.Error())
@@ -70,7 +79,7 @@ func (t *TransferTask) OnSucceeded() {
 }
 
 func (t *TransferTask) OnFailed() {
-	if t.deletePolicy == DeleteOnUploadFailed || t.deletePolicy == DeleteAlways {
+	if t.DeletePolicy == DeleteOnUploadFailed || t.DeletePolicy == DeleteAlways {
 		err := os.Remove(t.file.Path)
 		if err != nil {
 			log.Errorf("failed to delete file %s, error: %s", t.file.Path, err.Error())
