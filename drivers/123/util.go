@@ -23,9 +23,9 @@ import (
 // do others that not defined in Driver interface
 
 const (
-	Api              = "https://www.123pan.com/api"
-	AApi             = "https://www.123pan.com/a/api"
-	BApi             = "https://www.123pan.com/b/api"
+	Api              = "https://www.123pan.cn/api"
+	AApi             = "https://www.123pan.cn/a/api"
+	BApi             = "https://www.123pan.cn/b/api"
 	MainApi          = BApi
 	SignIn           = MainApi + "/user/sign_in"
 	Logout           = MainApi + "/user/logout"
@@ -160,8 +160,8 @@ func (d *Pan123) login() error {
 	}
 	res, err := base.RestyClient.R().
 		SetHeaders(map[string]string{
-			"origin":      "https://www.123pan.com",
-			"referer":     "https://www.123pan.com/",
+			"origin":      "https://www.123pan.cn",
+			"referer":     "https://www.123pan.cn/",
 			"user-agent":  "Dart/2.19(dart:io)-alist",
 			"platform":    "web",
 			"app-version": "3",
@@ -196,8 +196,8 @@ func (d *Pan123) login() error {
 func (d *Pan123) request(url string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
 	req := base.RestyClient.R()
 	req.SetHeaders(map[string]string{
-		"origin":        "https://www.123pan.com",
-		"referer":       "https://www.123pan.com/",
+		"origin":        "https://www.123pan.cn",
+		"referer":       "https://www.123pan.cn/",
 		"authorization": "Bearer " + d.AccessToken,
 		"user-agent":    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) alist-client",
 		"platform":      "web",

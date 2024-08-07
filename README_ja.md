@@ -49,7 +49,7 @@
     - [x] OneDrive / Sharepoint ([グローバル](https://www.office.com/), [cn](https://portal.partner.microsoftonline.cn),de,us)
     - [x] [189cloud](https://cloud.189.cn) (Personal, Family)
     - [x] [GoogleDrive](https://drive.google.com/)
-    - [x] [123pan](https://www.123pan.com/)
+    - [x] [123pan](https://www.123pan.cn/)
     - [x] FTP / SFTP
     - [x] [PikPak](https://www.mypikpak.com/)
     - [x] [S3](https://aws.amazon.com/s3/)
