@@ -2,6 +2,7 @@ package op
 
 import (
 	"context"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -189,6 +190,23 @@ func UpdateStorage(ctx context.Context, storage model.Storage) error {
 	go callStorageHooks("update", storageDriver)
 	log.Debugf("storage %+v is update", storageDriver)
 	return err
+}
+func DeleteMemoryStorage(dbMountPaths []string) {
+	keys := storagesMap.Keys()
+	for _, v := range keys {
+		if slices.Contains(dbMountPaths, v) {
+			continue
+		}
+		storageDriver, ok := storagesMap.Load(v)
+		if !ok {
+			continue
+		}
+		//ignore err
+		storageDriver.Drop(context.Background())
+		//delete
+		storagesMap.Delete(v)
+
+	}
 }
 
 func DeleteStorageById(ctx context.Context, id uint) error {

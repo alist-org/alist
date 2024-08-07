@@ -352,6 +352,16 @@ func (m *MapOf[K, V]) Values() []V {
 	return values
 }
 
+// Keys returns a slice of the keys in the map.
+func (m *MapOf[K, V]) Keys() []K {
+	var keys []K
+	m.Range(func(key K, value V) bool {
+		keys = append(keys, key)
+		return true
+	})
+	return keys
+}
+
 func (m *MapOf[K, V]) Count() int {
 	return len(m.dirty)
 }
