@@ -106,17 +106,26 @@ func (d *AliDrive) Link(ctx context.Context, file model.Obj, args model.LinkArgs
 		"file_id":    file.GetID(),
 		"expire_sec": 14400,
 	}
-	res, err, _ := d.request("https://api.alipan.com/v2/file/get_download_url", http.MethodPost, func(req *resty.Request) {
+	res, err, _ := d.request("https://bj29.api.aliyunpds.com/v2/file/get_download_url", http.MethodPost, func(req *resty.Request) {
 		req.SetBody(data)
 	}, nil)
 	if err != nil {
 		return nil, err
 	}
+	// 尝试获取 cdn_url
+	cdnURL := utils.Json.Get(res, "cdn_url").ToString()
+	var downloadURL string
+	if cdnURL != "" {
+		downloadURL = cdnURL
+	} else {
+		// 如果 cdn_url 为空，则获取 url
+		downloadURL = utils.Json.Get(res, "url").ToString()
+	}
 	return &model.Link{
 		Header: http.Header{
 			"Referer": []string{"https://www.alipan.com/"},
 		},
-		URL: utils.Json.Get(res, "url").ToString(),
+		URL: downloadURL,
 	}, nil
 }
 

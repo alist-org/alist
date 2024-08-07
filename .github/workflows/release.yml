@@ -55,7 +55,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          repository: alist-org/desktop-release
+          repository: qy527145/desktop-release
           ref: main
           persist-credentials: false
           fetch-depth: 0
@@ -72,4 +72,4 @@ jobs:
         with:
           github_token: ${{ secrets.MY_TOKEN }}
           branch: main
-          repository: alist-org/desktop-release
+          repository: qy527145/desktop-release
