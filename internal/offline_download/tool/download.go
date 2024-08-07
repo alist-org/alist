@@ -14,19 +14,26 @@ import (
 
 type DownloadTask struct {
 	tache.Base
-	Url          string       `json:"url"`
-	DstDirPath   string       `json:"dst_dir_path"`
-	TempDir      string       `json:"temp_dir"`
-	DeletePolicy DeletePolicy `json:"delete_policy"`
-
-	Status            string   `json:"status"`
-	Signal            chan int `json:"-"`
-	GID               string   `json:"-"`
+	Url               string       `json:"url"`
+	DstDirPath        string       `json:"dst_dir_path"`
+	TempDir           string       `json:"temp_dir"`
+	DeletePolicy      DeletePolicy `json:"delete_policy"`
+	Toolname          string       `json:"toolname"`
+	Status            string       `json:"-"`
+	Signal            chan int     `json:"-"`
+	GID               string       `json:"-"`
 	tool              Tool
 	callStatusRetried int
 }
 
 func (t *DownloadTask) Run() error {
+	if t.tool == nil {
+		tool, err := Tools.Get(t.Toolname)
+		if err != nil {
+			return errors.WithMessage(err, "failed get tool")
+		}
+		t.tool = tool
+	}
 	if err := t.tool.Run(t); !errs.IsNotSupportError(err) {
 		if err == nil {
 			return t.Complete()
@@ -142,9 +149,10 @@ func (t *DownloadTask) Complete() error {
 		file := files[i]
 		TransferTaskManager.Add(&TransferTask{
 			file:         file,
-			dstDirPath:   t.DstDirPath,
-			tempDir:      t.TempDir,
-			deletePolicy: t.DeletePolicy,
+			DstDirPath:   t.DstDirPath,
+			TempDir:      t.TempDir,
+			DeletePolicy: t.DeletePolicy,
+			FileDir:      file.Path,
 		})
 	}
 	return nil

@@ -76,6 +76,7 @@ func AddURL(ctx context.Context, args *AddURLArgs) (tache.TaskWithInfo, error) {
 		DstDirPath:   args.DstDirPath,
 		TempDir:      tempDir,
 		DeletePolicy: deletePolicy,
+		Toolname:     args.Tool,
 		tool:         tool,
 	}
 	DownloadTaskManager.Add(t)
