@@ -66,11 +66,18 @@ func AddURL(ctx context.Context, args *AddURLArgs) (tache.TaskWithInfo, error) {
 	uid := uuid.NewString()
 	tempDir := filepath.Join(conf.Conf.TempDir, args.Tool, uid)
 	deletePolicy := args.DeletePolicy
-	if args.Tool == "pikpak" {
+
+	switch args.Tool {
+	case "115 Cloud":
+		tempDir = args.DstDirPath
+		// 防止将下载好的文件删除
+		deletePolicy = DeleteNever
+	case "pikpak":
 		tempDir = args.DstDirPath
 		// 防止将下载好的文件删除
 		deletePolicy = DeleteNever
 	}
+	
 	t := &DownloadTask{
 		Url:          args.URL,
 		DstDirPath:   args.DstDirPath,

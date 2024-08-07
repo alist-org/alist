@@ -63,7 +63,7 @@ func (d *Pan115) Link(ctx context.Context, file model.Obj, args model.LinkArgs) 
 	if err := d.WaitLimit(ctx); err != nil {
 		return nil, err
 	}
-	var userAgent = args.Header.Get("User-Agent")
+	userAgent := args.Header.Get("User-Agent")
 	downloadInfo, err := d.
 		DownloadWithUA(file.(*FileObj).PickCode, userAgent)
 	if err != nil {
@@ -179,7 +179,22 @@ func (d *Pan115) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 	}
 	// 分片上传
 	return d.UploadByMultipart(&fastInfo.UploadOSSParams, stream.GetSize(), stream, dirID)
+}
 
+func (d *Pan115) OfflineList(ctx context.Context) ([]*driver115.OfflineTask, error) {
+	resp, err := d.client.ListOfflineTask(0)
+	if err != nil {
+		return nil, err
+	}
+	return resp.Tasks, nil
+}
+
+func (d *Pan115) OfflineDownload(ctx context.Context, uris []string, dstDir model.Obj) ([]string, error) {
+	return d.client.AddOfflineTaskURIs(uris, dstDir.GetID())
+}
+
+func (d *Pan115) DeleteOfflineTasks(ctx context.Context, hashes []string, deleteFiles bool) error {
+	return d.client.DeleteOfflineTasks(hashes, deleteFiles)
 }
 
 var _ driver.Driver = (*Pan115)(nil)
