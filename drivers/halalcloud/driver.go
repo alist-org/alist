@@ -147,7 +147,7 @@ func (d *HalalCloud) IsLogin() bool {
 	if err != nil {
 		return false
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	result, err := pbPublicUser.NewPubUserClient(serv.GetGrpcConnection()).Get(ctx, &pbPublicUser.User{
 		Identity: "",
