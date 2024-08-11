@@ -74,19 +74,16 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/386,linux/arm/v6,linux/s390x
 
-      - name: Replace dockerfile tag
-        run: |
-          sed -i -e "s/latest/main/g" Dockerfile.ffmpeg
-
       - name: Build and push with ffmpeg
         id: docker_build_ffmpeg
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: Dockerfile.ffmpeg
+          file: Dockerfile.ci
           push: ${{ github.event_name == 'push' }}
           tags: ${{ steps.meta-ffmpeg.outputs.tags }}
           labels: ${{ steps.meta-ffmpeg.outputs.labels }}
+          build-args: INSTALL_FFMPEG=true
           platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/386,linux/arm/v6,linux/s390x
 
   build_docker_with_aria2:

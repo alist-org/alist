@@ -9,7 +9,7 @@ RUN bash build.sh release docker
 
 FROM alpine:edge
 
-ARG FFMPEG=false
+ARG INSTALL_FFMPEG=false
 LABEL MAINTAINER="i@nn.ci"
 
 WORKDIR /opt/alist/
@@ -17,7 +17,7 @@ WORKDIR /opt/alist/
 RUN apk update && \
     apk upgrade --no-cache && \
     apk add --no-cache bash ca-certificates su-exec tzdata; \
-    [ "$FFMPEG" = "true" ] && apk add --no-cache ffmpeg; \
+    [ "$INSTALL_FFMPEG" = "true" ] && apk add --no-cache ffmpeg; \
     rm -rf /var/cache/apk/*
 
 COPY --from=builder /app/bin/alist ./
