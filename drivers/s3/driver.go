@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/alist-org/alist/v3/server/common"
 	"io"
 	"net/url"
 	stdpath "path"
@@ -95,23 +96,27 @@ func (d *S3) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*mo
 		input.ResponseContentDisposition = &disposition
 	}
 	req, _ := d.linkClient.GetObjectRequest(input)
-	var link string
+	var link model.Link
 	var err error
 	if d.CustomHost != "" {
 		err = req.Build()
-		link = req.HTTPRequest.URL.String()
+		link.URL = req.HTTPRequest.URL.String()
 		if d.RemoveBucket {
-			link = strings.Replace(link, "/"+d.Bucket, "", 1)
+			link.URL = strings.Replace(link.URL, "/"+d.Bucket, "", 1)
 		}
 	} else {
-		link, err = req.Presign(time.Hour * time.Duration(d.SignURLExpire))
+		if common.ShouldProxy(d, filename) {
+			err = req.Sign()
+			link.URL = req.HTTPRequest.URL.String()
+			link.Header = req.HTTPRequest.Header
+		} else {
+			link.URL, err = req.Presign(time.Hour * time.Duration(d.SignURLExpire))
+		}
 	}
 	if err != nil {
 		return nil, err
 	}
-	return &model.Link{
-		URL: link,
-	}, nil
+	return &link, nil
 }
 
 func (d *S3) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
