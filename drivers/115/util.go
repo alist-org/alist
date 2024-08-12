@@ -38,17 +38,17 @@ func (d *Pan115) login() error {
 	}
 	d.client = driver115.New(opts...)
 	cr := &driver115.Credential{}
-	if d.Addition.QRCodeToken != "" {
+	if d.QRCodeToken != "" {
 		s := &driver115.QRCodeSession{
-			UID: d.Addition.QRCodeToken,
+			UID: d.QRCodeToken,
 		}
 		if cr, err = d.client.QRCodeLoginWithApp(s, driver115.LoginApp(d.QRCodeSource)); err != nil {
 			return errors.Wrap(err, "failed to login by qrcode")
 		}
-		d.Addition.Cookie = fmt.Sprintf("UID=%s;CID=%s;SEID=%s", cr.UID, cr.CID, cr.SEID)
-		d.Addition.QRCodeToken = ""
-	} else if d.Addition.Cookie != "" {
-		if err = cr.FromCookie(d.Addition.Cookie); err != nil {
+		d.Cookie = fmt.Sprintf("UID=%s;CID=%s;SEID=%s", cr.UID, cr.CID, cr.SEID)
+		d.QRCodeToken = ""
+	} else if d.Cookie != "" {
+		if err = cr.FromCookie(d.Cookie); err != nil {
 			return errors.Wrap(err, "failed to login by cookies")
 		}
 		d.client.ImportCredential(cr)
@@ -370,11 +370,13 @@ LOOP:
 	}
 	return d.checkUploadStatus(dirID, params.SHA1)
 }
+
 func chunksProducer(ch chan oss.FileChunk, chunks []oss.FileChunk) {
 	for _, chunk := range chunks {
 		ch <- chunk
 	}
 }
+
 func (d *Pan115) checkUploadStatus(dirID, sha1 string) error {
 	// 验证上传是否成功
 	req := d.client.NewRequest().ForceContentType("application/json;charset=UTF-8")
@@ -431,8 +433,8 @@ func SplitFileByPartNum(fileSize int64, chunkNum int) ([]oss.FileChunk, error) {
 	}
 
 	var chunks []oss.FileChunk
-	var chunk = oss.FileChunk{}
-	var chunkN = (int64)(chunkNum)
+	chunk := oss.FileChunk{}
+	chunkN := (int64)(chunkNum)
 	for i := int64(0); i < chunkN; i++ {
 		chunk.Number = int(i + 1)
 		chunk.Offset = i * (fileSize / chunkN)
@@ -454,13 +456,13 @@ func SplitFileByPartSize(fileSize int64, chunkSize int64) ([]oss.FileChunk, erro
 		return nil, errors.New("chunkSize invalid")
 	}
 
-	var chunkN = fileSize / chunkSize
+	chunkN := fileSize / chunkSize
 	if chunkN >= 10000 {
 		return nil, errors.New("Too many parts, please increase part size")
 	}
 
 	var chunks []oss.FileChunk
-	var chunk = oss.FileChunk{}
+	chunk := oss.FileChunk{}
 	for i := int64(0); i < chunkN; i++ {
 		chunk.Number = int(i + 1)
 		chunk.Offset = i * chunkSize
