@@ -114,17 +114,19 @@ func (y *Cloud189PC) request(url, method string, callback base.ReqCallback, para
 		if err = y.refreshSession(); err != nil {
 			return nil, err
 		}
-		return y.request(url, method, callback, params, resp)
+		return y.request(url, method, callback, params, resp, isFamily...)
+	}
+
+	// if erron.ErrorCode == "InvalidSessionKey" || erron.Code == "InvalidSessionKey" {
+	if strings.Contains(res.String(), "InvalidSessionKey") {
+		if err = y.refreshSession(); err != nil {
+			return nil, err
+		}
+		return y.request(url, method, callback, params, resp, isFamily...)
 	}
 
 	// 处理错误
 	if erron.HasError() {
-		if erron.ErrorCode == "InvalidSessionKey" {
-			if err = y.refreshSession(); err != nil {
-				return nil, err
-			}
-			return y.request(url, method, callback, params, resp)
-		}
 		return nil, &erron
 	}
 	return res.Body(), nil
