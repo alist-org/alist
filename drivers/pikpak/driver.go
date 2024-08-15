@@ -20,14 +20,14 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
-	"golang.org/x/oauth2"
 )
 
 type PikPak struct {
 	model.Storage
 	Addition
 	*Common
-	oauth2Token oauth2.TokenSource
+	RefreshToken string
+	AccessToken  string
 }
 
 func (d *PikPak) Config() driver.Config {
@@ -58,29 +58,27 @@ func (d *PikPak) Init(ctx context.Context) (err error) {
 		}
 	}
 
-	oauth2Config := &oauth2.Config{
-		ClientID:     d.ClientID,
-		ClientSecret: d.ClientSecret,
-		Endpoint: oauth2.Endpoint{
-			AuthURL:   "https://user.mypikpak.com/v1/auth/signin",
-			TokenURL:  "https://user.mypikpak.com/v1/auth/token",
-			AuthStyle: oauth2.AuthStyleInParams,
-		},
+	if d.Addition.CaptchaToken != "" && d.Addition.RefreshToken == "" {
+		d.SetCaptchaToken(d.Addition.CaptchaToken)
 	}
 
-	d.oauth2Token = oauth2.ReuseTokenSource(nil, utils.TokenSource(func() (*oauth2.Token, error) {
-		return oauth2Config.PasswordCredentialsToken(
-			context.WithValue(context.Background(), oauth2.HTTPClient, base.HttpClient),
-			d.Username,
-			d.Password,
-		)
-	}))
-
-	// 获取用户ID
-	_ = d.GetUserID()
+	// 如果已经有RefreshToken，直接刷新AccessToken
+	if d.Addition.RefreshToken != "" {
+		d.RefreshToken = d.Addition.RefreshToken
+		if err := d.refreshToken(); err != nil {
+			return err
+		}
+	} else {
+		if err := d.login(); err != nil {
+			return err
+		}
+	}
 
 	// 获取CaptchaToken
-	_ = d.RefreshCaptchaTokenAtLogin(GetAction(http.MethodGet, "https://api-drive.mypikpak.com/drive/v1/files"), d.Common.UserID)
+	err = d.RefreshCaptchaTokenAtLogin(GetAction(http.MethodGet, "https://api-drive.mypikpak.com/drive/v1/files"), d.Common.UserID)
+	if err != nil {
+		return err
+	}
 	// 更新UserAgent
 	d.Common.UserAgent = BuildCustomUserAgent(d.Common.DeviceID, ClientID, PackageName, SdkVersion, ClientVersion, PackageName, d.Common.UserID)
 	return nil
@@ -102,7 +100,7 @@ func (d *PikPak) List(ctx context.Context, dir model.Obj, args model.ListArgs) (
 
 func (d *PikPak) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	var resp File
-	_, err := d.requestWithCaptchaToken(fmt.Sprintf("https://api-drive.mypikpak.com/drive/v1/files/%s?_magic=2021&thumbnail_size=SIZE_LARGE", file.GetID()),
+	_, err := d.request(fmt.Sprintf("https://api-drive.mypikpak.com/drive/v1/files/%s?_magic=2021&thumbnail_size=SIZE_LARGE", file.GetID()),
 		http.MethodGet, nil, &resp)
 	if err != nil {
 		return nil, err
@@ -316,21 +314,6 @@ func (d *PikPak) DeleteOfflineTasks(ctx context.Context, taskIDs []string, delet
 	}, nil)
 	if err != nil {
 		return fmt.Errorf("failed to delete tasks %v: %w", taskIDs, err)
-	}
-	return nil
-}
-
-func (d *PikPak) GetUserID() error {
-
-	token, err := d.oauth2Token.Token()
-	if err != nil {
-		return err
-	}
-
-	userID := token.Extra("sub").(string)
-
-	if userID != "" {
-		d.Common.SetUserID(userID)
 	}
 	return nil
 }
