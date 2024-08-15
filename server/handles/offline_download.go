@@ -30,6 +30,10 @@ func SetAria2(c *gin.Context) {
 		return
 	}
 	_tool, err := tool.Tools.Get("aria2")
+	if err != nil {
+		common.ErrorResp(c, err, 500)
+		return
+	}
 	version, err := _tool.Init()
 	if err != nil {
 		common.ErrorResp(c, err, 500)
@@ -72,6 +76,37 @@ func SetQbittorrent(c *gin.Context) {
 func OfflineDownloadTools(c *gin.Context) {
 	tools := tool.Tools.Names()
 	common.SuccessResp(c, tools)
+}
+
+type SetTransmissionReq struct {
+	Uri      string `json:"uri" form:"uri"`
+	Seedtime string `json:"seedtime" form:"seedtime"`
+}
+
+func SetTransmission(c *gin.Context) {
+	var req SetTransmissionReq
+	if err := c.ShouldBind(&req); err != nil {
+		common.ErrorResp(c, err, 400)
+		return
+	}
+	items := []model.SettingItem{
+		{Key: conf.TransmissionUri, Value: req.Uri, Type: conf.TypeString, Group: model.OFFLINE_DOWNLOAD, Flag: model.PRIVATE},
+		{Key: conf.TransmissionSeedtime, Value: req.Seedtime, Type: conf.TypeNumber, Group: model.OFFLINE_DOWNLOAD, Flag: model.PRIVATE},
+	}
+	if err := op.SaveSettingItems(items); err != nil {
+		common.ErrorResp(c, err, 500)
+		return
+	}
+	_tool, err := tool.Tools.Get("transmission")
+	if err != nil {
+		common.ErrorResp(c, err, 500)
+		return
+	}
+	if _, err := _tool.Init(); err != nil {
+		common.ErrorResp(c, err, 500)
+		return
+	}
+	common.SuccessResp(c, "ok")
 }
 
 type AddOfflineDownloadReq struct {
