@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/alist-org/alist/v3/internal/op"
+	"golang.org/x/oauth2"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -28,6 +30,7 @@ type PikPak struct {
 	*Common
 	RefreshToken string
 	AccessToken  string
+	oauth2Token  oauth2.TokenSource
 }
 
 func (d *PikPak) Config() driver.Config {
@@ -39,10 +42,6 @@ func (d *PikPak) GetAddition() driver.Additional {
 }
 
 func (d *PikPak) Init(ctx context.Context) (err error) {
-	if d.ClientID == "" || d.ClientSecret == "" {
-		d.ClientID = "YNxT9w7GMdWvEOKa"
-		d.ClientSecret = "dbw2OtmVEeuUvIptb1Coyg"
-	}
 
 	if d.Common == nil {
 		d.Common = &Common{
@@ -50,7 +49,7 @@ func (d *PikPak) Init(ctx context.Context) (err error) {
 			CaptchaToken: "",
 			UserID:       "",
 			DeviceID:     utils.GetMD5EncodeStr(d.Username + d.Password),
-			UserAgent:    BuildCustomUserAgent(utils.GetMD5EncodeStr(d.Username+d.Password), ClientID, PackageName, SdkVersion, ClientVersion, PackageName, ""),
+			UserAgent:    "",
 			RefreshCTokenCk: func(token string) {
 				d.Common.CaptchaToken = token
 				op.MustSaveDriverStorage(d)
@@ -58,21 +57,70 @@ func (d *PikPak) Init(ctx context.Context) (err error) {
 		}
 	}
 
+	if d.Platform == "android" {
+		d.ClientID = AndroidClientID
+		d.ClientSecret = AndroidClientSecret
+		d.ClientVersion = AndroidClientVersion
+		d.PackageName = AndroidPackageName
+		d.Algorithms = AndroidAlgorithms
+		d.UserAgent = BuildCustomUserAgent(utils.GetMD5EncodeStr(d.Username+d.Password), AndroidClientID, AndroidPackageName, AndroidSdkVersion, AndroidClientVersion, AndroidPackageName, "")
+	} else if d.Platform == "web" {
+		d.ClientID = WebClientID
+		d.ClientSecret = WebClientSecret
+		d.ClientVersion = WebClientVersion
+		d.PackageName = WebPackageName
+		d.Algorithms = WebAlgorithms
+		d.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36"
+	}
+
 	if d.Addition.CaptchaToken != "" && d.Addition.RefreshToken == "" {
 		d.SetCaptchaToken(d.Addition.CaptchaToken)
 	}
 
-	// 如果已经有RefreshToken，直接刷新AccessToken
-	if d.Addition.RefreshToken != "" {
-		d.RefreshToken = d.Addition.RefreshToken
-		if err := d.refreshToken(); err != nil {
-			return err
-		}
+	if d.Addition.DeviceID != "" {
+		d.SetDeviceID(d.Addition.DeviceID)
 	} else {
+		d.Addition.DeviceID = d.Common.DeviceID
+		op.MustSaveDriverStorage(d)
+	}
+	// 初始化 oauth2Config
+	oauth2Config := &oauth2.Config{
+		ClientID:     d.ClientID,
+		ClientSecret: d.ClientSecret,
+		Endpoint: oauth2.Endpoint{
+			AuthURL:   "https://user.mypikpak.com/v1/auth/signin",
+			TokenURL:  "https://user.mypikpak.com/v1/auth/token",
+			AuthStyle: oauth2.AuthStyleInParams,
+		},
+	}
+
+	// 如果已经有RefreshToken，直接获取AccessToken
+	if d.Addition.RefreshToken != "" {
+		// 使用 oauth2 刷新令牌
+		// 初始化 oauth2Token
+		d.oauth2Token = oauth2.ReuseTokenSource(nil, utils.TokenSource(func() (*oauth2.Token, error) {
+			return oauth2Config.TokenSource(ctx, &oauth2.Token{
+				RefreshToken: d.Addition.RefreshToken,
+			}).Token()
+		}))
+	} else {
+		// 如果没有填写RefreshToken，尝试登录 获取 refreshToken
 		if err := d.login(); err != nil {
 			return err
 		}
+		d.oauth2Token = oauth2.ReuseTokenSource(nil, utils.TokenSource(func() (*oauth2.Token, error) {
+			return oauth2Config.TokenSource(ctx, &oauth2.Token{
+				RefreshToken: d.RefreshToken,
+			}).Token()
+		}))
 	}
+
+	token, err := d.oauth2Token.Token()
+	if err != nil {
+		return err
+	}
+	d.RefreshToken = token.RefreshToken
+	d.AccessToken = token.AccessToken
 
 	// 获取CaptchaToken
 	err = d.RefreshCaptchaTokenAtLogin(GetAction(http.MethodGet, "https://api-drive.mypikpak.com/drive/v1/files"), d.Common.UserID)
@@ -80,7 +128,13 @@ func (d *PikPak) Init(ctx context.Context) (err error) {
 		return err
 	}
 	// 更新UserAgent
-	d.Common.UserAgent = BuildCustomUserAgent(d.Common.DeviceID, ClientID, PackageName, SdkVersion, ClientVersion, PackageName, d.Common.UserID)
+	if d.Platform == "android" {
+		d.Common.UserAgent = BuildCustomUserAgent(utils.GetMD5EncodeStr(d.Username+d.Password), AndroidClientID, AndroidPackageName, AndroidSdkVersion, AndroidClientVersion, AndroidPackageName, d.Common.UserID)
+	}
+
+	// 保存 有效的 RefreshToken
+	d.Addition.RefreshToken = d.RefreshToken
+	op.MustSaveDriverStorage(d)
 	return nil
 }
 
@@ -100,8 +154,18 @@ func (d *PikPak) List(ctx context.Context, dir model.Obj, args model.ListArgs) (
 
 func (d *PikPak) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	var resp File
-	_, err := d.request(fmt.Sprintf("https://api-drive.mypikpak.com/drive/v1/files/%s?_magic=2021&thumbnail_size=SIZE_LARGE", file.GetID()),
-		http.MethodGet, nil, &resp)
+	queryParams := map[string]string{
+		"_magic":         "2021",
+		"usage":          "FETCH",
+		"thumbnail_size": "SIZE_LARGE",
+	}
+	if !d.DisableMediaLink {
+		queryParams["usage"] = "CACHE"
+	}
+	_, err := d.request(fmt.Sprintf("https://api-drive.mypikpak.com/drive/v1/files/%s", file.GetID()),
+		http.MethodGet, func(req *resty.Request) {
+			req.SetQueryParams(queryParams)
+		}, &resp)
 	if err != nil {
 		return nil, err
 	}
@@ -224,7 +288,7 @@ func (d *PikPak) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 	input := &s3manager.UploadInput{
 		Bucket: &params.Bucket,
 		Key:    &params.Key,
-		Body:   stream,
+		Body:   io.TeeReader(stream, driver.NewProgress(stream.GetSize(), up)),
 	}
 	_, err = uploader.UploadWithContext(ctx, input)
 	return err
