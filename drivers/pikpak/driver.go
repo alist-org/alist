@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/alist-org/alist/v3/internal/op"
 	"net/http"
 	"strconv"
 	"strings"
@@ -19,14 +20,14 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
-	"golang.org/x/oauth2"
 )
 
 type PikPak struct {
 	model.Storage
 	Addition
-
-	oauth2Token oauth2.TokenSource
+	*Common
+	RefreshToken string
+	AccessToken  string
 }
 
 func (d *PikPak) Config() driver.Config {
@@ -43,23 +44,43 @@ func (d *PikPak) Init(ctx context.Context) (err error) {
 		d.ClientSecret = "dbw2OtmVEeuUvIptb1Coyg"
 	}
 
-	oauth2Config := &oauth2.Config{
-		ClientID:     d.ClientID,
-		ClientSecret: d.ClientSecret,
-		Endpoint: oauth2.Endpoint{
-			AuthURL:   "https://user.mypikpak.com/v1/auth/signin",
-			TokenURL:  "https://user.mypikpak.com/v1/auth/token",
-			AuthStyle: oauth2.AuthStyleInParams,
-		},
+	if d.Common == nil {
+		d.Common = &Common{
+			client:       base.NewRestyClient(),
+			CaptchaToken: "",
+			UserID:       "",
+			DeviceID:     utils.GetMD5EncodeStr(d.Username + d.Password),
+			UserAgent:    BuildCustomUserAgent(utils.GetMD5EncodeStr(d.Username+d.Password), ClientID, PackageName, SdkVersion, ClientVersion, PackageName, ""),
+			RefreshCTokenCk: func(token string) {
+				d.Common.CaptchaToken = token
+				op.MustSaveDriverStorage(d)
+			},
+		}
 	}
 
-	d.oauth2Token = oauth2.ReuseTokenSource(nil, utils.TokenSource(func() (*oauth2.Token, error) {
-		return oauth2Config.PasswordCredentialsToken(
-			context.WithValue(context.Background(), oauth2.HTTPClient, base.HttpClient),
-			d.Username,
-			d.Password,
-		)
-	}))
+	if d.Addition.CaptchaToken != "" && d.Addition.RefreshToken == "" {
+		d.SetCaptchaToken(d.Addition.CaptchaToken)
+	}
+
+	// 如果已经有RefreshToken，直接刷新AccessToken
+	if d.Addition.RefreshToken != "" {
+		d.RefreshToken = d.Addition.RefreshToken
+		if err := d.refreshToken(); err != nil {
+			return err
+		}
+	} else {
+		if err := d.login(); err != nil {
+			return err
+		}
+	}
+
+	// 获取CaptchaToken
+	err = d.RefreshCaptchaTokenAtLogin(GetAction(http.MethodGet, "https://api-drive.mypikpak.com/drive/v1/files"), d.Common.UserID)
+	if err != nil {
+		return err
+	}
+	// 更新UserAgent
+	d.Common.UserAgent = BuildCustomUserAgent(d.Common.DeviceID, ClientID, PackageName, SdkVersion, ClientVersion, PackageName, d.Common.UserID)
 	return nil
 }
 

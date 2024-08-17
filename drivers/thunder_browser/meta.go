@@ -25,7 +25,7 @@ type ExpertAddition struct {
 	SafePassword string `json:"safe_password" required:"true" help:"super safe password"` // 超级保险箱密码
 
 	// 签名方法1
-	Algorithms string `json:"algorithms" required:"true" help:"sign type is algorithms,this is required" default:"p+ExqPV,LwdwKlprzv7cQBQmxN5,vc08P1NwUBnbGsl58LzTW,VVNeXaXmZ8HH1SJEnp6YpVFSFU,pNAOJ,CNChvyDehAmUR1TDodfOusBAx,MS98NnX4Np8nxvEh6Ulv+SMMKMzKvD34C7lGWbb,9MpFF21GnVOYku0NM9Y/hzsK471UCUZ2o+,EY1QfeA06fXlw9wZNoZaXEED5zZPvNWI,,sciE,FIPqgQDUUW1e0GkiBFd5w7mCQ,zW,75XFdEO0Gi"`
+	Algorithms string `json:"algorithms" required:"true" help:"sign type is algorithms,this is required" default:"uWRwO7gPfdPB/0NfPtfQO+71,F93x+qPluYy6jdgNpq+lwdH1ap6WOM+nfz8/V,0HbpxvpXFsBK5CoTKam,dQhzbhzFRcawnsZqRETT9AuPAJ+wTQso82mRv,SAH98AmLZLRa6DB2u68sGhyiDh15guJpXhBzI,unqfo7Z64Rie9RNHMOB,7yxUdFADp3DOBvXdz0DPuKNVT35wqa5z0DEyEvf,RBG,ThTWPG5eC0UBqlbQ+04nZAptqGCdpv9o55A"`
 	// 签名方法2
 	CaptchaSign string `json:"captcha_sign" required:"true" help:"sign type is captcha_sign,this is required"`
 	Timestamp   string `json:"timestamp" required:"true" help:"sign type is captcha_sign,this is required"`
@@ -37,7 +37,7 @@ type ExpertAddition struct {
 	DeviceID      string `json:"device_id"  required:"false" default:""`
 	ClientID      string `json:"client_id"  required:"true" default:"ZUBzD9J_XPXfn7f7"`
 	ClientSecret  string `json:"client_secret"  required:"true" default:"yESVmHecEe6F0aou69vl-g"`
-	ClientVersion string `json:"client_version"  required:"true" default:"1.0.8.2215"`
+	ClientVersion string `json:"client_version"  required:"true" default:"1.10.0.2633"`
 	PackageName   string `json:"package_name"  required:"true" default:"com.xunlei.browser"`
 
 	// 不影响登录,影响下载速度

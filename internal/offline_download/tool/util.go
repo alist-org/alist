@@ -26,3 +26,16 @@ func GetFiles(dir string) ([]File, error) {
 	}
 	return files, nil
 }
+
+func GetFile(path string) (File, error) {
+	info, err := os.Stat(path)
+	if err != nil {
+		return File{}, err
+	}
+	return File{
+		Name:     info.Name(),
+		Size:     info.Size(),
+		Path:     path,
+		Modified: info.ModTime(),
+	}, nil
+}

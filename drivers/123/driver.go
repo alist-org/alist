@@ -53,7 +53,7 @@ func (d *Pan123) Drop(ctx context.Context) error {
 }
 
 func (d *Pan123) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]model.Obj, error) {
-	files, err := d.getFiles(dir.GetID())
+	files, err := d.getFiles(ctx, dir.GetID(), dir.GetName())
 	if err != nil {
 		return nil, err
 	}
@@ -247,9 +247,6 @@ func (d *Pan123) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 		}
 		_, err = uploader.UploadWithContext(ctx, input)
 	}
-	if err != nil {
-		return err
-	}
 	_, err = d.request(UploadComplete, http.MethodPost, func(req *resty.Request) {
 		req.SetBody(base.Json{
 			"fileId": resp.Data.FileId,
@@ -258,11 +255,12 @@ func (d *Pan123) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 	return err
 }
 
-func (d *Pan123) APIRateLimit(api string) bool {
-	limiter, _ := d.apiRateLimit.LoadOrStore(api,
-		rate.NewLimiter(rate.Every(time.Millisecond*700), 1))
-	ins := limiter.(*rate.Limiter)
-	return ins.Allow()
+func (d *Pan123) APIRateLimit(ctx context.Context, api string) error {
+	value, _ := d.apiRateLimit.LoadOrStore(api,
+		rate.NewLimiter(rate.Every(700*time.Millisecond), 1))
+	limiter := value.(*rate.Limiter)
+
+	return limiter.Wait(ctx)
 }
 
 var _ driver.Driver = (*Pan123)(nil)

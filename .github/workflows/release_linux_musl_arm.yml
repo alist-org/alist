@@ -29,6 +29,6 @@ jobs:
           bash build.sh release linux_musl_arm
 
       - name: Upload assets
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: build/compress/*

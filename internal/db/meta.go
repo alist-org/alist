@@ -34,7 +34,7 @@ func GetMetas(pageIndex, pageSize int) (metas []model.Meta, count int64, err err
 	if err = metaDB.Count(&count).Error; err != nil {
 		return nil, 0, errors.Wrapf(err, "failed get metas count")
 	}
-	if err = metaDB.Offset((pageIndex - 1) * pageSize).Limit(pageSize).Find(&metas).Error; err != nil {
+	if err = metaDB.Order(columnName("id")).Offset((pageIndex - 1) * pageSize).Limit(pageSize).Find(&metas).Error; err != nil {
 		return nil, 0, errors.Wrapf(err, "failed get find metas")
 	}
 	return metas, count, nil

@@ -466,6 +466,9 @@ func Remove(ctx context.Context, storage driver.Driver, path string) error {
 	if storage.Config().CheckStatus && storage.GetStorage().Status != WORK {
 		return errors.Errorf("storage not init: %s", storage.GetStorage().Status)
 	}
+	if utils.PathEqual(path, "/") {
+		return errors.New("delete root folder is not allowed, please goto the manage page to delete the storage instead")
+	}
 	path = utils.FixAndCleanPath(path)
 	rawObj, err := Get(ctx, storage, path)
 	if err != nil {

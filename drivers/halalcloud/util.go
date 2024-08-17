@@ -29,9 +29,9 @@ import (
 )
 
 const (
-	AppID      = "devDebugger/1.0"
+	AppID      = "alist/10001"
 	AppVersion = "1.0.0"
-	AppSecret  = "Nkx3Y2xvZ2luLmNu"
+	AppSecret  = "bR4SJwOkvnG5WvVJ"
 )
 
 const (
@@ -62,7 +62,7 @@ func (d *HalalCloud) NewAuthServiceWithOauth(options ...HalalOption) (*AuthServi
 	}
 	defer grpcConnection.Close()
 	userClient := pbPublicUser.NewPubUserClient(grpcConnection)
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	stateString := uuid.New().String()
 	// queryValues.Add("callback", oauthToken.Callback)
@@ -179,16 +179,16 @@ func (s *AuthService) signContext(method string, ctx context.Context) context.Co
 	bufferedString := bytes.NewBufferString(method)
 	kvString = append(kvString, "timestamp", currentTimeStamp)
 	bufferedString.WriteString(currentTimeStamp)
-	kvString = append(kvString, "appid", AppID)
-	bufferedString.WriteString(AppID)
-	kvString = append(kvString, "appversion", AppVersion)
-	bufferedString.WriteString(AppVersion)
+	kvString = append(kvString, "appid", s.appID)
+	bufferedString.WriteString(s.appID)
+	kvString = append(kvString, "appversion", s.appVersion)
+	bufferedString.WriteString(s.appVersion)
 	if s.tr != nil && len(s.tr.AccessToken) > 0 {
 		authorization := "Bearer " + s.tr.AccessToken
 		kvString = append(kvString, "authorization", authorization)
 		bufferedString.WriteString(authorization)
 	}
-	bufferedString.WriteString(AppSecret)
+	bufferedString.WriteString(s.appSecret)
 	sign := GetMD5Hash(bufferedString.String())
 	kvString = append(kvString, "sign", sign)
 	return metadata.AppendToOutgoingContext(ctx, kvString...)

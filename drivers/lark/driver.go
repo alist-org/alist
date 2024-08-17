@@ -4,18 +4,19 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/ipfs/boxo/path"
 	lark "github.com/larksuite/oapi-sdk-go/v3"
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 	larkdrive "github.com/larksuite/oapi-sdk-go/v3/service/drive/v1"
 	"golang.org/x/time/rate"
-	"io"
-	"net/http"
-	"strconv"
-	"time"
 )
 
 type Lark struct {
@@ -37,7 +38,7 @@ func (c *Lark) GetAddition() driver.Additional {
 func (c *Lark) Init(ctx context.Context) error {
 	c.client = lark.NewClient(c.AppId, c.AppSecret, lark.WithTokenCache(newTokenCache()))
 
-	paths := path.SplitList(c.RootFolderPath)
+	paths := strings.Split(c.RootFolderPath, "/")
 	token := ""
 
 	var ok bool
@@ -113,7 +114,7 @@ func (c *Lark) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]
 
 		f := model.Object{
 			ID:       *file.Token,
-			Path:     path.Join([]string{c.RootFolderPath, dir.GetPath(), *file.Name}),
+			Path:     strings.Join([]string{c.RootFolderPath, dir.GetPath(), *file.Name}, "/"),
 			Name:     *file.Name,
 			Size:     0,
 			Modified: time.Unix(modifiedUnix, 0),
@@ -170,7 +171,7 @@ func (c *Lark) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*
 			},
 		}, nil
 	} else {
-		url := path.Join([]string{c.TenantUrlPrefix, "file", token})
+		url := strings.Join([]string{c.TenantUrlPrefix, "file", token}, "/")
 
 		return &model.Link{
 			URL: url,
@@ -201,7 +202,7 @@ func (c *Lark) MakeDir(ctx context.Context, parentDir model.Obj, dirName string)
 
 	return &model.Object{
 		ID:       *resp.Data.Token,
-		Path:     path.Join([]string{c.RootFolderPath, parentDir.GetPath(), dirName}),
+		Path:     strings.Join([]string{c.RootFolderPath, parentDir.GetPath(), dirName}, "/"),
 		Name:     dirName,
 		Size:     0,
 		IsFolder: true,

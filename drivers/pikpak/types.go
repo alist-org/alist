@@ -1,6 +1,7 @@
 package pikpak
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 
@@ -8,11 +9,6 @@ import (
 	"github.com/alist-org/alist/v3/pkg/utils"
 	hash_extend "github.com/alist-org/alist/v3/pkg/utils/hash"
 )
-
-type RespErr struct {
-	ErrorCode int    `json:"error_code"`
-	Error     string `json:"error"`
-}
 
 type Files struct {
 	Files         []File `json:"files"`
@@ -167,4 +163,33 @@ type ReferenceResource struct {
 	Starred       bool                   `json:"starred"`
 	Tags          []string               `json:"tags"`
 	ThumbnailLink string                 `json:"thumbnail_link"`
+}
+
+type ErrResp struct {
+	ErrorCode        int64  `json:"error_code"`
+	ErrorMsg         string `json:"error"`
+	ErrorDescription string `json:"error_description"`
+}
+
+func (e *ErrResp) IsError() bool {
+	return e.ErrorCode != 0 || e.ErrorMsg != "" || e.ErrorDescription != ""
+}
+
+func (e *ErrResp) Error() string {
+	return fmt.Sprintf("ErrorCode: %d ,Error: %s ,ErrorDescription: %s ", e.ErrorCode, e.ErrorMsg, e.ErrorDescription)
+}
+
+type CaptchaTokenRequest struct {
+	Action       string            `json:"action"`
+	CaptchaToken string            `json:"captcha_token"`
+	ClientID     string            `json:"client_id"`
+	DeviceID     string            `json:"device_id"`
+	Meta         map[string]string `json:"meta"`
+	RedirectUri  string            `json:"redirect_uri"`
+}
+
+type CaptchaTokenResponse struct {
+	CaptchaToken string `json:"captcha_token"`
+	ExpiresIn    int64  `json:"expires_in"`
+	Url          string `json:"url"`
 }

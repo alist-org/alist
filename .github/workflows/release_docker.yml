@@ -3,7 +3,7 @@ name: release_docker
 on:
   push:
     tags:
-      - '*'
+      - 'v*'
 
 jobs:
   release_docker:
@@ -51,7 +51,7 @@ jobs:
 
       - name: Build and push
         id: docker_build
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: Dockerfile.ci
@@ -71,13 +71,14 @@ jobs:
             
       - name: Build and push with ffmpeg
         id: docker_build_ffmpeg
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
-          file: Dockerfile.ffmpeg
+          file: Dockerfile.ci
           push: true
           tags: ${{ steps.meta-ffmpeg.outputs.tags }}
           labels: ${{ steps.meta-ffmpeg.outputs.labels }}
+          build-args: INSTALL_FFMPEG=true
           platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/386,linux/arm/v6,linux/s390x
 
   release_docker_with_aria2:
