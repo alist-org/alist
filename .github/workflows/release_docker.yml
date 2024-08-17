@@ -3,7 +3,7 @@ name: release_docker
 on:
   push:
     tags:
-      - '*'
+      - 'v*'
 
 jobs:
   release_docker:
