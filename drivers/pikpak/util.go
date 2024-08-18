@@ -20,7 +20,7 @@ import (
 
 // do others that not defined in Driver interface
 
-var Algorithms = []string{
+var AndroidAlgorithms = []string{
 	"Gez0T9ijiI9WCeTsKSg3SMlx",
 	"zQdbalsolyb1R/",
 	"ftOjr52zt51JD68C3s",
@@ -38,27 +38,54 @@ var Algorithms = []string{
 	"zVof5yaJkPe3VFpadPof",
 }
 
+var WebAlgorithms = []string{
+	"C9qPpZLN8ucRTaTiUMWYS9cQvWOE",
+	"+r6CQVxjzJV6LCV",
+	"F",
+	"pFJRC",
+	"9WXYIDGrwTCz2OiVlgZa90qpECPD6olt",
+	"/750aCr4lm/Sly/c",
+	"RB+DT/gZCrbV",
+	"",
+	"CyLsf7hdkIRxRm215hl",
+	"7xHvLi2tOYP0Y92b",
+	"ZGTXXxu8E/MIWaEDB+Sm/",
+	"1UI3",
+	"E7fP5Pfijd+7K+t6Tg/NhuLq0eEUVChpJSkrKxpO",
+	"ihtqpG6FMt65+Xk+tWUH2",
+	"NhXXU9rg4XXdzo7u5o",
+}
+
 const (
-	ClientID      = "YNxT9w7GMdWvEOKa"
-	ClientSecret  = "dbw2OtmVEeuUvIptb1Coyg"
-	ClientVersion = "1.47.1"
-	PackageName   = "com.pikcloud.pikpak"
-	SdkVersion    = "2.0.4.204000 "
+	AndroidClientID      = "YNxT9w7GMdWvEOKa"
+	AndroidClientSecret  = "dbw2OtmVEeuUvIptb1Coyg"
+	AndroidClientVersion = "1.47.1"
+	AndroidPackageName   = "com.pikcloud.pikpak"
+	AndroidSdkVersion    = "2.0.4.204000"
+	WebClientID          = "YUMx5nI8ZU8Ap8pm"
+	WebClientSecret      = "dbw2OtmVEeuUvIptb1Coyg"
+	WebClientVersion     = "2.0.0"
+	WebPackageName       = "mypikpak.com"
+	WebSdkVersion        = "8.0.3"
 )
 
 func (d *PikPak) login() error {
 	url := "https://user.mypikpak.com/v1/auth/signin"
-	if err := d.RefreshCaptchaTokenInLogin(GetAction(http.MethodPost, url), d.Username); err != nil {
-		return err
+	// 使用 用户填写的 CaptchaToken —————— (验证后的captcha_token)
+	if d.GetCaptchaToken() == "" {
+		if err := d.RefreshCaptchaTokenInLogin(GetAction(http.MethodPost, url), d.Username); err != nil {
+			return err
+		}
 	}
+
 	var e ErrResp
-	res, err := base.RestyClient.R().SetError(&e).SetBody(base.Json{
+	res, err := base.RestyClient.SetRetryCount(1).R().SetError(&e).SetBody(base.Json{
 		"captcha_token": d.GetCaptchaToken(),
-		"client_id":     ClientID,
-		"client_secret": ClientSecret,
+		"client_id":     d.ClientID,
+		"client_secret": d.ClientSecret,
 		"username":      d.Username,
 		"password":      d.Password,
-	}).SetQueryParam("client_id", ClientID).Post(url)
+	}).SetQueryParam("client_id", d.ClientID).Post(url)
 	if err != nil {
 		return err
 	}
@@ -69,53 +96,60 @@ func (d *PikPak) login() error {
 	d.RefreshToken = jsoniter.Get(data, "refresh_token").ToString()
 	d.AccessToken = jsoniter.Get(data, "access_token").ToString()
 	d.Common.SetUserID(jsoniter.Get(data, "sub").ToString())
-	d.Addition.RefreshToken = d.RefreshToken
-	op.MustSaveDriverStorage(d)
 	return nil
 }
 
-func (d *PikPak) refreshToken() error {
-	url := "https://user.mypikpak.com/v1/auth/token"
-	var e ErrResp
-	res, err := base.RestyClient.R().SetError(&e).
-		SetHeader("user-agent", "").SetBody(base.Json{
-		"client_id":     ClientID,
-		"client_secret": ClientSecret,
-		"grant_type":    "refresh_token",
-		"refresh_token": d.RefreshToken,
-	}).SetQueryParam("client_id", ClientID).Post(url)
-	if err != nil {
-		d.Status = err.Error()
-		op.MustSaveDriverStorage(d)
-		return err
-	}
-	if e.ErrorCode != 0 {
-		if e.ErrorCode == 4126 {
-			// refresh_token invalid, re-login
-			return d.login()
-		}
-		d.Status = e.Error()
-		op.MustSaveDriverStorage(d)
-		return errors.New(e.Error())
-	}
-	data := res.Body()
-	d.Status = "work"
-	d.RefreshToken = jsoniter.Get(data, "refresh_token").ToString()
-	d.AccessToken = jsoniter.Get(data, "access_token").ToString()
-	d.Common.SetUserID(jsoniter.Get(data, "sub").ToString())
-	d.Addition.RefreshToken = d.RefreshToken
-	op.MustSaveDriverStorage(d)
-	return nil
-}
+//func (d *PikPak) refreshToken() error {
+//	url := "https://user.mypikpak.com/v1/auth/token"
+//	var e ErrResp
+//	res, err := base.RestyClient.SetRetryCount(1).R().SetError(&e).
+//		SetHeader("user-agent", "").SetBody(base.Json{
+//		"client_id":     ClientID,
+//		"client_secret": ClientSecret,
+//		"grant_type":    "refresh_token",
+//		"refresh_token": d.RefreshToken,
+//	}).SetQueryParam("client_id", ClientID).Post(url)
+//	if err != nil {
+//		d.Status = err.Error()
+//		op.MustSaveDriverStorage(d)
+//		return err
+//	}
+//	if e.ErrorCode != 0 {
+//		if e.ErrorCode == 4126 {
+//			// refresh_token invalid, re-login
+//			return d.login()
+//		}
+//		d.Status = e.Error()
+//		op.MustSaveDriverStorage(d)
+//		return errors.New(e.Error())
+//	}
+//	data := res.Body()
+//	d.Status = "work"
+//	d.RefreshToken = jsoniter.Get(data, "refresh_token").ToString()
+//	d.AccessToken = jsoniter.Get(data, "access_token").ToString()
+//	d.Common.SetUserID(jsoniter.Get(data, "sub").ToString())
+//	d.Addition.RefreshToken = d.RefreshToken
+//	op.MustSaveDriverStorage(d)
+//	return nil
+//}
 
 func (d *PikPak) request(url string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
 	req := base.RestyClient.R()
 	req.SetHeaders(map[string]string{
-		"Authorization":   "Bearer " + d.AccessToken,
+		//"Authorization":   "Bearer " + d.AccessToken,
 		"User-Agent":      d.GetUserAgent(),
 		"X-Device-ID":     d.GetDeviceID(),
 		"X-Captcha-Token": d.GetCaptchaToken(),
 	})
+	if d.oauth2Token != nil {
+		// 使用oauth2 获取 access_token
+		token, err := d.oauth2Token.Token()
+		if err != nil {
+			return nil, err
+		}
+		req.SetAuthScheme(token.TokenType).SetAuthToken(token.AccessToken)
+	}
+
 	if callback != nil {
 		callback(req)
 	}
@@ -132,18 +166,31 @@ func (d *PikPak) request(url string, method string, callback base.ReqCallback, r
 	switch e.ErrorCode {
 	case 0:
 		return res.Body(), nil
-	case 4122, 4121, 10, 16:
-		if err1 := d.refreshToken(); err1 != nil {
-			return nil, err1
+	case 4122, 4121, 16:
+		// access_token 过期
+
+		//if err1 := d.refreshToken(); err1 != nil {
+		//	return nil, err1
+		//}
+		t, err := d.oauth2Token.Token()
+		if err != nil {
+			return nil, err
 		}
+		d.AccessToken = t.AccessToken
+		d.RefreshToken = t.RefreshToken
+		d.Addition.RefreshToken = t.RefreshToken
+		op.MustSaveDriverStorage(d)
+
 		return d.request(url, method, callback, resp)
 	case 9: // 验证码token过期
 		if err = d.RefreshCaptchaTokenAtLogin(GetAction(method, url), d.Common.UserID); err != nil {
 			return nil, err
 		}
 		return d.request(url, method, callback, resp)
+	case 10: // 操作频繁
+		return nil, errors.New(e.ErrorDescription)
 	default:
-		return nil, err
+		return nil, errors.New(e.Error())
 	}
 }
 
@@ -185,8 +232,13 @@ type Common struct {
 	CaptchaToken string
 	UserID       string
 	// 必要值,签名相关
-	DeviceID  string
-	UserAgent string
+	ClientID      string
+	ClientSecret  string
+	ClientVersion string
+	PackageName   string
+	Algorithms    []string
+	DeviceID      string
+	UserAgent     string
 	// 验证码token刷新成功回调
 	RefreshCTokenCk func(token string)
 }
@@ -275,8 +327,8 @@ func (c *Common) GetDeviceID() string {
 // RefreshCaptchaTokenAtLogin 刷新验证码token(登录后)
 func (d *PikPak) RefreshCaptchaTokenAtLogin(action, userID string) error {
 	metas := map[string]string{
-		"client_version": ClientVersion,
-		"package_name":   PackageName,
+		"client_version": d.ClientVersion,
+		"package_name":   d.PackageName,
 		"user_id":        userID,
 	}
 	metas["timestamp"], metas["captcha_sign"] = d.Common.GetCaptchaSign()
@@ -299,8 +351,8 @@ func (d *PikPak) RefreshCaptchaTokenInLogin(action, username string) error {
 // GetCaptchaSign 获取验证码签名
 func (c *Common) GetCaptchaSign() (timestamp, sign string) {
 	timestamp = fmt.Sprint(time.Now().UnixMilli())
-	str := fmt.Sprint(ClientID, ClientVersion, PackageName, c.DeviceID, timestamp)
-	for _, algorithm := range Algorithms {
+	str := fmt.Sprint(c.ClientID, c.ClientVersion, c.PackageName, c.DeviceID, timestamp)
+	for _, algorithm := range c.Algorithms {
 		str = utils.GetMD5EncodeStr(str + algorithm)
 	}
 	sign = "1." + str
@@ -311,16 +363,16 @@ func (c *Common) GetCaptchaSign() (timestamp, sign string) {
 func (d *PikPak) refreshCaptchaToken(action string, metas map[string]string) error {
 	param := CaptchaTokenRequest{
 		Action:       action,
-		CaptchaToken: d.Common.CaptchaToken,
-		ClientID:     ClientID,
-		DeviceID:     d.Common.DeviceID,
+		CaptchaToken: d.GetCaptchaToken(),
+		ClientID:     d.ClientID,
+		DeviceID:     d.GetDeviceID(),
 		Meta:         metas,
 		RedirectUri:  "xlaccsdk01://xbase.cloud/callback?state=harbor",
 	}
 	var e ErrResp
 	var resp CaptchaTokenResponse
 	_, err := d.request("https://user.mypikpak.com/v1/shield/captcha/init", http.MethodPost, func(req *resty.Request) {
-		req.SetError(&e).SetBody(param).SetQueryParam("client_id", ClientID)
+		req.SetError(&e).SetBody(param).SetQueryParam("client_id", d.ClientID)
 	}, &resp)
 
 	if err != nil {
@@ -328,15 +380,7 @@ func (d *PikPak) refreshCaptchaToken(action string, metas map[string]string) err
 	}
 
 	if e.IsError() {
-		return &e
-	}
-
-	if resp.CaptchaToken == "" {
-		return fmt.Errorf("empty captchaToken")
-	} else {
-		// 对 被风控的情况 进行处理
-		d.Addition.CaptchaToken = resp.CaptchaToken
-		op.MustSaveDriverStorage(d)
+		return errors.New(e.Error())
 	}
 
 	if resp.Url != "" {
