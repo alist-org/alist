@@ -57,5 +57,7 @@ func (mq *inMemoryMQ[T]) Clear() {
 }
 
 func (mq *inMemoryMQ[T]) Len() int {
+	mq.Lock()
+	defer mq.Unlock()
 	return mq.queue.Len()
 }
