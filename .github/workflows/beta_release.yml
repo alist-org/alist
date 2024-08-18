@@ -26,7 +26,9 @@ jobs:
         id: changelog
         run: |
           git tag -l
-          npx changelogen@latest --output CHANGELOG.md
+          npx changelogithub --output CHANGELOG.md
+#          npx changelogen@latest --output CHANGELOG.md
+
 
       - name: Upload assets
         uses: softprops/action-gh-release@v2
