@@ -114,6 +114,8 @@ github.com/cheekybits/is v0.0.0-20150225183255-68e9c0620927 h1:SKI1/fuSdodxmNNyV
 github.com/cheekybits/is v0.0.0-20150225183255-68e9c0620927/go.mod h1:h/aW8ynjgkuj+NQRlZcDbAbM1ORAbXjXX77sX7T289U=
 github.com/city404/v6-public-rpc-proto/go v0.0.0-20240708163039-9a9b82a0ce4d h1:p5T6ZPvh7nihJfjI9M/W2cbcX7n766u/OGorLmE4xoQ=
 github.com/city404/v6-public-rpc-proto/go v0.0.0-20240708163039-9a9b82a0ce4d/go.mod h1:akxZg8LuwOIeCPRjcDrUS1WWcIwmLNSR2lfe4y85PH4=
+github.com/city404/v6-public-rpc-proto/go v0.0.0-20240817070657-90f8e24b653e h1:GLC8iDDcbt1H8+RkNao2nRGjyNTIo81e1rAJT9/uWYA=
+github.com/city404/v6-public-rpc-proto/go v0.0.0-20240817070657-90f8e24b653e/go.mod h1:ln9Whp+wVY/FTbn2SK0ag+SKD2fC0yQCF/Lqowc1LmU=
 github.com/cloudwego/base64x v0.1.4 h1:jwCgWpFanWmN8xoIUHa2rtzmkd5J2plF/dnLS6Xd/0Y=
 github.com/cloudwego/base64x v0.1.4/go.mod h1:0zlkT4Wn5C6NdauXdJRhSKRlJvmclQ1hhJgA0rcu/8w=
 github.com/cloudwego/iasm v0.2.0 h1:1KNIy1I1H9hNNFEEH3DVnI4UujN+1zjpuk6gwHLTssg=
