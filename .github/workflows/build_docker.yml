@@ -23,6 +23,12 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: xhofe/alist
+          tags: |
+            type=schedule
+            type=ref,event=branch
+            type=ref,event=tag
+            type=ref,event=pr
+            type=raw,value=beta,enable={{is_default_branch}}
 
       - name: Docker meta with ffmpeg
         id: meta-ffmpeg
@@ -30,7 +36,13 @@ jobs:
         with:
           images: xhofe/alist
           flavor: |
-            suffix=-ffmpeg,onlatest=true
+            suffix=-ffmpeg
+          tags: |
+            type=schedule
+            type=ref,event=branch
+            type=ref,event=tag
+            type=ref,event=pr
+            type=raw,value=beta,enable={{is_default_branch}}
 
       - uses: actions/setup-go@v5
         with:
