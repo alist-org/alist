@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
 )
 
@@ -19,6 +20,7 @@ func CreateStorage(storage *model.Storage) error {
 
 // UpdateStorage just update storage in database
 func UpdateStorage(storage *model.Storage) error {
+	storage.Status = utils.SanitizeHTML(storage.Status)
 	return errors.WithStack(db.Save(storage).Error)
 }
 
