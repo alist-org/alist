@@ -2,14 +2,16 @@ package http
 
 import (
 	"fmt"
-	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/internal/offline_download/tool"
-	"github.com/alist-org/alist/v3/pkg/utils"
 	"net/http"
 	"net/url"
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
+
+	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/offline_download/tool"
+	"github.com/alist-org/alist/v3/pkg/utils"
 )
 
 type SimpleHttp struct {
@@ -63,7 +65,12 @@ func (s SimpleHttp) Run(task *tool.DownloadTask) error {
 	if resp.StatusCode >= 400 {
 		return fmt.Errorf("http status code %d", resp.StatusCode)
 	}
-	filename := path.Base(_u.Path)
+	// If Path is empty, use Hostname; otherwise, filePath euqals TempDir which causes os.Create to fail
+	urlPath := _u.Path
+	if urlPath == "" {
+		urlPath = strings.ReplaceAll(_u.Host, ".", "_")
+	}
+	filename := path.Base(urlPath)
 	if n, err := parseFilenameFromContentDisposition(resp.Header.Get("Content-Disposition")); err == nil {
 		filename = n
 	}
