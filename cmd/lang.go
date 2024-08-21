@@ -139,7 +139,7 @@ var LangCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		err := os.MkdirAll("lang", 0777)
 		if err != nil {
-			utils.Log.Fatal("failed create folder: %s", err.Error())
+			utils.Log.Fatalf("failed create folder: %s", err.Error())
 		}
 		generateDriversJson()
 		generateSettingsJson()
