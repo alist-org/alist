@@ -2,20 +2,20 @@ package pikpak_share
 
 import (
 	"context"
+	"github.com/alist-org/alist/v3/internal/op"
 	"net/http"
+	"time"
 
-	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/go-resty/resty/v2"
-	"golang.org/x/oauth2"
 )
 
 type PikPakShare struct {
 	model.Storage
 	Addition
-	oauth2Token   oauth2.TokenSource
+	*Common
 	PassCodeToken string
 }
 
@@ -28,28 +28,45 @@ func (d *PikPakShare) GetAddition() driver.Additional {
 }
 
 func (d *PikPakShare) Init(ctx context.Context) error {
-	if d.ClientID == "" || d.ClientSecret == "" {
-		d.ClientID = "YNxT9w7GMdWvEOKa"
-		d.ClientSecret = "dbw2OtmVEeuUvIptb1Coyg"
+	if d.Common == nil {
+		d.Common = &Common{
+			DeviceID:  utils.GetMD5EncodeStr(d.Addition.ShareId + d.Addition.SharePwd + time.Now().String()),
+			UserAgent: "",
+			RefreshCTokenCk: func(token string) {
+				d.Common.CaptchaToken = token
+				op.MustSaveDriverStorage(d)
+			},
+		}
 	}
 
-	oauth2Config := &oauth2.Config{
-		ClientID:     d.ClientID,
-		ClientSecret: d.ClientSecret,
-		Endpoint: oauth2.Endpoint{
-			AuthURL:   "https://user.mypikpak.com/v1/auth/signin",
-			TokenURL:  "https://user.mypikpak.com/v1/auth/token",
-			AuthStyle: oauth2.AuthStyleInParams,
-		},
+	if d.Addition.DeviceID != "" {
+		d.SetDeviceID(d.Addition.DeviceID)
+	} else {
+		d.Addition.DeviceID = d.Common.DeviceID
+		op.MustSaveDriverStorage(d)
 	}
 
-	d.oauth2Token = oauth2.ReuseTokenSource(nil, utils.TokenSource(func() (*oauth2.Token, error) {
-		return oauth2Config.PasswordCredentialsToken(
-			context.WithValue(context.Background(), oauth2.HTTPClient, base.HttpClient),
-			d.Username,
-			d.Password,
-		)
-	}))
+	if d.Platform == "android" {
+		d.ClientID = AndroidClientID
+		d.ClientSecret = AndroidClientSecret
+		d.ClientVersion = AndroidClientVersion
+		d.PackageName = AndroidPackageName
+		d.Algorithms = AndroidAlgorithms
+		d.UserAgent = BuildCustomUserAgent(d.GetDeviceID(), AndroidClientID, AndroidPackageName, AndroidSdkVersion, AndroidClientVersion, AndroidPackageName, "")
+	} else if d.Platform == "web" {
+		d.ClientID = WebClientID
+		d.ClientSecret = WebClientSecret
+		d.ClientVersion = WebClientVersion
+		d.PackageName = WebPackageName
+		d.Algorithms = WebAlgorithms
+		d.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36"
+	}
+
+	// 获取CaptchaToken
+	err := d.RefreshCaptchaToken(GetAction(http.MethodGet, "https://api-drive.mypikpak.com/drive/v1/share:batch_file_info"), "")
+	if err != nil {
+		return err
+	}
 
 	if d.SharePwd != "" {
 		return d.getSharePassToken()
@@ -87,9 +104,14 @@ func (d *PikPakShare) Link(ctx context.Context, file model.Obj, args model.LinkA
 
 	downloadUrl := resp.FileInfo.WebContentLink
 	if downloadUrl == "" && len(resp.FileInfo.Medias) > 0 {
-		downloadUrl = resp.FileInfo.Medias[0].Link.Url
-	}
+		// 使用转码后的链接
+		if d.Addition.UseTransCodingAddress && len(resp.FileInfo.Medias) > 1 {
+			downloadUrl = resp.FileInfo.Medias[1].Link.Url
+		} else {
+			downloadUrl = resp.FileInfo.Medias[0].Link.Url
+		}
 
+	}
 	link := model.Link{
 		URL: downloadUrl,
 	}
