@@ -28,6 +28,7 @@ import (
 	_ "github.com/alist-org/alist/v3/drivers/halalcloud"
 	_ "github.com/alist-org/alist/v3/drivers/ilanzou"
 	_ "github.com/alist-org/alist/v3/drivers/ipfs_api"
+	_ "github.com/alist-org/alist/v3/drivers/kodbox"
 	_ "github.com/alist-org/alist/v3/drivers/lanzou"
 	_ "github.com/alist-org/alist/v3/drivers/lenovonas_share"
 	_ "github.com/alist-org/alist/v3/drivers/local"
