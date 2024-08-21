@@ -4,24 +4,18 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/alist-org/alist/v3/internal/op"
-	"golang.org/x/oauth2"
-	"io"
-	"net/http"
-	"strconv"
-	"strings"
-
 	"github.com/alist-org/alist/v3/drivers/base"
 	"github.com/alist-org/alist/v3/internal/driver"
 	"github.com/alist-org/alist/v3/internal/model"
+	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	hash_extend "github.com/alist-org/alist/v3/pkg/utils/hash"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/oauth2"
+	"net/http"
+	"strconv"
+	"strings"
 )
 
 type PikPak struct {
@@ -123,9 +117,15 @@ func (d *PikPak) Init(ctx context.Context) (err error) {
 	d.AccessToken = token.AccessToken
 
 	// 获取CaptchaToken
-	err = d.RefreshCaptchaTokenAtLogin(GetAction(http.MethodGet, "https://api-drive.mypikpak.com/drive/v1/files"), d.Common.UserID)
+	err = d.RefreshCaptchaTokenAtLogin(GetAction(http.MethodGet, "https://api-drive.mypikpak.com/drive/v1/files"), d.Username)
 	if err != nil {
 		return err
+	}
+
+	// 获取用户ID
+	userID := token.Extra("sub").(string)
+	if userID != "" {
+		d.Common.SetUserID(userID)
 	}
 	// 更新UserAgent
 	if d.Platform == "android" {
@@ -271,27 +271,17 @@ func (d *PikPak) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 	}
 
 	params := resp.Resumable.Params
-	endpoint := strings.Join(strings.Split(params.Endpoint, ".")[1:], ".")
-	cfg := &aws.Config{
-		Credentials: credentials.NewStaticCredentials(params.AccessKeyID, params.AccessKeySecret, params.SecurityToken),
-		Region:      aws.String("pikpak"),
-		Endpoint:    &endpoint,
+	//endpoint := strings.Join(strings.Split(params.Endpoint, ".")[1:], ".")
+	// web 端上传 返回的endpoint 为 `mypikpak.com` | android 端上传 返回的endpoint 为 `vip-lixian-07.mypikpak.com`·
+	if d.Addition.Platform == "android" {
+		params.Endpoint = "mypikpak.com"
 	}
-	ss, err := session.NewSession(cfg)
-	if err != nil {
-		return err
+
+	if stream.GetSize() <= 10*utils.MB { // 文件大小 小于10MB，改用普通模式上传
+		return d.UploadByOSS(&params, stream, up)
 	}
-	uploader := s3manager.NewUploader(ss)
-	if stream.GetSize() > s3manager.MaxUploadParts*s3manager.DefaultUploadPartSize {
-		uploader.PartSize = stream.GetSize() / (s3manager.MaxUploadParts - 1)
-	}
-	input := &s3manager.UploadInput{
-		Bucket: &params.Bucket,
-		Key:    &params.Key,
-		Body:   io.TeeReader(stream, driver.NewProgress(stream.GetSize(), up)),
-	}
-	_, err = uploader.UploadWithContext(ctx, input)
-	return err
+	// 分片上传
+	return d.UploadByMultipart(&params, stream.GetSize(), stream, up)
 }
 
 // 离线下载文件
