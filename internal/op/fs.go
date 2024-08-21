@@ -136,9 +136,7 @@ func List(ctx context.Context, storage driver.Driver, path string, args model.Li
 		model.WrapObjsName(files)
 		// call hooks
 		go func(reqPath string, files []model.Obj) {
-			for _, hook := range objsUpdateHooks {
-				hook(reqPath, files)
-			}
+			HandleObjsUpdateHook(reqPath, files)
 		}(utils.GetFullPath(storage.GetStorage().MountPath, path), files)
 
 		// sort objs

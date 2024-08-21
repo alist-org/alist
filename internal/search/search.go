@@ -27,7 +27,7 @@ func Init(mode string) error {
 		}
 		instance = nil
 	}
-	if Running.Load() {
+	if Running() {
 		return fmt.Errorf("index is running")
 	}
 	if mode == "none" {

@@ -5,10 +5,12 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/alist-org/alist/v3/internal/conf"
+	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/fs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/op"
@@ -21,9 +23,12 @@ import (
 )
 
 var (
-	Running = atomic.Bool{}
-	Quit    chan struct{}
+	Quit = atomic.Pointer[chan struct{}]{}
 )
+
+func Running() bool {
+	return Quit.Load() != nil
+}
 
 func BuildIndex(ctx context.Context, indexPaths, ignorePaths []string, maxDepth int, count bool) error {
 	var (
@@ -33,11 +38,27 @@ func BuildIndex(ctx context.Context, indexPaths, ignorePaths []string, maxDepth 
 	)
 	log.Infof("build index for: %+v", indexPaths)
 	log.Infof("ignore paths: %+v", ignorePaths)
-	Running.Store(true)
-	Quit = make(chan struct{}, 1)
-	indexMQ := mq.NewInMemoryMQ[ObjWithParent]()
+	quit := make(chan struct{}, 1)
+	if !Quit.CompareAndSwap(nil, &quit) {
+		// other goroutine is running
+		return errs.BuildIndexIsRunning
+	}
+	var (
+		indexMQ = mq.NewInMemoryMQ[ObjWithParent]()
+		running = atomic.Bool{} // current goroutine running
+		wg      = &sync.WaitGroup{}
+	)
+	running.Store(true)
+	wg.Add(1)
 	go func() {
 		ticker := time.NewTicker(time.Second)
+		defer func() {
+			Quit.Store(nil)
+			wg.Done()
+			// notify walk to exit when StopIndex api called
+			running.Store(false)
+			ticker.Stop()
+		}()
 		tickCount := 0
 		for {
 			select {
@@ -70,9 +91,8 @@ func BuildIndex(ctx context.Context, indexPaths, ignorePaths []string, maxDepth 
 					}
 				})
 
-			case <-Quit:
-				Running.Store(false)
-				ticker.Stop()
+			case <-quit:
+				log.Debugf("build index for %+v received quit", indexPaths)
 				eMsg := ""
 				now := time.Now()
 				originErr := err
@@ -100,14 +120,22 @@ func BuildIndex(ctx context.Context, indexPaths, ignorePaths []string, maxDepth 
 						})
 					}
 				})
+				log.Debugf("build index for %+v quit success", indexPaths)
 				return
 			}
 		}
 	}()
 	defer func() {
-		if Running.Load() {
-			Quit <- struct{}{}
+		if !running.Load() || Quit.Load() != &quit {
+			log.Debugf("build index for %+v stopped by StopIndex", indexPaths)
+			return
 		}
+		select {
+		// avoid goroutine leak
+		case quit <- struct{}{}:
+		default:
+		}
+		wg.Wait()
 	}()
 	admin, err := op.GetAdmin()
 	if err != nil {
@@ -121,7 +149,7 @@ func BuildIndex(ctx context.Context, indexPaths, ignorePaths []string, maxDepth 
 	}
 	for _, indexPath := range indexPaths {
 		walkFn := func(indexPath string, info model.Obj) error {
-			if !Running.Load() {
+			if !running.Load() {
 				return filepath.SkipDir
 			}
 			for _, avoidPath := range ignorePaths {
@@ -167,7 +195,7 @@ func Config(ctx context.Context) searcher.Config {
 }
 
 func Update(parent string, objs []model.Obj) {
-	if instance == nil || !instance.Config().AutoUpdate || !setting.GetBool(conf.AutoUpdateIndex) || Running.Load() {
+	if instance == nil || !instance.Config().AutoUpdate || !setting.GetBool(conf.AutoUpdateIndex) || Running() {
 		return
 	}
 	if isIgnorePath(parent) {
