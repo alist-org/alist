@@ -59,7 +59,7 @@ require (
 	github.com/xhofe/wopan-sdk-go v0.1.3
 	github.com/zzzhr1990/go-common-entity v0.0.0-20221216044934-fd1c571e3a22
 	golang.org/x/crypto v0.26.0
-	golang.org/x/exp v0.0.0-20240808152545-0cdaa3abc0fa
+	golang.org/x/exp v0.0.0-20240823005443-9b4947da3948
 	golang.org/x/image v0.19.0
 	golang.org/x/net v0.28.0
 	golang.org/x/oauth2 v0.22.0
