@@ -36,12 +36,12 @@ func isSymlinkDir(f fs.FileInfo, path string) bool {
 
 func GetSnapshot(videoPath string, frameNum int) (imgData *bytes.Buffer, err error) {
 	srcBuf := bytes.NewBuffer(nil)
-	err = ffmpeg.Input(videoPath).Filter("select", ffmpeg.Args{fmt.Sprintf("gte(n,%d)", frameNum)}).
+	stream := ffmpeg.Input(videoPath).
+		Filter("select", ffmpeg.Args{fmt.Sprintf("gte(n,%d)", frameNum)}).
 		Output("pipe:", ffmpeg.KwArgs{"vframes": 1, "format": "image2", "vcodec": "mjpeg"}).
-		WithOutput(srcBuf, os.Stdout).
-		Run()
-
-	if err != nil {
+		GlobalArgs("-loglevel", "error").Silent(true).
+		WithOutput(srcBuf, os.Stdout)
+	if err = stream.Run(); err != nil {
 		return nil, err
 	}
 	return srcBuf, nil
