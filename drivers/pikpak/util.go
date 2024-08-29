@@ -399,13 +399,15 @@ func (d *PikPak) refreshCaptchaToken(action string, metas map[string]string) err
 	if resp.Url != "" {
 		// return fmt.Errorf(`need verify: <a target="_blank" href="%s">Click Here</a>`, resp.Url)
 		if d.Addition.CaptchaApi != "" {
-			var e ErrResp
 			var captcha_resp CaptchaApiResponse
-			_, e := d.request(d.Addition.CaptchaApi, http.MethodGet, func(req *resty.Request) {
-				req.SetQueryParams("url", resp.Url)
+			_, err := d.request(d.Addition.CaptchaApi, http.MethodGet, func(req *resty.Request) {
+				queryParams := map[string]string{
+					"url": resp.Url,
+				}
+				req.SetQueryParams(queryParams)
 			}, &captcha_resp)
-			if e.IsError() {
-				return errors.New(e.Error())
+			if err != nil {
+				return err
 			}
 			if captcha_resp.Code == 200 {
 				d.Common.SetCaptchaToken(captcha_resp.Token)
