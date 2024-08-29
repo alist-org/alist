@@ -397,7 +397,25 @@ func (d *PikPak) refreshCaptchaToken(action string, metas map[string]string) err
 	}
 
 	if resp.Url != "" {
-		return fmt.Errorf(`need verify: <a target="_blank" href="%s">Click Here</a>`, resp.Url)
+		// return fmt.Errorf(`need verify: <a target="_blank" href="%s">Click Here</a>`, resp.Url)
+		if d.Addition.CaptchaApi != "" {
+			var e ErrResp
+			var captcha_resp CaptchaApiResponse
+			_, e := d.request(d.Addition.CaptchaApi, http.MethodGet, func(req *resty.Request) {
+				req.SetQueryParams("url", resp.Url)
+			}, &captcha_resp)
+			if e.IsError() {
+				return errors.New(e.Error())
+			}
+			if captcha_resp.Code == 200 {
+				d.Common.SetCaptchaToken(captcha_resp.Token)
+				return nil
+			} else {
+				return errors.New("验证失败")
+			}
+		} else {
+			return errors.New("没有配置自动验证Server")
+		}
 	}
 
 	if d.Common.RefreshCTokenCk != nil {
