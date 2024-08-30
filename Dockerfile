@@ -38,9 +38,10 @@ FROM ubuntu as pikpak_server
 RUN apt update && \
     apt install -y git
 WORKDIR /app
-RUN git clone https://github.com/wangjunkai2022/auto_pikpak.git --depth 1
-WORKDIR /app/auto_pikpak
-COPY --from=install_py /app/auto_pikpak/venv /app/auto_pikpak/venv
+RUN git clone  --depth=1 --recurse-submodules https://github.com/wangjunkai2022/pikpak_captcha_server.git
+WORKDIR /app/pikpak_captcha_server
+RUN rm -rf /app/pikpak_captcha_server/pikpak_captcha/ai/ai_train_pikpak
+COPY --from=install_py /app/auto_pikpak/venv /app/pikpak_captcha_server/venv
 
 FROM ubuntu
 ARG INSTALL_FFMPEG=false
@@ -53,7 +54,7 @@ RUN apt update && \
     apt install -y bash ca-certificates tzdata ffmpeg
 
 # 复制 auto_pikpak 到第二阶段
-COPY --from=pikpak_server /app/auto_pikpak /app/auto_pikpak
+COPY --from=pikpak_server /app/pikpak_captcha_server /app/pikpak_captcha_server
 COPY --from=build_alist /app/bin/alist ./
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh && /entrypoint.sh version
