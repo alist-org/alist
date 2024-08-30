@@ -197,7 +197,9 @@ func (d *PikPak) request(url string, method string, callback base.ReqCallback, r
 		return d.request(url, method, callback, resp)
 	case 9: // 验证码token过期
 		if err = d.RefreshCaptchaTokenAtLogin(GetAction(method, url), d.Common.UserID); err != nil {
-			return nil, err
+			if err = d.login(); err != nil {
+				return nil, err
+			}
 		}
 		return d.request(url, method, callback, resp)
 	case 10: // 操作频繁
