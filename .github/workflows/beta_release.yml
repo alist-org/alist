@@ -86,3 +86,15 @@ jobs:
           files: build/compress/*
           prerelease: true
           tag_name: beta
+          
+  desktop:
+    needs:
+      - release
+    name: Beta Release Desktop
+    runs-on: ubuntu-latest
+    steps:
+      - uses: dusansimic/trigger-workflow-action@v0
+        with:
+          name: release_beta.yml
+          owner: alist-org
+          repo: desktop-release
