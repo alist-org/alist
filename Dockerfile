@@ -12,36 +12,37 @@ RUN go mod download
 COPY ./ ./
 RUN bash build.sh release docker
 
-FROM ubuntu AS install_py
+FROM ubuntu AS install_yolov8
 RUN apt update && \
-    apt install -y curl python3 python3-pip python3.12-venv
+    apt install -y python3 python3-pip python3.12-venv
 WORKDIR /app/auto_pikpak/
-# RUN curl -O -L https://raw.githubusercontent.com/wangjunkai2022/auto_pikpak/main/requirements.txt requirements.txt
-# RUN curl -O -L https://raw.githubusercontent.com/wangjunkai2022/auto_pikpak/main/requirements.txt requirements.txt
 # 创建虚拟环境并激活
 RUN python3 -m venv venv && \
     . venv/bin/activate && \
     pip install \
-    PyYAML \
-    selenium \
-    pyTelegramBotAPI \
-    pyrclone \
-    httpx \
-    numpy \
-    opencv_python \
-    opencv_python_headless \
-    ultralytics \
-    2captcha-python \
-    Flask
+    # pip install \
+    ultralytics
+
+# FROM ubuntu AS install_py2
+# COPY --from=install_yolov8 /app/auto_pikpak/venv /app/pikpak_captcha_server/venv
+# RUN apt update && \
+#     apt install -y python3 python3-pip python3.12-venv
+# WORKDIR /app/pikpak_captcha_server/
+# # 使用虚拟环境中的 Python 安装其他依赖
+# RUN /app/pikpak_captcha_server/venv/bin/python -m pip install --no-cache-dir 2captcha-python Flask
 
 FROM ubuntu as pikpak_server
 RUN apt update && \
-    apt install -y git
+    apt install -y git python3 python3-pip python3.12-venv
 WORKDIR /app
-RUN git clone  --depth=1 --recurse-submodules https://github.com/wangjunkai2022/pikpak_captcha_server.git
+RUN git clone --depth=1 --recurse-submodules https://github.com/wangjunkai2022/pikpak_captcha_server.git
 WORKDIR /app/pikpak_captcha_server
 RUN rm -rf /app/pikpak_captcha_server/pikpak_captcha/ai/ai_train_pikpak
-COPY --from=install_py /app/auto_pikpak/venv /app/pikpak_captcha_server/venv
+COPY --from=install_yolov8 /app/auto_pikpak/venv /app/pikpak_captcha_server/venv
+# 使用虚拟环境中的 Python 安装其他依赖
+RUN /app/pikpak_captcha_server/venv/bin/python -m pip install -r requirements.txt
+# 安装每个子模块的依赖项
+RUN find . -name 'requirements.txt' -exec /app/pikpak_captcha_server/venv/bin/python -m pip install -r {} \;
 
 FROM ubuntu
 ARG INSTALL_FFMPEG=false
