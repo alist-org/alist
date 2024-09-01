@@ -13,6 +13,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/disintegration/imaging"
+	"github.com/pkg/errors"
 	ffmpeg "github.com/u2takey/ffmpeg-go"
 )
 
@@ -61,31 +62,84 @@ func readDir(dirname string) ([]fs.FileInfo, error) {
 	return list, nil
 }
 
-func (d *Local) getThumb(file model.Obj) (*bytes.Buffer, *string, error) {
+type thumbRequest struct {
+	file      model.Obj
+	result    chan *thumbResult
+	fullPath  string
+	thumbName string
+}
+
+type thumbResult struct {
+	buf  *bytes.Buffer
+	path *string
+	err  error
+}
+
+type thumbGenerator struct {
+	queue       chan *thumbRequest
+	concurrency int
+	cacheFolder string
+}
+
+func newThumbGenerator(concurrency int, cacheFolder string) *thumbGenerator {
+	g := &thumbGenerator{
+		queue:       make(chan *thumbRequest),
+		concurrency: concurrency,
+		cacheFolder: cacheFolder,
+	}
+	for i := 0; i < concurrency; i++ {
+		go g.worker()
+	}
+	return g
+}
+
+func (g *thumbGenerator) worker() {
+	for req := range g.queue {
+		result := g.generateThumb(req.file, req.fullPath, req.thumbName)
+		req.result <- result
+	}
+}
+
+func (g *thumbGenerator) GenerateThumb(file model.Obj) (*bytes.Buffer, *string, error) {
 	fullPath := file.GetPath()
 	thumbPrefix := "alist_thumb_"
 	thumbName := thumbPrefix + utils.GetMD5EncodeStr(fullPath) + ".png"
-	if d.ThumbCacheFolder != "" {
+
+	if g.cacheFolder != "" {
 		// skip if the file is a thumbnail
 		if strings.HasPrefix(file.GetName(), thumbPrefix) {
 			return nil, &fullPath, nil
 		}
-		thumbPath := filepath.Join(d.ThumbCacheFolder, thumbName)
+		thumbPath := filepath.Join(g.cacheFolder, thumbName)
 		if utils.Exists(thumbPath) {
 			return nil, &thumbPath, nil
 		}
 	}
+
+	resultChan := make(chan *thumbResult)
+	g.queue <- &thumbRequest{
+		file:      file,
+		result:    resultChan,
+		fullPath:  fullPath,
+		thumbName: thumbName,
+	}
+	result := <-resultChan
+	return result.buf, result.path, result.err
+}
+
+func (g *thumbGenerator) generateThumb(file model.Obj, fullPath, thumbName string) *thumbResult {
 	var srcBuf *bytes.Buffer
+	var err error
 	if utils.GetFileType(file.GetName()) == conf.VIDEO {
 		videoBuf, err := GetSnapshot(fullPath, 10)
 		if err != nil {
-			return nil, nil, err
+			return &thumbResult{err: err}
 		}
 		srcBuf = videoBuf
 	} else {
 		imgData, err := os.ReadFile(fullPath)
 		if err != nil {
-			return nil, nil, err
+			return &thumbResult{err: err}
 		}
 		imgBuf := bytes.NewBuffer(imgData)
 		srcBuf = imgBuf
@@ -93,19 +147,26 @@ func (d *Local) getThumb(file model.Obj) (*bytes.Buffer, *string, error) {
 
 	image, err := imaging.Decode(srcBuf, imaging.AutoOrientation(true))
 	if err != nil {
-		return nil, nil, err
+		return &thumbResult{err: err}
 	}
 	thumbImg := imaging.Resize(image, 144, 0, imaging.Lanczos)
 	var buf bytes.Buffer
 	err = imaging.Encode(&buf, thumbImg, imaging.PNG)
 	if err != nil {
-		return nil, nil, err
+		return &thumbResult{err: err}
 	}
-	if d.ThumbCacheFolder != "" {
-		err = os.WriteFile(filepath.Join(d.ThumbCacheFolder, thumbName), buf.Bytes(), 0666)
+
+	if g.cacheFolder != "" {
+		err = os.WriteFile(filepath.Join(g.cacheFolder, thumbName), buf.Bytes(), 0666)
 		if err != nil {
-			return nil, nil, err
+			return &thumbResult{err: errors.Wrap(err, "failed to write thumbnail to cache")}
 		}
+		// return &thumbResult{path: &thumbName}
+		return &thumbResult{buf: &buf}
 	}
-	return &buf, nil, nil
+	return &thumbResult{buf: &buf}
+}
+
+func (d *Local) getThumb(file model.Obj) (*bytes.Buffer, *string, error) {
+	return d.thumbGenerator.GenerateThumb(file)
 }

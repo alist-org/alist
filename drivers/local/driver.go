@@ -29,7 +29,9 @@ import (
 type Local struct {
 	model.Storage
 	Addition
-	mkdirPerm int32
+	mkdirPerm           int32
+	thumbGenerator      *thumbGenerator
+	thumbGenConcurrency int
 }
 
 func (d *Local) Config() driver.Config {
@@ -62,6 +64,16 @@ func (d *Local) Init(ctx context.Context) error {
 			return err
 		}
 	}
+	if d.ThumbConcurrency != "" {
+		v, err := strconv.ParseUint(d.ThumbConcurrency, 10, 32)
+		if err != nil {
+			return err
+		}
+		d.thumbGenConcurrency = int(v)
+	} else {
+		d.thumbGenConcurrency = 16
+	}
+	d.thumbGenerator = newThumbGenerator(d.thumbGenConcurrency, d.ThumbCacheFolder)
 	return nil
 }
 
