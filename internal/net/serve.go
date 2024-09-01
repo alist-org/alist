@@ -174,6 +174,7 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request, name string, modTime time
 			pw.Close()
 		}()
 	}
+	defer sendContent.Close()
 
 	w.Header().Set("Accept-Ranges", "bytes")
 	if w.Header().Get("Content-Encoding") == "" {
@@ -192,7 +193,6 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request, name string, modTime time
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}
-	//defer sendContent.Close()
 }
 func ProcessHeader(origin, override http.Header) http.Header {
 	result := http.Header{}
