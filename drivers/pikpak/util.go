@@ -2,6 +2,7 @@ package pikpak
 
 import (
 	"bytes"
+	"context"
 	"crypto/md5"
 	"crypto/sha1"
 	"encoding/hex"
@@ -13,6 +14,7 @@ import (
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/pkg/errors"
+	"golang.org/x/oauth2"
 	"io"
 	"net/http"
 	"path/filepath"
@@ -112,39 +114,63 @@ func (d *PikPak) login() error {
 	return nil
 }
 
-//func (d *PikPak) refreshToken() error {
-//	url := "https://user.mypikpak.com/v1/auth/token"
-//	var e ErrResp
-//	res, err := base.RestyClient.SetRetryCount(1).R().SetError(&e).
-//		SetHeader("user-agent", "").SetBody(base.Json{
-//		"client_id":     ClientID,
-//		"client_secret": ClientSecret,
-//		"grant_type":    "refresh_token",
-//		"refresh_token": d.RefreshToken,
-//	}).SetQueryParam("client_id", ClientID).Post(url)
-//	if err != nil {
-//		d.Status = err.Error()
-//		op.MustSaveDriverStorage(d)
-//		return err
-//	}
-//	if e.ErrorCode != 0 {
-//		if e.ErrorCode == 4126 {
-//			// refresh_token invalid, re-login
-//			return d.login()
-//		}
-//		d.Status = e.Error()
-//		op.MustSaveDriverStorage(d)
-//		return errors.New(e.Error())
-//	}
-//	data := res.Body()
-//	d.Status = "work"
-//	d.RefreshToken = jsoniter.Get(data, "refresh_token").ToString()
-//	d.AccessToken = jsoniter.Get(data, "access_token").ToString()
-//	d.Common.SetUserID(jsoniter.Get(data, "sub").ToString())
-//	d.Addition.RefreshToken = d.RefreshToken
-//	op.MustSaveDriverStorage(d)
-//	return nil
-//}
+func (d *PikPak) refreshToken(refreshToken string) error {
+	url := "https://user.mypikpak.com/v1/auth/token"
+	var e ErrResp
+	res, err := base.RestyClient.SetRetryCount(1).R().SetError(&e).
+		SetHeader("user-agent", "").SetBody(base.Json{
+		"client_id":     d.ClientID,
+		"client_secret": d.ClientSecret,
+		"grant_type":    "refresh_token",
+		"refresh_token": refreshToken,
+	}).SetQueryParam("client_id", d.ClientID).Post(url)
+	if err != nil {
+		d.Status = err.Error()
+		op.MustSaveDriverStorage(d)
+		return err
+	}
+	if e.ErrorCode != 0 {
+		if e.ErrorCode == 4126 {
+			// refresh_token invalid, re-login
+			return d.login()
+		}
+		d.Status = e.Error()
+		op.MustSaveDriverStorage(d)
+		return errors.New(e.Error())
+	}
+	data := res.Body()
+	d.Status = "work"
+	d.RefreshToken = jsoniter.Get(data, "refresh_token").ToString()
+	d.AccessToken = jsoniter.Get(data, "access_token").ToString()
+	d.Common.SetUserID(jsoniter.Get(data, "sub").ToString())
+	d.Addition.RefreshToken = d.RefreshToken
+	op.MustSaveDriverStorage(d)
+	return nil
+}
+
+func (d *PikPak) initializeOAuth2Token(ctx context.Context, oauth2Config *oauth2.Config, refreshToken string) {
+	d.oauth2Token = oauth2.ReuseTokenSource(nil, utils.TokenSource(func() (*oauth2.Token, error) {
+		return oauth2Config.TokenSource(ctx, &oauth2.Token{
+			RefreshToken: refreshToken,
+		}).Token()
+	}))
+}
+
+func (d *PikPak) refreshTokenByOAuth2() error {
+	token, err := d.oauth2Token.Token()
+	if err != nil {
+		return err
+	}
+	d.Status = "work"
+	d.RefreshToken = token.RefreshToken
+	d.AccessToken = token.AccessToken
+	// 获取用户ID
+	userID := token.Extra("sub").(string)
+	d.Common.SetUserID(userID)
+	d.Addition.RefreshToken = d.RefreshToken
+	op.MustSaveDriverStorage(d)
+	return nil
+}
 
 func (d *PikPak) request(url string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
 	req := base.RestyClient.R()
@@ -181,22 +207,19 @@ func (d *PikPak) request(url string, method string, callback base.ReqCallback, r
 		return res.Body(), nil
 	case 4122, 4121, 16:
 		// access_token 过期
-
-		//if err1 := d.refreshToken(); err1 != nil {
-		//	return nil, err1
-		//}
-		t, err := d.oauth2Token.Token()
-		if err != nil {
-			return nil, err
+		if d.RefreshTokenMethod == "oauth2" {
+			if err1 := d.refreshTokenByOAuth2(); err1 != nil {
+				return nil, err1
+			}
+		} else {
+			if err1 := d.refreshToken(d.RefreshToken); err1 != nil {
+				return nil, err1
+			}
 		}
-		d.AccessToken = t.AccessToken
-		d.RefreshToken = t.RefreshToken
-		d.Addition.RefreshToken = t.RefreshToken
-		op.MustSaveDriverStorage(d)
 
 		return d.request(url, method, callback, resp)
 	case 9: // 验证码token过期
-		if err = d.RefreshCaptchaTokenAtLogin(GetAction(method, url), d.Common.UserID); err != nil {
+		if err = d.RefreshCaptchaTokenAtLogin(GetAction(method, url), d.GetUserID()); err != nil {
 			return nil, err
 		}
 		return d.request(url, method, callback, resp)
@@ -335,6 +358,10 @@ func (c *Common) GetUserAgent() string {
 
 func (c *Common) GetDeviceID() string {
 	return c.DeviceID
+}
+
+func (c *Common) GetUserID() string {
+	return c.UserID
 }
 
 // RefreshCaptchaTokenAtLogin 刷新验证码token(登录后)

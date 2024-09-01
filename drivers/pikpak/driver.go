@@ -90,43 +90,36 @@ func (d *PikPak) Init(ctx context.Context) (err error) {
 
 	// 如果已经有RefreshToken，直接获取AccessToken
 	if d.Addition.RefreshToken != "" {
-		// 使用 oauth2 刷新令牌
-		// 初始化 oauth2Token
-		d.oauth2Token = oauth2.ReuseTokenSource(nil, utils.TokenSource(func() (*oauth2.Token, error) {
-			return oauth2Config.TokenSource(ctx, &oauth2.Token{
-				RefreshToken: d.Addition.RefreshToken,
-			}).Token()
-		}))
+		if d.RefreshTokenMethod == "oauth2" {
+			// 使用 oauth2 刷新令牌
+			// 初始化 oauth2Token
+			d.initializeOAuth2Token(ctx, oauth2Config, d.Addition.RefreshToken)
+			if err := d.refreshTokenByOAuth2(); err != nil {
+				return err
+			}
+		} else {
+			if err := d.refreshToken(d.Addition.RefreshToken); err != nil {
+				return err
+			}
+		}
+
 	} else {
 		// 如果没有填写RefreshToken，尝试登录 获取 refreshToken
 		if err := d.login(); err != nil {
 			return err
 		}
-		d.oauth2Token = oauth2.ReuseTokenSource(nil, utils.TokenSource(func() (*oauth2.Token, error) {
-			return oauth2Config.TokenSource(ctx, &oauth2.Token{
-				RefreshToken: d.RefreshToken,
-			}).Token()
-		}))
-	}
+		if d.RefreshTokenMethod == "oauth2" {
+			d.initializeOAuth2Token(ctx, oauth2Config, d.RefreshToken)
+		}
 
-	token, err := d.oauth2Token.Token()
-	if err != nil {
-		return err
 	}
-	d.RefreshToken = token.RefreshToken
-	d.AccessToken = token.AccessToken
 
 	// 获取CaptchaToken
-	err = d.RefreshCaptchaTokenAtLogin(GetAction(http.MethodGet, "https://api-drive.mypikpak.com/drive/v1/files"), d.Username)
+	err = d.RefreshCaptchaTokenAtLogin(GetAction(http.MethodGet, "https://api-drive.mypikpak.com/drive/v1/files"), d.Common.GetUserID())
 	if err != nil {
 		return err
 	}
 
-	// 获取用户ID
-	userID := token.Extra("sub").(string)
-	if userID != "" {
-		d.Common.SetUserID(userID)
-	}
 	// 更新UserAgent
 	if d.Platform == "android" {
 		d.Common.UserAgent = BuildCustomUserAgent(utils.GetMD5EncodeStr(d.Username+d.Password), AndroidClientID, AndroidPackageName, AndroidSdkVersion, AndroidClientVersion, AndroidPackageName, d.Common.UserID)
