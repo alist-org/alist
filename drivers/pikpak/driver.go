@@ -97,6 +97,17 @@ func (d *PikPak) Init(ctx context.Context) (err error) {
 				RefreshToken: d.Addition.RefreshToken,
 			}).Token()
 		}))
+		_, err := d.oauth2Token.Token()
+		if err != nil {
+			if err := d.login(); err != nil {
+				return err
+			}
+			d.oauth2Token = oauth2.ReuseTokenSource(nil, utils.TokenSource(func() (*oauth2.Token, error) {
+				return oauth2Config.TokenSource(ctx, &oauth2.Token{
+					RefreshToken: d.RefreshToken,
+				}).Token()
+			}))
+		}
 	} else {
 		// 如果没有填写RefreshToken，尝试登录 获取 refreshToken
 		if err := d.login(); err != nil {
