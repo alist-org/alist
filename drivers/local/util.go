@@ -2,6 +2,7 @@ package local
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io/fs"
 	"os"
@@ -13,7 +14,6 @@ import (
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/disintegration/imaging"
-	"github.com/pkg/errors"
 	ffmpeg "github.com/u2takey/ffmpeg-go"
 )
 
@@ -67,6 +67,8 @@ type thumbRequest struct {
 	result    chan *thumbResult
 	fullPath  string
 	thumbName string
+	ctx       context.Context
+	cancel    context.CancelFunc
 }
 
 type thumbResult struct {
@@ -95,8 +97,24 @@ func newThumbGenerator(concurrency int, cacheFolder string) *thumbGenerator {
 
 func (g *thumbGenerator) worker() {
 	for req := range g.queue {
-		result := g.generateThumb(req.file, req.fullPath, req.thumbName)
+		result := g.generateThumb(req)
 		req.result <- result
+	}
+}
+
+func (g *thumbGenerator) Stop(cancelTasks bool) {
+	close(g.queue)
+
+	if cancelTasks {
+		for req := range g.queue {
+			if req.ctx.Err() == nil {
+				req.cancel()
+			}
+		}
+	}
+
+	for i := 0; i < g.concurrency; i++ {
+		<-g.queue
 	}
 }
 
@@ -116,55 +134,63 @@ func (g *thumbGenerator) GenerateThumb(file model.Obj) (*bytes.Buffer, *string, 
 		}
 	}
 
+	ctx, cancel := context.WithCancel(context.Background())
 	resultChan := make(chan *thumbResult)
 	g.queue <- &thumbRequest{
 		file:      file,
 		result:    resultChan,
 		fullPath:  fullPath,
 		thumbName: thumbName,
+		ctx:       ctx,
+		cancel:    cancel,
 	}
 	result := <-resultChan
 	return result.buf, result.path, result.err
 }
 
-func (g *thumbGenerator) generateThumb(file model.Obj, fullPath, thumbName string) *thumbResult {
-	var srcBuf *bytes.Buffer
-	var err error
-	if utils.GetFileType(file.GetName()) == conf.VIDEO {
-		videoBuf, err := GetSnapshot(fullPath, 10)
+func (g *thumbGenerator) generateThumb(req *thumbRequest) *thumbResult {
+	select {
+	case <-req.ctx.Done():
+		return &thumbResult{err: fmt.Errorf("thumbnail generation cancelled")}
+	default:
+		var srcBuf *bytes.Buffer
+		var err error
+		if utils.GetFileType(req.file.GetName()) == conf.VIDEO {
+			videoBuf, err := GetSnapshot(req.fullPath, 10)
+			if err != nil {
+				return &thumbResult{err: err}
+			}
+			srcBuf = videoBuf
+		} else {
+			imgData, err := os.ReadFile(req.fullPath)
+			if err != nil {
+				return &thumbResult{err: err}
+			}
+			imgBuf := bytes.NewBuffer(imgData)
+			srcBuf = imgBuf
+		}
+
+		image, err := imaging.Decode(srcBuf, imaging.AutoOrientation(true))
 		if err != nil {
 			return &thumbResult{err: err}
 		}
-		srcBuf = videoBuf
-	} else {
-		imgData, err := os.ReadFile(fullPath)
+		thumbImg := imaging.Resize(image, 144, 0, imaging.Lanczos)
+		var buf bytes.Buffer
+		err = imaging.Encode(&buf, thumbImg, imaging.PNG)
 		if err != nil {
 			return &thumbResult{err: err}
 		}
-		imgBuf := bytes.NewBuffer(imgData)
-		srcBuf = imgBuf
-	}
 
-	image, err := imaging.Decode(srcBuf, imaging.AutoOrientation(true))
-	if err != nil {
-		return &thumbResult{err: err}
-	}
-	thumbImg := imaging.Resize(image, 144, 0, imaging.Lanczos)
-	var buf bytes.Buffer
-	err = imaging.Encode(&buf, thumbImg, imaging.PNG)
-	if err != nil {
-		return &thumbResult{err: err}
-	}
-
-	if g.cacheFolder != "" {
-		err = os.WriteFile(filepath.Join(g.cacheFolder, thumbName), buf.Bytes(), 0666)
-		if err != nil {
-			return &thumbResult{err: errors.Wrap(err, "failed to write thumbnail to cache")}
+		if g.cacheFolder != "" {
+			err = os.WriteFile(filepath.Join(g.cacheFolder, req.thumbName), buf.Bytes(), 0666)
+			if err != nil {
+				return &thumbResult{err: fmt.Errorf("failed to write thumbnail to %s: %w", g.cacheFolder, err)}
+			}
+			// return &thumbResult{path: &thumbName}
+			return &thumbResult{buf: &buf}
 		}
-		// return &thumbResult{path: &thumbName}
 		return &thumbResult{buf: &buf}
 	}
-	return &thumbResult{buf: &buf}
 }
 
 func (d *Local) getThumb(file model.Obj) (*bytes.Buffer, *string, error) {

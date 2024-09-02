@@ -73,7 +73,11 @@ func (d *Local) Init(ctx context.Context) error {
 	} else {
 		d.thumbGenConcurrency = 16
 	}
-	d.thumbGenerator = newThumbGenerator(d.thumbGenConcurrency, d.ThumbCacheFolder)
+	if d.thumbGenerator == nil {
+		d.thumbGenerator = newThumbGenerator(d.thumbGenConcurrency, d.ThumbCacheFolder)
+	} else {
+		d.UpdateThumbConcurrency(d.thumbGenConcurrency)
+	}
 	return nil
 }
 
@@ -309,6 +313,19 @@ func (d *Local) Put(ctx context.Context, dstDir model.Obj, stream model.FileStre
 		log.Errorf("[local] failed to change time of %s: %s", fullPath, err)
 	}
 	return nil
+}
+
+func (d *Local) UpdateThumbConcurrency(concurrency int) {
+	if d.thumbGenConcurrency <= 0 {
+		return
+	}
+
+	if d.thumbGenConcurrency != d.thumbGenerator.concurrency {
+		// Stop the existing thumbnail generator and cancel pending tasks
+		d.thumbGenerator.Stop(true)
+		d.thumbGenerator = nil
+	}
+	d.thumbGenerator = newThumbGenerator(concurrency, d.ThumbCacheFolder)
 }
 
 var _ driver.Driver = (*Local)(nil)
