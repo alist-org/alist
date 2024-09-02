@@ -29,8 +29,9 @@ import (
 type Local struct {
 	model.Storage
 	Addition
-	mkdirPerm           int32
-	thumbGenerator      *thumbGenerator
+	mkdirPerm      int32
+	thumbGenerator *thumbGenerator
+	// zero means no limit
 	thumbGenConcurrency int
 }
 
