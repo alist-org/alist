@@ -29,9 +29,11 @@ import (
 type Local struct {
 	model.Storage
 	Addition
-	mkdirPerm           int32
-	thumbGenerator      *thumbGenerator
-	thumbGenConcurrency int
+	mkdirPerm int32
+
+	// zero means no limit
+	thumbConcurrency int
+	thumbTokenBucket TokenBucket
 }
 
 func (d *Local) Config() driver.Config {
@@ -69,11 +71,13 @@ func (d *Local) Init(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		d.thumbGenConcurrency = int(v)
-	} else {
-		d.thumbGenConcurrency = 16
+		d.thumbConcurrency = int(v)
 	}
-	d.thumbGenerator = newThumbGenerator(d.thumbGenConcurrency, d.ThumbCacheFolder)
+	if d.thumbConcurrency == 0 {
+		d.thumbTokenBucket = NewNopTokenBucket()
+	} else {
+		d.thumbTokenBucket = NewStaticTokenBucket(d.thumbConcurrency)
+	}
 	return nil
 }
 
@@ -138,7 +142,6 @@ func (d *Local) FileInfoToObj(f fs.FileInfo, reqPath string, fullPath string) mo
 		},
 	}
 	return &file
-
 }
 func (d *Local) GetMeta(ctx context.Context, path string) (model.Obj, error) {
 	f, err := os.Stat(path)
@@ -190,7 +193,13 @@ func (d *Local) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 	fullPath := file.GetPath()
 	var link model.Link
 	if args.Type == "thumb" && utils.Ext(file.GetName()) != "svg" {
-		buf, thumbPath, err := d.getThumb(file)
+		var buf *bytes.Buffer
+		var thumbPath *string
+		err := d.thumbTokenBucket.Do(ctx, func() error {
+			var err error
+			buf, thumbPath, err = d.getThumb(file)
+			return err
+		})
 		if err != nil {
 			return nil, err
 		}
