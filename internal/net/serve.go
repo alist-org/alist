@@ -87,9 +87,9 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request, name string, modTime time
 	sendSize := size
 	var sendContent io.ReadCloser
 	ranges, err := http_range.ParseRange(rangeReq, size)
-	switch err {
-	case nil:
-	case http_range.ErrNoOverlap:
+	switch {
+	case err == nil:
+	case errors.Is(err, http_range.ErrNoOverlap):
 		if size == 0 {
 			// Some clients add a Range header to all requests to
 			// limit the size of the response. If the file is empty,
@@ -105,7 +105,7 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request, name string, modTime time
 		return
 	}
 
-	if sumRangesSize(ranges) > size || size < 0 {
+	if sumRangesSize(ranges) > size {
 		// The total number of bytes in all the ranges is larger than the size of the file
 		// or unknown file size, ignore the range request.
 		ranges = nil
@@ -174,6 +174,7 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request, name string, modTime time
 			pw.Close()
 		}()
 	}
+	defer sendContent.Close()
 
 	w.Header().Set("Accept-Ranges", "bytes")
 	if w.Header().Get("Content-Encoding") == "" {
@@ -192,7 +193,6 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request, name string, modTime time
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}
-	//defer sendContent.Close()
 }
 func ProcessHeader(origin, override http.Header) http.Header {
 	result := http.Header{}
