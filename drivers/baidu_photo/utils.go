@@ -21,8 +21,8 @@ const (
 	FILE_API_URL_V2 = API_URL + "/file/v2"
 )
 
-func (d *BaiduPhoto) Request(furl string, method string, callback base.ReqCallback, resp interface{}) (*resty.Response, error) {
-	req := base.RestyClient.R().
+func (d *BaiduPhoto) Request(client *resty.Client, furl string, method string, callback base.ReqCallback, resp interface{}) (*resty.Response, error) {
+	req := client.R().
 		SetQueryParam("access_token", d.AccessToken)
 	if callback != nil {
 		callback(req)
@@ -88,11 +88,11 @@ func (d *BaiduPhoto) refreshToken() error {
 }
 
 func (d *BaiduPhoto) Get(furl string, callback base.ReqCallback, resp interface{}) (*resty.Response, error) {
-	return d.Request(furl, http.MethodGet, callback, resp)
+	return d.Request(base.RestyClient, furl, http.MethodGet, callback, resp)
 }
 
 func (d *BaiduPhoto) Post(furl string, callback base.ReqCallback, resp interface{}) (*resty.Response, error) {
-	return d.Request(furl, http.MethodPost, callback, resp)
+	return d.Request(base.RestyClient, furl, http.MethodPost, callback, resp)
 }
 
 // 获取所有文件
@@ -338,24 +338,33 @@ func (d *BaiduPhoto) linkAlbum(ctx context.Context, file *AlbumFile, args model.
 		headers["X-Forwarded-For"] = args.IP
 	}
 
-	res, err := base.NoRedirectClient.R().
-		SetContext(ctx).
-		SetHeaders(headers).
-		SetQueryParams(map[string]string{
-			"access_token": d.AccessToken,
-			"fsid":         fmt.Sprint(file.Fsid),
-			"album_id":     file.AlbumID,
-			"tid":          fmt.Sprint(file.Tid),
-			"uk":           fmt.Sprint(file.Uk),
-		}).
-		Head(ALBUM_API_URL + "/download")
+	resp, err := d.Request(base.NoRedirectClient, ALBUM_API_URL+"/download", http.MethodHead, func(r *resty.Request) {
+		r.SetContext(ctx)
+		r.SetHeaders(headers)
+		r.SetQueryParams(map[string]string{
+			"fsid":     fmt.Sprint(file.Fsid),
+			"album_id": file.AlbumID,
+			"tid":      fmt.Sprint(file.Tid),
+			"uk":       fmt.Sprint(file.Uk),
+		})
+	}, nil)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode() != 302 {
+		return nil, fmt.Errorf("not found 302 redirect")
+	}
+
+	location := resp.Header().Get("Location")
 
 	if err != nil {
 		return nil, err
 	}
 
 	link := &model.Link{
-		URL: res.Header().Get("location"),
+		URL: location,
 		Header: http.Header{
 			"User-Agent": []string{headers["User-Agent"]},
 			"Referer":    []string{"https://photo.baidu.com/"},
@@ -375,22 +384,36 @@ func (d *BaiduPhoto) linkFile(ctx context.Context, file *File, args model.LinkAr
 		headers["X-Forwarded-For"] = args.IP
 	}
 
-	var downloadUrl struct {
-		Dlink string `json:"dlink"`
-	}
-	_, err := d.Get(FILE_API_URL_V2+"/download", func(r *resty.Request) {
+	// var downloadUrl struct {
+	// 	Dlink string `json:"dlink"`
+	// }
+	// _, err := d.Get(FILE_API_URL_V1+"/download", func(r *resty.Request) {
+	// 	r.SetContext(ctx)
+	// 	r.SetHeaders(headers)
+	// 	r.SetQueryParams(map[string]string{
+	// 		"fsid": fmt.Sprint(file.Fsid),
+	// 	})
+	// }, &downloadUrl)
+
+	resp, err := d.Request(base.NoRedirectClient, FILE_API_URL_V1+"/download", http.MethodHead, func(r *resty.Request) {
 		r.SetContext(ctx)
 		r.SetHeaders(headers)
 		r.SetQueryParams(map[string]string{
 			"fsid": fmt.Sprint(file.Fsid),
 		})
-	}, &downloadUrl)
+	}, nil)
+
 	if err != nil {
 		return nil, err
 	}
 
+	if resp.StatusCode() != 302 {
+		return nil, fmt.Errorf("not found 302 redirect")
+	}
+
+	location := resp.Header().Get("Location")
 	link := &model.Link{
-		URL: downloadUrl.Dlink,
+		URL: location,
 		Header: http.Header{
 			"User-Agent": []string{headers["User-Agent"]},
 			"Referer":    []string{"https://photo.baidu.com/"},
