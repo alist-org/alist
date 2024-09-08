@@ -134,6 +134,11 @@ var DlAddr = []string{
 }
 
 func (d *PikPak) login() error {
+	// 检查用户名和密码是否为空
+	if d.Addition.Username == "" || d.Addition.Password == "" {
+		return errors.New("username or password is empty")
+	}
+
 	url := "https://user.mypikpak.com/v1/auth/signin"
 	// 使用 用户填写的 CaptchaToken —————— (验证后的captcha_token)
 	if d.GetCaptchaToken() == "" {
@@ -180,8 +185,13 @@ func (d *PikPak) refreshToken(refreshToken string) error {
 	}
 	if e.ErrorCode != 0 {
 		if e.ErrorCode == 4126 {
-			// refresh_token invalid, re-login
-			return d.login()
+			// 1. 未填写 username 或 password
+			if d.Addition.Username == "" || d.Addition.Password == "" {
+				return errors.New("refresh_token invalid, please re-provide refresh_token")
+			} else {
+				// refresh_token invalid, re-login
+				return d.login()
+			}
 		}
 		d.Status = e.Error()
 		op.MustSaveDriverStorage(d)
@@ -229,14 +239,14 @@ func (d *PikPak) request(url string, method string, callback base.ReqCallback, r
 		"X-Device-ID":     d.GetDeviceID(),
 		"X-Captcha-Token": d.GetCaptchaToken(),
 	})
-	if d.RefreshTokenMethod == "oauth2" {
+	if d.RefreshTokenMethod == "oauth2" && d.oauth2Token != nil {
 		// 使用oauth2 获取 access_token
 		token, err := d.oauth2Token.Token()
 		if err != nil {
 			return nil, err
 		}
 		req.SetAuthScheme(token.TokenType).SetAuthToken(token.AccessToken)
-	} else {
+	} else if d.AccessToken != "" {
 		req.SetHeader("Authorization", "Bearer "+d.AccessToken)
 	}
 
