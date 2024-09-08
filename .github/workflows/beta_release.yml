@@ -51,8 +51,10 @@ jobs:
         include:
           - target: '!(*musl*|*windows-arm64*|*android*)' # xgo
             hash: "md5"
-          - target: 'linux-*-musl*' #musl
+          - target: 'linux-!(arm*)-musl*' #musl-not-arm
             hash: "md5-linux-musl"
+          - target: 'linux-arm*-musl*' #musl-arm
+            hash: "md5-linux-musl-arm"
           - target: 'windows-arm64' #win-arm64
             hash: "md5-windows-arm64"
           - target: 'android-*' #android
@@ -98,9 +100,14 @@ jobs:
     name: Beta Release Desktop
     runs-on: ubuntu-latest
     steps:
-      - uses: dusansimic/trigger-workflow-action@v0
+      - uses: peter-evans/create-or-update-comment@v4
         with:
-          name: release_beta.yml
-          owner: alist-org
-          repo: desktop-release
-          github-token: ${{ secrets.MY_TOKEN }}
+          issue-number: 69
+          body: |
+            /release-beta
+            - triggered by ${{ github.actor }}
+            - commit sha: ${{ github.sha }}
+            - view files: https://github.com/alist-org/alist/tree/${{ github.sha }}
+          reactions: 'rocket'
+          token: ${{ secrets.MY_TOKEN }}
+          repository: alist-org/desktop-release
