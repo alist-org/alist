@@ -42,7 +42,7 @@ require (
 	github.com/meilisearch/meilisearch-go v0.27.2
 	github.com/minio/sio v0.4.0
 	github.com/natefinch/lumberjack v2.0.0+incompatible
-	github.com/ncw/swift/v2 v2.0.2
+	github.com/ncw/swift/v2 v2.0.3
 	github.com/orzogc/fake115uploader v0.3.3-0.20230715111618-58f9eb76f831
 	github.com/pkg/errors v0.9.1
 	github.com/pkg/sftp v1.13.6

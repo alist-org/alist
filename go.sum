@@ -393,6 +393,8 @@ github.com/natefinch/lumberjack v2.0.0+incompatible h1:4QJd3OLAMgj7ph+yZTuX13Ld4
 github.com/natefinch/lumberjack v2.0.0+incompatible/go.mod h1:Wi9p2TTF5DG5oU+6YfsmYQpsTIOm0B1VNzQg9Mw6nPk=
 github.com/ncw/swift/v2 v2.0.2 h1:jx282pcAKFhmoZBSdMcCRFn9VWkoBIRsCpe+yZq7vEk=
 github.com/ncw/swift/v2 v2.0.2/go.mod h1:z0A9RVdYPjNjXVo2pDOPxZ4eu3oarO1P91fTItcb+Kg=
+github.com/ncw/swift/v2 v2.0.3 h1:8R9dmgFIWs+RiVlisCEfiQiik1hjuR0JnOkLxaP9ihg=
+github.com/ncw/swift/v2 v2.0.3/go.mod h1:cbAO76/ZwcFrFlHdXPjaqWZ9R7Hdar7HpjRXBfbjigk=
 github.com/orzogc/fake115uploader v0.3.3-0.20230715111618-58f9eb76f831 h1:K3T3eu4h5aYIOzUtLjN08L4Qt4WGaJONMgcaD0ayBJQ=
 github.com/orzogc/fake115uploader v0.3.3-0.20230715111618-58f9eb76f831/go.mod h1:lSHD4lC4zlMl+zcoysdJcd5KFzsWwOD8BJbyg1Ws9Ng=
 github.com/panjf2000/ants/v2 v2.4.2/go.mod h1:f6F0NZVFsGCp5A7QW/Zj/m92atWwOkY0OIhFxRNFr4A=
