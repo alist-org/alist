@@ -22,14 +22,19 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Create or update ref
+        id: create-or-update-ref
+        uses: ovsds/create-or-update-ref-action@v1
+        with:
+          ref: tags/beta
+          sha: ${{ github.sha }}
+
       - name: changelog # or changelogithub@0.12 if ensure the stable result
         id: changelog
         run: |
           git tag -l
           npx changelogithub --output CHANGELOG.md
 #          npx changelogen@latest --output CHANGELOG.md
-
-
       - name: Upload assets
         uses: softprops/action-gh-release@v2
         with:
@@ -98,3 +103,4 @@ jobs:
           name: release_beta.yml
           owner: alist-org
           repo: desktop-release
+          github-token: ${{ secrets.MY_TOKEN }}
