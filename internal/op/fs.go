@@ -267,6 +267,12 @@ func Link(ctx context.Context, storage driver.Driver, path string, args model.Li
 		}
 		return link, nil
 	}
+
+	if storage.Config().OnlyLocal {
+		link, err := fn()
+		return link, file, err
+	}
+
 	link, err, _ := linkG.Do(key, fn)
 	return link, file, err
 }

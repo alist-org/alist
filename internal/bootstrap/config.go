@@ -102,7 +102,13 @@ func initURL() {
 }
 
 func CleanTempDir() {
-	if err := os.RemoveAll(conf.Conf.TempDir); err != nil {
-		log.Errorln("failed delete temp file: ", err)
+	files, err := os.ReadDir(conf.Conf.TempDir)
+	if err != nil {
+		log.Errorln("failed list temp file: ", err)
+	}
+	for _, file := range files {
+		if err := os.RemoveAll(filepath.Join(conf.Conf.TempDir, file.Name())); err != nil {
+			log.Errorln("failed delete temp file: ", err)
+		}
 	}
 }
