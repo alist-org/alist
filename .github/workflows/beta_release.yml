@@ -105,7 +105,7 @@ jobs:
           issue-number: 69
           body: |
             /release-beta
-            - triggered by ${{ github.actor }}
+            - triggered by @${{ github.actor }}
             - commit sha: ${{ github.sha }}
             - view files: https://github.com/alist-org/alist/tree/${{ github.sha }}
           reactions: 'rocket'
