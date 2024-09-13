@@ -2,6 +2,8 @@ package op
 
 import (
 	"context"
+	"fmt"
+	"runtime"
 	"sort"
 	"strings"
 	"time"
@@ -83,11 +85,25 @@ func LoadStorage(ctx context.Context, storage model.Storage) error {
 	return err
 }
 
+func getCurrentGoroutineStack() string {
+	buf := make([]byte, 1<<16)
+	n := runtime.Stack(buf, false)
+	return string(buf[:n])
+}
+
 // initStorage initialize the driver and store to storagesMap
 func initStorage(ctx context.Context, storage model.Storage, storageDriver driver.Driver) (err error) {
 	storageDriver.SetStorage(storage)
 	driverStorage := storageDriver.GetStorage()
-
+	defer func() {
+		if err := recover(); err != nil {
+			errInfo := fmt.Sprintf("[panic] err: %v\nstack: %s\n", err, getCurrentGoroutineStack())
+			log.Errorf("panic init storage: %s", errInfo)
+			driverStorage.SetStatus(errInfo)
+			MustSaveDriverStorage(storageDriver)
+			storagesMap.Delete(driverStorage.MountPath)
+		}
+	}()
 	// Unmarshal Addition
 	err = utils.Json.UnmarshalFromString(driverStorage.Addition, storageDriver.GetAddition())
 	if err == nil {
