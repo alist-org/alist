@@ -29,12 +29,17 @@ jobs:
           ref: tags/beta
           sha: ${{ github.sha }}
 
+      - name: Delete beta tag
+        run: git tag -d beta
+        continue-on-error: true
+
       - name: changelog # or changelogithub@0.12 if ensure the stable result
         id: changelog
         run: |
           git tag -l
           npx changelogithub --output CHANGELOG.md
 #          npx changelogen@latest --output CHANGELOG.md
+
       - name: Upload assets
         uses: softprops/action-gh-release@v2
         with:
