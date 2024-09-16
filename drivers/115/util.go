@@ -26,7 +26,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-var UserAgent = driver115.UA115Desktop
+var UserAgent = driver115.UA115Browser
 
 func (d *Pan115) login() error {
 	var err error
