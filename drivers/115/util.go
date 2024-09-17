@@ -74,7 +74,7 @@ func (d *Pan115) getFiles(fileId string) ([]FileObj, error) {
 }
 
 const (
-	appVer = "2.0.3.6"
+	appVer = "27.0.3.7"
 )
 
 func (c *Pan115) DownloadWithUA(pickCode, ua string) (*driver115.DownloadInfo, error) {
@@ -161,7 +161,7 @@ func (d *Pan115) rapidUpload(fileSize int64, fileName, dirID, preID, fileID stri
 
 	signKey, signVal := "", ""
 	for retry := true; retry; {
-		t := driver115.Now()
+		t := driver115.NowMilli()
 
 		if encodedToken, err = ecdhCipher.EncodeToken(t.ToInt64()); err != nil {
 			return nil, err
