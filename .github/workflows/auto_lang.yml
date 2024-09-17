@@ -33,6 +33,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: alist
+          submodules: recursive
 
       - name: Checkout alist-web
         uses: actions/checkout@v4
