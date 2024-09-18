@@ -1,6 +1,8 @@
 module github.com/alist-org/alist/v3
 
-go 1.22.4
+go 1.23
+
+toolchain go1.23.1
 
 require (
 	github.com/SheltonZhu/115driver v1.0.29
@@ -43,7 +45,7 @@ require (
 	github.com/minio/sio v0.4.0
 	github.com/natefinch/lumberjack v2.0.0+incompatible
 	github.com/ncw/swift/v2 v2.0.3
-	github.com/orzogc/fake115uploader v0.3.3-0.20230715111618-58f9eb76f831
+	github.com/orzogc/fake115uploader v0.3.3-0.20240917110815-37d6251d9480
 	github.com/pkg/errors v0.9.1
 	github.com/pkg/sftp v1.13.6
 	github.com/pquerna/otp v1.4.0
@@ -91,7 +93,7 @@ require (
 	github.com/RoaringBitmap/roaring v1.9.3 // indirect
 	github.com/abbot/go-http-auth v0.4.0 // indirect
 	github.com/aead/ecdh v0.2.0 // indirect
-	github.com/andreburgaud/crypt2go v1.2.0 // indirect
+	github.com/andreburgaud/crypt2go v1.8.0 // indirect
 	github.com/andybalholm/brotli v1.0.4 // indirect
 	github.com/axgle/mahonia v0.0.0-20180208002826-3358181d7394
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
@@ -187,7 +189,7 @@ require (
 	github.com/multiformats/go-multistream v0.4.1 // indirect
 	github.com/multiformats/go-varint v0.0.7 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.2 // indirect
-	github.com/pierrec/lz4/v4 v4.1.18 // indirect
+	github.com/pierrec/lz4/v4 v4.1.21 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/power-devops/perfstat v0.0.0-20221212215047-62379fc7944b // indirect
 	github.com/pquerna/cachecontrol v0.1.0 // indirect
