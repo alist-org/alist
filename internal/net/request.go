@@ -191,10 +191,10 @@ func (d *downloader) finishBuf(id int) (isLast bool, buf *Buf) {
 	if id >= len(d.chunks)-1 {
 		return true, nil
 	}
+	ch := d.sendChunkTask()
 	if d.nextChunk > id+1 {
 		return false, d.getBuf(id + 1)
 	}
-	ch := d.sendChunkTask()
 	return false, ch.buf
 }
 
