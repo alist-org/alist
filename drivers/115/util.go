@@ -74,8 +74,22 @@ func (d *Pan115) getFiles(fileId string) ([]FileObj, error) {
 }
 
 const (
-	appVer = "2.0.3.6"
+	appVer = "27.0.3.7"
 )
+
+func (c *Pan115) getAppVer() string {
+	// todo add some cache？
+	vers, err := c.client.GetAppVersion()
+	if err != nil {
+		return appVer
+	}
+	for _, ver := range vers {
+		if ver.AppName == "win" {
+			return ver.Version
+		}
+	}
+	return appVer
+}
 
 func (c *Pan115) DownloadWithUA(pickCode, ua string) (*driver115.DownloadInfo, error) {
 	key := crypto.GenerateKey()
@@ -151,7 +165,7 @@ func (d *Pan115) rapidUpload(fileSize int64, fileName, dirID, preID, fileID stri
 	userID := strconv.FormatInt(d.client.UserID, 10)
 	form := url.Values{}
 	form.Set("appid", "0")
-	form.Set("appversion", appVer)
+	form.Set("appversion", d.getAppVer())
 	form.Set("userid", userID)
 	form.Set("filename", fileName)
 	form.Set("filesize", fileSizeStr)
@@ -161,7 +175,7 @@ func (d *Pan115) rapidUpload(fileSize int64, fileName, dirID, preID, fileID stri
 
 	signKey, signVal := "", ""
 	for retry := true; retry; {
-		t := driver115.Now()
+		t := driver115.NowMilli()
 
 		if encodedToken, err = ecdhCipher.EncodeToken(t.ToInt64()); err != nil {
 			return nil, err
@@ -225,6 +239,9 @@ func UploadDigestRange(stream model.FileStreamer, rangeSpec string) (result stri
 
 	length := end - start + 1
 	reader, err := stream.RangeRead(http_range.Range{Start: start, Length: length})
+	if err != nil {
+		return "", err
+	}
 	hashStr, err := utils.HashReader(utils.SHA1, reader)
 	if err != nil {
 		return "", err
