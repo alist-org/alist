@@ -54,11 +54,15 @@ const (
 	Aria2Uri    = "aria2_uri"
 	Aria2Secret = "aria2_secret"
 
+	// transmission
+	TransmissionUri      = "transmission_uri"
+	TransmissionSeedtime = "transmission_seedtime"
+
 	// single
 	Token         = "token"
 	IndexProgress = "index_progress"
 
-	//SSO
+	// SSO
 	SSOClientId          = "sso_client_id"
 	SSOClientSecret      = "sso_client_secret"
 	SSOLoginEnabled      = "sso_login_enabled"
@@ -73,7 +77,7 @@ const (
 	SSODefaultPermission = "sso_default_permission"
 	SSOCompatibilityMode = "sso_compatibility_mode"
 
-	//ldap
+	// ldap
 	LdapLoginEnabled      = "ldap_login_enabled"
 	LdapServer            = "ldap_server"
 	LdapManagerDN         = "ldap_manager_dn"
@@ -84,7 +88,7 @@ const (
 	LdapDefaultDir        = "ldap_default_dir"
 	LdapLoginTips         = "ldap_login_tips"
 
-	//s3
+	// s3
 	S3Buckets         = "s3_buckets"
 	S3AccessKeyId     = "s3_access_key_id"
 	S3SecretAccessKey = "s3_secret_access_key"
@@ -97,7 +101,7 @@ const (
 const (
 	UNKNOWN = iota
 	FOLDER
-	//OFFICE
+	// OFFICE
 	VIDEO
 	AUDIO
 	TEXT

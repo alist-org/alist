@@ -101,6 +101,19 @@ outer:
 			}
 		}
 	}
+
+	if t.tool.Name() == "transmission" {
+		// hack for transmission
+		seedTime := setting.GetInt(conf.TransmissionSeedtime, 0)
+		if seedTime >= 0 {
+			t.Status = "offline download completed, waiting for seeding"
+			<-time.After(time.Minute * time.Duration(seedTime))
+			err := t.tool.Remove(t)
+			if err != nil {
+				log.Errorln(err.Error())
+			}
+		}
+	}
 	return nil
 }
 
