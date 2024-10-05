@@ -18,6 +18,7 @@ type Database struct {
 	TablePrefix string `json:"table_prefix" env:"TABLE_PREFIX"`
 	SSLMode     string `json:"ssl_mode" env:"SSL_MODE"`
 	DSN         string `json:"dsn" env:"DSN"`
+	Parser      string `json:"parser" env:"PARSER"`
 }
 
 type Meilisearch struct {
