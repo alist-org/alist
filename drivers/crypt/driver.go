@@ -13,6 +13,7 @@ import (
 	"github.com/alist-org/alist/v3/internal/fs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/op"
+	"github.com/alist-org/alist/v3/internal/sign"
 	"github.com/alist-org/alist/v3/internal/stream"
 	"github.com/alist-org/alist/v3/pkg/http_range"
 	"github.com/alist-org/alist/v3/pkg/utils"
@@ -160,7 +161,11 @@ func (d *Crypt) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([
 				// discarding hash as it's encrypted
 			}
 			if d.Thumbnail && thumb == "" {
-				thumb = utils.EncodePath(common.GetApiUrl(nil)+stdpath.Join("/d", args.ReqPath, ".thumbnails", name+".webp"), true)
+				thumbPath := stdpath.Join(args.ReqPath, ".thumbnails", name+".webp")
+				thumb = fmt.Sprintf("%s/d%s?sign=%s",
+					common.GetApiUrlFromContext(ctx),
+					utils.EncodePath(thumbPath, true),
+					sign.Sign(thumbPath))
 			}
 			if !ok && !d.Thumbnail {
 				result = append(result, &objRes)
