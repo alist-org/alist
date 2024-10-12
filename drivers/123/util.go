@@ -163,10 +163,9 @@ func (d *Pan123) login() error {
 		SetHeaders(map[string]string{
 			"origin":      "https://www.123pan.com",
 			"referer":     "https://www.123pan.com/",
-			"user-agent":    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) alist-client",
-			"platform":      "web",
-            "app-version": "61",
-            "x-app-version": "2.4.0",
+			"user-agent":  "Dart/2.19(dart:io)-alist",
+			"platform":    "web",
+			"app-version": "3",
 			//"user-agent":  base.UserAgent,
 		}).
 		SetBody(body).Post(SignIn)
