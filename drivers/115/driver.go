@@ -3,6 +3,7 @@ package _115
 import (
 	"context"
 	"strings"
+	"sync"
 
 	driver115 "github.com/SheltonZhu/115driver/pkg/driver"
 	"github.com/alist-org/alist/v3/internal/driver"
@@ -16,8 +17,9 @@ import (
 type Pan115 struct {
 	model.Storage
 	Addition
-	client  *driver115.Pan115Client
-	limiter *rate.Limiter
+	client     *driver115.Pan115Client
+	limiter    *rate.Limiter
+	appVerOnce sync.Once
 }
 
 func (d *Pan115) Config() driver.Config {
@@ -29,6 +31,7 @@ func (d *Pan115) GetAddition() driver.Additional {
 }
 
 func (d *Pan115) Init(ctx context.Context) error {
+	d.appVerOnce.Do(d.initAppVer)
 	if d.LimitRate > 0 {
 		d.limiter = rate.NewLimiter(rate.Limit(d.LimitRate), 1)
 	}
