@@ -82,6 +82,7 @@ func (d *Pan123) Link(ctx context.Context, file model.Obj, args model.LinkArgs) 
 			"type":      f.Type,
 		}
 		resp, err := d.request(DownloadInfo, http.MethodPost, func(req *resty.Request) {
+			
 			req.SetBody(data).SetHeaders(headers)
 		}, nil)
 		if err != nil {

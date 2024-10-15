@@ -26,8 +26,9 @@ const (
 	Api              = "https://www.123pan.com/api"
 	AApi             = "https://www.123pan.com/a/api"
 	BApi             = "https://www.123pan.com/b/api"
+	LoginApi         = "https://login.123pan.com/api"
 	MainApi          = BApi
-	SignIn           = MainApi + "/user/sign_in"
+	SignIn           = LoginApi + "/user/sign_in"
 	Logout           = MainApi + "/user/logout"
 	UserInfo         = MainApi + "/user/info"
 	FileList         = MainApi + "/file/list/new"
