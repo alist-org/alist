@@ -372,6 +372,14 @@ func Move(ctx context.Context, storage driver.Driver, srcPath, dstDirPath string
 		return errors.WithMessage(err, "failed to get src object")
 	}
 	srcObj := model.UnwrapObj(srcRawObj)
+	// Move shared Copy's prologue and fetched dstDir without ensuring it
+	// exists first, so moving within the same storage into a not-yet-created
+	// nested path failed even though the cross-storage move path goes through
+	// Put, which does create it. MakeDir is a no-op when the dir already exists.
+	err = MakeDir(ctx, storage, dstDirPath)
+	if err != nil {
+		return errors.WithMessagef(err, "failed to make dir [%s]", dstDirPath)
+	}
 	dstDir, err := GetUnwrap(ctx, storage, dstDirPath)
 	if err != nil {
 		return errors.WithMessage(err, "failed to get dst dir")
