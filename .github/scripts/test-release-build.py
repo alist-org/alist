@@ -68,6 +68,10 @@ class ReleaseBuildTests(unittest.TestCase):
                 cwd, result = self.run_build('release', target)
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
                 self.assertEqual(len(list((cwd / 'build/compress').glob('*.tar.gz'))), count)
+                md5_files = list((cwd / 'build/compress').glob('md5*.txt'))
+                self.assertEqual(len(md5_files), 1)
+                entries = [line.split(maxsplit=1)[1].removeprefix('./') for line in md5_files[0].read_text().splitlines()]
+                self.assertEqual(set(entries), {p.name for p in (cwd / 'build/compress').glob('*.tar.gz')})
                 calls = (cwd / 'calls').read_text()
                 self.assertNotIn('musl.cc', calls)
                 if target == 'freebsd':

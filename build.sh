@@ -100,7 +100,7 @@ BuildDev() {
   cd dist
   cp ./alist-windows-amd64.exe ./alist-windows-amd64-upx.exe
   upx -9 ./alist-windows-amd64-upx.exe
-  find . -type f -print0 | xargs -0 md5sum >md5.txt
+  find . -type f ! -name md5.txt -print0 | xargs -0 md5sum >md5.txt
   cat md5.txt
 }
 
@@ -293,7 +293,7 @@ MakeRelease() {
     echo "No release archives were produced" >&2
     exit 1
   fi
-  find . -type f -print0 | xargs -0 md5sum >"$1"
+  find . -type f \( -name '*.tar.gz' -o -name '*.zip' \) -print0 | xargs -0 md5sum >"$1"
   cat "$1"
   cd ../..
 }
