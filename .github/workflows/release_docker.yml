@@ -9,6 +9,9 @@ on:
   pull_request:
     branches:
       - main
+permissions:
+  contents: read
+
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -72,6 +75,9 @@ jobs:
             !build/musl-libs/**
 
   release_docker:
+    permissions:
+      contents: read
+      packages: write
     needs: build_binary
     name: Release Docker image
     runs-on: ubuntu-latest

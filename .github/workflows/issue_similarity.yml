@@ -3,6 +3,9 @@ name: Issues Similarity Analysis
 on:
   issues:
     types: [opened, edited]
+permissions:
+  issues: write
+
 
 jobs:
   similarity-analysis:
