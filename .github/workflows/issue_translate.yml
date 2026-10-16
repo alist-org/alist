@@ -10,4 +10,4 @@ jobs:
   translate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions-cool/translation-helper@v1.2.0
+      - uses: actions-cool/translation-helper@7f7f19e4af266fd06c250ee4ada9db8b5f094118 # v1.2.0
