@@ -36,12 +36,34 @@ func (d *Wopan) Init(ctx context.Context) error {
 		d.RefreshToken = refreshToken
 		op.MustSaveDriverStorage(d)
 	})
-	fml, err := d.client.FamilyUserCurrentEncode()
+	return d.initClient(ctx)
+}
+
+// Initialize credentials before any request encrypted with the access token.
+func (d *Wopan) initClient(ctx context.Context) error {
+	// The SDK stores its default UA without applying it to dispatcher requests.
+	d.client.SetUserAgent(wopan.DefaultUA)
+	if len(d.AccessToken) < 16 {
+		if d.RefreshToken == "" {
+			return fmt.Errorf("a valid access token or refresh token is required")
+		}
+		if err := d.client.RefreshToken(); err != nil {
+			return fmt.Errorf("refresh token: %w", err)
+		}
+		accessToken, _ := d.client.GetToken()
+		if len(accessToken) < 16 {
+			return fmt.Errorf("refresh returned an invalid access token")
+		}
+	}
+	if err := d.client.InitData(); err != nil {
+		return fmt.Errorf("initialize user data: %w", err)
+	}
+	fml, err := d.client.FamilyUserCurrentEncode(func(req *resty.Request) { req.SetContext(ctx) })
 	if err != nil {
-		return err
+		return fmt.Errorf("query family: %w", err)
 	}
 	d.defaultFamilyID = strconv.Itoa(fml.DefaultHomeId)
-	return d.client.InitData()
+	return nil
 }
 
 func (d *Wopan) Drop(ctx context.Context) error {
