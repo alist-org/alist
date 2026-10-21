@@ -13,9 +13,26 @@ esac
 
 work_dir=$(mktemp -d)
 trap 'rm -rf "$work_dir"' EXIT
-base_url="https://archive.freebsd.org/old-releases/$os_arch/$release-RELEASE"
-curl --fail --location --retry 3 "$base_url/MANIFEST" -o "$work_dir/MANIFEST"
-curl --fail --location --retry 3 "$base_url/base.txz" -o "$work_dir/base.txz"
+# Prefer a release mirror for 14.3; fall back to the official archive.
+# Download both files from the same source, and validate base.txz via MANIFEST.
+case "$arch" in
+  arm64) mirror_url="https://ftp6.jp.freebsd.org/pub/FreeBSD/releases/arm64/$release-RELEASE" ;;
+  *) mirror_url="https://download.freebsd.org/ftp/releases/$os_arch/$release-RELEASE" ;;
+esac
+archive_url="https://archive.freebsd.org/old-releases/$os_arch/$release-RELEASE"
+download_release() {
+  local base_url=$1
+  rm -f "$work_dir/MANIFEST" "$work_dir/base.txz"
+  echo "Downloading FreeBSD $release ($os_arch) from $base_url"
+  curl --fail --location --silent --show-error --connect-timeout 10 --max-time 60 --retry 2 \
+    "$base_url/MANIFEST" -o "$work_dir/MANIFEST" || return 1
+  curl --fail --location --show-error --connect-timeout 10 --max-time 300 --retry 2 \
+    "$base_url/base.txz" -o "$work_dir/base.txz" || return 1
+}
+if ! download_release "$mirror_url"; then
+  echo "Primary mirror unavailable; trying FreeBSD archive" >&2
+  download_release "$archive_url"
+fi
 checksum=$(awk '$1 == "base.txz" { print $2 }' "$work_dir/MANIFEST")
 (cd "$work_dir"; printf '%s  base.txz\n' "$checksum" | sha256sum --check -)
 mkdir "$work_dir/sysroot"
