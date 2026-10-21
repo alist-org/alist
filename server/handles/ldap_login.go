@@ -7,6 +7,8 @@ import (
 	"strings"
 
 	"github.com/alist-org/alist/v3/internal/conf"
+	"github.com/alist-org/alist/v3/internal/device"
+	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/internal/model"
 	"github.com/alist-org/alist/v3/internal/op"
 	"github.com/alist-org/alist/v3/internal/setting"
@@ -110,13 +112,27 @@ func loginLdap(c *gin.Context, req *LoginReq) {
 		}
 	}
 
+	clientID := c.GetHeader("Client-Id")
+	if clientID == "" {
+		clientID = c.Query("client_id")
+	}
+	key := utils.GetMD5EncodeStr(fmt.Sprintf("%d-%s", user.ID, clientID))
+	if err := device.EnsureActiveOnLogin(user.ID, key, c.Request.UserAgent(), c.ClientIP()); err != nil {
+		if errors.Is(err, errs.TooManyDevices) {
+			common.ErrorResp(c, err, 403)
+		} else {
+			common.ErrorResp(c, err, 400, true)
+		}
+		return
+	}
+
 	// generate token
 	token, err := common.GenerateToken(user)
 	if err != nil {
 		common.ErrorResp(c, err, 400, true)
 		return
 	}
-	common.SuccessResp(c, gin.H{"token": token})
+	common.SuccessResp(c, gin.H{"token": token, "device_key": key})
 	loginCache.Del(ip)
 }
 
