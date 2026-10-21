@@ -22,6 +22,7 @@ elif name == 'curl':
     out = pathlib.Path(args[args.index('-o') + 1])
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(('base.txz ' + hashlib.sha256(b'corrupt' if os.environ.get('FAIL') == 'checksum' else b'archive').hexdigest()) if out.name == 'MANIFEST' else 'archive')
+    if '-w' in args: print('206', end='')
 elif name == 'tar':
     if '-zxvf' in args:
         pathlib.Path('public').mkdir(exist_ok=True)
