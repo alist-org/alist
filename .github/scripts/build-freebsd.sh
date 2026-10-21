@@ -13,9 +13,44 @@ esac
 
 work_dir=$(mktemp -d)
 trap 'rm -rf "$work_dir"' EXIT
-base_url="https://archive.freebsd.org/old-releases/$os_arch/$release-RELEASE"
-curl --fail --location --retry 3 "$base_url/MANIFEST" -o "$work_dir/MANIFEST"
-curl --fail --location --retry 3 "$base_url/base.txz" -o "$work_dir/base.txz"
+# Probe both required files on the runner before attempting a large download.
+# These mirrors have published 14.3 release directories, but availability can change.
+sources=(
+  "https://ftp.unicamp.br/pub/FreeBSD/releases/$os_arch/$release-RELEASE"
+  "https://ftp.fau.de/freebsd/releases/$os_arch/$release-RELEASE"
+  "https://mirror.opensource.iu.edu/FreeBSD/releases/$os_arch/$release-RELEASE"
+  "https://archive.freebsd.org/old-releases/$os_arch/$release-RELEASE"
+)
+downloaded=false
+for base_url in "${sources[@]}"; do
+  echo "::group::Probe $base_url"
+  ok=true
+  for file in MANIFEST base.txz; do
+    # A 0-0 range avoids transferring hundreds of MB during probes.
+    code=$(curl -L -sS -o /dev/null -w '%{http_code}' -r 0-0 \
+      --connect-timeout 5 --max-time 15 "$base_url/$file") || ok=false
+    echo "$file: HTTP ${code:-unreachable}"
+    [[ "$code" == "200" || "$code" == "206" ]] || ok=false
+  done
+  if [[ "$ok" != true ]]; then
+    echo "::endgroup::"
+    continue
+  fi
+  rm -f "$work_dir/MANIFEST" "$work_dir/base.txz"
+  if curl -fLsS --connect-timeout 10 --max-time 60 "$base_url/MANIFEST" -o "$work_dir/MANIFEST" &&
+     curl -fL --connect-timeout 10 --max-time 600 --retry 1 "$base_url/base.txz" -o "$work_dir/base.txz"; then
+    downloaded=true
+    echo "Download succeeded from $base_url"
+    echo "::endgroup::"
+    break
+  fi
+  echo "Download failed; trying next mirror"
+  echo "::endgroup::"
+done
+if [[ "$downloaded" != true ]]; then
+  echo "::error::Unable to download FreeBSD $release ($os_arch) from any mirror"
+  exit 1
+fi
 checksum=$(awk '$1 == "base.txz" { print $2 }' "$work_dir/MANIFEST")
 (cd "$work_dir"; printf '%s  base.txz\n' "$checksum" | sha256sum --check -)
 mkdir "$work_dir/sysroot"
