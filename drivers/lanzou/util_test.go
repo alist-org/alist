@@ -37,21 +37,22 @@ func TestFindFileID(t *testing.T) {
 	}
 }
 
-func TestGetAjaxmPath(t *testing.T) {
+func TestGetAjaxURL(t *testing.T) {
 	tests := []struct {
 		name string
 		html string
 		want string
 	}{
-		{name: "legacy page with file ID", html: `url: '/ajaxm.php?file=12345'`, want: "/ajaxm.php?file=12345"},
-		{name: "password file endpoint", html: `url : '/ajaxfile.php?file=215138709'`, want: "/ajaxfile.php?file=215138709"},
-		{name: "new page without file ID", html: `data: {'action':'downprocess','sign':sign,'ves':1}`, want: "/ajaxm.php"},
+		{name: "legacy page with file ID", html: `url: '/ajaxm.php?file=12345'`, want: "https://pan.lanzoui.com/ajaxm.php?file=12345"},
+		{name: "relative password file endpoint", html: `url : '/ajaxfile.php?file=215138709'`, want: "https://pan.lanzoui.com/ajaxfile.php?file=215138709"},
+		{name: "absolute password file endpoint", html: `url : 'https://apifile.woozooo.com/ajaxfile.php?file=215138709'`, want: "https://apifile.woozooo.com/ajaxfile.php?file=215138709"},
+		{name: "new page without file ID", html: `data: {'action':'downprocess','sign':sign,'ves':1}`, want: "https://pan.lanzoui.com/ajaxm.php"},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := getAjaxmPath(tt.html); got != tt.want {
-				t.Fatalf("getAjaxmPath() = %q, want %q", got, tt.want)
+			if got := getAjaxURL(tt.html, "https://pan.lanzoui.com"); got != tt.want {
+				t.Fatalf("getAjaxURL() = %q, want %q", got, tt.want)
 			}
 		})
 	}

@@ -322,11 +322,11 @@ var findDownPageParamReg = regexp.MustCompile(`<iframe.*?src="(.+?)"`)
 
 // 获取下载接口及文件 ID。旧页面使用 ajaxm.php，新版密码文件页面使用
 // ajaxfile.php；地址也可能使用单/双引号或完整 URL。
-var findAjaxPathReg = regexp.MustCompile(`(?i)(/ajax(?:m|file)\.php\?file=(\d+)\b)`)
+var findAjaxURLReg = regexp.MustCompile(`(?i)((?:https?://[^'"\s]+)?/ajax(?:m|file)\.php\?file=(\d+)\b)`)
 var findFileIDVarReg = regexp.MustCompile(`(?i)\b(?:f_id|fid)\s*=\s*['"]?(\d+)['"]?\s*;`)
 
 func findFileID(data string) (string, bool) {
-	if matches := findAjaxPathReg.FindStringSubmatch(data); len(matches) == 3 {
+	if matches := findAjaxURLReg.FindStringSubmatch(data); len(matches) == 3 {
 		return matches[2], true
 	}
 	if matches := findFileIDVarReg.FindStringSubmatch(data); len(matches) == 2 {
@@ -335,14 +335,17 @@ func findFileID(data string) (string, bool) {
 	return "", false
 }
 
-func getAjaxmPath(data string) string {
-	if matches := findAjaxPathReg.FindStringSubmatch(data); len(matches) == 3 {
-		return matches[1]
+func getAjaxURL(data, shareURL string) string {
+	if matches := findAjaxURLReg.FindStringSubmatch(data); len(matches) == 3 {
+		if strings.HasPrefix(strings.ToLower(matches[1]), "http") {
+			return matches[1]
+		}
+		return strings.TrimRight(shareURL, "/") + matches[1]
 	}
 	if fileID, ok := findFileID(data); ok {
-		return "/ajaxm.php?file=" + fileID
+		return strings.TrimRight(shareURL, "/") + "/ajaxm.php?file=" + fileID
 	}
-	return "/ajaxm.php"
+	return strings.TrimRight(shareURL, "/") + "/ajaxm.php"
 }
 
 // GET 页面并去除注释(acw_sc__v2 反爬挑战已在 request 层统一处理)
@@ -429,7 +432,7 @@ func (d *LanZou) getFilesByShareUrl(shareID, pwd string, sharePageData string) (
 		param["p"] = pwd
 
 		var resp FileShareInfoAndUrlResp[string]
-		_, err = d.post(d.ShareUrl+getAjaxmPath(sharePageData), func(req *resty.Request) {
+		_, err = d.post(getAjaxURL(sharePageData, d.ShareUrl), func(req *resty.Request) {
 			req.SetHeader("Accept", "application/json, text/javascript, */*; q=0.01")
 			req.SetHeader("Referer", strings.TrimRight(d.ShareUrl, "/")+"/"+shareID)
 			req.SetHeader("Origin", strings.TrimRight(d.ShareUrl, "/"))
@@ -462,7 +465,7 @@ func (d *LanZou) getFilesByShareUrl(shareID, pwd string, sharePageData string) (
 		}
 
 		var resp FileShareInfoAndUrlResp[int]
-		_, err = d.post(d.ShareUrl+getAjaxmPath(nextPageData), func(req *resty.Request) { req.SetFormData(param) }, &resp)
+		_, err = d.post(getAjaxURL(nextPageData, d.ShareUrl), func(req *resty.Request) { req.SetFormData(param) }, &resp)
 		if err != nil {
 			return nil, err
 		}
