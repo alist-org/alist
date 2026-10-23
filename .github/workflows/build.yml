@@ -21,6 +21,41 @@ jobs:
       - name: Test failure propagation and release packaging
         run: python3 .github/scripts/test-release-build.py
 
+  xgo_build:
+    name: Xgo security build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Free disk space
+        uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be
+        with:
+          tool-cache: false
+          swap-storage: false
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.10'
+      - name: Install xgo
+        run: go install github.com/crazy-max/xgo@latest
+      - name: Build patched xgo image and cross-compile
+        run: |
+          go_version=$(awk '$1 == "go" { print $2; exit }' go.mod)
+          image="alist-xgo:$go_version"
+          docker build --build-arg "GO_VERSION=$go_version" -t "$image" -f .github/docker/Dockerfile.xgo .
+          xgo -docker-image "$image" -targets=linux/amd64,windows/amd64,darwin/arm64 -out alist -tags=jsoniter .
+      - name: Verify embedded Go and security dependency versions
+        run: |
+          go_version=$(awk '$1 == "go" { print $2; exit }' go.mod)
+          for binary in alist-linux-amd64 alist-windows-amd64.exe alist-darwin-arm64; do
+            info=$(go version -m "$binary")
+            echo "$info"
+            [[ "$(head -n 1 <<< "$info")" == "$binary: go$go_version" ]]
+            for module in golang.org/x/net golang.org/x/crypto; do
+              expected=$(awk -v module="$module" '$1 == module { print $2; exit }' go.mod)
+              actual=$(awk -v module="$module" '$1 == "dep" && $2 == module { print $3 }' <<< "$info")
+              [[ "$actual" == "$expected" ]]
+            done
+          done
+
   build:
     strategy:
       matrix:
@@ -51,7 +86,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.22'
+          go-version: '1.26.10'
 
       - name: Setup web
         run: bash build.sh dev web

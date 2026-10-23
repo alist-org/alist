@@ -1,0 +1,11 @@
+# Keep xgo's cross compilers, but use the same patched Go as native builds.
+ARG GO_VERSION=1.26.10
+FROM golang:${GO_VERSION} AS toolchain
+FROM ghcr.io/crazy-max/xgo:latest
+
+ARG GO_VERSION
+ENV GO_VERSION=${GO_VERSION} GOTOOLCHAIN=local
+# Remove the old installation before copying to avoid mixing Go releases.
+RUN rm -rf /usr/local/go
+COPY --from=toolchain /usr/local/go /usr/local/go
+RUN go version

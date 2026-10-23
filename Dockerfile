@@ -1,7 +1,8 @@
-FROM alpine:edge as builder
+FROM golang:1.26.10-alpine AS builder
 LABEL stage=go-builder
 WORKDIR /app/
-RUN apk add --no-cache bash curl gcc git go musl-dev
+ENV GOTOOLCHAIN=local
+RUN apk add --no-cache bash curl gcc git musl-dev
 COPY go.mod go.sum ./
 RUN go mod download
 COPY ./ ./

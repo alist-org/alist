@@ -19,6 +19,8 @@ if name == 'git':
     print('v3.65.0' if 'describe' in args else 'abcdef')
 elif name == 'wget': print('{"tag_name": "v3.65.0"}')
 elif name == 'curl':
+    if '-w' in args:
+        print('206'); sys.exit(0)
     out = pathlib.Path(args[args.index('-o') + 1])
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(('base.txz ' + hashlib.sha256(b'corrupt' if os.environ.get('FAIL') == 'checksum' else b'archive').hexdigest()) if out.name == 'MANIFEST' else 'archive')
@@ -30,6 +32,9 @@ elif name == 'tar':
     elif '-czvf' in args: pathlib.Path(args[args.index('-czvf')+1]).write_text('packed')
 elif name == 'go' and 'build' in args:
     out = pathlib.Path(args[args.index('-o')+1]); out.parent.mkdir(parents=True, exist_ok=True); out.write_text('binary')
+elif name == 'xgo':
+    for target in ['linux-amd64', 'darwin-arm64', 'windows-amd64.exe']:
+        pathlib.Path('alist-' + target).write_text('binary')
 elif name == 'sudo':
     os.execvp(args[0], args)
 '''
@@ -40,10 +45,16 @@ class ReleaseBuildTests(unittest.TestCase):
         self.addCleanup(tmp.cleanup)
         cwd = Path(tmp.name)
         shutil.copy(ROOT / 'build.sh', cwd)
+        shutil.copy(ROOT / 'go.mod', cwd)
+        (cwd / '.github/docker').mkdir(parents=True)
+        shutil.copy(ROOT / '.github/docker/Dockerfile.xgo', cwd / '.github/docker')
+        (cwd / 'wrapper').mkdir()
+        for name in ['zcc-arm64', 'zcxx-arm64']:
+            (cwd / 'wrapper' / name).write_text('#!/bin/sh\n')
         (cwd / '.github/scripts').mkdir(parents=True)
         shutil.copy(ROOT / '.github/scripts/build-freebsd.sh', cwd / '.github/scripts')
         (cwd / 'mock-bin').mkdir()
-        for name in ['git', 'wget', 'curl', 'tar', 'go', 'sudo']:
+        for name in ['git', 'wget', 'curl', 'tar', 'go', 'sudo', 'docker', 'xgo', 'upx']:
             p = cwd / 'mock-bin' / name
             p.write_text(MOCK)
             p.chmod(0o755)
@@ -98,6 +109,21 @@ class ReleaseBuildTests(unittest.TestCase):
             with self.subTest(mode=mode, target=target):
                 _, result = self.run_build(mode, target, 'curl')
                 self.assertNotEqual(result.returncode, 0)
+
+    def test_xgo_uses_patched_container_and_stops_on_failure(self):
+        for fail in ['', 'docker', 'xgo']:
+            with self.subTest(fail=fail):
+                cwd, result = self.run_build('release', '', fail)
+                self.assertEqual(result.returncode == 0, not fail, result.stdout + result.stderr)
+                calls = (cwd / 'calls').read_text()
+                go_version = next(line.split()[1] for line in (ROOT / 'go.mod').read_text().splitlines() if line.startswith('go '))
+                self.assertIn('docker build --build-arg GO_VERSION=' + go_version, calls)
+                if fail == 'docker':
+                    self.assertNotIn('xgo -docker-image', calls)
+                else:
+                    self.assertIn('xgo -docker-image alist-xgo:' + go_version, calls)
+                if fail:
+                    self.assertFalse((cwd / 'build/compress').exists())
 
     def test_prepare_download_failure_is_not_cached_as_success(self):
         _, result = self.run_build('prepare', 'docker-multiplatform', 'curl')
