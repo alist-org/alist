@@ -16,7 +16,7 @@ jobs:
     strategy:
       matrix:
         platform: [ ubuntu-latest ]
-        go-version: [ '1.21' ]
+        go-version: [ '1.26.10' ]
     name: Release
     runs-on: ${{ matrix.platform }}
     steps:
@@ -57,7 +57,6 @@ jobs:
       - name: Install dependencies
         run: |
           sudo snap install zig --classic --beta
-          docker pull crazymax/xgo:latest
           go install github.com/crazy-max/xgo@latest
           sudo apt install upx
 

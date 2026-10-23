@@ -72,6 +72,15 @@ BuildWinArm64() {
   go build -o "$1" -ldflags="$ldflags" -tags=jsoniter .
 }
 
+# xgo selects its own container toolchain; setup-go does not control it.
+BuildXgo() {
+  local go_version
+  go_version=$(awk '$1 == "go" { print $2; exit }' go.mod)
+  local image="alist-xgo:$go_version"
+  docker build --build-arg "GO_VERSION=$go_version" -t "$image" -f .github/docker/Dockerfile.xgo .
+  xgo -docker-image "$image" "$@"
+}
+
 BuildDev() {
   rm -rf .git/
   mkdir -p "dist"
@@ -95,7 +104,7 @@ BuildDev() {
     export CGO_ENABLED=1
     go build -o ./dist/$appName-$os_arch -ldflags="$muslflags" -tags=jsoniter .
   done
-  xgo -targets=windows/amd64,darwin/amd64,darwin/arm64 -out "$appName" -ldflags="$ldflags" -tags=jsoniter .
+  BuildXgo -targets=windows/amd64,darwin/amd64,darwin/arm64 -out "$appName" -ldflags="$ldflags" -tags=jsoniter .
   mv alist-* dist
   cd dist
   cp ./alist-windows-amd64.exe ./alist-windows-amd64-upx.exe
@@ -163,7 +172,7 @@ BuildRelease() {
   rm -rf .git/
   mkdir -p "build"
   BuildWinArm64 ./build/alist-windows-arm64.exe
-  xgo -out "$appName" -ldflags="$ldflags" -tags=jsoniter .
+  BuildXgo -out "$appName" -ldflags="$ldflags" -tags=jsoniter .
   # why? Because some target platforms seem to have issues with upx compression
   upx -9 ./alist-linux-amd64
   cp ./alist-windows-amd64.exe ./alist-windows-amd64-upx.exe
